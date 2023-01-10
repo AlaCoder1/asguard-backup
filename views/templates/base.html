@@ -1,0 +1,31 @@
+<!doctype html>
+{% load static %}
+<html lang="en">
+<head>
+
+    <meta charset="utf-8">
+    <link rel="manifest" href="../../static/manifest.json"/>
+    <title>Django Encore</title>
+
+    {% load encore %}
+
+    {% block stylesheets %}
+    
+        {% encore_entry_link_tags 'app' %}
+    {% endblock %}
+
+</head>
+<body>
+
+<div class="container">
+    {% block body %}
+        Body block.
+    {% endblock %}
+</div>
+
+{% block javascripts %}
+    {% encore_entry_script_tags 'app' %}
+{% endblock %}
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+<h1>WELCOME TO ADD USERS</h1>
+<a href="{% url 'home'  %}"><button>back</button></a>
+<div class="r-form-head">
+    <h4>Ajouter user</h4>
+</div>
+<!-- formulaire de login -->
+<form class="r-form"  action="" method="POST">
+    {% csrf_token %}
+    {% comment %} {{form.active}}
+    <label>Desactiver user</label> {% endcomment %}
+    {{form.as_p}}
+    <input type="submit" value="ajouter">
+</form>

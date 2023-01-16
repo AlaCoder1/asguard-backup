@@ -70,7 +70,7 @@ def add_user(request):
                 if(validInput(password)):
                     # form.save()
                     # addUser(username,password)
-                    with open('/etc/passwd','a+') as f:
+                    with open('/etc/passwd','a') as f:
                         # last_line = f.readlines()[-1]
                         # print(last_line)
                         # for line in f:
@@ -121,6 +121,8 @@ def delete_user(username):
 # delete_user(username)
 # print("User deleted successfully.")
 
+ 
+
 def all_users_by_directory(request):
     tab_username=[]
     tab_userId=[]
@@ -129,6 +131,5 @@ def all_users_by_directory(request):
         for line in f:
             tab_username.append(line.split(':')[0])     
             tab_userId.append(line.split(':')[2]) 
-            tab.append(line)   
+            tab.append(line)
     return render(request,'all_user_by_directory.html', {"tab_username":tab_username, 'tab_userId':tab_userId, 'tab':tab})  
-

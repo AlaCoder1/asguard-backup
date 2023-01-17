@@ -10,3 +10,8 @@ class AddUser(ModelForm):
     class Meta:
         model = User
         fields = '__all__'
+        
+class AddGroup(ModelForm):
+    class Meta:
+        model = Group
+        fields = '__all__'

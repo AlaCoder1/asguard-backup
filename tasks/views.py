@@ -10,7 +10,7 @@ import subprocess
 import sys
 import getpass
 import re
-
+import traceback
 #from usermanagement import *
 
 def validInput(var):
@@ -45,13 +45,16 @@ def addGroup(groupName):
     try:
         return os.system("groupadd {}".format(groupName))
     except:
-            print(f"Failed to add group.")                     
-            sys.exit(1)
-
+        print(f"Failed to add group.")                     
+        sys.exit(1)
+def deleteUser(username):
+    subprocess.run(["userdel", "-r", username])
+    
 def home(request):
     return render(request, 'home.html')
 
 def add_user(request):
+    msg=''
     form = AddUser()
     if request.method == 'POST':
         form = AddUser(request.POST)
@@ -61,35 +64,43 @@ def add_user(request):
             if(validInput(username)):
                 if(validInput(password)):
                     # form.save()
-                    addUser(username,password)
+                    if addUser(username,password) == 0:
+                        msg='user added succesfully'
+                    else:
+                        msg = "useradd: user '"+username+ "' already exists"
                     
-    context = {'form': form}
+    context = {'form': form,'msg':msg}
     return render(request, 'add_user.html', context)
 
 def add_group(request):
+    msg=''
     form = AddGroup()
     if request.method == 'POST':
         form = AddGroup(request.POST)
         if form.is_valid():
             namegroup = form['namegroup'].value()
             if(validInput(namegroup)):
-                addGroup(namegroup)
-                form.save()
-                return redirect('home')
+                if addGroup(namegroup) == 0:
+                    msg='group added succesfully'
+                else:
+                    msg = "groupadd: group '"+namegroup+ "' already exists"
+                #form.save()
+                # return redirect('home')
+                print(msg)
     context = {'formAddGroup': form}
     return render(request, 'add_group.html', context)
 
 def all_users(request):
-
     # output = subprocess.run(['getent', 'passwd'], capture_output=True, text=True)
     # users = output.stdout.strip().split('\n')
     # user_list = [user.split(':')[0] for user in users]
     # context = {"list_of_users": user_list}
     result = subprocess.run(["getent", "passwd"], capture_output=True)
     output = result.stdout.decode()
-    print(output)
+    # print(output)
     users = []
     usersId = []
+    tab= []
     for line in output.split("\n"):
         fields = line.split(":")
         if len(fields) > 2:
@@ -97,12 +108,15 @@ def all_users(request):
             uid = fields[2]
             users.append(username)
             usersId.append(uid)
-            print(f"Username: {username}, UID: {uid}")
-    context = {"username": users, "uid": usersId}
+            tab.append({"username": username, "uid": uid})
+            # print(f"Username: {username}, UID: {uid}")
+    context = {"username": users, "uid": usersId, 'tab':tab}
     return render(request, 'all_users.html', context)
 
-def delete_user(username):
-    subprocess.run(["userdel", "-r", username])
+def delete_user(request,pk):
+    print(pk)
+    deleteUser(pk)
+    # return render(request,'delete_user.html')
 
 # username = input("Enter the username of the user to delete: ")
 # delete_user(username)

@@ -11,3 +11,10 @@ class User(models.Model):
 
     def __str__(self):
         return self.titre
+    
+    
+class Group(models.Model):
+    namegroup = models.CharField(max_length=200, null=True)
+    
+    def __str__(self):
+        return self.namegroup

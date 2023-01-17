@@ -1,11 +1,11 @@
 pipeline {
-     agent {
-    node {
-      label 'agent-1'
+    agent {
+        node {
+            label 'agent-1'
+        }
     }
-  }
     stages {
-         stage('Setup Python Virtual Environment'){
+        stage('Setup Python Virtual Environment'){
             steps {
                 sh '''
                     chmod +x envsetup.sh

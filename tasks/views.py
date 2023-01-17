@@ -42,24 +42,16 @@ def addUser(username, password):
          sys.exit(1)
 
 def addGroup(groupName):
-    return os.system("groupadd {}".format(groupName))
+    try:
+        return os.system("groupadd {}".format(groupName))
+    except:
+            print(f"Failed to add group.")                     
+            sys.exit(1)
 
 def home(request):
     return render(request, 'home.html')
 
 def add_user(request):
-    # length_of_file = sum(1 for _ in open('/etc/passwd'))
-    index_of_last_user=''
-    with open('/etc/passwd','r') as f:
-        list_from_file=[]
-        for line in f:
-            list_from_file.append(line)
-        length_of_file = len(list_from_file)
-        for i in range(length_of_file-1,-1,-1):
-            if(list_from_file[i].find('/bin/bash')!=-1):
-                index_of_last_user+=list_from_file[i].split(':')[2]
-                break
-    print(int(index_of_last_user))
     form = AddUser()
     if request.method == 'POST':
         form = AddUser(request.POST)
@@ -69,13 +61,8 @@ def add_user(request):
             if(validInput(username)):
                 if(validInput(password)):
                     # form.save()
-                    # addUser(username,password)
-                    with open('/etc/passwd','a') as f:
-                        # last_line = f.readlines()[-1]
-                        # print(last_line)
-                        # for line in f:
-                        f.write(username+':x:'+str(int(index_of_last_user)+1)+':'+str(int(index_of_last_user)+1)+'::/home/'+username+':/bin/bash')
-                    # return redirect('home')
+                    addUser(username,password)
+                    
     context = {'form': form}
     return render(request, 'add_user.html', context)
 

@@ -4,7 +4,7 @@ sudo cp -rf app.conf /etc/nginx/conf.d
 
 sudo usermod -a -G centos nginx
 
-chmod 710 /var/lib/jenkins/workspace/DjangoApp
+chmod 710 /var/lib/jenkins/workspace/newdms
 
 sudo nginx -t
 

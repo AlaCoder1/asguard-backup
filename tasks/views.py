@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.db.models.query import InstanceCheckMeta
 from django.http import request
-
+from django.http import HttpResponse, JsonResponse
 from .models import *
 from .form import *
 from django.contrib import messages
@@ -11,7 +11,7 @@ import sys
 import getpass
 import re
 import traceback
-#from usermanagement import *
+from .serializers import *
 
 def validInput(var):
     regexp = re.compile('[^0-9a-zA-Z]+')
@@ -47,8 +47,10 @@ def addGroup(groupName):
     except:
         print(f"Failed to add group.")                     
         sys.exit(1)
+
 def deleteUser(username):
-    subprocess.run(["userdel", "-r", username])
+    # return subprocess.run(["userdel", "-r", username])
+    return os.system("userdel " + "-r " +username)
     
 def home(request):
     return render(request, 'home.html')
@@ -58,6 +60,7 @@ def add_user(request):
     form = AddUser()
     if request.method == 'POST':
         form = AddUser(request.POST)
+        print(form)
         if form.is_valid():
             username = form['username'].value()
             password = form['password'].value()
@@ -103,7 +106,8 @@ def all_users(request):
     tab= []
     for line in output.split("\n"):
         fields = line.split(":")
-        if len(fields) > 2:
+        # if len(fields) > 2:
+        if(len(fields) > 2 and fields[6]=='/bin/bash'):
             username = fields[0]
             uid = fields[2]
             users.append(username)
@@ -116,13 +120,8 @@ def all_users(request):
 def delete_user(request,pk):
     print(pk)
     deleteUser(pk)
-    # return render(request,'delete_user.html')
+    return render(request,'add_user.html')
 
-# username = input("Enter the username of the user to delete: ")
-# delete_user(username)
-# print("User deleted successfully.")
-
- 
 
 def all_users_by_directory(request):
     tab_username=[]

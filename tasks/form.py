@@ -10,6 +10,7 @@ class AddUser(ModelForm):
     class Meta:
         model = User
         fields = '__all__'
+        exclude = ('uid',)
         
 class AddGroup(ModelForm):
     class Meta:

@@ -8,7 +8,6 @@ urlpatterns = [
     path('add_group', views.add_group, name="add_group"),
     path('all_users', views.all_users, name="all_users"),
     path('all_users_by_directory', views.all_users_by_directory, name="all_users_by_directory"),
-    # path('update_appeloffre/<str:pk>', views.update, name="update_appeloffre"),
     path('delete_user/<str:pk>', views.delete_user, name="delete_user"),
     # path('delete_user/<str:pk>', views.delete_user, name="delete_user"),
     # path('postulation/<str:pk>', views.add_postule, name="postulation"),

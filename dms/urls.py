@@ -26,5 +26,6 @@ urlpatterns = [
     path('heni/',index_page_test),
     path('', include('tasks.urls')),
     path('users/', include('managementUsers.urls')),
+    path('groups/', include('managementGroup.urls')),
     path('api/', include('rest_framework.urls'))
 ]

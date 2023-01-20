@@ -43,7 +43,8 @@ INSTALLED_APPS = [
     'tasks',
     'rest_framework',
     'corsheaders',
-    'managementUsers'
+    'managementUsers',
+    'managementGroup'
 ]
 
 MIDDLEWARE = [

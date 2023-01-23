@@ -27,6 +27,7 @@ Encore
     .addEntry('app', './assets/js/app.js')
     .addEntry('demo1', './assets/js/demo1.js')
     .addEntry('demo2', './assets/js/demo2.js')
+    .addEntry('testheni', './assets/js/testheni.js')
 
   
     // Enable Vue loader

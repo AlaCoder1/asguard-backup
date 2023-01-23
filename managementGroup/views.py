@@ -52,10 +52,8 @@ def createGroup(request):
             if(validInput(groupname)):
                 # form.save()
                 if addGroup(groupname) == 0:
-                    print('succes addgroup')
                     msg='group added succesfully'
                 else:
-                    print('faild addgroup')
                     msg = "groupadd: group '"+groupname+ "' already exists"
             # provide a Json Response with the data that was saved
             return JsonResponse({"msg":msg}, status=201)
@@ -75,10 +73,9 @@ def getAllGroups(request):
                 groupname = fields[0]
                 gid = fields[2]
                 tab_groups.append({"groupname": groupname, "gid": gid})
-        # get all the tasks
-        # serialize the task data
+        # get all groups
+        # serialize the groups data
         serializer = GroupSerializerGet(tab_groups, many=True)
-        # print(serializer.data)
         # return a Json response
         return JsonResponse(serializer.data,safe=False)
 
@@ -86,7 +83,7 @@ def getAllGroups(request):
 @csrf_exempt   
 def deleteGroup(request):
     if(request.method == 'DELETE'):
-        # delete the task
+        # delete group
         data = json.loads(request.body)
         groupname = data['groupname'] 
         delete_group(groupname)
@@ -97,14 +94,10 @@ def deleteGroup(request):
 @csrf_exempt
 def change_groupname(request):
     if(request.method == 'PUT'):
+        # parse the incoming information
         data = json.loads(request.body)
         oldgroupname =data['oldgroupname']
         Newgroupname =data['Newgroupname']
-        # parse the incoming information
-        # data = JSONParser().parse(request)  
-        # instanciate with the serializer
-        # serializer = UserSerializer(user, data=data)
-        serializer = GroupSerializerGet()
         if(validInput(Newgroupname)):
             changeGroupname(oldgroupname,Newgroupname)
             # check whether the sent information is okay

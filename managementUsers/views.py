@@ -22,16 +22,13 @@ def validInput(var):
 ### validation password mustn't conetent " or '
 def validPassword(password):
     if re.findall(r'["|\'|;|\|]',password):
-        # print('invalid password')
         return False
     else:
-        # print('valid password') 
         return True
 
 ### function to add user    
 def addUser(username, password):
      try:
-        # subprocess.run(['useradd', username , '&& echo ', username, ':', password , '| chpasswd'])   
         return os.system("useradd " + username +" && echo "+username+":"+password +" | chpasswd")
      except:
          print(f"Failed to add user.")                     
@@ -39,20 +36,11 @@ def addUser(username, password):
      
 ### function to delete user    
 def deleteUser(username):
-    # return subprocess.run(["userdel", "-r", username])
     return os.system("userdel " + "-r " +username)
 
 ### functio to change username
 def changeUsername(oldusername, Newusername):
     return os.system("usermod -l " + Newusername +" "+oldusername)
-
-### function to add group  
-def addGroup(groupName):
-    try:
-        return os.system("groupadd {}".format(groupName))
-    except:
-        print(f"Failed to add group.")                     
-        sys.exit(1)
 
 ### API to get all users       
 @csrf_exempt
@@ -70,7 +58,6 @@ def getAllUsers(request):
         # get all the tasks
         # serialize the task data
         serializer = UserSerializerGet(tab_users, many=True)
-        # print(serializer.data)
         # return a Json response
         return JsonResponse(serializer.data,safe=False)
 
@@ -88,24 +75,30 @@ def createUser(request):
         # check if the sent information is okay
         if(serializer.is_valid()):
             # if okay, save it on the database
-            print('in serializer')
             # serializer.save()
             if(validInput(username)):
                 if(validInput(password)):
                     # form.save()
-                    print('in validInput')
                     if addUser(username,password) == 0:
-                        print('succes adduser')
                         msg='user added succesfully'
                     else:
-                        print('faild adduser')
                         msg = "useradd: user '"+username+ "' already exists"
             # provide a Json Response with the data that was saved
-            print(msg)
             return JsonResponse({"msg":msg}, status=201)
             # provide a Json Response with the necessary error information
         return JsonResponse(serializer.errors, status=400)
 
+### API to delete group
+@csrf_exempt   
+def delete_user(request):
+    if(request.method == 'DELETE'):
+        # get data from body
+        data = json.loads(request.body)
+        username = data['username']
+        deleteUser(username)
+        # return a no content response.
+        return HttpResponse("delete succesfully",status=200) 
+    
 ### API to get user details to delete or update
 @csrf_exempt   
 def userDetails(request):
@@ -166,20 +159,15 @@ def change_password(request):
 @csrf_exempt
 def change_username(request):
     if(request.method == 'PUT'):
+        # parse the incoming information
         data = json.loads(request.body)
         oldusername =data['oldusername']
         Newusername =data['Newusername']
-        # parse the incoming information
-        # data = JSONParser().parse(request)  
         # instanciate with the serializer
-        # serializer = UserSerializer(user, data=data)
-        serializer = UserSerializerGet()
-        changeUsername(oldusername,Newusername)
-        # check whether the sent information is okay
-        # if(serializer.is_valid()):  
-            # if okay, save it on the database
-            # serializer.save() 
+        if(changeUsername(oldusername,Newusername)!=0):
+             # provide a JSON response with the necessary error information
+            return JsonResponse({"msg":"updated failed"}, status=400)
+        else:
             # provide a JSON response with the data that was submitted
-        return JsonResponse({"msg":"updated succesfully"}, status=201)
-        # provide a JSON response with the necessary error information
-        # return JsonResponse(serializer.errors, status=400)
+            return JsonResponse({"msg":"updated succesfully"}, status=201)
+       

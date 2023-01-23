@@ -26,6 +26,15 @@ def validPassword(password):
     else:
         return True
 
+### function to test if username exit
+def username_exists(username):
+    # Check if the username exists in the /etc/passwd file
+    with open("/etc/passwd", "r") as passwd_file:
+        for line in passwd_file:
+            if line.startswith(username + ":"):
+                return True
+    return False
+
 ### function to add user    
 def addUser(username, password):
      try:
@@ -39,8 +48,8 @@ def deleteUser(username):
     return os.system("userdel " + "-r " +username)
 
 ### functio to change username
-def changeUsername(oldusername, Newusername):
-    return os.system("usermod -l " + Newusername +" "+oldusername)
+def changeUsername(oldusername, newusername):
+    return os.system("usermod -l " + newusername +" "+oldusername)
 
 ### API to get all users       
 @csrf_exempt
@@ -158,16 +167,29 @@ def change_password(request):
 ### API to change username
 @csrf_exempt
 def change_username(request):
+    msg=''
     if(request.method == 'PUT'):
         # parse the incoming information
         data = json.loads(request.body)
         oldusername =data['oldusername']
-        Newusername =data['Newusername']
-        # instanciate with the serializer
-        if(changeUsername(oldusername,Newusername)!=0):
-             # provide a JSON response with the necessary error information
-            return JsonResponse({"msg":"updated failed"}, status=400)
+        newusername =data['newusername']
+        if validInput(oldusername):
+            if username_exists(oldusername):
+                if validInput(newusername):
+                    if username_exists(newusername):
+                        msg = f"Username {newusername} exists."
+                        return JsonResponse({"msg":msg})
+                    else:
+                        changeUsername(oldusername,newusername)
+                        msg="updated succesfully"
+                        return JsonResponse({"msg":msg})
+                else:
+                    msg = "invalid "+newusername
+                    return JsonResponse({"msg":msg})
+            else:
+                msg = f"Username {oldusername} does not exist."
+                return JsonResponse({"msg":msg})
         else:
-            # provide a JSON response with the data that was submitted
-            return JsonResponse({"msg":"updated succesfully"}, status=201)
+            msg = "invalid "+oldusername
+            return JsonResponse({"msg":msg})
        

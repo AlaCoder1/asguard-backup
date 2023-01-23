@@ -9,6 +9,7 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import re
 from rest_framework.parsers import JSONParser 
+import grp
 # Create your views here.
 
 ###### validation name of group and users (must content char and int)
@@ -59,7 +60,15 @@ def createGroup(request):
             return JsonResponse({"msg":msg}, status=201)
             # provide a Json Response with the necessary error information
         return JsonResponse(serializer.errors, status=400)
-    
+
+### function to test if groupname exit
+def group_exists(group_name):
+    try:
+        grp.getgrnam(group_name)
+        return True
+    except KeyError:
+        return False
+
 ### API to get all groups       
 @csrf_exempt
 def getAllGroups(request):
@@ -72,7 +81,8 @@ def getAllGroups(request):
             if(len(fields) > 2):
                 groupname = fields[0]
                 gid = fields[2]
-                tab_groups.append({"groupname": groupname, "gid": gid})
+                if int(gid) >=1000:
+                    tab_groups.append({"groupname": groupname, "gid": gid})
         # get all groups
         # serialize the groups data
         serializer = GroupSerializerGet(tab_groups, many=True)
@@ -93,20 +103,29 @@ def deleteGroup(request):
 ### API to change groupname
 @csrf_exempt
 def change_groupname(request):
+    msg=''
     if(request.method == 'PUT'):
         # parse the incoming information
         data = json.loads(request.body)
         oldgroupname =data['oldgroupname']
         Newgroupname =data['Newgroupname']
-        if(validInput(Newgroupname)):
-            changeGroupname(oldgroupname,Newgroupname)
-            # check whether the sent information is okay
-            # if(serializer.is_valid()):  
-                # if okay, save it on the database
-                # serializer.save() 
-                # provide a JSON response with the data that was submitted
-            return JsonResponse({"msg":"updated succesfully"}, status=201)
+        if validInput(oldgroupname):
+            if group_exists(oldgroupname):
+                if validInput(Newgroupname):
+                    if group_exists(Newgroupname):
+                        msg = f"Username {Newgroupname} exists."
+                        return JsonResponse({"msg":msg})
+                    else:
+                        changeGroupname(oldgroupname,Newgroupname)
+                        msg="updated succesfully"
+                        return JsonResponse({"msg":msg})
+                else:
+                    msg = "invalid "+Newgroupname
+                    return JsonResponse({"msg":msg})
+            else:
+                msg = f"Username {oldgroupname} does not exist."
+                return JsonResponse({"msg":msg})
         else:
-            return JsonResponse({"msg":"invalid groupname"})
-        # provide a JSON response with the necessary error information
-        # return JsonResponse(serializer.errors, status=400)
+            msg = "invalid "+oldgroupname
+            return JsonResponse({"msg":msg})
+    

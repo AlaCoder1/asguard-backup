@@ -9,4 +9,7 @@ urlpatterns = [
     path('userDetails', views.userDetails, name="userDetails"),
     path('userChangePW', views.change_password, name="userChangePW"),
     path('userChangeUsername', views.change_username, name="userChangeUsername"),
+    path('authentification', views.authentification, name="authentification"),
+    path('authentification2', views.authentifacation2, name="authentification2"),
+    path('getUidUser', views.getUidUser, name="getUidUser"),
 ]

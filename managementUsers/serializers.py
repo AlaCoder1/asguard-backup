@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User
+from .models import *
+from managementGroup.models import *
 
 class UserSerializerGet(serializers.ModelSerializer):
     class Meta:
@@ -8,6 +9,7 @@ class UserSerializerGet(serializers.ModelSerializer):
 
 
 class UserSerializerPost(serializers.ModelSerializer):
+    group = serializers.PrimaryKeyRelatedField(many=True,queryset=Group.objects.all())
     class Meta:
         model = User
-        fields =  ('username', 'password')
+        fields =  ('username', 'password','uid', 'group')

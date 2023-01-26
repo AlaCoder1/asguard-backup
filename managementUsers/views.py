@@ -1,14 +1,15 @@
 from django.shortcuts import render
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse 
 from .models import *
 import os 
-import subprocess
+import subprocess ,getpass
 import sys
 from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
 import json
 import re
 from rest_framework.parsers import JSONParser 
+import pam
 # Create your views here.
 
 ###### validation name of group and users (must content char and int)
@@ -51,7 +52,7 @@ def deleteUser(username):
 def changeUsername(oldusername, newusername):
     return os.system("usermod -l " + newusername +" "+oldusername)
 
-### API to get all users       
+### API to get all users  
 @csrf_exempt
 def getAllUsers(request):
     if(request.method == 'GET'):
@@ -60,7 +61,7 @@ def getAllUsers(request):
         tab_users= []
         for line in output.split("\n"):
             fields = line.split(":")
-            if(len(fields) > 2 and fields[6]=='/bin/bash'):
+            if(len(fields) > 2 and fields[6]=='/bin/bash' and int(fields[2])>=1000):
                 username = fields[0]
                 uid = fields[2]
                 tab_users.append({"username": username, "uid": uid})
@@ -80,22 +81,43 @@ def createUser(request):
         # instanciate with the serializer
         username=data['username']
         password=data['password']
-        serializer = UserSerializerPost(data=data)
-        # check if the sent information is okay
-        if(serializer.is_valid()):
-            # if okay, save it on the database
-            # serializer.save()
-            if(validInput(username)):
-                if(validInput(password)):
-                    # form.save()
-                    if addUser(username,password) == 0:
-                        msg='user added succesfully'
-                    else:
-                        msg = "useradd: user '"+username+ "' already exists"
-            # provide a Json Response with the data that was saved
-            return JsonResponse({"msg":msg}, status=201)
-            # provide a Json Response with the necessary error information
-        return JsonResponse(serializer.errors, status=400)
+        if(validInput(username)):
+            if(validInput(password)):
+                if addUser(username,password) == 0:
+                    msg='user added succesfully'
+                    uid = getUidUser(request)
+                    data['uid']=uid
+                    serializer = UserSerializerPost(data=data)
+                    # check if the sent information is okay
+                    if(serializer.is_valid()):
+                        # if okay, save it on the database
+                        serializer.save()
+                        # provide a Json Response with the data that was saved
+                        return JsonResponse({"msg":msg}, status=201)
+                    # provide a Json Response with the necessary error information
+                    return JsonResponse(serializer.errors, status=400)
+                else:
+                    msg = "useradd: user '"+username+ "' already exists"
+        
+            
+        
+        # if(serializer.is_valid()):
+        #     if(validInput(username)):
+        #         if(validInput(password)):
+        #             # form.save()
+        #             if addUser(username,password) == 0:
+        #                 msg='user added succesfully'
+        #                 uid = getUidUser(request)
+        #                 # if okay, save it on the database
+        #                 # serializer.save()
+        #                 # print(uid)
+        #             else:
+        #                 msg = "useradd: user '"+username+ "' already exists"
+        #     # provide a Json Response with the data that was saved
+        #     return JsonResponse({"msg":msg}, status=201)
+        #     # provide a Json Response with the necessary error information
+        # return JsonResponse(serializer.errors, status=400)
+
 
 ### API to delete group
 @csrf_exempt   
@@ -193,3 +215,67 @@ def change_username(request):
             msg = "invalid "+oldusername
             return JsonResponse({"msg":msg})
        
+### function to auth
+def authenticate(username, password):
+    service = 'login'
+    try:
+        authenticated = pam.authenticate(username, password, service)
+        return authenticated
+    except pam.exception as e:
+        print(e)
+        return False
+    
+### API1 to authentification
+@csrf_exempt
+def authentification(request):
+    msg=''
+    if(request.method == 'POST'):
+        # parse the incoming information
+        data = json.loads(request.body)
+        username = data['username']
+        password = data['password']
+
+        # run the command to check if the provided credentials are valid
+        result = subprocess.run(["su", "-c", "id", username], input=password, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        # result = subprocess.run(["su", username], input=password, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+
+        # check if the command succeeded (return code 0)
+        if result.returncode == 0:
+            msg = "Authentication successful!"
+            return JsonResponse({"msg":msg})
+        else:
+            msg = "Authentication failed."
+            return JsonResponse({"msg":msg})
+
+### API2 to authentification
+@csrf_exempt
+def authentifacation2(request):
+    msg=''
+    if(request.method == 'POST'):
+        data = json.loads(request.body)
+        username = data['username']
+        password = data['password']
+        if authenticate(username, password):
+            msg = "Authentication successful!"
+            return JsonResponse({"msg":msg})
+        else:
+            msg = "Authentication failed."
+            return JsonResponse({"msg":msg})
+        
+
+# # Usage example
+# username = input("Enter your username: ")
+# password = input("Enter your password: ")
+
+# if authenticate(username, password):
+#     print("Authentication successful")
+# else:
+#     print("Authentication failed")
+
+
+### function to get UID from system
+def getUidUser(request):
+    return subprocess.run(["getent", "passwd"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
+
+
+

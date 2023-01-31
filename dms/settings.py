@@ -154,3 +154,5 @@ else:
     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 ENCORE_ENTRYPOINTS_FILE = os.path.join(BASE_DIR, 'static') + '/entrypoints.json'
 #ENCORE_ENTRYPOINTS_FILE= '/home/oussema/Documents/numeryx/newdms/dms/public/build/entrypoints.json'
+
+ENCRYPT_KEY= "57-xmiMq0yop7uD7Aq3j4PNUOgZhradICh2BKBnIdB0="

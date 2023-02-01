@@ -69,13 +69,21 @@ def group_exists(group_name):
     except KeyError:
         return False
 
-### API to get all groups       
+### API to get all groups   
+# import mysql.connector  
+# cnx  = mysql.connector.connect(
+#   host="localhost",
+#   user="root",
+#   password="",
+#   database="testbd"
+# )    
 @csrf_exempt
 def getAllGroups(request):
     if(request.method == 'GET'):
         result = subprocess.run(["getent", "group"], capture_output=True)
         output = result.stdout.decode()
         tab_groups= []
+        list_group = []
         for line in output.split("\n"):
             fields = line.split(":")
             if(len(fields) > 2):
@@ -83,7 +91,31 @@ def getAllGroups(request):
                 gid = fields[2]
                 if int(gid) >=1000:
                     tab_groups.append({"groupname": groupname, "gid": gid})
+                    list_group.append(groupname+":"+gid)
         # get all groups
+        # val = [tuple(line.split(":")[:3]) for line in list_group]
+        # print(val)
+        # # a = [('terry', '1000'), ('sudo', '1002'), ('mysql', '1019'), ('amani', '1020'), ('heni', '1001')]
+        # a = ('terry', '1000')
+        # # Create the cursor and execute the INSERT statement
+        # cursor = cnx.cursor()
+        # query = "INSERT INTO Group (groupname , gid) VALUES (%s, %s)"
+        # try:
+        #     cursor.execute(query, a)
+        #     # Commit the changes to the database
+        #     cnx.commit()
+        #     print("Data inserted successfully")
+        # except Exception as e:
+        #     # Rollback in case there is any error
+        #     cnx.rollback()
+        #     print("Error: ", e)
+        # # cursor.executemany(query, a)
+
+        # # Commit the changes to the database
+        # # cnx.commit()
+        # # Close the cursor and connection
+        # cursor.close()
+        # cnx.close()
         # serialize the groups data
         serializer = GroupSerializer(tab_groups, many=True)
         # return a Json response

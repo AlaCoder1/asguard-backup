@@ -1,9 +1,11 @@
 from django.http import JsonResponse, HttpResponse 
 from .models import *
 import os 
-import subprocess ,getpass
+import subprocess 
 import sys
 from .serializers import *
+from managementGroup.serializers import *
+from managementGroup.views import *
 from django.views.decorators.csrf import csrf_exempt
 import json
 import re
@@ -85,22 +87,56 @@ def addUserToGroup(groupname,username):
          print(f"Failed to add user in group.")                     
          sys.exit(1)
 
-### API to get all users  
+### API to get all users
+import mysql.connector  
+cnx  = mysql.connector.connect(
+  host="localhost",
+  user="root",
+  password="",
+  database="testbd"
+)
+
 @csrf_exempt
 def getAllUsers(request):
     if(request.method == 'GET'):
         result = subprocess.run(["getent", "passwd"], capture_output=True)
         output = result.stdout.decode()
         tab_users= []
+        list_users = []
         for line in output.split("\n"):
             fields = line.split(":")
             if(len(fields) > 2 and fields[6]=='/bin/bash' and int(fields[2])>=1000):
                 username = fields[0]
                 uid = fields[2]
                 tab_users.append({"username": username, "uid": uid})
+                list_users.append(username+':'+uid)
+                
         # get all the users
+        # print(list_users)
+        val = [tuple(line.split(":")[:3]) for line in list_users]
+        # print(val)
+        # Create the cursor and execute the INSERT statement
+        # cursor = cnx.cursor()
+        # query = "INSERT INTO User (username, uid) VALUES (%s, %s)"
+        # try:
+        #     cursor.executemany(query, val)
+        #     # Commit the changes to the database
+        #     cnx.commit()
+        #     print("Data inserted successfully")
+        # except Exception as e:
+        #     # Rollback in case there is any error
+        #     cnx.rollback()
+        #     print("Error: ", e)
+        # # cursor.executemany(query, val)
+        
+        # # # Commit the changes to the database
+        # # cnx.commit()
+        # # Close the cursor and connection
+        # cursor.close()
+        # cnx.close()
         # serialize the users data
         serializer = UserSerializerGet(tab_users, many=True)
+        
         # return a Json response
         return JsonResponse(serializer.data,safe=False)
 
@@ -112,10 +148,12 @@ def createUser(request):
     if(request.method == 'POST'):
         # parse the incoming information
         data = JSONParser().parse(request)
+        print(data)
         # instanciate with the serializer
         username=data['username']
         password=data['password']
         groups = data['group']
+        groupname = {"groupname": username}
         if(validInput(username)):
             if(validInput(password)):
                 if addUser(username,password) == 0:
@@ -126,6 +164,9 @@ def createUser(request):
                     data['password'] = encrypt(password)
                     data['uid']=uid
                     serializer = UserSerializerPost(data=data)
+                    gid = getUidGroup()
+                    groupname['gid']=gid
+                    serializer = GroupSerializer(data=groupname)
                     # check if the sent information is okay
                     if(serializer.is_valid()):
                         # if okay, save it on the database
@@ -135,7 +176,6 @@ def createUser(request):
                     # provide a Json Response with the necessary error information
                     return JsonResponse(serializer.errors, status=400)
                 else:
-                    addUserToGroup("yy",username)
                     msg = "useradd: user '"+username+ "' already exists"
                     return JsonResponse({"msg":msg}, status=400)
         

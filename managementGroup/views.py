@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse
 from .models import *
 import os 
@@ -43,24 +42,25 @@ def createGroup(request):
     if(request.method == 'POST'):
         # parse the incoming information
         data = JSONParser().parse(request)
-        # instanciate with the serializer
         groupname=data['groupname']
-        serializer = GroupSerializerPost(data=data)
-        # check if the sent information is okay
-        if(serializer.is_valid()):
-            # if okay, save it on the database
-            # serializer.save()
-            if(validInput(groupname)):
-                # form.save()
-                if addGroup(groupname) == 0:
-                    msg='group added succesfully'
-                else:
-                    msg = "groupadd: group '"+groupname+ "' already exists"
-            # provide a Json Response with the data that was saved
-            return JsonResponse({"msg":msg}, status=201)
-            # provide a Json Response with the necessary error information
-        return JsonResponse(serializer.errors, status=400)
-
+        if(validInput(groupname)):
+            if addGroup(groupname) == 0:
+                msg='group added succesfully'
+                gid = getUidGroup()
+                data['gid']=gid
+                serializer = GroupSerializer(data=data)
+                # check if the sent information is okay
+                if(serializer.is_valid()):
+                    # if okay, save it on the database
+                    serializer.save()
+                    # provide a Json Response with the data that was saved
+                    return JsonResponse({"msg":msg}, status=201)
+                # provide a Json Response with the necessary error information
+                return JsonResponse(serializer.errors, status=400)
+            else:
+                msg = "groupadd: group '"+groupname+ "' already exists"
+                return JsonResponse({"msg":msg}, status=201)
+            
 ### function to test if groupname exit
 def group_exists(group_name):
     try:
@@ -85,7 +85,7 @@ def getAllGroups(request):
                     tab_groups.append({"groupname": groupname, "gid": gid})
         # get all groups
         # serialize the groups data
-        serializer = GroupSerializerGet(tab_groups, many=True)
+        serializer = GroupSerializer(tab_groups, many=True)
         # return a Json response
         return JsonResponse(serializer.data,safe=False)
 
@@ -128,4 +128,19 @@ def change_groupname(request):
         else:
             msg = "invalid "+oldgroupname
             return JsonResponse({"msg":msg})
+    
+### function to get UID from system
+def getLastGroupName():
+    return subprocess.run(["getent", "group"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[0]
+
+### function de get id group
+def getUidGroup():
+    return subprocess.run(["getent", "group"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
+
+### function de get all groupname by id
+def getGroupNameById(pk):
+        group = Group.objects.get(id=pk)
+        return str(group)
+    
+        
     

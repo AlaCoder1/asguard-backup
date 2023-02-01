@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from django.http import JsonResponse, HttpResponse 
 from .models import *
 import os 
@@ -10,7 +9,33 @@ import json
 import re
 from rest_framework.parsers import JSONParser 
 import pam
+from cryptography.fernet import Fernet
+import base64
+import logging
+import traceback
+from django.conf import settings
 # Create your views here.
+
+### function to get UID from system
+def getUidUser():
+    return subprocess.run(["getent", "passwd"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
+
+### function to encrypted pwd
+def encrypt(txt):
+    try:
+        # convert integer etc to string first
+        txt = str(txt)
+        # get the key from settings
+        cipher_suite = Fernet(settings.ENCRYPT_KEY) # key should be byte
+        # #input should be byte, so convert the text to byte
+        encrypted_text = cipher_suite.encrypt(txt.encode('ascii'))
+        # encode to urlsafe base64 format
+        encrypted_text = base64.urlsafe_b64encode(encrypted_text).decode("ascii") 
+        return encrypted_text
+    except Exception as e:
+        # log the error if any
+        logging.getLogger("error_logger").error(traceback.format_exc())
+        return None
 
 ###### validation name of group and users (must content char and int)
 def validInput(var):
@@ -52,6 +77,14 @@ def deleteUser(username):
 def changeUsername(oldusername, newusername):
     return os.system("usermod -l " + newusername +" "+oldusername)
 
+### function to add user in group
+def addUserToGroup(groupname,username):
+    try:
+        return os.system("usermod -aG " + groupname +" "+username)
+    except:
+         print(f"Failed to add user in group.")                     
+         sys.exit(1)
+
 ### API to get all users  
 @csrf_exempt
 def getAllUsers(request):
@@ -65,13 +98,14 @@ def getAllUsers(request):
                 username = fields[0]
                 uid = fields[2]
                 tab_users.append({"username": username, "uid": uid})
-        # get all the tasks
-        # serialize the task data
+        # get all the users
+        # serialize the users data
         serializer = UserSerializerGet(tab_users, many=True)
         # return a Json response
         return JsonResponse(serializer.data,safe=False)
 
 ### API to create user 
+from managementGroup.views import getGroupNameById
 @csrf_exempt
 def createUser(request):
     msg=''
@@ -81,11 +115,15 @@ def createUser(request):
         # instanciate with the serializer
         username=data['username']
         password=data['password']
+        groups = data['group']
         if(validInput(username)):
             if(validInput(password)):
                 if addUser(username,password) == 0:
                     msg='user added succesfully'
-                    uid = getUidUser(request)
+                    for i in range(0,len(groups)):
+                        addUserToGroup(getGroupNameById(groups[i]),username)
+                    uid = getUidUser()
+                    data['password'] = encrypt(password)
                     data['uid']=uid
                     serializer = UserSerializerPost(data=data)
                     # check if the sent information is okay
@@ -97,28 +135,10 @@ def createUser(request):
                     # provide a Json Response with the necessary error information
                     return JsonResponse(serializer.errors, status=400)
                 else:
+                    addUserToGroup("yy",username)
                     msg = "useradd: user '"+username+ "' already exists"
+                    return JsonResponse({"msg":msg}, status=400)
         
-            
-        
-        # if(serializer.is_valid()):
-        #     if(validInput(username)):
-        #         if(validInput(password)):
-        #             # form.save()
-        #             if addUser(username,password) == 0:
-        #                 msg='user added succesfully'
-        #                 uid = getUidUser(request)
-        #                 # if okay, save it on the database
-        #                 # serializer.save()
-        #                 # print(uid)
-        #             else:
-        #                 msg = "useradd: user '"+username+ "' already exists"
-        #     # provide a Json Response with the data that was saved
-        #     return JsonResponse({"msg":msg}, status=201)
-        #     # provide a Json Response with the necessary error information
-        # return JsonResponse(serializer.errors, status=400)
-
-
 ### API to delete group
 @csrf_exempt   
 def delete_user(request):
@@ -214,7 +234,28 @@ def change_username(request):
         else:
             msg = "invalid "+oldusername
             return JsonResponse({"msg":msg})
-       
+
+### API de create permission 
+@csrf_exempt
+def createPermission(request):
+    msg=''
+    if(request.method == 'POST'):
+        # parse the incoming information
+        data = JSONParser().parse(request)
+        # instanciate with the serializer
+        name=data['name']
+        context=data['context']
+        serializer = PermissionSerializer(data=data)
+        # check if the sent information is okay
+        if(serializer.is_valid()):
+            # if okay, save it on the database
+            serializer.save()
+            msg ='Permission added succesfully'
+            # provide a Json Response with the data that was saved
+            return JsonResponse({"msg":msg}, status=201)
+            # provide a Json Response with the necessary error information
+        return JsonResponse(serializer.errors, status=400)
+
 ### function to auth
 def authenticate(username, password):
     service = 'login'
@@ -262,20 +303,3 @@ def authentifacation2(request):
             msg = "Authentication failed."
             return JsonResponse({"msg":msg})
         
-
-# # Usage example
-# username = input("Enter your username: ")
-# password = input("Enter your password: ")
-
-# if authenticate(username, password):
-#     print("Authentication successful")
-# else:
-#     print("Authentication failed")
-
-
-### function to get UID from system
-def getUidUser(request):
-    return subprocess.run(["getent", "passwd"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
-
-
-

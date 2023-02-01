@@ -12,4 +12,5 @@ urlpatterns = [
     path('authentification', views.authentification, name="authentification"),
     path('authentification2', views.authentifacation2, name="authentification2"),
     path('getUidUser', views.getUidUser, name="getUidUser"),
+    path('addPermission', views.createPermission, name="addPermission"),
 ]

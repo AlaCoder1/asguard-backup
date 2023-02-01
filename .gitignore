@@ -4,3 +4,5 @@
 /static/
 npm-debug.log
 yarn-error.log
+
+/managementUsers/migrations/__pycache__/*

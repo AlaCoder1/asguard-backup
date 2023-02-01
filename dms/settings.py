@@ -82,12 +82,19 @@ WSGI_APPLICATION = 'dms.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+DATABASES = {  
+    'default': {  
+        'ENGINE': 'django.db.backends.mysql',  
+        'NAME': 'testbd',  
+        'USER': 'root',  
+        'PASSWORD': '',  
+        'HOST': '127.0.0.1',  
+        'PORT': '3306',  
+        'OPTIONS': {  
+            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"  
+        }  
+    }  
+}  
 
 
 # Password validation
@@ -147,3 +154,5 @@ else:
     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 ENCORE_ENTRYPOINTS_FILE = os.path.join(BASE_DIR, 'static') + '/entrypoints.json'
 #ENCORE_ENTRYPOINTS_FILE= '/home/oussema/Documents/numeryx/newdms/dms/public/build/entrypoints.json'
+
+ENCRYPT_KEY= "57-xmiMq0yop7uD7Aq3j4PNUOgZhradICh2BKBnIdB0="

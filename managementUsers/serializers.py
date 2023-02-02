@@ -15,6 +15,11 @@ class UserSerializerPost(serializers.ModelSerializer):
         model = User
         fields =  ('username', 'password','fullname', 'email','role', 'uid', 'group','permission')
         
+class UserSerializerPostWithoutGroupAndPermission(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields =  ('username', 'password','fullname', 'email','role', 'uid')
+        
         
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:

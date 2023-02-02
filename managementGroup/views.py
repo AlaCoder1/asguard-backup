@@ -9,6 +9,7 @@ import json
 import re
 from rest_framework.parsers import JSONParser 
 import grp
+import mysql.connector  
 # Create your views here.
 
 ###### validation name of group and users (must content char and int)
@@ -70,16 +71,12 @@ def group_exists(group_name):
         return False
 
 ### API to get all groups   
-# import mysql.connector  
-# cnx  = mysql.connector.connect(
-#   host="localhost",
-#   user="root",
-#   password="",
-#   database="testbd"
-# )    
+
+    
 @csrf_exempt
 def getAllGroups(request):
     if(request.method == 'GET'):
+        print(getAllUsersFromGroup(6))
         result = subprocess.run(["getent", "group"], capture_output=True)
         output = result.stdout.decode()
         tab_groups= []
@@ -129,6 +126,9 @@ def deleteGroup(request):
         data = json.loads(request.body)
         groupname = data['groupname'] 
         delete_group(groupname)
+        # id = data['id']
+        # group = Group.objects.filter(id=id)
+        # group.delete()
         # return a no content response.
         return HttpResponse("delete succesfully",status=200) 
     
@@ -174,5 +174,24 @@ def getGroupNameById(pk):
         group = Group.objects.get(id=pk)
         return str(group)
     
-        
+
+from dms.settings import DATABASES
+cnx  = mysql.connector.connect(
+        host=DATABASES['default']['HOST'],
+        user=DATABASES['default']['USER'],
+        password=DATABASES['default']['PASSWORD'],
+        database=DATABASES['default']['NAME']
+    )
+def getAllUsersFromGroup(id):
+    mycursor = cnx.cursor()
+    sql  = "SELECT username FROM `User_group` INNER JOIN User on User_group.user_id = User.id where User_group.group_id = %s"
+    adr = (id, )
+    mycursor.execute(sql, adr)
+    myresult = mycursor.fetchall()
+    list = []
+    for x in myresult:
+            list.append(x[0])
+
+    return(list)
+    
     

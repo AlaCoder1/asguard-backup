@@ -140,6 +140,7 @@ def getAllUsers(request):
         # return a Json response
         return JsonResponse(serializer.data,safe=False)
 
+
 ### API to create user 
 from managementGroup.views import getGroupNameById
 @csrf_exempt
@@ -148,37 +149,44 @@ def createUser(request):
     if(request.method == 'POST'):
         # parse the incoming information
         data = JSONParser().parse(request)
-        print(data)
         # instanciate with the serializer
         username=data['username']
         password=data['password']
-        groups = data['group']
         groupname = {"groupname": username}
         if(validInput(username)):
             if(validInput(password)):
                 if addUser(username,password) == 0:
                     msg='user added succesfully'
-                    for i in range(0,len(groups)):
-                        addUserToGroup(getGroupNameById(groups[i]),username)
                     uid = getUidUser()
                     data['password'] = encrypt(password)
                     data['uid']=uid
-                    serializer = UserSerializerPost(data=data)
+                    if ('group' in data):
+                        groups = data['group']
+                        for i in range(0,len(groups)):
+                            addUserToGroup(getGroupNameById(groups[i]),username)
+                        serializerUser = UserSerializerPost(data=data)
+                    else:
+                        serializerUser = UserSerializerPostWithoutGroupAndPermission(data=data)
                     gid = getUidGroup()
                     groupname['gid']=gid
-                    serializer = GroupSerializer(data=groupname)
+                    serializerGroup = GroupSerializer(data=groupname)
                     # check if the sent information is okay
-                    if(serializer.is_valid()):
-                        # if okay, save it on the database
-                        serializer.save()
-                        # provide a Json Response with the data that was saved
-                        return JsonResponse({"msg":msg}, status=201)
+                    if(serializerUser.is_valid()):
+                        if(serializerGroup.is_valid()):
+                            # if okay, save it on the database
+                            serializerUser.save()
+                            serializerGroup.save()
+                            # provide a Json Response with the data that was saved
+                            return JsonResponse({"msg":msg}, status=201)
+                        # provide a Json Response with the necessary error information
+                        return JsonResponse(serializerUser.errors, status=400)
                     # provide a Json Response with the necessary error information
-                    return JsonResponse(serializer.errors, status=400)
+                    return JsonResponse(serializerUser.errors, status=400)
                 else:
                     msg = "useradd: user '"+username+ "' already exists"
                     return JsonResponse({"msg":msg}, status=400)
-        
+
+
 ### API to delete group
 @csrf_exempt   
 def delete_user(request):
@@ -186,7 +194,10 @@ def delete_user(request):
         # get data from body
         data = json.loads(request.body)
         username = data['username']
+        id = data['id']
         deleteUser(username)
+        user = User.objects.filter(id=id)
+        user.delete()
         # return a no content response.
         return HttpResponse("delete succesfully",status=200) 
     

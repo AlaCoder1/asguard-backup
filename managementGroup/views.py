@@ -194,4 +194,30 @@ def getAllUsersFromGroup(id):
 
     return(list)
     
-    
+#change groupname if groupname=username
+def change_groupname_username(oldgroupname,Newgroupname):
+        msg=''
+        if validInput(oldgroupname):
+            if group_exists(oldgroupname):
+                if validInput(Newgroupname):
+                    if group_exists(Newgroupname):
+                        msg = f"Username {Newgroupname} exists."
+                        return JsonResponse({"msg":msg})
+                    else:
+                        changeGroupname(oldgroupname,Newgroupname)
+                        reporter = Group.objects.get(groupname=oldgroupname)
+                        reporter.groupname =Newgroupname
+                        reporter.save()
+                        msg="updated succesfully"
+                        return JsonResponse({"msg":msg})
+                else:
+                    msg = "invalid "+Newgroupname
+                    return JsonResponse({"msg":msg})
+            else:
+                msg = f"Username {oldgroupname} does not exist."
+                return JsonResponse({"msg":msg})
+        else:
+            msg = "invalid "+oldgroupname
+            return JsonResponse({"msg":msg})
+        
+        

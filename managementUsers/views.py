@@ -80,7 +80,7 @@ def changeUsername(oldusername, newusername):
     return os.system("usermod -l " + newusername +" "+oldusername)
 
 ### function to add user in group
-def addUserToGroup(groupname,username):
+def add_user_group(groupname,username):
     try:
         return os.system("usermod -aG " + groupname +" "+username)
     except:
@@ -163,7 +163,7 @@ def createUser(request):
                     if ('group' in data):
                         groups = data['group']
                         for i in range(0,len(groups)):
-                            addUserToGroup(getGroupNameById(groups[i]),username)
+                            add_user_group(getGroupNameById(groups[i]),username)
                         serializerUser = UserSerializerPost(data=data)
                     else:
                         serializerUser = UserSerializerPostWithoutGroupAndPermission(data=data)
@@ -258,6 +258,16 @@ def change_password(request):
         # return JsonResponse(serializer.errors, status=400)
     
 ### API to change username
+#function  to check if username=groupname 
+def getUserGroups(username):
+        out =os.popen("id "+username).readline().strip('\n').strip()
+        if (out[out.find("groups")+len("groups")+1:len(out)].find(username)!=-1):
+            return True
+        return False
+    
+
+from django.db.models import F
+
 @csrf_exempt
 def change_username(request):
     msg=''
@@ -273,8 +283,16 @@ def change_username(request):
                         msg = f"Username {newusername} exists."
                         return JsonResponse({"msg":msg})
                     else:
-                        changeUsername(oldusername,newusername)
-                        msg="updated succesfully"
+                        if getUserGroups(oldusername)  :
+                          changeUsername(oldusername,newusername)
+                          reporter = User.objects.get(username=oldusername)
+                          reporter.username =newusername
+                          reporter.save()
+                          change_groupname_username(oldusername,newusername)                        
+                          msg="updated groupname and username succesfully"
+                        else:
+                            changeUsername(oldusername,newusername)
+                            msg="updated only username succesfully"
                         return JsonResponse({"msg":msg})
                 else:
                     msg = "invalid "+newusername
@@ -353,4 +371,115 @@ def authentifacation2(request):
         else:
             msg = "Authentication failed."
             return JsonResponse({"msg":msg})
+    
+
+
+
+
+#API TO DELETE USER FROM GROUP (user_group)
+# def add_user_group(groupname,username):
+#     return os.system("gpasswd -a "+username+" "+groupname) 
+
+
+
+@csrf_exempt
+def addUserToGroup(request):
+    msg=''
+    if(request.method == 'POST'):
+        # parse the incoming information
+        data = JSONParser().parse(request)
+        # instanciate with the serializer
+        groups=data['groups']
+        username=data['username']
+        for gid in groups:
+           if(validInput(username)):
+             if username_exists(username):
+               reporter = User.objects.get(username=username)
+               #reporter.group.add(1,2,3,5)
+               groupname=Group.objects.get(pk=gid)
+               
+               if add_user_group(str(groupname),username)==0:
+                      reporter.group.add(gid)
+                      msg="add user to group succesfully!!"
+               else:      
+                      msg="add fail!!" 
+                
+             else:        
+                  msg="add fail! : username non exists"
+           else:
+                  msg="add fail! : invalid username "
+            
+        return JsonResponse({"msg":msg})
+
+
+
+
+
+
+#delete user from group
+def delete_user_group(groupname,username):
+    return os.system("gpasswd -d "+username+" "+groupname) 
+
+
+
+@csrf_exempt
+def deleteUserFromGroup(request):
+    msg=''
+    if(request.method == 'POST'):
+        # parse the incoming information
+        data = JSONParser().parse(request)
+        # instanciate with the serializer
+        groups=data['groups']
+        username=data['username']
+        for gid in groups:
+           if(validInput(username)):
+             if username_exists(username):
+               reporter = User.objects.get(username=username)
+               #reporter.group.add(1,2,3,5)
+               
+               groupname=reporter.group.get(pk=gid)
+              
+               if delete_user_group(str(groupname),username)==0:
+                      reporter.group.remove(gid)
+                      msg="delete user from group succesfully!!"
+               else:      
+                    msg="delete fail!!" 
+                
+             else:        
+                     msg="delete fail! : username non exists"
+           else:
+                    msg="delete fail! : invalid username "
+            
+        return JsonResponse({"msg":msg})
+            
+           
+ 
+ 
+ 
+         
+                
+                
+                
+                   
+def update_intermediaire(username):
+    reporter = User.objects.get(username=username)
+    #print(type(reporter))
+    #groupname=reporter.group.get(pk=2)
+    
+    #print(groupname)
+    #reporter.group.add(1,2,3,5)
+    #print(reporter.group.filter(pk=1))
+    # if (reporter.group.get(pk=1)):
+    #    reporter.group.remove(1)
+    #print(reporter.group.all())
+    print(reporter.group.all())
+    print("hello",reporter.group.get(pk=1))
+    # r=reporter.group.get(pk=1)
+    # r.set(3)
+    
+    # print(r)
+    # print(reporter.group.all())
+    
+update_intermediaire("twitter")
+    
         

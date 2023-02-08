@@ -1,0 +1,59 @@
+version: "3.3"
+services:
+  app:
+    build: .
+    container_name: app-django-container
+    # command: "python3 manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8080:8000"
+    # env_file: .env
+    volumes:
+      - .:/usr/src/app
+    depends_on:
+      - db
+
+
+
+  # db:
+  #   image: postgres
+  #   volumes:
+  #     - ./data/db:/var/lib/postgresql/data
+  #   environment:
+  #     - POSTGRES_DB=postgres
+  #     - POSTGRES_USER=postgres
+  #     - POSTGRES_PASSWORD=postgres
+  #   container_name: postgres_db
+
+
+
+  db:
+    image: "postgres:latest"
+    container_name: app-db-container
+    environment:
+      # POSTGRES_PASSWORD: mypassword
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+
+    volumes:
+      - pgdb:/var/lib/postgresql/data
+  #     #- ./data/db:/var/lib/postgresql/data
+
+
+  nginx:
+    image: nginx:1.19-alpine
+    container_name: monsite_nginx
+    volumes:
+      - sitestatics:/home/app/static
+    #  - sitemedias:/home/app/web/medias
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    ports:
+      - '80:80'
+
+
+volumes:
+   pgdb:
+   sitestatics:
+  #  sitemedias:

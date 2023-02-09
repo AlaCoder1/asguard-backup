@@ -32,6 +32,12 @@ Vagrant.configure("2") do |config|
           $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
           sudo apt-get update -y
           sudo apt-get install docker-ce docker-ce-cli containerd.io -y
+         #Install docker-compose
+         echo "--------------------Installing Docker-compose--------------------" 
+         sudo curl -L "https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+         sudo chmod +x /usr/local/bin/docker-compose
+         sudo ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+         sudo chmod 666 /var/run/docker.sock
           #Install ansible
           echo "--------------------Installing Ansible--------------------"
           sudo apt update -y
@@ -45,7 +51,8 @@ Vagrant.configure("2") do |config|
           echo "--------------------Install JDK--------------------"
           sudo apt-get update -y
           sudo apt-get install default-jdk -y
-          #sudo D:\VirtualBox\Slave1-Jenkins/welcome.sh
+          cd /home/vagrant
+          mkdir newdms
         
        SHELL
     

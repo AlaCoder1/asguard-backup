@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-p6qmvrnn#8ig(1*(bpu^tcc4-jrtd8%ml-!+@xmpqnm238mumn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS =  ['*']
 
 
 # Application definition
@@ -84,15 +84,14 @@ WSGI_APPLICATION = 'dms.wsgi.application'
 
 DATABASES = {  
     'default': {  
-        'ENGINE': 'django.db.backends.mysql',  
-        'NAME': 'testbd',  
-        'USER': 'root',  
-        'PASSWORD': '',  
-        'HOST': '127.0.0.1',  
-        'PORT': '3306',  
-        'OPTIONS': {  
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"  
-        }  
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres',
+        'PASSWORD': 'mypassword',
+        'HOST': 'db',
+        'PORT': 5432,
+        # 'ATOMIC_REQUESTS': True,
+
     }  
 }  
 

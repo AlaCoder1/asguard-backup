@@ -12,5 +12,4 @@ urlpatterns = [
     path('userChangePW', views.changePassword, name="userChangePW"),
     path('authentification', views.authentification, name="authentification"),
     path('authentification2', views.authentifacation2, name="authentification2"),
-
 ]

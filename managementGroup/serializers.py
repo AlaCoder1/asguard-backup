@@ -4,5 +4,5 @@ from .models import *
 class GroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
-        fields =  ('groupname', 'gid')
+        fields =  ('groupname', 'gid','createdBySystem')
         

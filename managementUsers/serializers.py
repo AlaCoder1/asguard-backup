@@ -10,10 +10,16 @@ class UserSerializerGet(serializers.ModelSerializer):
 
 class UserSerializerPost(serializers.ModelSerializer):
     group = serializers.PrimaryKeyRelatedField(many=True,queryset=Group.objects.all())
-    permission=serializers.PrimaryKeyRelatedField(many=True,queryset=Permission.objects.all())
+    # permission=serializers.PrimaryKeyRelatedField(many=True,queryset=Permission.objects.all())
     class Meta:
         model = User
-        fields =  ('username', 'password','fullname', 'email','role', 'uid', 'group','permission')
+        # fields =  ('username', 'password','fullname', 'email','role', 'uid', 'group','permission')
+        fields =  ('username', 'password','fullname', 'email','role', 'uid', 'group')
+        
+class UserSerializerPostWithoutGroupAndPermission(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields =  ('username', 'password','fullname', 'email','role', 'uid')
         
         
 class PermissionSerializer(serializers.ModelSerializer):

@@ -11,4 +11,4 @@
     ignore_errors: yes
     
   - name: build the existing dockerfile & run container
-    command: docker-compose up
+    command: docker-compose up -d

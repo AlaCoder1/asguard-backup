@@ -7,7 +7,6 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 from rest_framework.parsers import JSONParser
 from django.core import serializers
-import mysql.connector
 from .functions import *
 # Create your views here.
 
@@ -134,12 +133,7 @@ def changeGroupname(request,id):
             return JsonResponse({"msg": msg})
 
 
-cnx = mysql.connector.connect(
-    host=DATABASES['default']['HOST'],
-    user=DATABASES['default']['USER'],
-    password=DATABASES['default']['PASSWORD'],
-    database=DATABASES['default']['NAME']
-)
+
 
 
 def getAllUsersFromGroup(id):

@@ -7,7 +7,6 @@ services:
     # ports:
     #   - "8080:8000"
     # env_file: .env
-    #jihed
     volumes:
       #- .:/usr/src/app
       - sitestatics:/app/static_assets/ 

@@ -27,8 +27,7 @@ RUN yarn install
 RUN yarn build
 
 EXPOSE 8000
-
-CMD ["gunicorn", "--bind", ":8000", "--workers", "1", "dms.wsgi:application"]
-#CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# en prod #CMD ["gunicorn", "--bind", ":8000", "--workers", "1", "dms.wsgi:application"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 

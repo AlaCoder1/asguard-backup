@@ -82,6 +82,7 @@ def createGroup(request):
 #done✔
 @csrf_exempt
 def deleteGroup(request,id):
+    msg=''
     if (request.method == 'DELETE'):
         group = Group.objects.get(id=id)
         if delete_group(group.groupname)==0:

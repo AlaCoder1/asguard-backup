@@ -5,7 +5,5 @@
 npm-debug.log
 yarn-error.log
 
-/managementUsers/migrations/
-/managementUsers/__pycache__/
 /managementGroup/migrations/
-/managementGroup/__pycache__/
+/managementUsers/__pycache__/

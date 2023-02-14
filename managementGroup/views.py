@@ -1,6 +1,6 @@
 from django.core import serializers
 from dms.settings import DATABASES
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse
 from .models import *
 from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
@@ -28,7 +28,7 @@ def getAllGroups(request):
             res[i]['fields'].pop('createdBySystem')
             res[i]['fields']['id'] = id
             list_group.append(res[i]['fields'])
-        # print(getAllUsersFromGroup(6))
+
         # return a Json response
         return JsonResponse(list_group, safe=False)
 
@@ -88,6 +88,8 @@ def deleteGroup(request,id):
         if delete_group(group.groupname)==0:
             group.delete()
             msg = "delete succesfully"
+        else:
+            msg="delete failed"
         # return a no content response.
         return JsonResponse({"msg": msg})
 
@@ -134,44 +136,21 @@ def changeGroupname(request,id):
             return JsonResponse({"msg": msg})
 
 
-
-
-
-def getAllUsersFromGroup(id):
-    mycursor = cnx.cursor()
-    sql = "SELECT username FROM `User_group` INNER JOIN User on User_group.user_id = User.id where User_group.group_id = %s"
-    adr = (id, )
-    mycursor.execute(sql, adr)
-    myresult = mycursor.fetchall()
-    list = []
-    for x in myresult:
-        list.append(x[0])
-    return (list)
-
 # function to change groupname if groupname=username
 
 
 def change_groupname_username(oldgroupname, Newgroupname):
     msg = ''
-    if validInput(oldgroupname):
-        if group_exists(oldgroupname):
-            if validInput(Newgroupname):
-                if group_exists(Newgroupname):
-                    msg = f"Username {Newgroupname} exists."
-                    return JsonResponse({"msg": msg})
-                else:
-                    change_groupname(oldgroupname, Newgroupname)
-                    reporter = Group.objects.get(groupname=oldgroupname)
-                    reporter.groupname = Newgroupname
-                    reporter.save()
-                    msg = "updated succesfully"
-                    return JsonResponse({"msg": msg})
-            else:
-                msg = "invalid "+Newgroupname
-                return JsonResponse({"msg": msg})
-        else:
-            msg = f"Username {oldgroupname} does not exist."
-            return JsonResponse({"msg": msg})
-    else:
-        msg = "invalid "+oldgroupname
+    if group_exists(Newgroupname):
+        msg = f"Username {Newgroupname} exists."
         return JsonResponse({"msg": msg})
+    else:
+        if change_groupname(oldgroupname, Newgroupname) ==0:
+            reporter = Group.objects.get(groupname=oldgroupname)
+            reporter.groupname = Newgroupname
+            reporter.save()
+            msg = "updated succesfully"
+            return JsonResponse({"msg": msg})
+
+   
+

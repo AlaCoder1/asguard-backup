@@ -109,14 +109,18 @@ def createUser(request):
 
 @csrf_exempt
 def delete_user(request, id):
+    msg=""
     if (request.method == 'DELETE'):
         user = User.objects.get(id=id)
         group = Group.objects.filter(gid=user.uid)
         if deleteUser(user.username) == 0:
             user.delete()
             group.delete()
+            msg = "delete succesfully"
+        else:
+            msg="delete failed"
         # return a no content response.
-        return HttpResponse("delete succesfully", status=200)
+        return JsonResponse({"msg": msg})
 
 
 # API to update user
@@ -150,35 +154,33 @@ def modifyUser(request, id):
                 msg = f"newusername  exists."
                 return JsonResponse({"msg": msg})
             else:
+                userObject.username = newusername
                 if checkSameGroupnameWithUsername(oldusername):
                     changeUsername(newusername, oldusername)
-                    userObject.username = newusername
                     change_groupname_username(oldusername, newusername)
                     msg = "updated groupname and username succesfully"
                 else:
                     changeUsername(newusername, oldusername)
-                    userObject.username = newusername
                     msg = "updated only username succesfully"
+                    
+                
         else:
             msg = "invalid "+newusername
         userObject.fullname = newfullname
         userObject.email = newmail
         userObject.role = newrole
-        groups = data['group']
-        print(groups)
-        userJson['group'] = groups
-        print(userJson['group'])
-        testByGroup = Group.objects.filter(user__id=id)
-        testByGroupDict = serializers.serialize("json", testByGroup)
-        restestByGroup = json.loads(testByGroupDict)
-        for k in restestByGroup:
-            print(k['fields']['groupname'])
-            delete_user_group(k['fields']['groupname'], newusername)
-        for m in data['group']:
-            print(m)
-            gg = Group.objects.get(id=m)
-            add_user_group(gg.groupname, newusername)
-        userObject.group.set(userJson['group'])
+        if ('group' in data):
+            groups = data['group']
+            userJson['group'] = groups
+            testByGroup = Group.objects.filter(user__id=id)
+            testByGroupDict = serializers.serialize("json", testByGroup)
+            restestByGroup = json.loads(testByGroupDict)
+            for k in restestByGroup:
+                delete_user_group(k['fields']['groupname'], newusername)
+            for m in data['group']:
+                gg = Group.objects.get(id=m)
+                add_user_group(gg.groupname, newusername)
+            userObject.group.set(userJson['group'])
         userObject.save()
     return JsonResponse({"data": data, "msg": msg})
 

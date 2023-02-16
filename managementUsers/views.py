@@ -112,7 +112,7 @@ def delete_user(request, id):
     msg=""
     if (request.method == 'DELETE'):
         user = User.objects.get(id=id)
-        group = Group.objects.filter(gid=user.uid)
+        group = Group.objects.filter(groupname=user.username)
         if deleteUser(user.username) == 0:
             user.delete()
             group.delete()

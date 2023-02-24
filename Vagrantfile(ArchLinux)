@@ -1,0 +1,59 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+Vagrant.configure("2") do |config|
+  config.vm.box_download_insecure=true
+  config.vm.box = "archlinux/archlinux"
+  config.vm.network "public_network", :adapter=>2 , type: "dhcp", :bridge => 'en1: Realtek PCIe GbE Family Controller'
+  config.vm.hostname = "iso-arch"
+  config.vm.provider "virtualbox" do |vb|
+    # Display the VirtualBox GUI when booting the machine
+    vb.gui = false
+  
+    # Customize the amount of memory on the VM:
+    vb.memory = "3072"
+  end
+  config.vm.provision "shell", inline: <<-SHELL
+  sudo pacman -Sy
+  yes | sudo pacman -Sy git
+  yes | sudo pacman -Sy docker
+  yes | sudo pacman -Sy docker-compose
+  yes | sudo pacman -Sy ansible
+  #Add docker ton sudo group
+  echo "--------------------Add Docker to Sudo group--------------------"
+  sudo groupadd docker && sudo usermod -aG docker $USER && newgrp docker && sudo chmod 777 /var/run/docker.sock
+  sudo systemctl start docker
+  echo "--------------------enabled SSH--------------------"
+  #create_backup
+  cat /etc/ssh/sshd_config > tmp_sshd_config
+  #modify config
+  sudo sed -i 's/PasswordAuthentication no/PasswordAuthentication yes/g' tmp_sshd_config
+  sudo sed -i 's/PermitRootLogin prohibit-password/PermitRootLogin yes/g' tmp_sshd_config
+  sudo sed -i 's/PubkeyAuthentication yes/PubkeyAuthentication no/g' tmp_sshd_config
+  #uncomment_config
+  sudo sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/g' tmp_sshd_config
+  sudo sed -i 's/#PermitRootLogin yes/PermitRootLogin yes/g' tmp_sshd_config
+  sudo sed -i 's/#PubkeyAuthentication no/PubkeyAuthentication no/g' tmp_sshd_config
+  #save_sshd_config
+  sudo cat tmp_sshd_config > /etc/ssh/sshd_config
+  sudo rm -r tmp_sshd_config
+  #restart_service
+  sudo systemctl restart sshd
+  sudo -i
+  ssh-keygen -t rsa -N "" -f /root/.ssh/id_rsa
+  sudo ip a
+  sudo cat /root/.ssh/id_rsa.pub
+  echo "--------------------@IP:8080--------------------"
+  sleep 1m
+  cd /home/vagrant
+  echo "StrictHostKeyChecking no" > ~/.ssh/config
+  git clone -b hanine git@10.1.12.65:OO/newdms.git
+  cd newdms
+  ansible-playbook playbook-dcompose.yml
+
+ 
+SHELL
+
+
+end

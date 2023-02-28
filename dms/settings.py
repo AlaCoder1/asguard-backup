@@ -44,7 +44,9 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     'managementUsers',
-    'managementGroup'
+    'managementGroup',
+    "managementServers",
+    "settings"
 ]
 
 MIDDLEWARE = [
@@ -84,14 +86,13 @@ WSGI_APPLICATION = 'dms.wsgi.application'
 
 DATABASES = {  
     'default': {  
-        'ENGINE': 'django.db.backends.postgresql',
+       'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': 'mypassword',
-        'HOST': 'db',
+        'HOST': 'localhost',
         'PORT': 5432,
         # 'ATOMIC_REQUESTS': True,
-
     }  
 }  
 

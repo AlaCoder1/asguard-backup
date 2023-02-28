@@ -144,3 +144,18 @@ def authenticate(username, password):
 #             groups_users = fields[-1].split(',')
 #     # groups_users.append(groupname)
 #     return groups_users
+
+
+def decrypt(encrypted_text):
+    try:
+        # get the key from settings
+        cipher_suite = Fernet(settings.ENCRYPT_KEY)  # key should be byte
+        # decode from urlsafe base64 format
+        encrypted_text = base64.urlsafe_b64decode(encrypted_text)
+        # decrypt the text and convert it to string
+        decrypted_text = cipher_suite.decrypt(encrypted_text).decode('ascii')
+        return decrypted_text
+    except Exception as e:
+        # log the error if any
+        logging.getLogger("error_logger").error(traceback.format_exc())
+        return None

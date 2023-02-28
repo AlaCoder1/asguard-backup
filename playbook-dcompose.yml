@@ -10,5 +10,8 @@
     command: docker rmi newdms_app
     ignore_errors: yes
     
-  - name: build the existing dockerfile & run container
+  - name: build the existing dockerfile
+    command: docker-compose build
+
+  - name: run container
     command: docker-compose up -d

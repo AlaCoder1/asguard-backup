@@ -9,6 +9,14 @@ import json
 from rest_framework.parsers import JSONParser
 from django.core import serializers
 from .functions import *
+from rest_framework.decorators import permission_classes
+####
+from django.contrib.auth import get_user_model
+from rest_framework import views, permissions, status
+from rest_framework.permissions import IsAuthenticated
+from .authentication import JWTAuthentication
+
+
 # Create your views here.
 
 # API to get all users
@@ -20,17 +28,20 @@ from .functions import *
 def getAllUsers(request):
     list_users = []
     if (request.method == 'GET'):
-        users = User.objects.all()
-        userDict = serializers.serialize("json", users)
-        res = json.loads(userDict)
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields'].pop('password')
-            res[i]['fields']['id'] = id
-            list_users.append(res[i]['fields'])
-        return JsonResponse(list_users, safe=False)
+        if JWTAuthentication.authenticate(request) is not None:
+            users = User.objects.all()
+            userDict = serializers.serialize("json", users)
+            res = json.loads(userDict)
+            for i in range(0, len(res)):
+                res[i].pop('model')
+                id = res[i]['pk']
+                res[i].pop('pk')
+                res[i]['fields'].pop('password')
+                res[i]['fields']['id'] = id
+                list_users.append(res[i]['fields'])
+            return JsonResponse(list_users, safe=False)
+        else:
+            return JsonResponse({"msg":"Invalid token"}, safe=False)
 
 # API to get one user
 
@@ -69,7 +80,7 @@ def createUser(request):
                 if addUser(username, password) == 0:
                     msg = 'user added succesfully'
                     uid = getUidUser()
-                    data['password'] = encrypt(password)
+                    data['password'] = Hash(password)
                     data['uid'] = uid
                     if ('group' in data):
                         groups = data['group']
@@ -130,59 +141,62 @@ def delete_user(request, id):
 @csrf_exempt
 def modifyUser(request, id):
     if (request.method == 'PUT'):
-        userById = User.objects.filter(id=id)
-        userDict = serializers.serialize("json", userById)
-        res = json.loads(userDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields'].pop('password')
-        res[0]['fields']['id'] = id
-        userJson = res[0]['fields']
-        oldusername = userJson['username']
-        data = json.loads(request.body)
-        newusername = data['username']
-        newfullname = data['fullname']
-        newmail = data['email']
-        newrole = data['role']
-        userObject = User.objects.get(id=id)
-        user = userObject.__dict__
-        user['group'] = userJson['group']
-        user['permission'] = userJson['permission']
-        if validInput(newusername):
-            if username_exists(newusername) and newusername != oldusername:
-                msg = f"newusername  exists."
-                return JsonResponse({"msg": msg})
-            else:
-                userObject.username = newusername
-                if checkSameGroupnameWithUsername(oldusername):
-                    changeUsername(newusername, oldusername)
-                    change_groupname_username(oldusername, newusername)
-                    msg = "updated groupname and username succesfully"
+        if JWTAuthentication.authenticate(request) is not None:
+                userById = User.objects.filter(id=id)
+                userDict = serializers.serialize("json", userById)
+                res = json.loads(userDict)
+                res[0].pop('model')
+                id = res[0]['pk']
+                res[0].pop('pk')
+                res[0]['fields'].pop('password')
+                res[0]['fields']['id'] = id
+                userJson = res[0]['fields']
+                oldusername = userJson['username']
+                data = json.loads(request.body)
+                newusername = data['username']
+                newfullname = data['fullname']
+                newmail = data['email']
+                newrole = data['role']
+                userObject = User.objects.get(id=id)
+                user = userObject.__dict__
+                user['group'] = userJson['group']
+                user['permission'] = userJson['permission']
+                if validInput(newusername):
+                    if username_exists(newusername) and newusername != oldusername:
+                        msg = f"newusername  exists."
+                        return JsonResponse({"msg": msg})
+                    else:
+                        userObject.username = newusername
+                        if checkSameGroupnameWithUsername(oldusername):
+                            changeUsername(newusername, oldusername)
+                            change_groupname_username(oldusername, newusername)
+                            msg = "updated groupname and username succesfully"
+                        else:
+                            changeUsername(newusername, oldusername)
+                            msg = "updated only username succesfully"
+                            
+                        
                 else:
-                    changeUsername(newusername, oldusername)
-                    msg = "updated only username succesfully"
-                    
-                
+                    msg = "invalid "+newusername
+                userObject.fullname = newfullname
+                userObject.email = newmail
+                userObject.role = newrole
+                if ('group' in data):
+                    groups = data['group']
+                    userJson['group'] = groups
+                    testByGroup = Group.objects.filter(user__id=id)
+                    testByGroupDict = serializers.serialize("json", testByGroup)
+                    restestByGroup = json.loads(testByGroupDict)
+                    for k in restestByGroup:
+                        delete_user_group(k['fields']['groupname'], newusername)
+                    for m in data['group']:
+                        gg = Group.objects.get(id=m)
+                        add_user_group(gg.groupname, newusername)
+                    userObject.group.set(userJson['group'])
+                userObject.save()
+                return JsonResponse({"data": data, "msg": msg})
         else:
-            msg = "invalid "+newusername
-        userObject.fullname = newfullname
-        userObject.email = newmail
-        userObject.role = newrole
-        if ('group' in data):
-            groups = data['group']
-            userJson['group'] = groups
-            testByGroup = Group.objects.filter(user__id=id)
-            testByGroupDict = serializers.serialize("json", testByGroup)
-            restestByGroup = json.loads(testByGroupDict)
-            for k in restestByGroup:
-                delete_user_group(k['fields']['groupname'], newusername)
-            for m in data['group']:
-                gg = Group.objects.get(id=m)
-                add_user_group(gg.groupname, newusername)
-            userObject.group.set(userJson['group'])
-        userObject.save()
-    return JsonResponse({"data": data, "msg": msg})
+            return JsonResponse({"msg":"Invalid token"}, safe=False)
 
 
 # API de create permission
@@ -283,3 +297,45 @@ def authentifacation2(request):
         else:
             msg = "Authentication failed."
             return JsonResponse({"msg": msg})
+        
+        
+
+
+
+
+@csrf_exempt
+
+def authentification_JWT(request):
+    if (request.method=="POST"):
+        User = get_user_model()
+        data = json.loads(request.body)
+        username = data['username']
+        password = data['password']
+        serializer = ObtainTokenSerializer(data=data)
+        
+        if (serializer.is_valid()):
+
+            username = serializer.validated_data.get('username')
+            
+            password = Hash(serializer.validated_data.get('password'))
+            if User.objects.filter(username=username).first() is not None: 
+                user = User.objects.filter(username=username).first()
+                
+                print(user.password)
+                print(password)
+                print(user.password==password)
+                # print(user.check_password(password))
+                if user.password==password:
+                    # Generate the JWT token
+                    jwt_token=str(JWTAuthentication.create_jwt(user).decode())
+                    # Expire=str(JWTAuthentication.create_jwt(user)[1])
+                    print("seerializer***",jwt_token)
+                    return JsonResponse({'token': jwt_token})
+                else:
+                    return JsonResponse({'message': 'Incorrect password'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return JsonResponse({'message': 'Invalid username'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+           
+                
+

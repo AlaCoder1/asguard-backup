@@ -1,5 +1,6 @@
 from django.db import models
 from managementGroup.models import *
+from django.contrib.auth.models import AbstractBaseUser
 # Create your models here.
 
 
@@ -12,16 +13,19 @@ class Permission(models.Model):
         return self.name
     
     
-class User(models.Model):
+class User(AbstractBaseUser):
     username = models.CharField(max_length=200, null=True,unique=True)
     password = models.CharField(max_length=800, null=True)
-    fullname = models.CharField(max_length=800, null=True)
     email = models.CharField(max_length=800, null=True)
+    fullname = models.CharField(max_length=800, null=True)
+    
     role = models.CharField(max_length=800, null=True)
     uid = models.IntegerField(null=True,unique=True)
     group = models.ManyToManyField(Group)
     permission=models.ManyToManyField(Permission)
-    
+    is_active=models.BooleanField(default=True)
+    USERNAME_FIELD = 'username'
+    REQUIRED_FIELDS = ['email']
     class Meta:
         db_table = 'User'
         

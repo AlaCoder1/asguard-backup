@@ -12,4 +12,6 @@ urlpatterns = [
     path('userChangePW', views.changePassword, name="userChangePW"),
     path('authentification', views.authentification, name="authentification"),
     path('authentification2', views.authentifacation2, name="authentification2"),
+    path('authentification_JWT',views.authentification_JWT,name="authentification_JWT")
 ]
+

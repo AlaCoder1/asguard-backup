@@ -9,6 +9,10 @@ yarn-error.log
 /managementGroup/__pycache__/
 /managementUsers/__pycache__/
 /managementUsers/migrations/__pycache__/
+/managementServers/__pycache__/
+/managementServers/migrations/__pycache__/
+/settings/__pycache__/
+/settings/migrations/__pycache__/
 /tasks/migrations/__pycache__/
 /tasks/__pycache__/
 /dms/__pycache__/

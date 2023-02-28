@@ -9,26 +9,26 @@ import json
 from rest_framework.parsers import JSONParser
 from django.core import serializers
 from .functions import *
-from rest_framework.decorators import permission_classes
-####
+
 from django.contrib.auth import get_user_model
 from rest_framework import views, permissions, status
-from rest_framework.permissions import IsAuthenticated
 from .authentication import JWTAuthentication
-
-
+from rest_framework.decorators import api_view, permission_classes,authentication_classes
+from rest_framework.permissions import IsAuthenticated,AllowAny
+####
+User=get_user_model()
 # Create your views here.
 
 # API to get all users
 
 # done✔
 
-
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def getAllUsers(request):
     list_users = []
     if (request.method == 'GET'):
-        if JWTAuthentication.authenticate(request) is not None:
             users = User.objects.all()
             userDict = serializers.serialize("json", users)
             res = json.loads(userDict)
@@ -40,15 +40,15 @@ def getAllUsers(request):
                 res[i]['fields']['id'] = id
                 list_users.append(res[i]['fields'])
             return JsonResponse(list_users, safe=False)
-        else:
-            return JsonResponse({"msg":"Invalid token"}, safe=False)
+       
 
 # API to get one user
 
 # done✔
 
-
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def getUser(request, id):
     if (request.method == 'GET'):
         user = User.objects.filter(id=id)
@@ -66,7 +66,9 @@ def getUser(request, id):
 
 # API to create user
 # done✔
-@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([AllowAny])
 def createUser(request):
     msg = ''
     if (request.method == 'POST'):
@@ -117,8 +119,9 @@ def createUser(request):
 
 # done✔
 
-
-@csrf_exempt
+@api_view(['DELETE'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def delete_user(request, id):
     msg=""
     if (request.method == 'DELETE'):
@@ -138,10 +141,11 @@ def delete_user(request, id):
 # done✔
 
 
-@csrf_exempt
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def modifyUser(request, id):
     if (request.method == 'PUT'):
-        if JWTAuthentication.authenticate(request) is not None:
                 userById = User.objects.filter(id=id)
                 userDict = serializers.serialize("json", userById)
                 res = json.loads(userDict)
@@ -195,14 +199,14 @@ def modifyUser(request, id):
                     userObject.group.set(userJson['group'])
                 userObject.save()
                 return JsonResponse({"data": data, "msg": msg})
-        else:
-            return JsonResponse({"msg":"Invalid token"}, safe=False)
+        
 
 
 # API de create permission
 # done✔
-
-@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def addPermission(request):
     msg = ''
     if (request.method == 'POST'):
@@ -226,7 +230,9 @@ def addPermission(request):
 # API to change password user
 
 
-@csrf_exempt
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def changePassword(request):
     if (request.method == 'PUT'):
         data = json.loads(request.body)
@@ -303,7 +309,9 @@ def authentifacation2(request):
 
 
 
-@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([AllowAny])
 
 def authentification_JWT(request):
     if (request.method=="POST"):
@@ -324,18 +332,21 @@ def authentification_JWT(request):
                 print(user.password)
                 print(password)
                 print(user.password==password)
-                # print(user.check_password(password))
                 if user.password==password:
                     # Generate the JWT token
-                    jwt_token=str(JWTAuthentication.create_jwt(user).decode())
-                    # Expire=str(JWTAuthentication.create_jwt(user)[1])
-                    print("seerializer***",jwt_token)
-                    return JsonResponse({'token': jwt_token})
-                else:
-                    return JsonResponse({'message': 'Incorrect password'}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                return JsonResponse({'message': 'Invalid username'}, status=status.HTTP_400_BAD_REQUEST)
                     
+                    jwt_token=str(JWTAuthentication.create_jwt(user).decode())
+                    print("seerializer***",jwt_token)
+                    print(user)
+                    print("request",request.user.is_authenticated)
+                    return JsonResponse({'token': jwt_token})
+                    
+                else:
+                    return JsonResponse({'message': 'Incorrect credentiels'}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_400_BAD_REQUEST)
+                    
+
            
                 
 

@@ -8,13 +8,18 @@ import json
 from rest_framework.parsers import JSONParser
 from django.core import serializers
 from .functions import *
+from rest_framework.decorators import api_view, permission_classes,authentication_classes
+from rest_framework.permissions import IsAuthenticated,AllowAny
+from managementUsers.authentication import JWTAuthentication
 # Create your views here.
 
 
 # API to get all groups
 
 #done✔
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def getAllGroups(request):
     list_group = []
     if (request.method == 'GET'):
@@ -37,7 +42,9 @@ def getAllGroups(request):
 # API to get one group
 
 #done✔
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def getGroup(request, id):
     if (request.method == 'GET'):
         group = Group.objects.get(id=id)
@@ -50,7 +57,9 @@ def getGroup(request, id):
 # API to create group
 
 #done✔
-@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def createGroup(request):
     msg = ''
     if (request.method == 'POST'):
@@ -80,7 +89,9 @@ def createGroup(request):
 # API to delete group
 
 #done✔
-@csrf_exempt
+@api_view(['DELETE'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def deleteGroup(request,id):
     msg=''
     if (request.method == 'DELETE'):
@@ -103,7 +114,9 @@ def updateGroup(request,id):
 # API to change groupname
 
 from managementUsers.models import *
-@csrf_exempt
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def changeGroupname(request,id):
     msg = ''
     if (request.method == 'PUT'):
@@ -151,6 +164,3 @@ def change_groupname_username(oldgroupname, Newgroupname):
             reporter.save()
             msg = "updated succesfully"
             return JsonResponse({"msg": msg})
-
-   
-

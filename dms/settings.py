@@ -160,15 +160,14 @@ ENCRYPT_KEY= "57-xmiMq0yop7uD7Aq3j4PNUOgZhradICh2BKBnIdB0="
 AUTH_USER_MODEL = "managementUsers.User"
 # REST FRAMEWORK
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
-        'rest_framework.permissions.IsAuthenticated',
-         
-    ],
+    'DEFAULT_PERMISSION_CLASSES': [ 
+       'rest_framework.permissions.IsAuthenticated'],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'managementUsers.authentication.JWTAuthentication',
         
     ]
+
+  
 }
 
 # jwt_auth/settings.py

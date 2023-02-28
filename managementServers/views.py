@@ -8,10 +8,15 @@ import json
 from managementUsers.models import *
 from managementUsers.functions import *
 from django.core import serializers
+from rest_framework.decorators import api_view, permission_classes,authentication_classes
+from rest_framework.permissions import IsAuthenticated,AllowAny
+from managementUsers.authentication import JWTAuthentication
 # Create your views here.
 
 
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def getAllServers(request):
     list_servers = []
     if (request.method == 'GET'):
@@ -29,8 +34,10 @@ def getAllServers(request):
             res[i]['fields']['type_name'] = type.type_name
             list_servers.append(res[i]['fields'])
         return JsonResponse(list_servers, safe=False)
-    
-@csrf_exempt  
+#####    
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated]) 
 def getServer(request,id):
     if (request.method == 'GET'):
         server = Server.objects.filter(id=id)
@@ -46,8 +53,11 @@ def getServer(request,id):
         # return a no content response.
         return JsonResponse(serverJson)
     
+####
     
-@csrf_exempt   
+@api_view(['POST'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
 def createServer(request):
     msg = ''
     if (request.method == 'POST'):
@@ -79,8 +89,10 @@ def createServer(request):
             return JsonResponse({"msg": msg}, status=201)
         
 
-
-@csrf_exempt               
+####
+@api_view(['DELETE'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])              
 def deleteServer(request,id):
     msg=""
     if (request.method == 'DELETE'):
@@ -90,8 +102,10 @@ def deleteServer(request,id):
         # return a no content response.
         return JsonResponse({"msg": msg})
 
-
-@csrf_exempt     
+####
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated]) 
 def modifyServer(request,id):
     msg=''
     if (request.method == 'PUT'):

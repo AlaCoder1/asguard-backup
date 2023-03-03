@@ -26,3 +26,11 @@ class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
         fields =  ('name','context',)
+        
+
+
+
+
+class ObtainTokenSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    password = serializers.CharField()

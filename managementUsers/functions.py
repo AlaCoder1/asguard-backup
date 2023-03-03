@@ -8,6 +8,7 @@ from django.conf import settings
 from cryptography.fernet import Fernet
 import re
 import pam
+import hashlib
 
 # function to get UID from system
 
@@ -15,9 +16,15 @@ import pam
 def getUidUser():
     return subprocess.run(["getent", "passwd"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
 
+
+# function to hash pwd
+
+def Hash(text):
+    hash_sha3_512 = hashlib.new("sha3_512", text.encode())
+    return (hash_sha3_512.hexdigest())
+
+
 # function to encrypted pwd
-
-
 def encrypt(txt):
     try:
         # convert integer etc to string first
@@ -34,6 +41,7 @@ def encrypt(txt):
         # log the error if any
         logging.getLogger("error_logger").error(traceback.format_exc())
         return None
+    
 
 # validation name of group and users (must content char and int)
 

@@ -156,3 +156,31 @@ ENCORE_ENTRYPOINTS_FILE = os.path.join(BASE_DIR, 'static') + '/entrypoints.json'
 #ENCORE_ENTRYPOINTS_FILE= '/home/oussema/Documents/numeryx/newdms/dms/public/build/entrypoints.json'
 
 ENCRYPT_KEY= "57-xmiMq0yop7uD7Aq3j4PNUOgZhradICh2BKBnIdB0="
+# custom user model
+AUTH_USER_MODEL = "managementUsers.User"
+# REST FRAMEWORK
+REST_FRAMEWORK = {
+    'DEFAULT_PERMISSION_CLASSES': [ 
+       'rest_framework.permissions.IsAuthenticated'],
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'managementUsers.authentication.JWTAuthentication',
+        
+    ]
+
+  
+}
+
+# jwt_auth/settings.py
+
+from datetime import timedelta
+
+
+
+JWT_CONF = {
+    'TOKEN_LIFETIME_HOURS': 1,
+    'REFRESH_TOKEN_LIFETIME': 15,
+    'ROTATE_REFRESH_TOKENS': True,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'JWT_AUTH_HEADER_PREFIX': 'Bearer'
+    
+}

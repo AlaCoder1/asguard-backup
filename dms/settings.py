@@ -175,12 +175,11 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 
-
 JWT_CONF = {
-    'TOKEN_LIFETIME_HOURS': 1,
-    'REFRESH_TOKEN_LIFETIME': 15,
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'JWT_AUTH_HEADER_PREFIX': 'Bearer'
-    
-}
+        'TOKEN_LIFETIME_HOURS': 1,
+        'REFRESH_TOKEN_LIFETIME': 15,
+        'ROTATE_REFRESH_TOKENS': True,
+        'BLACKLIST_AFTER_ROTATION': True,
+        'JWT_AUTH_HEADER_PREFIX': 'Bearer'
+        
+    }  

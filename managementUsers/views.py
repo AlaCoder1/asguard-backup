@@ -9,12 +9,15 @@ import json
 from rest_framework.parsers import JSONParser
 from django.core import serializers
 from .functions import *
-
 from django.contrib.auth import get_user_model
 from rest_framework import views, permissions, status
 from .authentication import JWTAuthentication
 from rest_framework.decorators import api_view, permission_classes,authentication_classes
 from rest_framework.permissions import IsAuthenticated,AllowAny
+from django.contrib.auth.hashers import make_password
+from django.contrib.auth import authenticate, login, logout
+from datetime import datetime, timedelta
+from django.conf import settings
 ####
 User=get_user_model()
 # Create your views here.
@@ -22,8 +25,7 @@ User=get_user_model()
 # API to get all users
 
 # done✔
-
-@api_view(['GET'])
+@api_view(['Get'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def getAllUsers(request):
@@ -46,7 +48,7 @@ def getAllUsers(request):
 
 # done✔
 
-@api_view(['GET'])
+@api_view(['Get'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def getUser(request, id):
@@ -77,12 +79,15 @@ def createUser(request):
         # instanciate with the serializer
         username = data['username']
         password = data['password']
+        print(make_password(data['password']))
         if (validInput(username)):
             if (validInput(password)):
                 if addUser(username, password) == 0:
                     msg = 'user added succesfully'
                     uid = getUidUser()
-                    data['password'] = Hash(password)
+                    # data['password'] = Hash(password)
+                   
+                    data['password']=( make_password(data['password']))
                     data['uid'] = uid
                     if ('group' in data):
                         groups = data['group']
@@ -308,11 +313,9 @@ def authentifacation2(request):
 
 
 
-
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
-
 def authentification_JWT(request):
     if (request.method=="POST"):
         User = get_user_model()
@@ -320,33 +323,38 @@ def authentification_JWT(request):
         username = data['username']
         password = data['password']
         serializer = ObtainTokenSerializer(data=data)
-        
+       
         if (serializer.is_valid()):
-
             username = serializer.validated_data.get('username')
-            
-            password = Hash(serializer.validated_data.get('password'))
-            if User.objects.filter(username=username).first() is not None: 
-                user = User.objects.filter(username=username).first()
-                
-                print(user.password)
-                print(password)
-                print(user.password==password)
-                if user.password==password:
-                    # Generate the JWT token
-                    
-                    jwt_token=str(JWTAuthentication.create_jwt(user).decode())
-                    print("seerializer***",jwt_token)
-                    print(user)
-                    print("request",request.user.is_authenticated)
-                    return JsonResponse({'token': jwt_token})
-                    
-                else:
-                    return JsonResponse({'message': 'Incorrect credentiels'}, status=status.HTTP_400_BAD_REQUEST)
+            password = (serializer.validated_data.get('password'))
+            user=authenticate(request, username=username, password=password)
+            if (user is not None):
+                login(request,user)
+                jwt_token=str(JWTAuthentication.create_jwt(user).decode())
+                userObject = User.objects.get(username=username)
+                userObject.token_last_expired=datetime.now()+timedelta(hours=settings.JWT_CONF['TOKEN_LIFETIME_HOURS'])
+                userObject.save()
+                return JsonResponse({'token': jwt_token})
             else:
                 return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_400_BAD_REQUEST)
+       
+
+@api_view(['GET'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([IsAuthenticated])
+def logout_view(request):
+    username=request.user.username
+    logout(request)
+    userObject = User.objects.get(username=username)
+    userObject.token_last_expired=datetime.now()+timedelta(hours=0)
+    userObject.save()
+    return JsonResponse({"msg":'User Logged out successfully'})
+             
                     
 
-           
-                
+
+
+
+
+     
 

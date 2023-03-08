@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import *
 from managementGroup.models import *
+from django.contrib.auth import get_user_model
+
 
 class UserSerializerGet(serializers.ModelSerializer):
     class Meta:
@@ -15,12 +17,18 @@ class UserSerializerPost(serializers.ModelSerializer):
         model = User
         # fields =  ('username', 'password','fullname', 'email','role', 'uid', 'group','permission')
         fields =  ('username', 'password','fullname', 'email','role', 'uid', 'group')
+        write_only_fields = ('password')
+        
+       
         
 class UserSerializerPostWithoutGroupAndPermission(serializers.ModelSerializer):
     class Meta:
         model = User
         fields =  ('username', 'password','fullname', 'email','role', 'uid')
+        write_only_fields = ('password')
         
+        
+            
         
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:

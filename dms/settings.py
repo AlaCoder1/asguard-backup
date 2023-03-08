@@ -175,7 +175,6 @@ REST_FRAMEWORK = {
 from datetime import timedelta
 
 
-
 JWT_CONF = {
     'TOKEN_LIFETIME_HOURS': 1,
     'REFRESH_TOKEN_LIFETIME': 15,

@@ -8,6 +8,7 @@ import json
 from rest_framework.parsers import JSONParser
 from django.core import serializers
 from .functions import *
+from .remoteFunctions import *
 from rest_framework.decorators import api_view, permission_classes,authentication_classes
 from rest_framework.permissions import IsAuthenticated,AllowAny
 from managementUsers.authentication import JWTAuthentication
@@ -17,9 +18,10 @@ from managementUsers.authentication import JWTAuthentication
 # API to get all groups
 
 #done✔
-@api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+# @api_view(['GET'])
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([IsAuthenticated])
+@csrf_exempt
 def getAllGroups(request):
     list_group = []
     if (request.method == 'GET'):
@@ -42,9 +44,10 @@ def getAllGroups(request):
 # API to get one group
 
 #done✔
-@api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+# @api_view(['GET'])
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([IsAuthenticated])
+@csrf_exempt
 def getGroup(request, id):
     if (request.method == 'GET'):
         group = Group.objects.get(id=id)
@@ -57,9 +60,10 @@ def getGroup(request, id):
 # API to create group
 
 #done✔
-@api_view(['POST'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+# @api_view(['POST'])
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([IsAuthenticated])
+@csrf_exempt
 def createGroup(request):
     msg = ''
     if (request.method == 'POST'):
@@ -67,9 +71,17 @@ def createGroup(request):
         data = JSONParser().parse(request)
         groupname = data['groupname']
         if (validInput(groupname)):
-            if addGroup(groupname) == 0:
-                msg = 'group added succesfully'
-                gid = getUidGroup()
+            # command = "groupadd "+groupname
+
+            # Execute the command on the remote machine
+            # stdin, stdout, stderr = settings.SSH.execute_command(command)
+            stdin, stdout, stderr = addRemoteGroup(groupname)
+            # convert the stderr stream to a string
+            error_str = stderr.read().decode('utf-8')
+
+            if error_str=="":
+                msg=groupname+" added sucessfully"
+                gid = getRemoteGidGroup()
                 data['gid'] = gid
                 serializer = GroupSerializer(data=data)
                 # check if the sent information is okay
@@ -81,8 +93,11 @@ def createGroup(request):
                 # provide a Json Response with the necessary error information
                 return JsonResponse(serializer.errors, status=400)
             else:
-                msg = "groupadd: group '"+groupname + "' already exists"
-                return JsonResponse({"msg": msg}, status=201)
+                msg=error_str
+        else:
+            msg="groupname invalid"
+            return JsonResponse({"msg": msg}, status=201)
+    return JsonResponse({"msg": msg}, status=201)
 
 
 
@@ -90,14 +105,21 @@ def createGroup(request):
 # API to delete group
 
 #done✔
-@api_view(['DELETE'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+# @api_view(['DELETE'])
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([IsAuthenticated])
+@csrf_exempt
 def deleteGroup(request,id):
     msg=''
     if (request.method == 'DELETE'):
         group = Group.objects.get(id=id)
-        if delete_group(group.groupname)==0:
+        
+        # Execute the command on the remote machine
+        stdin, stdout, stderr = deleteRemoteGroup(group.groupname)
+        # convert the stderr stream to a string
+        error_str = stderr.read().decode('utf-8')
+        print(stdout.read().decode('utf-8'))
+        if error_str=="":
             group.delete()
             msg = "delete succesfully"
         else:
@@ -115,9 +137,10 @@ def updateGroup(request,id):
 # API to change groupname
 
 from managementUsers.models import *
-@api_view(['PUT'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+# @api_view(['PUT'])
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([IsAuthenticated])
+@csrf_exempt
 def changeGroupname(request,id):
     msg = ''
     if (request.method == 'PUT'):
@@ -127,27 +150,21 @@ def changeGroupname(request,id):
         data = json.loads(request.body)
         oldgroupname = groupDict['groupname']
         Newgroupname = data['Newgroupname']
-        if validInput(oldgroupname):
-            if group_exists(oldgroupname):
-                if validInput(Newgroupname):
-                    if group_exists(Newgroupname):
-                        msg = f"Username {Newgroupname} exists."
-                        return JsonResponse({"msg": msg})
-                    else:
-                        change_groupname(oldgroupname, Newgroupname)
-                        msg = "updated succesfully"
-                        group.groupname=Newgroupname
-                        group.save()
-                        return JsonResponse({"msg": msg})
-                else:
-                    msg = "invalid "+Newgroupname
-                    return JsonResponse({"msg": msg})
+
+        if validInput(Newgroupname):
+            if RemoteGroupExists(Newgroupname):
+                msg = f"Username {Newgroupname} exists."
+                return JsonResponse({"msg": msg})
             else:
-                msg = f"Username {oldgroupname} does not exist."
+                changeRemoteGroupname(oldgroupname, Newgroupname)
+                msg = "updated succesfully"
+                group.groupname=Newgroupname
+                group.save()
                 return JsonResponse({"msg": msg})
         else:
-            msg = "invalid "+oldgroupname
+            msg = "invalid "+Newgroupname
             return JsonResponse({"msg": msg})
+
 
 
 # function to change groupname if groupname=username
@@ -155,11 +172,11 @@ def changeGroupname(request,id):
 
 def change_groupname_username(oldgroupname, Newgroupname):
     msg = ''
-    if group_exists(Newgroupname):
+    if RemoteGroupExists(Newgroupname):
         msg = f"Username {Newgroupname} exists."
         return JsonResponse({"msg": msg})
     else:
-        if change_groupname(oldgroupname, Newgroupname) ==0:
+        if changeRemoteGroupname(oldgroupname, Newgroupname) ==0:
             reporter = Group.objects.get(groupname=oldgroupname)
             reporter.groupname = Newgroupname
             reporter.save()
@@ -175,9 +192,6 @@ def change_groupname_username(oldgroupname, Newgroupname):
 from django.conf import settings
 
 
-# from ssh_utils import SSHConnection
-# # create an SSH connection
-# ssh = SSHConnection()
 
 @csrf_exempt
 def createGroupToAnotherMachine(request):
@@ -187,17 +201,17 @@ def createGroupToAnotherMachine(request):
         data = JSONParser().parse(request)
         groupname = data['groupname']
         if (validInput(groupname)):
-            command = "groupadd "+groupname
+            # command = "groupadd "+groupname
 
             # Execute the command on the remote machine
-            stdin, stdout, stderr = settings.SSH.execute_command(command)
-
+            # stdin, stdout, stderr = settings.SSH.execute_command(command)
+            stdin, stdout, stderr = addRemoteGroup(groupname)
             # convert the stderr stream to a string
             error_str = stderr.read().decode('utf-8')
 
             if error_str=="":
                 msg=groupname+" added sucessfully"
-                gid = getUidGroup()
+                gid = getRemoteGidGroup()
                 data['gid'] = gid
                 serializer = GroupSerializer(data=data)
                 # check if the sent information is okay

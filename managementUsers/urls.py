@@ -3,6 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
+    path('whoami', views.whoami, name="whoami"),
     path('getAllUsers', views.getAllUsers, name="getAllUsers"),
     path('getUser/<int:id>', views.getUser, name="getUser"),
     path('createUser', views.createUser, name="createUser"),

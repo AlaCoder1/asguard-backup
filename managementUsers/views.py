@@ -23,9 +23,10 @@ User=get_user_model()
 
 # done✔
 
-@api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+# @api_view(['GET'])
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([IsAuthenticated])
+@csrf_exempt
 def getAllUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -46,9 +47,10 @@ def getAllUsers(request):
 
 # done✔
 
-@api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+# @api_view(['GET'])
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([IsAuthenticated])
+@csrf_exempt
 def getUser(request, id):
     if (request.method == 'GET'):
         user = User.objects.filter(id=id)
@@ -66,24 +68,32 @@ def getUser(request, id):
 
 # API to create user
 # done✔
-@api_view(['POST'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([AllowAny])
+# @api_view(['POST'])
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([AllowAny])
+@csrf_exempt
 def createUser(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
         data = JSONParser().parse(request)
-        # instanciate with the serializer
         username = data['username']
         password = data['password']
         if (validInput(username)):
             if (validInput(password)):
-                if addUser(username, password) == 0:
-                    msg = 'user added succesfully'
-                    uid = getUidUser()
+
+                # Execute the command on the remote machine
+                stdin, stdout, stderr = addRemoteUser(username, password)
+
+                # convert the stderr stream to a string
+                error_str = stderr.read().decode('utf-8')
+
+                if error_str=="":
+                    msg=username+" added sucessfully"
+                    uid = getRemoteUidUser()
                     data['password'] = Hash(password)
                     data['uid'] = uid
+                    print(data)
                     if ('group' in data):
                         groups = data['group']
                         for i in range(0, len(groups)):
@@ -93,35 +103,44 @@ def createUser(request):
                     else:
                         serializerUser = UserSerializerPostWithoutGroupAndPermission(
                             data=data)
-                    gid = getUidGroup()
-                    groupname = {"groupname": username}
-                    groupname['gid'] = gid
-                    groupname['createdBySystem'] = True
-                    print(groupname)
-                    serializerGroup = GroupSerializer(data=groupname)
-                    # check if the sent information is okay
-                    if (serializerUser.is_valid()):
-                        if (serializerGroup.is_valid()):
-                            # if okay, save it on the database
-                            serializerUser.save()
-                            serializerGroup.save()
-                            # provide a Json Response with the data that was saved
-                            return JsonResponse({"msg": msg}, status=201)
+                        gid = getRemoteGidGroup()
+                        groupname = {"groupname": username}
+                        groupname['gid'] = gid
+                        groupname['createdBySystem'] = True
+                        serializerGroup = GroupSerializer(data=groupname)
+                        # check if the sent information is okay
+                        if (serializerUser.is_valid()):
+                            if (serializerGroup.is_valid()):
+                                # if okay, save it on the database
+                                serializerUser.save()
+                                serializerGroup.save()
+                                # provide a Json Response with the data that was saved
+                                return JsonResponse({"msg": msg}, status=201)
+                            # provide a Json Response with the necessary error information
+                            return JsonResponse(serializerUser.errors, status=400)
                         # provide a Json Response with the necessary error information
                         return JsonResponse(serializerUser.errors, status=400)
-                    # provide a Json Response with the necessary error information
-                    return JsonResponse(serializerUser.errors, status=400)
                 else:
-                    msg = "useradd: user '"+username + "' already exists"
+                    msg=error_str
                     return JsonResponse({"msg": msg}, status=400)
+
+            else:
+                msg="invalid password"
+                return JsonResponse({"msg": msg}, status=201)
+        # ssh.close()
+        # settings.SSH.close()
+        else:
+            msg="invalid username"
+            return JsonResponse({"msg": msg}, status=201)
 
 # API to delete group
 
 # done✔
 
-@api_view(['DELETE'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+# @api_view(['DELETE'])
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([IsAuthenticated])
+@csrf_exempt
 def delete_user(request, id):
     msg=""
     if (request.method == 'DELETE'):
@@ -141,9 +160,10 @@ def delete_user(request, id):
 # done✔
 
 
-@api_view(['PUT'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+# @api_view(['PUT'])
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([IsAuthenticated])
+@csrf_exempt
 def modifyUser(request, id):
     if (request.method == 'PUT'):
                 userById = User.objects.filter(id=id)
@@ -352,7 +372,7 @@ def authentification_JWT(request):
 
 
 
-
+from .remoteFunctions import *
 from django.conf import settings
 @csrf_exempt
 def createUserToAnotherMachine(request):
@@ -362,19 +382,69 @@ def createUserToAnotherMachine(request):
         data = JSONParser().parse(request)
         username = data['username']
         password = data['password']
-        
-        command = "useradd " + username + " && echo "+username+":"+password + " | chpasswd"
+        if (validInput(username)):
+            if (validInput(password)):
 
-        # Execute the command on the remote machine
-        stdin, stdout, stderr = settings.SSH.execute_command(command)
+                # Execute the command on the remote machine
+                stdin, stdout, stderr = addRemoteUser(username, password)
 
-        # convert the stderr stream to a string
-        error_str = stderr.read().decode('utf-8')
+                # convert the stderr stream to a string
+                error_str = stderr.read().decode('utf-8')
 
-        if error_str=="":
-            msg=username+" added sucessfully"
-        else:
-            msg=error_str
+                if error_str=="":
+                    msg=username+" added sucessfully"
+                    uid = getRemoteUidUser()
+                    data['password'] = Hash(password)
+                    data['uid'] = uid
+                    print(data)
+                    if ('group' in data):
+                        groups = data['group']
+                        for i in range(0, len(groups)):
+                            add_user_group(
+                                getGroupNameById(groups[i]), username)
+                        serializerUser = UserSerializerPost(data=data)
+                    else:
+                        serializerUser = UserSerializerPostWithoutGroupAndPermission(
+                            data=data)
+                        gid = getRemoteGidGroup()
+                        groupname = {"groupname": username}
+                        groupname['gid'] = gid
+                        groupname['createdBySystem'] = True
+                        serializerGroup = GroupSerializer(data=groupname)
+                        # check if the sent information is okay
+                        if (serializerUser.is_valid()):
+                            if (serializerGroup.is_valid()):
+                                # if okay, save it on the database
+                                serializerUser.save()
+                                serializerGroup.save()
+                                # provide a Json Response with the data that was saved
+                                return JsonResponse({"msg": msg}, status=201)
+                            # provide a Json Response with the necessary error information
+                            return JsonResponse(serializerUser.errors, status=400)
+                        # provide a Json Response with the necessary error information
+                        return JsonResponse(serializerUser.errors, status=400)
+                else:
+                    msg=error_str
+                    return JsonResponse({"msg": msg}, status=400)
+
+            else:
+                msg="invalid password"
+                return JsonResponse({"msg": msg}, status=201)
         # ssh.close()
         # settings.SSH.close()
-    return JsonResponse({"msg": msg}, status=201)
+        else:
+            msg="invalid username"
+            return JsonResponse({"msg": msg}, status=201)
+
+@csrf_exempt
+def whoami():
+    # Run the getent group command and capture its output
+    command = "whoami"
+    # Execute the command on the remote machine
+    stdin, stdout, stderr = settings.SSH.execute_command(sudo(command))
+    # Split the output into lines and extract the last line
+    lines = stdout.read().decode('utf-8').split("\n")
+    last_line = lines[-2] if lines[-1] == "" else lines[-1]
+    print(last_line)
+    whoami=last_line
+    return JsonResponse({"whoami": whoami}, status=201)

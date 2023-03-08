@@ -204,6 +204,6 @@ SSH_PORT = int(os.getenv('SSH_PORT'))
 SSH_USERNAME = os.getenv('SSH_USERNAME')
 SSH_PASSWORD = os.getenv('SSH_PASSWORD')
 
-from ssh_utils import SSHConnection
+from managementUsers.ssh_utils import SSHConnection
 # create an SSH connection
 SSH = SSHConnection()

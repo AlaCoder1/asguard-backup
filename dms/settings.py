@@ -46,7 +46,8 @@ INSTALLED_APPS = [
     'managementUsers',
     'managementGroup',
     "managementServers",
-    "settings"
+    "settings",
+    "authentification"
 ]
 
 MIDDLEWARE = [
@@ -163,7 +164,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [ 
        'rest_framework.permissions.IsAuthenticated'],
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'managementUsers.authentication.JWTAuthentication',
+        'authentification.authentication.JWTAuthentication',
         
     ]
 
@@ -172,24 +173,14 @@ REST_FRAMEWORK = {
 
 # jwt_auth/settings.py
 
-from datetime import timedelta
-
-
 JWT_CONF = {
-    'TOKEN_LIFETIME_HOURS': 1,
+    'TOKEN_LIFETIME_HOURS': 72,
     'REFRESH_TOKEN_LIFETIME': 15,
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'JWT_AUTH_HEADER_PREFIX': 'Bearer'
     
 }
-
-# import os
-# from dotenv import load_dotenv
-# file_path = '.env'  # replace this with the path to your file
-# abs_path = os.path.abspath(file_path)
-
-# a=load_dotenv(os.path.abspath(file_path))
 
 import os
 from dotenv import load_dotenv
@@ -200,9 +191,8 @@ load_dotenv()
 # SSH settings
 SSH_HOST = os.getenv('SSH_HOST')
 SSH_PORT = int(os.getenv('SSH_PORT'))
-SSH_USERNAME = os.getenv('SSH_USERNAME')
-SSH_PASSWORD = os.getenv('SSH_PASSWORD')
-
-from managementUsers.ssh_utils import SSHConnection
-# create an SSH connection
-SSH = SSHConnection()
+# SSH_USERNAME = os.getenv('SSH_USERNAME')
+# SSH_PASSWORD = os.getenv('SSH_PASSWORD')
+# from managementUsers.ssh_utils import SSHConnection
+# # create an SSH connection
+# SSH = SSHConnection()

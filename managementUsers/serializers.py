@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from .models import *
 from managementGroup.models import *
-from django.contrib.auth import get_user_model
 
 
 class UserSerializerGet(serializers.ModelSerializer):
@@ -29,16 +28,8 @@ class UserSerializerPostWithoutGroupAndPermission(serializers.ModelSerializer):
         
         
             
-        
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
         fields =  ('name','context',)
         
-
-
-
-
-class ObtainTokenSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()

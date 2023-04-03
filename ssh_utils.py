@@ -1,16 +1,5 @@
 import paramiko
 from django.conf import settings
-# def ssh_connect():
-#     host = "remote_server_address"
-#     port = 22
-#     username = "your_username"
-#     password = "your_password"
-
-#     ssh = paramiko.SSHClient()
-#     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-#     ssh.connect(host, port, username, password)
-
-#     return ssh.connect(host, port, username, password)
 class SSHConnection:
     def __init__(self):
         self.ssh = paramiko.SSHClient()

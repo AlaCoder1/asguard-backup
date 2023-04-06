@@ -358,3 +358,31 @@ def logout_view(request):
 
      
 
+
+
+
+from django.conf import settings
+@csrf_exempt
+def createUserToAnotherMachine(request):
+    msg = ''
+    if (request.method == 'POST'):
+        # parse the incoming information
+        data = JSONParser().parse(request)
+        username = data['username']
+        password = data['password']
+        
+        command = "useradd " + username + " && echo "+username+":"+password + " | chpasswd"
+
+        # Execute the command on the remote machine
+        stdin, stdout, stderr = settings.SSH.execute_command(command)
+
+        # convert the stderr stream to a string
+        error_str = stderr.read().decode('utf-8')
+
+        if error_str=="":
+            msg=username+" added sucessfully"
+        else:
+            msg=error_str
+        # ssh.close()
+        # settings.SSH.close()
+    return JsonResponse({"msg": msg}, status=201)

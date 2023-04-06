@@ -6,25 +6,18 @@
 {% block stylesheets %}
     {{ block.super }}
 
-    {% encore_entry_link_tags 'demo2' %}
+    {% encore_entry_link_tags 'demo' %}
 {% endblock %}
 
 {% block javascripts %}
     {{ block.super }}
 
-    {% encore_entry_script_tags 'demo2' %}
+    {% encore_entry_script_tags 'demo' %}
 {% endblock %}
 
 {% block body %}
 
-    {% for i in users %}
-        <ul>
-            <li>{{i}}</li>
-        </ul>
-    {% endfor %}
-        
-    <div id="app">
-
+    <div id='app'  users='{{ users }}'>
     </div>
 
 {% endblock %}

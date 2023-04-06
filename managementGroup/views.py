@@ -83,6 +83,7 @@ def createGroup(request):
     return JsonResponse({"msg": msg}, status=201)
 
 
+
 # API to delete group
 @api_view(['DELETE'])
 @authentication_classes([JWTAuthentication])

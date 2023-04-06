@@ -13,6 +13,10 @@ yarn-error.log
 /managementServers/migrations/__pycache__/
 /settings/__pycache__/
 /settings/migrations/__pycache__/
+/authentification/__pycache__/
+/authentification/migrations/__pycache__/
+/network/__pycache__/
+/network/migrations/__pycache__/
 /tasks/migrations/__pycache__/
 /tasks/__pycache__/
 /dms/__pycache__/

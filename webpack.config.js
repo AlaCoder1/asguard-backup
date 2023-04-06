@@ -25,9 +25,8 @@ Encore
      * and one CSS file (e.g. app.css) if your JavaScript imports CSS.
      */
     .addEntry('app', './assets/js/app.js')
-    .addEntry('demo1', './assets/js/demo1.js')
-    .addEntry('demo2', './assets/js/demo2.js')
-    .addEntry('testheni', './assets/js/testheni.js')
+    .addEntry('demo', './assets/js/demo.js')
+
 
   
     // Enable Vue loader

@@ -28,6 +28,7 @@ class UserSerializerPostWithoutGroupAndPermission(serializers.ModelSerializer):
         fields =  ('username', 'password','fullname', 'email','role', 'uid')
         write_only_fields = ('password')
         
+            
         
             
 class PermissionSerializer(serializers.ModelSerializer):

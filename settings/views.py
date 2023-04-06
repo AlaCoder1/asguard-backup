@@ -79,8 +79,6 @@ def createSystem(request):
             serializerSystem.save()
                 # provide a Json Response with the data that was saved
             return JsonResponse({"msg": msg}, status=201)
-            # provide a Json Response with the necessary error information
-            return JsonResponse(serializerUser.errors, status=400)
         # provide a Json Response with the necessary error information
         return JsonResponse(SystemSerializer.errors, status=400)
 

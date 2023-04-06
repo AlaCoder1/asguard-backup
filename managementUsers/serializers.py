@@ -4,6 +4,7 @@ from managementGroup.models import *
 from django.contrib.auth import get_user_model
 
 
+
 class UserSerializerGet(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -27,18 +28,11 @@ class UserSerializerPostWithoutGroupAndPermission(serializers.ModelSerializer):
         fields =  ('username', 'password','fullname', 'email','role', 'uid')
         write_only_fields = ('password')
         
-        
             
         
+            
 class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
         fields =  ('name','context',)
         
-
-
-
-
-class ObtainTokenSerializer(serializers.Serializer):
-    username = serializers.CharField()
-    password = serializers.CharField()

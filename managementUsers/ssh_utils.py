@@ -1,6 +1,10 @@
 import paramiko
 from django.conf import settings
-class SSHConnection:
+# from remoteFunctions import *
+# def aa():
+#     print(whoami())
+
+class SSHConnection: 
     def __init__(self):
         self.ssh = paramiko.SSHClient()
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())

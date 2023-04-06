@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from .models import *
 from managementGroup.models import *
+from django.contrib.auth import get_user_model
+
 
 
 class UserSerializerGet(serializers.ModelSerializer):

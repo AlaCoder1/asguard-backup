@@ -17,11 +17,9 @@
 </head>
 <body>
 
-<div class="container">
-    {% block body %}
-        Body block.
-    {% endblock %}
-</div>
+{% block body %}
+    Body block.
+{% endblock %}
 
 {% block javascripts %}
     {% encore_entry_script_tags 'app' %}

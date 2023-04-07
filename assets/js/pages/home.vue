@@ -1,10 +1,7 @@
 <template>
 <div>
+da
 
- <ul>
- 
-  
-  </ul>
 </div>
   
 </template>
@@ -17,13 +14,12 @@ export default {
     data() {
         return {
             users:'',
+            test:[],
         };
     },
     beforeMount: async function () {
         this.users= this.$root.$data.tab ;
-
         console.log("out data from django",this.users);
-        
     }
 };
 </script>

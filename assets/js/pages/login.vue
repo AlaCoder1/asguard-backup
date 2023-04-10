@@ -1,44 +1,56 @@
 <template>
     <v-container>
     <v-row align="center" justify="center" style="justify-content: center;">
-      <v-col cols="12" sm="7" md="5" class="text-center" justify="center">
-            <v-img
-                src="../../images/logoDMS.png"  height="100"
-            />  
+      <v-col cols="12" sm="7" md="5" class="text-center pos" justify="center">
 
-        <v-card class="mt-5">
-          <v-card-text>
+            <img
+              src="../../images/logoDMS.png"  
+              height="100"
+              class="img-center"
+            />
+
+        <div class="mt-5" >
             <v-form @submit.prevent="login">
+             <p class="c-w">Username</p>
               <v-text-field
+                rounded
                 v-model="username"
                 label="Username"
                 required
-                outlined
+                class="input-w"
               ></v-text-field>
+               <p class="c-w">Password</p>
               <v-text-field
+                rounded
                 v-model="password"
                 label="Password"
                 required
-                outlined
                 type="password"
+                class="input-w"
               ></v-text-field>
-              <v-btn type="submit"  style="background-color: #FFC300;" class="mx-auto mt-5 btn--color">
+              <v-btn type="submit" class="mx-auto mt-5 btn--connect">
                 Login
               </v-btn>
+              <p class="c-o">Wrong username or password!!!</p>
             </v-form>
-          </v-card-text>
-        </v-card>
+        </div>
       </v-col>
     </v-row>
-  </v-container>
+
+    <Footer />
+    </v-container>
 </template>
 
 
 <script>
+import Footer from '@/components/layout/footer.vue';
 
 
 export default {
     name: 'HomeComponent',
+    components: {
+        Footer,
+    },
     data() {
         return {
             users:'',
@@ -52,12 +64,37 @@ export default {
 };
 </script>
 <style scoped>
-.bg-color {
-  background-color: #042439;
-}
-.btn--color {
-  color: #FFFFFF;
-    background-color!important: #FFC300;
 
+.btn--connect {
+    color: #FFFFFF;
+    background-color: #FFC300!important;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 5%;
+    width:40%
+}
+.pos {
+  transform: translateY(20%);
+}
+.img-center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 33%;
+  height: 33%;
+}
+.input-w {
+    background-color: white;
+    height:80%;
+}
+.c-w {
+  color:white;
+  margin-left: 10%;
+}
+.c-o {
+  color:#FFC300;
+  text-align:center;
+  margin-top: 5%;
 }
 </style>

@@ -8,3 +8,11 @@
     {{form.as_p}}
     <input type="submit" value="ajouter">
 </form>
+
+<div>
+    <ul>
+        {% for i in organizations %}
+            <li>{{i}}</li>
+        {% endfor %}
+    <ul>
+</div>

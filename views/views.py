@@ -5,6 +5,7 @@ from managementUsers.models import User
 def index_page(request):
     usr=getAllUsers(request)
     context = {'users':usr}
+    print(context)
     return render(request, 'index_page.html',context)
 
 def login(request):

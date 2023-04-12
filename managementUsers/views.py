@@ -40,6 +40,7 @@ def getAllUsers(request):
             res[i]['fields'].pop('password')
             res[i]['fields']['id'] = id
             list_users.append(res[i]['fields'])
+        return list_users
         return JsonResponse(list_users, safe=False)
 
 

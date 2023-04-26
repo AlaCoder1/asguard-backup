@@ -34,8 +34,8 @@ class paymentTransaction(models.Model):
         return self.uuid
     
 class plansSubscription(models.Model):
-    start_at = models.DateField()
-    end_at = models.DateField()
+    start_at = models.DateTimeField()
+    end_at = models.DateTimeField()
     planId = models.ForeignKey(plan, on_delete=models.CASCADE)
     class Meta:
         db_table = 'plans_subscription'
@@ -53,5 +53,6 @@ class plansFeatures(models.Model):
 class planSubsciptionUsage(models.Model):
     plans_feature = models.ForeignKey(plansFeatures, on_delete=models.CASCADE)
     plans_subscription = models.ForeignKey(plansSubscription, on_delete=models.CASCADE)
+    valid_until =models.DateTimeField()
     class Meta:
         db_table = 'plan_subsciption_usage'

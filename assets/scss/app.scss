@@ -1,7 +1,85 @@
 @import "global";
+@import "./icomoon.scss";
 
+.dms-font{
+
+    font-family: "Roboto" !important;
+
+    &-size{
+        &-one{
+            font-size: 14px;
+            font-weight: 500 !important;
+            line-height: 16.41px;
+            font-style: normal;
+        }
+        &-two{
+            @extend .dms-font-size-one;
+            font-weight: 400 !important;
+            line-height: 20px;
+        }
+        &-three{
+            @extend .dms-font-size-one;
+            font-size: 20px;
+        }
+        &-four{
+            @extend .dms-font-size-two;
+            font-size: 12px;
+            line-height: 14px;
+            letter-spacing: 0.25px;
+        }
+        &-five{
+            @extend .dms-font-size-one;
+            font-size: 13px;
+            line-height: 15.23px;
+        }
+        &-six{
+            @extend .dms-font-size-one;
+            font-size: 16px;
+            line-height: 18.75px;
+        }
+        &-seven{
+            @extend .dms-font-size-four;
+            font-size: 14px;
+        }
+        &-eight{
+            @extend .dms-font-size-one;
+            font-size: 11px !important;
+            line-height: 12.89px;
+        }
+    }
+}
 body {
-    background-color: #042439;
+    //background-color: #042439;
+    margin: 0;
     height: 100vh;
+    min-height: 100vh;
 }
 
+.bg-color {
+    background-color: #042439;
+    height: 100%;
+}
+.dms-login-container {
+    background-color: #042439;
+    height: 100%;
+}
+.global-drawer{
+    .logo{
+        display: block;
+        background: white;
+        height: 180px;
+        .v-image__image{
+            background-size: 70% !important;
+        }
+        .v-image{
+            height: 180px;
+        }
+    }
+    .logoM{
+        display: none;
+    }
+    position: absolute!important;
+    top: 70px!important;
+    bottom: 4%!important;
+    height: auto!important;
+}

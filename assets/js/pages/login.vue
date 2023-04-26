@@ -1,44 +1,45 @@
 <template>
-    <v-container>
-    <v-row align="center" justify="center" style="justify-content: center;">
-      <v-col cols="12" sm="7" md="5" class="text-center pos" justify="center">
+  <div class="bg-color">
+    <v-container class="dms-login-container">
+      <v-row align="center" justify="center" style="justify-content: center;">
+        <v-col cols="12" sm="7" md="5" class="text-center pos" justify="center">
 
-            <img
-              src="../../images/logoDMS.png"  
-              height="100"
-              class="img-center"
-            />
+              <img
+                src="../../images/logoDMS.png"  
+                height="100"
+                class="img-center"
+              />
 
-        <div class="mt-5" >
-            <v-form @submit.prevent="login">
-             <p class="c-w">Username</p>
-              <v-text-field
-                rounded
-                v-model="username"
-                label="Username"
-                required
-                class="input-w"
-              ></v-text-field>
-               <p class="c-w">Password</p>
-              <v-text-field
-                rounded
-                v-model="password"
-                label="Password"
-                required
-                type="password"
-                class="input-w"
-              ></v-text-field>
-              <v-btn type="submit" class="mx-auto mt-5 btn--connect">
-                Login
-              </v-btn>
-              <p class="c-o">Wrong username or password!!!</p>
-            </v-form>
-        </div>
-      </v-col>
-    </v-row>
-
+          <div class="mt-5" >
+              <v-form @submit.prevent="login">
+              <p class="c-w">Username</p>
+                <v-text-field
+                  rounded
+                  v-model="username"
+                  label="Username"
+                  required
+                  class="input-w"
+                ></v-text-field>
+                <p class="c-w">Password</p>
+                <v-text-field
+                  rounded
+                  v-model="password"
+                  label="Password"
+                  required
+                  type="password"
+                  class="input-w"
+                ></v-text-field>
+                <v-btn type="submit" class="mx-auto mt-5 btn--connect">
+                  Login
+                </v-btn>
+                <p class="c-o">Wrong username or password!!!</p>
+              </v-form>
+          </div>
+        </v-col>
+      </v-row>
     <Footer />
     </v-container>
+  </div>
 </template>
 
 
@@ -55,6 +56,8 @@ export default {
         return {
             users:'',
             test:[],
+            username:'',
+            password:'',
         };
     },
     beforeMount: async function () {
@@ -86,7 +89,6 @@ export default {
 }
 .input-w {
     background-color: white;
-    height:80%;
 }
 .c-w {
   color:white;

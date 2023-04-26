@@ -22,10 +22,12 @@ export default {
         position: fixed;
         left: 0;
         bottom: 0;
-        margin-bottom:1%;
+        margin-bottom:0%;
         width: 100%;
         background-color: #042439;
         color: white;
         text-align: center;
+        height: 4%;
+
     }
 </style>

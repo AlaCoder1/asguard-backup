@@ -1,11 +1,12 @@
 <template>
+
     <v-app id="inspire">
         <Drawer :active-menu="activeMenu" />
         <v-main>
             <!-- header -->
             <v-toolbar
                 flat
-                class="axe_blue_light axe-media-print-hide axe-sticky"
+                class="dms_grey axe-media-print-hide axe-sticky"
                 height="60"
             >
                 <v-toolbar-title class="axe-font-size-three white--text ml-2">
@@ -30,16 +31,20 @@
             <!-- content -->
             <slot name="content" />
         </v-main>
+        <Footer />  
     </v-app>
 </template>
 
 <script>
 import Drawer from '@/components/layout/drawer.vue';
+import Footer from '@/components/layout/footer.vue';
+
 
 export default {
     name: 'BaseLayout',
     components: {
         Drawer,
+        Footer,
     },
     props: {
         title: {

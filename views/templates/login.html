@@ -12,10 +12,12 @@
 {% block javascripts %}
     {% encore_entry_script_tags 'login' %}
 {% endblock %}
-
+<body class="bg-color">
+ 
 {% block body %}
 
     <div id='app'  users='{{ users }}'>
     </div>
 
 {% endblock %}
+</body>

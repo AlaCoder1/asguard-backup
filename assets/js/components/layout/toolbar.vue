@@ -1,35 +1,34 @@
 <template>
-    <nav>
-        <v-toolbar
-            flat
-            class="axe_blue_light"
-        >
-            <v-toolbar-title class="font-weight-black text-h5 ml-2">
-                Restitutions
-            </v-toolbar-title>
-        </v-toolbar>
-        <v-divider />
-
-        <v-tabs
-            flat
-            background-color="axe_grey"
-            class="axe-tabs"
-        >
-            <v-tab>
-                A - Synthèse de l'analyse financière
-            </v-tab>
-            <v-tab>
-                B - Description du patrimoine analysé
-            </v-tab>
-            <v-spacer />
-            <v-switch
-                v-model="active"
-                class="font-weight-black black--text text-h4 mt-7 mr-9"
-                label="Filtrer les données"
-            />
-        </v-tabs>
-        <v-divider />
-    </nav>
+    <v-app>
+        <v-main>
+            <!-- header -->
+            <v-toolbar
+                flat
+                class="dms_blue_light axe-media-print-hide axe-sticky"
+                height="60"
+            >
+                <v-toolbar-title class="axe-font-size-three white--text ml-2">
+                </v-toolbar-title>
+                <v-spacer />
+                <div v-if="back">
+                    <v-btn
+                        text
+                        x-small
+                        class="white--text axe-btn-bg text-caption"
+                        href="/"
+                    >
+                        <span class="icon-arrow-left  icon-size-one mr-2" />
+                        <p class="text-capitalize mt-3">
+                           titleback
+                        </p>
+                    </v-btn>
+                </div>
+            </v-toolbar>
+            <v-divider class="axe-media-print-hide" />
+            <!-- content -->
+            <slot name="content" />
+        </v-main>
+    </v-app>
 </template>
 
 <script>

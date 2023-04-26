@@ -1,0 +1,99 @@
+$icomoon-font-family: "icomoon" !default;
+
+
+$icon-book-outline: "\e900";
+$icon-browsers-outline: "\e901";
+$icon-business-outline: "\e902";
+$icon-card-outline: "\e903";
+$icon-create-outline: "\e904";
+$icon-people-outline: "\e905";
+$icon-person-outline: "\e906";
+$icon-power-sharp: "\e907";
+$icon-settings-outline: "\e908";
+$icon-trending-up-sharp: "\e909";
+$icon-alert-circle-outline: "\e90a";
+$icon-arrow_back: "\e90b";
+$icon-arrow: "\e90c";
+$icon-delete: "\e90d";
+$icon-Ellipse: "\e90e";
+$icon-expand_circle_top: "\e90f";
+$icon-expand_circle_down: "\e910";
+$icon-home: "\e911";
+$icon-menu-sharp: "\e912";
+$icon-search: "\e913";
+$icon-arrow-down: "\e914";
+$icon-check: "\e915";
+$icon-eye: "\e916";
+$icon-chevron-right: "\e917";
+
+$icon-library: (
+"book":$icon-book-outline,
+"browsers":$icon-browsers-outline,
+"business":$icon-business-outline,
+"card":$icon-card-outline,
+"create":$icon-create-outline,
+"people":$icon-people-outline,
+"person":$icon-person-outline,
+"power":$icon-power-sharp,
+"settings":$icon-settings-outline,
+"trending":$icon-trending-up-sharp,
+"alert":$icon-alert-circle-outline,
+"arrow-left":$icon-arrow_back,
+"arrow-right":$icon-arrow,
+"delete":$icon-delete,
+"ellipse":$icon-Ellipse,
+"expand-top":$icon-expand_circle_top,
+"expand-down":$icon-expand_circle_down,
+"home":$icon-home,
+"menu":$icon-menu-sharp,
+"search":$icon-search,
+"arrow":$icon-arrow-down,
+"check": $icon-check,
+"eye": $icon-eye,
+"chevron-right": $icon-chevron-right
+);
+
+@font-face {
+  font-family: '#{$icomoon-font-family}';
+  src:
+    url('../fonts/icomoon/icomoon.woff') format('woff2'),
+    url('../fonts/icomoon/icomoon.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: '#{$icomoon-font-family}' !important;
+  speak: none; 
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+
+@each $alias, $icon in $icon-library {
+  .icon-#{$alias}{
+  &:before{
+    content: $icon; 
+  }
+  }
+}
+  
+
+.icon{
+  &-size{
+    &-one{
+      font-size: 15px;
+    }
+    &-two{
+      font-size: 20px;
+    }
+  }
+}

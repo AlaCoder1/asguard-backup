@@ -22,8 +22,7 @@ from views.views import *
 urlpatterns = [
     # path('admin/', admin.site.urls),
     path('', index_page),
-    path('demo/',index_page),
-    path('heni/',index_page_test),
+    path('login/', login),
     path('', include('tasks.urls')),
     path('auth/', include('authentification.urls')),
     path('network/', include('network.urls')),

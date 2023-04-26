@@ -6,13 +6,13 @@
 {% block stylesheets %}
     {{ block.super }}
 
-    {% encore_entry_link_tags 'home' %}
+    {% encore_entry_link_tags 'login' %}
 {% endblock %}
 
 {% block javascripts %}
-    {% encore_entry_script_tags 'home' %}
+    {% encore_entry_script_tags 'login' %}
 {% endblock %}
-
+ 
 {% block body %}
 
     <div id='app'  users='{{ users }}'>

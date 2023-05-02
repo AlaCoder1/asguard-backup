@@ -13,5 +13,9 @@ urlpatterns = [
     path('modifyUser/<int:id>', views.modifyUser, name="modifyUser"),
     path('addPermission', views.addPermission, name="addPermission"),
     path('userChangePW', views.changePassword, name="userChangePW"),
+    path('updateConnToStatic',views.updateConnToStatic,name="updateConnToStatic"),
+    path('updateConnToDhcpBase',views.updateConnToDhcpBase,name="updateConnToDhcpBase"),
+    path('updateConnToDhcpAdvanced',views.updateConnToDhcpAdvanced,name="updateConnToDhcpAdvanced"),
+
 ]
 

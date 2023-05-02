@@ -271,30 +271,93 @@ def whoami():
     return JsonResponse({"whoami": whoami}, status=201)
 
 
-import paramiko
-from pyroute2 import IPRoute
+
+
+####
+ 
+from .scriptNetlinksshFinale import *
+###########API to update connexion using ssh and netlink
+#####API to update connexion to static
 @csrf_exempt
-def netlink(request):
-    data = JSONParser().parse(request)
-    interface_name = data['interface_name']
-    address = data['address']
-    # Create an SSH client object
-    ssh = paramiko.SSHClient()
+def updateConnToStatic(request):
+    if (request.method == 'PUT'):
+        data = json.loads(request.body)
+        ifname = data.get('ifname', None)
+        ip_address = data.get('ip_address', None)
+        netmask = data.get('netmask', None)
+        gateway = data.get('gateway', None)
+        msg,status=update_conn_static(ifname,ip_address,netmask,gateway)
+        return JsonResponse({"msg:":msg},status=status)
+        
+        
+#####API to update connexion to dhcp base
+@csrf_exempt
+def updateConnToDhcpBase(request):
+    if (request.method == 'PUT'):
+        data = json.loads(request.body)
+        ifname = data.get('ifname', None)
+        reject = data.get('reject', None)
+        hostname = data.get('hostname', None)
+        alias_add = data.get('alias_add', None)
+        alias_mask = data.get('alias_mask', None)
+           
+        config=['reject {};'.format(reject),
+        'interface "{}"'.format(ifname),
+            '{',
+        'send host-name "{}";'.format(hostname),
+        'alias {',
+        'interface "{}";'.format(ifname),
+        'fixed-address {};'.format(alias_add),
+        'option subnet-mask {};'.format(alias_mask),
+        '}'
+                ]
+        msg,status=update_conn_dhcp(ifname,config)
+        return JsonResponse({"msg:":msg},status=status)
+#####API to update connexion to dhcp advanced
+@csrf_exempt
+def updateConnToDhcpAdvanced(request):
+    if (request.method == 'PUT'):
+        data = json.loads(request.body)
+        ifname = data.get('ifname', None)
+        timeout = data.get('timeout', None)
+        retry = data.get('retry', None)
+        reboot = data.get('reboot', None)
+        backoff = data.get('backoff', None)
+        select_timeout = data.get('select_timeout', None)
+        initial_interval = data.get('initial_interval', None)
+        reject = data.get('reject', None)
+        hostname = data.get('hostname', None)
+        dhcp_client = data.get('dhcp_client', None)
+        domaine_name = data.get('domaine_name', None)
+        domain_server = data.get('domain_server', None)
+        lease_time = data.get('lease_time', None)
+        request = data.get('request', None)
+        require = data.get('require', None)
+        alias_add = data.get('alias_add', None)
+        alias_mask = data.get('alias_mask', None)
+        config=['timeout {};'.format(timeout),
+        'retry {};'.format(retry),
+        'reboot {};'.format(reboot),
+        'backoff-cutoff {};'.format(backoff),
+        'select-timeout {};'.format(select_timeout),
+        'initial-interval {};'.format(initial_interval),
+            'reject {};'.format(reject),
+            'interface "{}"'.format(ifname),
+                '{',
+        'send host-name "{}";'.format(hostname),
+        'send dhcp-client-identifier {};'.format(dhcp_client),
+        'supersede domain-name "{}";'.format(domaine_name),
+        'prepend domain-name-servers {};'.format(domain_server),
+        'send dhcp-lease-time {};'.format(lease_time),
+        ' request {};'.format(request),
+            'require {};'.format(require),
+            '}',
+        'alias {',
+        'interface "{}";'.format(ifname),
+        'fixed-address {};'.format(alias_add),
+        'option subnet-mask {};'.format(alias_mask),
+        '}'
+                ]
+        msg,status=update_conn_dhcp(ifname,config)
+        return JsonResponse({"msg:":msg},status=status)
 
-    # Automatically add host keys from unknown hosts
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-
-    # Connect to the remote server
-    ssh.connect(hostname='10.1.12.14', username='root', password='rootroot')
-    # Create a Netlink socket
-    ip = IPRoute()
-
-    # Create a new network interface
-    # ip.link("add", ifname=interface_name, kind="dummy")
-    print(ip.link("add", ifname=interface_name, kind="dummy"))
-
-    # Configure the IP address for the interface
-    ip.addr("add", index=ip.link_lookup(ifname=interface_name)[0],
-            address=address, mask=24)
-
-    return JsonResponse({"msd": "done"}, status=201)

@@ -1,5 +1,6 @@
 from django.db import models
 from managementGroup.models import *
+from subscription.models import *
 from django.contrib.auth.models import (AbstractBaseUser,BaseUserManager)
 # Create your models here.
 
@@ -53,7 +54,7 @@ class User(AbstractBaseUser):
     password = models.CharField(max_length=800, null=True)
     email = models.CharField(max_length=800, null=True)
     fullname = models.CharField(max_length=800, null=True)
-    
+    # organisation= models.ForeignKey(organization, on_delete=models.CASCADE)
     role = models.CharField(max_length=800, null=True)
     uid = models.IntegerField(null=True,unique=True)
     group = models.ManyToManyField(Group)

@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'managementGroup',
     "managementServers",
     "settings",
-    "authentification"
+    "authentification",
+    "subscription"
 ]
 
 MIDDLEWARE = [

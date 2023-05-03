@@ -18,7 +18,7 @@ class JWTAuthentication(authentication.BaseAuthentication):
         # Decode the JWT and verify its signature
         try:
             payload = jwt.decode(jwt_token, settings.SECRET_KEY, algorithms=['HS256'])
-        except (jwt.InvalidTokenError, jwt.ExpiredSignature, jwt.DecodeError) as exc:
+        except (jwt.InvalidTokenError, jwt.DecodeError) as exc:
             raise AuthenticationFailed(str(exc))
         # Get the user from the database
         id = payload.get('user_identifier')

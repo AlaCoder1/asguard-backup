@@ -90,10 +90,6 @@ def function_plansSubscription():
 
 def function_planSubsciptionUsage():
     last_id = paymentTransaction.objects.last().id
-    # if(paymentTransaction.objects.last().id is not None):
-    #     last_id = paymentTransaction.objects.last().id
-    # else:
-    #     last_id=1
     payment_transaction=paymentTransaction.objects.get(id=last_id)
     payment_transaction_dict=payment_transaction.__dict__
     payment_features=plansFeatures.objects.filter(planId=payment_transaction_dict['planId_id'])
@@ -115,13 +111,6 @@ def payment(request):
         function_paymentTransaction(my_checkbox_value,my_select_value)
         function_plansSubscription()
         function_planSubsciptionUsage()
-        if is_valid():
-            if if_subscribed(2):
-                print("he has a subscription")
-            else:
-                print("he hasn't a subscription")
-        else:
-            print("your subscription has expired")
     return render(request, 'payment.html', {'form': form})
 
 def initBD_organization():
@@ -136,9 +125,10 @@ def initBD_plan(slug,price):
     plan_instance.currency = "euro"
     plan_instance.save()
     
-def initBD_plansFeatures(description,planId):
+def initBD_plansFeatures(description,planId,list):
     plansFeatures_instance = plansFeatures()
     plansFeatures_instance.description = description
+    plansFeatures_instance.APIS = list
     plansFeatures_instance.planId = plan.objects.get(id=planId)
     plansFeatures_instance.save()
 
@@ -148,43 +138,12 @@ def initBD(request):
     initBD_plan("basic",100)
     initBD_plan("gold",500)
 
-    initBD_plansFeatures("management users",1)
-    initBD_plansFeatures("management users",2)
-    initBD_plansFeatures("network",2)
+    initBD_plansFeatures("management users",1,['create','update','delete'])
+    initBD_plansFeatures("management users",2,['a','b','c'])
+    initBD_plansFeatures("network",2,['e','f','g'])
     return render(request, 'payment.html')
 
 
-# def if_subscribed(plan_id,index_plans_feature):
-#     list_of_plan_feature = []
-#     # last_subscription = plansSubscription.objects.order_by('start_at').last()
-#     last_subscription = plansSubscription.objects.filter(planId=plan_id).order_by('start_at').last()
-#     last_subscription_dict = last_subscription.__dict__
-#     date_end=last_subscription_dict['end_at']
-#     date_end_datetime = datetime.combine(date_end, datetime.min.time())
-#     difference = datetime.now() - date_end_datetime
-#     print({"date_now":datetime.now()})
-#     print({"date_end":date_end})
-#     print({"resultsss":difference.days})
-#     #inverse the condition because we are in face of test so all date that we have is >= data.now
-#     if (difference.days <= 0):
-#         print({"last_subscription_id":last_subscription.id})
-#         planSubsciptionUsages = planSubsciptionUsage.objects.filter(plans_subscription=last_subscription.id)
-#         print({"list_of_planSubsciptionUsages":planSubsciptionUsages})
-#         for k in range(0,len(planSubsciptionUsages)):
-#             list_of_plan_feature.append(planSubsciptionUsages[k].plans_feature_id)
-#         print({"list_of_plan_feature":list_of_plan_feature})
-#     # for i in list:
-#     #     print(i)
-#         # planSubsciptionUsages = planSubsciptionUsage.objects.filter(plans_feature=i)
-#         # print(planSubsciptionUsages[0].plans_subscription)
-#         # if list_of_plan_feature.find(index_plans_feature) !=
-#         try:
-#             list_of_plan_feature.index(index_plans_feature)
-#             print(list_of_plan_feature.index(index_plans_feature))
-#             return True
-#         except ValueError:
-#             print("plan_feature not found in plan_subsciption")
-#             return False
 def is_valid():
     last_subscription = plansSubscription.objects.order_by('start_at').last()
     last_subscription_dict = last_subscription.__dict__
@@ -192,29 +151,53 @@ def is_valid():
         return True
     else:
         return False
-def if_subscribed(index_plans_feature):
+def if_subscribed(indexs_plans_feature):
     list_of_plan_feature = []
     last_subscription = plansSubscription.objects.order_by('start_at').last()
     last_subscription_dict = last_subscription.__dict__
-    # date_end_datetime = datetime.combine(last_subscription_dict['end_at'], datetime.min.time())
-    print({"date_now":datetime.now()})
-    print({"date_end":last_subscription_dict['end_at']})
-    print({"resultsss":last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()})
-    print({"days":(last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days})
-    print({"last_subscription":last_subscription_dict})
-    # if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
-    print({"last_subscription_id":last_subscription.id})
+    # print({"date_end":last_subscription_dict['end_at']})
+    # print({"resultsss":last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()})
+    # print({"days":(last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days})
+    # print({"last_subscription":last_subscription_dict})
+    # print({"last_subscription_id":last_subscription.id})
     planSubsciptionUsages = planSubsciptionUsage.objects.filter(plans_subscription=last_subscription.id)
-    print({"list_of_planSubsciptionUsages":planSubsciptionUsages})
+    # print({"list_of_planSubsciptionUsages":planSubsciptionUsages})
     for k in range(0,len(planSubsciptionUsages)):
         list_of_plan_feature.append(planSubsciptionUsages[k].plans_feature_id)
+    # print({"indexs_plans_feature":indexs_plans_feature})
     # print({"list_of_plan_feature":list_of_plan_feature})
+    common_elements = set(indexs_plans_feature) & set(list_of_plan_feature)
+    # print({"type":type(common_elements)})
+    # print({"tttttttttttttttttttttttttttttttt":common_elements})
+    # print({"bbbbbbbbbb":bool(common_elements)})
     try:
-        list_of_plan_feature.index(index_plans_feature)
-        # print(list_of_plan_feature.index(index_plans_feature))
-        return True
+        common_elements = set(indexs_plans_feature) & set(list_of_plan_feature)        
+        if bool(common_elements):
+            return True
+        else:
+            return False
     except ValueError:
-        # print("plan_feature not found in plan_subsciption")
         return False
-    # else:
-    #     return "your subscription has expired"
+    
+# def if_subscribed(api):
+#     queryset = plansFeatures.objects.filter(APIS__contains=[api])
+#     print({"/////////////////////////////":queryset[0].__dict__})
+#     list_of_plan_feature = []
+#     last_subscription = plansSubscription.objects.order_by('start_at').last()
+#     last_subscription_dict = last_subscription.__dict__
+#     # date_end_datetime = datetime.combine(last_subscription_dict['end_at'], datetime.min.time())
+#     print({"date_now":datetime.now()})
+#     print({"date_end":last_subscription_dict['end_at']})
+#     print({"resultsss":last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()})
+#     print({"days":(last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days})
+#     print({"last_subscription":last_subscription_dict})
+#     print({"last_subscription_id":last_subscription.id})
+#     planSubsciptionUsages = planSubsciptionUsage.objects.filter(plans_subscription=last_subscription.id)
+#     print({"list_of_planSubsciptionUsages":planSubsciptionUsages})
+#     for k in range(0,len(planSubsciptionUsages)):
+#         list_of_plan_feature.append(planSubsciptionUsages[k].plans_feature_id)
+#     try:
+#         list_of_plan_feature.index(queryset[0].__dict__['id'])
+#         return True
+#     except ValueError:
+#         return False

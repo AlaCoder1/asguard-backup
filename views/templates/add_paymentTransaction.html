@@ -1,8 +1,6 @@
 <a href="{% url 'add_plan' %}"><button>add plan</button></a>
 <a href="{% url 'add_organizations' %}"><button>add organization</button></a>
-<a href="{% url 'add_paymentTransaction' %}"><button>add paymentTransaction</button></a>
 <a href="{% url 'add_plansFeatures' %}"><button>add plansFeatures</button></a>
-<a href="{% url 'add_plansSubscription' %}"><button>add plansSubscription</button></a>
 <form class="r-form"  action="" method="POST">
     {% csrf_token %}
     {{form.as_p}}

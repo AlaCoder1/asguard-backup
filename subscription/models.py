@@ -43,12 +43,13 @@ class plansSubscription(models.Model):
     
 class plansFeatures(models.Model):
     description = models.CharField(max_length=200,null=True )
+    APIS = models.JSONField(null=True)
     planId = models.ForeignKey(plan, on_delete=models.CASCADE)
     plan_subsciption_usage=models.ManyToManyField('plansSubscription', through='planSubsciptionUsage')
     class Meta:
         db_table = 'plans_features'
-    def __str__(self):
-        return self.description
+    def __list__(self):
+        return self.APIS
     
 class planSubsciptionUsage(models.Model):
     plans_feature = models.ForeignKey(plansFeatures, on_delete=models.CASCADE)

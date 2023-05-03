@@ -84,7 +84,7 @@ def addRemoteUser(username, password):
         username+":"+password + " | sudo chpasswd"
     # Execute the command on the remote machine
     return ssh.exec_command(command)
-    return ssh.exec_command(command)
+    # return ssh.exec_command(command)
 
 # function to delete user
 def deleteRemoteUser(username):

@@ -11,6 +11,8 @@ yarn-error.log
 /managementUsers/migrations/__pycache__/
 /managementServers/__pycache__/
 /managementServers/migrations/__pycache__/
+/subscription/__pycache__/
+/subscription/migrations/__pycache__/
 /settings/__pycache__/
 /settings/migrations/__pycache__/
 /authentification/__pycache__/

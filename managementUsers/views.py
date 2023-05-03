@@ -4,6 +4,7 @@ import subprocess
 from .serializers import *
 from managementGroup.serializers import *
 from managementGroup.views import *
+from subscription.views import *
 from .remoteFunctions import *
 import json
 from rest_framework.parsers import JSONParser
@@ -20,7 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 # Retrieve the model class dynamically
 def handle(self, *args, **options):
     # Your code to add data to the database here
-    User.objects.create(username='zied', password=make_password("zied"))
+    User.objects.create(username='root', password=make_password("rootroot"))
     msg = "user added succesffuly"
     return JsonResponse({"msg": msg}, status=201)
 # API to get all users
@@ -40,7 +41,7 @@ def getAllUsers(request):
             res[i]['fields'].pop('password')
             res[i]['fields']['id'] = id
             list_users.append(res[i]['fields'])
-        return list_users
+        # return list_users
         return JsonResponse(list_users, safe=False)
 
 
@@ -70,56 +71,63 @@ def getUser(request, id):
 def createUser(request):
     msg = ''
     if (request.method == 'POST'):
-        # parse the incoming information
-        data = JSONParser().parse(request)
-        username = data['username']
-        password = data['password']
-        print(make_password(data['password']))
-        if (validInput(username)):
-            if (validInput(password)):
-                # Execute the command on the remote machine
-                stdin, stdout, stderr = addRemoteUser(username, password)
-                # convert the stderr stream to a string
-                error_str = stderr.read().decode('utf-8')
-                if error_str == "":
-                    msg = username+" added sucessfully"
-                    uid = getRemoteUidUser()
-                    data['password'] = make_password(data['password'])
-                    data['uid'] = uid
-                    if ('group' in data):
-                        groups = data['group']
-                        for i in range(0, len(groups)):
-                            RemoteAddUserGroup(
-                                getGroupNameById(groups[i]), username)
-                        serializerUser = UserSerializerPost(data=data)
+        if is_valid():
+            if if_subscribed([1]):
+                # parse the incoming information
+                data = JSONParser().parse(request)
+                username = data['username']
+                password = data['password']
+                if (validInput(username)):
+                    if (validInput(password)):
+                        # Execute the command on the remote machine
+                        stdin, stdout, stderr = addRemoteUser(username, password)
+                        # convert the stderr stream to a string
+                        error_str = stderr.read().decode('utf-8')
+                        if error_str == "":
+                            msg = username+" added sucessfully"
+                            uid = getRemoteUidUser()
+                            data['password'] = make_password(data['password'])
+                            data['uid'] = uid
+                            if ('group' in data):
+                                groups = data['group']
+                                for i in range(0, len(groups)):
+                                    RemoteAddUserGroup(
+                                        getGroupNameById(groups[i]), username)
+                                serializerUser = UserSerializerPost(data=data)
+                            else:
+                                serializerUser = UserSerializerPostWithoutGroupAndPermission(data=data)
+                                gid = getRemoteGidGroup()
+                                groupname = {"groupname": username}
+                                groupname['gid'] = gid
+                                groupname['createdBySystem'] = True
+                                serializerGroup = GroupSerializer(data=groupname)
+                                # check if the sent information is okay
+                                if (serializerUser.is_valid()):
+                                    if (serializerGroup.is_valid()):
+                                        # if okay, save it on the database
+                                        serializerUser.save()
+                                        serializerGroup.save()
+                                        # provide a Json Response with the data that was saved
+                                        return JsonResponse({"msg": msg}, status=201)
+                                    # provide a Json Response with the necessary error information
+                                    return JsonResponse(serializerGroup.errors, status=400)
+                                # provide a Json Response with the necessary error information
+                                return JsonResponse(serializerUser.errors, status=400)
+                        else:
+                            msg = error_str
+                            return JsonResponse({"msg": msg}, status=400)
                     else:
-                        serializerUser = UserSerializerPostWithoutGroupAndPermission(data=data)
-                        gid = getRemoteGidGroup()
-                        groupname = {"groupname": username}
-                        groupname['gid'] = gid
-                        groupname['createdBySystem'] = True
-                        serializerGroup = GroupSerializer(data=groupname)
-                        # check if the sent information is okay
-                        if (serializerUser.is_valid()):
-                            if (serializerGroup.is_valid()):
-                                # if okay, save it on the database
-                                serializerUser.save()
-                                serializerGroup.save()
-                                # provide a Json Response with the data that was saved
-                                return JsonResponse({"msg": msg}, status=201)
-                            # provide a Json Response with the necessary error information
-                            return JsonResponse(serializerGroup.errors, status=400)
-                        # provide a Json Response with the necessary error information
-                        return JsonResponse(serializerUser.errors, status=400)
+                        msg = "invalid password"
+                        return JsonResponse({"msg": msg}, status=201)
                 else:
-                    msg = error_str
-                    return JsonResponse({"msg": msg}, status=400)
+                    msg = "invalid username"
+                    return JsonResponse({"msg": msg}, status=201)
             else:
-                msg = "invalid password"
-                return JsonResponse({"msg": msg}, status=201)
+                return JsonResponse({"msg": "your plan dosn't satisfy your requerement"}, status=400)
         else:
-            msg = "invalid username"
-            return JsonResponse({"msg": msg}, status=201)
+            return JsonResponse({"msg": "your subscription has expired"}, status=400)
+
+        
 
 
 # API to delete group

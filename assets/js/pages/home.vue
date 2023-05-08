@@ -42,7 +42,53 @@
                                 :value="'user-management'"
                                 :transition="false"
                             >
-                                test 1
+                                <v-row
+                                 align="center"
+                                 class=" pr-4 axe-media-print-hide axe-sticky-three"
+                                >
+                    <v-col cols="6">
+                      <v-table>
+    <thead>
+      <tr>
+        <th>
+          User
+        </th>
+        <th >
+          Role
+        </th>
+        <th >
+          Actions
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+      >
+        <td>tst</td>
+        <td>role test </td>
+        <td>action tst</td>
+
+      </tr>
+    </tbody>
+  </v-table>
+
+
+                    </v-col>
+                     <v-col cols="6">
+                     test 02
+                    </v-col>
+                    </v-row>
+                                     <v-row
+                                 align="center"
+                                 class=" pr-4 axe-media-print-hide axe-sticky-three"
+                                >
+                    <v-col cols="6">
+                    test 03
+                    </v-col>
+                     <v-col cols="6">
+                     test 04
+                    </v-col>
+                    </v-row>
                             </v-tab-item>
                             <v-tab-item
                                 :value="'certificats-management'"

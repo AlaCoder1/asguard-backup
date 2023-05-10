@@ -35,7 +35,7 @@
                         />
                     </v-col>
                 </v-row>
-                <v-row>
+                <v-row > 
                     <v-col cols="12">
                         <v-tabs-items v-model="tab">
                             <v-tab-item
@@ -43,52 +43,53 @@
                                 :transition="false"
                             >
                                 <v-row
+                                 no-gutters style="height: calc(50vh);"
                                  align="center"
                                  class=" pr-4 axe-media-print-hide axe-sticky-three"
                                 >
-                    <v-col cols="6">
-                      <v-table>
-    <thead>
-      <tr>
-        <th>
-          User
-        </th>
-        <th >
-          Role
-        </th>
-        <th >
-          Actions
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr
-      >
-        <td>tst</td>
-        <td>role test </td>
-        <td>action tst</td>
+                                    <v-col cols="6" style="height: 100%;" >
+                                        <user-management :users="users" />
 
-      </tr>
-    </tbody>
-  </v-table>
+                                    </v-col>
+                                        <v-col cols="6" style="height: 100%;" >
+                            
+                                        <ag-grid-vue
+                                            style="width: 100%;height:100%"
+                                            class="ag-theme-alpine"
+                                            :columnDefs="columnDefs"
+                                            :rowData="rowData"
+                                        />
+                                    
 
+                                    </v-col>
+                                </v-row >
+                                <v-row no-gutters style="height: calc(50vh);"
+                                        align="center"
+                                        class=" pr-4 axe-media-print-hide axe-sticky-three"
+                                        >
+                                     <v-col cols="6" style="height: 100%;" >
+                            
+                                        <ag-grid-vue
+                                            style="width: 100%;height:100%"
+                                            class="ag-theme-alpine"
+                                            :columnDefs="columnDefs"
+                                            :rowData="rowData"
+                                        />
+                                    
 
-                    </v-col>
-                     <v-col cols="6">
-                     test 02
-                    </v-col>
-                    </v-row>
-                                     <v-row
-                                 align="center"
-                                 class=" pr-4 axe-media-print-hide axe-sticky-three"
-                                >
-                    <v-col cols="6">
-                    test 03
-                    </v-col>
-                     <v-col cols="6">
-                     test 04
-                    </v-col>
-                    </v-row>
+                                    </v-col>
+                                    <v-col cols="6" style="height: 100%;" >
+                            
+                                        <ag-grid-vue
+                                            style="width: 100%;height:100%"
+                                            class="ag-theme-alpine"
+                                            :columnDefs="columnDefs"
+                                            :rowData="rowData"
+                                        />
+                                    
+
+                                    </v-col>
+                                </v-row>
                             </v-tab-item>
                             <v-tab-item
                                 :value="'certificats-management'"
@@ -107,18 +108,32 @@
 
 <script>
 import BaseLayout from '@/pages/layout.vue';
+import { AgGridVue } from 'ag-grid-vue';
+import UserManagement from '@/pages/user-management.vue';
 
 
 export default {
     name: 'HomeComponent',
     components: {
         BaseLayout,
+        AgGridVue,
+        UserManagement,
     },
     data() {
         return {
-            users:'',
             test:[],
             tab: null,
+            users:'',
+            columnDefs: [
+                { headerName: "Make", field: "make" },
+                { headerName: "Model", field: "model" },
+                { headerName: "Price", field: "price" },
+            ],
+            rowData: [
+                { make: "Toyota", model: "Celica", price: 35000 },
+                { make: "Ford", model: "Mondeo", price: 32000 },
+                { make: "Porsche", model: "Boxster", price: 72000 },
+            ],
         };
     },
     beforeMount: async function () {
@@ -127,3 +142,7 @@ export default {
     }
 };
 </script>
+<style lang="scss">
+   @import "~ag-grid-community/dist/styles/ag-grid.css";
+   @import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
+</style>

@@ -17,6 +17,8 @@ from django.contrib.auth.hashers import make_password
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
+
+
 @csrf_exempt
 # Retrieve the model class dynamically
 def handle(self, *args, **options):
@@ -25,6 +27,8 @@ def handle(self, *args, **options):
     msg = "user added succesffuly"
     return JsonResponse({"msg": msg}, status=201)
 # API to get all users
+
+
 @api_view(['GET'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
@@ -71,63 +75,69 @@ def getUser(request, id):
 def createUser(request):
     msg = ''
     if (request.method == 'POST'):
-        if is_valid():
-            if if_subscribed([1]):
-                # parse the incoming information
-                data = JSONParser().parse(request)
-                username = data['username']
-                password = data['password']
-                if (validInput(username)):
-                    if (validInput(password)):
-                        # Execute the command on the remote machine
-                        stdin, stdout, stderr = addRemoteUser(username, password)
-                        # convert the stderr stream to a string
-                        error_str = stderr.read().decode('utf-8')
-                        if error_str == "":
-                            msg = username+" added sucessfully"
-                            uid = getRemoteUidUser()
-                            data['password'] = make_password(data['password'])
-                            data['uid'] = uid
-                            if ('group' in data):
-                                groups = data['group']
-                                for i in range(0, len(groups)):
-                                    RemoteAddUserGroup(
-                                        getGroupNameById(groups[i]), username)
-                                serializerUser = UserSerializerPost(data=data)
-                            else:
-                                serializerUser = UserSerializerPostWithoutGroupAndPermission(data=data)
-                                gid = getRemoteGidGroup()
-                                groupname = {"groupname": username}
-                                groupname['gid'] = gid
-                                groupname['createdBySystem'] = True
-                                serializerGroup = GroupSerializer(data=groupname)
-                                # check if the sent information is okay
-                                if (serializerUser.is_valid()):
-                                    if (serializerGroup.is_valid()):
-                                        # if okay, save it on the database
-                                        serializerUser.save()
-                                        serializerGroup.save()
-                                        # provide a Json Response with the data that was saved
-                                        return JsonResponse({"msg": msg}, status=201)
+        if has_subscription():
+            if is_valid():
+                if if_subscribed([1, 2]):
+                    # parse the incoming information
+                    data = JSONParser().parse(request)
+                    username = data['username']
+                    password = data['password']
+                    if (validInput(username)):
+                        if (validInput(password)):
+                            # Execute the command on the remote machine
+                            stdin, stdout, stderr = addRemoteUser(
+                                username, password)
+                            # convert the stderr stream to a string
+                            error_str = stderr.read().decode('utf-8')
+                            if error_str == "":
+                                msg = username+" added sucessfully"
+                                uid = getRemoteUidUser()
+                                data['password'] = make_password(
+                                    data['password'])
+                                data['uid'] = uid
+                                if ('group' in data):
+                                    groups = data['group']
+                                    for i in range(0, len(groups)):
+                                        RemoteAddUserGroup(
+                                            getGroupNameById(groups[i]), username)
+                                    serializerUser = UserSerializerPost(
+                                        data=data)
+                                else:
+                                    serializerUser = UserSerializerPostWithoutGroupAndPermission(
+                                        data=data)
+                                    gid = getRemoteGidGroup()
+                                    groupname = {"groupname": username}
+                                    groupname['gid'] = gid
+                                    groupname['createdBySystem'] = True
+                                    serializerGroup = GroupSerializer(
+                                        data=groupname)
+                                    # check if the sent information is okay
+                                    if (serializerUser.is_valid()):
+                                        if (serializerGroup.is_valid()):
+                                            # if okay, save it on the database
+                                            serializerUser.save()
+                                            serializerGroup.save()
+                                            # provide a Json Response with the data that was saved
+                                            return JsonResponse({"msg": msg}, status=201)
+                                        # provide a Json Response with the necessary error information
+                                        return JsonResponse(serializerGroup.errors, status=400)
                                     # provide a Json Response with the necessary error information
-                                    return JsonResponse(serializerGroup.errors, status=400)
-                                # provide a Json Response with the necessary error information
-                                return JsonResponse(serializerUser.errors, status=400)
+                                    return JsonResponse(serializerUser.errors, status=400)
+                            else:
+                                msg = error_str
+                                return JsonResponse({"msg": msg}, status=400)
                         else:
-                            msg = error_str
-                            return JsonResponse({"msg": msg}, status=400)
+                            msg = "invalid password"
+                            return JsonResponse({"msg": msg}, status=201)
                     else:
-                        msg = "invalid password"
+                        msg = "invalid username"
                         return JsonResponse({"msg": msg}, status=201)
                 else:
-                    msg = "invalid username"
-                    return JsonResponse({"msg": msg}, status=201)
+                    return JsonResponse({"msg": "your plan dosn't satisfy your requerement"}, status=400)
             else:
-                return JsonResponse({"msg": "your plan dosn't satisfy your requerement"}, status=400)
+                return JsonResponse({"msg": "your subscription has expired"}, status=400)
         else:
-            return JsonResponse({"msg": "your subscription has expired"}, status=400)
-
-        
+            return JsonResponse({"msg": "your havn't a subscription"}, status=400)
 
 
 # API to delete group
@@ -237,26 +247,46 @@ def addPermission(request):
 
 
 # API to change password user
+
+
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
-def changePassword(request):
+def changePassword(request, id):
     if (request.method == 'PUT'):
+        userObject = User.objects.get(id=id)
+        print({'username': userObject.username})
         data = json.loads(request.body)
-        print(data)
         # instanciate with the serializer
         serializer = UserSerializerGet()
-        current_password = data['current_password']
+        # current_password = data['current_password']
         new_password = data['new_password']
         confirm_password = data['confirm_password']
         if new_password != confirm_password:
             print("Passwords do not match. Please try again.")
             return JsonResponse({"msg": "Passwords do not match. Please try again."})
-        subprocess.run(["echo", current_password, "|",
-                       "passwd", "--stdin", "username"])
-        subprocess.run(["echo", new_password, "|", "passwd",
-                       "--stdin", "username", "--password"])
-        print("Password changed successfully.")
+        else:
+            # run 'passwd' command to change password
+            # cmd = f"echo '{new_password}\n{new_password}\n' | sudo passwd {userObject.username}"
+            stdin, stdout, stderr = changePW(new_password, userObject.username)
+
+            # check if password change was successful
+            if stdout.channel.recv_exit_status() == 0:
+                userObject.password = make_password(new_password)
+                userObject.save()
+                print("Password change successful")
+            else:
+                print(f"Error changing password: {stderr.read().decode()}")
+        # run 'passwd' command to change password
+        # cmd = ["passwd", username]
+        # proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # output, error = proc.communicate(input=f"{new_password}\n{new_password}\n".encode())
+
+        # # check if password change was successful
+        # if proc.returncode == 0:
+        #     print("Password change successful")
+        # else:
+        #     print(f"Error changing password: {error.decode()}")
         # check whether the sent information is okay
         # if(serializer.is_valid()):
         # if okay, save it on the database
@@ -265,6 +295,34 @@ def changePassword(request):
         # provide a JSON response with the necessary error information
         # return JsonResponse(serializer.errors, status=400)
         return JsonResponse(serializer.data, status=201)
+# # API to change password user
+# @api_view(['PUT'])
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([AllowAny])
+# def changePassword(request):
+#     if (request.method == 'PUT'):
+#         data = json.loads(request.body)
+#         # instanciate with the serializer
+#         serializer = UserSerializerGet()
+#         current_password = data['current_password']
+#         new_password = data['new_password']
+#         confirm_password = data['confirm_password']
+#         if new_password != confirm_password:
+#             print("Passwords do not match. Please try again.")
+#             return JsonResponse({"msg": "Passwords do not match. Please try again."})
+#         subprocess.run(["echo", current_password, "|",
+#                        "passwd", "--stdin", "username"])
+#         subprocess.run(["echo", new_password, "|", "passwd",
+#                        "--stdin", "username", "--password"])
+#         print("Password changed successfully.")
+#         # check whether the sent information is okay
+#         # if(serializer.is_valid()):
+#         # if okay, save it on the database
+#         # serializer.save()
+#         # provide a JSON response with the data that was submitted
+#         # provide a JSON response with the necessary error information
+#         # return JsonResponse(serializer.errors, status=400)
+#         return JsonResponse(serializer.data, status=201)
 
 
 def whoami():
@@ -280,93 +338,4 @@ def whoami():
     return JsonResponse({"whoami": whoami}, status=201)
 
 
-
-
 ####
- 
-from .scriptNetlinksshFinale import *
-###########API to update connexion using ssh and netlink
-#####API to update connexion to static
-@csrf_exempt
-def updateConnToStatic(request):
-    if (request.method == 'PUT'):
-        data = json.loads(request.body)
-        ifname = data.get('ifname', None)
-        ip_address = data.get('ip_address', None)
-        netmask = data.get('netmask', None)
-        gateway = data.get('gateway', None)
-        msg,status=update_conn_static(ifname,ip_address,netmask,gateway)
-        return JsonResponse({"msg:":msg},status=status)
-        
-        
-#####API to update connexion to dhcp base
-@csrf_exempt
-def updateConnToDhcpBase(request):
-    if (request.method == 'PUT'):
-        data = json.loads(request.body)
-        ifname = data.get('ifname', None)
-        reject = data.get('reject', None)
-        hostname = data.get('hostname', None)
-        alias_add = data.get('alias_add', None)
-        alias_mask = data.get('alias_mask', None)
-           
-        config=['reject {};'.format(reject),
-        'interface "{}"'.format(ifname),
-            '{',
-        'send host-name "{}";'.format(hostname),
-        'alias {',
-        'interface "{}";'.format(ifname),
-        'fixed-address {};'.format(alias_add),
-        'option subnet-mask {};'.format(alias_mask),
-        '}'
-                ]
-        msg,status=update_conn_dhcp(ifname,config)
-        return JsonResponse({"msg:":msg},status=status)
-#####API to update connexion to dhcp advanced
-@csrf_exempt
-def updateConnToDhcpAdvanced(request):
-    if (request.method == 'PUT'):
-        data = json.loads(request.body)
-        ifname = data.get('ifname', None)
-        timeout = data.get('timeout', None)
-        retry = data.get('retry', None)
-        reboot = data.get('reboot', None)
-        backoff = data.get('backoff', None)
-        select_timeout = data.get('select_timeout', None)
-        initial_interval = data.get('initial_interval', None)
-        reject = data.get('reject', None)
-        hostname = data.get('hostname', None)
-        dhcp_client = data.get('dhcp_client', None)
-        domaine_name = data.get('domaine_name', None)
-        domain_server = data.get('domain_server', None)
-        lease_time = data.get('lease_time', None)
-        request = data.get('request', None)
-        require = data.get('require', None)
-        alias_add = data.get('alias_add', None)
-        alias_mask = data.get('alias_mask', None)
-        config=['timeout {};'.format(timeout),
-        'retry {};'.format(retry),
-        'reboot {};'.format(reboot),
-        'backoff-cutoff {};'.format(backoff),
-        'select-timeout {};'.format(select_timeout),
-        'initial-interval {};'.format(initial_interval),
-            'reject {};'.format(reject),
-            'interface "{}"'.format(ifname),
-                '{',
-        'send host-name "{}";'.format(hostname),
-        'send dhcp-client-identifier {};'.format(dhcp_client),
-        'supersede domain-name "{}";'.format(domaine_name),
-        'prepend domain-name-servers {};'.format(domain_server),
-        'send dhcp-lease-time {};'.format(lease_time),
-        ' request {};'.format(request),
-            'require {};'.format(require),
-            '}',
-        'alias {',
-        'interface "{}";'.format(ifname),
-        'fixed-address {};'.format(alias_add),
-        'option subnet-mask {};'.format(alias_mask),
-        '}'
-                ]
-        msg,status=update_conn_dhcp(ifname,config)
-        return JsonResponse({"msg:":msg},status=status)
-

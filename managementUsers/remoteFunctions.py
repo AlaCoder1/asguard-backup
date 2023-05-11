@@ -8,10 +8,15 @@ import pam
 import hashlib
 from authentification.views import *
 
+
 def sudo(cmd):
     return "sudo "+cmd
+def changePW(newPassword,username):
+    # run 'passwd' command to change password
+    cmd = f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}"
+    stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
+    return stdin, stdout, stderr 
 
-# function to get UID from system
 def getRemoteUidUser():
     # Run the getent group command and capture its output
     command = "getent passwd"
@@ -62,6 +67,8 @@ def validInput(var):
         return True
 
 # validation password mustn't conetent " or '
+
+
 def validPassword(password):
     if re.findall(r'["|\'|;|\|]', password):
         return False
@@ -69,6 +76,8 @@ def validPassword(password):
         return True
 
 # function to test if username exit
+
+
 def RemoteUsernameExists(username):
     # Check if the username exists in the /etc/passwd file
     with open("/etc/passwd", "r") as passwd_file:
@@ -78,6 +87,8 @@ def RemoteUsernameExists(username):
     return False
 
 # function to add user
+
+
 def addRemoteUser(username, password):
     # Run the getent group command and capture its output
     command = "sudo useradd " + username + " && sudo echo " + \
@@ -87,6 +98,8 @@ def addRemoteUser(username, password):
     # return ssh.exec_command(command)
 
 # function to delete user
+
+
 def deleteRemoteUser(username):
     # Run the getent group command and capture its output
     command = "userdel -r"+username
@@ -94,6 +107,8 @@ def deleteRemoteUser(username):
     return ssh.exec_command(sudo(command))
 
 # functio to change username
+
+
 def RemotechangeUsername(newusername, oldusername):
     # Run the getent group command and capture its output
     command = "usermod -l " + newusername + " "+oldusername
@@ -101,6 +116,8 @@ def RemotechangeUsername(newusername, oldusername):
     return ssh.exec_command(sudo(command))
 
 # function to add user in group
+
+
 def RemoteAddUserGroup(groupname, username):
     # Run the getent group command and capture its output
     command = "usermod -aG " + groupname + " "+username

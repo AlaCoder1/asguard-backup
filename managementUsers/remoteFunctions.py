@@ -11,20 +11,25 @@ from authentification.views import *
 
 def sudo(cmd):
     return "sudo "+cmd
-def changePW_byAdmin(newPassword,username):
+
+
+def changePW_byAdmin(newPassword, username):
     # run 'passwd' command to change password
     cmd = f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}"
     stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
-    return stdin, stdout, stderr 
+    return stdin, stdout, stderr
 
-def changePW(currentPassword,newPassword,username):
+
+def changePW(currentPassword, newPassword, username):
     # run 'passwd' command to change password
     cmd = f"echo '{currentPassword}\n{newPassword}\n{newPassword}' | passwd"
 
     # stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
-    stdin, stdout, stderr = ssh.exec_command(f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}")
+    stdin, stdout, stderr = ssh.exec_command(
+        f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}")
 
-    return stdin, stdout, stderr 
+    return stdin, stdout, stderr
+
 
 def getRemoteUidUser():
     # Run the getent group command and capture its output

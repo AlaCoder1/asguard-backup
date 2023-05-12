@@ -11,7 +11,7 @@ urlpatterns = [
     path('deleteUser/<int:id>', views.delete_user, name="deleteUser"),
     path('modifyUser/<int:id>', views.modifyUser, name="modifyUser"),
     path('addPermission', views.addPermission, name="addPermission"),
-    path('userChangePW_ByAdmin/<int:id>', views.changePasswordByAdmin, name="userChangePW"),
+    path('userChangePW_ByAdmin/<int:id>',
+         views.changePasswordByAdmin, name="userChangePW"),
     path('userChangePW/<int:id>', views.changePassword, name="userChangePW"),
 ]
-

@@ -8,14 +8,10 @@ urlpatterns = [
     path('getAllUsers', views.getAllUsers, name="getAllUsers"),
     path('getUser/<int:id>', views.getUser, name="getUser"),
     path('createUser', views.createUser, name="createUser"),
-    # path('createUserToAnotherMachine', views.createUserToAnotherMachine, name="createUserToAnotherMachine"),
-     path('deleteUser/<int:id>', views.delete_user, name="deleteUser"),
+    path('deleteUser/<int:id>', views.delete_user, name="deleteUser"),
     path('modifyUser/<int:id>', views.modifyUser, name="modifyUser"),
     path('addPermission', views.addPermission, name="addPermission"),
+    path('userChangePW_ByAdmin/<int:id>', views.changePasswordByAdmin, name="userChangePW"),
     path('userChangePW/<int:id>', views.changePassword, name="userChangePW"),
-    path('updateConnToStatic',views.updateConnToStatic,name="updateConnToStatic"),
-    path('updateConnToDhcpBase',views.updateConnToDhcpBase,name="updateConnToDhcpBase"),
-    path('updateConnToDhcpAdvanced',views.updateConnToDhcpAdvanced,name="updateConnToDhcpAdvanced"),
-
 ]
 

@@ -151,6 +151,14 @@ def is_valid():
         return True
     else:
         return False
+    
+def has_subscription():
+    last_subscription = plansSubscription.objects.order_by('start_at').last()
+    if last_subscription is None:
+        return False
+    else:
+        return True
+
 def if_subscribed(indexs_plans_feature):
     list_of_plan_feature = []
     last_subscription = plansSubscription.objects.order_by('start_at').last()

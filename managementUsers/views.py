@@ -252,7 +252,7 @@ def addPermission(request):
 @api_view(['PUT'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
-def changePassword(request, id):
+def changePasswordByAdmin(request, id):
     if (request.method == 'PUT'):
         userObject = User.objects.get(id=id)
         print({'username': userObject.username})
@@ -267,9 +267,7 @@ def changePassword(request, id):
             return JsonResponse({"msg": "Passwords do not match. Please try again."})
         else:
             # run 'passwd' command to change password
-            # cmd = f"echo '{new_password}\n{new_password}\n' | sudo passwd {userObject.username}"
-            stdin, stdout, stderr = changePW(new_password, userObject.username)
-
+            stdin, stdout, stderr = changePW_byAdmin(new_password, userObject.username)
             # check if password change was successful
             if stdout.channel.recv_exit_status() == 0:
                 userObject.password = make_password(new_password)
@@ -277,24 +275,52 @@ def changePassword(request, id):
                 print("Password change successful")
             else:
                 print(f"Error changing password: {stderr.read().decode()}")
-        # run 'passwd' command to change password
-        # cmd = ["passwd", username]
-        # proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        # output, error = proc.communicate(input=f"{new_password}\n{new_password}\n".encode())
-
-        # # check if password change was successful
-        # if proc.returncode == 0:
-        #     print("Password change successful")
-        # else:
-        #     print(f"Error changing password: {error.decode()}")
-        # check whether the sent information is okay
-        # if(serializer.is_valid()):
-        # if okay, save it on the database
-        # serializer.save()
-        # provide a JSON response with the data that was submitted
-        # provide a JSON response with the necessary error information
-        # return JsonResponse(serializer.errors, status=400)
         return JsonResponse(serializer.data, status=201)
+    
+from django.contrib.auth.hashers import check_password
+@api_view(['PUT'])
+@authentication_classes([JWTAuthentication])
+@permission_classes([AllowAny])
+def changePassword(request, id):
+    msg=""
+    if (request.method == 'PUT'):
+        userObject = User.objects.get(id=id)
+        if userObject.is_verified == True:
+            return JsonResponse({"msg":"your account is verified"})
+        else:
+            # print({'username': userObject.username})
+            # print({'vérifier': userObject.is_verified})
+            # print({'password': userObject.password})
+            data = json.loads(request.body)
+            current_password = data['current_password']
+            new_password = data['new_password']
+            confirm_password = data['confirm_password']
+            if check_password(current_password, userObject.password):
+                print('Passwords match!')
+                if new_password != confirm_password:
+                    print("Passwords do not match. Please try again.")
+                    msg="Passwords do not match. Please try again."
+                    return JsonResponse({"msg": "Passwords do not match. Please try again."})
+                else:
+                    # run 'passwd' command to change password
+                    stdin, stdout, stderr = changePW(current_password,new_password,userObject.username)
+                    # check if password change was successful
+                    if stdout.channel.recv_exit_status() == 0:
+                        userObject.password = make_password(new_password)
+                        userObject.is_verified = True
+                        userObject.save()
+                        print("Password change successful")
+                        msg="Password change successful"
+                    else:
+                        print(f"Error changing password: {stderr.read().decode()}")
+                        msg=f"Error changing password: {stderr.read().decode()}"
+            else:
+                print('Passwords do not match')
+                msg='Passwords do not match'
+            
+            return JsonResponse({"msg":msg})
+    
+    
 # # API to change password user
 # @api_view(['PUT'])
 # @authentication_classes([JWTAuthentication])
@@ -336,6 +362,3 @@ def whoami():
     print(last_line)
     whoami = last_line
     return JsonResponse({"whoami": whoami}, status=201)
-
-
-####

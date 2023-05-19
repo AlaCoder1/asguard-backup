@@ -78,7 +78,7 @@ def createServer(request):
                     serializerServer.save()
                     # provide a Json Response with the data that was saved
                     return JsonResponse({"msg": msg}, status=201)
-                    
+
                 # provide a Json Response with the necessary error information
                 return JsonResponse(serializerServer.errors, status=400)
             else:

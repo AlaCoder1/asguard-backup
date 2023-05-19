@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+from dotenv import load_dotenv
 from pathlib import Path
 import os
 import mimetypes
@@ -27,7 +28,7 @@ SECRET_KEY = 'django-insecure-p6qmvrnn#8ig(1*(bpu^tcc4-jrtd8%ml-!+@xmpqnm238mumn
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS =  ['*']
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -47,7 +48,8 @@ INSTALLED_APPS = [
     'managementGroup',
     "managementServers",
     "settings",
-    "authentification"
+    "authentification",
+    "subscription"
 ]
 
 MIDDLEWARE = [
@@ -58,7 +60,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    "whitenoise.middleware.WhiteNoiseMiddleware", # Here
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Here
 ]
 
 ROOT_URLCONF = 'dms.urls'
@@ -85,17 +87,17 @@ WSGI_APPLICATION = 'dms.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
-DATABASES = {  
-    'default': {  
-       'ENGINE': 'django.db.backends.postgresql',
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': 'mypassword',
         'HOST': 'localhost',
         'PORT': 5432,
         # 'ATOMIC_REQUESTS': True,
-    }  
-}  
+    }
+}
 
 
 # Password validation
@@ -115,7 +117,6 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
 ]
-
 
 
 # Internationalization
@@ -153,22 +154,23 @@ if DEBUG:
     ]
 else:
     STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-ENCORE_ENTRYPOINTS_FILE = os.path.join(BASE_DIR, 'static') + '/entrypoints.json'
-#ENCORE_ENTRYPOINTS_FILE= '/home/oussema/Documents/numeryx/newdms/dms/public/build/entrypoints.json'
+ENCORE_ENTRYPOINTS_FILE = os.path.join(
+    BASE_DIR, 'static') + '/entrypoints.json'
+# ENCORE_ENTRYPOINTS_FILE= '/home/oussema/Documents/numeryx/newdms/dms/public/build/entrypoints.json'
 
-ENCRYPT_KEY= "57-xmiMq0yop7uD7Aq3j4PNUOgZhradICh2BKBnIdB0="
+ENCRYPT_KEY = "57-xmiMq0yop7uD7Aq3j4PNUOgZhradICh2BKBnIdB0="
 # custom user model
 AUTH_USER_MODEL = "managementUsers.User"
 # REST FRAMEWORK
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [ 
-       'rest_framework.permissions.IsAuthenticated'],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated'],
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'authentification.authentication.JWTAuthentication',
-        
+
     ]
 
-  
+
 }
 
 # jwt_auth/settings.py
@@ -179,11 +181,9 @@ JWT_CONF = {
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'JWT_AUTH_HEADER_PREFIX': 'Bearer'
-    
+
 }
 
-import os
-from dotenv import load_dotenv
 
 # Load environment variables from .env file
 load_dotenv()

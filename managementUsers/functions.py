@@ -41,7 +41,7 @@ def encrypt(txt):
         # log the error if any
         logging.getLogger("error_logger").error(traceback.format_exc())
         return None
-    
+
 
 # validation name of group and users (must content char and int)
 
@@ -152,7 +152,3 @@ def authenticate(username, password):
 #             groups_users = fields[-1].split(',')
 #     # groups_users.append(groupname)
 #     return groups_users
-
-
-
-

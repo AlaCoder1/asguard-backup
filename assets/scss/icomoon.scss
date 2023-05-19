@@ -25,6 +25,7 @@ $icon-arrow-down: "\e914";
 $icon-check: "\e915";
 $icon-eye: "\e916";
 $icon-chevron-right: "\e917";
+$icon-close : "\e6fd";
 
 $icon-library: (
 "book":$icon-book-outline,
@@ -50,7 +51,8 @@ $icon-library: (
 "arrow":$icon-arrow-down,
 "check": $icon-check,
 "eye": $icon-eye,
-"chevron-right": $icon-chevron-right
+"chevron-right": $icon-chevron-right,
+"close": $icon-close,
 );
 
 @font-face {

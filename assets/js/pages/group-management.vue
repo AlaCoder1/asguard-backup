@@ -1,6 +1,6 @@
 <template>
         <div> 
-            <h4>Networks admins</h4>
+            <h4>Networks groups</h4>
             <ag-grid-vue
                 domLayout="autoHeight"
                 class="ag-theme-alpine mt-3 m-w-80"
@@ -13,7 +13,7 @@
                 :rounded="true"
                 class="mt-3 add-btn-user"
             >
-                <span class="text-white" >Add User</span>
+                <span class="text-white" >Add Group</span>
             </v-btn>       
          </div>
         
@@ -21,7 +21,7 @@
 <script>
 import { AgGridVue } from 'ag-grid-vue';
 export default {
-    name: 'UserManagement',
+    name: 'GroupManagement',
     components: {
         AgGridVue,
     },
@@ -34,18 +34,17 @@ export default {
     data() {
         return {
             columnDefs: [
-                { headerName: "User", field: "user" },
-                { headerName: "Role", field: "role" },
+                { headerName: "Group", field: "group" },
+                { headerName: "Description", field: "description" },
                 { headerName: "Actions", cellRenderer: this.actionCellRenderer },
             ],
             rowData: [
-                { id:1, user: "root (root@numeryx.fr)", role: "Super Root"  },
-                { id:2, user: "admin (admin@numeryx.fr)", role: "Root"  },
-                { id:3, user: "user (admin@numeryx.fr)", role: "Root"  },
-                { id:4, user: "client (admin@numeryx.fr)", role: "Root"  },
-                { id:5, user: "none (admin@numeryx.fr)", role: "Root"  },
-                { id:6, user: "test (admin@numeryx.fr)", role: "Root"  },
-
+                { id:1, group:"Support", description: "Super Root"  },
+                { id:2, group: "Sudoers", description: "Sudoers"  },
+                { id:3, group: "Observateurs", description: "Observateurs"  },
+                { id:4, group: "Admins", description: "Admins"  },
+                { id:5, group: "Users", description: "Users"  },
+                { id:6, group: "tests", description: "tests"  },
             ],
             gridOptions: {
                pagination: true,

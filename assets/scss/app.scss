@@ -87,3 +87,20 @@ body {
 .text-color {
     color: black;
 }
+.m-w-80 {
+    max-width: 80%!important;
+}
+.add-btn {
+    &-user{
+        margin-left: 64%;
+    }
+    &-server{
+        margin-left: 80%;
+    }
+}
+.add-btn-user .v-btn__content {
+    color: white;
+}
+.add-btn-server .v-btn__content {
+    color: white;
+}

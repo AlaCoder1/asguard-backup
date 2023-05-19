@@ -1,9 +1,9 @@
 <template>
         <div> 
-            <h4>Networks admins</h4>
+            <h4>Networks servers</h4>
             <ag-grid-vue
                 domLayout="autoHeight"
-                class="ag-theme-alpine mt-3 m-w-80"
+                class="ag-theme-alpine mt-3 "
                 :columnDefs="columnDefs"
                 :rowData="rowData"
                 :gridOptions="gridOptions"
@@ -11,9 +11,9 @@
             <v-btn
                 color="dms_blue_dark"
                 :rounded="true"
-                class="mt-3 add-btn-user"
+                class="mt-3 add-btn-server"
             >
-                <span class="text-white" >Add User</span>
+                <span >Add Server</span>
             </v-btn>       
          </div>
         
@@ -21,7 +21,7 @@
 <script>
 import { AgGridVue } from 'ag-grid-vue';
 export default {
-    name: 'UserManagement',
+    name: 'NetworkServerManagement',
     components: {
         AgGridVue,
     },
@@ -34,18 +34,18 @@ export default {
     data() {
         return {
             columnDefs: [
-                { headerName: "User", field: "user" },
-                { headerName: "Role", field: "role" },
+                { headerName: "Server name", field: "servername" },
+                { headerName: "Type", field: "type" },
+                { headerName: "Host Name", field: "hostname" },
                 { headerName: "Actions", cellRenderer: this.actionCellRenderer },
             ],
             rowData: [
-                { id:1, user: "root (root@numeryx.fr)", role: "Super Root"  },
-                { id:2, user: "admin (admin@numeryx.fr)", role: "Root"  },
-                { id:3, user: "user (admin@numeryx.fr)", role: "Root"  },
-                { id:4, user: "client (admin@numeryx.fr)", role: "Root"  },
-                { id:5, user: "none (admin@numeryx.fr)", role: "Root"  },
-                { id:6, user: "test (admin@numeryx.fr)", role: "Root"  },
-
+                { id:1, servername: "mfa", type: "Local + Mot de Passe à Usage Unique Temporel (TOTP)	" ,hostname:"DMS sdwan" },
+                { id:2, servername: "mfa", type: "Local + Mot de Passe à Usage Unique Temporel (TOTP)	" ,hostname:"DMS sdwan" },
+                { id:3, servername: "mfa", type: "Local + Mot de Passe à Usage Unique Temporel (TOTP)	" ,hostname:"DMS sdwan" },
+                { id:4, servername: "mfa", type: "Local + Mot de Passe à Usage Unique Temporel (TOTP)	" ,hostname:"DMS sdwan" },
+                { id:5, servername: "mfa", type: "Local + Mot de Passe à Usage Unique Temporel (TOTP)	" ,hostname:"DMS sdwan" },
+                { id:6, servername: "mfa2", type: "Local + Mot de Passe à Usage Unique Temporel (TOTP)	" ,hostname:"DMS sdwan" },
             ],
             gridOptions: {
                pagination: true,

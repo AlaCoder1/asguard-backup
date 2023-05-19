@@ -48,45 +48,20 @@
                                  class=" pr-4 axe-media-print-hide axe-sticky-three"
                                 >
                                     <v-col cols="6" style="height: 100%;" >
-                                        <user-management :users="users" />
-
+                                        <user-management />
                                     </v-col>
-                                        <v-col cols="6" style="height: 100%;" >
-                            
-                                        <ag-grid-vue
-                                            style="width: 100%;height:100%"
-                                            class="ag-theme-alpine"
-                                            :columnDefs="columnDefs"
-                                            :rowData="rowData"
-                                        />
-                                    
-
+                                    <v-col cols="6" style="height: 100%;" >
+                                        <network-server-management />
                                     </v-col>
                                 </v-row >
                                 <v-row no-gutters style="height: calc(50vh);"
-                                        align="center"
-                                        class=" pr-4 axe-media-print-hide axe-sticky-three"
-                                        >
-                                     <v-col cols="6" style="height: 100%;" >
-                            
-                                        <ag-grid-vue
-                                            style="width: 100%;height:100%"
-                                            class="ag-theme-alpine"
-                                            :columnDefs="columnDefs"
-                                            :rowData="rowData"
-                                        />
-                                    
-
+                                align="center"
+                                class=" pr-4 axe-media-print-hide axe-sticky-three mt-10"
+                                >
+                                    <v-col cols="6" style="height: 100%;" >
+                                        <group-management />
                                     </v-col>
                                     <v-col cols="6" style="height: 100%;" >
-                            
-                                        <ag-grid-vue
-                                            style="width: 100%;height:100%"
-                                            class="ag-theme-alpine"
-                                            :columnDefs="columnDefs"
-                                            :rowData="rowData"
-                                        />
-                                    
 
                                     </v-col>
                                 </v-row>
@@ -108,32 +83,25 @@
 
 <script>
 import BaseLayout from '@/pages/layout.vue';
-import { AgGridVue } from 'ag-grid-vue';
 import UserManagement from '@/pages/user-management.vue';
+import GroupManagement from '@/pages/group-management.vue';
+import NetworkServerManagement from '@/pages/network-server-management.vue';
+
 
 
 export default {
     name: 'HomeComponent',
     components: {
         BaseLayout,
-        AgGridVue,
         UserManagement,
+        NetworkServerManagement,
+        GroupManagement
     },
     data() {
         return {
             test:[],
             tab: null,
             users:'',
-            columnDefs: [
-                { headerName: "Make", field: "make" },
-                { headerName: "Model", field: "model" },
-                { headerName: "Price", field: "price" },
-            ],
-            rowData: [
-                { make: "Toyota", model: "Celica", price: 35000 },
-                { make: "Ford", model: "Mondeo", price: 32000 },
-                { make: "Porsche", model: "Boxster", price: 72000 },
-            ],
         };
     },
     beforeMount: async function () {
@@ -142,7 +110,4 @@ export default {
     }
 };
 </script>
-<style lang="scss">
-   @import "~ag-grid-community/dist/styles/ag-grid.css";
-   @import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
-</style>
+

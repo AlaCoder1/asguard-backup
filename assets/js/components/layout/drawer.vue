@@ -92,7 +92,7 @@
                     </v-list-item-title>
                 </v-list-item-content>
 
-                <div class="sub-menu" v-if=" mouseOverSubMenu ">
+                <div class="sub-menu" >
                     <ul>
                         <li v-for="it in item.subItems" >
                             <a >{{ it.title }}</a>

@@ -9,7 +9,7 @@
                 class="dms_grey axe-media-print-hide axe-sticky"
                 height="60"
             >
-                <v-toolbar-title class="axe-font-size-three white--text ml-2">
+                <v-toolbar-title class="axe-font-size-three text-color ml-2">
                     {{ title }}
                 </v-toolbar-title>
                 <v-spacer />

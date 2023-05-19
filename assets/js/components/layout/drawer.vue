@@ -63,11 +63,16 @@
         <v-list
             dense
             class="white lighten-1 pb-0">
+            
             <v-list-item
                 v-for="item in items"
                 :key="item.title"
                 link
                 :href="item.href"
+                @mouseover="showSubMenu(item, $event)"
+                @mouseleave="hideSubMenu(item, $event)"
+
+
             >
                 <v-list-item-icon  v-if="mini"> 
                     <span
@@ -86,9 +91,22 @@
                         {{ item.title }}
                     </v-list-item-title>
                 </v-list-item-content>
+
+                <div class="sub-menu" >
+                    <ul>
+                        <li v-for="it in item.subItems" >
+                            <a >{{ it.title }}</a>
+                        </li>
+                    </ul>
+                </div> 
+
+               
             </v-list-item>
         </v-list>
+
     </v-navigation-drawer>
+    
+
 </div>
 </template>
 
@@ -104,13 +122,28 @@ export default {
     },
     data: () => ({
         drawer: true,
+        subMenuVisible: false,
         lang:'frensh',
         items: [
             {
                 title: 'Dashboard', icon: 'icon-home', href: '/', active: 'home',
+                subItems: [
+                    { title: 'Sub-item 1' , icon: 'icon-home', href: '/' },
+                    { title: 'Sub-item 2', icon: 'icon-home', href: '/' },
+                    { title: 'Sub-item 3', icon: 'icon-home', href: '/' },
+                ],
+                showSubMenu: false,
+                mouseOverSubMenu: false,
             },
             {
                 title: 'System', icon: 'icon-trending', href: '/system', active: 'system',
+                subItems: [
+                    { title: 'Sub-item 4', icon: 'icon-home', href: '/' },
+                    { title: 'Sub-item 5', icon: 'icon-home', href: '/' },
+                    { title: 'Sub-item 6', icon: 'icon-home', href: '/' },
+                ],
+                showSubMenu: false,
+                mouseOverSubMenu: false,
             },
             {
                 title: 'Interfaces', icon: 'icon-business', href: '/interfaces', active: 'interfaces',
@@ -128,8 +161,32 @@ export default {
                 title: 'Subscription', icon: 'icon-business', href: '/subscription', active: 'Firewall',
             },                     
         ],
+        subItems: [
+                    { title: 'Sub-item 1' , icon: 'icon-home', href: '/' },
+                    { title: 'Sub-item 2', icon: 'icon-home', href: '/' },
+                    { title: 'Sub-item 3', icon: 'icon-home', href: '/' },
+        ],
         mini: true,
     }),
+    methods: {
+        showSubMenu(item, event) {
+            item.showSubMenu = true;
+           
+            if (event.relatedTarget && event.relatedTarget.parentElement === event.currentTarget) {
+                // If the user is already hovering over the sub-menu, don't hide it when leaving the list item
+                 item.mouseOverSubMenu = true;
+            } 
+        },
+        hideSubMenu(item, event) {
+            item.showSubMenu = false;
+            console.log(event);
+           //if (event.relatedTarget && event.relatedTarget.parentElement !== event.currentTarget) {
+                // If the user is already hovering over the sub-menu, don't hide it when leaving the list item
+                 item.mouseOverSubMenu = false;
+            //}
+            
+        },
+    },
 };
 </script>
 <style lang="sass">
@@ -237,6 +294,18 @@ export default {
     }
     .input-search   {
         max-width: 250px;
+    }
+    .sub-menu {
+        top: 127.778px;
+        left: 252px;
+        max-height: 443.778px;
+        background: blue;
+        height:400px;
+        width: 200px;
+        overflow-y: auto;
+        padding: 16px;
+        position: fixed;
+        z-index: 9999;
     }
 
 

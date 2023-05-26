@@ -48,7 +48,7 @@ def authentification_JWT(request):
                 del userDict['token_last_expired']
                 return JsonResponse({'token': jwt_token, 'user': userDict})
             else:
-                return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_400_BAD_REQUEST)
+                return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return JsonResponse({'message': 'Invalid username or password'})
 

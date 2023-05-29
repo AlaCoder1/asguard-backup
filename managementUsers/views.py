@@ -24,16 +24,15 @@ from django.views.decorators.csrf import csrf_exempt
 # Retrieve the model class dynamically
 def handle(self, *args, **options):
     # Your code to add data to the database here
-    User.objects.create(username='root', password=make_password("rootroot"))
+    User.objects.create(username='test', password=make_password("test"))
     msg = "user added succesffuly"
     return JsonResponse({"msg": msg}, status=201)
 # API to get all users
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def getAllUsers(request):
+
     list_users = []
     if (request.method == 'GET'):
         users = User.objects.all()

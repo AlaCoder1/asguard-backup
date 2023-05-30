@@ -16,8 +16,6 @@ from authentification.authentication import JWTAuthentication
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def getAllServers(request):
     list_servers = []
     if (request.method == 'GET'):
@@ -38,8 +36,6 @@ def getAllServers(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def getServer(request, id):
     if (request.method == 'GET'):
         server = Server.objects.filter(id=id)
@@ -57,8 +53,6 @@ def getServer(request, id):
 
 
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def createServer(request):
     msg = ''
     if (request.method == 'POST'):
@@ -90,8 +84,6 @@ def createServer(request):
 
 
 @api_view(['DELETE'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def deleteServer(request, id):
     msg = ""
     if (request.method == 'DELETE'):
@@ -103,8 +95,6 @@ def deleteServer(request, id):
 
 
 @api_view(['PUT'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def modifyServer(request, id):
     msg = ''
     if (request.method == 'PUT'):

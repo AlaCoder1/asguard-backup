@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from managementUsers.views import *
 from managementUsers.models import User
+from django.contrib.auth.decorators import login_required
 
+@login_required(login_url='/')
 def index_page(request):
     usr=getAllUsers(request)
     context = {'users':usr}

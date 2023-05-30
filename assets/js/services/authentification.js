@@ -7,8 +7,8 @@ import axios from 'axios';
  * @param  params
  * @returns
  */
- export async function loginAndGetToken(params) {
-    return axios.post('/auth/authentification_JWT', params);
+ export async function login(params) {
+    return axios.post('/auth/authentification', params);
 }
 
 /**

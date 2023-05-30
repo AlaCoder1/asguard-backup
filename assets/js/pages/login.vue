@@ -48,7 +48,7 @@
 
 <script>
 import Footer from '@/components/layout/footer.vue';
-import { loginAndGetToken } from '@/services/authentification.js';
+import { login } from '@/services/authentification.js';
 
 export default {
     name: 'HomeComponent',
@@ -74,7 +74,7 @@ export default {
                 username: this.username,
                 password: this.password,
             };
-            loginAndGetToken(params).then((resp) => {
+            login(params).then((resp) => {
               this.invalid = false ;
               console.log("retour from api" ,resp);
                window.location.href = `/dashboard`;

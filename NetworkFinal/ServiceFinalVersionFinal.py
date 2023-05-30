@@ -1,7 +1,7 @@
 import paramiko
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('10.1.12.178', username='root', password='rootroot')
+#ssh.connect('10.1.12.178', username='root', password='rootroot')
 
 ###################
 ##clean old config

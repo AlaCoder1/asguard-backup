@@ -15,8 +15,6 @@ from django.core import serializers
 
 # API to get all groups
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def getAllGroups(request):
     list_group = []
     if (request.method == 'GET'):
@@ -36,8 +34,6 @@ def getAllGroups(request):
 
 # API to get one group
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def getGroup(request, id):
     if (request.method == 'GET'):
         group = Group.objects.get(id=id)
@@ -49,8 +45,6 @@ def getGroup(request, id):
 
 # API to create group
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def createGroup(request):
     msg = ''
     if (request.method == 'POST'):
@@ -85,8 +79,6 @@ def createGroup(request):
 
 # API to delete group
 @api_view(['DELETE'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def deleteGroup(request, id):
     msg = ''
     if (request.method == 'DELETE'):
@@ -113,8 +105,6 @@ def updateGroup(request, id):
 
 
 @api_view(['PUT'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def changeGroupname(request, id):
     msg = ''
     if (request.method == 'PUT'):

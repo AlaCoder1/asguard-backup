@@ -18,7 +18,6 @@ ssh = paramiko.SSHClient()
 
 
 @api_view(['POST'])
-@authentication_classes([])
 @permission_classes([AllowAny])
 def authentification(request):
     if (request.method == "POST"):
@@ -54,7 +53,7 @@ def authentification(request):
 
 
 @api_view(['GET'])
-
+@permission_classes([AllowAny])
 def logout_view(request):
     username = request.user.username
     print({"logout": logout(request)})

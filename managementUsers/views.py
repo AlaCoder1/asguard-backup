@@ -31,6 +31,7 @@ def handle(self, *args, **options):
 
 
 @api_view(['GET'])
+@permission_classes([])
 def getAllUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -67,6 +68,7 @@ def getUser(request, id):
 
 # API to create user
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def createUser(request):
     msg = ''
     if (request.method == 'POST'):
@@ -137,6 +139,7 @@ def createUser(request):
 
 # API to delete group
 @api_view(['DELETE'])
+@permission_classes([AllowAny])
 def delete_user(request, id):
     msg = ""
     if (request.method == 'DELETE'):
@@ -158,6 +161,7 @@ def delete_user(request, id):
 
 # API to update user
 @api_view(['PUT'])
+@permission_classes([AllowAny])
 def modifyUser(request, id):
     if (request.method == 'PUT'):
         userById = User.objects.filter(id=id)
@@ -215,6 +219,7 @@ def modifyUser(request, id):
 
 # API de create permission
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def addPermission(request):
     msg = ''
     if (request.method == 'POST'):
@@ -239,6 +244,7 @@ def addPermission(request):
 
 
 @api_view(['PUT'])
+@permission_classes([AllowAny])
 def changePasswordByAdmin(request, id):
     if (request.method == 'PUT'):
         userObject = User.objects.get(id=id)
@@ -267,6 +273,7 @@ def changePasswordByAdmin(request, id):
 
 
 @api_view(['PUT'])
+@permission_classes([AllowAny])
 def changePassword(request, id):
     msg = ""
     if (request.method == 'PUT'):

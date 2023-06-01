@@ -16,6 +16,7 @@ from authentification.authentication import JWTAuthentication
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def getAllServers(request):
     list_servers = []
     if (request.method == 'GET'):
@@ -36,6 +37,7 @@ def getAllServers(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 def getServer(request, id):
     if (request.method == 'GET'):
         server = Server.objects.filter(id=id)
@@ -53,6 +55,7 @@ def getServer(request, id):
 
 
 @api_view(['POST'])
+@permission_classes([AllowAny])
 def createServer(request):
     msg = ''
     if (request.method == 'POST'):
@@ -84,6 +87,7 @@ def createServer(request):
 
 
 @api_view(['DELETE'])
+@permission_classes([AllowAny])
 def deleteServer(request, id):
     msg = ""
     if (request.method == 'DELETE'):
@@ -95,6 +99,7 @@ def deleteServer(request, id):
 
 
 @api_view(['PUT'])
+@permission_classes([AllowAny])
 def modifyServer(request, id):
     msg = ''
     if (request.method == 'PUT'):

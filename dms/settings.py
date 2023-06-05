@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     "managementServers",
     "settings",
     "authentification",
-    "subscription"
+    "subscription",
+     "background_task"
 ]
 
 MIDDLEWARE = [

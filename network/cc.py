@@ -10,35 +10,7 @@ from network.address import *
 # API to update connexion using ssh and netlink
 # API to update connexion to static
 
-####background task to execute it 
-from background_task import background
-@background
-def your_background_task():
-    # Code to execute in the background
-    ssh_conx = paramiko.SSHClient()
-    ssh_conx.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                # connect to SSH server
-    ssh_conx.connect("10.1.12.231", username="root",
-                password="rootroot", port="22")
-    commands=[
-        
-        'sudo systemctl daemon-reload',
-        'sudo systemctl restart Asguard-Networking.service',
-        'sudo mkdir /etc/task',
-    ]
-    print("////////////////////////////////////////////////////////////////////////////////////////")
-    # stdin, stdout, stderr = ssh_conx.exec_command('sudo mkdir /etc/task')
-    # print({"ddddd":stdout.read().decode('utf-8')})
-    
-    
-    for cmd in commands:
-        stdin, stdout, stderr = ssh_conx.exec_command('{}'.format(cmd))
-        
-        print(stdout.read().decode('utf-8'),cmd)
-        # if (stderr.read().decode('utf-8')):
-        #     print({"error":stderr.read().decode('utf-8')})
-        #     break
-    ssh_conx.close()    
+
 ###################
 ##clean old config
 def clean_old_config(config,typeConf):
@@ -59,8 +31,10 @@ def update_conn_static(config,ifname,ip_address,netmask,gateway):
         "ExecStart=/usr/bin/ip addr add {}/{} dev {}".format(ip_address,netmask,ifname),
          "#End IP4Config {}".format(ifname)
     ]
-    
-    return commands,config
+    cmd_final=[ 
+        "sudo ip addr flush dev {}".format(ifname),
+        "sudo ip addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
+    return commands,config,cmd_final
 
 ################### Dhcp
 ####create file
@@ -79,14 +53,19 @@ def update_conn_dhcp(config,ifname):
     "ExecStart=/usr/bin/dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf {}".format(ifname,ifname),
      "#End IP4Config {}".format(ifname)
     ]
+    cmd_final=[
+    "sudo ip addr flush dev {}".format(ifname),
+    "sudo dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf {}".format(ifname,ifname),
+    ]
     
-    return commandes,config
+    return commandes,config,cmd_final
 
 
 ###################generic configuration
 
 def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
     commandes=[]
+    cmd_final=[]
     match speed_duplex:
             case '100baseTx-FD':
                 speedV=100
@@ -108,6 +87,10 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
             'ExecStart=/usr/bin/ip link set dev {} address {}'.format(ifname,addmac),
             "#End addmac config {}".format(ifname)
             ]
+            cmd_final+=[
+                'sudo ip link set dev {} address {}'.format(ifname,addmac),
+            ]
+            
     if mtuV is not None:
         config=clean_old_config(config,"mtu config {}".format(ifname))
         commandes+=[
@@ -115,6 +98,9 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
         'ExecStart=/usr/bin/ip link set dev {} mtu {}'.format(ifname,mtuV),
         "#End mtu config {}".format(ifname)
             ]
+        cmd_final+=[
+        'sudo ip link set dev {} mtu {}'.format(ifname,mtuV),
+         ]
     if mssV is not None:
         config=clean_old_config(config,"mss config {}".format(ifname))
         commandes+=[
@@ -122,6 +108,9 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
         'ExecStart=/usr/bin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
         "#End mss config {}".format(ifname),
             ]
+        cmd_final+=[
+        'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
+         ]
     if speed_duplex is not None:
         config=clean_old_config(config,"speed duplex config {}".format(ifname))
         commandes+=[
@@ -129,7 +118,11 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
         'ExecStart=/usr/bin/ethtool -s {} speed {} duplex {}'.format(ifname,speedV,duplexV),
         "#End speed duplex config {}".format(ifname),
                     ]
-    return commandes,config
+        cmd_final+=[
+        'sudo ethtool -s {} speed {} duplex {}'.format(ifname,speedV,duplexV),
+            
+         ]
+    return commandes,config,cmd_final
 
 #################Blockage address
 ####add all addresse 
@@ -157,6 +150,7 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
     rule=''
     commandes=[]
     configuration=[]
+    cmd_final=[]
     if bogon_aux or private_aux:
         if bogon_aux and private_aux:
             rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
@@ -182,12 +176,19 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
             'ExecStart=/usr/bin/nft -f /etc/nftables/{}/nftables.conf'.format(ifname),
             "#End nftables config {}".format(ifname)
             ]
+        cmd_final=[
+            'sudo nft -f /etc/nftables/{}/nftables.conf'.format(ifname),
+        ]
     else:
        config=clean_old_config(config,"nftables config {}".format(ifname))
     
    
     
-    return configuration,commandes,config
+    return configuration,commandes,config,cmd_final
+
+
+
+
 
 
 @api_view(['POST'])
@@ -199,8 +200,6 @@ def conf(request):
     if (request.method == 'POST'):
         # parse the incoming information
         data = JSONParser().parse(request)
-        # BPN = data['BPN']
-        # BBN = data['BBN']
         ##static
         ip_address = data['ip_address']
         netmask=data['netmask']
@@ -264,7 +263,7 @@ with open('/etc/systemd/system/Asguard-Networking.service', 'r') as file:
                     case "None":
                         pass
                     case "static":
-                        commandes,output=update_conn_static(output,ifname,ip_address,netmask,gateway)
+                        commandes,output,cmd_final=update_conn_static(output,ifname,ip_address,netmask,gateway)
                     case "dhcp":
                         if typeDhcp=="Base" :
                             configContenu=['reject {};'.format(reject),
@@ -303,15 +302,15 @@ with open('/etc/systemd/system/Asguard-Networking.service', 'r') as file:
                                 '}'
                                         ]
                         commandes_final+=create_file(ifname,configContenu)
-                        commandes,output=update_conn_dhcp(output,ifname)
+                        commandes,output,cmd_final=update_conn_dhcp(output,ifname)
                 ##for generic config 
                 cmds=[]       
-                cmds,output=generic_config(output,ifname,speed_duplex,addmac,mtuV,mssV)
+                cmds,output,cmd_final_Gen=generic_config(output,ifname,speed_duplex,addmac,mtuV,mssV)
                 ##blocages des adresses
                 cmdsBlock=[]
                 configs=[]
             
-                configs,cmdsBlock,output=block_address_commandes(output,ifname,bogon_aux,private_aux)
+                configs,cmdsBlock,output,cmd_final_Block=block_address_commandes(output,ifname,bogon_aux,private_aux)
                 cmdsBlock = [x for x in cmdsBlock if x not in output]
                 ###add all commandes to the service
                 index_cmd=output.index('[Install]') 
@@ -322,8 +321,7 @@ with open('/etc/systemd/system/Asguard-Networking.service', 'r') as file:
                 """cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 {}
 EOF""".format('\n'.join(output)),
-                  
-                ]
+                ]+cmd_final+cmd_final_Gen+cmd_final_Block
                 print({"trah":commandes_final})
     # print({'aaaa':commandes_final})
     for cmd in commandes_final:
@@ -336,7 +334,4 @@ EOF""".format('\n'.join(output)),
             # break
         else:
             print("service created successufully!!",cmd)
-    your_background_task()
-    import subprocess
-    process = subprocess.Popen(['python', 'manage.py', 'process_tasks'])
     return JsonResponse({"commandes_finals:": commandes_final})

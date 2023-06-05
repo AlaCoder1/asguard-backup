@@ -11,7 +11,9 @@ class System(models.Model):
         
 class Network(models.Model):
     prever_IPV4_IPV6 = models.BooleanField(default=False, null=True)
-    server_DNS = models.JSONField(null=True)
+    # server_DNS = models.JSONField(null=True)
+    server_DNS =  models.CharField(max_length=800, null=True)
+    gateway =  models.CharField(max_length=800, null=True)
     allow_server_DNS = models.BooleanField(default=False, null=True)
     exclude_interfaces = models.CharField(max_length=800, null=True)
     getway_failover = models.BooleanField(default=False, null=True)
@@ -27,3 +29,16 @@ class ServerReseau(models.Model):
     class Meta:
         db_table = 'ServerReseau'
         
+        
+class Timezone(models.Model):
+    name = models.CharField(max_length=800, null=True,unique=True)
+
+    class Meta:
+        db_table = 'Timezone'
+        
+class GateWayInterface(models.Model):
+    gateway = models.CharField(max_length=800, null=True)
+    interface = models.CharField(max_length=800, null=True)
+
+    class Meta:
+        db_table = 'Gateway_Interface'

@@ -5,4 +5,5 @@ from . import views
 urlpatterns = [
     # path('testPostNetwork', views.testPostNetwork, name="testPostNetwork"),
     # path('testGetNetwork', views.testGetNetwork, name="testGetNetwork"),
+    path('conf', views.conf, name="conf"),
 ]

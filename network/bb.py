@@ -10,35 +10,7 @@ from network.address import *
 # API to update connexion using ssh and netlink
 # API to update connexion to static
 
-####background task to execute it 
-from background_task import background
-@background
-def your_background_task():
-    # Code to execute in the background
-    ssh_conx = paramiko.SSHClient()
-    ssh_conx.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                # connect to SSH server
-    ssh_conx.connect("10.1.12.231", username="root",
-                password="rootroot", port="22")
-    commands=[
-        
-        'sudo systemctl daemon-reload',
-        'sudo systemctl restart Asguard-Networking.service',
-        'sudo mkdir /etc/task',
-    ]
-    print("////////////////////////////////////////////////////////////////////////////////////////")
-    # stdin, stdout, stderr = ssh_conx.exec_command('sudo mkdir /etc/task')
-    # print({"ddddd":stdout.read().decode('utf-8')})
-    
-    
-    for cmd in commands:
-        stdin, stdout, stderr = ssh_conx.exec_command('{}'.format(cmd))
-        
-        print(stdout.read().decode('utf-8'),cmd)
-        # if (stderr.read().decode('utf-8')):
-        #     print({"error":stderr.read().decode('utf-8')})
-        #     break
-    ssh_conx.close()    
+
 ###################
 ##clean old config
 def clean_old_config(config,typeConf):
@@ -190,11 +162,15 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
     return configuration,commandes,config
 
 
+
+
+
+
 @api_view(['POST'])
 @authentication_classes([JWTAuthentication])
 @permission_classes([IsAuthenticated])
 def conf(request):
-    ifname='eth3'
+    ifname='eth1'
     msg = ""
     if (request.method == 'POST'):
         # parse the incoming information
@@ -322,7 +298,10 @@ with open('/etc/systemd/system/Asguard-Networking.service', 'r') as file:
                 """cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 {}
 EOF""".format('\n'.join(output)),
-                  
+                    'sudo systemctl daemon-reload',
+                    # 'sudo systemctl disable Asguard-Networking.service',
+                    # 'sudo systemctl enable Asguard-Networking.service',
+                    'sudo systemctl restart Asguard-Networking.service',
                 ]
                 print({"trah":commandes_final})
     # print({'aaaa':commandes_final})
@@ -336,7 +315,4 @@ EOF""".format('\n'.join(output)),
             # break
         else:
             print("service created successufully!!",cmd)
-    your_background_task()
-    import subprocess
-    process = subprocess.Popen(['python', 'manage.py', 'process_tasks'])
     return JsonResponse({"commandes_finals:": commandes_final})

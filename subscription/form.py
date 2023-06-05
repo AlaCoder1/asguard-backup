@@ -17,6 +17,7 @@ class AddplansSubscriptionForm(ModelForm):
     class Meta:
         model = plansSubscription
         fields = '__all__'
+        
 class AddplansFeaturesForm(ModelForm):
     class Meta:
         model = plansFeatures

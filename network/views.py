@@ -15,14 +15,30 @@ from background_task import background
 @background
 def your_background_task():
     # Code to execute in the background
-    # commands=[
-    #     'sudo systemctl daemon-reload',
-    #     'sudo systemctl restart Asguard-Networking.service',
-    # ]
-    print("////////////////////////////////////////////////////////////////////////////////////////")
-    # for cmd in commands:
-    #     stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+    ssh_conx = paramiko.SSHClient()
+    ssh_conx.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                # connect to SSH server
+    ssh_conx.connect("10.1.12.231", username="root",
+                password="rootroot", port="22")
+    commands=[
         
+        'sudo systemctl daemon-reload',
+        'sudo systemctl restart Asguard-Networking.service',
+        'sudo mkdir /etc/task',
+    ]
+    print("////////////////////////////////////////////////////////////////////////////////////////")
+    # stdin, stdout, stderr = ssh_conx.exec_command('sudo mkdir /etc/task')
+    # print({"ddddd":stdout.read().decode('utf-8')})
+    
+    
+    for cmd in commands:
+        stdin, stdout, stderr = ssh_conx.exec_command('{}'.format(cmd))
+        
+        print(stdout.read().decode('utf-8'),cmd)
+        # if (stderr.read().decode('utf-8')):
+        #     print({"error":stderr.read().decode('utf-8')})
+        #     break
+    ssh_conx.close()    
 ###################
 ##clean old config
 def clean_old_config(config,typeConf):
@@ -321,4 +337,6 @@ EOF""".format('\n'.join(output)),
         else:
             print("service created successufully!!",cmd)
     your_background_task()
+    import subprocess
+    process = subprocess.Popen(['python', 'manage.py', 'process_tasks'])
     return JsonResponse({"commandes_finals:": commandes_final})

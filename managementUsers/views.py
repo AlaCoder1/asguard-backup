@@ -24,15 +24,14 @@ from django.views.decorators.csrf import csrf_exempt
 # Retrieve the model class dynamically
 def handle(self, *args, **options):
     # Your code to add data to the database here
-    User.objects.create(username='root', password=make_password("rootroot"))
+    User.objects.create(username='test', password=make_password("test"))
     msg = "user added succesffuly"
     return JsonResponse({"msg": msg}, status=201)
 # API to get all users
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([])
 def getAllUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -52,8 +51,6 @@ def getAllUsers(request):
 
 # API to get one user
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
 def getUser(request, id):
     if (request.method == 'GET'):
         user = User.objects.filter(id=id)
@@ -71,8 +68,7 @@ def getUser(request, id):
 
 # API to create user
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def createUser(request):
     msg = ''
     if (request.method == 'POST'):
@@ -143,8 +139,7 @@ def createUser(request):
 
 # API to delete group
 @api_view(['DELETE'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def delete_user(request, id):
     msg = ""
     if (request.method == 'DELETE'):
@@ -166,8 +161,7 @@ def delete_user(request, id):
 
 # API to update user
 @api_view(['PUT'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
 def modifyUser(request, id):
     if (request.method == 'PUT'):
         userById = User.objects.filter(id=id)
@@ -225,7 +219,6 @@ def modifyUser(request, id):
 
 # API de create permission
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
 def addPermission(request):
     msg = ''
@@ -251,7 +244,6 @@ def addPermission(request):
 
 
 @api_view(['PUT'])
-@authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
 def changePasswordByAdmin(request, id):
     if (request.method == 'PUT'):
@@ -281,7 +273,6 @@ def changePasswordByAdmin(request, id):
 
 
 @api_view(['PUT'])
-@authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
 def changePassword(request, id):
     msg = ""

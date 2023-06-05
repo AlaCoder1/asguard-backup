@@ -11,7 +11,7 @@
               />
 
           <div class="mt-5" >
-              <v-form @submit.prevent="login">
+              <v-form @submit.prevent="connect">
               <p class="c-w">Username</p>
                 <v-text-field
                   rounded
@@ -29,23 +29,26 @@
                   type="password"
                   class="input-w"
                 ></v-text-field>
-                <v-btn type="submit" class="mx-auto mt-5 btn--connect">
+                <v-btn 
+                  type="submit" 
+                  class="mx-auto mt-5 btn--connect"
+                  >
                   Login
                 </v-btn>
-                <p class="c-o">Wrong username or password!!!</p>
+                <p class="c-o" v-if="invalid">{{message}}</p>
               </v-form>
           </div>
         </v-col>
       </v-row>
-    <Footer />
     </v-container>
+    <Footer />
   </div>
 </template>
 
 
 <script>
 import Footer from '@/components/layout/footer.vue';
-
+import { login } from '@/services/authentification.js';
 
 export default {
     name: 'HomeComponent',
@@ -58,11 +61,37 @@ export default {
             test:[],
             username:'',
             password:'',
+            invalid:false,
         };
     },
     beforeMount: async function () {
         this.users= this.$root.$data.tab ;
         console.log("out data from django",this.users);
+    },
+    methods: {
+      async connect()  {
+            const params = {
+                username: this.username,
+                password: this.password,
+            };
+            login(params).then((resp) => {
+              this.invalid = false ;
+              console.log("retour from api" ,resp);
+               window.location.href = `/dashboard`;
+            }).catch((err) => {
+                if (err.response && err.response.status === 401) {
+                  const responseData = err.response.data; // Access the response data
+                  console.log("401 Error Response:", responseData);
+                  this.invalid = true ;
+                  this.message=responseData.message;
+                  // Handle the 401 error here
+                } else {
+                  console.error("Error occurred:", error);
+                  // Handle other errors
+                }
+            });
+        
+      },
     }
 };
 </script>

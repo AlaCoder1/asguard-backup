@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from .authentication import JWTAuthentication
+
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate, login, logout
@@ -18,9 +18,8 @@ ssh = paramiko.SSHClient()
 
 
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
-def authentification_JWT(request):
+def authentification(request):
     if (request.method == "POST"):
         User = get_user_model()
         data = json.loads(request.body)
@@ -36,25 +35,24 @@ def authentification_JWT(request):
                 # connect to SSH server
                 ssh.connect(settings.SSH_HOST, username=username,
                             password=password, port=settings.SSH_PORT)
-                jwt_token = str(JWTAuthentication.create_jwt(user))
-                userObject = User.objects.get(username=username)
-                userObject.token_last_expired = datetime.now(
-                )+timedelta(hours=settings.JWT_CONF['TOKEN_LIFETIME_HOURS'])
-                userObject.save()
-                userDict = userObject.__dict__
-                del userDict['_state']
-                del userDict['password']
-                del userDict['last_login']
-                del userDict['token_last_expired']
-                return JsonResponse({'token': jwt_token, 'user': userDict})
+                #jwt_token = str(JWTAuthentication.create_jwt(user))
+                #userObject = User.objects.get(username=username)
+                #userObject.token_last_expired = datetime.now(
+                #)+timedelta(hours=settings.JWT_CONF['TOKEN_LIFETIME_HOURS'])
+                #userObject.save()
+                # userDict = userObject.__dict__
+                # del userDict['_state']
+                # del userDict['password']
+                # del userDict['last_login']
+                # del userDict['token_last_expired']
+                return JsonResponse({'message': ' Success Authentification'}, status=status.HTTP_200_OK)
             else:
-                return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_400_BAD_REQUEST)
+                return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
             return JsonResponse({'message': 'Invalid username or password'})
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
 def logout_view(request):
     username = request.user.username

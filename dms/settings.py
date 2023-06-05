@@ -23,7 +23,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-p6qmvrnn#8ig(1*(bpu^tcc4-jrtd8%ml-!+@xmpqnm238mumn'
+SECRET_KEY = 'mmj@uz23n!%6u4#$b1&%f(7l*rr(9qx%am)wyk@s4ugeuam52m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -164,26 +164,29 @@ ENCRYPT_KEY = "57-xmiMq0yop7uD7Aq3j4PNUOgZhradICh2BKBnIdB0="
 AUTH_USER_MODEL = "managementUsers.User"
 # REST FRAMEWORK
 REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ),
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated'],
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'authentification.authentication.JWTAuthentication',
-
-    ]
-
-
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 }
 
 # jwt_auth/settings.py
+SESSION_COOKIE_AGE = 60
+SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+SESSION_COOKIE_SECURE= True
+SESSION_COOKIE_HTTPONLY = True
+SESSION_COOKIE_SAMESITE= 'Strict'
+# JWT_CONF = {
+#     'TOKEN_LIFETIME_HOURS': 72,
+#     'REFRESH_TOKEN_LIFETIME': 15,
+#     'ROTATE_REFRESH_TOKENS': True,
+#     'BLACKLIST_AFTER_ROTATION': True,
+#     'JWT_AUTH_HEADER_PREFIX': 'Bearer'
 
-JWT_CONF = {
-    'TOKEN_LIFETIME_HOURS': 72,
-    'REFRESH_TOKEN_LIFETIME': 15,
-    'ROTATE_REFRESH_TOKENS': True,
-    'BLACKLIST_AFTER_ROTATION': True,
-    'JWT_AUTH_HEADER_PREFIX': 'Bearer'
-
-}
+# }
 
 
 # Load environment variables from .env file

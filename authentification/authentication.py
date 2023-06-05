@@ -8,6 +8,8 @@ from rest_framework import authentication
 from rest_framework.exceptions import AuthenticationFailed
 User = get_user_model()
 
+# @authentication_classes([JWTAuthentication])
+# @permission_classes([AllowAny])
 
 class JWTAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request):

@@ -1,6 +1,6 @@
 <template>
     <div class="footer-bg">
-        <p class="c-o">DMSsdwan © 2019-2023 Numeryx.</p>
+        <span class="c-o">DMSsdwan © 2019-2023 Numeryx.</span>
     </div>
 </template>
 
@@ -17,9 +17,10 @@ export default {
     .c-o {
         color:#FFFFFF;
         text-align:center;
+        margin-bottom:0px;
     }
     .footer-bg{
-        position: fixed;
+        position: relative;
         left: 0;
         bottom: 0;
         margin-bottom:0%;
@@ -27,7 +28,7 @@ export default {
         background-color: #042439;
         color: white;
         text-align: center;
-        height: 4%;
+        height: 3%;
 
     }
 </style>

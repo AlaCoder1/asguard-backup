@@ -1,4 +1,6 @@
 from django.http import JsonResponse
+
+from authentification.authentication import JWTAuthentication
 from .models import *
 from settings.serializers import *
 from django.views.decorators.csrf import csrf_exempt

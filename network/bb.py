@@ -167,8 +167,8 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
 
 
 @api_view(['POST'])
-@authentication_classes([JWTAuthentication])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
+
 def conf(request):
     ifname='eth1'
     msg = ""

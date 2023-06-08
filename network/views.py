@@ -1,4 +1,6 @@
 from django.http import JsonResponse
+
+from authentification.authentication import JWTAuthentication
 from .models import *
 from settings.serializers import *
 from django.views.decorators.csrf import csrf_exempt
@@ -9,7 +11,7 @@ from authentification.views import *
 from network.address import *
 # API to update connexion using ssh and netlink
 # API to update connexion to static
-
+ 
 ####background task to execute it 
 from background_task import background
 @background

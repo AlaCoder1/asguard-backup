@@ -2,6 +2,9 @@ from django.shortcuts import render
 from .form import *
 from .models import *
 from datetime import datetime, timedelta
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.parsers import JSONParser
+from django.http import JsonResponse
 # Create your views here.
 
 
@@ -65,7 +68,7 @@ def add_plansFeatures(request):
     context = {'form': form,'msg':msg,'plansFeature':plansFeature} 
     return render(request, 'add_plansFeatures.html', context)
 
-
+##paymentTransaction_name
 def function_paymentTransaction(checkbox_value,select_value):
     payment_instance = paymentTransaction()
     if checkbox_value != None:
@@ -74,6 +77,17 @@ def function_paymentTransaction(checkbox_value,select_value):
         payment_instance.status = "approved"
     payment_instance.organizationId = organization.objects.get(id=1)
     payment_instance.planId = plan.objects.get(slug=select_value)
+    payment_instance.save()
+
+##paymentTransaction_id
+def function_paymentTransaction_id(checkbox_value,select_value):
+    payment_instance = paymentTransaction()
+    if checkbox_value != None:
+        payment_instance.status = "declined"
+    else:
+        payment_instance.status = "approved"
+    payment_instance.organizationId = organization.objects.get(id=1)
+    payment_instance.planId = plan.objects.get(id=select_value)
     payment_instance.save()
         
 def function_plansSubscription():
@@ -102,16 +116,29 @@ def function_planSubsciptionUsage():
             payment_subscription_usage_instance.plans_feature =plansFeatures.objects.get(id=result.id)
             payment_subscription_usage_instance.valid_until =last_plansSubscription.__dict__['end_at']
             payment_subscription_usage_instance.save()
-        
+
+@api_view(['POST'])
+@permission_classes([])     
 def payment(request):
     form = MyForm()
     if request.method == 'POST':
-        my_checkbox_value = request.POST.get('my_checkbox')
-        my_select_value = request.POST.get('my_select')
-        function_paymentTransaction(my_checkbox_value,my_select_value)
+        # parse the incoming information
+        data = JSONParser().parse(request)
+        status = data['status']
+        if status:
+            status=None
+        # subscription_name = data['subscription_name']
+        subscription_id = data['subscription_id']
+        # function_paymentTransaction(status,subscription_name)
+        function_paymentTransaction_id(status,subscription_id)
         function_plansSubscription()
         function_planSubsciptionUsage()
-    return render(request, 'payment.html', {'form': form})
+        if status == None:
+            return JsonResponse({"msg": "you subscribed successfully"}, status=200)
+        else:
+            return JsonResponse({"msg": "you subscribed declined"}, status=400)
+    # return render(request, 'payment.html', {'form': form})
+    
 
 def initBD_organization():
     organization_instance = organization()
@@ -125,10 +152,9 @@ def initBD_plan(slug,price):
     plan_instance.currency = "euro"
     plan_instance.save()
     
-def initBD_plansFeatures(description,planId,list):
+def initBD_plansFeatures(description,planId):
     plansFeatures_instance = plansFeatures()
     plansFeatures_instance.description = description
-    plansFeatures_instance.APIS = list
     plansFeatures_instance.planId = plan.objects.get(id=planId)
     plansFeatures_instance.save()
 
@@ -138,9 +164,9 @@ def initBD(request):
     initBD_plan("basic",100)
     initBD_plan("gold",500)
 
-    initBD_plansFeatures("management users",1,['create','update','delete'])
-    initBD_plansFeatures("management users",2,['a','b','c'])
-    initBD_plansFeatures("network",2,['e','f','g'])
+    initBD_plansFeatures("management users",1)
+    initBD_plansFeatures("management users",2)
+    initBD_plansFeatures("network",2)
     return render(request, 'payment.html')
 
 

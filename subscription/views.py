@@ -152,10 +152,9 @@ def initBD_plan(slug,price):
     plan_instance.currency = "euro"
     plan_instance.save()
     
-def initBD_plansFeatures(description,planId,list):
+def initBD_plansFeatures(description,planId):
     plansFeatures_instance = plansFeatures()
     plansFeatures_instance.description = description
-    plansFeatures_instance.APIS = list
     plansFeatures_instance.planId = plan.objects.get(id=planId)
     plansFeatures_instance.save()
 
@@ -165,9 +164,9 @@ def initBD(request):
     initBD_plan("basic",100)
     initBD_plan("gold",500)
 
-    initBD_plansFeatures("management users",1,['create','update','delete'])
-    initBD_plansFeatures("management users",2,['a','b','c'])
-    initBD_plansFeatures("network",2,['e','f','g'])
+    initBD_plansFeatures("management users",1)
+    initBD_plansFeatures("management users",2)
+    initBD_plansFeatures("network",2)
     return render(request, 'payment.html')
 
 

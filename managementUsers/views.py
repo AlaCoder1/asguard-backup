@@ -74,7 +74,8 @@ def createUser(request):
     if (request.method == 'POST'):
         if has_subscription():
             if is_valid():
-                if if_subscribed([1, 2]):
+                #test index of feature by plan e.g 1,2 index of management users in our BD
+                if if_subscribed([1]):
                     # parse the incoming information
                     data = JSONParser().parse(request)
                     username = data['username']

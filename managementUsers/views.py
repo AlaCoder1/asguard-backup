@@ -65,12 +65,17 @@ def getUser(request, id):
         # return a no content response.
         return JsonResponse(userJson)
 
-
+from django.contrib.auth.decorators import login_required
 # API to create user
 @api_view(['POST'])
 @permission_classes([AllowAny])
+# @login_required(login_url='/auth/authentification')
 def createUser(request):
     msg = ''
+    # user_id = request.user
+
+    # print({"userID":user_id})
+    print({"ccccccccccccc":settings.CurrentUserId})
     if (request.method == 'POST'):
         if has_subscription():
             if is_valid():

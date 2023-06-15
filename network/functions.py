@@ -45,9 +45,9 @@ def your_background_task(commands):
                 # connect to SSH server
     # ssh_conx.connect("10.1.12.200", username="root",
     #             password="rootroot", port="22")
-    print({"HOST":settings.SSH_HOST,"username":username,"password":password})
-    ssh.connect(settings.SSH_HOST, username=username,
-                            password=password)
+    print({"HOST":settings.SSH_HOST,"username":settings.USERNAME,"password":settings.PASSWORD})
+    ssh.connect(settings.SSH_HOST, username=settings.USERNAME,
+                            password=settings.PASSWORD)
     for cmd in commands:
         stdin, stdout, stderr = ssh_conx.exec_command('{}'.format(cmd))
         error = stderr.read().decode('utf-8')

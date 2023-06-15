@@ -3,7 +3,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # path('testPostNetwork', views.testPostNetwork, name="testPostNetwork"),
-    # path('testGetNetwork', views.testGetNetwork, name="testGetNetwork"),
-    path('conf', views.conf, name="conf"),
+     path('conf/<int:id>', views.conf, name="conf"),
+    path('addInterface', views.add_interface, name="addInterface"),
+
 ]

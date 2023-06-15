@@ -65,12 +65,17 @@ def getUser(request, id):
         # return a no content response.
         return JsonResponse(userJson)
 
-
+from django.contrib.auth.decorators import login_required
 # API to create user
 @api_view(['POST'])
 @permission_classes([AllowAny])
+# @login_required(login_url='/auth/authentification')
 def createUser(request):
     msg = ''
+    # user_id = request.user
+
+    # print({"userID":user_id})
+    print({"ccccccccccccc":settings.CurrentUserId})
     if (request.method == 'POST'):
         if has_subscription():
             if is_valid():
@@ -100,6 +105,26 @@ def createUser(request):
                                             getGroupNameById(groups[i]), username)
                                     serializerUser = UserSerializerPost(
                                         data=data)
+                                    gid = getRemoteGidGroup()
+                                    groupname = {"groupname": username}
+                                    groupname['gid'] = gid
+                                    groupname['createdBySystem'] = True
+                                    serializerGroup = GroupSerializer(
+                                        data=groupname)
+                                    serializerGroup = GroupSerializer(
+                                        data=groupname)
+                                    # check if the sent information is okay
+                                    if (serializerUser.is_valid()):
+                                        if (serializerGroup.is_valid()):
+                                            # if okay, save it on the database
+                                            serializerUser.save()
+                                            serializerGroup.save()
+                                            # provide a Json Response with the data that was saved
+                                            return JsonResponse({"msg": msg}, status=201)
+                                        # provide a Json Response with the necessary error information
+                                        return JsonResponse(serializerGroup.errors, status=400)
+                                    # provide a Json Response with the necessary error information
+                                    return JsonResponse(serializerUser.errors, status=400)
                                 else:
                                     serializerUser = UserSerializerPostWithoutGroupAndPermission(
                                         data=data)

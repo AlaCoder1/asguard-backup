@@ -105,6 +105,26 @@ def createUser(request):
                                             getGroupNameById(groups[i]), username)
                                     serializerUser = UserSerializerPost(
                                         data=data)
+                                    gid = getRemoteGidGroup()
+                                    groupname = {"groupname": username}
+                                    groupname['gid'] = gid
+                                    groupname['createdBySystem'] = True
+                                    serializerGroup = GroupSerializer(
+                                        data=groupname)
+                                    serializerGroup = GroupSerializer(
+                                        data=groupname)
+                                    # check if the sent information is okay
+                                    if (serializerUser.is_valid()):
+                                        if (serializerGroup.is_valid()):
+                                            # if okay, save it on the database
+                                            serializerUser.save()
+                                            serializerGroup.save()
+                                            # provide a Json Response with the data that was saved
+                                            return JsonResponse({"msg": msg}, status=201)
+                                        # provide a Json Response with the necessary error information
+                                        return JsonResponse(serializerGroup.errors, status=400)
+                                    # provide a Json Response with the necessary error information
+                                    return JsonResponse(serializerUser.errors, status=400)
                                 else:
                                     serializerUser = UserSerializerPostWithoutGroupAndPermission(
                                         data=data)

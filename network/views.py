@@ -1,239 +1,78 @@
 from django.http import JsonResponse
-
-from authentification.authentication import JWTAuthentication
+from network.serializers import *
 from .models import *
 from settings.serializers import *
-from django.views.decorators.csrf import csrf_exempt
 from rest_framework.parsers import JSONParser
 import json
 from django.core import serializers
 from authentification.views import *
 from network.address import *
-# API to update connexion using ssh and netlink
-# API to update connexion to static
- 
-####background task to execute it 
-from background_task import background
-@background
-def your_background_task():
-    # Code to execute in the background
-    ssh_conx = paramiko.SSHClient()
-    ssh_conx.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                # connect to SSH server
-    ssh_conx.connect("10.1.12.231", username="root",
-                password="rootroot", port="22")
-    commands=[
-        
-        'sudo systemctl daemon-reload',
-        'sudo systemctl restart Asguard-Networking.service',
-        'sudo mkdir /etc/task',
-    ]
-    print("////////////////////////////////////////////////////////////////////////////////////////")
-    # stdin, stdout, stderr = ssh_conx.exec_command('sudo mkdir /etc/task')
-    # print({"ddddd":stdout.read().decode('utf-8')})
-    
-    
-    for cmd in commands:
-        stdin, stdout, stderr = ssh_conx.exec_command('{}'.format(cmd))
-        
-        print(stdout.read().decode('utf-8'),cmd)
-        # if (stderr.read().decode('utf-8')):
-        #     print({"error":stderr.read().decode('utf-8')})
-        #     break
-    ssh_conx.close()    
-###################
-##clean old config
-def clean_old_config(config,typeConf):
-    if "#Start {}".format(typeConf) in config and "#End {}".format(typeConf) in config: 
-        i=config.index("#Start {}".format(typeConf))
-        j=config.index("#End {}".format(typeConf))
-        config=config[:i]+config[j+1:]
-    return config
- 
-
-################### Static      
-# convert  to static connexion 
-def update_conn_static(config,ifname,ip_address,netmask,gateway):
-    config=clean_old_config(config,"IP4Config {}".format(ifname))
-    commands=[
-         "#Start IP4Config {}".format(ifname),
-        "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
-        "ExecStart=/usr/bin/ip addr add {}/{} dev {}".format(ip_address,netmask,ifname),
-         "#End IP4Config {}".format(ifname)
-    ]
-    
-    return commands,config
-
-################### Dhcp
-####create file
-def create_file(ifname,config_contenu):
-    commands = ["""bash -c 'mkdir -p /etc/Dhcp4Config/{} && cat <<EOF > /etc/Dhcp4Config/{}/dhclient.conf
-{}
-EOF'""".format(ifname, ifname, '\n'.join(config_contenu))]
-    return commands
-
-# convert  to dhcp  connexion base and advanced
-def update_conn_dhcp(config,ifname):
-    config=clean_old_config(config,"IP4Config {}".format(ifname))
-    commandes=[
-     "#Start IP4Config {}".format(ifname),   
-     "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
-    "ExecStart=/usr/bin/dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf {}".format(ifname,ifname),
-     "#End IP4Config {}".format(ifname)
-    ]
-    
-    return commandes,config
-
-
-###################generic configuration
-
-def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
-    commandes=[]
-    match speed_duplex:
-            case '100baseTx-FD':
-                speedV=100
-                duplexV='full'
-            case '100baseTx-HD':
-                speedV=100
-                duplexV='half'
-            case '10baseT-FD':
-                speedV=10
-                duplexV='full'
-            case '10baseT-HD':
-                speedV=10
-                duplexV='half'
-   
-    if addmac is not None:
-            config=clean_old_config(config,"addmac config {}".format(ifname))
-            commandes+=[
-            "#Start addmac config {}".format(ifname),
-            'ExecStart=/usr/bin/ip link set dev {} address {}'.format(ifname,addmac),
-            "#End addmac config {}".format(ifname)
-            ]
-    if mtuV is not None:
-        config=clean_old_config(config,"mtu config {}".format(ifname))
-        commandes+=[
-        "#Start mtu config {}".format(ifname),
-        'ExecStart=/usr/bin/ip link set dev {} mtu {}'.format(ifname,mtuV),
-        "#End mtu config {}".format(ifname)
-            ]
-    if mssV is not None:
-        config=clean_old_config(config,"mss config {}".format(ifname))
-        commandes+=[
-        "#Start mss config {}".format(ifname),
-        'ExecStart=/usr/bin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
-        "#End mss config {}".format(ifname),
-            ]
-    if speed_duplex is not None:
-        config=clean_old_config(config,"speed duplex config {}".format(ifname))
-        commandes+=[
-        "#Start speed duplex config {}".format(ifname),
-        'ExecStart=/usr/bin/ethtool -s {} speed {} duplex {}'.format(ifname,speedV,duplexV),
-        "#End speed duplex config {}".format(ifname),
-                    ]
-    return commandes,config
-
-#################Blockage address
-####add all addresse 
-def create_rule(address):
-    block=''
-    for i in range(len(address)-1):
-        block+=address[i]+','
-    block+=address[-1]
-    block='{ '+block+' } drop'
-    return block
-
-
-####create file
-def create_file_nftables(ifname,rules):
-    commands = [
-        'if nft list tables | grep -q "filter_{}"; then sudo nft delete table inet filter_{} ; fi'.format(ifname,ifname),
-        """bash -c 'mkdir -p /etc/nftables/{} && cat <<EOF > /etc/nftables/{}/nftables.conf
-{}
-EOF' """.format(ifname, ifname, '\n'.join(rules))
-      ]
-    return commands
-
-###Function to block private or bogons address
-def block_address_commandes(config,ifname,bogon_aux,private_aux):
-    rule=''
-    commandes=[]
-    configuration=[]
-    if bogon_aux or private_aux:
-        if bogon_aux and private_aux:
-            rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
-            rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))    
-        elif bogon_aux and not private_aux:
-            rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
-            rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))
-            
-        elif private_aux and not bogon_aux:
-            rule='iifname {} ip saddr {}'.format(ifname,create_rule(private_address))
-            
-        rules=[
-            'table inet filter_'+ifname+' {',
-                    'chain input {',
-                            'type filter hook input priority filter; policy accept;',
-                            '{}'.format(rule),
-            '        }',
-            '}'
-        ]  
-        configuration=create_file_nftables(ifname,rules)
-        commandes=[
-            "#Start nftables config {}".format(ifname),
-            'ExecStart=/usr/bin/nft -f /etc/nftables/{}/nftables.conf'.format(ifname),
-            "#End nftables config {}".format(ifname)
-            ]
-    else:
-       config=clean_old_config(config,"nftables config {}".format(ifname))
-    
-   
-    
-    return configuration,commandes,config
-
-
+from .functions import *
+#################################
 @api_view(['POST'])
 @permission_classes([AllowAny])
+def add_interface(request):
+    data = JSONParser().parse(request)
+    serializerIP4Config = InterfaceSerializer(data=data)
+    print(serializerIP4Config.is_valid())
+    if (serializerIP4Config.is_valid()):
+        serializerIP4Config.save()
+    return JsonResponse({"msg:": "interface added successfully!!!!!"})
 
-def conf(request):
-    ifname='eth3'
+###########################
+@api_view(['PUT'])
+@permission_classes([AllowAny])
+def conf(request,id):
     msg = ""
-    if (request.method == 'POST'):
+    if (request.method == 'PUT'):
+        ###
+        #get object of interface type
+        interfaceObject= Interface.objects.get(id=id)
+        #get interface name to execute command systeme
+        ifname=interfaceObject.ifname
+        print({"ifname":ifname})
+        ####
         # parse the incoming information
         data = JSONParser().parse(request)
-        # BPN = data['BPN']
-        # BBN = data['BBN']
         ##static
-        ip_address = data['ip_address']
-        netmask=data['netmask']
-        gateway= data['gateway']
+        ip_address = data.get('ip_address', None)
+        netmask = data.get('netmask', None)
+        # gateway = data.get('gateway', None)
         ##DHCP
-        timeout=data['timeout']
-        retry=data['retry']
-        reboot=data['reboot']
-        backoff=data['backoff']
-        select_timeout=data['select_timeout']
-        initial_interval=data['initial_interval']
-        reject=data['reject']
-        ####
-        hostname=data['hostname']
-        dhcp_client=data['dhcp_client']
-        domaine_name='fugue.comrc.vix.comhome.vix.com'
-        domain_server=data['domain_server']
-        lease_time=data['lease_time']
-        request='subnet-mask, broadcast-address, time-offset, routers,domain-name, domain-name-servers, host-name'
-        require='subnet-mask , domain-name-servers'
-        alias_add=data['alias_add']
-        alias_mask=data['alias_mask']
+
+
+        ####case of ipvs dhcp and button is basic /advanced
+        reject = data.get('reject', None)
+        hostname = data.get('hostname', None)
+        alias_add = data.get('alias_add', None)
+        alias_mask = data.get('alias_mask', None)
+        
+        
+        ###case of ipvs dhcp and button is advanced
+        ##time protocol
+        timeout = data.get('timeout', None)
+        retry = data.get('retry', None)
+        reboot = data.get('reboot', None)
+        backoff = data.get('backoff', None)
+        select_timeout = data.get('select_timeout', None)
+        initial_interval = data.get('initial_interval', None)
+        ###other
+        dhcp_client = data.get('dhcp_client', None)
+        domaine_name = data.get('domaine_name', None)
+        domain_server = data.get('domain_server', None)
+        lease_time = data.get('lease_time', None)
+        request = data.get('request', None)
+        require = data.get('require', None)
+        
 
         ###generic config
         mtuV=data.get('mtuV', None)
         addmac=data.get('addmac', None)
         mssV=data.get('mssV', None)
-        speed_duplex=None
+        speed_duplex=data.get('speed_duplex', None)
         ####
-        IP4Config=data['IP4Config']
-        typeDhcp=data['typeDhcp']
+        typeIP4=data.get('typeIP4', None)
+        typeDHCP=data.get('typeDHCP', None)
         ##blockage addresse
         bogon_aux=data['bogon_aux']
         private_aux=data['private_aux']
@@ -241,104 +80,73 @@ def conf(request):
         commandes_final=[]
         print({'bbbbbb':"commandes_final"})
         ##get old configuration in service
-        cmd = """python -c "
-with open('/etc/systemd/system/Asguard-Networking.service', 'r') as file:
-    for line in file:
-        print(line)
-        " """
-        ssh.exec_command(cmd)
-        stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-        error = stderr.read().decode('utf-8')
-        output = stdout.read().decode('utf-8').split('\n')
+        output,error=get_old_config()
         if error:
-            print("error ",error,"  :",cmd)
+            print("error ",error)
         else:
             if len(output)!=0:
+                #delete empty value
                 output = [x for x in output if x]
-                index=output.index('[Service]')
                 ##add requirement service
-                values_to_add=['BindsTo=sys-subsystem-net-devices-{}.device'.format(ifname),
-                            'After=sys-subsystem-net-devices-{}.device'.format(ifname)]
-                values_to_add = [x for x in values_to_add if x not in output]
-                output = output[:index] + values_to_add + output[index:]
+                output=add_requirement(ifname,output)
                 ##IPV4 configuration cases 
-                match IP4Config:
+                match typeIP4:
                     case "None":
                         pass
                     case "static":
-                        commandes,output=update_conn_static(output,ifname,ip_address,netmask,gateway)
+                        #call function to convert address to static
+                        commandes,output=update_conn_static(output,ifname,ip_address,netmask)
                     case "dhcp":
-                        if typeDhcp=="Base" :
-                            configContenu=['reject {};'.format(reject),
-                                'interface "{}"'.format(ifname),
-                                    '{',
-                                'send host-name "{}";'.format(hostname),
-                                '}',
-                                'alias {',
-                                'interface "{}";'.format(ifname),
-                                'fixed-address {};'.format(alias_add),
-                                'option subnet-mask {};'.format(alias_mask),
-                                '}',
-                                        ]
-                        if typeDhcp=="Advanced":
-                            configContenu=['timeout {};'.format(timeout),
-                                'retry {};'.format(retry),
-                                'reboot {};'.format(reboot),
-                                'backoff-cutoff {};'.format(backoff),
-                                'select-timeout {};'.format(select_timeout),
-                                'initial-interval {};'.format(initial_interval),
-                                    'reject {};'.format(reject),
-                                    'interface "{}"'.format(ifname),
-                                        '{',
-                                'send host-name "{}";'.format(hostname),
-                                'send dhcp-client-identifier {};'.format(dhcp_client),
-                                'supersede domain-name "{}";'.format(domaine_name),
-                                'prepend domain-name-servers {};'.format(domain_server),
-                                'send dhcp-lease-time {};'.format(lease_time),
-                                ' request {};'.format(request),
-                                    'require {};'.format(require),
-                                    '}',
-                                'alias {',
-                                'interface "{}";'.format(ifname),
-                                'fixed-address {};'.format(alias_add),
-                                'option subnet-mask {};'.format(alias_mask),
-                                '}'
-                                        ]
+                        if typeDHCP=="Base" :
+                        #contenu de dhclient.conf dhcp Base
+                            configContenu=return_config_base(ifname,reject,hostname,alias_add,alias_mask)
+                        if typeDHCP=="Advanced":
+                        #contenu de dhclient.conf dhcp advanced
+                            configContenu=return_config_advanced(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require)
+                        #add commands of create file dhclient to list of commandes to execute    
                         commandes_final+=create_file(ifname,configContenu)
+                         #call function to convert address to dhcp advanced /Base  in service
                         commandes,output=update_conn_dhcp(output,ifname)
+                        
+                #update changes in DB ip4
+                print('changes in DB  ip4/*********************/')
+                update_DB(id,data,IP4Config,IP4ConfigSerializer)
+                print('/*********************/')
+                    
                 ##for generic config 
                 cmds=[]       
                 cmds,output=generic_config(output,ifname,speed_duplex,addmac,mtuV,mssV)
+                #update changes in DB generic config
+                print('changes in DB generic config/*********************/')
+                update_DB(id,data,GenericConfig,GenericConfigSerializer)
                 ##blocages des adresses
                 cmdsBlock=[]
                 configs=[]
-            
+                #call function to block address
                 configs,cmdsBlock,output=block_address_commandes(output,ifname,bogon_aux,private_aux)
+                #update changes in DB interface config
+                print('changes in DB interface config/*********************/')
+                update_interface_table(id,data,InterfaceSerializer)
+                # update_DB(id,data,Interface,InterfaceSerializer)
+                #clean list of cmd to block address
                 cmdsBlock = [x for x in cmdsBlock if x not in output]
-                ###add all commandes to the service
-                index_cmd=output.index('[Install]') 
+                #contenu final des cmds pour lancer le service (execStart)
                 commandes+=cmds+cmdsBlock
-                output = output[:index_cmd] + commandes + output[index_cmd:]
-            ####
+                ###call function to add all commandes to the service
+                output = add_cmd(output,commandes)
+            ####ajouter au liste des commandes finales à executer (ssh.exec_command) 
                 commandes_final +=configs+[
                 """cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 {}
 EOF""".format('\n'.join(output)),
-                  
+              
+        'sudo systemctl daemon-reload',
+        'sudo systemctl restart Asguard-Networking.service',
                 ]
                 print({"trah":commandes_final})
     # print({'aaaa':commandes_final})
-    for cmd in commandes_final:
-        stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-        error = stderr.read().decode('utf-8')
-        output = stdout.read().decode('utf-8').split('\n')
-
-        if error:
-            print("error ",error,"    :",cmd)
-            # break
-        else:
-            print("service created successufully!!",cmd)
-    your_background_task()
-    import subprocess
-    process = subprocess.Popen(['python', 'manage.py', 'process_tasks'])
+                #lancer au background
+                your_background_task(commandes_final)
+                process = subprocess.Popen(['sudo','python', 'manage.py', 'process_tasks'])
+                
     return JsonResponse({"commandes_finals:": commandes_final})

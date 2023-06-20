@@ -140,34 +140,6 @@ def payment(request):
     # return render(request, 'payment.html', {'form': form})
     
 
-def initBD_organization():
-    organization_instance = organization()
-    organization_instance.groupName = "numeryx"
-    organization_instance.save()
-    
-def initBD_plan(slug,price):
-    plan_instance = plan()
-    plan_instance.slug = slug
-    plan_instance.price = price
-    plan_instance.currency = "euro"
-    plan_instance.save()
-    
-def initBD_plansFeatures(description,planId):
-    plansFeatures_instance = plansFeatures()
-    plansFeatures_instance.description = description
-    plansFeatures_instance.planId = plan.objects.get(id=planId)
-    plansFeatures_instance.save()
-
-def initBD(request):
-    initBD_organization()
-
-    initBD_plan("basic",100)
-    initBD_plan("gold",500)
-
-    initBD_plansFeatures("management users",1)
-    initBD_plansFeatures("management users",2)
-    initBD_plansFeatures("network",2)
-    return render(request, 'payment.html')
 
 
 def is_valid():

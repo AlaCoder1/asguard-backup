@@ -105,8 +105,7 @@ def RemoteUsernameExists(username):
 
 def addRemoteUser(username, password):
     # Run the getent group command and capture its output
-    command = "sudo useradd " + username + " && sudo echo " + \
-        username+":"+password + " | sudo chpasswd"
+    command = "sudo useradd -m " + username + " && sudo echo " + username+":"+password + " | sudo chpasswd"
     # Execute the command on the remote machine
     return ssh.exec_command(command)
     # return ssh.exec_command(command)

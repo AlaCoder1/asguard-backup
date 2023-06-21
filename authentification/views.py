@@ -15,8 +15,8 @@ import paramiko
 
 User = get_user_model()
 ssh = paramiko.SSHClient()
-
-
+from django.shortcuts import redirect
+from django.conf import settings
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def authentification(request):
@@ -35,8 +35,16 @@ def authentification(request):
                 # connect to SSH server
                 ssh.connect(settings.SSH_HOST, username=username,
                             password=password, port=settings.SSH_PORT)
+                # def getUserCredentials():
+                #     settings.USERNAME = username
+                #     settings.PASSWORD = username
+                #     return username,password
+                # getUserCredentials()
+                settings.USERNAME = username
+                settings.PASSWORD = password
+                print({"HOST":settings.SSH_HOST,"username":settings.USERNAME,"password":settings.PASSWORD})
                 #jwt_token = str(JWTAuthentication.create_jwt(user))
-                #userObject = User.objects.get(username=username)
+                # userObject = User.objects.get(username=username)
                 #userObject.token_last_expired = datetime.now(
                 #)+timedelta(hours=settings.JWT_CONF['TOKEN_LIFETIME_HOURS'])
                 #userObject.save()
@@ -45,6 +53,15 @@ def authentification(request):
                 # del userDict['password']
                 # del userDict['last_login']
                 # del userDict['token_last_expired']
+                userObject = User.objects.get(username=username)
+                userDict = userObject.__dict__
+                settings.CurrentUserId = userDict['id']
+                # def getCurrentUserId():
+                #     userObject = User.objects.get(username=username)
+                #     userDict = userObject.__dict__
+                #     settings.CurrentUserId = userDict['id']
+                #     return userDict['id']
+                # getCurrentUserId()
                 return JsonResponse({'message': ' Success Authentification'}, status=status.HTTP_200_OK)
             else:
                 return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)

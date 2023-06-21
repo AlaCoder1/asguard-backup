@@ -50,7 +50,8 @@ INSTALLED_APPS = [
     "settings",
     "authentification",
     "subscription",
-     "background_task"
+    "background_task",
+    "network"
 ]
 
 MIDDLEWARE = [
@@ -195,8 +196,6 @@ load_dotenv()
 # SSH settings
 SSH_HOST = os.getenv('SSH_HOST')
 SSH_PORT = int(os.getenv('SSH_PORT'))
-# SSH_USERNAME = os.getenv('SSH_USERNAME')
-# SSH_PASSWORD = os.getenv('SSH_PASSWORD')
-# from managementUsers.ssh_utils import SSHConnection
-# # create an SSH connection
-# SSH = SSHConnection()
+
+USERNAME=None
+PASSWORD=None

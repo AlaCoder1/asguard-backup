@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-
 from managementUsers.remoteFunctions import decrypt
 from .models import *
 from .serializers import *
@@ -12,6 +11,7 @@ from django.core import serializers
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from authentification.authentication import JWTAuthentication
+from django.contrib.auth.hashers import check_password
 # Create your views here.
 
 
@@ -61,11 +61,12 @@ def createServer(request):
     if (request.method == 'POST'):
         # parse the incoming information
         data = JSONParser().parse(request)
-        user = User.objects.filter(username=data["username"])
-        if (len(user) != 0):
-            serverDict = serializers.serialize("json", user)
+        userSearch = User.objects.filter(username=data["username"])
+        if (len(userSearch) != 0):
+            user = User.objects.get(username=data["username"])
+            serverDict = serializers.serialize("json", userSearch)
             res = json.loads(serverDict)
-            if (decrypt(res[0]['fields']['password']) == data['password']):
+            if check_password(data['password'], user.__dict__['password']):
                 # instanciate with the serializer
                 serializerServer = ServerSerializerPost(data=data)
                 # check if the sent information is okay
@@ -75,7 +76,6 @@ def createServer(request):
                     serializerServer.save()
                     # provide a Json Response with the data that was saved
                     return JsonResponse({"msg": msg}, status=201)
-
                 # provide a Json Response with the necessary error information
                 return JsonResponse(serializerServer.errors, status=400)
             else:
@@ -115,11 +115,12 @@ def modifyServer(request, id):
         serverObject = Server.objects.get(id=id)
         server = serverObject.__dict__
         type = Type.objects.get(id=data['type'])
-        user = User.objects.filter(username=data["username"])
-        if (len(user) != 0):
-            serverDict = serializers.serialize("json", user)
+        userSearch = User.objects.filter(username=data["username"])
+        if (len(userSearch) != 0):
+            user = User.objects.get(username=data["username"])
+            serverDict = serializers.serialize("json", userSearch)
             res = json.loads(serverDict)
-            if (decrypt(res[0]['fields']['password']) == data['password']):
+            if check_password(data['password'], user.__dict__['password']):
                 serverObject.name_server = data['name_server']
                 serverObject.hostname = data['hostname']
                 serverObject.transport = data['transport']

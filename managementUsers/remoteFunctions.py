@@ -9,6 +9,7 @@ import hashlib
 from authentification.views import *
 
 
+
 def sudo(cmd):
     return "sudo "+cmd
 
@@ -47,31 +48,6 @@ def getRemoteUidUser():
     return uid
 
 
-# function to hash pwd
-def Hash(text):
-    hash_sha3_512 = hashlib.new("sha3_512", text.encode())
-    return (hash_sha3_512.hexdigest())
-
-
-# function to encrypted pwd
-def encrypt(txt):
-    try:
-        # convert integer etc to string first
-        txt = str(txt)
-        # get the key from settings
-        cipher_suite = Fernet(settings.ENCRYPT_KEY)  # key should be byte
-        # #input should be byte, so convert the text to byte
-        encrypted_text = cipher_suite.encrypt(txt.encode('ascii'))
-        # encode to urlsafe base64 format
-        encrypted_text = base64.urlsafe_b64encode(
-            encrypted_text).decode("ascii")
-        return encrypted_text
-    except Exception as e:
-        # log the error if any
-        logging.getLogger("error_logger").error(traceback.format_exc())
-        return None
-
-
 # validation name of group and users (must content char and int)
 def validInput(var):
     regexp = re.compile('[^0-9a-zA-Z-_]+')
@@ -94,18 +70,21 @@ def validPassword(password):
 
 def RemoteUsernameExists(username):
     # Check if the username exists in the /etc/passwd file
-    with open("/etc/passwd", "r") as passwd_file:
-        for line in passwd_file:
-            if line.startswith(username + ":"):
-                return True
+    cmd="cat /etc/passwd"
+    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+    error = stderr.read().decode('utf-8')
+    output = stdout.read().decode('utf-8').split('\n')
+    for line in output:
+        if line.startswith(username):
+            return True
     return False
-
+    
 # function to add user
 
 
 def addRemoteUser(username, password):
     # Run the getent group command and capture its output
-    command = "sudo useradd " + username + " && sudo echo " + \
+    command = "sudo useradd -m " + username + " && sudo echo " + \
         username+":"+password + " | sudo chpasswd"
     # Execute the command on the remote machine
     return ssh.exec_command(command)
@@ -145,7 +124,11 @@ def checkSameGroupnameWithUsername(username):
     command = "id " + username
     # Execute the command on the remote machine
     stdin, stdout, stderr = ssh.exec_command(sudo(command))
+    error=stderr.read().decode('utf-8')
     out = stdout.read().decode('utf-8')
+    print("error",error)
+    print({"out": out[out.find("groups") +
+          len("groups")+1:len(out)].find(username)})
     if (out[out.find("groups")+len("groups")+1:len(out)].find(username) != -1):
         return True
     return False
@@ -167,15 +150,16 @@ def RemoteAddUserGroup(groupname, username):
     return ssh.exec_command(sudo(command))
 
 
-# function to auth
-def authenticate(username, password):
-    service = 'login'
-    try:
-        authenticated = pam.authenticate(username, password, service)
-        return authenticated
-    except pam.exception as e:
-        print(e)
-        return False
+# who i'am
+def whoami():
+    # Run the getent group command and capture its output
+    command = "whoami"
+    # Execute the command on the remote machine
+    stdin, stdout, stderr = ssh.exec_command(sudo(command))
+    # Split the output into lines and extract the last line
+    lines = stdout.read().decode('utf-8').split("\n")
+    last_line = lines[-2] if lines[-1] == "" else lines[-1]
+    return last_line
 
 
 def decrypt(encrypted_text):
@@ -191,15 +175,3 @@ def decrypt(encrypted_text):
         # log the error if any
         logging.getLogger("error_logger").error(traceback.format_exc())
         return None
-
-
-# who i'am
-def whoami():
-    # Run the getent group command and capture its output
-    command = "whoami"
-    # Execute the command on the remote machine
-    stdin, stdout, stderr = ssh.exec_command(sudo(command))
-    # Split the output into lines and extract the last line
-    lines = stdout.read().decode('utf-8').split("\n")
-    last_line = lines[-2] if lines[-1] == "" else lines[-1]
-    return last_line

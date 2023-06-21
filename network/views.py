@@ -39,15 +39,11 @@ def conf(request,id):
         netmask = data.get('netmask', None)
         # gateway = data.get('gateway', None)
         ##DHCP
-
-
         ####case of ipvs dhcp and button is basic /advanced
         reject = data.get('reject', None)
         hostname = data.get('hostname', None)
         alias_add = data.get('alias_add', None)
         alias_mask = data.get('alias_mask', None)
-        
-        
         ###case of ipvs dhcp and button is advanced
         ##time protocol
         timeout = data.get('timeout', None)

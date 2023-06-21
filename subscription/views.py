@@ -184,26 +184,3 @@ def if_subscribed(indexs_plans_feature):
             return False
     except ValueError:
         return False
-    
-# def if_subscribed(api):
-#     queryset = plansFeatures.objects.filter(APIS__contains=[api])
-#     print({"/////////////////////////////":queryset[0].__dict__})
-#     list_of_plan_feature = []
-#     last_subscription = plansSubscription.objects.order_by('start_at').last()
-#     last_subscription_dict = last_subscription.__dict__
-#     # date_end_datetime = datetime.combine(last_subscription_dict['end_at'], datetime.min.time())
-#     print({"date_now":datetime.now()})
-#     print({"date_end":last_subscription_dict['end_at']})
-#     print({"resultsss":last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()})
-#     print({"days":(last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days})
-#     print({"last_subscription":last_subscription_dict})
-#     print({"last_subscription_id":last_subscription.id})
-#     planSubsciptionUsages = planSubsciptionUsage.objects.filter(plans_subscription=last_subscription.id)
-#     print({"list_of_planSubsciptionUsages":planSubsciptionUsages})
-#     for k in range(0,len(planSubsciptionUsages)):
-#         list_of_plan_feature.append(planSubsciptionUsages[k].plans_feature_id)
-#     try:
-#         list_of_plan_feature.index(queryset[0].__dict__['id'])
-#         return True
-#     except ValueError:
-#         return False

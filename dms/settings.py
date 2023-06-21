@@ -198,4 +198,4 @@ SSH_HOST = os.getenv('SSH_HOST')
 SSH_PORT = int(os.getenv('SSH_PORT'))
 
 USERNAME=None
-PAASWORD=None
+PASSWORD=None

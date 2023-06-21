@@ -93,6 +93,8 @@ class IP4Config(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.created_at = timezone.now()
+            self.created_by = settings.CurrentUserId
+            self.updated_by = settings.CurrentUserId
         self.updated_at = timezone.now()
         super(IP4Config, self).save(*args, **kwargs)
     class Meta:

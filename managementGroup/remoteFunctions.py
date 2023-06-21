@@ -99,13 +99,14 @@ def getGroupNameById(pk):
 
 
 # function to change groupname if groupname=username
-def change_groupname_username(oldgroupname, Newgroupname):
+def remote_change_groupname_username(oldgroupname, Newgroupname):
     msg = ''
     if RemoteGroupExists(Newgroupname):
         msg = f"Username {Newgroupname} exists."
         return JsonResponse({"msg": msg})
     else:
-        if changeRemoteGroupname(oldgroupname, Newgroupname) == 0:
+        stdin, stdout, stderr = changeRemoteGroupname(oldgroupname, Newgroupname) 
+        if stderr.read().decode()=='':
             reporter = Group.objects.get(groupname=oldgroupname)
             reporter.groupname = Newgroupname
             reporter.save()

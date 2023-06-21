@@ -43,7 +43,7 @@
                                 :transition="false"
                             >
                                 <v-row
-                                 no-gutters style="height: calc(50vh);"
+                                 no-gutters
                                  align="center"
                                  class=" pr-4 axe-media-print-hide axe-sticky-three"
                                 >
@@ -54,7 +54,7 @@
                                         <network-server-management />
                                     </v-col>
                                 </v-row >
-                                <v-row no-gutters style="height: calc(50vh);"
+                                <v-row no-gutters
                                 align="center"
                                 class=" pr-4 axe-media-print-hide axe-sticky-three mt-10"
                                 >

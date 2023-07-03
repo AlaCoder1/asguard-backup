@@ -27,6 +27,7 @@ Encore
     .addEntry('app', './assets/js/app.js')
     .addEntry('home', './assets/js/home.js')
     .addEntry('login', './assets/js/login.js')
+    .addEntry('lan', './assets/js/lan.js')
 
 
   

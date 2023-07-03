@@ -29,52 +29,50 @@
       </v-menu>
       <span style="color: white;">johndoe@example.com</span>
     </v-toolbar>
-    <v-navigation-drawer :mini-variant.sync="mini" class="dms_grey global-drawer" permanent app>
+    <v-navigation-drawer :mini-variant.sync="mini" class="global-drawer" permanent app>
       <v-app-bar dense flat class="row-pointer dms_white" @click.stop="mini = !mini">
         <v-app-bar-nav-icon color="dms_teal" />
         <v-toolbar-title class="dms_teal--text text-body-2">
           Réduire le menu
         </v-toolbar-title>
       </v-app-bar>
-      <v-list dense class="white lighten-1 pb-0">
+      <v-list dense>
         <v-list-item v-for="item in items" :key="item.title" link>
           <v-list-item-icon v-if="mini">
-            <span :class="[item.icon, 'icon-size-two axe_teal--text']" />
+            <span :class="[item.icon, 'icon-size-two axe_teal--text']"></span>
           </v-list-item-icon>
           <v-list-item-content>
             <v-list-item-icon v-if="!mini" class="dms-menu-open">
-              <span :class="[item.icon, 'icon-size-two axe_teal--text']" />
+              <span :class="[item.icon, 'icon-size-two axe_teal--text']"></span>
             </v-list-item-icon>
-            <v-list-item-title class="dms_teal--text item" style="color: blue; font-weight: bold;">{{ item.title
-            }}</v-list-item-title>
+            <v-list-item-title class="dms_teal--text item">{{ item.title}}</v-list-item-title>
           </v-list-item-content>
           <v-list-item-action>
             <v-icon v-if="item.subItems.length > 0" @click.stop="toggleSubMenu(item)">
-              {{ item.showSubMenu ? 'mdi-menu-up' : 'mdi-menu-down' }}
+              {{ item.showSubMenu ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
             </v-icon>
           </v-list-item-action>
-          <v-menu v-if="item.subItems.length >= 1" v-model="item.showSubMenu" :close-on-content-click="false" offset-y
-            :nudge-width="200" min-width="200" :return-value.sync="item.showSubMenu" transition="scale-transition"
-            offset-x :position-x="mini ? 'left' : 'right'" :position-y="mini ? 'bottom' : 'center'" max-width="290px"
-            max-height="909px" min-height="909px" background-color="white" :top="mini ? '0' : '71'">
-            <template v-slot:activator="{ on }">
+        <v-menu v-if="item.subItems.length >= 1" v-model="item.showSubMenu" :close-on-content-click="false" offset-y
+          :nudge-width="290" min-width="200px" :return-value.sync="item.showSubMenu" transition="scale-transition"
+          offset-x max-width="200px"
+          max-height="909px" min-height="909px" background-color="white" :top="mini ? true : false">
+            <template v-slot:activator="{ on }"
+            :class="{ 'drawer_hover': !mini, 'axe-active-menu': activeMenu === item.active }">
               <v-list-item v-on="on">
-                <v-list-item-action>
-                  <v-icon>{{ item.showSubMenu ? 'mdi-menu-up' : 'mdi-menu-down' }}</v-icon>
-                </v-list-item-action>
-                <v-list-item-content id='overlay'>
+                <v-list-item-content id='overlay'
+                  :class="{ 'text-white-space': !mini, 'dms_teal--text': activeMenu === item.active }">
                   <v-list-item-icon v-if="!mini" class="dms-menu-open">
-                    <span :class="[item.icon, 'icon-size-two axe_teal--text']" />
+                    <span :class="[item.icon, 'icon-size-two axe_teal--text']"></span>
                   </v-list-item-icon>
-                  <v-list-item-title class="dms_teal--text item" style="color: blue; font-weight: bold;">{{ item.title }}</v-list-item-title>
+                  <v-list-item-title class="dms_teal--text item">{{ item.title }}</v-list-item-title>
                 </v-list-item-content>
               </v-list-item>
             </template>
-            <v-list dense class="white lighten-1 pb-0">
+            <v-list dense>
               <v-list-item v-for="(subItem, subIndex) in item.subItems" :key="subIndex" @click="selectSubItem(subItem)">
                 <v-list-item-content>
                   <v-list-item-icon v-if="!mini" class="dms-menu-open">
-                    <span :class="[subItem.icon, 'icon-size-two axe_teal--text']" />
+                    <span :class="[subItem.icon, 'icon-size-two axe_teal--text']"></span>
                   </v-list-item-icon>
                   <v-list-item-title class="dms_teal--text item">{{ subItem.title }}</v-list-item-title>
                 </v-list-item-content>
@@ -421,9 +419,14 @@ $grid-breakpoints: map-merge($grid-breakpoints, (
   justify-content: center !important;
 }
 
-a:hover {
+a:hover,
+.v-list-item--active > .v-list-item__title {
   background-color: #ffc300;
-  transition: background-color 0.2s ease-in-out;
+}
+
+a:hover .dms_teal--text,
+.v-list-item--active .dms_teal--text {
+  color: white !important;
 }
 
 .select-white-text .v-select__selection--comma {
@@ -453,4 +456,10 @@ a:hover {
     position: absolute;
     z-index:100;
 }
+
+.v-list-item--link:hover {
+  background-color: #ffc300 !important;
+}
+
+
 </style>

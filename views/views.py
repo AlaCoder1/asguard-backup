@@ -10,6 +10,10 @@ def index_page(request):
     print(context)
     return render(request, 'index_page.html',context)
 
+# @login_required(login_url='/')
+def lan_page(request):
+    return render(request, 'lan_page.html')
+
 def login(request):
     usr=getAllUsers(request)
     context = {'users':usr}

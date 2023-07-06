@@ -1,0 +1,23 @@
+from django.db import models
+from network.models import *
+# Create your models here.
+###Model inbound rule
+class Rule(models.Model):
+    rule = models.CharField(max_length=200, null=True,unique=True)
+    rule_status = models.BooleanField(default=False)
+    type_rule=models.CharField(max_length=200, null=True)
+    policy=models.CharField(max_length=200, null=True)
+    Rule_description=models.CharField(max_length=200, null=True)
+    protocol=models.CharField(max_length=200, null=True)
+    saddr=models.CharField(max_length=200, null=True)
+    sport= models.IntegerField(null=True)
+    daddr=models.CharField(max_length=200, null=True)
+    dport=models.IntegerField(null=True)
+    interface = models.ForeignKey(
+            Interface, on_delete=models.CASCADE, null=True)
+    class Meta:
+        db_table = 'Rule'
+
+    def __str__(self):
+        return self.rule
+    

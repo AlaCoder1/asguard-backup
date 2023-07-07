@@ -31,5 +31,7 @@ urlpatterns = [
     path('groups/', include('managementGroup.urls')),
     path('servers/', include('managementServers.urls')),
     path('settings/', include('settings.urls')),
-    path('api/', include('rest_framework.urls'))
+    path('api/', include('rest_framework.urls')),
+    path('rules/', include('rules.urls')),
+    
 ]

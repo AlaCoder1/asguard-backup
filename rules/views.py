@@ -47,12 +47,16 @@ def addRule(request,id):
         type_rule = data.get('type_rule', None)
         Rule_description=data.get('Rule_description', None)
         msg="Failed to add rule"
+        #appel la fonction pour initialiser les fichies nftables.conf
         if init_file_nftables(ifname):
+          #appel la fonction pour retourner rule à ajouter 
           rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
           if not Rule.objects.filter(rule=rule).exists():
+          #appel la fonction pour ajouter rule dans le système
             add_rule=add_rule_remote(rule,ifname,type_rule)
             if add_rule:
                   data['interface']=id
+                   #appel la fonction pour ajouter rule dans la base de données 
                   if add_rule_DB(data,rule,type_rule):
                       msg="add rule Successufully!!"
                
@@ -64,6 +68,7 @@ def addRule(request,id):
 def deleteRule(request,idInter,id):
       if (request.method == 'DELETE'):
         msg="failed to delete rule!!"
+        #tester si rule exist ou non
         if (Rule.objects.filter(id=id).exists()):
             rules = Rule.objects.get(id=id)
             rule=rules.rule
@@ -73,9 +78,11 @@ def deleteRule(request,idInter,id):
             interfaceObject= Interface.objects.get(id=idInter)
             #get interface name to execute command systeme
             ifname=interfaceObject.ifname
+             #appel la fonction pour retrouver handle rule à supprimer
             handle=get_handle_rule(ifname,type_rules,rule)
-            print(rules.rule)
+             #appel la fonction pour supprimer  rule avec handle déjà retrouvé(système)
             if delete_rule_remote(ifname,type_rules,handle):
+              #appel la fonction pour supprimer  rule de la base de données 
                   rules.delete()
                   msg="delete rule Successfully!!"
         return JsonResponse({"msg": msg})
@@ -95,6 +102,7 @@ def updateRule(request,idInter,id):
         Rule_description=data.get('Rule_description', None)
         # type_rule = data.get('type_rule', None)
         msg="Failed to update rule!!"
+        #tester si rule exist ou non
         if (Rule.objects.filter(id=id).exists()):
             rules = Rule.objects.get(id=id)
             rule=rules.rule
@@ -103,12 +111,17 @@ def updateRule(request,idInter,id):
             interfaceObject= Interface.objects.get(id=idInter)
             #get interface name to execute command systeme
             ifname=interfaceObject.ifname
+            #appel la fonction pour retrouver handle rule à supprimer
             handle=get_handle_rule(ifname,type_rules,rule)
+             #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
             if delete_rule_remote(ifname,type_rules,handle):
+                 #appel la fonction pour retourner rule à ajouter 
                 rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
                 if not Rule.objects.filter(rule=rule).exists():
+                #appel la fonction pour ajouter rule dans le système
                     add_rule=add_rule_remote(rule,ifname,type_rules)
                     if add_rule:
+                      #appel la fonction pour update rule dans la base de données 
                       if update_rule_DB(rule,rules,data) :
                         msg="Update rule Successfully!!"
                   

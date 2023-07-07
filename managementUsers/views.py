@@ -83,6 +83,7 @@ def createUser(request):
                             # Execute the command on the remote machine
                             stdin, stdout, stderr = addRemoteUser(
                                 username, password)
+                            addMailSpool(username)
                             # convert the stderr stream to a string
                             error_str = stderr.read().decode('utf-8')
                             if error_str == "":

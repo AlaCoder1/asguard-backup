@@ -404,8 +404,10 @@
         </v-row>
         <v-spacer></v-spacer>
         <div class="text-center">
-            <v-btn large rounded outlined color="#039BE5">Cancel</v-btn>
-            <v-btn large rounded color="#039BE5">Save</v-btn>
+            <v-btn large rounded outlined color="#042439">Cancel</v-btn>
+            <v-btn large rounded color="#042439">
+                <span class="mr-2 c-o">Save</span>
+            </v-btn>
         </div>
         <br />
     </v-card>

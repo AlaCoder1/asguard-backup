@@ -21,8 +21,10 @@ from views.views import *
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
-    path('dashboard/', index_page),
+
     path('', login ),
+    path('dashboard/', index_page),
+    path('lan/', lan_page),
     path('', include('tasks.urls')),
     path('auth/', include('authentification.urls')),
     path('network/', include('network.urls')),

@@ -34,6 +34,7 @@ def conf(request,id):
         ####
         # parse the incoming information
         data = JSONParser().parse(request)
+        ##########IPV4
         ##static
         ip_address = data.get('ip_address', None)
         netmask = data.get('netmask', None)
@@ -59,16 +60,23 @@ def conf(request,id):
         lease_time = data.get('lease_time', None)
         request = data.get('request', None)
         require = data.get('require', None)
+         ####
+        typeIP4=data.get('typeIP4', None)
+        typeDHCP=data.get('typeDHCP', None)
+        ##########IPV6
+        #static 
+        ip6_address = data.get('ip6_address', None)
+        netmask6 = data.get('netmask6', None)
+         ####
+        typeIP6=data.get('typeIP6', None)
+        typeDHCP6=data.get('typeDHCP6', None)        
         
-
         ###generic config
         mtuV=data.get('mtuV', None)
         addmac=data.get('addmac', None)
         mssV=data.get('mssV', None)
         speed_duplex=data.get('speed_duplex', None)
-        ####
-        typeIP4=data.get('typeIP4', None)
-        typeDHCP=data.get('typeDHCP', None)
+       
         ##blockage addresse
         bogon_aux=data['bogon_aux']
         private_aux=data['private_aux']
@@ -103,6 +111,24 @@ def conf(request,id):
                         commandes_final+=create_file(ifname,configContenu)
                          #call function to convert address to dhcp advanced /Base  in service
                         commandes,output=update_conn_dhcp(output,ifname)
+                
+                match typeIP6:
+                    case "None":
+                        pass
+                    case "static":
+                        #call function to convert address to static ipv6
+                        commandesIPV6,output=update_conn_static_ipv6(output,ifname,ip6_address,netmask6)
+                    case "dhcp":
+                        if typeDHCP=="Base" :
+                        #contenu de dhclient.conf dhcp Base
+                            configContenu=return_config_base(ifname,reject,hostname,alias_add,alias_mask)
+                        if typeDHCP=="Advanced":
+                        #contenu de dhclient.conf dhcp advanced
+                            configContenu=return_config_advanced(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require)
+                        #add commands of create file dhclient to list of commandes to execute    
+                        commandes_final+=create_file(ifname,configContenu)
+                         #call function to convert address to dhcp advanced /Base  in service
+                        commandesIPV6,output=update_conn_dhcp(output,ifname)
                         
                 #update changes in DB ip4
                 print('changes in DB  ip4/*********************/')
@@ -127,7 +153,7 @@ def conf(request,id):
                 #clean list of cmd to block address
                 cmdsBlock = [x for x in cmdsBlock if x not in output]
                 #contenu final des cmds pour lancer le service (execStart)
-                commandes+=cmds+cmdsBlock
+                commandes+=commandesIPV6+cmds+cmdsBlock
                 ###call function to add all commandes to the service
                 output = add_cmd(output,commandes)
             ####ajouter au liste des commandes finales à executer (ssh.exec_command) 

@@ -62,11 +62,7 @@ def your_background_task(commands):
 ###################    
 ##get old configuration in service
 def get_old_config():
-        cmd = """python -c "
-with open('/etc/systemd/system/Asguard-Networking.service', 'r') as file:
-    for line in file:
-        print(line)
-        " """
+        cmd = "cat /etc/systemd/system/Asguard-Networking.service"
         ssh.exec_command(cmd)
         stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
         error = stderr.read().decode('utf-8')
@@ -103,8 +99,9 @@ def clean_old_config(config,typeConf):
         config=config[:i]+config[j+1:]
     return config
  
-
-################### Static      
+#############################################ipv4#############################################
+################### Static 
+     
 # convert  to static connexion 
 def update_conn_static(config,ifname,ip_address,netmask):
     #lancer la fonction de "remove old config"
@@ -118,6 +115,8 @@ def update_conn_static(config,ifname,ip_address,netmask):
     ]
     
     return commands,config
+
+
 
 ################### Dhcp
 ###return base config
@@ -187,6 +186,23 @@ def update_conn_dhcp(config,ifname):
     ]
     
     return commandes,config
+#############################################ipv6#############################################
+##static ipv6
+# convert  to static connexion  ipv6 
+def update_conn_static_ipv6(config,ifname,ip_address,netmask):
+    #lancer la fonction de "remove old config"
+    config=clean_old_config(config,"IP6Config {}".format(ifname))
+    #la liste des commandes pour l'IPV4 static
+    commands=[
+         "#Start IP6Config {}".format(ifname),
+        "ExecStart=/usr/bin/ip -6 addr flush dev {}".format(ifname),
+        "ExecStart=/usr/bin/ip -6 addr add {}/{} dev {}".format(ip_address,netmask,ifname),
+         "#End IP6Config {}".format(ifname)
+    ]
+    
+    return commands,config
+##dhcp ipv6
+
 
 
 ###################generic configuration

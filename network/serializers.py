@@ -19,6 +19,15 @@ class IP4ConfigSerializer(serializers.ModelSerializer):
                       'dhcp_client','domaine_name','domain_server','lease_time','request','require',
                       'interface',
                       ]
+# #serializer for ip6 config   
+class IP6ConfigSerializer(serializers.ModelSerializer):
+    interface = serializers.PrimaryKeyRelatedField(queryset=Interface.objects.all())
+    class Meta:
+            model = IP4Config
+            fields = ['typeIP6','typeDHCP6', 'ip6_address','netmask6',
+                      
+                      'interface',
+                      ]
 
             
 #serializer for generic config        

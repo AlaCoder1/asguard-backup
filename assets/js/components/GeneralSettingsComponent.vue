@@ -7,7 +7,8 @@
                     <v-divider class="mt-1"></v-divider>
                     <h3>System</h3>
                     <v-divider class="mt-1"></v-divider>
-                    <v-text-field label="Host name" style="background-color: #eff4f6; margin-left: 2px;"></v-text-field>
+                    <v-text-field label="Host name" style="background-color: #eff4f6; margin-left: 2px;"
+                        class="mt-2"></v-text-field>
                     <v-text-field label="Domain" style="background-color: #eff4f6; margin-left: 2px;"></v-text-field>
                     <v-select label="Time zone" :items="timeZones"
                         style="background-color: #eff4f6; margin-left: 2px;"></v-select>
@@ -23,28 +24,31 @@
                     </v-row>
                     <v-row class="mt-2">
                         <v-col cols="4">
-                            <h4>DNS Server</h4>
+                            <h4 class="text-color">DNS Server</h4>
                             <v-text-field style="background-color: #eff4f6; margin-left: 2px;">
                             </v-text-field>
                             <v-text-field style="background-color: #eff4f6; margin-left: 2px; margin-bottom: 2px;">
                             </v-text-field>
                         </v-col>
                         <v-col cols="6">
-                            <h4>Use the gateway</h4>
+                            <h4 class="text-color">Use the gateway</h4>
                             <v-select style="background-color: #eff4f6; margin-left: 2px; margin-bottom: 2px;"></v-select>
                             <v-select style="background-color: #eff4f6; margin-left: 2px; margin-bottom: 2px;"></v-select>
                         </v-col>
                         <v-col cols="2">
                             <div class="d-flex" style="margin-top: 56px !important;">
-                                <v-btn class="btn btn-primary" color="primary" text>
+                                <v-btn class="btn btn-primary button-color" color="primary" text
+                                    style="min-width: 8px !important; margin-right: 10px !important;">
                                     <i class="fas fa-edit"></i>
                                 </v-btn>
-                                <v-btn class="btn btn-primary" color="primary" text>
+                                <v-btn class="btn btn-primary button-color" color="primary" text
+                                    style="min-width: 8px !important; margin-right: 10px !important;">
+
                                     <i class="fas fa-trash"></i>
                                 </v-btn>
                             </div>
                             <div style="margin-top: 30px !important;">
-                                <v-btn class="btn btn-primary" color="primary" text>
+                                <v-btn class="btn btn-primary button-color" color="primary" text>
                                     <i class="fas fa-plus"></i>
                                     <span class="ml-2">Add</span>
                                 </v-btn>
@@ -90,7 +94,72 @@
                     <v-divider class="mt-1"></v-divider>
                     <h3>Local Logging Options</h3>
                     <v-divider class="mt-1"></v-divider>
-                    <!-- Add your content for local logging options here -->
+                    <v-row class="mt-2">
+                        <v-col cols="6">
+                            <p>Circular logs</p>
+                        </v-col>
+                        <v-col cols="6">
+                            <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer">
+                            <label for="dnsServer">Disable</label>
+                        </v-col>
+                    </v-row>
+                    <v-row>
+                        <v-col cols="6">
+                            <p>Size of log files (Bytes)</p>
+                        </v-col>
+                        <v-col cols="6">
+                            <v-text-field style="background-color: #eff4f6; margin-left: 2px;"></v-text-field>
+                        </v-col>
+                    </v-row>
+                    <v-row>
+                        <v-col cols="6">
+                            <p>Log firewall default blocks</p>
+                        </v-col>
+                        <v-col cols="6">
+                            <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer" class="mb-3">
+                            <label for="dnsServer">Log packets matching the default blocking rules put in the
+                                ruleset</label>
+                            <br />
+                            <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer" class="mb-3">
+                            <label for="dnsServer">Log packets that match the ruleset's default forwarding rules</label>
+                            <br />
+                            <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer" class="mb-3">
+                            <label for="dnsServer">Log packets blocked by 'Block private networks' rules</label>
+                            <br />
+                        </v-col>
+                    </v-row>
+                    <v-row class="mt-2">
+                        <v-col cols="6">
+                            <p>Web server process errors</p>
+                        </v-col>
+                        <v-col cols="6">
+                            <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer">
+                            <label for="dnsServer">Trace</label>
+                        </v-col>
+                    </v-row>
+                    <v-row style="height: 100%;">
+                        <v-col cols="6">
+                            <p>Event logs</p>
+                        </v-col>
+                        <v-col cols="6">
+                            <button class="reset-style">
+                                <span class="mr-2 c-o">Reset</span>
+                            </button>
+                        </v-col>
+                    </v-row>
+                    <v-alert type="success" class="d-flex mt-3" :value="alert" dismissible>
+                        <span class="justify-start">
+                            <i class="fas fa-check-circle "></i>
+                        </span>
+                        <span class="c-o ml-3">Log files have been reset.</span>
+                        <span class="ml-16" style="margin-top: 20px !important;"><i
+                                class="fas fa-times justify-end"></i></span>
+                    </v-alert>
+                    <v-row class="d-flex mb-2 mt-2 mr-2 text-center justify-end" style="height: 100%;">
+                        <v-btn large rounded color="primary">
+                            <span class="mr-2 c-o">Save</span>
+                        </v-btn>
+                    </v-row>
                 </div>
             </v-col>
         </v-row>
@@ -108,9 +177,36 @@ export default {
                 'PST',
                 // Add more time zones as needed
             ],
+            alert: true,
         };
     },
 };
 </script>
 
-<style scoped></style>
+<style scoped>
+.reset-style {
+    background-color: #909597;
+    border: none;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    height: 44px;
+    min-width: 78px;
+    padding-top: 0px;
+    padding-right: 19.5556px;
+    padding-bottom: 0px;
+    padding-left: 19.5556px;
+}
+
+.text-color {
+    color: #909597;
+}
+
+.button-color {
+    background-color: #e6eaeb;
+}
+</style>

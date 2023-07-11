@@ -109,7 +109,7 @@
                 <div class="ml-3">
                     <div style="color: black;" class="inline-input">IPV4 gateway</div>
                     <v-btn class="ml-3 mt-2 " color="primary" text>
-                        <v-icon>mdi-plus</v-icon>
+                         <i class="fas fa-plus"></i>
                         <span class="ml-2">Add</span>
                     </v-btn>
                     <v-text-field label="Enter IP address" class="ml-3 mt-2 inline-input"></v-text-field>

@@ -25,6 +25,7 @@ urlpatterns = [
     path('', login ),
     path('dashboard/', index_page),
     path('lan/', lan_page),
+    path('settings/', settings_page),
     path('', include('tasks.urls')),
     path('auth/', include('authentification.urls')),
     path('network/', include('network.urls')),

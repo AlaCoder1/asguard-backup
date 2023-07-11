@@ -3,7 +3,7 @@ from managementUsers.views import *
 from managementUsers.models import User
 from django.contrib.auth.decorators import login_required
 
-@login_required(login_url='/')
+# @login_required(login_url='/')
 def index_page(request):
     usr=getAllUsers(request)
     context = {'users':usr}
@@ -13,6 +13,10 @@ def index_page(request):
 # @login_required(login_url='/')
 def lan_page(request):
     return render(request, 'lan_page.html')
+
+# @login_required(login_url='/')
+def settings_page(request):
+    return render(request, 'settings_page.html')
 
 def login(request):
     usr=getAllUsers(request)

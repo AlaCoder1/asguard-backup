@@ -147,13 +147,13 @@
                             </button>
                         </v-col>
                     </v-row>
-                    <v-alert type="success" class="d-flex mt-3" dismissible v-if="alert">
+                    <v-alert type="success" class="d-flex mt-3" v-if="alert">
                         <span class="justify-start">
                             <i class="fas fa-check-circle "></i>
                         </span>
                         <span class="c-o ml-3">Log files have been reset.</span>
-                        <span class="ml-16" style="margin-top: 20px !important;"><i
-                                class="fas fa-times justify-end"></i></span>
+                        <span class="ml-16" style="margin-top: 20px !important;">
+                            <i class="fas fa-times justify-end cursor" @click="handleRemove"></i></span>
                     </v-alert>
                     <v-row class="d-flex mb-2 mt-2 mr-2 text-center justify-end" style="height: 100%;">
                         <v-btn large rounded color="primary">
@@ -183,6 +183,9 @@ export default {
     methods: {
         handleReset() {
             this.alert = true;
+        },
+        handleRemove() {
+            this.alert = false;
         },
     },  
 };

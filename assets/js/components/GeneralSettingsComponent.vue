@@ -142,12 +142,12 @@
                             <p>Event logs</p>
                         </v-col>
                         <v-col cols="6">
-                            <button class="reset-style">
+                            <button class="reset-style" @click="handleReset">
                                 <span class="mr-2 c-o">Reset</span>
                             </button>
                         </v-col>
                     </v-row>
-                    <v-alert type="success" class="d-flex mt-3" :value="alert" dismissible>
+                    <v-alert type="success" class="d-flex mt-3" dismissible v-if="alert">
                         <span class="justify-start">
                             <i class="fas fa-check-circle "></i>
                         </span>
@@ -177,9 +177,14 @@ export default {
                 'PST',
                 // Add more time zones as needed
             ],
-            alert: true,
+            alert: false,
         };
     },
+    methods: {
+        handleReset() {
+            this.alert = true;
+        },
+    },  
 };
 </script>
 

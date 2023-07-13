@@ -10,25 +10,25 @@
                             <label>Client name</label>
                         </v-col>
                         <v-col cols="8">
-                            <v-text-field label="Client name" style="background-color: #eff4f6;"></v-text-field>
+                            <v-text-field type="text" label="Client name" style="background-color: #eff4f6;" v-model="clientName"></v-text-field>
                         </v-col>
                         <v-col cols="4" class="mb-3">
                             <label>Description</label>
                         </v-col>
                         <v-col cols="8">
-                            <v-text-field label="Description" style="background-color: #eff4f6;"></v-text-field>
+                            <v-text-field type="text" label="Description" style="background-color: #eff4f6;" v-model="description"></v-text-field>
                         </v-col>
                         <v-col cols="4">
                             <label>Server mode</label>
                         </v-col>
                         <v-col cols="8">
-                            <v-select label="Server mode" style="background-color: #eff4f6;"></v-select>
+                            <v-select label="Server mode" style="background-color: #eff4f6;" v-model="serverMode"></v-select>
                         </v-col>
                         <v-col cols="4">
                             <label>Protocol</label>
                         </v-col>
                         <v-col cols="8">
-                            <v-select label="Protocol" style="background-color: #eff4f6;"></v-select>
+                            <v-select label="Protocol" style="background-color: #eff4f6;" v-model="protocol"></v-select>
                         </v-col>
                         <v-col cols="4">
                             <label>Device Mode</label>
@@ -53,13 +53,13 @@
                             <label>Proxy host or address</label>
                         </v-col>
                         <v-col cols="8">
-                            <v-text-field label="Proxy host or address" style="background-color: #eff4f6;"></v-text-field>
+                            <v-text-field type="text" label="Proxy host or address" style="background-color: #eff4f6;"></v-text-field>
                         </v-col>
                         <v-col cols="4">
                             <label>Proxy port</label>
                         </v-col>
                         <v-col cols="8">
-                            <v-text-field label="Proxy port" style="background-color: #eff4f6;"></v-text-field>
+                            <v-text-field type="text" label="Proxy port" style="background-color: #eff4f6;"></v-text-field>
                         </v-col>
 
                         <v-col cols="4">
@@ -73,7 +73,7 @@
                             <label>Local port</label>
                         </v-col>
                         <v-col cols="8">
-                            <v-text-field label="Local port" style="background-color: #eff4f6;"></v-text-field>
+                            <v-text-field type="text" label="Local port" style="background-color: #eff4f6;"></v-text-field>
                         </v-col>
                     </v-row>
                     <v-row class="mt-2">
@@ -85,19 +85,19 @@
                                     <label>Username</label>
                                 </v-col>
                                 <v-col cols="8">
-                                    <v-text-field label="Username" style="background-color: #eff4f6;"></v-text-field>
+                                    <v-text-field type="text" label="Username" style="background-color: #eff4f6;"></v-text-field>
                                 </v-col>
                                 <v-col cols="4">
                                     <label>Password</label>
                                 </v-col>
                                 <v-col cols="8">
-                                    <v-text-field label="Password" style="background-color: #eff4f6;"></v-text-field>
+                                    <v-text-field type="password" label="Password" style="background-color: #eff4f6;"></v-text-field>
                                 </v-col>
                                 <v-col cols="4">
                                     <label>Renegotiate time</label>
                                 </v-col>
                                 <v-col cols="8">
-                                    <v-text-field label="Renegotiate time"
+                                    <v-text-field type="text" label="Renegotiate time"
                                         style="background-color: #eff4f6;"></v-text-field>
                                 </v-col>
                                 <v-col cols="4">
@@ -117,7 +117,7 @@
                                 <v-col cols="8">
                                     <input type="checkbox" style="background-color: #eff4f6;">
                                     <label>Automatically generate a shared key.</label>
-                                    <v-text-field label="Shared key" style="background-color: #eff4f6;"></v-text-field>
+                                    <v-text-field type="text" label="Shared key" style="background-color: #eff4f6;"></v-text-field>
 
                                 </v-col>
                                 <br />
@@ -170,42 +170,42 @@
                                     <label>IPv4 Tunnel Network</label>
                                 </v-col>
                                 <v-col cols="8">
-                                    <v-text-field label="IPv4 Tunnel Network"
+                                    <v-text-field type="text" label="IPv4 Tunnel Network"
                                         style="background-color: #eff4f6;"></v-text-field>
                                 </v-col>
                                 <v-col cols="4">
                                     <label>IPv6 Tunnel Network</label>
                                 </v-col>
                                 <v-col cols="8">
-                                    <v-text-field label="IPv6 Tunnel Network"
+                                    <v-text-field type="text" label="IPv6 Tunnel Network"
                                         style="background-color: #eff4f6;"></v-text-field>
                                 </v-col>
                                 <v-col cols="4">
                                     <label>IPv4 Remote Network</label>
                                 </v-col>
                                 <v-col cols="8">
-                                    <v-text-field label="IPv4 Remote Network"
+                                    <v-text-field type="text" label="IPv4 Remote Network"
                                         style="background-color: #eff4f6;"></v-text-field>
                                 </v-col>
                                 <v-col cols="4">
                                     <label>IPv6 Remote Network</label>
                                 </v-col>
                                 <v-col cols="8">
-                                    <v-text-field label="IPv6 Remote Network"
+                                    <v-text-field type="text" label="IPv6 Remote Network"
                                         style="background-color: #eff4f6;"></v-text-field>
                                 </v-col>
                                 <v-col cols="4">
                                     <label>Limit outgoing bandwidth</label>
                                 </v-col>
                                 <v-col cols="8">
-                                    <v-text-field label="Limit outgoing bandwidth"
+                                    <v-text-field type="text" label="Limit outgoing bandwidth"
                                         style="background-color: #eff4f6;"></v-text-field>
                                 </v-col>
                                 <v-col cols="4">
                                     <label>Compression</label>
                                 </v-col>
                                 <v-col cols="8">
-                                    <v-select label="Compression" style="background-color: #eff4f6;"></v-select>
+                                    <v-select type="text" label="Compression" style="background-color: #eff4f6;"></v-select>
                                 </v-col>
                                 <v-col cols="4">
                                     <label>Type-of-Service</label>
@@ -258,6 +258,49 @@
 
 
 <script>
+export default {
+    name: "ClientsOpenvpnComponent",
+    data: () => ({
+        // add data here
+        clientName: '',
+        description: '',
+        serverMode: '',
+        protocol: '',
+        deviceMode: '',
+        interface: '',
+        retryDnsResolution: '',
+        proxyHostOrAddress: '',
+        proxyPort: '',
+        proxyAuthenticationExtraOptions: '',
+        localPort: '',
+        username: '',
+        password: '',
+        renegotiateTime: '',
+        sharedKey: '',
+        peerCertificateAuthority: '',
+        clientCertificate: '',
+        encryptionAlgorithm: '',
+        authDigestAlgorithm: '',
+        hardwareCrypto: '',
+        ipv4TunnelNetwork: '',
+        ipv6TunnelNetwork: '',
+        ipv4RemoteNetwork: '',
+        ipv6RemoteNetwork: '',
+        limitOutgoingBandwidth: '',
+        compression: '',
+        typeOfService: '',
+        ipv6: '',
+        pullRoutes: '',
+        addRemoveRoutes: '',
+        verbosityLevel: '',
+    }),
+    methods: {
+        //
+    },
+    mounted() {
+        //
+    }
+}
 
 </script>
 

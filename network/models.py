@@ -37,8 +37,8 @@ class GenericConfig(models.Model):
     mssV=models.IntegerField(null=True)
     speed_duplex=models.CharField(max_length=200, null=True)
       # Created and updated timestamps
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(default=timezone.now,editable=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False,null=True)
+    updated_at = models.DateTimeField(default=timezone.now,editable=False,null=True)
     created_by = models.IntegerField(null=True)
     updated_by = models.IntegerField(null=True)
 

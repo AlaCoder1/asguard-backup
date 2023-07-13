@@ -89,13 +89,17 @@ def addRemoteUser(username, password):
     # Execute the command on the remote machine
     return ssh.exec_command(command)
     # return ssh.exec_command(command)
-
+def addMailSpool(username):
+    cmd=["touch /var/mail/"+username,"chown "+username+":mail /var/mail/"+username,"chmod 660 /var/mail/"+username]
+    for i in cmd:
+        ssh.exec_command(i)
 # function to delete user
 
 
 def deleteRemoteUser(username):
     # Run the getent group command and capture its output
-    command = "userdel -r"+username
+    # command = "userdel -r "+username
+    command = "userdel "+username
     # Execute the command on the remote machine
     return ssh.exec_command(sudo(command))
 

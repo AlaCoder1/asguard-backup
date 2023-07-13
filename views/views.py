@@ -18,6 +18,10 @@ def lan_page(request):
 def settings_page(request):
     return render(request, 'settings_page.html')
 
+# @login_required(login_url='/')
+def openvpn_page(request):
+    return render(request, 'openvpn_page.html')
+
 def login(request):
     usr=getAllUsers(request)
     context = {'users':usr}

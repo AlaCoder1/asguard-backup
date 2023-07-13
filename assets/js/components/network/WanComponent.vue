@@ -1,11 +1,5 @@
 <template>
     <v-card>
-        <v-toolbar>
-            <v-tabs>
-                <v-tab>LAN</v-tab>
-                <v-tab>WAN</v-tab>
-            </v-tabs>
-        </v-toolbar>
         <v-row class="fill-height ml-3">
             <v-col cols="12" sm="6">
                 <v-card-title>Basic configuration</v-card-title>
@@ -109,7 +103,7 @@
                 <div class="ml-3">
                     <div style="color: black;" class="inline-input">IPV4 gateway</div>
                     <v-btn class="ml-3 mt-2 " color="primary" text>
-                         <i class="fas fa-plus"></i>
+                        <i class="fas fa-plus"></i>
                         <span class="ml-2">Add</span>
                     </v-btn>
                     <v-text-field label="Enter IP address" class="ml-3 mt-2 inline-input"></v-text-field>
@@ -415,9 +409,9 @@
 
 <script>
 export default {
+    name: "WanComponent",
     data() {
         return {
-            model: "tab-1",
             title: "",
             text: "",
             activate: false,
@@ -451,4 +445,3 @@ export default {
     vertical-align: middle;
 }
 </style>
-```

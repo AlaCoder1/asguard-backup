@@ -74,7 +74,6 @@ def conf(request,id):
         private_aux=data['private_aux']
         commandes=[]
         commandes_final=[]
-        print({'bbbbbb':"commandes_final"})
         ##get old configuration in service
         output,error=get_old_config()
         if error:
@@ -140,7 +139,6 @@ EOF""".format('\n'.join(output)),
         'sudo systemctl restart Asguard-Networking.service',
                 ]
                 print({"trah":commandes_final})
-    # print({'aaaa':commandes_final})
                 #lancer au background
                 your_background_task(commandes_final)
                 process = subprocess.Popen(['sudo','python', 'manage.py', 'process_tasks'])

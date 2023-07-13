@@ -51,7 +51,8 @@ INSTALLED_APPS = [
     "authentification",
     "subscription",
     "background_task",
-    "network"
+    "network",
+    "openvpn"
 ]
 
 MIDDLEWARE = [

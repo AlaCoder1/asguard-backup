@@ -20,13 +20,13 @@
 
 <script>
 import BaseLayout from '@/pages/layout.vue';
-import ServersOpenvpnComponent from '@/components/ServersOpenvpnComponent.vue';
-import ClientsOpenvpnComponent from '@/components/ClientsOpenvpnComponent.vue';
-import MonotoringOpenvpnComponent from '@/components/MonotoringOpenvpnComponent.vue';
-import ListingOpenvpnComponent from '@/components/ListingOpenvpnComponent.vue';
+import ServersOpenvpnComponent from '@/components/openvpn/ServersOpenvpnComponent.vue';
+import ClientsOpenvpnComponent from '@/components/openvpn/ClientsOpenvpnComponent.vue';
+import MonotoringOpenvpnComponent from '@/components/openvpn/MonotoringOpenvpnComponent.vue';
+import ListingOpenvpnComponent from '@/components/openvpn/ListingOpenvpnComponent.vue';
 
 export default {
-  name: 'SettingsComponent',
+  name: 'OpenvpnComponent',
   components: {
     BaseLayout,
     ServersOpenvpnComponent,

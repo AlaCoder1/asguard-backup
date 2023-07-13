@@ -10,13 +10,13 @@
 
 <script>
 import BaseLayout from '@/pages/layout.vue';
-import NetworkManager from '@/components/NetworkManager.vue';
+import NetworkManager from '../components/network/NetworkManager.vue';
 
 export default {
   name: 'LanComponent',
   components: {
     BaseLayout,
-    NetworkManager
+    NetworkManager,
   },
   data() {
     return {

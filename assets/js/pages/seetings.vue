@@ -21,11 +21,11 @@
 
 <script>
 import BaseLayout from '@/pages/layout.vue';
-import GeneralSettingsComponent from '@/components/GeneralSettingsComponent.vue';
-import AdministrationSettingsComponent from '@/components/AdministrationSettingsComponent.vue';
-import CronSettingsComponent from '@/components/CronSettingsComponent.vue';
-import LoggingTargetsSettingsComponent from '@/components/LoggingTargetsSettingsComponent.vue';
-import OptimisationsSettingsComponent from '@/components/OptimisationsSettingsComponent.vue';
+import GeneralSettingsComponent from '@/components/settings/GeneralSettingsComponent.vue';
+import AdministrationSettingsComponent from '@/components/settings/AdministrationSettingsComponent.vue';
+import CronSettingsComponent from '@/components/settings/CronSettingsComponent.vue';
+import LoggingTargetsSettingsComponent from '@/components/settings/LoggingTargetsSettingsComponent.vue';
+import OptimisationsSettingsComponent from '@/components/settings/OptimisationsSettingsComponent.vue';
 
 export default {
     name: 'SettingsComponent',

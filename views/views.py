@@ -3,9 +3,24 @@ from managementUsers.views import *
 from managementUsers.models import User
 from django.contrib.auth.decorators import login_required
 
-@login_required(login_url='/')
+
+def getUsers(request):
+    list_users = []
+    if (request.method == 'GET'):
+        users = User.objects.all()
+        userDict = serializers.serialize("json", users)
+        res = json.loads(userDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields'].pop('password')
+            res[i]['fields']['id'] = id
+            list_users.append(res[i]['fields'])
+        return list_users
+# @login_required(login_url='/')
 def index_page(request):
-    usr=getAllUsers(request)
+    usr=getUsers(request)
     context = {'users':usr}
     print(context)
     return render(request, 'index_page.html',context)

@@ -115,7 +115,53 @@ def update_conn_static(config,ifname,ip_address,netmask):
     ]
     
     return commands,config
+###########DHCP
+###return base config
+def return_config_base_dhcp6(ifname,RequestPrefixAux, PrefixDelegation,SendIPv6Prefix,IPv4Connectivity,VLANPriority):
+    #contenu de fichier dhclient.conf "config base"
+    configContenu=[
+      ' interface {} {',
+  'send ia-pd 1;' ,# request prefix delegation
+ ' request domain-name-servers;',
+  'request domain-name;',
+  'script "/var/etc/dhcp6c_wan_script.sh";' # we'd like some nameservers please
+'};',
+'id-assoc pd 1 {',
+ ' prefix ::/64 infinity;',
+'};'
 
+                        ]
+    return configContenu
+###return advanced config
+def return_config_advanced(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require):
+    #contenu de fichier dhclient.conf "config advanced"
+    configContenu=[
+        'timeout {};'.format(timeout),
+        'retry {};'.format(retry),
+        'reboot {};'.format(reboot),
+        'backoff-cutoff {};'.format(backoff),
+        'select-timeout {};'.format(select_timeout),
+        'initial-interval {};'.format(initial_interval),
+            'reject {};'.format(reject),
+            'interface "{}"'.format(ifname),
+                '{',
+        'send host-name "{}";'.format(hostname),
+        'send dhcp-client-identifier {};'.format(dhcp_client),
+        'supersede domain-name "{}";'.format(domaine_name),
+        'prepend domain-name-servers {};'.format(domain_server),
+        'send dhcp-lease-time {};'.format(lease_time),
+        ' request {};'.format(request),
+            'require {};'.format(require),
+            '}',
+        'alias {',
+        'interface "{}";'.format(ifname),
+        'fixed-address {};'.format(alias_add),
+        'option subnet-mask {};'.format(alias_mask),
+        '}'
+                                        ]
+    return configContenu
+
+####create file
 
 
 ################### Dhcp

@@ -120,7 +120,6 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
                     ]
         cmd_final+=[
         'sudo ethtool -s {} speed {} duplex {}'.format(ifname,speedV,duplexV),
-            
          ]
     return commandes,config,cmd_final
 

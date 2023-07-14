@@ -23,9 +23,8 @@ class IP4ConfigSerializer(serializers.ModelSerializer):
 class IP6ConfigSerializer(serializers.ModelSerializer):
     interface = serializers.PrimaryKeyRelatedField(queryset=Interface.objects.all())
     class Meta:
-            model = IP4Config
+            model = IP6Config
             fields = ['typeIP6','typeDHCP6', 'ip6_address','netmask6',
-                      
                       'interface',
                       ]
 

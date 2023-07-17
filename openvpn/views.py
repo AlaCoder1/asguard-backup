@@ -1,16 +1,12 @@
-from django.shortcuts import render
-
-# Create your views here.
-from django.shortcuts import render
 from django.http import JsonResponse
-from .models import *
 import json
 from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from .service_openvpn import *
+from .models import *
+from .serializers import *
 from django.core import serializers
-from openvpn.service_openvpn import *
-from openvpn.serializers import *
 # Create your views here.
 @api_view(['GET'])
 @permission_classes([])
@@ -85,6 +81,7 @@ def updateOpenVPN(request,id):
         tls_crypt = data.get('tls_crypt', '')
         crl_verify = data.get('crl_verify', '')
         ca = data.get('ca', '')
+        cert = data.get('cert', '')
         key = data.get('key', '')
         auth = data.get('auth', '')
         cipher = data.get('cipher', '')
@@ -96,33 +93,37 @@ def updateOpenVPN(request,id):
         status = data.get('status', '')
         verb = data.get('verb', '')
         server_path = "/etc/openvpn/server.conf"
-        new_server_conf = """
-port """+data['port']+"""
-proto """+data['proto']+"""
-dev """+data['dev']+"""
-user """+data['user']+"""
-group """+data['group']+"""
-persist-key """+data['persist_key']+"""
-persist-tun """+data['persist_tun']+"""
-keepalive """+data['keepalive']+"""
-topology """+data['topology']+"""
-server """+data['server']+"""
-ifconfig-pool-ifconfig_pool_persist """+data['ifconfig_pool_persist']+"""
-push """+'"'+data['push_ipv4_option1']+'"'+"""
-push """+'"'+data['push_ipv4_option2']+'"'+"""
-push """+'"'+data['push_ipv4_option3']+'"'+"""
-dh """+data['dh']+"""
-ecdh-curve """+data['ecdh_curve']+"""
-tls-crypt """+data['tls_crypt']+"""
-crl-verify """+data['crl_verify']+"""
-ca """+data['ca']+"""
-cert """+data['cert']+"""
-key """+data['key']+"""
-auth """+data['auth']+"""
-cipher """+data['cipher']+"""
-ncp-ciphers """+data['ncp_ciphers']+"""
-tls-server """+data['tls_server']+"""
-tls-version-min """+data['tls_version_min']
+        new_server_conf = f"""
+port {port}
+proto {proto}
+dev {dev}
+user {user}
+group {group}
+persist-key {persist_key}
+persist-tun {persist_tun}
+keepalive {keepalive}
+topology {topology}
+server {server}
+ifconfig_pool_persist {ifconfig_pool_persist}
+push "{push_ipv4_option1}"
+push "{push_ipv4_option2}"
+push "{push_ipv4_option3}"
+dh {dh}
+ecdh-curve {ecdh_curve}
+tls-crypt {tls_crypt}
+crl-verify {crl_verify}
+ca {ca}
+cert {cert}
+key {key}
+auth {auth}
+cipher {cipher}
+ncp-ciphers {ncp_ciphers}
+tls-server {tls_server}
+tls-version-min {tls_version_min}
+tls-cipher {tls_cipher}
+client-config-dir {client_config_dir}
+status {status}
+verb {verb}"""
         # print(data)
         stdin, stdout, stderr = add_config_server(server_path, new_server_conf)
         if stderr.read().decode('utf-8') == "":

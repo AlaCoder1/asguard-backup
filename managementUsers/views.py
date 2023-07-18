@@ -2,7 +2,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from .models import *
-import subprocess
 from .serializers import *
 from managementGroup.serializers import *
 from managementGroup.views import *

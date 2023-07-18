@@ -2,7 +2,7 @@ import paramiko
 from rules.serializers import *
 ssh = paramiko.SSHClient()
 ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-ssh.connect('10.1.12.163', username='root', password='root')
+# ssh.connect('10.1.12.163', username='root', password='root')
  
 ##function initial nftables.conf et /rules/ifname/nftables.conf
 def init_file_nftables(ifname):

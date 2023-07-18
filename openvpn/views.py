@@ -1,16 +1,12 @@
-from django.shortcuts import render
-
-# Create your views here.
-from django.shortcuts import render
 from django.http import JsonResponse
-from .models import *
 import json
 from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from .service_openvpn import *
+from .models import *
+from .serializers import *
 from django.core import serializers
-from openvpn.service_openvpn import *
-from openvpn.serializers import *
 # Create your views here.
 @api_view(['GET'])
 @permission_classes([])
@@ -18,7 +14,7 @@ def getAllOpenvpns(request):
     list_openvpn = []
     if (request.method == 'GET'):
         openvpn = ServerOpenvpn.objects.all()
-        openvpnDict = serializers.serialize("json", openvpn)
+        openvpnDict = serializers.serialize("json",openvpn)
         res = json.loads(openvpnDict)
         for i in range(0, len(res)):
             res[i].pop('model')
@@ -26,7 +22,6 @@ def getAllOpenvpns(request):
             res[i].pop('pk')
             res[i]['fields']['id'] = id
             list_openvpn.append(res[i]['fields'])
-        # return list_openvpn
         return JsonResponse(list_openvpn, safe=False)
     
 

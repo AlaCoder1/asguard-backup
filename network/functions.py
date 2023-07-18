@@ -199,38 +199,16 @@ def return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint
         # Setup the prefix delegation 
             configContenu.append("id-assoc pd {} {".format(id))
             if  prefix_hint is not None:
-                preflen = 64 -Prefix_delegation
+                preflen = 64 - Prefix_delegation
                 configContenu.append("  prefix ::/{} infinity;".format(preflen))
                         
     return configContenu
 
 ###return advanced config
-def return_config_advanced_ipv6(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require):
+def return_config_advanced_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
     #contenu de fichier dhclient.conf "config advanced"
-    configContenu=[
-        'timeout {};'.format(timeout),
-        'retry {};'.format(retry),
-        'reboot {};'.format(reboot),
-        'backoff-cutoff {};'.format(backoff),
-        'select-timeout {};'.format(select_timeout),
-        'initial-interval {};'.format(initial_interval),
-            'reject {};'.format(reject),
-            'interface "{}"'.format(ifname),
-                '{',
-        'send host-name "{}";'.format(hostname),
-        'send dhcp-client-identifier {};'.format(dhcp_client),
-        'supersede domain-name "{}";'.format(domaine_name),
-        'prepend domain-name-servers {};'.format(domain_server),
-        'send dhcp-lease-time {};'.format(lease_time),
-        ' request {};'.format(request),
-            'require {};'.format(require),
-            '}',
-        'alias {',
-        'interface "{}";'.format(ifname),
-        'fixed-address {};'.format(alias_add),
-        'option subnet-mask {};'.format(alias_mask),
-        '}'
-                                        ]
+    configContenu=return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
+
     return configContenu
 
 ####create file

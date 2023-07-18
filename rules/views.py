@@ -65,7 +65,8 @@ def addRule(request,id):
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
 ###function to delete rule
-def deleteRule(request,idInter,id):
+# def deleteRule(request,idInter,id):
+def deleteRule(request,id):
       if (request.method == 'DELETE'):
         msg="failed to delete rule!!"
         #tester si rule exist ou non
@@ -73,9 +74,9 @@ def deleteRule(request,idInter,id):
             rules = Rule.objects.get(id=id)
             rule=rules.rule
             type_rules=rules.type_rule
-            # print(rules.interface)
              #get object of interface type
-            interfaceObject= Interface.objects.get(id=idInter)
+            interfaceObject= Interface.objects.get(id=rules.interface_id)
+            print({"interfaceName":interfaceObject.ifname})
             #get interface name to execute command systeme
             ifname=interfaceObject.ifname
              #appel la fonction pour retrouver handle rule à supprimer
@@ -90,7 +91,7 @@ def deleteRule(request,idInter,id):
 @api_view(['PUT'])
 @permission_classes([AllowAny])
 ###function to delete rule
-def updateRule(request,idInter,id):
+def updateRule(request,id):
       if (request.method == 'PUT'):
         data = JSONParser().parse(request)
         policy=data.get('policy', None)
@@ -104,11 +105,11 @@ def updateRule(request,idInter,id):
         msg="Failed to update rule!!"
         #tester si rule exist ou non
         if (Rule.objects.filter(id=id).exists()):
-            rules = Rule.objects.get(id=id)
-            rule=rules.rule
-            type_rules=rules.type_rule
+            rulesObject = Rule.objects.get(id=id)
+            rule=rulesObject.rule
+            type_rules=rulesObject.type_rule
              #get object of interface type
-            interfaceObject= Interface.objects.get(id=idInter)
+            interfaceObject= Interface.objects.get(id=rulesObject.interface_id)
             #get interface name to execute command systeme
             ifname=interfaceObject.ifname
             #appel la fonction pour retrouver handle rule à supprimer
@@ -116,13 +117,15 @@ def updateRule(request,idInter,id):
              #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
             if delete_rule_remote(ifname,type_rules,handle):
                  #appel la fonction pour retourner rule à ajouter 
-                rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
-                if not Rule.objects.filter(rule=rule).exists():
+                ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
+                if not Rule.objects.filter(rule=ruleupdate).exists():
                 #appel la fonction pour ajouter rule dans le système
-                    add_rule=add_rule_remote(rule,ifname,type_rules)
+                    add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
                     if add_rule:
                       #appel la fonction pour update rule dans la base de données 
-                      if update_rule_DB(rule,rules,data) :
+                      print(rulesObject)
+                      data['interface']=rulesObject.interface_id
+                      if update_rule_DB(ruleupdate,rulesObject,data) :
                         msg="Update rule Successfully!!"
                   
         return JsonResponse({"msg": msg})

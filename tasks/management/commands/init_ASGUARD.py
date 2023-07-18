@@ -55,15 +55,3 @@ WantedBy=multi-user.target
 
         except IntegrityError as e:
             return "Error: " + str(e)
-
-
-def writeFile():
-    # Open the file in write mode
-    file = open("example.txt", "w")
-
-    # Write content to the file
-    file.write("Hello, world!\n")
-    file.write("This is a sample file.")
-
-    # Close the file
-    file.close()

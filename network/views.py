@@ -129,7 +129,7 @@ def conf(request,id):
                             configContenu=return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
                         if typeDHCP=="Advanced":
                         #contenu de dhclient.conf dhcp advanced
-                            configContenu=return_config_advanced_ipv6(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require)
+                            configContenu=return_config_advanced_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
                         #add commands of create file dhclient to list of commandes to execute    
                         commandes_final+=create_file_ipv6(ifname,configContenu)
                         #call function to convert address to dhcp advanced /Base  in service
@@ -157,7 +157,6 @@ def conf(request,id):
                 #update changes in DB interface config
                 print('changes interface config in DB /*********************/')
                 update_interface_table(id,data,InterfaceSerializer)
-                # update_DB(id,data,Interface,InterfaceSerializer)
                 #clean list of cmd to block address
                 cmdsBlock = [x for x in cmdsBlock if x not in output_service]
                 #contenu final des cmds pour lancer le service (execStart)
@@ -165,7 +164,7 @@ def conf(request,id):
                 ###call function to add all commandes to the service
                 output_service = add_cmd(output_service,commandes)
                 #ajouter au liste des commandes finales à executer (ssh.exec_command) 
-                commandes_final +=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_Gen+cmd_final_Block
+                commandes_final+=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_Gen+cmd_final_Block
                 print({"trah":commandes_final})
     for cmd in commandes_final:
         stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))

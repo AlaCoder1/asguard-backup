@@ -1,17 +1,10 @@
 import Vue from 'vue';
-import Vuetify from 'vuetify/lib';
-import fr from 'vuetify/lib/locale/fr';
-import VuetifyMask from 'vuetify-mask';
+import Vuetify from 'vuetify'
+import 'vuetify/dist/vuetify.min.css'
 
 Vue.use(Vuetify);
 
-Vue.use(VuetifyMask);
-
 export default new Vuetify({
-    lang: {
-        locales: { fr },
-        current: 'fr',
-    },
     theme: {
         themes: {
             light: {
@@ -21,7 +14,7 @@ export default new Vuetify({
                 dms_teal: '#6e8692',
                 dms_blue: '#43aaf5',
                 dms_blue_light: '#039BE5',
-                dms_blue_dark:'#042439',
+                dms_blue_dark: '#042439',
             },
             dark: {
                 dms_grey: '#F8F8F8',

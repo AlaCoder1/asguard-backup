@@ -51,7 +51,9 @@ INSTALLED_APPS = [
     "authentification",
     "subscription",
     "background_task",
-    "network"
+    "network",
+    "rules",
+    "openvpn"
 ]
 
 MIDDLEWARE = [
@@ -198,4 +200,4 @@ SSH_HOST = os.getenv('SSH_HOST')
 SSH_PORT = int(os.getenv('SSH_PORT'))
 
 USERNAME=None
-PAASWORD=None
+PASSWORD=None

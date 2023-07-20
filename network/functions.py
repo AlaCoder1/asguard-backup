@@ -207,6 +207,8 @@ def return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint
 ###return advanced config
 def return_config_advanced_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
     #contenu de fichier dhclient.conf "config advanced"
+    # Python equivalent regular expression
+    # pattern = r'\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)'
     configContenu=return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
 
     return configContenu

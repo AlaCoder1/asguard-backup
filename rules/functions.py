@@ -1,9 +1,14 @@
 import paramiko
 from rules.serializers import *
+<<<<<<< HEAD
 from django.conf import settings
 from authentification.views import *
 # ssh = paramiko.SSHClient()
 # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+=======
+ssh = paramiko.SSHClient()
+ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+>>>>>>> 5455c69788c0d36ca3840295683216c02b4b6031
 # ssh.connect('10.1.12.163', username='root', password='root')
  
 ##function initial nftables.conf et /rules/ifname/nftables.conf

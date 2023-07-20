@@ -52,7 +52,8 @@ INSTALLED_APPS = [
     "subscription",
     "background_task",
     "network",
-    "openvpn"
+    "openvpn",
+    "ipsec"
 ]
 
 MIDDLEWARE = [

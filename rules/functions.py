@@ -1,14 +1,9 @@
 import paramiko
 from rules.serializers import *
-<<<<<<< HEAD
 from django.conf import settings
 from authentification.views import *
 # ssh = paramiko.SSHClient()
 # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-=======
-ssh = paramiko.SSHClient()
-ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
->>>>>>> 5455c69788c0d36ca3840295683216c02b4b6031
 # ssh.connect('10.1.12.163', username='root', password='root')
  
 ##function initial nftables.conf et /rules/ifname/nftables.conf
@@ -27,8 +22,7 @@ def init_file_nftables(ifname):
          5-créer les chaines de filtrage (inbound,outbound,cellular,inbound cellular)
          6-ajouter include_rules contenu in central file /etc/nftables.conf
    """
-   cmd="""bash -c 'if [ ! -d /etc/rules/{} ];then
-sudo mkdir -p /etc/rules/{}
+   cmd="""bash -c 'sudo mkdir -p /etc/rules/{}
 sudo cat <<EOF >> /etc/rules/{}/nftables.conf
 {} 
 EOF
@@ -39,13 +33,13 @@ sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 
 sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}
 sudo cat <<EOF >> /etc/nftables.conf
 {} 
-EOF
-fi'""" .format(ifname,ifname,ifname,rules,ifname,ifname,ifname,ifname,ifname,include_rules)
+EOF'""" .format(ifname,ifname,ifname,rules,ifname,ifname,ifname,ifname,ifname,include_rules)
 ##executer le script créée précédamment retourner true si pas d'error sinon false en cas d'error
    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
    error = stderr.read().decode('utf-8')
    output = stdout.read().decode('utf-8').split('\n')
    if error:
+      print(error)
       return False
    return True
 
@@ -91,6 +85,7 @@ def add_rule_remote(rule,ifname,type_rule):
          stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
          error = stderr.read().decode('utf-8')
          if error: 
+            print(error)
             return False
       return True
 ###function to get handle rule   
@@ -130,7 +125,9 @@ def add_rule_DB(data,rule,type_rule):
    
    print(data)
    InboundSerializer = RuleSerializer(data=data)
+   print("aaaa")
    print(InboundSerializer.is_valid())
+
    if InboundSerializer.is_valid():
       InboundSerializer.save()
       return True

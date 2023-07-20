@@ -48,10 +48,13 @@ def addRule(request,id):
         Rule_description=data.get('Rule_description', None)
         msg="Failed to add rule"
         #appel la fonction pour initialiser les fichies nftables.conf
+        # print(init_file_nftables(ifname))
         if init_file_nftables(ifname):
+          print('//////////////////////////')
           #appel la fonction pour retourner rule à ajouter 
           rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
           if not Rule.objects.filter(rule=rule).exists():
+            print('//////////////////////////')
           #appel la fonction pour ajouter rule dans le système
             add_rule=add_rule_remote(rule,ifname,type_rule)
             if add_rule:

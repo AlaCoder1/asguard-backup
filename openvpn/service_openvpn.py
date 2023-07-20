@@ -3,16 +3,16 @@ from authentification.views import *
 
 def sudo(cmd):
     return "sudo "+cmd
-def connect_ssh():
-    sshh = paramiko.SSHClient()
-    sshh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    sshh.connect('10.1.12.107', username='root', password='root')
-    return sshh
+# def connect_ssh():
+#     sshh = paramiko.SSHClient()
+#     sshh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+#     sshh.connect('10.1.12.107', username='root', password='root')
+#     return sshh
 
 def get_config_server(server_path):
-    sshh = connect_ssh()
+    # ssh = connect_ssh()
     cmd = f"cat {server_path}"
-    stdin, stdout, stderr = sshh.exec_command(sudo(cmd))
+    stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
     return stdin, stdout, stderr
 
 

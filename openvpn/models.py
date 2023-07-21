@@ -57,7 +57,7 @@ class ClientOpenvpn(models.Model):
     auth_nocache = models.CharField(max_length=100,default=None)
     cipher = models.CharField(max_length=100,default=None)
     tls_client = models.CharField(max_length=100,default=None)
-    tls_version_min = models.IntegerField(default=0)
+    tls_version_min = models.CharField(max_length=100,default=None,null=True,blank=True)
     tls_cipher = models.CharField(max_length=100,default=None)
     ignore_unknown_option = models.CharField(max_length=100,default=None)
     setenv = models.CharField(max_length=100,default=None)

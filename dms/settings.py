@@ -52,6 +52,8 @@ INSTALLED_APPS = [
     "subscription",
     "background_task",
     "network",
+    "openvpn",
+    "ipsec"
     "rules",
     "openvpn"
 ]

@@ -20,8 +20,7 @@
                         <v-col cols="12">
                             <v-tabs-items v-model="tab">
                                 <v-tab-item :value="'user-management'" :transition="false">
-                                    <v-row no-gutters align="center"
-                                        class=" pr-4 axe-media-print-hide axe-sticky-three">
+                                    <v-row no-gutters align="center" class=" pr-4 axe-media-print-hide axe-sticky-three">
                                         <v-col cols="6" style="height: 100%;">
                                             <user-management />
                                         </v-col>
@@ -71,14 +70,21 @@ export default {
         GroupManagement,
         CertificatsManagement,
     },
+    props: {
+        users_data: {
+            type: Array,
+            required: true,
+        },
+    },
     data() {
         return {
             tab: null,
-            users: '',
+            // users: '',
         };
     },
     beforeMount: async function () {
-        this.users = this.$root.$data.tab;
+        console.log("suii mounted users_data:" + JSON.stringify(this.users_data));
+        // this.users = this.$root.$data.tab;
     }
 };
 </script>

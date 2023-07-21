@@ -43,7 +43,7 @@ class Migration(migrations.Migration):
                 ('cipher', models.CharField(default=None, max_length=100)),
                 ('ncp_ciphers', models.CharField(default=None, max_length=100)),
                 ('tls_server', models.CharField(default=None, max_length=100)),
-                ('tls_version_min', models.IntegerField(default=0)),
+                ('tls_version_min', models.CharField(default=None, max_length=100)),
                 ('tls_cipher', models.CharField(default=None, max_length=100)),
                 ('client_config_dir', models.CharField(default=None, max_length=100)),
                 ('status', models.CharField(default=None, max_length=100)),

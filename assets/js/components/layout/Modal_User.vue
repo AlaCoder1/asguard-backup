@@ -4,54 +4,39 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5">{{ mode === 'create' ? 'Create' : 'Update' }} server</span>
+            <span class="text-h5">{{ mode === 'create' ? 'Create' : 'Update' }} user</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
-                <!-- Network Modal -->
+                <!-- User Modal -->
 
                 <v-col cols="12">
-                  <v-text-field label="Server " v-model="formData.servername"></v-text-field>
-                </v-col>
-
-                <v-col cols="12">
-                  <v-autocomplete :items="['LDAP', 'LDAP + time based one time password', 'Local + Mot de Passe à Usage Unique Temporel (TOTP)	'
-                    , 'radius']" label="Type" v-model="formData.type"></v-autocomplete>
-                </v-col>
-
-                <v-col cols="12">
-                  <v-text-field label="Hostname or IP address" v-model="formData.hostname"></v-text-field>
-                </v-col>
-
-                <v-col cols="12">
-                  <v-autocomplete :items="['TCP', 'startTls', 'SSL-chifré']" label="Transport"
-                    v-model="formData.transport"></v-autocomplete>
-                </v-col>
-
-                <v-col cols="12">
-                  <v-autocomplete :items="['2', '3']" label="Protocol version"
-                    v-model="formData.protocolVersion"></v-autocomplete>
-                </v-col>
-
-                <v-col cols="6">
-                  <v-text-field label="Binding identities" v-model="formData.bindingIdentities"></v-text-field>
+                  <v-text-field label="Username " v-model="formData.servername"></v-text-field>
                 </v-col>
 
                 <v-col cols="6">
                   <v-text-field label="Password" type="password" v-model="formData.password"></v-text-field>
                 </v-col>
 
-                <v-col cols="12">
-                  <v-autocomplete :items="['niveau', 'sous aborecessence complete']" label="Search Scope"
-                    v-model="formData.searchScope"></v-autocomplete>
+                <v-col cols="6">
+                  <v-text-field label="Confirm password" type="password" v-model="formData.password"></v-text-field>
                 </v-col>
 
                 <v-col cols="12">
-                  <v-text-field label="Base DN" v-model="formData.baseDN"></v-text-field>
+                  <v-text-field label="Fullname " v-model="formData.servername"></v-text-field>
                 </v-col>
 
-                <!-- Network Modal -->
+                <v-col cols="12">
+                  <v-text-field label="Email for Ldap auth " v-model="formData.servername"></v-text-field>
+                </v-col>
+
+                <v-col cols="12">
+                  <v-autocomplete :items="['LDAP', 'LDAP + time based one time password', 'Local + Mot de Passe à Usage Unique Temporel (TOTP)	'
+                    , 'radius']" label="Role user" v-model="formData.type"></v-autocomplete>
+                </v-col>
+
+                <!-- User Modal -->
               </v-row>
             </v-container>
             <small>*indicates required field</small>
@@ -73,7 +58,7 @@
 
 <script>
 export default {
-  name: 'Modal',
+  name: 'Modal_User',
   props: {
     isOpen: {
       type: Boolean,

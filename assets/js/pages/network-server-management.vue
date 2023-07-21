@@ -4,7 +4,7 @@
     <ag-grid-vue domLayout="autoHeight" class="ag-theme-alpine mt-3 " :columnDefs="columnDefs" :rowData="rowData"
       :gridOptions="gridOptions" />
     <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-server" @click="openModal">
-      <span>addd Server </span>
+      <span>Add Server </span>
     </v-btn>
     <Modal 
     :mode="modalMode"
@@ -12,18 +12,22 @@
     @closeModal="closeModal"
     :initialData="modalData" 
     @updateModalData="handleModalUpdate" />
+    
   </div>
 </template>
 
 <script>
 import { AgGridVue } from 'ag-grid-vue';
 import Modal from '../components/layout/Modal.vue';
+import WithModal from '../components/layout/WithModal';
 
 export default {
   name: 'NetworkServerManagement',
   components: {
     AgGridVue,
     Modal,
+    // NetworkModal : WithModal(Modal),
+    
   },
   data() {
     return {

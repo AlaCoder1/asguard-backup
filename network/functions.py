@@ -35,38 +35,10 @@ def update_interface_table(id,data,InterfaceSerializer):
     serializerInterface= InterfaceSerializer(objectConfig,data=data)
     if serializerInterface.is_valid():
             serializerInterface.save()      
-############################################################
-@background
-def your_background_task(commands):
-    # Code to execute in the background
-    ssh_conx = paramiko.SSHClient()
-    ssh_conx.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    # connect to SSH server
-    ssh_conx.connect("10.1.12.74", username="root",
-                password="root", port="22")
-    # username=settings.CurrentUserId
-    print({"heniiiiiiiiiiiiii":settings.USERNAME})
-    # print({"HOST":settings.SSH_HOST,"username":settings.USERNAME,"password":settings.PASSWORD})
-    # ssh.connect(settings.SSH_HOST, username=settings.USERNAME,
-    #                         password=settings.PASSWORD)
-    for cmd in commands:
-        stdin, stdout, stderr = ssh_conx.exec_command('{}'.format(cmd))
-        error = stderr.read().decode('utf-8')
-        output = stdout.read().decode('utf-8').split('\n')
-        if error:
-            print("error ",error,"    :",cmd)
-            # break
-        else:
-            print("service created successufully!!",cmd)
-    ssh_conx.close()    
-###################    
+############################################################  
 ##get old configuration in service
 def get_old_config():
-        cmd = """python -c "
-with open('/etc/systemd/system/Asguard-Networking.service', 'r') as file:
-    for line in file:
-        print(line)
-        " """
+        cmd = "cat /etc/systemd/system/Asguard-Networking.service"
         ssh.exec_command(cmd)
         stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
         error = stderr.read().decode('utf-8')
@@ -103,8 +75,9 @@ def clean_old_config(config,typeConf):
         config=config[:i]+config[j+1:]
     return config
  
-
-################### Static      
+#############################################ipv4#############################################
+################### Static 
+     
 # convert  to static connexion 
 def update_conn_static(config,ifname,ip_address,netmask):
     #lancer la fonction de "remove old config"
@@ -116,9 +89,10 @@ def update_conn_static(config,ifname,ip_address,netmask):
         "ExecStart=/usr/bin/ip addr add {}/{} dev {}".format(ip_address,netmask,ifname),
          "#End IP4Config {}".format(ifname)
     ]
-    
-    return commands,config
-
+    cmd_final=[ 
+        "sudo ip addr flush dev {}".format(ifname),
+        "sudo ip addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
+    return commands,config,cmd_final
 ################### Dhcp
 ###return base config
 def return_config_base(ifname,reject,hostname,alias_add,alias_mask):
@@ -185,14 +159,91 @@ def update_conn_dhcp(config,ifname):
     "ExecStart=/usr/bin/dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf {}".format(ifname,ifname),
      "#End IP4Config {}".format(ifname)
     ]
+    cmd_final=[
+    "sudo ip addr flush dev {}".format(ifname),
+    "sudo dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf {}".format(ifname,ifname),
+    ]
     
-    return commandes,config
+    return commandes,config,cmd_final
+#############################################ipv6#############################################
+##static ipv6
+# convert  to static connexion  ipv6 
+def update_conn_static_ipv6(config,ifname,ip_address,netmask):
+    #lancer la fonction de "remove old config"
+    config=clean_old_config(config,"IP6Config {}".format(ifname))
+    #la liste des commandes pour l'IPV4 static
+    commands=[
+         "#Start IP6Config {}".format(ifname),
+        "ExecStart=/usr/bin/ip -6 addr flush dev {}".format(ifname),
+        "ExecStart=/usr/bin/ip -6 addr add {}/{} dev {}".format(ip_address,netmask,ifname),
+         "#End IP6Config {}".format(ifname)
+    ]
+    cmd_final=[ 
+        "sudo ip -6 addr flush dev {}".format(ifname),
+        "sudo ip -6 addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
+    return commands,config,cmd_final
+##dhcp ipv6
+###############
+###return base config
+def return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
+    #contenu de fichier dhclient.conf "config base"
+    configContenu=["interface {} {".format(ifname)]
+    if Request_only==False:
+        configContenu.append("  send ia-na {}; # request stateful address".format(id))
+    configContenu += ["  request domain-name-servers;", 
+                      "  request domain-name;",
+                          "};"]   
+    if Request_only==False:
+        configContenu.append("id-assoc na {} { };".format(id))
+    if Prefix_delegation is not None:
+        # Setup the prefix delegation 
+            configContenu.append("id-assoc pd {} {".format(id))
+            if  prefix_hint is not None:
+                preflen = 64 - Prefix_delegation
+                configContenu.append("  prefix ::/{} infinity;".format(preflen))
+                        
+    return configContenu
 
+###return advanced config
+def return_config_advanced_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
+    #contenu de fichier dhclient.conf "config advanced"
+    # Python equivalent regular expression
+    # pattern = r'\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)'
+    configContenu=return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
+
+    return configContenu
+
+####create file
+def create_file_ipv6(ifname,config_contenu):
+    #commandes pour créer un dossier et stocker le contenu dans dhclient.conf
+    commands = ["""bash -c 'sudo mkdir -p /etc/Dhcp6Config/{} && sudo cat <<EOF > /etc/Dhcp6Config/{}/dhcp6c.conf
+{}
+EOF'""".format(ifname, ifname, '\n'.join(config_contenu))]
+    return commands
+
+# convert  to dhcp  connexion base and advanced
+def update_conn_dhcp_ipv6(config,ifname):
+    #lancer la fonction de "remove old config"
+    config=clean_old_config(config,"IP6Config {}".format(ifname))
+    #la liste des commandes pour l'IPV4 dhcp
+    commandes=[
+     "#Start IP6Config {}".format(ifname),   
+     "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
+    "ExecStart=/usr/bin/dhcp6c -c /etc/Dhcp6Config/{}/dhcp6c.conf -fp /var/run/dhcp6c.pid {}".format(ifname),
+     "#End IP6Config {}".format(ifname)
+    ]
+    cmd_final=[
+    "sudo ip addr flush dev {}".format(ifname),
+    "sudo dhcp6c -c /etc/Dhcp6Config/{}/dhcp6c.conf -fp /var/run/dhcp6c.pid {}".format(ifname),
+    ]
+    
+    return commandes,config,cmd_final
 
 ###################generic configuration
 
 def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
     commandes=[]
+    cmd_final=[]
     #traiter le speed_duplex
     match speed_duplex:
         case '100baseTx-FD':
@@ -217,6 +268,9 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
             'ExecStart=/usr/bin/ip link set dev {} address {}'.format(ifname,addmac),
             "#End addmac config {}".format(ifname)
             ]
+            cmd_final+=[
+                'sudo ip link set dev {} address {}'.format(ifname,addmac),
+            ]
     #tester si mtu is not None
     if mtuV is not None:
         #lancer la fonction de "remove old config"
@@ -227,6 +281,9 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
         'ExecStart=/usr/bin/ip link set dev {} mtu {}'.format(ifname,mtuV),
         "#End mtu config {}".format(ifname)
             ]
+        cmd_final+=[
+        'sudo ip link set dev {} mtu {}'.format(ifname,mtuV),
+         ]
     #tester si mtu is not None
     if mssV is not None:
         #lancer la fonction de "remove old config"
@@ -237,6 +294,9 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
         'ExecStart=/usr/bin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
         "#End mss config {}".format(ifname),
             ]
+        cmd_final+=[
+        'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
+         ]
     #tester si speed_duplex is not None
     if speed_duplex is not None:
         #lancer la fonction de "remove old config"
@@ -247,7 +307,10 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
         'ExecStart=/usr/bin/ethtool -s {} speed {} duplex {}'.format(ifname,speedV,duplexV),
         "#End speed duplex config {}".format(ifname),
                     ]
-    return commandes,config
+        cmd_final+=[
+        'sudo ethtool -s {} speed {} duplex {}'.format(ifname,speedV,duplexV),
+         ]
+    return commandes,config,cmd_final
 
 #################Blockage address
 ####add all addresse 
@@ -263,8 +326,6 @@ def create_rule(address):
 
 ####create file
 def create_file_nftables(ifname,rules):
-     
-    
     commands = [
         #cmd pour supprimer la configuration ancienne
         'if nft list tables | grep -q "filter_{}"; then sudo nft delete table inet filter_{} ; fi'.format(ifname,ifname),
@@ -280,6 +341,7 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
     rule=''
     commandes=[]
     configuration=[]
+    cmd_final=[]
     #tester si on bloque les addresses bogons ou private
     if bogon_aux or private_aux:
         #tester si on bloque les addresses bogons and private
@@ -315,10 +377,13 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
             'ExecStart=/usr/bin/nft -f /etc/nftables/{}/nftables.conf'.format(ifname),
             "#End nftables config {}".format(ifname)
             ]
+        cmd_final=[
+            'sudo nft -f /etc/nftables/{}/nftables.conf'.format(ifname),
+        ]
     else:
         #call function to clean old config
        config=clean_old_config(config,"nftables config {}".format(ifname))
     
    
     
-    return configuration,commandes,config
+    return configuration,commandes,config,cmd_final

@@ -2,7 +2,6 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from .models import *
-import subprocess
 from .serializers import *
 from managementGroup.serializers import *
 from managementGroup.views import *
@@ -83,6 +82,7 @@ def createUser(request):
                             # Execute the command on the remote machine
                             stdin, stdout, stderr = addRemoteUser(
                                 username, password)
+                            addMailSpool(username)
                             # convert the stderr stream to a string
                             error_str = stderr.read().decode('utf-8')
                             if error_str == "":

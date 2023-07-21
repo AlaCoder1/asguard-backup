@@ -37,8 +37,8 @@ class GenericConfig(models.Model):
     mssV=models.IntegerField(null=True)
     speed_duplex=models.CharField(max_length=200, null=True)
       # Created and updated timestamps
-    created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(default=timezone.now,editable=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False,null=True)
+    updated_at = models.DateTimeField(default=timezone.now,editable=False,null=True)
     created_by = models.IntegerField(null=True)
     updated_by = models.IntegerField(null=True)
 
@@ -101,9 +101,32 @@ class IP4Config(models.Model):
         db_table = 'IP4Config'
         
 
+#model to configure ipv4
+class IP6Config(models.Model):
+     ##
+    interface = models.ForeignKey(
+            Interface, on_delete=models.CASCADE, null=True)
 
+    typeIP6=models.CharField(max_length=200, null=True,default=None)
+    typeDHCP6=models.CharField(max_length=200, null=True,default=None)
+    ##static
+    ip6_address=models.CharField(max_length=200, null=True,default=None)
+    netmask6=models.IntegerField(null=True,default=None)
             
-
-            
-
+ # Created and updated timestamps
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+    updated_at = models.DateTimeField(default=timezone.now,editable=False)
+    created_by = models.IntegerField(null=True)
+    updated_by = models.IntegerField(null=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.created_at = timezone.now()
+            self.created_by = settings.CurrentUserId
+            self.updated_by = settings.CurrentUserId
+        self.updated_at = timezone.now()
+        super(IP6Config, self).save(*args, **kwargs)
+    class Meta:
+        db_table = 'IP6Config'
+        
 

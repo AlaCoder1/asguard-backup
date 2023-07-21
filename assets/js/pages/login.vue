@@ -66,7 +66,7 @@ export default {
     },
     beforeMount: async function () {
         this.users= this.$root.$data.tab ;
-        console.log("out data from django",this.users);
+        console.log("data from django",this.users);
     },
     methods: {
       async connect()  {

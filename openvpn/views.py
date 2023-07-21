@@ -14,7 +14,7 @@ def getAllOpenvpns(request):
     list_openvpn = []
     if (request.method == 'GET'):
         openvpn = ServerOpenvpn.objects.all()
-        openvpnDict = serializers.serialize("json", openvpn)
+        openvpnDict = serializers.serialize("json",openvpn)
         res = json.loads(openvpnDict)
         for i in range(0, len(res)):
             res[i].pop('model')
@@ -22,7 +22,6 @@ def getAllOpenvpns(request):
             res[i].pop('pk')
             res[i]['fields']['id'] = id
             list_openvpn.append(res[i]['fields'])
-        # return list_openvpn
         return JsonResponse(list_openvpn, safe=False)
     
 

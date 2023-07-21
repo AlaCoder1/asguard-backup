@@ -21,8 +21,12 @@ from views.views import *
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
-    path('dashboard/', index_page),
+
     path('', login ),
+    path('dashboard/', index_page),
+    path('lan/', lan_page),
+    path('settings/', settings_page),
+    path('openvpn/', openvpn_page),
     path('', include('tasks.urls')),
     path('auth/', include('authentification.urls')),
     path('network/', include('network.urls')),
@@ -34,4 +38,6 @@ urlpatterns = [
     path('api/', include('rest_framework.urls')),
     path('openvpn/', include('openvpn.urls')),
     path('ipsec/', include('ipsec.urls'))
+    path('rules/', include('rules.urls')),
+    path('openvpn/', include('openvpn.urls'))
 ]

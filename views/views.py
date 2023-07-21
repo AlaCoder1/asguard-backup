@@ -15,7 +15,15 @@ def getUsers(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields'].pop('password')
+            res[i]['fields'].pop('last_login')
+            res[i]['fields'].pop('token_last_expired')
             res[i]['fields']['id'] = id
+            if len(res[i]['fields']['group'])!=0:
+                # print({"gggg":res[i]['fields']['group']})
+                group=Group.objects.get(id=res[i]['fields']['group'][0])
+                groupDict={"name":group.groupname,"id":group.id}
+                # print({"groupppppppp":groupDict})
+                res[i]['fields']['group']=groupDict
             list_users.append(res[i]['fields'])
         return list_users
 # @login_required(login_url='/')
@@ -24,6 +32,18 @@ def index_page(request):
     context = {'users':usr}
     print(context)
     return render(request, 'index_page.html',context)
+
+# @login_required(login_url='/')
+def lan_page(request):
+    return render(request, 'lan_page.html')
+
+# @login_required(login_url='/')
+def settings_page(request):
+    return render(request, 'settings_page.html')
+
+# @login_required(login_url='/')
+def openvpn_page(request):
+    return render(request, 'openvpn_page.html')
 
 def login(request):
     usr=getAllUsers(request)

@@ -20,7 +20,7 @@
                         <v-col cols="12">
                             <v-tabs-items v-model="tab">
                                 <v-tab-item :value="'user-management'" :transition="false">
-                                    <v-row no-gutters style="height: calc(50vh);" align="center"
+                                    <v-row no-gutters align="center"
                                         class=" pr-4 axe-media-print-hide axe-sticky-three">
                                         <v-col cols="6" style="height: 100%;">
                                             <user-management />
@@ -29,7 +29,7 @@
                                             <network-server-management />
                                         </v-col>
                                     </v-row>
-                                    <v-row no-gutters style="height: calc(50vh);" align="center"
+                                    <v-row no-gutters align="center"
                                         class=" pr-4 axe-media-print-hide axe-sticky-three mt-10">
                                         <v-col cols="6" style="height: 100%;">
                                             <group-management />

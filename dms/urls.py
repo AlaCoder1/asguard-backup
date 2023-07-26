@@ -37,7 +37,7 @@ urlpatterns = [
     path('settings/', include('settings.urls')),
     path('api/', include('rest_framework.urls')),
     path('openvpn/', include('openvpn.urls')),
-    path('ipsec/', include('ipsec.urls'))
+    path('ipsec/', include('ipsec.urls')),
     path('rules/', include('rules.urls')),
     path('openvpn/', include('openvpn.urls'))
 ]

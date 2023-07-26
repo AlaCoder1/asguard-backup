@@ -2,7 +2,7 @@ from django.shortcuts import render
 from managementUsers.views import *
 from managementUsers.models import User
 from django.contrib.auth.decorators import login_required
-
+from managementServers.models import * 
 
 def getUsers(request):
     list_users = []
@@ -11,6 +11,7 @@ def getUsers(request):
         userDict = serializers.serialize("json", users)
         res = json.loads(userDict)
         for i in range(0, len(res)):
+            groupDict = []
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
@@ -19,17 +20,54 @@ def getUsers(request):
             res[i]['fields'].pop('token_last_expired')
             res[i]['fields']['id'] = id
             if len(res[i]['fields']['group'])!=0:
-                # print({"gggg":res[i]['fields']['group']})
-                group=Group.objects.get(id=res[i]['fields']['group'][0])
-                groupDict={"name":group.groupname,"id":group.id}
-                # print({"groupppppppp":groupDict})
+                for k in res[i]['fields']['group']:
+                    group=Group.objects.get(id=k)
+                    groupDict.append({"name":group.groupname,"id":group.id})
                 res[i]['fields']['group']=groupDict
             list_users.append(res[i]['fields'])
         return list_users
+def getGroups(request):
+    list_group = []
+    if (request.method == 'GET'):
+        groups = Group.objects.filter(createdBySystem=0)
+        groupDict = serializers.serialize("json", groups)
+        res = json.loads(groupDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields'].pop('createdBySystem')
+            res[i]['fields']['id'] = id
+            if res[i]['fields']['id'] != 1:
+                res[i]['fields']['sudoers']=False
+            else:
+                res[i]['fields']['sudoers']=True
+            list_group.append(res[i]['fields'])
+        return list_group
+    
+def getServers(request):
+    list_servers = []
+    if (request.method == 'GET'):
+        servers = Server.objects.all()
+        serverDict = serializers.serialize("json", servers)
+        res = json.loads(serverDict)
+        print(res)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            type = Type.objects.get(id=res[i]['fields']['type'])
+            print(type.type_name)
+            res[i]['fields']['id'] = id
+            res[i]['fields']['type_name'] = type.type_name
+            list_servers.append(res[i]['fields'])
+        return list_servers
 # @login_required(login_url='/')
 def index_page(request):
     usr=getUsers(request)
-    context = {'users':usr}
+    grp=getGroups(request)
+    srv=getServers(request)
+    context = {'users':usr,"groups":grp,"servers":srv}
     print(context)
     return render(request, 'index_page.html',context)
 

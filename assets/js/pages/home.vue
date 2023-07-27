@@ -14,6 +14,9 @@
                                 </v-tab>
                             </v-tabs>
                             <v-divider style="width: 100%" />
+
+                            <p>Prop Value: {{  tab }}</p>
+
                         </v-col>
                     </v-row>
                     <v-row>
@@ -22,7 +25,7 @@
                                 <v-tab-item :value="'user-management'" :transition="false">
                                     <v-row no-gutters align="center" class=" pr-4 axe-media-print-hide axe-sticky-three">
                                         <v-col cols="6" style="height: 100%;">
-                                            <user-management />
+                                            <user-management :DataList="tab" />
                                         </v-col>
                                         <v-col cols="6" style="height: 100%;">
                                             <network-server-management />
@@ -70,21 +73,16 @@ export default {
         GroupManagement,
         CertificatsManagement,
     },
-    props: {
-        users_data: {
-            type: Array,
-            required: true,
-        },
-    },
+
     data() {
         return {
             tab: null,
-            // users: '',
+            users: '',
         };
     },
     beforeMount: async function () {
-        console.log("suii mounted users_data:" + JSON.stringify(this.users_data));
-        // this.users = this.$root.$data.tab;
+
+        console.log("suii mounted :" + this.$root.$data.tab);
     }
 };
 </script>

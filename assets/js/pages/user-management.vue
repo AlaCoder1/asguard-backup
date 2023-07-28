@@ -1,15 +1,14 @@
 <template>
   <div>
-    <h4>Networks admins</h4>
+    <h4>Networks admins aa </h4>
+    <p>Prop Value: {{  JSON.stringify(DataList)  }}</p>
+
     <ag-grid-vue domLayout="autoHeight" class="ag-theme-alpine mt-3 m-w-80" :columnDefs="columnDefs" :rowData="rowData"
       :gridOptions="gridOptions" />
     <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-user" @click="openModal">
-      <span class="text-white">Add rr</span>
+      <span class="text-white">Add user</span>
     </v-btn>
-    <Modal_User :mode="modalMode" 
-    :isOpen="isModalOpen" 
-    @closeModal="closeModal" 
-    :initialData="modalData"
+    <Modal_User :mode="modalMode" :isOpen="isModalOpen" @closeModal="closeModal" :initialData="modalData"
       @updateModalData="handleModalUpdate" />
   </div>
 </template>
@@ -29,27 +28,70 @@ export default {
     //   type: Object,
     //   required: true,
     // }
+
+    DataList: {
+      type: Array,
+      required: true,
+    },
   },
   data() {
     return {
       isModalOpen: false,
       modalData: {}, // Add this line
       modalMode: '', // Mode of the modal ('create' or 'update')
+      
 
       columnDefs: [
-        { headerName: "User", field: "user" },
+        { headerName: "User", field: "username" },
         { headerName: "Role", field: "role" },
         { headerName: "Actions", cellRenderer: this.actionCellRenderer },
       ],
-      rowData: [
-        { id: 1, user: "root (root@numeryx.fr)", role: "Super Root" },
-        { id: 2, user: "admin (admin@numeryx.fr)", role: "Root" },
-        { id: 3, user: "user (admin@numeryx.fr)", role: "Root" },
-        { id: 4, user: "client (admin@numeryx.fr)", role: "Root" },
-        { id: 5, user: "none (admin@numeryx.fr)", role: "Root" },
-        { id: 6, user: "test (admin@numeryx.fr)", role: "Root" },
+      // rowData: [
+      //   { id: 1, user: "root (root@numeryx.fr)", role: "Super Root" },
+      //   { id: 2, user: "admin (admin@numeryx.fr)", role: "Root" },
+      //   { id: 3, user: "user (admin@numeryx.fr)", role: "Root" },
+      //   { id: 4, user: "client (admin@numeryx.fr)", role: "Root" },
+      //   { id: 5, user: "none (admin@numeryx.fr)", role: "Root" },
+      //   { id: 6, user: "test (admin@numeryx.fr)", role: "Root" },
 
-      ],
+      // ],
+      rowData:
+        [
+          {
+            "username": "suuu",
+            "email": "abc@gmail.com",
+            "fullname": "namehere",
+            "organisation": 1,
+            "role": "aaa",
+            "uid": 1064,
+            "is_active": true,
+            "is_verified": false,
+            "group": [
+              { "name": "suuu", "id": 2 },
+              { "name": "wheel", "id": 1 }
+            ],
+            "permission": [],
+            "id": 2
+          },
+          {
+            "username": "root",
+            "email": null,
+            "fullname": null,
+            "organisation": null,
+            "role": null,
+            "uid": null,
+            "is_active": true,
+            "is_verified": false,
+            "group": [],
+            "permission": [],
+            "id": 1
+          }
+        ],
+
+
+
+      // rowData: this.Data,
+
       gridOptions: {
         pagination: true,
         paginationPageSize: 5,
@@ -76,19 +118,17 @@ export default {
     handleModalUpdate(updatedData) {
       // Do something with the updated data
       this.modalData = updatedData;
-      console.log("updatedData" , updatedData)
-      console.log("this.rowData[this.modalData.id]" , this.rowData[this.modalData.id])
+      console.log("updatedData", updatedData)
+      console.log("this.rowData[this.modalData.id]", this.rowData[this.modalData.id])
 
       // this.rowData[this.modalData.id - 1] = updatedData;
-      if ( this.modalMode === "update")
-      {
+      if (this.modalMode === "update") {
         this.$set(this.rowData, this.modalData.id - 1, updatedData);
       }
-      else
-      {
+      else {
         this.$set(this.rowData, this.rowData.length, updatedData);
       }
-      
+
       // Additional actions if needed
     },
     openModal() {

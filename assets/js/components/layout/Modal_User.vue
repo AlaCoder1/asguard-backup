@@ -12,7 +12,7 @@
                 <!-- User Modal -->
 
                 <v-col cols="12">
-                  <v-text-field label="Username " v-model="formData.servername"></v-text-field>
+                  <v-text-field label="Username " v-model="formData.username"></v-text-field>
                 </v-col>
 
                 <v-col cols="6">
@@ -24,16 +24,15 @@
                 </v-col>
 
                 <v-col cols="12">
-                  <v-text-field label="Fullname " v-model="formData.servername"></v-text-field>
+                  <v-text-field label="Fullname " v-model="formData.fullname"></v-text-field>
                 </v-col>
 
                 <v-col cols="12">
-                  <v-text-field label="Email for Ldap auth " v-model="formData.servername"></v-text-field>
+                  <v-text-field label="Email for Ldap auth " v-model="formData.email"></v-text-field>
                 </v-col>
 
                 <v-col cols="12">
-                  <v-autocomplete :items="['LDAP', 'LDAP + time based one time password', 'Local + Mot de Passe à Usage Unique Temporel (TOTP)	'
-                    , 'radius']" label="Role user" v-model="formData.type"></v-autocomplete>
+                  <v-autocomplete :items="['root', 'admin', 'user']" label="Role user" v-model="formData.role"></v-autocomplete>
                 </v-col>
 
                 <!-- User Modal -->

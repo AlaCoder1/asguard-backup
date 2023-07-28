@@ -71,6 +71,14 @@ def index_page(request):
     print(context)
     return render(request, 'index_page.html',context)
 
+def user_certificate_managment_page(request):
+    usr=getUsers(request)
+    grp=getGroups(request)
+    srv=getServers(request)
+    context = {'users':usr,"groups":grp,"servers":srv}
+    print(context)
+    return render(request, 'user_certificate_managment.html',context)
+
 # @login_required(login_url='/')
 def lan_page(request):
     return render(request, 'lan_page.html')

@@ -30,8 +30,7 @@ Encore
     .addEntry('lan', './assets/js/lan.js')
     .addEntry('openvpn', './assets/js/openvpn.js')
     .addEntry('settings', './assets/js/settings.js')
-
-
+    .addEntry('user_certificate_managment', './assets/js/user_certificate_managment.js')
   
     // Enable Vue loader
     .enableVueLoader()

@@ -2,7 +2,7 @@
     <v-app id="inspire">
         <base-layout title="home" active-menu="home">
             <template #content>
-                <!-- <v-container class=" axe-media-print-hide" fluid>
+                <v-container class=" axe-media-print-hide" fluid>
                     <v-row align="center" class=" pr-4 axe-media-print-hide axe-sticky-three">
                         <v-col cols="12">
                             <v-tabs v-model="tab" flat>
@@ -23,7 +23,7 @@
                                 <v-tab-item :value="'user-management'" :transition="false">
                                     <v-row no-gutters align="center" class=" pr-4 axe-media-print-hide axe-sticky-three">
                                         <v-col cols="6" style="height: 100%;">
-                                            <user-management :DataList="data" />
+                                            <user-management :DataList="users" />
                                         </v-col>
                                         <v-col cols="6" style="height: 100%;">
                                             <network-server-management />
@@ -49,7 +49,7 @@
                             </v-tabs-items>
                         </v-col>
                     </v-row>
-                </v-container> -->
+                </v-container>
             </template>
         </base-layout>
     </v-app>
@@ -75,13 +75,12 @@ export default {
     data() {
         return {
             tab: null,
-            data: [],
-            users: '',
+            users: [],
         };
     },
     methods: {
         setData() {
-            const validJsonString = this.$root.$data.tab
+            const validJsonString = this.$root.$data.users
                 .replace(/'/g, '"')
                 .replace(/True/g, 'true')
                 .replace(/False/g, 'false')
@@ -89,16 +88,13 @@ export default {
 
             const parsedArray = JSON.parse(validJsonString);
 
-            this.data = parsedArray;
+            this.users = parsedArray;
         },
         // ... other methods
     },
     beforeMount: async function () {
-        console.log("suii mounted :" + JSON.stringify(this.$root.$data.tab));
-
         this.setData();
 
-        console.log("data mounted :" + JSON.stringify(this.data));
     }
 };
 </script>

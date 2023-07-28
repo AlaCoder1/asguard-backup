@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load encore %}
+
+{% block stylesheets %}
+    {{ block.super }}
+
+    {% encore_entry_link_tags 'user_certificate_managment' %}
+{% endblock %}
+
+{% block javascripts %}
+    {% encore_entry_script_tags 'user_certificate_managment' %}
+{% endblock %}
+
+{% block body %}
+
+    <div id='app'  users='{{ users }}'>
+
+        <my-component :users="{{ users }}"  ></my-component>
+
+    </div>
+
+{% endblock %}

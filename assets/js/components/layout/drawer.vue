@@ -70,12 +70,14 @@
             </template>
             <v-list dense>
               <v-list-item v-for="(subItem, subIndex) in item.subItems" :key="subIndex" @click="selectSubItem(subItem)">
+                <a :href="subItem.href">
                 <v-list-item-content>
                   <v-list-item-icon v-if="!mini" class="dms-menu-open">
                     <span :class="[subItem.icon, 'icon-size-two axe_teal--text']"></span>
                   </v-list-item-icon>
                   <v-list-item-title class="dms_teal--text item">{{ subItem.title }}</v-list-item-title>
                 </v-list-item-content>
+                </a>
               </v-list-item>
             </v-list>
           </v-menu>
@@ -137,7 +139,7 @@ export default {
             {
               title: 'Settings',
               icon: '',
-              href: '/system/settings',
+              href: '/settings',
               active: 'Settings',
             }
 
@@ -175,12 +177,12 @@ export default {
             {
               title: 'LAN / WAN',
               icon: '',
-              href: '/interfaces/lan-wan',
+              href: '/lan',
               active: 'LAN / WAN',
             }, {
               title: 'Settings',
               icon: '',
-              href: '/interfaces/settings',
+              href: '/settings',
               active: 'Settings',
             }
           ],
@@ -220,7 +222,7 @@ export default {
             {
               title: 'OPEN VPN',
               icon: '',
-              href: '/services/open-vpn',
+              href: '/openvpn',
               active: 'OPEN VPN',
             },
             {

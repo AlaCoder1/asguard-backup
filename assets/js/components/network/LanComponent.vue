@@ -83,7 +83,7 @@
                     </div>
                     <div class="ml-3">
                         <div style="color: black;" class="inline-input">IPV4 gateway</div>
-                        <v-btn class="ml-3 mt-2 " color="primary" text>
+                        <v-btn class="ml-3 mt-2 " color="primary" text @click="openModal">
                             <i class="fas fa-plus"></i>
                             <span class="ml-2">Add</span>
                         </v-btn>
@@ -395,6 +395,44 @@
             style="width: 20%;" border="top" v-if="showAlert" :style="alertStyle">
             Configuration saved successfully
         </v-alert>
+        <v-dialog max-width="500px" v-model="showModal">
+            <v-card class="ml-3 mr-3">
+                <v-card-title>
+                    <span class="headline font-weight-bold">Add IPv4 Gateway</span>
+                </v-card-title>
+                <v-card-text>
+                    <v-container>
+                        <v-row>
+                            <v-text-field label="Enter Gateway Name" v-model="gatewayName"></v-text-field>
+                        </v-row>
+                        <v-row>
+                            <v-text-field label="Enter Gateway IPV4" v-model="gatewayIPV4"></v-text-field></v-row>
+                        <v-row> <v-text-field label="Enter Description" v-model="description"></v-text-field></v-row>
+                        <v-row>
+                            <input type="checkbox" v-model="isDefaultGateway">
+                            <label class="ml-3">Default Gateway</label>
+                        </v-row>
+                        <v-row>
+                            <input type="checkbox" v-model="isFarGateway">
+                            <label class="ml-3">Far Gateway</label>
+                        </v-row>
+                        <v-row>
+                            <input type="checkbox" v-model="isMultiWanGateway">
+                            <label class="ml-3">Multi-WAN Gateway</label>
+                        </v-row>
+                    </v-container>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn style="background-color: #042439;" @click="showModal = false" rounded>
+                        <span style="color: #fff">Cancel</span>
+                    </v-btn>
+                    <v-btn style="background-color: #042439;" @click="" rounded>
+                        <span style="color: #fff">Save</span>
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-card>
 </template>
 
@@ -494,6 +532,17 @@ export default {
             gateway: "",
             netmask: "",
             showAlert: false,
+            showModal: false,
+            gateways: [
+                {
+                    gatewayName: "",
+                    gatewayIPV4: "",
+                    description: "",
+                    isDefaultGateway: false,
+                    isFarGateway: false,
+                    isMultiWanGateway: false,
+                },
+            ],
         };
     },
     computed: {
@@ -554,6 +603,9 @@ export default {
             this.ip_address = "";
             this.gateway = "";
             this.netmask = "";
+        },
+        openModal() {
+            this.showModal = true;
         },
     },
 };

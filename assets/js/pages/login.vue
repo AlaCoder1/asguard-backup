@@ -2,11 +2,12 @@
   <div class="bg-color">
     <v-container class="dms-login-container">
       <v-row align="center" justify="center" style="justify-content: center;">
-        <v-col cols="12" sm="7" md="5" class="text-center pos" justify="center">
+        <v-col cols="16" sm="7" md="5" class="text-center pos" justify="center">
 
               <img
-                src="../../images/logoDMS.png"  
+                src="../../images/logoDMS.svg"  
                 height="100"
+                width="100"
                 class="img-center"
               />
 

@@ -2,7 +2,7 @@
   <div>
     <v-toolbar flat class="dms_blue_dark dms-media-print-hide dms-sticky" height="70">
       <v-toolbar-title class="dms-font-size-three white--text ml-8">
-        <img src="../../../images/logoDMS.png" height="100" />
+        <img src="../../../images/logoDMS.svg" height="50" />
       </v-toolbar-title>
       <v-spacer />
       <v-select v-model="lang" :items="['frensh', 'english']" solo background-color="#042439"

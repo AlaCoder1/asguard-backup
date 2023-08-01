@@ -44,7 +44,7 @@ def get_old_config():
         error = stderr.read().decode('utf-8')
         output = stdout.read().decode('utf-8').split('\n')
         return output,error
-###################    
+   
 ##add requirement
 def add_requirement(ifname,output):
     index=output.index('[Service]')
@@ -62,6 +62,44 @@ def add_cmd(output,commandes):
     output = output[:index_cmd] + commandes + output[index_cmd:]
     return output
 ###################
+###################    
+
+##désactiver interface dans le système
+def desactiver_interface_remote(ifname,output):
+    #la liste des commandes pour la désactivation de l'interface dans Asguard Service
+    commands=[
+         "#Start IP4Config {}".format(ifname),
+         "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
+         "ExecStart=/usr/bin/ip link set dev {} down".format(ifname),        
+         "#End IP4Config {}".format(ifname)
+    ]
+    print(output)
+    output=add_requirement(ifname,output)
+    output=add_cmd(output,commands)
+    #la liste des commandes à executer pour désactiver l'interface
+    cmd_final=[ 
+        "sudo sed -i '/{}/d' /etc/systemd/system/Asguard-Networking.service".format(ifname),
+        "sudo ip addr flush dev {}".format(ifname),
+        "sudo ip link set dev {} down".format(ifname),
+        """sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
+{}
+EOF""".format('\n'.join(output))
+        
+        ]
+    for cmd in cmd_final:
+                stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+                error = stderr.read().decode('utf-8')
+                output = stdout.read().decode('utf-8').split('\n')
+                if error:
+                    msg=error,"    :"+cmd
+                    print({"msg":msg})
+                    return False
+    return True
+    
+    # return commands,cmd_final
+   
+        
+################### 
 ###################
 ##clean old config
 def clean_old_config(config,typeConf):
@@ -76,6 +114,21 @@ def clean_old_config(config,typeConf):
     return config
  
 #############################################ipv4#############################################
+################### None 
+     
+# convert  to None
+def update_conn_None(config,ifname):
+    #lancer la fonction de "remove old config"
+    config=clean_old_config(config,"IP4Config {}".format(ifname))
+    #la liste des commandes pour l'IPV4 static
+    commands=[
+         "#Start IP4Config {}".format(ifname),
+        "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
+         "#End IP4Config {}".format(ifname)
+    ]
+    cmd_final=[ 
+        "sudo ip addr flush dev {}".format(ifname),]
+    return commands,config,cmd_final
 ################### Static 
      
 # convert  to static connexion 

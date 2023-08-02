@@ -11,6 +11,7 @@ class Interface(models.Model):
     private_aux= models.BooleanField(default=False)
     bogon_aux = models.BooleanField(default=False)
     service_status=models.CharField(max_length=200, null=True,default=None)
+    name_interface=models.CharField(max_length=200, null=True,default=None)
     # Created and updated timestamps
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(default=timezone.now,editable=False)
@@ -24,8 +25,8 @@ class Interface(models.Model):
     class Meta:
         db_table = 'Interface'
 
-    def __str__(self):
-        return self.ifname
+    # def __dict__(self):
+    #     return self.ifname
     
 #model generic config
 from django.conf import settings

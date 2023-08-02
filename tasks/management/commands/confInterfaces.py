@@ -1,3 +1,4 @@
+from openvpn.models import *
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 import paramiko
@@ -26,12 +27,26 @@ class Command(BaseCommand):
                 ssh.connect(settings.SSH_HOST, username=name,
                             password=pw, port=settings.SSH_PORT)
                 return ssh
+            file_path = "/etc/ConfigInterfaces"
             ssh = connect_ssh()
-            commandes_final = ["pacman -Syu --noconfirm","pacman -S iptables --noconfirm","pacman -S nftables --noconfirm","pacman -S dhclient --noconfirm","pacman -S ethtool --noconfirm","mkdir /etc/Dhcp4Config","mkdir /etc/nftables"]
-            for cmd in commandes_final:
-                stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-                if stderr.read().decode('utf-8') != "":
-                    print(stderr.read().decode('utf-8'))
+            # Open an SFTP session
+            sftp = ssh.open_sftp()
+
+            # Open the remote file in write mode
+            remote_file = sftp.open(file_path, 'w')
+            #content
+            content="""
+eth0: WAN
+eth1: LAN
+            """
+            # Write content to the remote file
+            remote_file.write(content)
+
+            # Close the remote file
+            remote_file.close()
+
+            # Close the SFTP session
+            sftp.close()
 
         except IntegrityError as e:
             return "Error: " + str(e)

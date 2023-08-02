@@ -27,9 +27,9 @@ class Command(BaseCommand):
                             password=pw, port=settings.SSH_PORT)
                 return ssh
             ssh = connect_ssh()
-            commandes_final = ["pacman -Syu --noconfirm","pacman -S iptables --noconfirm","pacman -S nftables --noconfirm","pacman -S dhclient --noconfirm","pacman -S ethtool --noconfirm","mkdir /etc/Dhcp4Config","mkdir /etc/nftables"]
+            commandes_final = ["pacman -Syu --noconfirm","pacman -S git --noconfirm","pacman -S fakeroot --noconfirm","pacman -S patch --noconfirm","pacman -S gcc --noconfirm","pacman -S base-devel --noconfirm","git clone https://aur.archlinux.org/wide-dhcpv6.git","cd wide-dhcpv6/ && makepkg -si"]
             for cmd in commandes_final:
-                stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+                stdin, stdout, stderr = ssh.exec_command('{}'.format(sudo(cmd)))
                 if stderr.read().decode('utf-8') != "":
                     print(stderr.read().decode('utf-8'))
 

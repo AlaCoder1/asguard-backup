@@ -87,13 +87,13 @@ EOF""".format('\n'.join(output))
         
         ]
     for cmd in cmd_final:
-                stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-                error = stderr.read().decode('utf-8')
-                output = stdout.read().decode('utf-8').split('\n')
-                if error:
-                    msg=error,"    :"+cmd
-                    print({"msg":msg})
-                    return False
+        stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+        error = stderr.read().decode('utf-8')
+        output = stdout.read().decode('utf-8').split('\n')
+        if error:
+            msg=error,"    :"+cmd
+            print({"msg":msg})
+            return False
     return True
     
     # return commands,cmd_final
@@ -117,7 +117,7 @@ def clean_old_config(config,typeConf):
 ################### None 
      
 # convert  to None
-def update_conn_None(config,ifname):
+def update_conn_None_IPV4(config,ifname):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
@@ -132,7 +132,7 @@ def update_conn_None(config,ifname):
 ################### Static 
      
 # convert  to static connexion 
-def update_conn_static(config,ifname,ip_address,netmask):
+def update_conn_static_IPV4(config,ifname,ip_address,netmask):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
@@ -148,7 +148,7 @@ def update_conn_static(config,ifname,ip_address,netmask):
     return commands,config,cmd_final
 ################### Dhcp
 ###return base config
-def return_config_base(ifname,reject,hostname,alias_add,alias_mask):
+def return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask):
     #contenu de fichier dhclient.conf "config base"
     configContenu=[
         'reject {};'.format(reject),
@@ -165,7 +165,7 @@ def return_config_base(ifname,reject,hostname,alias_add,alias_mask):
     return configContenu
 
 ###return advanced config
-def return_config_advanced(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require):
+def return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require):
     #contenu de fichier dhclient.conf "config advanced"
     configContenu=[
         'timeout {};'.format(timeout),
@@ -194,7 +194,7 @@ def return_config_advanced(ifname,reject,hostname,alias_add,alias_mask,timeout,r
     return configContenu
 
 ####create file
-def create_file(ifname,config_contenu):
+def create_file_IPV4(ifname,config_contenu):
     #commandes pour créer un dossier et stocker le contenu dans dhclient.conf
     commands = ["""bash -c 'sudo mkdir -p /etc/Dhcp4Config/{} && sudo cat <<EOF > /etc/Dhcp4Config/{}/dhclient.conf
 {}
@@ -202,7 +202,7 @@ EOF'""".format(ifname, ifname, '\n'.join(config_contenu))]
     return commands
 
 # convert  to dhcp  connexion base and advanced
-def update_conn_dhcp(config,ifname):
+def update_conn_dhcp_IPV4(config,ifname):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 dhcp
@@ -218,10 +218,10 @@ def update_conn_dhcp(config,ifname):
     ]
     
     return commandes,config,cmd_final
-#############################################ipv6#############################################
-##static ipv6
-# convert  to static connexion  ipv6 
-def update_conn_static_ipv6(config,ifname,ip_address,netmask):
+#############################################IPV6#############################################
+##static IPV6
+# convert  to static connexion  IPV6 
+def update_conn_static_IPV6(config,ifname,ip_address,netmask):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP6Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
@@ -235,10 +235,10 @@ def update_conn_static_ipv6(config,ifname,ip_address,netmask):
         "sudo ip -6 addr flush dev {}".format(ifname),
         "sudo ip -6 addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
     return commands,config,cmd_final
-##dhcp ipv6
+##dhcp IPV6
 ###############
 ###return base config
-def return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
+def return_config_base_IPV6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
     #contenu de fichier dhclient.conf "config base"
     configContenu=["interface {} {".format(ifname)]
     if Request_only==False:
@@ -258,16 +258,16 @@ def return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint
     return configContenu
 
 ###return advanced config
-def return_config_advanced_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
+def return_config_advanced_IPV6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
     #contenu de fichier dhclient.conf "config advanced"
     # Python equivalent regular expression
     # pattern = r'\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)'
-    configContenu=return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
+    configContenu=return_config_base_IPV6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
 
     return configContenu
 
 ####create file
-def create_file_ipv6(ifname,config_contenu):
+def create_file_IPV6(ifname,config_contenu):
     #commandes pour créer un dossier et stocker le contenu dans dhclient.conf
     commands = ["""bash -c 'sudo mkdir -p /etc/Dhcp6Config/{} && sudo cat <<EOF > /etc/Dhcp6Config/{}/dhcp6c.conf
 {}
@@ -275,7 +275,7 @@ EOF'""".format(ifname, ifname, '\n'.join(config_contenu))]
     return commands
 
 # convert  to dhcp  connexion base and advanced
-def update_conn_dhcp_ipv6(config,ifname):
+def update_conn_dhcp_IPV6(config,ifname):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP6Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 dhcp
@@ -383,7 +383,7 @@ def create_file_nftables(ifname,rules):
         #cmd pour supprimer la configuration ancienne
         'if nft list tables | grep -q "filter_{}"; then sudo nft delete table inet filter_{} ; fi'.format(ifname,ifname),
         #cmd ajouter un dossier contenant le fichier config
-        """bash -c 'sudo mkdir -p /etc/nftables/{} && cat <<EOF > /etc/nftables/{}/nftables.conf
+        """bash -c 'sudo mkdir -p /etc/rules/{} && cat <<EOF > /etc/rules/{}/nftables.conf
 {}
 EOF' """.format(ifname, ifname, '\n'.join(rules))
       ]
@@ -401,13 +401,13 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
         if bogon_aux and private_aux:
             #rules pour les adresses ipv4
             rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
-            #rules pour les adresses ipv6
+            #rules pour les adresses IPV6
             rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))    
         #tester si on bloque les addresses bogons seulement
         elif bogon_aux and not private_aux:
             #rules pour les adresses ipv4
             rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
-            #rules pour les adresses ipv6
+            #rules pour les adresses IPV6
             rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))
          #tester si on bloque les addresses privées seulement   
         elif private_aux and not bogon_aux:
@@ -427,11 +427,11 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
         ##cmd to block address
         commandes=[
             "#Start nftables config {}".format(ifname),
-            'ExecStart=/usr/bin/nft -f /etc/nftables/{}/nftables.conf'.format(ifname),
+            'ExecStart=/usr/bin/nft -f /etc/rules/{}/nftables.conf'.format(ifname),
             "#End nftables config {}".format(ifname)
             ]
         cmd_final=[
-            'sudo nft -f /etc/nftables/{}/nftables.conf'.format(ifname),
+            'sudo nft -f /etc/rules/{}/nftables.conf'.format(ifname),
         ]
     else:
         #call function to clean old config

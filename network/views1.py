@@ -31,14 +31,7 @@ def conf(request,name_interface,id):
         addmac = data.get('addmac')
         mtuV = data.get('mtuV')
         mssV = data.get('mssV')
-        speed_duplex = data.get('speed_duplex')
-        ##########IPV6
-        #static 
-        ip6_address = data.get('ip6_address', None)
-        netmask6 = data.get('netmask6', None)
-         ####
-        typeIP6=data.get('typeIP6', None)
-        typeDHCP6=data.get('typeDHCP6', None)   
+        speed_duplex = data.get('speed_duplex') 
         commandes=[]
         commandes_final=[]
         #get old configuration in service
@@ -148,8 +141,21 @@ EOF""".format('\n'.join(output)),
         'sudo systemctl restart Asguard-Networking.service',
                 ]
                 print({"trah":commandes_final})
-                #lancer au background
-                your_background_task(commandes_final)
-                process = subprocess.Popen(['sudo','python', 'manage.py', 'process_tasks'])
+                for cmd in commandes_final:
+                    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+                    error = stderr.read().decode('utf-8')
+                    output = stdout.read().decode('utf-8').split('\n')
 
+                    if error:
+                        msg=error,"    :"+cmd
+                        break
+                    else:
+                        print("service created successufully!!",cmd) 
+
+                stdin, stdout, stderr = ssh.exec_command('{}'.format(
+                        """cat <<EOF > /etc/systemd/system/Asguard-Networking.service
+            {}
+            EOF""".format('\n'.join(output_service)),
+                        ))
     return JsonResponse({"commandes_finals:": commandes_final})
+

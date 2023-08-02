@@ -5,6 +5,7 @@ from network.address import *
 from background_task import background
 from django.conf import settings
 import subprocess
+import re
 ###############################################################
 ####update in Database functions
 #function to update config tables
@@ -218,10 +219,10 @@ def update_conn_dhcp_IPV4(config,ifname):
     ]
     
     return commandes,config,cmd_final
-#############################################IPV6#############################################
-##static IPV6
-# convert  to static connexion  IPV6 
-def update_conn_static_IPV6(config,ifname,ip_address,netmask):
+#############################################ipv6#############################################
+##static ipv6
+# convert  to static connexion  ipv6 
+def update_conn_static_ipv6(config,ifname,ip_address,netmask):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP6Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
@@ -235,10 +236,10 @@ def update_conn_static_IPV6(config,ifname,ip_address,netmask):
         "sudo ip -6 addr flush dev {}".format(ifname),
         "sudo ip -6 addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
     return commands,config,cmd_final
-##dhcp IPV6
+##dhcp ipv6
 ###############
 ###return base config
-def return_config_base_IPV6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
+def return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
     #contenu de fichier dhclient.conf "config base"
     configContenu=["interface {} {".format(ifname)]
     if Request_only==False:
@@ -258,16 +259,100 @@ def return_config_base_IPV6(ifname,id,Request_only,Prefix_delegation,prefix_hint
     return configContenu
 
 ###return advanced config
-def return_config_advanced_IPV6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
-    #contenu de fichier dhclient.conf "config advanced"
-    # Python equivalent regular expression
-    # pattern = r'\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)'
-    configContenu=return_config_base_IPV6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
+def return_config_advanced_ipv6(ifname,
+id,IPv4_connectivity,VLAN_priority,information_only,
+send_options,request_options,script,non_temporary,id_assoc,address,Nlifetime,Nvalid_time,
+prefix_delegation,id_assoc_pd,IPv6_Prefix,Plifetime,Pvalid_time,
+authname,protocol,algorithm,
+rdm,keyname,royaume,keyid,secret,expire):
+    #contenu de fichier dhcp6c.conf "config advanced"
+ ####### 
+    sendOptionString=""
+    regex_pattern = r'\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)'
+    # Usamos re.split() para dividir la cadena en Python:
+    options = re.split(regex_pattern,send_options)
+    for opt in options:
+        sendOptionString+=" send {};\n".format(opt)
+ ####### 
+    requestOptionString=""
+    regex_pattern = r'\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)'
+    # Usamos re.split() para dividir la cadena en Python:
+    options = re.split(regex_pattern,request_options)
+    for opt in options:
+        requestOptionString+=" request {};\n".format(opt) 
+ ####### 
+    informationOnlyString=""    
+    if information_only==True:
+       informationOnlyString+=" information-only;\n"
+     
+    configContenu=["interface {} {\n".format(ifname),
+                   "{}".format(sendOptionString),
+                   "{}".format(requestOptionString),
+                   "{}".format(informationOnlyString),
+                   "};"
+                   ]
+    id_assoc_statement_address=""
+    if non_temporary==True:
+        id_assoc_statement_address += "id-assoc na "
+        if  id_assoc.isdigit():
+            id_assoc_statement_address +=id_assoc
+        else:
+            id_assoc_statement_address+=id
+        id_assoc_statement_address+="{\n"
+        if address!='' and Nlifetime.isdigit() or Nlifetime == 'infinity':
+            id_assoc_statement_address+=" address "+ address+Nlifetime
+            if Nvalid_time.isdigit() or Nvalid_time == 'infinity':
+                id_assoc_statement_address+=Nvalid_time
+            id_assoc_statement_address+=";\n"
+        id_assoc_statement_address+="};\n"
+    
+    id_assoc_statement_prefix=""
+    if prefix_delegation:
+        id_assoc_statement_prefix = "id-assoc pd "
+        if id_assoc_pd.isdigit():
+            id_assoc_statement_prefix += id_assoc_pd
+        else:
+            id_assoc_statement_prefix += id_assoc_pd
+        id_assoc_statement_prefix += "{\n"
+        if IPv6_Prefix != '' and Plifetime.isdigit() and Plifetime == 'infinity':
+            id_assoc_statement_prefix += " prefix " + IPv6_Prefix + Plifetime
+            if Pvalid_time.isdigit() or Pvalid_time == 'infinity':
+                id_assoc_statement_prefix+=Pvalid_time
+            id_assoc_statement_prefix+=";\n"
+        id_assoc_statement_prefix  += "};\n"
+    authentication_statement = ""
+    if authname!='' and  protocol=="delayed":
+        authentication_statement+="authentication {} {\n".format(authname)
+        authentication_statement+= " protocol {};\n".format(protocol)
+        if re.search(r'(hmac(-)?md5|HMAC(-)?MD5)',algorithm):
+           authentication_statement+= " algorithm {};\n".format(algorithm)
+        if rdm=="monocounter":
+            authentication_statement+" rdm {};\n".format(rdm)
+        authentication_statement+="};\n"    
+    
+    key_info_statement=""
+   
+    if keyname!='' and royaume!='' and keyid.isdigit() and secret!='':
+        key_info_statement += "keyinfo {} {\n".format(keyname)
+        key_info_statement += "  realm \"{}\";\n".format(royaume)
+        key_info_statement += "  keyid {};\n".format(keyid)
+        key_info_statement += "  secret \"{}\";\n".format(secret)
+        # The regular expression pattern
+        pattern = r"((([0-9]{4}-)?[0-9]{2}[0-9]{2} )?[0-9]{2}:[0-9]{2})|forever"
+        if re.match(pattern, expire):
+            key_info_statement += "  expire \"{}\";\n".format(expire)
+        
+        key_info_statement += "};\n"
+    
+    configContenu += id_assoc_statement_address
+    configContenu += id_assoc_statement_prefix
+    configContenu += authentication_statement
+    configContenu += key_info_statement
 
     return configContenu
 
 ####create file
-def create_file_IPV6(ifname,config_contenu):
+def create_file_ipv6(ifname,config_contenu):
     #commandes pour créer un dossier et stocker le contenu dans dhclient.conf
     commands = ["""bash -c 'sudo mkdir -p /etc/Dhcp6Config/{} && sudo cat <<EOF > /etc/Dhcp6Config/{}/dhcp6c.conf
 {}
@@ -275,19 +360,19 @@ EOF'""".format(ifname, ifname, '\n'.join(config_contenu))]
     return commands
 
 # convert  to dhcp  connexion base and advanced
-def update_conn_dhcp_IPV6(config,ifname):
+def update_conn_dhcp_ipv6(config,ifname):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP6Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 dhcp
     commandes=[
      "#Start IP6Config {}".format(ifname),   
      "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
-    "ExecStart=/usr/bin/dhcp6c -c /etc/Dhcp6Config/{}/dhcp6c.conf -fp /var/run/dhcp6c.pid {}".format(ifname),
+    "ExecStart=/usr/bin/dhcp6c -c /etc/Dhcp6Config/{}/dhcp6c.conf {}".format(ifname),
      "#End IP6Config {}".format(ifname)
     ]
     cmd_final=[
     "sudo ip addr flush dev {}".format(ifname),
-    "sudo dhcp6c -c /etc/Dhcp6Config/{}/dhcp6c.conf -fp /var/run/dhcp6c.pid {}".format(ifname),
+    "sudo dhcp6c -c /etc/Dhcp6Config/{}/dhcp6c.conf {}".format(ifname),
     ]
     
     return commandes,config,cmd_final

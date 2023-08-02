@@ -102,7 +102,8 @@ def conf(request,id):
                 ##IPV4 configuration cases 
                 match typeIP4:
                     case "None":
-                        pass
+                         #call function to convert address to None
+                        commandes,output_service,cmd_final_ipv4=update_conn_None(output_service,ifname)
                     case "static":
                         #call function to convert address to static
                         commandes,output_service,cmd_final_ipv4=update_conn_static(output_service,ifname,ip_address,netmask)
@@ -183,3 +184,25 @@ def conf(request,id):
 EOF""".format('\n'.join(output_service)),
             ))
     return JsonResponse({"commandes_finals:": commandes_final})
+
+##API to delete config 
+###########################
+@api_view(['DELETE'])
+@permission_classes([AllowAny])
+def delete_interface(request,id):
+    msg="failed to delete interface!"
+    print(request.method=="DELETE")
+    if request.method=="DELETE":
+        print("aaaa",Interface.objects.filter(id=id).exists())
+        if (Interface.objects.filter(id=id).exists()):
+                interfaceObject = Interface.objects.get(id=id)
+                ifname=interfaceObject.ifname
+                output_service,error= get_old_config()
+                if not error:
+                    print(desactiver_interface_remote(ifname,output_service))
+                    if desactiver_interface_remote(ifname,output_service):
+                        interfaceObject.delete() 
+                        msg="Delete interface Successfully!!"
+                
+    return JsonResponse({"mssg":msg})
+            

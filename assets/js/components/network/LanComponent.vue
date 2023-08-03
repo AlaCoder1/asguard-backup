@@ -9,11 +9,6 @@
                     <input type="checkbox" class="ml-5" v-model="activate">
                     <label class="ml-2">Activate</label>
                 </v-row>
-                <v-row class="ml-3 mt-5">
-                    <div style="color: black;">Lock</div>
-                    <input type="checkbox" class="ml-12" v-model="lock">
-                    <label class="ml-2">Prevent interface removal</label>
-                </v-row>
                 <div style="background-color: #D0D3D4;" class="ml-3">
                     <v-row class="ml-3 mt-5">
                         <div style="color: black;">Device</div>
@@ -185,8 +180,13 @@
                     <v-card-title class="bold-title">Configuring the DHCP Client</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <v-row class="ml-3 mt-3">
-                        <v-tabs v-model="activeTab" fixed-tabs background-color="#F8F8F8" color="#FFC300" dark>
-                            <v-tab v-for="tab in tabs" :key="tab.id">
+                        <v-tabs v-model="activeTab" fixed-tabs background-color="#fff" color="#FFC300" dark>
+                            <span 
+                            style="color: #020202; background-color: #fff;
+                            height: ;" 
+                            class="mt-4">
+                            Setup mode</span>
+                            <v-tab v-for="tab in tabs" :key="tab.id" class="ml-2">
                                 <span style="color: #020202;">{{ tab.label }}</span>
                             </v-tab>
                             <v-tab-item v-for="tab in tabs" :key="tab.id">
@@ -228,24 +228,28 @@
                     <v-card-title class="bold-title">Lease Requirements</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <div class="ml-3 mt-3">
-                        <div style="color: black;" class="ml-3 inline-input">Send options</div>
-                        <v-text-field label="Send options" class="ml-3 inline-input"></v-text-field>
+                        <div style="color: black;" class="ml-3 inline-input">Send options DHCP Client</div>
+                        <v-text-field label="Send options DHCP Client" class="ml-3 inline-input"></v-text-field>
+                    </div>
+                    <div class="ml-3 mt-3">
+                        <div style="color: black;" class="ml-3 inline-input">Send Options lease time</div>
+                        <v-text-field label="Send Options lease time" class="ml-3 inline-input"></v-text-field>
                     </div>
                     <div class="ml-3 mt-3">
                         <div style="color: black;" class="ml-3 inline-input">Request Options</div>
                         <v-text-field label="Request Options" class="ml-3 inline-input"></v-text-field>
                     </div>
                     <div class="ml-3 mt-3">
-                        <div style="color: black;" class="ml-3 inline-input">Required Options</div>
-                        <v-text-field label="Required Options" class="ml-3 inline-input"></v-text-field>
+                            <div style="color: black;" class="ml-3 inline-input">Required Options</div>
+                            <v-text-field label="Required Options" class="ml-3 inline-input"></v-text-field>
+                        </div>
+                    <div class="ml-3 mt-3">
+                        <div style="color: black;" class="ml-3 inline-input">Supersede domaine name</div>
+                        <v-text-field label="Supersede domaine name" class="ml-3 inline-input"></v-text-field>
                     </div>
                     <div class="ml-3 mt-3">
-                        <div style="color: black;" class="ml-3 inline-input">Option Modifiers</div>
-                        <v-text-field label="Option Modifiers" class="ml-3 inline-input"></v-text-field>
-                    </div>
-                    <div class="ml-3 mt-3">
-                        <div style="color: black;" class="ml-3 inline-input">Use IPv4 connectivity</div>
-                        <v-text-field label="Use IPv4 connectivity" class="ml-3 inline-input"></v-text-field>
+                        <div style="color: black;" class="ml-3 inline-input">Prepend domain server</div>
+                        <v-text-field label="Prepend domain server" class="ml-3 inline-input"></v-text-field>
                     </div>
                 </div>
                 <div v-if="typeIP4 === 'PPP'">
@@ -546,7 +550,6 @@ export default {
                 '32',
             ],
             activate: false,
-            lock: false,
             deviceName: "",
             description: "",
             private_aux: false,
@@ -599,7 +602,6 @@ export default {
         addNetwork() {
             const params = {
                 // activate: this.activate,
-                // lock: this.lock,
                 // deviceName: this.deviceName,
                 // description: this.description,
                 // dynamicGatewayPolicy: this.dynamicGatewayPolicy,
@@ -628,7 +630,6 @@ export default {
         },
         cancel() {
             // this.activate = false;
-            // this.lock = false;
             // this.deviceName = "";
             // this.description = "";
             // this.dynamicGatewayPolicy = false;

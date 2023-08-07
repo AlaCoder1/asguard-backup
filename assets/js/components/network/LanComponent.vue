@@ -2,7 +2,7 @@
         <v-card>
             <v-row class="fill-height ml-3">
                 <v-col cols="12" sm="6">
-                    <v-card-title>Basic configuration</v-card-title>
+                    <v-card-title>{{ $t('PageNetwork.BasicConfiguration') }}</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <v-row class="ml-3 mt-3">
                         <div style="color: black;">Interface</div>
@@ -71,7 +71,7 @@
                     </v-row>
                     <v-row class="ml-3 mt-9">
                         <div style="color: black;" class=" mt-6">MAC address</div>
-                        <v-text-field label="Enter MAC address" class="ml-3 mt-2"></v-text-field>
+                        <v-text-field   name="MACAddress"  v-validate="'required|digits:8'" label="Enter MAC address" class="ml-3 mt-2"></v-text-field>
                     </v-row>
                     <v-row class="ml-3 mt-9">
                         <div style="color: black;" class=" mt-6">MTU (Maximum Transmission Unit)</div>

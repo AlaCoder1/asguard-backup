@@ -10,7 +10,7 @@ from .remoteFunctions import *
 import json
 from rest_framework.parsers import JSONParser
 from django.core import serializers
-from authentification.authentication import JWTAuthentication
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.hashers import make_password
@@ -22,7 +22,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 @api_view(['GET'])
-@permission_classes([])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def getAllUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -42,7 +43,8 @@ def getAllUsers(request):
 
 # API to get one user
 @api_view(['GET'])
-@permission_classes([])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def getUser(request, id):
     if (request.method == 'GET'):
         user = User.objects.filter(id=id)
@@ -62,7 +64,8 @@ def getUser(request, id):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def createUser(request):
     msg = ''
     if (request.method == 'POST'):
@@ -157,8 +160,8 @@ def createUser(request):
 
 # API to delete group
 @api_view(['DELETE'])
-@permission_classes([AllowAny])
-# @login_required
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def delete_user(request, id):
     msg = ""
     if (request.method == 'DELETE'):
@@ -180,7 +183,8 @@ def delete_user(request, id):
 
 # API to update user
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def modifyUser(request, id):
     if (request.method == 'PUT'):
         userById = User.objects.filter(id=id)
@@ -249,7 +253,8 @@ def modifyUser(request, id):
 
 
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def changePasswordByAdmin(request, id):
     if (request.method == 'PUT'):
         userObject = User.objects.get(id=id)
@@ -278,7 +283,8 @@ def changePasswordByAdmin(request, id):
 
 
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def changePassword(request, id):
     msg = ""
     if (request.method == 'PUT'):
@@ -323,7 +329,8 @@ def changePassword(request, id):
 
 # API de create permission
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def addPermission(request):
     msg = ''
     if (request.method == 'POST'):

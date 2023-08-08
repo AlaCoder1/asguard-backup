@@ -4,13 +4,16 @@ from .models import *
 from settings.serializers import *
 from rest_framework.parsers import JSONParser
 import json
+from rest_framework.authentication import SessionAuthentication
+
 from django.core import serializers
 from authentification.views import *
 from network.address import *
 from .functions import *
 #################################
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def add_interface(request):
     data = JSONParser().parse(request)
     serializerIP4Config = InterfaceSerializer(data=data)
@@ -21,7 +24,8 @@ def add_interface(request):
 
 ###########################
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def conf(request,id):
     msg = ""
     if (request.method == 'PUT'):

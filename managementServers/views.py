@@ -8,6 +8,7 @@ import json
 from managementUsers.models import *
 from managementUsers.functions import *
 from django.core import serializers
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from authentification.authentication import JWTAuthentication
@@ -16,7 +17,8 @@ from django.contrib.auth.hashers import check_password
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def getAllServers(request):
     list_servers = []
     if (request.method == 'GET'):
@@ -37,7 +39,8 @@ def getAllServers(request):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def getServer(request, id):
     if (request.method == 'GET'):
         server = Server.objects.filter(id=id)
@@ -55,7 +58,8 @@ def getServer(request, id):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def createServer(request):
     msg = ''
     if (request.method == 'POST'):
@@ -87,7 +91,8 @@ def createServer(request):
 
 
 @api_view(['DELETE'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def deleteServer(request, id):
     msg = ""
     if (request.method == 'DELETE'):
@@ -99,7 +104,8 @@ def deleteServer(request, id):
 
 
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def modifyServer(request, id):
     msg = ''
     if (request.method == 'PUT'):

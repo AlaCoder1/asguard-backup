@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
-
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate, login, logout
@@ -70,14 +70,12 @@ def authentification(request):
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def logout_view(request):
-    username = request.user.username
+    logout(request)
     print({"logout": logout(request)})
     if logout(request) is None:
         # close the SSH connection
         ssh.close()
-    userObject = User.objects.get(username=username)
-    userObject.token_last_expired = datetime.now()+timedelta(hours=0)
-    userObject.save()
     return JsonResponse({"msg": 'User Logged out successfully'})

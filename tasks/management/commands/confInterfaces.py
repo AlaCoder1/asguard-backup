@@ -36,7 +36,7 @@ class Command(BaseCommand):
             remote_file = sftp.open(file_path, 'w')
             #content
             content="""
-eth0: WAN
+eth2: WAN
 eth1: LAN
             """
             # Write content to the remote file

@@ -86,23 +86,23 @@ def conf(request,name_interface,id):
                         commandes_final+=create_file(ifname,configContenu)
                          #call function to convert address to dhcp advanced /Base  in service
                         commandes,output=update_conn_dhcp(output,ifname)
-                match typeIP6:
-                    case "None":
-                        pass
-                    case "static":
-                        #call function to convert address to static ipv6
-                        commandesIPV6,output=update_conn_static_ipv6(output,ifname,ip6_address,netmask6)
-                    case "dhcp":
-                        if typeDHCP=="Base" :
-                        #contenu de dhclient.conf dhcp Base
-                            configContenu=return_config_base(ifname,reject,hostname,alias_add,alias_mask)
-                        if typeDHCP=="Advanced":
-                        #contenu de dhclient.conf dhcp advanced
-                            configContenu=return_config_advanced(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require)
-                        #add commands of create file dhclient to list of commandes to execute    
-                        commandes_final+=create_file(ifname,configContenu)
-                            #call function to convert address to dhcp advanced /Base  in service
-                        commandesIPV6,output=update_conn_dhcp(output,ifname)
+                # match typeIP6:
+                #     case "None":
+                #         pass
+                #     case "static":
+                #         #call function to convert address to static ipv6
+                #         commandesIPV6,output=update_conn_static_ipv6(output,ifname,ip6_address,netmask6)
+                #     case "dhcp":
+                #         if typeDHCP=="Base" :
+                #         #contenu de dhclient.conf dhcp Base
+                #             configContenu=return_config_base(ifname,reject,hostname,alias_add,alias_mask)
+                #         if typeDHCP=="Advanced":
+                #         #contenu de dhclient.conf dhcp advanced
+                #             configContenu=return_config_advanced(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require)
+                #         #add commands of create file dhclient to list of commandes to execute    
+                #         commandes_final+=create_file(ifname,configContenu)
+                #             #call function to convert address to dhcp advanced /Base  in service
+                #         commandesIPV6,output=update_conn_dhcp(output,ifname)
                 
                 #update changes in DB ip4
                 print('changes in DB  ip4/*********************/')

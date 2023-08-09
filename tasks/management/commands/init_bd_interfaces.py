@@ -1,8 +1,8 @@
+from network.models import *
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 import paramiko
 from django.conf import settings
-
 
 def sudo(cmd):
     return "sudo "+cmd
@@ -26,12 +26,19 @@ class Command(BaseCommand):
                 ssh.connect(settings.SSH_HOST, username=name,
                             password=pw, port=settings.SSH_PORT)
                 return ssh
+            server_path = "/etc/ConfigInterfaces"
             ssh = connect_ssh()
-            commandes_final = ["pacman -Syu --noconfirm","pacman -S iptables --noconfirm","pacman -S nftables --noconfirm","pacman -S dhclient --noconfirm","pacman -S ethtool --noconfirm","mkdir /etc/Dhcp4Config","mkdir /etc/nftables"]
-            for cmd in commandes_final:
-                stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-                if stderr.read().decode('utf-8') != "":
-                    print(stderr.read().decode('utf-8'))
-
+            cmd = f"cat {server_path}"
+            stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
+            if stderr.read().decode('utf-8') == '':
+                lines = stdout.read().decode('utf-8').split('\n')
+                lines.pop(0)
+                lines.pop()
+                for i in range(0,len(lines)):
+                    # print({"loul":lines[i].split(':')[0],"thani":lines[i].split(':')[1].strip()})
+                    Interface.objects.create(ifname=lines[i].split(':')[0],name_interface=lines[i].split(':')[1].strip())
+                return "ALL Interfaces from ConfigInterfaces added succesffuly"
+            else:
+                return "erreur: "+stderr.read().decode('utf-8')
         except IntegrityError as e:
             return "Error: " + str(e)

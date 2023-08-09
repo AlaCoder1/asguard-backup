@@ -4,6 +4,8 @@ from .models import *
 from settings.serializers import *
 from rest_framework.parsers import JSONParser
 import json
+from rest_framework.authentication import SessionAuthentication
+
 from django.core import serializers
 from authentification.views import *
 from .functions import *
@@ -13,8 +15,23 @@ def device_nameInterface(name_interface):
     return data
 
 ###########################
+
+#################################
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def add_interface(request):
+    data = JSONParser().parse(request)
+    serializerIP4Config = InterfaceSerializer(data=data)
+    print(serializerIP4Config.is_valid())
+    if (serializerIP4Config.is_valid()):
+        serializerIP4Config.save()
+    return JsonResponse({"msg:": "interface added successfully!!!!!"})
+
+###########################
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def conf(request,name_interface,id):
     msg = ""
     if (request.method == 'PUT'):

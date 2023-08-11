@@ -10,6 +10,7 @@ from .serializers import *
 import json
 from django.http import JsonResponse
 import paramiko
+from .models import *
 # Create your views here.
 
 
@@ -42,12 +43,15 @@ def authentification(request):
                 # getUserCredentials()
                 settings.USERNAME = username
                 settings.PASSWORD = password
-                print({"HOST":settings.SSH_HOST,"username":settings.USERNAME,"password":settings.PASSWORD})
-                #jwt_token = str(JWTAuthentication.create_jwt(user))
+                ## add this code so that logout work with jwt and timeleft
+                
+                # jwt_token = str(JWTAuthentication.create_jwt(user))
                 # userObject = User.objects.get(username=username)
-                #userObject.token_last_expired = datetime.now(
-                #)+timedelta(hours=settings.JWT_CONF['TOKEN_LIFETIME_HOURS'])
-                #userObject.save()
+                # userObject.token_last_expired = datetime.now(
+                # )+timedelta(hours=settings.JWT_CONF['TOKEN_LIFETIME_HOURS'])
+                # userObject.save()
+                
+                ## end code
                 # userDict = userObject.__dict__
                 # del userDict['_state']
                 # del userDict['password']
@@ -62,6 +66,10 @@ def authentification(request):
                 #     settings.CurrentUserId = userDict['id']
                 #     return userDict['id']
                 # getCurrentUserId()
+                ## add this code so that logout work with jwt and timeleft
+                
+                # return JsonResponse({'message': ' Success Authentification','jwt':jwt_token}, status=status.HTTP_200_OK)
+                ## end code
                 return JsonResponse({'message': ' Success Authentification'}, status=status.HTTP_200_OK)
             else:
                 return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)

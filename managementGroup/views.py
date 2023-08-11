@@ -17,7 +17,7 @@ from django.core import serializers
 # API to get all groups
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def getAllGroups(request):
     list_group = []
     if (request.method == 'GET'):
@@ -38,7 +38,7 @@ def getAllGroups(request):
 # API to get one group
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def getGroup(request, id):
     if (request.method == 'GET'):
         group = Group.objects.get(id=id)
@@ -51,12 +51,12 @@ def getGroup(request, id):
 # API to create group
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def createGroup(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         groupname = data['groupname']
         if (validInput(groupname)):
             # Execute the command on the remote machine
@@ -122,7 +122,7 @@ def changeGroupname(request, id):
         group = Group.objects.get(id=id)
         groupDict = group.__dict__
         # parse the incoming information
-        data = json.loads(request.body)
+        data = request.data
         oldgroupname = groupDict['groupname']
         Newgroupname = data['Newgroupname']
         if validInput(Newgroupname):

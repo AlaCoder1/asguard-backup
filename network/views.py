@@ -19,9 +19,9 @@ def device_nameInterface(name_interface):
 #################################
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def add_interface(request):
-    data = JSONParser().parse(request)
+    data = request.data
     serializerIP4Config = InterfaceSerializer(data=data)
     print(serializerIP4Config.is_valid())
     if (serializerIP4Config.is_valid()):
@@ -31,7 +31,7 @@ def add_interface(request):
 ###########################
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def conf(request,name_interface,id):
     msg = ""
     if (request.method == 'PUT'):

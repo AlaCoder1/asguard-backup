@@ -23,7 +23,7 @@ def GetAllRules(request):
 @permission_classes([AllowAny])
 def addRule(request):
     if (request.method == 'POST'):
-        data = JSONParser().parse(request)
+        data = request.data
         policy=data.get('policy', None)
         saddr = data.get('saddr', None)
         daddr = data.get('daddr', None)
@@ -60,7 +60,7 @@ def deleteRule(request,id):
 ###function to delete rule
 def updateRule(request,id):
       if (request.method == 'PUT'):
-        data = JSONParser().parse(request)
+        data = request.data
         policy=data.get('policy', None)
         saddr = data.get('saddr', None)
         daddr = data.get('daddr', None)

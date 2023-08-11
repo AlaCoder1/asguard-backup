@@ -13,7 +13,7 @@ from django.core import serializers
 # Create your views here.
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def GetAllRules(request):
     if (request.method == 'GET'):
         rules = Rule.objects.all()
@@ -23,7 +23,7 @@ def GetAllRules(request):
       
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def GetRulesByInterface(request,id):
     if (request.method == 'GET'):
         rules= Rule.objects.filter(interface_id=id)
@@ -34,14 +34,14 @@ def GetRulesByInterface(request,id):
             
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def addRule(request,id):
     if (request.method == 'POST'):
         #get object of interface type
         interfaceObject= Interface.objects.get(id=id)
         #get interface name to execute command systeme
         ifname=interfaceObject.ifname
-        data = JSONParser().parse(request)
+        data = request.data
         policy=data.get('policy', None)
         saddr = data.get('saddr', None)
         daddr = data.get('daddr', None)
@@ -71,7 +71,7 @@ def addRule(request,id):
 
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 ###function to delete rule
 # def deleteRule(request,idInter,id):
 def deleteRule(request,id):
@@ -98,11 +98,11 @@ def deleteRule(request,id):
     
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 ###function to delete rule
 def updateRule(request,id):
       if (request.method == 'PUT'):
-        data = JSONParser().parse(request)
+        data = request.data
         policy=data.get('policy', None)
         saddr = data.get('saddr', None)
         daddr = data.get('daddr', None)

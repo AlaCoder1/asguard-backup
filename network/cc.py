@@ -198,7 +198,7 @@ def conf(request):
     msg = ""
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         ##static
         ip_address = data['ip_address']
         netmask=data['netmask']

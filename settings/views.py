@@ -12,12 +12,16 @@ import datetime
 import subprocess
 # Create your views here.
 
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def Settings(request,id):
     return JsonResponse(getSystem(request, id))
 
 
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getSystem(request, id):
     if (request.method == 'GET'):
         system = System.objects.filter(id=id)
@@ -32,7 +36,9 @@ def getSystem(request, id):
         return JsonResponse(systemJson)
 
 
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getNetwork(request, id):
     if (request.method == 'GET'):
         network = Network.objects.filter(id=id)
@@ -47,7 +53,9 @@ def getNetwork(request, id):
         return JsonResponse(networkJson)
 
 
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getServerReseau(request, id):
     if (request.method == 'GET'):
         serverReseau = ServerReseau.objects.filter(id=id)
@@ -62,12 +70,14 @@ def getServerReseau(request, id):
         return JsonResponse(serverReseauJson)
 
 
-@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def createSystem(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # instanciate with the serializer
         serializerSystem = SystemSerializer(data=data)
         # check if the sent information is okay
@@ -85,12 +95,14 @@ def createSystem(request):
 
 
 
-@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def createServerReseau(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # instanciate with the serializer
         serializerServerReseau = ServerReseauSerializer(data=data)
         # check if the sent information is okay
@@ -221,14 +233,16 @@ def timeZones(request):
 ############################################   createNetwork ############################################################
 
 
-@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def createNetwork(request):
     # cmdNetwork = []
     # interface="eth0"
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # instanciate with the serializer
         serializerNetwork = NetworkSerializer(data=data)
         print({'allGatway':AllGateway()})

@@ -12,7 +12,7 @@ from django.core import serializers
 # Create your views here.
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def getAllOpenvpns(request):
     list_openvpn = []
     if (request.method == 'GET'):
@@ -54,12 +54,12 @@ def update_openvpn_table(id,data,ServerOpenvpnSerializer):
             serializerServerOpenvpn.save()    
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def updateOpenVPN(request,id):
     msg=''
     if (request.method == 'PUT'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         port = data.get('port', '')
         proto = data.get('proto', '')
         dev = data.get('dev', '')

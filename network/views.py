@@ -13,9 +13,9 @@ from .functions import *
 #################################
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def add_interface(request):
-    data = JSONParser().parse(request)
+    data = request.data
     serializerIP4Config = InterfaceSerializer(data=data)
     print(serializerIP4Config.is_valid())
     if (serializerIP4Config.is_valid()):
@@ -25,7 +25,7 @@ def add_interface(request):
 ###########################
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def conf(request,id):
     msg = ""
     if (request.method == 'PUT'):
@@ -36,7 +36,7 @@ def conf(request,id):
         print({"ifname":ifname})
         ####
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         ##########IPV4
         ##static
         ip_address = data.get('ip_address', None)

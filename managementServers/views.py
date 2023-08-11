@@ -18,7 +18,7 @@ from django.contrib.auth.hashers import check_password
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def getAllServers(request):
     list_servers = []
     if (request.method == 'GET'):
@@ -40,7 +40,7 @@ def getAllServers(request):
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def getServer(request, id):
     if (request.method == 'GET'):
         server = Server.objects.filter(id=id)
@@ -59,12 +59,12 @@ def getServer(request, id):
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def createServer(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         userSearch = User.objects.filter(username=data["username"])
         if (len(userSearch) != 0):
             user = User.objects.get(username=data["username"])
@@ -105,7 +105,7 @@ def deleteServer(request, id):
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+#@permission_classes([IsAuthenticated])
 def modifyServer(request, id):
     msg = ''
     if (request.method == 'PUT'):
@@ -117,7 +117,7 @@ def modifyServer(request, id):
         res[0].pop('pk')
         res[0]['fields']['id'] = id
         serverJson = res[0]['fields']
-        data = json.loads(request.body)
+        data = request.data
         serverObject = Server.objects.get(id=id)
         server = serverObject.__dict__
         type = Type.objects.get(id=data['type'])

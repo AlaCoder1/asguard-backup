@@ -1,4 +1,5 @@
 <template>
+<<<<<<< HEAD
     <v-app class="ml-3 mt-3 mr-3">
         <div style="display: flex; align-items: center; margin-top: 8px;">
             <label style="width: 150px;">IPv4 Adress Alias</label>
@@ -60,3 +61,9 @@ export default {
 </script>
 
 <style scoped></style>
+=======
+    <div>
+        advanced
+    </div>
+</template>
+>>>>>>> 9173cc0 (integrate api add/update network lan ipv4)

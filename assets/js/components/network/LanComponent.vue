@@ -2,20 +2,29 @@
     <v-card>
         <v-row class="fill-height ml-3">
             <v-col cols="12" sm="6">
-                <v-card-title class="bold-title">Basic configuration</v-card-title>
-                <v-divider class="ml-3"></v-divider>
+                        <v-card-title>{{ $t('PageNetwork.BasicConfiguration') }}</v-card-title>
+                    <v-divider class="ml-3"></v-divider>
+
                 <v-row class="ml-3 mt-3">
                     <div style="color: black;">Interface</div>
                     <input type="checkbox" class="ml-5" v-model="activate">
                     <label class="ml-2">Activate</label>
                 </v-row>
+                <div style="background-color: #F6F6F6;" class="ml-3">
+                <v-row class="ml-3 mt-5">
+                    <div style="color: black;">Lock</div>
+                    <input type="checkbox" class="ml-12" v-model="lock">
+                    <label class="ml-2">Prevent interface removal</label>
+                </v-row>
+                </div>
                 <div style="background-color: #D0D3D4;" class="ml-3">
                     <v-row class="ml-3 mt-5">
                         <div style="color: black;">Device</div>
                     </v-row>
                     <v-text-field label="Enter device name" class="ml-3 mt-2" v-model="deviceName"></v-text-field>
                 </div>
-                <div style="background-color: #D0D3D4;" class="ml-3">
+                <div style="background-color: #F6F6F6;" class="ml-3">
+
                     <v-row class="ml-3 mt-2">
                         <div style="color: black;">Description</div>
                     </v-row>
@@ -39,7 +48,7 @@
                 </v-row>
                 <v-row class="ml-3 mt-9">
                     <div style="color: black;" class=" mt-6">IPV6 Setup Type</div>
-                    <v-select label="Setup IPV6 Type" class="ml-3" v-model="ipv6SetupType"></v-select>
+                    <v-select :items="ipv6Items" label="Setup IPV6 Type" class="ml-3" v-model="ipv6SetupType"></v-select>
                 </v-row>
                 <v-row class="ml-3 mt-9">
                     <div style="color: black;" class=" mt-6">MAC address</div>
@@ -78,7 +87,7 @@
                     </div>
                     <div class="ml-3">
                         <div style="color: black;" class="inline-input">IPV4 gateway</div>
-                        <v-btn class="ml-3 mt-2 " color="primary" text @click="openModal">
+                        <v-btn class="ml-3 mt-2 " color="primary" text>
                             <i class="fas fa-plus"></i>
                             <span class="ml-2">Add</span>
                         </v-btn>
@@ -89,12 +98,19 @@
                     <v-card-title class="bold-title">Configuring the DHCPv6 client</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <v-row class="ml-3 mt-3">
-                        <v-tabs>
-                            <v-tab>Basic</v-tab>
-                            <v-tab>Advanced</v-tab>
-                            <v-tab>Config file bypass</v-tab>
+                        <v-tabs v-model="activeTabIPV6" fixed-tabs background-color="#fff" color="#FFC300" dark>
+                            <span style="color: #020202; background-color: #fff; height: ;" class="mt-4">
+                                Setup mode</span>
+                            <v-tab v-for="tab in tabsIPV6" :key="tab.id" class="ml-2">
+                                <span style="color: #020202;">{{ tab.label }}</span>
+                            </v-tab>
+                            <v-tab-item v-for="tab in tabsIPV6" :key="tab.id">
+                                <BasicConfigDHCPv6 v-if="tab.id == 1" />
+                                <AdvancedConfigDHCPv6 v-if="tab.id == 2" />
+                            </v-tab-item>
                         </v-tabs>
                     </v-row>
+                    <v-card-title class="bold-title">Interface status</v-card-title>
                     <v-row class="ml-3 mt-9">
                         <div style="color: black;" class="ml-3">Use IPV4 connectivity</div>
                         <input type="checkbox" class="ml-5">
@@ -104,7 +120,7 @@
                         <div style="color: black;" class="ml-3 inline-input">Use VLAN Priority</div>
                         <v-select class="ml-3 inline-input"></v-select>
                     </div>
-                    <v-card-title class="bold-title">Interface status</v-card-title>
+                    <v-card-title>Interface status</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <div class="ml-3 mt-2">
                         <div style="color: black;" class="ml-3 inline-input">Informations</div>
@@ -123,16 +139,46 @@
                         <div style="color: black;" class="ml-3 inline-input">Script</div>
                         <v-text-field label="Script" class="ml-3 inline-input"></v-text-field>
                     </div>
-                    <div class="ml-3">
+                    <v-row class="ml-3 mt-3">
                         <div style="color: black;" class="ml-3 inline-input">Identity association</div>
                         <div class="ml-16">
-                            <input type="checkbox" class="inline-input">
-                            <div style="color: black;" class="ml-2 inline-input">Non-temporary address allocation</div>
+                            <input type="checkbox" class="inline-input" v-model="isTemporaryAddressAllocation">
+                            <div style="color: black;" class="ml-2 inline-input">Temporary address allocation</div>
                             <br />
-                            <input type="checkbox" class="inline-input">
+                            <!-- bloc to show when Non-temporary address allocation is checked -->
+                            <div v-if="isTemporaryAddressAllocation">
+                                <br />
+                                <div style="color: black;" class="ml-3">id-assoc na ID</div>
+                                <v-text-field class="ml-3 mb-10"></v-text-field>
+
+                                <div style="color: black;" class="ml-3">Address IPv6-address</div>
+                                <v-text-field class="ml-3  mb-10"></v-text-field>
+
+                                <div style="color: black;" class="ml-3">Preferred Lifetime</div>
+                                <v-text-field class="ml-3  mb-10"></v-text-field>
+
+                                <div style="color: black;" class="ml-3">Valid time</div>
+                                <v-text-field class="ml-3  mb-10"></v-text-field>
+                            </div>
+                            <input type="checkbox" class="inline-input" v-model="isPrefixDelegation">
                             <div style="color: black;" class="ml-2 inline-input">Prefix delegation</div>
+                            <!-- bloc to show when prefix deligation is checked -->
+                            <div v-if="isPrefixDelegation">
+                                <br />
+                                <div style="color: black;" class="ml-3">id-assoc na ID</div>
+                                <v-text-field class="ml-3  mb-10"></v-text-field>
+
+                                <div style="color: black;" class="ml-3">Address IPv6-address</div>
+                                <v-text-field class="ml-3  mb-10"></v-text-field>
+
+                                <div style="color: black;" class="ml-3">Preferred Lifetime</div>
+                                <v-text-field class="ml-3  mb-10"></v-text-field>
+
+                                <div style="color: black;" class="ml-3">Valid time</div>
+                                <v-text-field class="ml-3  mb-10"></v-text-field>
+                            </div>
                         </div>
-                    </div>
+                    </v-row>
                 </div>
                 <div v-if="false">
                     <v-card-title class="bold-title">Authentication</v-card-title>
@@ -181,13 +227,12 @@
                     <v-divider class="ml-3"></v-divider>
                     <v-row class="ml-3 mt-3">
                         <v-tabs v-model="activeTab" fixed-tabs background-color="#fff" color="#FFC300" dark>
-                            <span 
-                            style="color: #020202; background-color: #fff;
-                            height: ;" 
-                            class="mt-4">
-                            Setup mode</span>
+                            <span style="color: #020202; background-color: #fff;
+                            height: ;" class="mt-4">
+                                Setup mode</span>
                             <v-tab v-for="tab in tabs" :key="tab.id" class="ml-2">
                                 <span style="color: #020202;">{{ tab.label }}</span>
+
                             </v-tab>
                             <v-tab-item v-for="tab in tabs" :key="tab.id">
                                 <BasicConfigDHCPv4 v-if="tab.id == 1" />
@@ -240,9 +285,9 @@
                         <v-text-field label="Request Options" class="ml-3 inline-input"></v-text-field>
                     </div>
                     <div class="ml-3 mt-3">
-                            <div style="color: black;" class="ml-3 inline-input">Required Options</div>
-                            <v-text-field label="Required Options" class="ml-3 inline-input"></v-text-field>
-                        </div>
+                        <div style="color: black;" class="ml-3 inline-input">Required Options</div>
+                        <v-text-field label="Required Options" class="ml-3 inline-input"></v-text-field>
+                    </div>
                     <div class="ml-3 mt-3">
                         <div style="color: black;" class="ml-3 inline-input">Supersede domaine name</div>
                         <v-text-field label="Supersede domaine name" class="ml-3 inline-input"></v-text-field>
@@ -386,8 +431,8 @@
         <v-spacer></v-spacer>
         <br />
         <div class="text-center">
-            <v-btn large rounded outlined color="#042439" @click="cancel">Cancel</v-btn>
-            <v-btn large rounded color="#042439" @click="addNetwork">
+            <v-btn large rounded outlined color="#213E9F" @click="cancel">Cancel</v-btn>
+            <v-btn large rounded color="#213E9F" @click="addNetwork">
                 <span class="mr-2 c-o">Save</span>
             </v-btn>
         </div>
@@ -396,80 +441,6 @@
             style="width: 20%;" border="top" v-if="showAlert" :style="alertStyle">
             Configuration saved successfully
         </v-alert>
-        <!-- Modal Gateway ipv4 -->
-        <v-dialog max-width="500px" v-model="showModal">
-            <v-card class="ml-3 mr-3">
-                <v-card-title class="bold-title">
-                    <span class="headline font-weight-bold">Add IPv4 Gateway</span>
-                </v-card-title>
-                <v-card-text>
-                    <v-container>
-                        <v-row>
-                            <v-text-field label="Enter Gateway Name" v-model="gatewayName"></v-text-field>
-                        </v-row>
-                        <v-row>
-                            <v-text-field label="Enter Gateway IPV4" v-model="gatewayIPV4"></v-text-field></v-row>
-                        <v-row> <v-text-field label="Enter Description" v-model="description"></v-text-field></v-row>
-                        <v-row>
-                            <input type="checkbox" v-model="isDefaultGateway">
-                            <label class="ml-3">Default Gateway</label>
-                        </v-row>
-                        <v-row>
-                            <input type="checkbox" v-model="isFarGateway">
-                            <label class="ml-3">Far Gateway</label>
-                        </v-row>
-                        <v-row>
-                            <input type="checkbox" v-model="isMultiWanGateway">
-                            <label class="ml-3">Multi-WAN Gateway</label>
-                        </v-row>
-                    </v-container>
-                </v-card-text>
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn style="background-color: #042439;" @click="showModal = false" rounded>
-                        <span style="color: #fff">Cancel</span>
-                    </v-btn>
-                    <v-btn style="background-color: #042439;" @click="" rounded>
-                        <span style="color: #fff">Save</span>
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
-        <!-- Modal Gateway ipv6 -->
-        <v-dialog max-width="500px" v-model="showModalIPv6">
-            <v-card class="ml-3 mr-3">
-                <v-card-title class="bold-title">
-                    <span class="headline font-weight-bold">Add a new gateway</span>
-                </v-card-title>
-                <v-card-text>
-                    <v-container>
-                        <v-row>
-                            <v-text-field label="Enter Gateway Name" v-model="gatewayName"></v-text-field>
-                        </v-row>
-                        <v-row>
-                            <v-text-field label="Enter Gateway IPV6" v-model="gatewayIPV6"></v-text-field></v-row>
-                        <v-row> <v-text-field label="Enter Description" v-model="description"></v-text-field></v-row>
-                        <v-row>
-                            <input type="checkbox" v-model="isDefaultGateway">
-                            <label class="ml-3">Default Gateway</label>
-                        </v-row>
-                        <v-row>
-                            <input type="checkbox" v-model="isMultiWanGateway">
-                            <label class="ml-3">Multi-WAN Gateway</label>
-                        </v-row>
-                    </v-container>
-                </v-card-text>
-                <v-card-actions>
-                    <v-spacer></v-spacer>
-                    <v-btn style="background-color: #042439;" @click="showModalIPv6 = false" rounded>
-                        <span style="color: #fff">Cancel</span>
-                    </v-btn>
-                    <v-btn style="background-color: #042439;" @click="" rounded>
-                        <span style="color: #fff">Save</span>
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </v-dialog>
     </v-card>
 </template>
 
@@ -478,19 +449,29 @@
 import axios from 'axios';
 import BasicConfigDHCPv4 from '../shared/BasicConfigDHCPv4.vue';
 import AdvancedConfigDHCPv4 from '../shared/AdvancedConfigDHCPv4.vue';
+import AdvancedConfigDHCPv6 from '../shared/AdvancedConfigDHCPv6.vue';
+import BasicConfigDHCPv6 from '../shared/BasicConfigDHCPv6.vue';
 
 export default {
     name: "LanComponent",
     components: {
         BasicConfigDHCPv4,
         AdvancedConfigDHCPv4,
+        AdvancedConfigDHCPv6,
+        BasicConfigDHCPv6
     },
     data() {
         return {
             activeTab: 0,
+            activeTabIPV6: 0,
             tabs: [
                 { id: 1, label: "Basic" },
                 { id: 2, label: "Advanced" },
+            ],
+            tabsIPV6: [
+                { id: 1, label: "Basic" },
+                { id: 2, label: "Advanced" },
+
             ],
             items: [
                 { text: "DHCP", value: "DHCP" },
@@ -565,27 +546,6 @@ export default {
             gateway: "",
             netmask: "",
             showAlert: false,
-            showModal: false,
-            showModalIPv6: false,
-            gatewaysIPV4: [
-                {
-                    gatewayName: "",
-                    gatewayIPV4: "",
-                    description: "",
-                    isDefaultGateway: false,
-                    isFarGateway: false,
-                    isMultiWanGateway: false,
-                },
-            ],
-            gatewaysIPV6: [
-                {
-                    gatewayName: "",
-                    gatewayIPV6: "",
-                    description: "",
-                    isDefaultGateway: false,
-                    isMultiWanGateway: false,
-                },
-            ]
         };
     },
     computed: {
@@ -601,7 +561,7 @@ export default {
     methods: {
         addNetwork() {
             const params = {
-                // activate: this.activate,
+
                 // deviceName: this.deviceName,
                 // description: this.description,
                 // dynamicGatewayPolicy: this.dynamicGatewayPolicy,
@@ -645,16 +605,6 @@ export default {
             this.gateway = "";
             this.netmask = "";
         },
-        openModal() {
-            this.showModal = true;
-        },
-        openModalIPv6() {
-            this.showModalIPv6 = true;
-        },
-        cancelModalIPv6() {
-            this.showModalIPv6 = false;
-
-        },
     },
 };
 </script>
@@ -672,4 +622,10 @@ export default {
 .bold-title {
     font-weight: bold;
 }
+
+.v-text-field {
+    padding-top: 12px;
+    margin-top: -2px;
+}
+
 </style>

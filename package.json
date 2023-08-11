@@ -1,6 +1,7 @@
 {
     "devDependencies": {
         "@hotwired/stimulus": "^3.0.0",
+        "@mdi/font": "^7.2.96",
         "@symfony/stimulus-bridge": "^3.0.0",
         "@symfony/webpack-encore": "^1.7.0",
         "axios": "^0.26.1",
@@ -44,6 +45,8 @@
         "vuedraggable": "^2.24.3",
         "vuetify": "^2.6.15",
         "vuetify-loader": "^1.7.3",
-        "vuetify-mask": "^1.1.2"
+        "vuetify-mask": "^1.1.2",
+        "vuex": "2.5",
+        "vuex-persistedstate": "^4.1.0"
     }
 }

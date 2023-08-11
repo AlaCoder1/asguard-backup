@@ -5,10 +5,21 @@
         <img src="../../../images/logoDMS.svg" height="50" />
       </v-toolbar-title>
       <v-spacer />
-      <v-select v-model="lang" :items="['frensh', 'english']" solo background-color="#042439"
-        class="select-white-text select-lang" />
-      <v-text-field background-color="white" rounded class="ml-3 input-search" placeholder="Search"
-        hide-details></v-text-field>
+      <v-select v-model="lang" :items="['English', 'French']" class="select-lang" hide-details>
+        <template v-slot:selection="{ item, index }">
+          <v-chip class="dms_blue_dark white--text" small>
+            <span>{{ item }}</span>
+          </v-chip>
+        </template>
+      </v-select>
+      <v-text-field
+        background-color="white"
+        rounded
+        class="ml-3 input-search"
+        hide-details
+        v-model="searchText"
+        append-icon="mdi-magnify"
+      ></v-text-field>
       <v-menu offset-y>
         <template v-slot:activator="{ on }">
           <v-avatar class="ml-3 mr-3" size="30" v-on="on">
@@ -27,15 +38,17 @@
           </v-list-item>
         </v-list>
       </v-menu>
-      <span style="color: white;">johndoe@example.com</span>
+      <span style="color: white;"> {{user.message}} </span>
     </v-toolbar>
     <v-navigation-drawer :mini-variant.sync="mini" class="global-drawer" permanent app>
       <v-app-bar dense flat class="row-pointer dms_white" @click.stop="mini = !mini">
-        <v-app-bar-nav-icon color="dms_teal" />
-        <v-toolbar-title class="dms_teal--text text-body-2">
-          Réduire le menu
-        </v-toolbar-title>
-      </v-app-bar>
+    <v-app-bar-nav-icon color="dms_teal" />
+    <v-toolbar-title>
+    </v-toolbar-title>
+    <v-spacer></v-spacer>
+    <v-icon v-if="mini">mdi-menu</v-icon>
+  </v-app-bar>
+
       <v-list dense>
         <v-list-item v-for="item in items" :key="item.title" link>
           <v-list-item-icon v-if="mini">
@@ -45,19 +58,16 @@
             <v-list-item-icon v-if="!mini" class="dms-menu-open">
               <span :class="[item.icon, 'icon-size-two axe_teal--text']"></span>
             </v-list-item-icon>
-            <v-list-item-title class="dms_teal--text item">{{ item.title}}</v-list-item-title>
+            <v-list-item-title class="dms_teal--text item">{{ item.title }}</v-list-item-title>
           </v-list-item-content>
           <v-list-item-action>
-            <v-icon v-if="item.subItems.length > 0" @click.stop="toggleSubMenu(item)">
-              {{ item.showSubMenu ? 'mdi-chevron-up' : 'mdi-chevron-down' }}
-            </v-icon>
           </v-list-item-action>
-        <v-menu v-if="item.subItems.length >= 1" v-model="item.showSubMenu" :close-on-content-click="false" offset-y
-          :nudge-width="290" min-width="200px" :return-value.sync="item.showSubMenu" transition="scale-transition"
-          offset-x max-width="200px"
-          max-height="909px" min-height="909px" background-color="white" :top="mini ? true : false">
+          <v-menu v-if="item.subItems.length >= 1" v-model="item.showSubMenu" :close-on-content-click="false" offset-y
+            :nudge-width="290" min-width="200px" :return-value.sync="item.showSubMenu" transition="scale-transition"
+            offset-x max-width="200px" max-height="909px" min-height="909px" background-color="white"
+            :top="mini ? true : false">
             <template v-slot:activator="{ on }"
-            :class="{ 'drawer_hover': !mini, 'axe-active-menu': activeMenu === item.active }">
+              :class="{ 'drawer_hover': !mini, 'axe-active-menu': activeMenu === item.active }">
               <v-list-item v-on="on">
                 <v-list-item-content id='overlay'
                   :class="{ 'text-white-space': !mini, 'dms_teal--text': activeMenu === item.active }">
@@ -71,12 +81,12 @@
             <v-list dense>
               <v-list-item v-for="(subItem, subIndex) in item.subItems" :key="subIndex" @click="selectSubItem(subItem)">
                 <a :href="subItem.href">
-                <v-list-item-content>
-                  <v-list-item-icon v-if="!mini" class="dms-menu-open">
-                    <span :class="[subItem.icon, 'icon-size-two axe_teal--text']"></span>
-                  </v-list-item-icon>
-                  <v-list-item-title class="dms_teal--text item">{{ subItem.title }}</v-list-item-title>
-                </v-list-item-content>
+                  <v-list-item-content>
+                    <v-list-item-icon v-if="!mini" class="dms-menu-open">
+                      <span :class="[subItem.icon, 'icon-size-two axe_teal--text']"></span>
+                    </v-list-item-icon>
+                    <v-list-item-title class="dms_teal--text item">{{ subItem.title }}</v-list-item-title>
+                  </v-list-item-content>
                 </a>
               </v-list-item>
             </v-list>
@@ -88,6 +98,8 @@
 </template>
 
 <script>
+import { mapState } from 'vuex';
+
 export default {
   name: 'DrawerComponent',
   props: {
@@ -101,7 +113,8 @@ export default {
     return {
       drawer: true,
       mini: false,
-      lang: null,
+      searchText: '',
+      lang: 'English',
       items: [
         {
           title: 'Dashboard', icon: 'icon-home', href: '/', active: 'home',
@@ -139,6 +152,7 @@ export default {
             {
               title: 'Settings',
               icon: '',
+              href: '/settings',
               href: '/settings',
               active: 'Settings',
             }
@@ -178,10 +192,12 @@ export default {
               title: 'LAN / WAN',
               icon: '',
               href: '/lan',
+              href: '/lan',
               active: 'LAN / WAN',
             }, {
               title: 'Settings',
               icon: '',
+              href: '/settings',
               href: '/settings',
               active: 'Settings',
             }
@@ -223,6 +239,7 @@ export default {
               title: 'OPEN VPN',
               icon: '',
               href: '/openvpn',
+              href: '/openvpn',
               active: 'OPEN VPN',
             },
             {
@@ -261,7 +278,7 @@ export default {
               href: '/services/proxy-web',
               active: 'Proxy Web'
             }
-         
+
           ],
         },
         {
@@ -317,7 +334,10 @@ export default {
       //}
 
     },
-  }
+  },
+  computed: {
+    ...mapState('auth', ['loggedIn', 'user']),
+  },
 };
 </script>
 
@@ -423,7 +443,7 @@ $grid-breakpoints: map-merge($grid-breakpoints, (
 
 a:hover,
 .v-list-item--active > .v-list-item__title {
-  background-color: #ffc300;
+  background-color: #FFC300;
 }
 
 a:hover .dms_teal--text,
@@ -437,7 +457,21 @@ a:hover .dms_teal--text,
 
 .select-lang {
   max-width: 110px;
-  margin-top: 2% !important;
+  margin-top: 0% !important;
+  margin-right: 1% !important;
+  item-align: center;
+  background-color: #213E9F;;
+  border-radius: 5px;
+  padding: 0px 10px;
+  height: 30px;
+  color: #43aaf5;
+  font-size: 18.16px;
+  font-weight: 500;
+  font-family: 'Nunito';
+  border: none;
+  line-height: normal;
+  text-align: center;
+  max-height: 20px;
 }
 
 .input-search {
@@ -450,8 +484,8 @@ a:hover .dms_teal--text,
   top: 71px !important;
   left: 257px;
   z-index: 10;
-  height: 909px;
-  min-height: 909px;
+  height: 500px;
+  min-height: 94px;
 }
 
 #overlay {
@@ -460,8 +494,11 @@ a:hover .dms_teal--text,
 }
 
 .v-list-item--link:hover {
-  background-color: #ffc300 !important;
+  background-color: #FFC300 !important;
 }
 
+.v-application--is-ltr .v-toolbar__content > .v-btn.v-btn--icon:first-child, .v-application--is-ltr .v-toolbar__extension > .v-btn.v-btn--icon:first-child {
+    margin-left: 180px;
+}
 
 </style>

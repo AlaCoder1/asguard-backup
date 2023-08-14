@@ -8,11 +8,13 @@ const state = {
 const mutations = {
     SET_USER(state, user) {
         state.user = user;
+        state.isAuthenticated = true;
     },
 
-    CLEAR_USER(state) {
+    SET_LOGGED_OUT(state) {
+        state.loggedIn = false;
         state.user = null;
-    }
+    },
 };
 
 const actions = {
@@ -28,10 +30,17 @@ const actions = {
         }
     },
 
-    logout({ commit }) {
-        // Perform logout logic (e.g., clear local storage) and then commit mutation
-        commit('CLEAR_USER');
-    },
+    async logout({ commit }) {
+        try {
+            await axios.get('/auth/logout');
+            commit('SET_LOGGED_OUT');
+            window.location.href = '/';
+
+        } catch (error) {
+            console.error('Error during logout:', error);
+        }
+    }
+
 };
 
 const getters = {

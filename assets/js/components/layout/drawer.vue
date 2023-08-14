@@ -34,7 +34,9 @@
             <v-list-item-title>Settings</v-list-item-title>
           </v-list-item>
           <v-list-item>
-            <v-list-item-title>Logout</v-list-item-title>
+            <v-list-item-title>
+              <v-btn @click="logout" text>Logout</v-btn>
+            </v-list-item-title>
           </v-list-item>
         </v-list>
       </v-menu>
@@ -98,7 +100,7 @@
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import { mapState, mapActions } from 'vuex';
 
 export default {
   name: 'DrawerComponent',
@@ -317,6 +319,10 @@ export default {
     };
   },
   methods: {
+    ...mapActions('auth', ['logout']),
+    logout() {
+      this.$store.dispatch('auth/logout');
+    },
     showSubMenu(item, event) {
       item.showSubMenu = true;
 

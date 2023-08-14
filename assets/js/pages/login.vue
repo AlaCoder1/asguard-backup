@@ -70,7 +70,6 @@ export default {
       try {
         store.dispatch('auth/login', user);
         this.message = '';
-        // this.$router.push('/dashboard');
       } catch (error) {
         this.invalid = true;
         this.message = response.data.message;

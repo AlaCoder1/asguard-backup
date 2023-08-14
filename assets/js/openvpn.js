@@ -2,6 +2,7 @@ import Vue from 'vue';
 import vuetify from '@/plugins/vuetify';
 import 'vuetify/dist/vuetify.min.css'
 import App from '@/pages/openvpn';
+import store from '@/store/index';
 
 
 import VeeValidate from 'vee-validate';
@@ -37,7 +38,8 @@ Vue.use(VeeValidate, {
 });
 
 new Vue({
-    vuetify,
+  vuetify,
+  store,
     i18n,
     data: {},
     render: (h) => h(App),

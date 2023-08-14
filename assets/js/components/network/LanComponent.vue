@@ -13,7 +13,7 @@
                 <div style="background-color: #F6F6F6;" class="ml-3">
                 <v-row class="ml-3 mt-5">
                     <div style="color: black;">Lock</div>
-                    <input type="checkbox" class="ml-12" v-model="lock">
+                    <input type="checkbox" class="ml-12">
                     <label class="ml-2">Prevent interface removal</label>
                 </v-row>
                 </div>
@@ -529,6 +529,11 @@ export default {
                 '30',
                 '31',
                 '32',
+            ],
+            ipv6Items: [
+                'DHCPv6',
+                'SLAAC',
+                'Static',
             ],
             activate: false,
             deviceName: "",

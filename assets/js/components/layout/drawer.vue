@@ -336,7 +336,7 @@ export default {
     },
   },
   computed: {
-    ...mapState('auth', ['loggedIn', 'user']),
+      ...mapState('auth', ['loggedIn', 'user']),
   },
 };
 </script>

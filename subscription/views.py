@@ -5,6 +5,8 @@ from datetime import datetime, timedelta
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
+from rest_framework.authentication import SessionAuthentication
+
 # Create your views here.
 
 
@@ -118,12 +120,13 @@ def function_planSubsciptionUsage():
             payment_subscription_usage_instance.save()
 
 @api_view(['POST'])
-@permission_classes([])     
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])   
 def payment(request):
     form = MyForm()
     if request.method == 'POST':
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         status = data['status']
         if status:
             status=None

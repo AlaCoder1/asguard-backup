@@ -178,11 +178,12 @@ REST_FRAMEWORK = {
 }
 
 # jwt_auth/settings.py
-SESSION_COOKIE_AGE = 60
+SESSION_COOKIE_AGE = 3600
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SECURE= True
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE= 'Strict'
+## add this code so that logout work with jwt and timeleft
 # JWT_CONF = {
 #     'TOKEN_LIFETIME_HOURS': 72,
 #     'REFRESH_TOKEN_LIFETIME': 15,
@@ -191,7 +192,7 @@ SESSION_COOKIE_SAMESITE= 'Strict'
 #     'JWT_AUTH_HEADER_PREFIX': 'Bearer'
 
 # }
-
+## end code
 
 # Load environment variables from .env file
 load_dotenv()

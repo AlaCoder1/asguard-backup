@@ -5,6 +5,7 @@ from network.address import *
 from background_task import background
 from django.conf import settings
 import subprocess
+import re
 ###############################################################
 ####update in Database functions
 #function to update config tables
@@ -26,11 +27,11 @@ def update_DB(id,data,model,IP4serializer):
         serializerIP4Config.save()
 
 #function to update interface tables  
-def update_interface_table(id,data,InterfaceSerializer):
-    objectConfig=Interface.objects.get(id=id)
+def update_interface_table(name_interface,data,InterfaceSerializer):
+    objectConfig=Interface.objects.get(name_interface=name_interface)
     # Set all attributes to None
     for field in objectConfig._meta.fields:
-        if field.attname not in ["id",'ifname','created_at','updated_at']: 
+        if field.attname not in ["id",'ifname','created_at','updated_at','name_interface','description']: 
             setattr(objectConfig, field.attname, None)
     serializerInterface= InterfaceSerializer(objectConfig,data=data)
     if serializerInterface.is_valid():
@@ -44,7 +45,7 @@ def get_old_config():
         error = stderr.read().decode('utf-8')
         output = stdout.read().decode('utf-8').split('\n')
         return output,error
-###################    
+   
 ##add requirement
 def add_requirement(ifname,output):
     index=output.index('[Service]')
@@ -62,6 +63,44 @@ def add_cmd(output,commandes):
     output = output[:index_cmd] + commandes + output[index_cmd:]
     return output
 ###################
+###################    
+
+##désactiver interface dans le système
+def desactiver_interface_remote(ifname,output):
+    #la liste des commandes pour la désactivation de l'interface dans Asguard Service
+    commands=[
+         "#Start IP4Config {}".format(ifname),
+         "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
+         "ExecStart=/usr/bin/ip link set dev {} down".format(ifname),        
+         "#End IP4Config {}".format(ifname)
+    ]
+    print(output)
+    output=add_requirement(ifname,output)
+    output=add_cmd(output,commands)
+    #la liste des commandes à executer pour désactiver l'interface
+    cmd_final=[ 
+        "sudo sed -i '/{}/d' /etc/systemd/system/Asguard-Networking.service".format(ifname),
+        "sudo ip addr flush dev {}".format(ifname),
+        "sudo ip link set dev {} down".format(ifname),
+        """sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
+{}
+EOF""".format('\n'.join(output))
+        
+        ]
+    for cmd in cmd_final:
+        stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+        error = stderr.read().decode('utf-8')
+        output = stdout.read().decode('utf-8').split('\n')
+        if error:
+            msg=error,"    :"+cmd
+            print({"msg":msg})
+            return False
+    return True
+    
+    # return commands,cmd_final
+   
+        
+################### 
 ###################
 ##clean old config
 def clean_old_config(config,typeConf):
@@ -76,10 +115,25 @@ def clean_old_config(config,typeConf):
     return config
  
 #############################################ipv4#############################################
+################### None 
+     
+# convert  to None
+def update_conn_None_IPV4(config,ifname):
+    #lancer la fonction de "remove old config"
+    config=clean_old_config(config,"IP4Config {}".format(ifname))
+    #la liste des commandes pour l'IPV4 static
+    commands=[
+         "#Start IP4Config {}".format(ifname),
+        "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
+         "#End IP4Config {}".format(ifname)
+    ]
+    cmd_final=[ 
+        "sudo ip addr flush dev {}".format(ifname),]
+    return commands,config,cmd_final
 ################### Static 
      
 # convert  to static connexion 
-def update_conn_static(config,ifname,ip_address,netmask):
+def update_conn_static_IPV4(config,ifname,ip_address,netmask):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
@@ -95,7 +149,7 @@ def update_conn_static(config,ifname,ip_address,netmask):
     return commands,config,cmd_final
 ################### Dhcp
 ###return base config
-def return_config_base(ifname,reject,hostname,alias_add,alias_mask):
+def return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask):
     #contenu de fichier dhclient.conf "config base"
     configContenu=[
         'reject {};'.format(reject),
@@ -112,7 +166,7 @@ def return_config_base(ifname,reject,hostname,alias_add,alias_mask):
     return configContenu
 
 ###return advanced config
-def return_config_advanced(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require):
+def return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require):
     #contenu de fichier dhclient.conf "config advanced"
     configContenu=[
         'timeout {};'.format(timeout),
@@ -141,7 +195,7 @@ def return_config_advanced(ifname,reject,hostname,alias_add,alias_mask,timeout,r
     return configContenu
 
 ####create file
-def create_file(ifname,config_contenu):
+def create_file_IPV4(ifname,config_contenu):
     #commandes pour créer un dossier et stocker le contenu dans dhclient.conf
     commands = ["""bash -c 'sudo mkdir -p /etc/Dhcp4Config/{} && sudo cat <<EOF > /etc/Dhcp4Config/{}/dhclient.conf
 {}
@@ -149,7 +203,7 @@ EOF'""".format(ifname, ifname, '\n'.join(config_contenu))]
     return commands
 
 # convert  to dhcp  connexion base and advanced
-def update_conn_dhcp(config,ifname):
+def update_conn_dhcp_IPV4(config,ifname):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 dhcp
@@ -205,11 +259,95 @@ def return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint
     return configContenu
 
 ###return advanced config
-def return_config_advanced_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
-    #contenu de fichier dhclient.conf "config advanced"
-    # Python equivalent regular expression
-    # pattern = r'\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)'
-    configContenu=return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
+def return_config_advanced_ipv6(ifname,
+id,IPv4_connectivity,VLAN_priority,information_only,
+send_options,request_options,script,non_temporary,id_assoc,address,Nlifetime,Nvalid_time,
+prefix_delegation,id_assoc_pd,IPv6_Prefix,Plifetime,Pvalid_time,
+authname,protocol,algorithm,
+rdm,keyname,royaume,keyid,secret,expire):
+    #contenu de fichier dhcp6c.conf "config advanced"
+ ####### 
+    sendOptionString=""
+    regex_pattern = r'\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)'
+    # Usamos re.split() para dividir la cadena en Python:
+    options = re.split(regex_pattern,send_options)
+    for opt in options:
+        sendOptionString+=" send {};\n".format(opt)
+ ####### 
+    requestOptionString=""
+    regex_pattern = r'\s*,\s*(?=(?:[^"]*"[^"]*")*[^"]*$)'
+    # Usamos re.split() para dividir la cadena en Python:
+    options = re.split(regex_pattern,request_options)
+    for opt in options:
+        requestOptionString+=" request {};\n".format(opt) 
+ ####### 
+    informationOnlyString=""    
+    if information_only==True:
+       informationOnlyString+=" information-only;\n"
+     
+    configContenu=["interface {} {\n".format(ifname),
+                   "{}".format(sendOptionString),
+                   "{}".format(requestOptionString),
+                   "{}".format(informationOnlyString),
+                   "};"
+                   ]
+    id_assoc_statement_address=""
+    if non_temporary==True:
+        id_assoc_statement_address += "id-assoc na "
+        if  id_assoc.isdigit():
+            id_assoc_statement_address +=id_assoc
+        else:
+            id_assoc_statement_address+=id
+        id_assoc_statement_address+="{\n"
+        if address!='' and Nlifetime.isdigit() or Nlifetime == 'infinity':
+            id_assoc_statement_address+=" address "+ address+Nlifetime
+            if Nvalid_time.isdigit() or Nvalid_time == 'infinity':
+                id_assoc_statement_address+=Nvalid_time
+            id_assoc_statement_address+=";\n"
+        id_assoc_statement_address+="};\n"
+    
+    id_assoc_statement_prefix=""
+    if prefix_delegation:
+        id_assoc_statement_prefix = "id-assoc pd "
+        if id_assoc_pd.isdigit():
+            id_assoc_statement_prefix += id_assoc_pd
+        else:
+            id_assoc_statement_prefix += id_assoc_pd
+        id_assoc_statement_prefix += "{\n"
+        if IPv6_Prefix != '' and Plifetime.isdigit() and Plifetime == 'infinity':
+            id_assoc_statement_prefix += " prefix " + IPv6_Prefix + Plifetime
+            if Pvalid_time.isdigit() or Pvalid_time == 'infinity':
+                id_assoc_statement_prefix+=Pvalid_time
+            id_assoc_statement_prefix+=";\n"
+        id_assoc_statement_prefix  += "};\n"
+    authentication_statement = ""
+    if authname!='' and  protocol=="delayed":
+        authentication_statement+="authentication {} {\n".format(authname)
+        authentication_statement+= " protocol {};\n".format(protocol)
+        if re.search(r'(hmac(-)?md5|HMAC(-)?MD5)',algorithm):
+           authentication_statement+= " algorithm {};\n".format(algorithm)
+        if rdm=="monocounter":
+            authentication_statement+" rdm {};\n".format(rdm)
+        authentication_statement+="};\n"    
+    
+    key_info_statement=""
+   
+    if keyname!='' and royaume!='' and keyid.isdigit() and secret!='':
+        key_info_statement += "keyinfo {} {\n".format(keyname)
+        key_info_statement += "  realm \"{}\";\n".format(royaume)
+        key_info_statement += "  keyid {};\n".format(keyid)
+        key_info_statement += "  secret \"{}\";\n".format(secret)
+        # The regular expression pattern
+        pattern = r"((([0-9]{4}-)?[0-9]{2}[0-9]{2} )?[0-9]{2}:[0-9]{2})|forever"
+        if re.match(pattern, expire):
+            key_info_statement += "  expire \"{}\";\n".format(expire)
+        
+        key_info_statement += "};\n"
+    
+    configContenu += id_assoc_statement_address
+    configContenu += id_assoc_statement_prefix
+    configContenu += authentication_statement
+    configContenu += key_info_statement
 
     return configContenu
 
@@ -229,12 +367,12 @@ def update_conn_dhcp_ipv6(config,ifname):
     commandes=[
      "#Start IP6Config {}".format(ifname),   
      "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
-    "ExecStart=/usr/bin/dhcp6c -c /etc/Dhcp6Config/{}/dhcp6c.conf -fp /var/run/dhcp6c.pid {}".format(ifname),
+    "ExecStart=/usr/bin/dhcp6c -c /etc/Dhcp6Config/{}/dhcp6c.conf {}".format(ifname),
      "#End IP6Config {}".format(ifname)
     ]
     cmd_final=[
     "sudo ip addr flush dev {}".format(ifname),
-    "sudo dhcp6c -c /etc/Dhcp6Config/{}/dhcp6c.conf -fp /var/run/dhcp6c.pid {}".format(ifname),
+    "sudo dhcp6c -c /etc/Dhcp6Config/{}/dhcp6c.conf {}".format(ifname),
     ]
     
     return commandes,config,cmd_final
@@ -330,7 +468,7 @@ def create_file_nftables(ifname,rules):
         #cmd pour supprimer la configuration ancienne
         'if nft list tables | grep -q "filter_{}"; then sudo nft delete table inet filter_{} ; fi'.format(ifname,ifname),
         #cmd ajouter un dossier contenant le fichier config
-        """bash -c 'sudo mkdir -p /etc/nftables/{} && cat <<EOF > /etc/nftables/{}/nftables.conf
+        """bash -c 'sudo mkdir -p /etc/rules/{} && cat <<EOF > /etc/rules/{}/nftables.conf
 {}
 EOF' """.format(ifname, ifname, '\n'.join(rules))
       ]
@@ -348,13 +486,13 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
         if bogon_aux and private_aux:
             #rules pour les adresses ipv4
             rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
-            #rules pour les adresses ipv6
+            #rules pour les adresses IPV6
             rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))    
         #tester si on bloque les addresses bogons seulement
         elif bogon_aux and not private_aux:
             #rules pour les adresses ipv4
             rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
-            #rules pour les adresses ipv6
+            #rules pour les adresses IPV6
             rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))
          #tester si on bloque les addresses privées seulement   
         elif private_aux and not bogon_aux:
@@ -374,11 +512,11 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
         ##cmd to block address
         commandes=[
             "#Start nftables config {}".format(ifname),
-            'ExecStart=/usr/bin/nft -f /etc/nftables/{}/nftables.conf'.format(ifname),
+            'ExecStart=/usr/bin/nft -f /etc/rules/{}/nftables.conf'.format(ifname),
             "#End nftables config {}".format(ifname)
             ]
         cmd_final=[
-            'sudo nft -f /etc/nftables/{}/nftables.conf'.format(ifname),
+            'sudo nft -f /etc/rules/{}/nftables.conf'.format(ifname),
         ]
     else:
         #call function to clean old config

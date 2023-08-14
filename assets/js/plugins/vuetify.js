@@ -14,7 +14,7 @@ export default new Vuetify({
                 dms_teal: '#6e8692',
                 dms_blue: '#43aaf5',
                 dms_blue_light: '#039BE5',
-                dms_blue_dark: '#042439',
+                dms_blue_dark: '#213E9F',
             },
             dark: {
                 dms_grey: '#F8F8F8',

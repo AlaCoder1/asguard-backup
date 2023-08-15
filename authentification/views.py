@@ -78,6 +78,7 @@ def authentification(request):
 
 
 @api_view(['GET'])
+@permission_classes([AllowAny])
 #@authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def logout_view(request):

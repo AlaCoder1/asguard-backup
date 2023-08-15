@@ -25,7 +25,7 @@ def get_config_server(server_path):
 #     return lines
 
 
-def add_config_server(server_path, server_config):
+def add_config_server(server_path, server_config:str):
     cmd = f"echo '{server_config.strip()}' | sudo tee {server_path}"
     stdin, stdout, stderr = ssh.exec_command(cmd)
     return stdin, stdout, stderr

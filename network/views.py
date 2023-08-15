@@ -196,7 +196,7 @@ def conf(request,name_interface,id):
 
         if error:
             msg=error,"    :"+cmd
-            break
+            # break
         else:
             print("service created successufully!!",cmd) 
     stdin, stdout, stderr = ssh.exec_command("""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service

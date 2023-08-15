@@ -1,46 +1,37 @@
 <template>
-  <div class="bg-color">
-    <v-container class="dms-login-container">
-      <v-row align="center" justify="center" style="justify-content: center;">
-        <v-col cols="12" sm="7" md="5" class="text-center pos" justify="center">
-
-              <img
-                src="../../images/logoDMS.png"  
-                height="100"
-                class="img-center"
-              />
-
-          <div class="mt-5" >
-              <v-form @submit.prevent="connect">
-              <p class="c-w">Username</p>
-                <v-text-field
-                  rounded
-                  v-model="username"
-                  label="Username"
-                  required
-                  class="input-w"
-                ></v-text-field>
-                <p class="c-w">Password</p>
-                <v-text-field
-                  rounded
-                  v-model="password"
-                  label="Password"
-                  required
-                  type="password"
-                  class="input-w"
-                ></v-text-field>
-                <v-btn 
-                  type="submit" 
-                  class="mx-auto mt-5 btn--connect"
-                  >
-                  Login
-                </v-btn>
-                <p class="c-o" v-if="invalid">{{message}}</p>
-              </v-form>
-          </div>
-        </v-col>
-      </v-row>
-    </v-container>
+  <div class="bg-color" style="width: 1920, height: 1080, background: '#213E9F'" justify="center">
+    <v-row align="center" justify="center" style="justify-content: center;">
+      <v-col cols="16" sm="7" md="5" class="text-center pos" justify="center">
+        <img src="../../images/logoDMS.svg" height="100" width="100" class="img-center" />
+        <div class="mt-5">
+          <v-form @submit.prevent="connect">
+            <div
+              style="color: white; font-size: 16px; font-family: 'Nunito'; font-weight: 400; word-wrap: break-word;margin-top: 51px;margin-left: 10%">
+              User name
+            </div>
+            <v-text-field rounded v-model="username" label="Enter user name" required class="input-w"
+              style="margin-bottom: 11.5px;"></v-text-field>
+            <div
+              style="color: white; font-size: 16px; font-family: 'Nunito'; font-weight: 400; word-wrap: break-word;margin-top: 51px; margin-left: 10%">
+              Password
+            </div>
+            <v-text-field rounded v-model="password" label="Enter password" required type="password"
+              style="margin-bottom: 11.5px;" class="input-w"></v-text-field>
+            <div rounded
+              style="width: 188px; height: 43px; background: #213E9F; margin-top: 74px; margin-left: 200px;justify-content: center;">
+              <v-btn rounded type="submit" style="width: 100%; height: 100%; background: #193286; color: white;">
+                <span
+                  style="font-size: 16px; font-family: 'Nunito'; font-weight: 400; word-wrap: break-word;">Login</span>
+              </v-btn>
+            </div>
+            <div style="color: #FFC300; font-size: 20px; font-family: 'Nunito'; font-weight: 400; word-wrap: break-word;justify-content: center;
+              margin-top: 5%; margin-left: -4%;" align="center" justify="center" v-if="invalid">
+              {{ message }}
+            </div>
+          </v-form>
+        </div>
+      </v-col>
+    </v-row>
     <Footer />
   </div>
 </template>
@@ -48,67 +39,56 @@
 
 <script>
 import Footer from '@/components/layout/footer.vue';
-import { login } from '@/services/authentification.js';
+import { mapActions } from 'vuex';
+import store from '@/store/index.js';
 
 export default {
-    name: 'HomeComponent',
-    components: {
-        Footer,
+  name: 'HomeComponent',
+  components: {
+    Footer,
+  },
+  data() {
+    return {
+      users: '',
+      test: [],
+      username: '',
+      password: '',
+      invalid: false,
+      message: '',
+    };
+  },
+  beforeMount: async function () {
+    this.users = this.$root.$data.tab;
+  },
+  methods: {
+    ...mapActions('auth', ['login']),
+    connect() {
+      const user = {
+        username: this.username,
+        password: this.password,
+      };
+      try {
+        store.dispatch('auth/login', user);
+        this.message = '';
+      } catch (error) {
+        this.invalid = true;
+        this.message = response.data.message;
+        console.log(error);
+      }
     },
-    data() {
-        return {
-            users:'',
-            test:[],
-            username:'',
-            password:'',
-            invalid:false,
-        };
-    },
-    beforeMount: async function () {
-        this.users= this.$root.$data.tab ;
-        console.log("data from django",this.users);
-    },
-    methods: {
-      async connect()  {
-            const params = {
-                username: this.username,
-                password: this.password,
-            };
-            login(params).then((resp) => {
-              this.invalid = false ;
-              console.log("retour from api" ,resp);
-               window.location.href = `/dashboard`;
-            }).catch((err) => {
-                if (err.response && err.response.status === 401) {
-                  const responseData = err.response.data; // Access the response data
-                  console.log("401 Error Response:", responseData);
-                  this.invalid = true ;
-                  this.message=responseData.message;
-                  // Handle the 401 error here
-                } else {
-                  console.error("Error occurred:", error);
-                  // Handle other errors
-                }
-            });
-        
-      },
-    }
+  }
 };
 </script>
 <style scoped>
+.main-content {
+  margin-top: 80px;
+  margin-bottom: 80px;
+}
 
-.btn--connect {
-    color: #FFFFFF;
-    background-color: #FFC300!important;
-    display: block;
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 5%;
-    width:40%
+.dms-login-container {
+  margin-top: 357px;
 }
-.pos {
-  transform: translateY(20%);
-}
+
 .img-center {
   display: block;
   margin-left: auto;
@@ -116,16 +96,8 @@ export default {
   width: 33%;
   height: 33%;
 }
+
 .input-w {
-    background-color: white;
-}
-.c-w {
-  color:white;
-  margin-left: 10%;
-}
-.c-o {
-  color:#FFC300;
-  text-align:center;
-  margin-top: 5%;
+  background-color: white;
 }
 </style>

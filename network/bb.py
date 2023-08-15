@@ -174,7 +174,7 @@ def conf(request):
     msg = ""
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # BPN = data['BPN']
         # BBN = data['BBN']
         ##static

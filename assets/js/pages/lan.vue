@@ -7,8 +7,8 @@
             {{ tab.label }}
           </v-tab>
           <v-tab-item v-for="tab in tabs" :key="tab.id">
-            <LanComponent v-if="tab.id === 1" />
-            <WanComponent v-if="tab.id === 2" />
+            <LanComponent v-if="tab.id == 1" />
+            <WanComponent v-if="tab.id == 2" />
           </v-tab-item>
         </v-tabs>
       </template>
@@ -29,15 +29,16 @@ export default {
   },
   data() {
     return {
-      activeTab: null,
+      activeTab: 0,
       tabs: [
         { id: 1, label: 'LAN' },
         { id: 2, label: 'WAN' },
       ],
+      lan: ""
     };
   },
-  methods: {
-
+  beforeMount() {
+    this.lan = this.$root.$data.lan;
   },
 };
 </script>

@@ -1,5 +1,7 @@
 from django.http import JsonResponse
 import json
+from rest_framework.authentication import SessionAuthentication
+
 from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
@@ -9,7 +11,8 @@ from .serializers import *
 from django.core import serializers
 # Create your views here.
 @api_view(['GET'])
-@permission_classes([])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getAllOpenvpns(request):
     list_openvpn = []
     if (request.method == 'GET'):
@@ -50,12 +53,13 @@ def update_openvpn_table(id,data,ServerOpenvpnSerializer):
     if serializerServerOpenvpn.is_valid():
             serializerServerOpenvpn.save()    
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def updateOpenVPN(request,id):
     msg=''
     if (request.method == 'PUT'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         port = data.get('port', '')
         proto = data.get('proto', '')
         dev = data.get('dev', '')

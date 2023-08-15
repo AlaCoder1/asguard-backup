@@ -325,10 +325,10 @@
                                 </v-col>
                                 <v-col>
                                     <div class="mr-1 flex center">
-                                        <v-btn large rounded color="#042439">
+                                        <v-btn large rounded color="#213E9F">
                                             <span class="text-white c-o">Cancel</span>
                                         </v-btn>
-                                        <v-btn large rounded color="#042439">
+                                        <v-btn large rounded color="#213E9F">
                                             <span class="text-white c-o">Save</span>
                                         </v-btn>
                                     </div>
@@ -344,10 +344,10 @@
             </v-col>
             <v-col>
                 <div class="mr-1 flex center">
-                    <v-btn large rounded color="#042439">
+                    <v-btn large rounded color="#213E9F">
                         <span class="text-white c-o">Cancel</span>
                     </v-btn>
-                    <v-btn large rounded color="#042439">
+                    <v-btn large rounded color="#213E9F">
                         <span class="text-white c-o">Save</span>
                     </v-btn>
                 </div>

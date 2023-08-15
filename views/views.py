@@ -83,6 +83,9 @@ def user_certificate_managment_page(request):
 @login_required(login_url='/')
 def lan_page(request):
     return render(request, 'lan_page.html')
+    lan=getNetworkData(request)
+    context = {'lan':lan}
+    return render(request, 'lan_page.html',context)
 
 @login_required(login_url='/')
 def settings_page(request):

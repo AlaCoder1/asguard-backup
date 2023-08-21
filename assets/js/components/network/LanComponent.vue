@@ -529,8 +529,12 @@ export default {
             ],
             ipv6Items: [
                 'DHCPv6',
-                'SLAAC',
                 'Static',
+                'SLAAC',
+                '6to4',
+                '6RD',
+                'Track Interface',
+                'PPPoE',
             ],
             activate: false,
             device: "",

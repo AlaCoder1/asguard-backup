@@ -8,6 +8,7 @@ import VueI18n from 'vue-i18n';
 import dictionnary from './dictionnary';
 import enJson from './translations/en.json'; 
 import frJson from './translations/fr.json'; 
+import store from '@/store/index';
 
 Vue.use(VueI18n);
 
@@ -21,6 +22,7 @@ const i18n = new VueI18n({
 
 Vue.use(VeeValidate, {
   i18n,
+  store,
   classes: true,
   fieldsBagName: 'formFields',
   dictionary: {

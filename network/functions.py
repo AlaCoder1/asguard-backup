@@ -644,3 +644,14 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
    
     
     return configuration,commandes,config,cmd_final
+
+
+### get different metric
+def differentMetric(exclude_list):
+    num_start = min(exclude_list)+1
+    while num_start < max(exclude_list):
+        if num_start in exclude_list:
+            num_start+=1
+        else:
+            return num_start
+    return max(exclude_list)+1

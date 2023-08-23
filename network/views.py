@@ -10,7 +10,7 @@ from django.core import serializers
 from authentification.views import *
 from .functions import *
 from django.views.decorators.csrf import csrf_exempt
-
+from gateway.models import *
 def device_nameInterface(name_interface):
     data = Interface.objects.get(name_interface=name_interface)
     return data
@@ -37,6 +37,7 @@ def add_interface(request):
 @csrf_exempt
 def conf(request,name_interface):
     msg="Failed to configure Network!"
+    list_metric = []
     if (request.method == 'PUT'):
         interfaceObject = Interface.objects.get(name_interface=name_interface)
         id_interface = interfaceObject.id
@@ -65,6 +66,7 @@ def conf(request,name_interface):
         commandesIPV6=[]
         cmd_final_ipv6=[]
         cmd_final_ipv4=[]
+
         ##get old configuration in service
         output_service,error=get_old_config()
         if error:
@@ -87,6 +89,20 @@ def conf(request,name_interface):
                         addmac = data.get('addmac')
                         ip_address4 = data.get('value_setup_Ipv4')['ip_address4']
                         netmask4 = data.get('value_setup_Ipv4')['netmask4']
+                        gateway4=data.get('value_setup_Ipv4')['gateway4']
+                        print({"gateway": gateway4['value']})
+                        IdGateway = Gateway.objects.get(gwaddress=gateway4['value'])
+                        print({"IdGateway":IdGateway.id})
+                        gatewayInterface = GatewayInterface()
+                        gatewayInterface.gateway=Gateway.objects.get(id=IdGateway.id)
+                        gatewayInterface.interface=Interface.objects.get(name_interface=name_interface)
+                        allGatewayInterface = GatewayInterface.objects.all()
+                        for i in allGatewayInterface:
+                            list_metric.append(i.metric)
+                        print({'list_metric':list_metric})
+                        
+                        gatewayInterface.metric=differentMetric(list_metric)
+                        gatewayInterface.save()
                         # gateway4=data.get('value_setup_Ipv4')['gateway4']
                         # gateways=Gateway.objects.get(gwaddress=gateway4)
                         # interface=Interface.objects.get(gateway_id=gateways.id)

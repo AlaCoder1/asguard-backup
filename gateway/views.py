@@ -50,17 +50,7 @@ def addStaticGateway(request):
             Gatewayerializer.save()
             msg="Add gateway Successfully!!"
         else: 
-            msg="Failed to add gateway!"
-        last_id = Gateway.objects.last().id
-        for interface in interfaces:
-            gatewayInterface = GatewayInterface()
-            gatewayInterface.gateway=Gateway.objects.get(id=last_id)
-            gatewayInterface.interface=Interface.objects.get(id=interface)
-            gatewayInterface.metric=0
-            gatewayInterface.save()
-        
-        print({"last_id":last_id})
-            
+            msg="Failed to add gateway!"   
     return JsonResponse({"msg:": msg})       
    
 @api_view(['DELETE'])

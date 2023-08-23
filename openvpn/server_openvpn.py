@@ -1,15 +1,18 @@
 import time
 import paramiko
 
+# from openvpn.functions import CommandExecutionError
+
 
 def connect_ssh():
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('10.1.12.9', username='root', password='root')
+    ssh.connect('10.1.12.254', username='root', password='root')
     return ssh
 
 
 def install_server_openvpn(server_name, server_conf):
+    """Function to install an openvpn server in system using easyrsa package to generate keys and certificates"""
     ssh = connect_ssh()
     stdin, stdout, stderr = ssh.exec_command('pwd')
     current_dir = stdout.read().decode('utf-8')
@@ -20,20 +23,38 @@ def install_server_openvpn(server_name, server_conf):
                                     {'command': 'sudo easyrsa build-server-full server', 'arguments': ['akrampass','akrampass','yes']},
                                     ]
     commands_list_without_arguments = ['sudo easyrsa gen-dh',
-                                    f'rm /etc/openvpn/server/server_{server_name}.conf',
+                                    f'rm -f /etc/openvpn/server/server_{server_name}.conf',
                                     f'''echo '{server_conf.strip()}' >>/etc/openvpn/server/server_{server_name}.conf''',
-                                    f'mkdir /etc/openvpn/certificates_{server_name}/',
+                                    f'mkdir -p /etc/openvpn/certificates_{server_name}/',
                                     f'cp {current_dir}/pki/ca.crt "/etc/openvpn/certificates_{server_name}/ca.crt"',
                                     f'cp {current_dir}/pki/issued/server.crt "/etc/openvpn/certificates_{server_name}/server.crt"',
                                     f'cp {current_dir}/pki/private/server.key "/etc/openvpn/certificates_{server_name}/server.key"',
                                     f'cp {current_dir}/pki/dh.pem "/etc/openvpn/certificates_{server_name}/dh.pem"',
                                     'chown -R openvpn:network /etc/openvpn/*',
                                     #    f'chown -R openvpn:network {current_dir}/*',
-                                    'mkdir /var/log/openvpn/',
+                                    'mkdir -p /var/log/openvpn/',
                                     'touch /var/log/openvpn/status.log',
                                     'sudo chown 777 /var/log/openvpn/status.log',
                                     ]
     execute_list_of_commands(ssh_connect=ssh, list_commands=commands_list_with_arguments)
+    execute_list_commands_without_arguments(ssh_connect=ssh, commands_list=commands_list_without_arguments)
+
+
+def delete_server_openvpn(server_name):
+    """Function to delete an openvpn server in system and his keys and certificates"""
+    ssh = connect_ssh()
+    commands_list_without_arguments = [f'sudo systemctl stop openvpn-server@server_{server_name}',
+                                       f'sudo rm /etc/openvpn/server/server_{server_name}.conf',
+                                       f'sudo rm -r /etc/openvpn/certificates_{server_name}',
+                                       f'sudo rm /var/log/openvpn/status-server_{server_name}.log']
+    execute_list_commands_without_arguments(ssh_connect=ssh, commands_list=commands_list_without_arguments)
+
+
+def update_server_openvpn(server_name, server_conf):
+    """Function to update an openvpn server in system"""
+    ssh = connect_ssh()
+    commands_list_without_arguments = [f'rm /etc/openvpn/server/server_{server_name}.conf',
+                                       f'''echo '{server_conf.strip()}' >>/etc/openvpn/server/server_{server_name}.conf''']
     execute_list_commands_without_arguments(ssh_connect=ssh, commands_list=commands_list_without_arguments)
 
 
@@ -43,6 +64,8 @@ def execute_list_commands_without_arguments(ssh_connect, commands_list):
         print(f'command {command}')
         print('Error: ', stderr.read().decode('utf-8'))
         print('Output: ', stdout.read().decode('utf-8'))
+        # if stderr != '':
+        #     raise CommandExecutionError(command=command, message=stderr.read().decode('utf-8'))
 
 
 def execute_command_with_arguments(ssh_connect, command, arguments):
@@ -52,76 +75,79 @@ def execute_command_with_arguments(ssh_connect, command, arguments):
 
     # Send the command
     channel.send(f'{command}\n')
-    time.sleep(1)
+    time.sleep(0.5)
 
     # Send the list of arguments
     for arg in arguments:
         channel.send(f'{arg}\n')
-        time.sleep(1)
+        time.sleep(0.5)
+    
+    output_command = channel.recv(4096).decode('utf-8')
 
     # Close the session
     channel.close()
+    return output_command
 
 
 def execute_list_of_commands(ssh_connect, list_commands):
     for command in list_commands:
         print(f"Command: {command['command']}")
-        execute_command_with_arguments(ssh_connect=ssh_connect, command=command['command'], arguments=command['arguments'])
-        print(f"Command done")
+        output_command = execute_command_with_arguments(ssh_connect=ssh_connect, command=command['command'], arguments=command['arguments'])
+        print(f"output_command: {output_command}")
 
 
-server_name = 'azizserver'
-config_server =f'''port 1195
-proto udp
+# server_name = 'azizserver'
+# config_server =f'''port 1195
+# proto udp
 
-# "dev tun" will create a routed IP tunnel.
-dev tun
-topology subnet
+# # "dev tun" will create a routed IP tunnel.
+# dev tun
+# topology subnet
 
-#Certificate Configuration
+# #Certificate Configuration
 
-#ca certificate
-ca /etc/openvpn/certificates_{server_name}/ca.crt
-#Server Certificate
-cert /etc/openvpn/certificates_{server_name}/server.crt
+# #ca certificate
+# ca /etc/openvpn/certificates_{server_name}/ca.crt
+# #Server Certificate
+# cert /etc/openvpn/certificates_{server_name}/server.crt
 
-#Server Key and keep this is secret
-key /etc/openvpn/certificates_{server_name}/server.key
+# #Server Key and keep this is secret
+# key /etc/openvpn/certificates_{server_name}/server.key
 
 
-#See the size a dh key in /etc/openvpn/keys/
-dh /etc/openvpn/certificates_{server_name}/dh.pem
+# #See the size a dh key in /etc/openvpn/keys/
+# dh /etc/openvpn/certificates_{server_name}/dh.pem
 
-#Internal IP will get when already connect
-server 10.8.1.0 255.255.255.0
+# #Internal IP will get when already connect
+# server 10.8.1.0 255.255.255.0
 
-#this line will redirect all traffic through our OpenVPN
-push "redirect-gateway def1"
-push "route 192.168.0.0 255.255.255.0"
+# #this line will redirect all traffic through our OpenVPN
+# push "redirect-gateway def1"
+# push "route 192.168.0.0 255.255.255.0"
 
-#Provide DNS servers to the client, you can use goolge DNS
-push "dhcp-option DNS 8.8.8.8"
-push "dhcp-option DNS 8.8.4.4"
+# #Provide DNS servers to the client, you can use goolge DNS
+# push "dhcp-option DNS 8.8.8.8"
+# push "dhcp-option DNS 8.8.4.4"
 
-#Enable multiple client to connect with same key
-duplicate-cn
+# #Enable multiple client to connect with same key
+# duplicate-cn
 
-cipher AES-256-CBC
+# cipher AES-256-CBC
 
-keepalive 20 60
-# comp-lzo adaptive
-persist-key
-persist-tun
-daemon
+# keepalive 20 60
+# # comp-lzo adaptive
+# persist-key
+# persist-tun
+# daemon
 
-#openvpn status log
-#status /var/log/openvpn/status.log
+# #openvpn status log
+# #status /var/log/openvpn/status.log
 
-#enable log
-#log-append /var/log/openvpn/openvpn.log
+# #enable log
+# #log-append /var/log/openvpn/openvpn.log
 
-#Log Level
-verb 3'''
+# #Log Level
+# verb 3'''
 
-install_server_openvpn(server_name=server_name, server_conf=config_server)
-print('Installation done')
+# install_server_openvpn(server_name=server_name, server_conf=config_server)
+# print('Installation done')

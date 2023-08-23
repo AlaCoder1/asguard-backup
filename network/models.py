@@ -4,9 +4,12 @@ from django.db import models
 from django.db import models
 from django.utils import timezone
 from managementUsers.models import User
+
 # Create your models here.
 ##model interface
 class Interface(models.Model):
+    # gateway = models.ForeignKey(
+            # Gateway, on_delete=models.CASCADE,null=True)
     ifname = models.CharField(max_length=200, null=True,unique=True)
     private_aux= models.BooleanField(default=False)
     bogon_aux = models.BooleanField(default=False)
@@ -26,8 +29,6 @@ class Interface(models.Model):
     class Meta:
         db_table = 'Interface'
 
-    # def __dict__(self):
-    #     return self.ifname
     
 #model generic config
 from django.conf import settings
@@ -169,3 +170,13 @@ class IP6Config(models.Model):
     class Meta:
         db_table = 'IP6Config'
 
+
+
+
+class tempsExucution(models.Model):
+    type=models.CharField(max_length=200, null=True)
+    cmd=models.TextField(max_length=10000, null=True)
+    temps=models.FloatField(null=True)
+
+    class Meta:
+        db_table = 'tempsExucution'

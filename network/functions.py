@@ -7,8 +7,15 @@ import re
 import time
 import threading
 from .models import *
+from gateway.models import *
 ###############################################################
 ####update in Database functions
+###function to add gateway to interface in DB
+def addGatewayInterfaceDB(GatewayObject,name_interface):
+    gatewayInterface = GatewayInterface()
+    gatewayInterface.gateway=Gateway.objects.get(id=GatewayObject.id)
+    gatewayInterface.interface=Interface.objects.get(name_interface=name_interface)
+    gatewayInterface.save()
 #function to update config tables
 def update_DB(id,data,model,IP4serializer):
     data['interface']=id
@@ -69,7 +76,7 @@ def add_cmd(output,commandes):
 ################################# Function to execute command with timeout
 def run_command(ssh_client, command):
     stdin, stdout, stderr = ssh_client.exec_command(command)
-    output = stdout.read().decode('utf-8')
+    output = stdout.read().decode('utf-')
     error = stderr.read().decode('utf-8')
     return output, error
 
@@ -179,7 +186,18 @@ def update_conn_None_IPV4(config,ifname):
         "sudo ip addr flush dev {}".format(ifname),]
     return commands,config,cmd_final
 ################### Static 
-def return_Gateway_system(data,ifname,addrgw,far_aux,multiWan_aux,metric):
+
+### get different metric
+def differentMetric(exclude_list):
+    num_start = min(exclude_list)+1
+    while num_start < max(exclude_list):
+        if num_start in exclude_list:
+            num_start+=1
+        else:
+            return num_start
+    return max(exclude_list)+1
+
+def return_Gateway_system(ifname,addrgw,far_aux,multiWan_aux,metric):
     cmd="sudo ip route add default via {} dev {}".format(addrgw,ifname)
     ##test multiwan is true
     if multiWan_aux:
@@ -193,11 +211,11 @@ def return_Gateway_system(data,ifname,addrgw,far_aux,multiWan_aux,metric):
             cmd+="metric {}".format(addrgw,ifname,metric)
     elif far_aux and not multiWan_aux:
         cmd+="onlink".format(addrgw)
-    data['metric']=metric
-      
     return cmd
+  
 # convert  to static connexion 
-def update_conn_static_IPV4(config,ifname,ip_address,netmask):
+def update_conn_static_IPV4(config,ifname,ip_address,netmask,cmdgw):
+    
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
@@ -205,34 +223,14 @@ def update_conn_static_IPV4(config,ifname,ip_address,netmask):
          "#Start IP4Config {}".format(ifname),
         "ExecStart=/usr/bin/ifconfig {} 0.0.0.0".format(ifname),
         "ExecStart=/usr/bin/ip addr add {}/{} dev {}".format(ip_address,netmask,ifname),
+        "ExecStart=/usr/bin/{}".format(cmdgw),
          "#End IP4Config {}".format(ifname)
     ]
     cmd_final=[ 
         "sudo ifconfig {} 0.0.0.0".format(ifname),
         "sudo ip addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
+    cmd_final.append(cmdgw)
     return commands,config,cmd_final
-     
-# # convert  to static connexion 
-# def update_conn_static_IPV4(data,config,ifname,ip_address,netmask):
-#     #cmd to return gateway 
-#     # cmdgw=return_Gateway_system(data,ifname,addrgw,far_aux,multiWan_aux,metric)
-#     #lancer la fonction de "remove old config"
-#     config=clean_old_config(config,"IP4Config {}".format(ifname))
-#     #la liste des commandes pour l'IPV4 static
-#     commands=[
-#          "#Start IP4Config {}".format(ifname),
-#         "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
-#         "ExecStart=/usr/bin/ip addr add {}/{} dev {}".format(ip_address,netmask,ifname),
-#         # "ExecStart=/usr/bin/{}".format(cmdgw),
-#          "#End IP4Config {}".format(ifname)
-#     ]
-#     cmd_final=[ 
-#         "sudo ip addr flush dev {}".format(ifname),
-#         "sudo ip addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
-#     # cmd_final.append(cmdgw)
-    
-    
-#     return commands,config,cmd_final
 
 ################### Dhcp
 ####function to convert_to_subnet_mask 
@@ -646,12 +644,3 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
     return configuration,commandes,config,cmd_final
 
 
-### get different metric
-def differentMetric(exclude_list):
-    num_start = min(exclude_list)+1
-    while num_start < max(exclude_list):
-        if num_start in exclude_list:
-            num_start+=1
-        else:
-            return num_start
-    return max(exclude_list)+1

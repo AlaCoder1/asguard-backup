@@ -90,30 +90,24 @@ def conf(request,name_interface):
                         ip_address4 = data.get('value_setup_Ipv4')['ip_address4']
                         netmask4 = data.get('value_setup_Ipv4')['netmask4']
                         gateway4=data.get('value_setup_Ipv4')['gateway4']
-                        print({"gateway": gateway4['value']})
-                        IdGateway = Gateway.objects.get(gwaddress=gateway4['value'])
-                        print({"IdGateway":IdGateway.id})
-                        gatewayInterface = GatewayInterface()
-                        gatewayInterface.gateway=Gateway.objects.get(id=IdGateway.id)
-                        gatewayInterface.interface=Interface.objects.get(name_interface=name_interface)
+                        metric=0
                         allGatewayInterface = GatewayInterface.objects.all()
-                        for i in allGatewayInterface:
-                            list_metric.append(i.metric)
-                        print({'list_metric':list_metric})
+                        if multiWan_aux:
+                            for i in allGatewayInterface:
+                                list_metric.append(i.metric)
+                            metric=differentMetric(list_metric)
                         
-                        gatewayInterface.metric=differentMetric(list_metric)
-                        gatewayInterface.save()
-                        # gateway4=data.get('value_setup_Ipv4')['gateway4']
-                        # gateways=Gateway.objects.get(gwaddress=gateway4)
-                        # interface=Interface.objects.get(gateway_id=gateways.id)
-                        # data['gateway']=gateways.id
-                        # far_aux=gateways.far_aux
-                        # multiWan_aux=gateways.multiwan_aux
-                        # metric=interface.metric
-
+                        print({"gateway": gateway4['value']})
+                        GatewayObject = Gateway.objects.get(gwaddress=gateway4['value'])
+                        print({"IdGateway":GatewayObject.id})
+                        default_aux=GatewayObject.default_aux
+                        far_aux=GatewayObject.far_aux
+                        multiWan_aux=GatewayObject.multiwan_aux
+                        cmdgw=return_Gateway_system(ifname,gateway4,far_aux,multiWan_aux,metric)
+                        addGatewayInterfaceDB(GatewayObject,name_interface)
                         #gateway ??????????
                         #call function to convert address to static
-                        commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,ip_address4,netmask4)
+                        commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,ip_address4,netmask4,cmdgw)
                         jsonIPV4={
                     "nameInterface":nameInterface,"ifname":ifname,
                     "ip_address":ip_address4,"netmask":netmask4,

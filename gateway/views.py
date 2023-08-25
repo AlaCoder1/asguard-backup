@@ -29,8 +29,10 @@ def getAllStaticGateways(request):
     return JsonResponse({"Gateways:": resgateways})
             
 # API to add  static gateway
-@api_view(['POST'])
-@permission_classes([])
+# @api_view(['POST'])
+# @permission_classes(["SessionAuthentication"])
+from django.views.decorators.csrf import csrf_exempt
+@csrf_exempt
 def addStaticGateway(request):
     if (request.method == 'POST'):
         data = JSONParser().parse(request)

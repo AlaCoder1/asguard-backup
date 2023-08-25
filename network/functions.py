@@ -8,13 +8,21 @@ import time
 import threading
 from .models import *
 from gateway.models import *
+from gateway.serializers import *
 ###############################################################
 ####update in Database functions
 ###function to add gateway to interface in DB
-def addGatewayInterfaceDB(GatewayObject,name_interface):
-    gatewayInterface = GatewayInterface()
-    gatewayInterface.gateway=Gateway.objects.get(id=GatewayObject.id)
-    gatewayInterface.interface=Interface.objects.get(name_interface=name_interface)
+def addGatewayInterfaceDB(GatewayObject,name_interface,metric):
+    id_interface = Interface.objects.get(name_interface=name_interface).id
+    if GatewayInterface.objects.filter(interface=id_interface).exists():
+        id_GatewayInterface = GatewayInterface.objects.get(interface=id_interface).id
+        gatewayInterface = GatewayInterface.objects.get(id=id_GatewayInterface)
+        gatewayInterface.gateway = Gateway.objects.get(id=GatewayObject.id)  
+    else:
+        gatewayInterface = GatewayInterface()
+        gatewayInterface.gateway=Gateway.objects.get(id=GatewayObject.id)
+        gatewayInterface.interface=Interface.objects.get(name_interface=name_interface)
+    gatewayInterface.metric=metric    
     gatewayInterface.save()
 #function to update config tables
 def update_DB(id,data,model,IP4serializer):
@@ -76,7 +84,7 @@ def add_cmd(output,commandes):
 ################################# Function to execute command with timeout
 def run_command(ssh_client, command):
     stdin, stdout, stderr = ssh_client.exec_command(command)
-    output = stdout.read().decode('utf-')
+    output = stdout.read().decode('utf-8')
     error = stderr.read().decode('utf-8')
     return output, error
 
@@ -99,6 +107,7 @@ def run_remote_command_with_timeout(type, typeDHCP4, ssh_client, command, timeou
     # Save the instance to the database
     new_entry.save()
     if  (command.find("sudo dhclient")==-1) and error:
+        print("error::::",error)
         return False
     elif command_thread.is_alive():
         print(f"Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}")
@@ -189,6 +198,9 @@ def update_conn_None_IPV4(config,ifname):
 
 ### get different metric
 def differentMetric(exclude_list):
+    if exclude_list ==[]:
+        exclude_list = [0]
+        
     num_start = min(exclude_list)+1
     while num_start < max(exclude_list):
         if num_start in exclude_list:
@@ -198,24 +210,17 @@ def differentMetric(exclude_list):
     return max(exclude_list)+1
 
 def return_Gateway_system(ifname,addrgw,far_aux,multiWan_aux,metric):
-    cmd="sudo ip route add default via {} dev {}".format(addrgw,ifname)
+    cmd="sudo ip route add default via {} dev {} proto static".format(addrgw,ifname)
     ##test multiwan is true
     if multiWan_aux:
-        if metric!=0:
-            metric=metric+10
-        else:
-            metric=10
-        if far_aux :
-            cmd+="metric {} onlink".format(addrgw,ifname,metric)
-        else: 
-            cmd+="metric {}".format(addrgw,ifname,metric)
-    elif far_aux and not multiWan_aux:
-        cmd+="onlink".format(addrgw)
+        cmd+=" metric {}".format(metric)
+    if far_aux :
+        cmd+=" onlink"
     return cmd
   
 # convert  to static connexion 
 def update_conn_static_IPV4(config,ifname,ip_address,netmask,cmdgw):
-    
+    print("cmdgw",cmdgw)
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
@@ -233,6 +238,25 @@ def update_conn_static_IPV4(config,ifname,ip_address,netmask,cmdgw):
     return commands,config,cmd_final
 
 ################### Dhcp
+####function to get gateway if typeIPV4 est DHCP Base or Advanced
+def get_gateway_dhcp(ifname,ssh_client):
+    command="ip route list | grep {} | cut -d ' ' -f 3-".format(ifname)
+    output,error=run_command(ssh_client, command)
+    if error or len(output)==0:
+        gwaddr=None
+    else:
+        gwaddr=output.split()[0]
+    return gwaddr
+
+### function to add gateway to database
+def add_gateway_dhcp(gwaddr,ifname):
+    data={ "gwname":"{}_DHCP".format(ifname),
+    "gwaddress":"{}".format(gwaddr),}
+    Gatewayerializer = GatewaySerializer(data=data)
+    if Gatewayerializer.is_valid():
+        Gatewayerializer.save()
+        return True
+    return False           
 ####function to convert_to_subnet_mask 
 def convert_to_subnet_mask(bits):
     cidr_bits = int(bits)

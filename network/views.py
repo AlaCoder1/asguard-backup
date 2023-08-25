@@ -70,7 +70,6 @@ def conf(request,name_interface):
         ##get old configuration in service
         output_service,error=get_old_config()
         if error:
-            print("error ",error)
             msg=error
         else:
             if len(output_service)!=0:
@@ -78,6 +77,8 @@ def conf(request,name_interface):
                 output_service = [x for x in output_service if x]
                 ##add requirement service
                 output_service=add_requirement(ifname,output_service)
+                ###set gatewayObject to None
+                GatewayObject=None
                 ##IPV4 configuration cases 
                 match setuptypeIP4:
                     case "None":
@@ -90,21 +91,24 @@ def conf(request,name_interface):
                         ip_address4 = data.get('value_setup_Ipv4')['ip_address4']
                         netmask4 = data.get('value_setup_Ipv4')['netmask4']
                         gateway4=data.get('value_setup_Ipv4')['gateway4']
-                        metric=0
-                        allGatewayInterface = GatewayInterface.objects.all()
-                        if multiWan_aux:
-                            for i in allGatewayInterface:
-                                list_metric.append(i.metric)
-                            metric=differentMetric(list_metric)
-                        
                         print({"gateway": gateway4['value']})
                         GatewayObject = Gateway.objects.get(gwaddress=gateway4['value'])
                         print({"IdGateway":GatewayObject.id})
                         default_aux=GatewayObject.default_aux
                         far_aux=GatewayObject.far_aux
                         multiWan_aux=GatewayObject.multiwan_aux
-                        cmdgw=return_Gateway_system(ifname,gateway4,far_aux,multiWan_aux,metric)
-                        addGatewayInterfaceDB(GatewayObject,name_interface)
+                        multiWan_aux=GatewayObject.multiwan_aux
+                        addrgw=GatewayObject.gwaddress
+                        metric=0
+                        allGatewayInterface = GatewayInterface.objects.all()
+                        if multiWan_aux:
+                            for i in allGatewayInterface:
+                                list_metric.append(i.metric)
+                            metric=differentMetric(list_metric)
+                            print("metric==",metric)
+
+                        cmdgw=return_Gateway_system(ifname,addrgw,far_aux,multiWan_aux,metric)
+                        addGatewayInterfaceDB(GatewayObject,name_interface,metric)
                         #gateway ??????????
                         #call function to convert address to static
                         commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,ip_address4,netmask4,cmdgw)
@@ -186,7 +190,7 @@ def conf(request,name_interface):
                     #     #call function to convert address to dhcp advanced /Base  in service
                     #     commandesIPV6,output_service,cmd_final_ipv6=update_conn_dhcp_ipv6(output_service,ifname)
                                 #clean list of cmd to block address
-               
+                
                 ##for generic config 
                 cmds=[]       
                 cmds,output_service,cmd_final_Gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuV,mssV)
@@ -208,18 +212,26 @@ def conf(request,name_interface):
 EOF""".format('\n'.join(output_service))
                 # print("1111",run_all_commands(commandes_final,setuptypeIP4,typeDHCP4))
                 if run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,5):
-                       stdin, stdout, stderr = ssh.exec_command(cmd_asguard)  
-                       if not (stderr.read().decode('utf-8')):
-                            #update changes in DB ip4
-                            aux_ipv4=update_DB(id_interface,jsonIPV4,IP4Config,IP4ConfigSerializer)
-                            #update changes in DB ip6
-                            # update_DB(id,data,IP6Config,IP6ConfigSerializer)
-                            #update changes in DB generic config
-                            aux_gen=update_DB(id_interface,data,GenericConfig,GenericConfigSerializer)
-                            #update changes in DB interface config
-                            aux_inter=update_interface_table(name_interface,data,InterfaceSerializer)
-                            if aux_ipv4 and aux_gen and aux_inter:
-                                msg="Your interface {} was configured Successfully!!".format(name_interface)
+                    stdin, stdout, stderr = ssh.exec_command(cmd_asguard)  
+                    if not (stderr.read().decode('utf-8')):
+                        if setuptypeIP4=="dhcp":
+                            ##function to get gateway if typeIPV4 est DHCP Base or Advanced
+                            gwaddr=get_gateway_dhcp(ifname,ssh)
+                            if gwaddr is not None:
+                                GatewayObject = Gateway.objects.get(gwaddress=gwaddr)
+                                metric=0 
+                                addGatewayInterfaceDB(GatewayObject,name_interface,metric)
+                        #update changes in DB ip4
+                        aux_ipv4=update_DB(id_interface,jsonIPV4,IP4Config,IP4ConfigSerializer)
+                        #update changes in DB ip6
+                        # update_DB(id,data,IP6Config,IP6ConfigSerializer)
+                        #update changes in DB generic config
+                        aux_gen=update_DB(id_interface,data,GenericConfig,GenericConfigSerializer)
+                        #update changes in DB interface config
+                        aux_inter=update_interface_table(name_interface,data,InterfaceSerializer)
+                        print(aux_ipv4 and aux_gen and aux_inter)
+                        if aux_ipv4 and aux_gen and aux_inter:
+                            msg="Your interface {} was configured Successfully!!".format(name_interface)
 
                 
 

@@ -11,12 +11,14 @@ from django.core import serializers
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from authentification.authentication import JWTAuthentication
+from rest_framework.authentication import SessionAuthentication
 from django.contrib.auth.hashers import check_password
 # Create your views here.
 
 
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def getAllServers(request):
     list_servers = []
     if (request.method == 'GET'):
@@ -55,12 +57,15 @@ def getServer(request, id):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+# @permission_classes([IsAuthenticated])
 def createServer(request):
     msg = ''
     if (request.method == 'POST'):
+        # return JsonResponse({"msg": request.data}, status=201)
+        
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         userSearch = User.objects.filter(username=data["username"])
         if (len(userSearch) != 0):
             user = User.objects.get(username=data["username"])

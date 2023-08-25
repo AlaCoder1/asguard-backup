@@ -78,12 +78,15 @@ def authentification(request):
 
 
 @api_view(['GET'])
-@authentication_classes([JWTAuthentication])
 @permission_classes([AllowAny])
 def logout_view(request):
-    logout()
+    # username = request.user.username
+    print({"logout": logout(request)})
     if logout(request) is None:
         # close the SSH connection
         ssh.close()
-  
+    # userObject = User.objects.get(username=username)
+    # userObject.token_last_expired = datetime.now()+timedelta(hours=0)
+    # userObject.save()
     return JsonResponse({"msg": 'User Logged out successfully'})
+

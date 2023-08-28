@@ -19,9 +19,8 @@ def device_nameInterface(name_interface):
 @api_view(['PUT'])
 @permission_classes([AllowAny])
 def conf(request,name_interface):
-    interfaceObject = Interface.objects.get(name_interface=name_interface)
-    id_interface = interfaceObject.id
     msg = ""
+    list_metric = []
     if (request.method == 'PUT'):
         interfaceObject = Interface.objects.get(name_interface=name_interface)
         id_interface = interfaceObject.id
@@ -70,6 +69,7 @@ def conf(request,name_interface):
                          #call function to convert address to None
                         commandes,output_service,cmd_final_ipv4=update_conn_None_IPV4(output_service,ifname)
                     case "static":
+                        typeDHCP4=''
                         # addmac = data.get('addmac')
                         addmac = None
                         ip_address4 = data.get('value_setup_Ipv4')['ip_address4']
@@ -175,19 +175,10 @@ def conf(request,name_interface):
                     #     commandesIPV6,output_service,cmd_final_ipv6=update_conn_dhcp_ipv6(output_service,ifname)
                                 #clean list of cmd to block address
                 
-                print('changes ip4 in DB /*********************/')
-                update_DB(id_interface,jsonIPV4,IP4Config,IP4ConfigSerializer)
-                print('/*********************/')
-                 #update changes in DB ip9
-                # print('changes ip6 in DB /*********************/')
-                # update_DB(id,data,IP6Config,IP6ConfigSerializer)
-                print('/*********************/')
+                
                 ##for generic config 
                 cmds=[]       
                 cmds,output_service,cmd_final_Gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuV,mssV)
-                #update changes in DB generic config
-                print('changes in DB generic config/*********************/')
-                update_DB(id_interface,data,GenericConfig,GenericConfigSerializer)
                 ##blocages des adresses
                 cmdsBlock=[]
                 configs=[]
@@ -201,18 +192,8 @@ def conf(request,name_interface):
                 output_service = add_cmd(output_service,commandes)
                 #ajouter au liste des commandes finales à executer (ssh.exec_command) 
                 commandes_final+=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_Gen+cmd_final_Block
-                print({"trah":commandes_final})
-    for cmd in commandes_final:
-        stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-        error = stderr.read().decode('utf-8')
-        output = stdout.read().decode('utf-8').split('\n')
+                cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 
-        if error:
-            msg=error,"    :"+cmd
-            # break
-        else:
-            print("service created successufully!!",cmd) 
-    stdin, stdout, stderr = ssh.exec_command("""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 {}
 EOF""".format('\n'.join(output_service))
                 # print("1111",run_all_commands(commandes_final,setuptypeIP4,typeDHCP4))

@@ -88,6 +88,13 @@ def lan_page(request):
     return render(request, 'lan_page.html',context)
 
 @login_required(login_url='/')
+def firewall_page(request):
+    return render(request, 'firewall_page.html')
+    firewall=getNetworkData(request)
+    context = {'firewall':firewall}
+    return render(request, 'firewall_page.html',context)
+
+@login_required(login_url='/')
 def settings_page(request):
     return render(request, 'settings_page.html')
 

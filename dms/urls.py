@@ -26,6 +26,7 @@ urlpatterns = [
     path('dashboard/', index_page),
     path('userCertifMang/', user_certificate_managment_page),
     path('lan/', lan_page),
+    path('firewall/rules', firewall_page),
     path('settings/', settings_page),
     path('openvpn/', openvpn_page),
     path('', include('tasks.urls')),

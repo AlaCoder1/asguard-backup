@@ -7,7 +7,6 @@ import random
 
 def sudo(cmd):
     return "sudo "+cmd
-
 class Command(BaseCommand):
     def add_arguments(self, parser):
         # Optional argument
@@ -27,6 +26,7 @@ class Command(BaseCommand):
                 ssh.connect(settings.SSH_HOST, username=name,
                             password=pw, port=settings.SSH_PORT)
                 return ssh
+            ssh = connect_ssh()
             liste_interfaces =[]
             cmd1="ip route list | grep default | cut -d ' ' -f 3-5"
             stdin1, stdout1, stderr1 = ssh.exec_command(cmd1)
@@ -38,7 +38,8 @@ class Command(BaseCommand):
             for i in output_getway_interface:
                 liste_interfaces.append(i.split(' ')[2])
             server_path = "/etc/ConfigInterfaces"
-            ssh = connect_ssh()
+            print({"liste_interfaces":liste_interfaces})
+            
             # Open an SFTP session
             sftp = ssh.open_sftp()
 
@@ -55,6 +56,7 @@ class Command(BaseCommand):
                 #content
                 content+="{}: {} \n".format(i,random_element)
             # Write content to the remote file
+            print({"content":content})
             remote_file.write(content)
 
             # Close the remote file
@@ -67,29 +69,20 @@ class Command(BaseCommand):
             if stderr.read().decode('utf-8') == '':
                 lines = stdout.read().decode('utf-8').split('\n')
                 lines.pop()
+                print({"lines":lines})
                 for i in range(0,len(lines)):
+                    
                     # Check if an object with the same ifname exists
-                    existing_interface = Interface.objects.filter(ifname=lines[i].split(':')[0]).first()
+                    existing_interface = Interface.objects.filter(ifname=lines[i].split(':')[0]).exists()
+                    print(existing_interface)
                     # print({"loul":lines[i].split(':')[0],"thani":lines[i].split(':')[1].strip()})
                     if existing_interface:
                         pass
                     else:
                         Interface.objects.create(ifname=lines[i].split(':')[0],name_interface=lines[i].split(':')[1].strip())
                         return "ALL Interfaces from ConfigInterfaces added succesffuly"
+                    
             else:
-                return "erreur: "+stderr.read().decode('utf-8')            # Gateway_Interface = GateWayInterface(gateway=i.split(' ')[0],interface=i.split(' ')[2])
-            # # Gateway_Interface.save()
-            # cmd = f"cat {server_path}"
-            # stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
-            # if stderr.read().decode('utf-8') == '':
-            #     lines = stdout.read().decode('utf-8').split('\n')
-            #     lines.pop(0)
-            #     lines.pop()
-            #     for i in range(0,len(lines)):
-            #         # print({"loul":lines[i].split(':')[0],"thani":lines[i].split(':')[1].strip()})
-            #         Interface.objects.create(ifname=lines[i].split(':')[0],name_interface=lines[i].split(':')[1].strip())
-            #     return "ALL Interfaces from ConfigInterfaces added succesffuly"
-            # else:
-            #     return "erreur: "+stderr.read().decode('utf-8')
+                return "erreur: "+stderr.read().decode('utf-8')           
         except IntegrityError as e:
             return "Error: " + str(e)

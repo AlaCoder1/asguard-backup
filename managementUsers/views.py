@@ -2,6 +2,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from .models import *
+from django.views.decorators.csrf import csrf_protect
+
 from .serializers import *
 from managementGroup.serializers import *
 from managementGroup.views import *
@@ -10,7 +12,7 @@ from .remoteFunctions import *
 import json
 from rest_framework.parsers import JSONParser
 from django.core import serializers
-from authentification.authentication import JWTAuthentication
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.hashers import make_password
@@ -22,7 +24,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 
 @api_view(['GET'])
-@permission_classes([])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getAllUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -42,7 +45,8 @@ def getAllUsers(request):
 
 # API to get one user
 @api_view(['GET'])
-@permission_classes([])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getUser(request, id):
     if (request.method == 'GET'):
         user = User.objects.filter(id=id)
@@ -62,7 +66,8 @@ def getUser(request, id):
 
 
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def createUser(request):
     msg = ''
     if (request.method == 'POST'):
@@ -71,7 +76,7 @@ def createUser(request):
                 # test index of feature by plan e.g 1,2 index of management users in our BD
                 if if_subscribed([1]):
                     # parse the incoming information
-                    data = JSONParser().parse(request)
+                    data = request.data
                     username = data['username']
                     password = data['password']
                     organisation = organization.objects.get(id=1)
@@ -157,8 +162,8 @@ def createUser(request):
 
 # API to delete group
 @api_view(['DELETE'])
-@permission_classes([AllowAny])
-# @login_required
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def delete_user(request, id):
     msg = ""
     if (request.method == 'DELETE'):
@@ -180,7 +185,8 @@ def delete_user(request, id):
 
 # API to update user
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def modifyUser(request, id):
     if (request.method == 'PUT'):
         userById = User.objects.filter(id=id)
@@ -193,7 +199,7 @@ def modifyUser(request, id):
         res[0]['fields']['id'] = id
         userJson = res[0]['fields']
         oldusername = userJson['username']
-        data = json.loads(request.body)
+        data = request.data
         newusername = data['username']
         newfullname = data['fullname']
         newmail = data['email']
@@ -249,12 +255,13 @@ def modifyUser(request, id):
 
 
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def changePasswordByAdmin(request, id):
     if (request.method == 'PUT'):
         userObject = User.objects.get(id=id)
         print({'username': userObject.username})
-        data = json.loads(request.body)
+        data = request.data
         # instanciate with the serializer
         serializer = UserSerializerGet()
         # current_password = data['current_password']
@@ -278,7 +285,8 @@ def changePasswordByAdmin(request, id):
 
 
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def changePassword(request, id):
     msg = ""
     if (request.method == 'PUT'):
@@ -289,7 +297,7 @@ def changePassword(request, id):
             # print({'username': userObject.username})
             # print({'vérifier': userObject.is_verified})
             # print({'password': userObject.password})
-            data = json.loads(request.body)
+            data = request.data
             current_password = data['current_password']
             new_password = data['new_password']
             confirm_password = data['confirm_password']
@@ -323,12 +331,13 @@ def changePassword(request, id):
 
 # API de create permission
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def addPermission(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # instanciate with the serializer
         name = data['name']
         context = data['context']

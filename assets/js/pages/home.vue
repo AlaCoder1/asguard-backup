@@ -71,7 +71,7 @@ export default {
         GroupManagement,
         CertificatsManagement,
     },
-
+    computed: {},
     data() {
         return {
             tab: null,
@@ -86,19 +86,12 @@ export default {
                 .replace(/True/g, 'true')
                 .replace(/False/g, 'false')
                 .replace(/None/g, 'null');
-
             const parsedArray = JSON.parse(validJsonString);
-
             this.data = parsedArray;
         },
-        // ... other methods
     },
     beforeMount: async function () {
-        console.log("suii mounted :" + JSON.stringify(this.$root.$data.tab));
-
         this.setData();
-
-        console.log("data mounted :" + JSON.stringify(this.data));
     }
 };
 </script>

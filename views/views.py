@@ -62,7 +62,7 @@ def getServers(request):
             res[i]['fields']['type_name'] = type.type_name
             list_servers.append(res[i]['fields'])
         return list_servers
-# @login_required(login_url='/')
+@login_required(login_url='/')
 def index_page(request):
     usr=getUsers(request)
     grp=getGroups(request)
@@ -71,6 +71,7 @@ def index_page(request):
     print(context)
     return render(request, 'index_page.html',context)
 
+@login_required(login_url='/')
 def user_certificate_managment_page(request):
     usr=getUsers(request)
     grp=getGroups(request)
@@ -79,15 +80,18 @@ def user_certificate_managment_page(request):
     print(context)
     return render(request, 'user_certificate_managment.html',context)
 
-# @login_required(login_url='/')
+@login_required(login_url='/')
 def lan_page(request):
     return render(request, 'lan_page.html')
+    lan=getNetworkData(request)
+    context = {'lan':lan}
+    return render(request, 'lan_page.html',context)
 
-# @login_required(login_url='/')
+@login_required(login_url='/')
 def settings_page(request):
     return render(request, 'settings_page.html')
 
-# @login_required(login_url='/')
+@login_required(login_url='/')
 def openvpn_page(request):
     return render(request, 'openvpn_page.html')
 

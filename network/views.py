@@ -4,6 +4,8 @@ from .models import *
 from settings.serializers import *
 from rest_framework.parsers import JSONParser
 import json
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.core import serializers
 from authentification.views import *
 from .functions import *
@@ -21,6 +23,9 @@ def conf(request,name_interface):
     id_interface = interfaceObject.id
     msg = ""
     if (request.method == 'PUT'):
+        interfaceObject = Interface.objects.get(name_interface=name_interface)
+        id_interface = interfaceObject.id
+        print("id_interface",id_interface)
         #get object of interface type
         deviceInfo = device_nameInterface(name_interface)
         print({"ifname":deviceInfo.ifname})
@@ -45,10 +50,10 @@ def conf(request,name_interface):
         commandesIPV6=[]
         cmd_final_ipv6=[]
         cmd_final_ipv4=[]
+
         ##get old configuration in service
         output_service,error=get_old_config()
         if error:
-            print("error ",error)
             msg=error
         else:
             if len(output_service)!=0:
@@ -56,6 +61,8 @@ def conf(request,name_interface):
                 output_service = [x for x in output_service if x]
                 ##add requirement service
                 output_service=add_requirement(ifname,output_service)
+                ###set gatewayObject to None
+                GatewayObject=None
                 ##IPV4 configuration cases 
                 match setuptypeIP4:
                     case "None":
@@ -67,9 +74,28 @@ def conf(request,name_interface):
                         addmac = None
                         ip_address4 = data.get('value_setup_Ipv4')['ip_address4']
                         netmask4 = data.get('value_setup_Ipv4')['netmask4']
+                        gateway4=data.get('value_setup_Ipv4')['gateway4']
+                        print({"gateway": gateway4['value']})
+                        GatewayObject = Gateway.objects.get(gwaddress=gateway4['value'])
+                        print({"IdGateway":GatewayObject.id})
+                        default_aux=GatewayObject.default_aux
+                        far_aux=GatewayObject.far_aux
+                        multiWan_aux=GatewayObject.multiwan_aux
+                        multiWan_aux=GatewayObject.multiwan_aux
+                        addrgw=GatewayObject.gwaddress
+                        metric=0
+                        allGatewayInterface = GatewayInterface.objects.all()
+                        if multiWan_aux:
+                            for i in allGatewayInterface:
+                                list_metric.append(i.metric)
+                            metric=differentMetric(list_metric)
+                            print("metric==",metric)
+
+                        cmdgw=return_Gateway_system(ifname,addrgw,far_aux,multiWan_aux,metric)
+                        addGatewayInterfaceDB(GatewayObject,name_interface,metric)
                         #gateway ??????????
                         #call function to convert address to static
-                        commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,ip_address4,netmask4)
+                        commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,ip_address4,netmask4,cmdgw)
                         jsonIPV4={
                     "nameInterface":nameInterface,"ifname":ifname,
                     "ip_address":ip_address4,"netmask":netmask4,
@@ -82,6 +108,8 @@ def conf(request,name_interface):
                             alias_mask = data.get('value_setup_Ipv4')['alias_mask']
                             reject = data.get('value_setup_Ipv4')['reject']
                             hostname = data.get('value_setup_Ipv4')['hostname']
+                            #call function to convert mask format to bits
+                            alias_mask=convert_to_subnet_mask(alias_mask)
                             #contenu de dhclient.conf dhcp Base
                             configContenu=return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask)
                             jsonIPV4={
@@ -106,6 +134,8 @@ def conf(request,name_interface):
                             require = data.get('value_setup_Ipv4')['require']
                             supersede_domaine_name = data.get('value_setup_Ipv4')['supersede_domaine_name']
                             prepend_domain_server = data.get('value_setup_Ipv4')['prepend_domain_server']
+                            #call function to convert mask format to bits
+                            alias_mask=convert_to_subnet_mask(alias_mask)
                         #contenu de dhclient.conf dhcp advanced
                             configContenu=return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,send_options_dhcp_client,supersede_domaine_name,prepend_domain_server,send_options_lease_time,request,require)
                             jsonIPV4={
@@ -143,8 +173,7 @@ def conf(request,name_interface):
                     #     commandes_final+=create_file_ipv6(ifname,configContenu)
                     #     #call function to convert address to dhcp advanced /Base  in service
                     #     commandesIPV6,output_service,cmd_final_ipv6=update_conn_dhcp_ipv6(output_service,ifname)
-                        
-                #update changes in DB ip4
+                                #clean list of cmd to block address
                 
                 print('changes ip4 in DB /*********************/')
                 update_DB(id_interface,jsonIPV4,IP4Config,IP4ConfigSerializer)
@@ -164,9 +193,6 @@ def conf(request,name_interface):
                 configs=[]
                 #call function to block address
                 configs,cmdsBlock,output_service,cmd_final_Block=block_address_commandes(output_service,ifname,bogon_aux,private_aux)
-                #update changes in DB interface config
-                print('changes interface config in DB /*********************/')
-                update_interface_table(name_interface,data,InterfaceSerializer)
                 #clean list of cmd to block address
                 cmdsBlock = [x for x in cmdsBlock if x not in output_service]
                 #contenu final des cmds pour lancer le service (execStart)
@@ -188,11 +214,34 @@ def conf(request,name_interface):
             print("service created successufully!!",cmd) 
     stdin, stdout, stderr = ssh.exec_command("""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 {}
-EOF""".format('\n'.join(output_service)),
-            )
-    print({"error":stderr.read().decode('utf-8')})
-    
-    return JsonResponse({"commandes_finals:": commandes_final})
+EOF""".format('\n'.join(output_service))
+                # print("1111",run_all_commands(commandes_final,setuptypeIP4,typeDHCP4))
+                if run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,5):
+                    stdin, stdout, stderr = ssh.exec_command(cmd_asguard)  
+                    if not (stderr.read().decode('utf-8')):
+                        if setuptypeIP4=="dhcp":
+                            ##function to get gateway if typeIPV4 est DHCP Base or Advanced
+                            gwaddr=get_gateway_dhcp(ifname,ssh)
+                            if gwaddr is not None:
+                                GatewayObject = Gateway.objects.get(gwaddress=gwaddr)
+                                metric=0 
+                                addGatewayInterfaceDB(GatewayObject,name_interface,metric)
+                        #update changes in DB ip4
+                        aux_ipv4=update_DB(id_interface,jsonIPV4,IP4Config,IP4ConfigSerializer)
+                        #update changes in DB ip6
+                        # update_DB(id,data,IP6Config,IP6ConfigSerializer)
+                        #update changes in DB generic config
+                        aux_gen=update_DB(id_interface,data,GenericConfig,GenericConfigSerializer)
+                        #update changes in DB interface config
+                        aux_inter=update_interface_table(name_interface,data,InterfaceSerializer)
+                        print(aux_ipv4 and aux_gen and aux_inter)
+                        if aux_ipv4 and aux_gen and aux_inter:
+                            msg="Your interface {} was configured Successfully!!".format(name_interface)
+
+                
+
+        
+    return JsonResponse({"Message:": msg})
 
 ##API to delete config 
 ###########################

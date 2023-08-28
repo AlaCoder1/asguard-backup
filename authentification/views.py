@@ -1,6 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from .authentication import JWTAuthentication
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate, login, logout
@@ -79,6 +79,8 @@ def authentification(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
+#@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def logout_view(request):
     # username = request.user.username
     print({"logout": logout(request)})

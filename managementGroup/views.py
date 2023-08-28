@@ -4,6 +4,7 @@ from .models import *
 from .serializers import *
 import json
 from rest_framework.parsers import JSONParser
+from rest_framework.authentication import SessionAuthentication
 from .functions import *
 from .remoteFunctions import *
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -15,7 +16,8 @@ from django.core import serializers
 
 # API to get all groups
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getAllGroups(request):
     list_group = []
     if (request.method == 'GET'):
@@ -35,7 +37,8 @@ def getAllGroups(request):
 
 # API to get one group
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getGroup(request, id):
     if (request.method == 'GET'):
         group = Group.objects.get(id=id)
@@ -47,12 +50,13 @@ def getGroup(request, id):
 
 # API to create group
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def createGroup(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         groupname = data['groupname']
         if (validInput(groupname)):
             # Execute the command on the remote machine
@@ -82,7 +86,8 @@ def createGroup(request):
 
 # API to delete group
 @api_view(['DELETE'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def deleteGroup(request, id):
     msg = ''
     if (request.method == 'DELETE'):
@@ -109,14 +114,15 @@ def updateGroup(request, id):
 
 
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def changeGroupname(request, id):
     msg = ''
     if (request.method == 'PUT'):
         group = Group.objects.get(id=id)
         groupDict = group.__dict__
         # parse the incoming information
-        data = json.loads(request.body)
+        data = request.data
         oldgroupname = groupDict['groupname']
         Newgroupname = data['Newgroupname']
         if validInput(Newgroupname):

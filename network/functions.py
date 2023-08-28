@@ -2,15 +2,32 @@ from .models import *
 from authentification.views import *
 from network.address import *
 ####background task to execute it 
-from background_task import background
 from django.conf import settings
-import subprocess
 import re
+import time
+import threading
+from .models import *
+from gateway.models import *
+from gateway.serializers import *
 ###############################################################
 ####update in Database functions
+###function to add gateway to interface in DB
+def addGatewayInterfaceDB(GatewayObject,name_interface,metric):
+    id_interface = Interface.objects.get(name_interface=name_interface).id
+    if GatewayInterface.objects.filter(interface=id_interface).exists():
+        id_GatewayInterface = GatewayInterface.objects.get(interface=id_interface).id
+        gatewayInterface = GatewayInterface.objects.get(id=id_GatewayInterface)
+        gatewayInterface.gateway = Gateway.objects.get(id=GatewayObject.id)  
+    else:
+        gatewayInterface = GatewayInterface()
+        gatewayInterface.gateway=Gateway.objects.get(id=GatewayObject.id)
+        gatewayInterface.interface=Interface.objects.get(name_interface=name_interface)
+    gatewayInterface.metric=metric    
+    gatewayInterface.save()
 #function to update config tables
 def update_DB(id,data,model,IP4serializer):
     data['interface']=id
+    print({'id in update':id})
     if model.objects.filter(interface_id=id).exists():
         objectConfig=model.objects.get(interface_id=id)
         # Set all attributes to None
@@ -19,12 +36,12 @@ def update_DB(id,data,model,IP4serializer):
                 setattr(objectConfig, field.attname, None)
         setattr(objectConfig, 'updated_by', settings.CurrentUserId)
         serializerIP4Config = IP4serializer(objectConfig,data=data)
-        print(data)
     else:
         serializerIP4Config = IP4serializer(data=data)
-    print(serializerIP4Config.is_valid())
     if (serializerIP4Config.is_valid()):
         serializerIP4Config.save()
+        return True
+    return False
 
 #function to update interface tables  
 def update_interface_table(name_interface,data,InterfaceSerializer):
@@ -35,7 +52,9 @@ def update_interface_table(name_interface,data,InterfaceSerializer):
             setattr(objectConfig, field.attname, None)
     serializerInterface= InterfaceSerializer(objectConfig,data=data)
     if serializerInterface.is_valid():
-            serializerInterface.save()      
+            serializerInterface.save()     
+            return True
+    return False 
 ############################################################  
 ##get old configuration in service
 def get_old_config():
@@ -62,9 +81,53 @@ def add_cmd(output,commandes):
     
     output = output[:index_cmd] + commandes + output[index_cmd:]
     return output
-###################
-###################    
+################################# Function to execute command with timeout
+def run_command(ssh_client, command):
+    stdin, stdout, stderr = ssh_client.exec_command(command)
+    output = stdout.read().decode('utf-8')
+    error = stderr.read().decode('utf-8')
+    return output, error
 
+def run_remote_command_with_timeout(type, typeDHCP4, ssh_client, command, timeout_seconds):
+    def run_command_thread():
+        nonlocal output, error
+        output, error = run_command(ssh_client, command)
+
+    start_time = time.time()
+    output = None
+    error = None
+
+    command_thread = threading.Thread(target=run_command_thread)
+    command_thread.start()
+    command_thread.join(timeout=timeout_seconds)
+    elapsed_time = time.time() - start_time
+
+    # Create a new instance of your model
+    new_entry = tempsExucution(type=type, cmd=command, temps=elapsed_time)
+    # Save the instance to the database
+    new_entry.save()
+    if  (command.find("sudo dhclient")==-1) and error:
+        print("error::::",error)
+        return False
+    elif command_thread.is_alive():
+        print(f"Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}")
+        stdin, stdout, stderr = ssh_client.exec_command('\x03')
+        print("Ctrl+C sent.")
+        return False
+        
+    else:
+        print(f"Command not too long ({elapsed_time:.2f} seconds). {command}")
+        return True
+        
+#function to run all commandes
+def run_all_commands(commandes,setuptypeIP4,typeDHCP4,timeout):
+    for cmd in commandes:
+        if not run_remote_command_with_timeout(setuptypeIP4,typeDHCP4,ssh, cmd, timeout) :
+            return False
+    return True
+
+#################################
+###################
 ##désactiver interface dans le système
 def desactiver_interface_remote(ifname,output):
     #la liste des commandes pour la désactivation de l'interface dans Asguard Service
@@ -80,6 +143,7 @@ def desactiver_interface_remote(ifname,output):
     #la liste des commandes à executer pour désactiver l'interface
     cmd_final=[ 
         "sudo sed -i '/{}/d' /etc/systemd/system/Asguard-Networking.service".format(ifname),
+        "sudo sed -i '/{}/d' /etc/ConfigInterfaces".format(ifname),
         "sudo ip addr flush dev {}".format(ifname),
         "sudo ip link set dev {} down".format(ifname),
         """sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
@@ -96,7 +160,7 @@ EOF""".format('\n'.join(output))
             print({"msg":msg})
             return False
     return True
-    
+
     # return commands,cmd_final
    
         
@@ -131,67 +195,143 @@ def update_conn_None_IPV4(config,ifname):
         "sudo ip addr flush dev {}".format(ifname),]
     return commands,config,cmd_final
 ################### Static 
-     
+
+### get different metric
+def differentMetric(exclude_list):
+    if exclude_list ==[]:
+        exclude_list = [0]
+        
+    num_start = min(exclude_list)+1
+    while num_start < max(exclude_list):
+        if num_start in exclude_list:
+            num_start+=1
+        else:
+            return num_start
+    return max(exclude_list)+1
+
+def return_Gateway_system(ifname,addrgw,far_aux,multiWan_aux,metric):
+    cmd="sudo ip route add default via {} dev {} proto static".format(addrgw,ifname)
+    ##test multiwan is true
+    if multiWan_aux:
+        cmd+=" metric {}".format(metric)
+    if far_aux :
+        cmd+=" onlink"
+    return cmd
+  
 # convert  to static connexion 
-def update_conn_static_IPV4(config,ifname,ip_address,netmask):
+def update_conn_static_IPV4(config,ifname,ip_address,netmask,cmdgw):
+    print("cmdgw",cmdgw)
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
     commands=[
          "#Start IP4Config {}".format(ifname),
-        "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
+        "ExecStart=/usr/bin/ifconfig {} 0.0.0.0".format(ifname),
         "ExecStart=/usr/bin/ip addr add {}/{} dev {}".format(ip_address,netmask,ifname),
+        "ExecStart=/usr/bin/{}".format(cmdgw),
          "#End IP4Config {}".format(ifname)
     ]
     cmd_final=[ 
-        "sudo ip addr flush dev {}".format(ifname),
+        "sudo ifconfig {} 0.0.0.0".format(ifname),
         "sudo ip addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
+    cmd_final.append(cmdgw)
     return commands,config,cmd_final
+
 ################### Dhcp
+####function to get gateway if typeIPV4 est DHCP Base or Advanced
+def get_gateway_dhcp(ifname,ssh_client):
+    command="ip route list | grep {} | cut -d ' ' -f 3-".format(ifname)
+    output,error=run_command(ssh_client, command)
+    if error or len(output)==0:
+        gwaddr=None
+    else:
+        gwaddr=output.split()[0]
+    return gwaddr
+
+### function to add gateway to database
+def add_gateway_dhcp(gwaddr,ifname):
+    data={ "gwname":"{}_DHCP".format(ifname),
+    "gwaddress":"{}".format(gwaddr),}
+    Gatewayerializer = GatewaySerializer(data=data)
+    if Gatewayerializer.is_valid():
+        Gatewayerializer.save()
+        return True
+    return False           
+####function to convert_to_subnet_mask 
+def convert_to_subnet_mask(bits):
+    cidr_bits = int(bits)
+    if cidr_bits < 0 or cidr_bits > 32:
+        return "Invalid CIDR bits"
+    
+    binary_mask = "1" * cidr_bits + "0" * (32 - cidr_bits)
+    subnet_mask = ".".join([str(int(binary_mask[i:i+8], 2)) for i in range(0, 32, 8)])
+    return subnet_mask
+################
 ###return base config
 def return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask):
+    configContenu=[]
     #contenu de fichier dhclient.conf "config base"
-    configContenu=[
-        'reject {};'.format(reject),
-        'interface "{}"'.format(ifname),
+    if reject is not None:
+        configContenu.append('reject {};'.format(reject))
+    if hostname is not None:
+        configContenu+=['interface "{}"'.format(ifname),
             '{',
         'send host-name "{}";'.format(hostname),
-        '}',
-        'alias {',
+        '}']
+    if alias_add is not None and alias_mask is not None:
+         configContenu+=[ 'alias {',
         'interface "{}";'.format(ifname),
         'fixed-address {};'.format(alias_add),
         'option subnet-mask {};'.format(alias_mask),
-        '}',
-                        ]
+        '}',]
+        
     return configContenu
 
 ###return advanced config
 def return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require):
     #contenu de fichier dhclient.conf "config advanced"
-    configContenu=[
-        'timeout {};'.format(timeout),
-        'retry {};'.format(retry),
-        'reboot {};'.format(reboot),
-        'backoff-cutoff {};'.format(backoff),
-        'select-timeout {};'.format(select_timeout),
-        'initial-interval {};'.format(initial_interval),
-            'reject {};'.format(reject),
-            'interface "{}"'.format(ifname),
-                '{',
-        'send host-name "{}";'.format(hostname),
-        'send dhcp-client-identifier {};'.format(dhcp_client),
-        'supersede domain-name "{}";'.format(domaine_name),
-        'prepend domain-name-servers {};'.format(domain_server),
-        'send dhcp-lease-time {};'.format(lease_time),
-        ' request {};'.format(request),
-            'require {};'.format(require),
-            '}',
-        'alias {',
-        'interface "{}";'.format(ifname),
-        'fixed-address {};'.format(alias_add),
-        'option subnet-mask {};'.format(alias_mask),
-        '}'
-                                        ]
+    config_settings = [
+    (timeout, 'timeout {};'),
+    (retry, 'retry {};'),
+    (reboot, 'reboot {};'),
+    (backoff, 'backoff-cutoff {};'),
+    (select_timeout, 'select-timeout {};'),
+    (initial_interval, 'initial-interval {};'),
+    (reject, 'reject {};')
+    ]
+
+    configContenu = []
+    for value, config_format in config_settings:
+        if value is not None:
+            configContenu.append(config_format.format(value))
+    variables_to_check = [hostname, dhcp_client, domaine_name, domain_server, lease_time, request, require]
+
+    if any(variable is not None for variable in variables_to_check):
+        configContenu+=['interface "{}"'.format(ifname),
+                '{',]
+        if hostname is not None:
+            configContenu.append('send host-name "{}";'.format(hostname))
+        if dhcp_client is not None:
+            configContenu.append('send dhcp-client-identifier {};'.format(dhcp_client))
+        if domaine_name is not None:
+            configContenu.append('supersede domain-name "{}";'.format(domaine_name)) 
+        if  domain_server is not None:
+            configContenu.append( 'prepend domain-name-servers {};'.format(domain_server)) 
+        if lease_time is not None:
+            configContenu.append( 'send dhcp-lease-time {};'.format(lease_time)) 
+        if request is not None:
+            configContenu.append( ' request {};'.format(request)) 
+        if require is not None:
+            configContenu.append( 'require {};'.format(require)) 
+        configContenu.append("}")    
+    if alias_add is not None and alias_mask is not None:
+        configContenu+=[ 'alias {',
+    'interface "{}";'.format(ifname),
+    'fixed-address {};'.format(alias_add),
+    'option subnet-mask {};'.format(alias_mask),
+    '}',]        
+         
+ 
     return configContenu
 
 ####create file
@@ -210,12 +350,13 @@ def update_conn_dhcp_IPV4(config,ifname):
     commandes=[
      "#Start IP4Config {}".format(ifname),   
      "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
-    "ExecStart=/usr/bin/dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf {}".format(ifname,ifname),
+     "ExecStart=/usr/bin/dhclient -4 -cf  /etc/Dhcp4Config/{}/dhclient.conf -d {} ".format(ifname,ifname),
      "#End IP4Config {}".format(ifname)
     ]
     cmd_final=[
-    "sudo ip addr flush dev {}".format(ifname),
-    "sudo dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf {}".format(ifname,ifname),
+  
+    "sudo ifconfig {} 0.0.0.0".format(ifname),
+    "sudo dhclient -v  -1 -cf  /etc/Dhcp4Config/{}/dhclient.conf {} ".format(ifname,ifname,ifname),
     ]
     
     return commandes,config,cmd_final
@@ -525,3 +666,5 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
    
     
     return configuration,commandes,config,cmd_final
+
+

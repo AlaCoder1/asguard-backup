@@ -4,6 +4,7 @@ from .models import *
 from settings.serializers import *
 from rest_framework.parsers import JSONParser
 import json
+from rest_framework.authentication import SessionAuthentication
 from django.core import serializers
 from authentification.views import *
 from network.address import *
@@ -11,7 +12,8 @@ from .functions import *
 from django.core import serializers
 # Create your views here.
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def GetAllRules(request):
     if (request.method == 'GET'):
         rules = Rule.objects.all()
@@ -20,7 +22,8 @@ def GetAllRules(request):
         return JsonResponse({"Rules:": resRules})
       
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def GetRulesByInterface(request,id):
     if (request.method == 'GET'):
         rules= Rule.objects.filter(interface_id=id)
@@ -30,14 +33,15 @@ def GetRulesByInterface(request,id):
         return JsonResponse({"Rules:": resRules})
             
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def addRule(request,id):
     if (request.method == 'POST'):
         #get object of interface type
         interfaceObject= Interface.objects.get(id=id)
         #get interface name to execute command systeme
         ifname=interfaceObject.ifname
-        data = JSONParser().parse(request)
+        data = request.data
         policy=data.get('policy', None)
         saddr = data.get('saddr', None)
         daddr = data.get('daddr', None)
@@ -66,7 +70,8 @@ def addRule(request,id):
         return JsonResponse({"msg:": msg})
 
 @api_view(['DELETE'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 ###function to delete rule
 # def deleteRule(request,idInter,id):
 def deleteRule(request,id):
@@ -92,11 +97,12 @@ def deleteRule(request,id):
         return JsonResponse({"msg": msg})
     
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 ###function to delete rule
 def updateRule(request,id):
       if (request.method == 'PUT'):
-        data = JSONParser().parse(request)
+        data = request.data
         policy=data.get('policy', None)
         saddr = data.get('saddr', None)
         daddr = data.get('daddr', None)

@@ -54,7 +54,8 @@ INSTALLED_APPS = [
     "network",
     "openvpn",
     "ipsec",
-    "rules"
+    "rules",
+    "gateway"
 ]
 
 MIDDLEWARE = [

@@ -69,7 +69,7 @@ def createSystem(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # instanciate with the serializer
         serializerSystem = SystemSerializer(data=data)
         # check if the sent information is okay
@@ -91,7 +91,7 @@ def createNetwork(request):
     liste_getway =[]
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # instanciate with the serializer
         serializerNetwork = NetworkSerializer(data=data)
         # check if the sent information is okay
@@ -137,7 +137,7 @@ def createServerReseau(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # instanciate with the serializer
         serializerServerReseau = ServerReseauSerializer(data=data)
         # check if the sent information is okay
@@ -194,7 +194,7 @@ def sys(request):
 @csrf_exempt
 def updateHostname(request):
     msg=""
-    data = JSONParser().parse(request)
+    data = request.data
     # Prompt the user for the new domain name
 
     # Update the hosts file
@@ -265,7 +265,7 @@ def configure_network(interface, ip_address, netmask, gateway, dns_servers):
             
 @csrf_exempt
 def configurationNetwork(request):
-    data = JSONParser().parse(request)
+    data = request.data
     configure_network(data['interface'], data['ip_address'], data['netmask'], data['gateway'], data['dns_servers'])
     return JsonResponse({"hostname": "domain"}, status=201) 
 
@@ -276,7 +276,7 @@ def getAddressByInterface(interface):
 
 @csrf_exempt
 def getInterface(request):
-    data = JSONParser().parse(request)
+    data = request.data
     
     result = getAddressByInterface(data['interface'])
     if result.returncode == 0:
@@ -292,7 +292,7 @@ def delete_address(ip_address,interface):
         
 @csrf_exempt
 def deleteAddress(request):
-    data = JSONParser().parse(request)
+    data = request.data
     a=delete_address(data['ip_address'],data['interface'])
     return JsonResponse({"address": "address"}, status=201) 
 

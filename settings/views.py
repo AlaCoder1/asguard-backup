@@ -1,5 +1,8 @@
 from django.shortcuts import render
 from django.http import JsonResponse
+
+from managementGroup.remoteFunctions import sudo
+from network.models import Interface
 from .models import *
 from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
@@ -10,14 +13,19 @@ from authentification.views import *
 import socket
 import datetime
 import subprocess
+import random
 # Create your views here.
 
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def Settings(request,id):
     return JsonResponse(getSystem(request, id))
 
 
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getSystem(request, id):
     if (request.method == 'GET'):
         system = System.objects.filter(id=id)
@@ -32,7 +40,9 @@ def getSystem(request, id):
         return JsonResponse(systemJson)
 
 
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getNetwork(request, id):
     if (request.method == 'GET'):
         network = Network.objects.filter(id=id)
@@ -47,7 +57,9 @@ def getNetwork(request, id):
         return JsonResponse(networkJson)
 
 
-@csrf_exempt
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getServerReseau(request, id):
     if (request.method == 'GET'):
         serverReseau = ServerReseau.objects.filter(id=id)
@@ -62,12 +74,14 @@ def getServerReseau(request, id):
         return JsonResponse(serverReseauJson)
 
 
-@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def createSystem(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # instanciate with the serializer
         serializerSystem = SystemSerializer(data=data)
         # check if the sent information is okay
@@ -85,12 +99,14 @@ def createSystem(request):
 
 
 
-@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def createServerReseau(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # instanciate with the serializer
         serializerServerReseau = ServerReseauSerializer(data=data)
         # check if the sent information is okay
@@ -144,8 +160,10 @@ def sys(request):
 
 
 ############################################   gateway and Interface ############################################################
-def InsertGateway():
+@csrf_exempt
+def InsertInterface(request):
     liste_getway =[]
+    liste_interfaces =[]
     cmd1="ip route list | grep default | cut -d ' ' -f 3-5"
     stdin1, stdout1, stderr1 = ssh.exec_command(cmd1)
     print({'stderr1':stderr1.read().decode('utf-8')})
@@ -155,10 +173,51 @@ def InsertGateway():
     print({'len_output_getway_interface':len(output_getway_interface)})
     for i in output_getway_interface:
         liste_getway.append(i.split(' ')[0])
-        Gateway_Interface = GateWayInterface(gateway=i.split(' ')[0],interface=i.split(' ')[2])
-        Gateway_Interface.save()
+        liste_interfaces.append(i.split(' ')[2])
+    file_path = "/etc/ConfigInterfaces"
+    # Open an SFTP session
+    sftp = ssh.open_sftp()
+
+    # Open the remote file in write mode
+    remote_file = sftp.open(file_path, 'w')
+    list_LAN_WAN = ['LAN', 'WAN', "LAN1", "WAN1"]
+    content=""
+    num_elements_to_select=len(liste_interfaces)
+    print({"num_elements_to_select":num_elements_to_select})
+    for i in liste_interfaces:
+        if num_elements_to_select <= len(list_LAN_WAN):
+            random_element = random.choice(list_LAN_WAN)
+            print({"random_element":random_element})
+        #content
+        content+="{}: {} \n".format(i,random_element)
+    # Write content to the remote file
+    remote_file.write(content)
+
+    # Close the remote file
+    remote_file.close()
+
+    # Close the SFTP session
+    sftp.close()
+    cmd = f"cat {file_path}"
+    stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
+    if stderr.read().decode('utf-8') == '':
+        lines = stdout.read().decode('utf-8').split('\n')
+        lines.pop()
+        for i in range(0,len(lines)):
+            # Check if an object with the same ifname exists
+            existing_interface = Interface.objects.filter(ifname=lines[i].split(':')[0]).first()
+            # print({"loul":lines[i].split(':')[0],"thani":lines[i].split(':')[1].strip()})
+            if existing_interface:
+                pass
+            else:
+                Interface.objects.create(ifname=lines[i].split(':')[0],name_interface=lines[i].split(':')[1].strip())
+    else:
+        return JsonResponse({"msg": "erreur: "+stderr.read().decode('utf-8')}) 
+    # Gateway_Interface = GateWayInterface(gateway=i.split(' ')[0],interface=i.split(' ')[2])
+    # Gateway_Interface.save()
     print({'liste_getway':liste_getway})
-    return "all gateway are saved" 
+    print({'liste_interfaces':liste_interfaces})
+    return JsonResponse({"msg": "all gateway are saved"}) 
 
 def InterfaceFromGateway(gateway):
     interfaceFromGateway = GateWayInterface.objects.filter(gateway=gateway)
@@ -221,14 +280,16 @@ def timeZones(request):
 ############################################   createNetwork ############################################################
 
 
-@csrf_exempt
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def createNetwork(request):
     # cmdNetwork = []
     # interface="eth0"
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # instanciate with the serializer
         serializerNetwork = NetworkSerializer(data=data)
         print({'allGatway':AllGateway()})

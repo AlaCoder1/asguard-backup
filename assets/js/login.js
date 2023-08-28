@@ -1,10 +1,12 @@
 import Vue from 'vue';
 import vuetify from '@/plugins/vuetify';
 import App from '@/pages/login';
+import store from '@/store/index';
 
 // any CSS you import will output into a single css file (app.css in this case)
 new Vue({
     vuetify,
+    store,
     data: {
         tab: '',
     },

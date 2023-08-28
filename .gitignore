@@ -4,7 +4,7 @@
 /static/
 npm-debug.log
 yarn-error.log
-
+.env
 /managementGroup/migrations/__pycache__/
 /managementGroup/__pycache__/
 

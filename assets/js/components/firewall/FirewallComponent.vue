@@ -26,6 +26,9 @@
                         @selection-changed="onSelectionChanged" 
                         @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
                         @row-drag-end="onRowDragEnd"
+                        :pagination="true" 
+                        :paginationPageSize="2" 
+                        :rowSelection="'multiple'"
                         />
                 </v-card-text>
             </v-card>
@@ -167,7 +170,7 @@ export default {
                 }
             ],
             filterText: null,
-             columnOrder: [],
+            columnOrder: [],
         };
     },
     created() {

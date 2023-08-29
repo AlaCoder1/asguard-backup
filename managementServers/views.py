@@ -12,13 +12,14 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from authentification.authentication import JWTAuthentication
+from rest_framework.authentication import SessionAuthentication
 from django.contrib.auth.hashers import check_password
 # Create your views here.
 
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def getAllServers(request):
     list_servers = []
     if (request.method == 'GET'):
@@ -59,10 +60,12 @@ def getServer(request, id):
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def createServer(request):
     msg = ''
     if (request.method == 'POST'):
+        # return JsonResponse({"msg": request.data}, status=201)
+        
         # parse the incoming information
         data = request.data
         userSearch = User.objects.filter(username=data["username"])

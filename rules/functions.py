@@ -22,25 +22,40 @@ def init_file_nftables(ifname):
          5-créer les chaines de filtrage (inbound,outbound,cellular,inbound cellular)
          6-ajouter include_rules contenu in central file /etc/nftables.conf
    """
-   cmd="""bash -c 'sudo mkdir -p /etc/rules/{}
-sudo cat <<EOF >> /etc/rules/{}/nftables.conf
+#    cmd="""bash -c 'sudo mkdir -p /etc/rules/{}
+# sudo cat <<EOF >> /etc/rules/{}/nftables.conf
+# {} 
+# EOF
+# sudo nft add table inet filter_{} 
+# sudo nft add chain inet filter_{} inbound {{ type filter hook input priority 0 \; }}
+# sudo nft add chain inet filter_{} outbound {{ type filter hook input priority 0 \; }}
+# sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 \; }}
+# sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}
+# sudo cat <<EOF >> /etc/nftables.conf
+# {} 
+# EOF'""" .format(ifname,ifname,ifname,rules,ifname,ifname,ifname,ifname,ifname,include_rules)
+   commandes=[ 'sudo mkdir -p /etc/rules/{}'.format(ifname),
+              """sudo cat <<EOF >> /etc/rules/{}/nftables.conf
 {} 
-EOF
-sudo nft add table inet filter_{} 
-sudo nft add chain inet filter_{} inbound {{ type filter hook input priority 0 \; }}
-sudo nft add chain inet filter_{} outbound {{ type filter hook input priority 0 \; }}
-sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 \; }}
-sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}
-sudo cat <<EOF >> /etc/nftables.conf
+EOF""".format(ifname,rules),
+"sudo nft add table inet filter_{} ".format(ifname),
+"sudo nft add chain inet filter_{} inbound {{ type filter hook input priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} outbound {{ type filter hook input priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}".format(ifname),
+"""sudo cat <<EOF >> /etc/nftables.conf
 {} 
-EOF'""" .format(ifname,ifname,ifname,rules,ifname,ifname,ifname,ifname,ifname,include_rules)
+EOF""".format(include_rules)
+]
+
 ##executer le script créée précédamment retourner true si pas d'error sinon false en cas d'error
-   stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-   error = stderr.read().decode('utf-8')
-   output = stdout.read().decode('utf-8').split('\n')
-   if error:
-      print(error)
-      return False
+   for cmd in commandes:
+      stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+      error = stderr.read().decode('utf-8')
+      output = stdout.read().decode('utf-8').split('\n')
+      if error:
+         print(error)
+         return False
    return True
 
 

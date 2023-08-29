@@ -25,6 +25,7 @@ urlpatterns = [
     path('timeZones', views.timeZones, name="timeZones"),
     path('InterfaceFromGateway', views.InterfaceFromGateway, name="InterfaceFromGateway"),
     path('AllGateway', views.AllGateway, name="AllGateway"),
+    path('InsertInterface', views.InsertInterface, name="InsertInterface"),
     # path('deleteDB', views.deleteDB, name="deleteDB"),
     # path('deleteServer/<int:id>', views.deleteServer, name="deleteServer"),
     # path('modifyServer/<int:id>', views.modifyServer, name="modifyServer"),

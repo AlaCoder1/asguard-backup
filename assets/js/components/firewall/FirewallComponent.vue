@@ -12,7 +12,7 @@
                                 @input="onFilterTextBoxChanged"></v-text-field>
                         </v-col>
                         <v-col cols="12" md="6" class="d-flex justify-end">
-                            <v-btn class="ml-3 mt-2 " color="primary" text>
+                            <v-btn class="ml-3 mt-2 " color="primary" text @click="addRow">
                                 <i class="fas fa-plus"></i>
                                 <span class="ml-2">Add</span>
                             </v-btn>
@@ -21,137 +21,26 @@
                 </v-card-title>
                 <v-card-text>
                     <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
-                        :rowData="rowData" @grid-ready="onGridReady" :defaultColDef="defaultColDef" :editType="editType"
+                        :rowData="rowData" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef" :editType="editType"
                         style="width: 100%;" @cell-value-changed="onCellValueChanged" @row-value-changed="onRowValueChanged"
-                        @selection-changed="onSelectionChanged" />
+                        @selection-changed="onSelectionChanged" 
+                        @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
+                        @row-drag-end="onRowDragEnd"
+                        />
                 </v-card-text>
-                <v-card-actions class="d-flex justify-end">
-                    <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel">
-                        Cancel
-                    </v-btn>
-                    <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="finishEditing">
-                        Finish editing
-                    </v-btn>
-                </v-card-actions>
             </v-card>
         </div>
         <div class="container">
-            <h4>Outbound rules</h4>
-            <v-divider></v-divider>
-            <v-card class="mt-3">
-                <v-card-title>
-                    <v-row>
-                        <v-col cols="12" md="6">
-                            <v-text-field id="filter-text-box" v-model="filterText" append-icon="mdi-magnify" label="Search"
-                                single-line hide-details rounded outlined dense
-                                @input="onFilterTextBoxChanged"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" md="6" class="d-flex justify-end">
-                            <v-btn class="ml-3 mt-2 " color="primary" text>
-                                <i class="fas fa-plus"></i>
-                                <span class="ml-2">Add</span>
-                            </v-btn>
-                        </v-col>
-                    </v-row>
-                </v-card-title>
-                <v-card-text>
-                    <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
-                        :rowData="rowData" @grid-ready="onGridReady" :defaultColDef="defaultColDef" :editType="editType"
-                        style="width: 100%;" @cell-value-changed="onCellValueChanged" @row-value-changed="onRowValueChanged"
-                        @selection-changed="onSelectionChanged" />
-                </v-card-text>
-                <v-card-actions class="d-flex justify-end">
+            <div class="row justify-content-center">
+                <div class="col-12 text-center">
                     <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel">
                         Cancel
                     </v-btn>
-                    <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="finishEditing">
-                        Finish editing
+                    <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="save">
+                        Save
                     </v-btn>
-                </v-card-actions>
-            </v-card>
-        </div>
-        <div class="container">
-            <h4>Cellular fallover rules</h4>
-            <v-divider></v-divider>
-            <v-card class="mt-3">
-                <v-card-title>
-                    <v-row>
-                        <v-col cols="12" md="6">
-                            <v-text-field id="filter-text-box" v-model="filterText" append-icon="mdi-magnify" label="Search"
-                                single-line hide-details rounded outlined dense
-                                @input="onFilterTextBoxChanged"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" md="6" class="d-flex justify-end">
-                            <v-btn class="ml-3 mt-2 " color="primary" text>
-                                <i class="fas fa-plus"></i>
-                                <span class="ml-2">Add</span>
-                            </v-btn>
-                        </v-col>
-                    </v-row>
-                </v-card-title>
-                <v-card-text>
-                    <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
-                        :rowData="rowData" @grid-ready="onGridReady" :defaultColDef="defaultColDef" :editType="editType"
-                        style="width: 100%;" @cell-value-changed="onCellValueChanged" @row-value-changed="onRowValueChanged"
-                        @selection-changed="onSelectionChanged" />
-                </v-card-text>
-                <v-card-actions class="d-flex justify-end">
-                    <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel">
-                        Cancel
-                    </v-btn>
-                    <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="finishEditing">
-                        Finish editing
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </div>
-        <div class="container">
-            <h4>Inbound cellular failover rules</h4>
-            <v-divider></v-divider>
-            <v-card class="mt-3">
-                <v-card-title>
-                    <v-row>
-                        <v-col cols="12" md="6">
-                            <v-text-field id="filter-text-box" v-model="filterText" append-icon="mdi-magnify" label="Search"
-                                single-line hide-details rounded outlined dense
-                                @input="onFilterTextBoxChanged"></v-text-field>
-                        </v-col>
-                        <v-col cols="12" md="6" class="d-flex justify-end">
-                            <v-btn class="ml-3 mt-2 " color="primary" text>
-                                <i class="fas fa-plus"></i>
-                                <span class="ml-2">Add</span>
-                            </v-btn>
-                        </v-col>
-                    </v-row>
-                </v-card-title>
-                <v-card-text>
-                    <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
-                        :rowData="rowData" @grid-ready="onGridReady" :defaultColDef="defaultColDef" :editType="editType"
-                        style="width: 100%;" @cell-value-changed="onCellValueChanged" @row-value-changed="onRowValueChanged"
-                        @selection-changed="onSelectionChanged" />
-                </v-card-text>
-                <v-card-actions class="d-flex justify-end">
-                    <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel">
-                        Cancel
-                    </v-btn>
-                    <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="finishEditing">
-                        Finish editing
-                    </v-btn>
-                </v-card-actions>
-            </v-card>
-        </div>
-         <!-- Centered buttons container -->
-        <div class="container">
-          <div class="row justify-content-center">
-            <div class="col-12 text-center">
-              <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel">
-                Cancel
-              </v-btn>
-              <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="save">
-                Save
-              </v-btn>
+                </div>
             </div>
-          </div>
         </div>
         <br /><br /><br />
     </div>
@@ -170,26 +59,21 @@ export default {
         return {
             columnDefs: [
                 {
+                    width: 50,
+                    minWidth: 50,
+                    maxWidth: 50,
+                    rowDrag: true,
+                    rowDragText: (params) => {
+                        return params.rowNode.data.ruleDescription;
+                    },
+                },
+                {
                     headerCheckboxSelection: true,
                     checkboxSelection: true,
-                    width: 5,
                     editable: false,
-                    headerCheckboxSelectionFilteredOnly: true,
-                    suppressMenu: false,
-                    suppressMovable: false,
-                    suppressNavigable: false,
-                    suppressResize: false,
-                    suppressSizeToFit: false,
-                    suppressSorting: false,
-                    suppressToolPanel: false,
-                    suppressColumnsToolPanel: false,
-                    suppressFiltersToolPanel: false,
-                    suppressRowDrag: false,
-                    suppressMoveWhenRowDragging: false,
-                    suppressScrollOnNewData: false,
-                    suppressPaginationPanel: false,
-                    suppressFieldDotNotation: false,
-                    suppressFocusAfterRefresh: false,
+                    width: 100,
+                    minWidth: 100,
+                    maxWidth: 100,
                 },
                 {
                     field: 'Policy',
@@ -283,6 +167,7 @@ export default {
                 }
             ],
             filterText: null,
+             columnOrder: [],
         };
     },
     created() {
@@ -321,25 +206,15 @@ export default {
             });
             if (isCurrentRowEditing) {
                 eGui.innerHTML = `
-        <button  
-          class="action-button update"
-          data-action="update">
-               update  
-        </button>
-        <button  
-          class="action-button cancel"
-          data-action="cancel">
-               cancel
+        <button 
+          class="action-button delete"
+          data-action="delete">
+            <i class="fas fa-times" style="color: #086eae;"></i>
         </button>
         `;
             }
             else {
                 eGui.innerHTML = `
-        <button 
-          class="action-button edit"  
-          data-action="edit">
-             <i class="far fa-edit" style="color: #086eae;"></i> 
-          </button>
         <button 
           class="action-button delete"
           data-action="delete">
@@ -353,7 +228,6 @@ export default {
                     this.handleAction(action, params.node.data);
                 });
             });
-
             return eGui;
         },
         onFilterTextBoxChanged() {
@@ -380,12 +254,59 @@ export default {
         cancel() {
             console.log('Cancel clicked');
         },
-        finishEditing() {
-            console.log('Finish Editing clicked');
-        },
         save() {
             console.log('Save clicked');
         },
+        addRow() {
+            const newRow = {
+                isSelected: false,
+                isRowSelected: false,
+                Policy: 'Allow',
+                ruleDescription: '',
+                Protocol: 'TCP',
+                Source: '',
+                srcPort: 'ANY',
+                Destination: '',
+                dstPort: 'ANY',
+                Action: '',
+            };
+            this.rowData.push(newRow);
+
+            // Select the newly added row
+            this.gridApi.forEachNode(node => node.setSelected(node.data === newRow));
+
+        },
+         arrayMove(arr, fromIndex, toIndex) {
+            const element = arr[fromIndex];
+            arr.splice(fromIndex, 1);
+            arr.splice(toIndex, 0, element);
+            return arr.slice(); // Create a new array reference
+        },
+         onRowDragEnd(event) {
+            const updatedRows = event.overIndex !== undefined
+                ? this.arrayMove(this.rowData, event.node.rowIndex, event.overIndex)
+                : this.rowData;
+
+            this.rowData = updatedRows;
+        },
+        onColumnRowGroupChanged(event) {
+            const newColumnOrder = event.columns.map(column => column.colId);
+            this.gridApi.setColumnDefs(this.columnDefs);
+            this.gridApi.setColumnOrder(newColumnOrder);    
+        },
+        onColumnRowDragEnd(event) {
+            console.log('event:', event); // Log the event to see its structure
+            if (event && event.columns) {
+                this.columnOrder = event.columns.map(column => column.colId);
+
+                // Apply the new column order to the grid
+                this.gridApi.setColumnDefs(this.columnDefs);
+                this.gridApi.setColumnOrder(this.columnOrder);
+            } else {
+                console.log('event.columns is undefined or null');
+            }
+        },
+
     },
 };
 

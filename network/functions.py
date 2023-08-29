@@ -48,7 +48,7 @@ def update_interface_table(name_interface,data,InterfaceSerializer):
     objectConfig=Interface.objects.get(name_interface=name_interface)
     # Set all attributes to None
     for field in objectConfig._meta.fields:
-        if field.attname not in ["id",'ifname','created_at','updated_at','name_interface','description']: 
+        if field.attname not in ["id",'ifname','created_at','updated_at','name_interface','description','private_aux','bogon_aux']: 
             setattr(objectConfig, field.attname, None)
     serializerInterface= InterfaceSerializer(objectConfig,data=data)
     if serializerInterface.is_valid():
@@ -112,6 +112,8 @@ def run_remote_command_with_timeout(type, typeDHCP4, ssh_client, command, timeou
     elif command_thread.is_alive():
         print(f"Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}")
         stdin, stdout, stderr = ssh_client.exec_command('\x03')
+        # interrupt_command = "sudo pkill -INT -f 'some_long_running_command'"
+        # output,error=run_command(ssh_client, interrupt_command)
         print("Ctrl+C sent.")
         return False
         
@@ -232,22 +234,60 @@ def update_conn_static_IPV4(config,ifname,ip_address,netmask,cmdgw):
          "#End IP4Config {}".format(ifname)
     ]
     cmd_final=[ 
+        # "sudo ip addr flush dev {}".format(ifname),
         "sudo ifconfig {} 0.0.0.0".format(ifname),
+        "sudo dhclient -r {}".format(ifname),  
         "sudo ip addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
     cmd_final.append(cmdgw)
     return commands,config,cmd_final
 
 ################### Dhcp
 ####function to get gateway if typeIPV4 est DHCP Base or Advanced
-def get_gateway_dhcp(ifname,ssh_client):
-    command="ip route list | grep {} | cut -d ' ' -f 3-".format(ifname)
-    output,error=run_command(ssh_client, command)
-    if error or len(output)==0:
-        gwaddr=None
-    else:
-        gwaddr=output.split()[0]
-    return gwaddr
+# def get_gateway_dhcp(ifname,ssh_client):
+#     # command="ip route list | grep {} | cut -d ' ' -f 3-".format(ifname)
+#     command="ip route list | grep default |  grep {} | cut -d ' ' -f 3-".format(ifname)
+    
+#     output,error=run_command(ssh_client, command)
+#     print("command ",command,"output ",output)
+#     metric=0
+#     if error or len(output)==0:
+#         gwaddr=None
+#     else:
+#         gwaddr=output.split()[0]
+#         if output.find('metric')!=-1:
+#             metric=int(output[output.find('metric')+len('metric'):])
+#             print(metric)
+    # return gwaddr,metric
 
+def get_gateway_dhcp(ifname,ssh_client):
+    # command="ip route list | grep {} | cut -d ' ' -f 3-".format(ifname)
+    command="ip route list | grep default |  grep {} | cut -d ' ' -f 3-".format(ifname)
+    retry_count = 10
+    while retry_count > 0:
+        output, error = run_command(ssh_client, command)
+        print("command ",command,"output ",output,"retry_count",retry_count)
+        if not error and output.strip():  # Check for non-empty output and no errors
+            break  # Break out of the loop if successful result
+        else:
+            print("Retrying command...")
+            retry_count -= 1
+    
+    if retry_count == 0 or not output.strip():
+        print("Failed to retrieve default gateway.")
+        return None, 0, False, False, False  # Return None and metric 0 in case of failure
+    
+    gwaddr = output.split()[0]
+    metric_start = output.find('metric')
+    metric = 0
+    default_aux=True
+    far_aux=False
+    multi_aux=False
+    if metric_start != -1:
+        metric = int(output[metric_start + len('metric'):].strip())
+        multi_aux=True
+    if output.find('onlink')!=-1:
+           far_aux = True
+    return gwaddr,metric,default_aux,far_aux,multi_aux
 ### function to add gateway to database
 def add_gateway_dhcp(gwaddr,ifname):
     data={ "gwname":"{}_DHCP".format(ifname),
@@ -354,9 +394,10 @@ def update_conn_dhcp_IPV4(config,ifname):
      "#End IP4Config {}".format(ifname)
     ]
     cmd_final=[
-  
+    # "sudo ip addr flush dev {}".format(ifname),
     "sudo ifconfig {} 0.0.0.0".format(ifname),
     "sudo dhclient -v  -1 -cf  /etc/Dhcp4Config/{}/dhclient.conf {} ".format(ifname,ifname,ifname),
+    "sudo systemctl restart NetworkManager"
     ]
     
     return commandes,config,cmd_final

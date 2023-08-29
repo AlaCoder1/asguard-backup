@@ -11,6 +11,7 @@ from authentification.views import *
 from .functions import *
 from django.views.decorators.csrf import csrf_exempt
 from gateway.models import *
+from gateway.functions import *
 def device_nameInterface(name_interface):
     data = Interface.objects.get(name_interface=name_interface)
     return data
@@ -34,6 +35,7 @@ def add_interface(request):
 # @authentication_classes([AllowAny])
 # @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
+from django.db.models import Q
 @csrf_exempt
 def conf(request,name_interface):
     msg="Failed to configure Network!"
@@ -92,7 +94,9 @@ def conf(request,name_interface):
                         netmask4 = data.get('value_setup_Ipv4')['netmask4']
                         gateway4=data.get('value_setup_Ipv4')['gateway4']
                         print({"gateway": gateway4['value']})
-                        GatewayObject = Gateway.objects.get(gwaddress=gateway4['value'])
+                        
+                        # GatewayObject = Gateway.objects.get(gwaddress=gateway4['value'])*
+                        GatewayObject=Gateway.objects.get(Q(gwaddress=gateway4['value']) & Q(staticgw=True) )
                         print({"IdGateway":GatewayObject.id})
                         default_aux=GatewayObject.default_aux
                         far_aux=GatewayObject.far_aux
@@ -216,11 +220,30 @@ EOF""".format('\n'.join(output_service))
                     if not (stderr.read().decode('utf-8')):
                         if setuptypeIP4=="dhcp":
                             ##function to get gateway if typeIPV4 est DHCP Base or Advanced
-                            gwaddr=get_gateway_dhcp(ifname,ssh)
+                            gwaddr,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname,ssh)
+                            print(gwaddr,metric,default_aux,far_aux,multiwan_aux)
                             if gwaddr is not None:
-                                GatewayObject = Gateway.objects.get(gwaddress=gwaddr)
-                                metric=0 
-                                addGatewayInterfaceDB(GatewayObject,name_interface,metric)
+                                data={
+                                "gwname":"DHCP_GW",
+                                "gwaddress":"{}".format(gwaddr),
+                                "description":"DHCP gateway generated automatically ",
+                                "default_aux":default_aux,
+                                "far_aux":far_aux,
+                                "multiwan_aux":multiwan_aux
+                                    }
+                                print(data)
+                                aux_exist=Gateway.objects.filter(gwaddress=gwaddr).exists()
+                                if not aux_exist:
+                                    aux_GW=add_gateway_DB(data)
+                                else:
+                                    GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr) & Q(staticgw=False) )
+                                    idGW=GatewayObject.id
+                                    if GatewayObject.staticgw == False:
+                                        aux_GW=update_gateway_DB(data,idGW)
+                                    else:
+                                        aux_GW=add_gateway_DB(data)
+                                addGatewayInterfaceDB(GatewayObject,name_interface,metric)   
+                                    
                         #update changes in DB ip4
                         aux_ipv4=update_DB(id_interface,jsonIPV4,IP4Config,IP4ConfigSerializer)
                         #update changes in DB ip6

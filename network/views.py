@@ -19,7 +19,7 @@ def device_nameInterface(name_interface):
 @api_view(['PUT'])
 @permission_classes([AllowAny])
 def conf(request,name_interface):
-    msg = ""
+    msg="Failed to configure Network!"
     list_metric = []
     if (request.method == 'PUT'):
         interfaceObject = Interface.objects.get(name_interface=name_interface)
@@ -276,25 +276,34 @@ def GetInformationsByInterface(request,name_interface):
         interface['name_interface']=interfaceObject.name_interface
         interface['description']=interfaceObject.description
         info['interface']=interface
+        print({"interfaceObject":interfaceObject})
         genericConfigObject = GenericConfig.objects.filter(interface_id=interfaceObject.id)
         genericConfigDict = serializers.serialize("json", genericConfigObject)
         res = json.loads(genericConfigDict)
-        id = res[0]['pk']
-        res[0]['fields']['id'] = id
-        res[0].pop('model')
-        res[0].pop('pk')
-        res[0]['fields'].pop('interface')
-        info['genericConfig']=res[0]['fields']
-        print({"res":res[0]['fields']})
+        genericConfigList = list(genericConfigDict)
+        print({"genericConfigList":res})
+        if res != []:
+            id = res[0]['pk']
+            res[0]['fields']['id'] = id
+            res[0].pop('model')
+            res[0].pop('pk')
+            res[0]['fields'].pop('interface')
+            info['genericConfig']=res[0]['fields']
+        else:
+            info['genericConfig']=[]
+        # print({"res":res[0]['fields']})
         IPV4ConfigObject = IP4Config.objects.filter(interface_id=interfaceObject.id)
         print({"IPV4ConfigObject":IPV4ConfigObject})
         IPV4ConfigObjectDict = serializers.serialize("json", IPV4ConfigObject)
         resultat = json.loads(IPV4ConfigObjectDict)
-        id = resultat[0]['pk']
-        resultat[0]['fields']['id'] = id
-        resultat[0].pop('model')
-        resultat[0].pop('pk')
-        resultat[0]['fields'].pop('interface')
-        info['IPV4Config']=resultat[0]['fields']
-        print({"resultat":resultat[0]['fields']})
+        if resultat != []:
+            id = resultat[0]['pk']
+            resultat[0]['fields']['id'] = id
+            resultat[0].pop('model')
+            resultat[0].pop('pk')
+            resultat[0]['fields'].pop('interface')
+            info['IPV4Config']=resultat[0]['fields']
+        else:
+            info['IPV4Config']=[]
+        # print({"resultat":resultat[0]['fields']})
     return JsonResponse(info)

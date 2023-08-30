@@ -22,18 +22,7 @@ def init_file_nftables(ifname):
          5-créer les chaines de filtrage (inbound,outbound,cellular,inbound cellular)
          6-ajouter include_rules contenu in central file /etc/nftables.conf
    """
-#    cmd="""bash -c 'sudo mkdir -p /etc/rules/{}
-# sudo cat <<EOF >> /etc/rules/{}/nftables.conf
-# {} 
-# EOF
-# sudo nft add table inet filter_{} 
-# sudo nft add chain inet filter_{} inbound {{ type filter hook input priority 0 \; }}
-# sudo nft add chain inet filter_{} outbound {{ type filter hook input priority 0 \; }}
-# sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 \; }}
-# sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}
-# sudo cat <<EOF >> /etc/nftables.conf
-# {} 
-# EOF'""" .format(ifname,ifname,ifname,rules,ifname,ifname,ifname,ifname,ifname,include_rules)
+
    commandes=[ 'sudo mkdir -p /etc/rules/{}'.format(ifname),
               """sudo cat <<EOF >> /etc/rules/{}/nftables.conf
 {} 
@@ -54,7 +43,6 @@ EOF""".format(include_rules)
       error = stderr.read().decode('utf-8')
       output = stdout.read().decode('utf-8').split('\n')
       if error:
-         print(error)
          return False
    return True
 
@@ -68,25 +56,19 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
          rule='iifname "{}" ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(ifname,saddr,daddr,protocol,sport,protocol,dport,policy)
     ##cas outbound
    elif type_rule=='outbound':
-         print("outbound==========")
          rule='oifname "{}" ip daddr {} ip saddr {} {} dport {} {} sport {} {}'.format(ifname,daddr,saddr,protocol,dport,protocol,sport,policy)
    #####cas saddr is None
    if saddr is None:
       rule=rule[:rule.find('ip saddr None')]+rule[rule.find('ip saddr None')+len(('ip saddr None'))+1:].strip()
-      print('confition1====',rule)
    #####cas daddr is None
    if daddr is None:
       rule=rule[:rule.find('ip daddr None')]+rule[rule.find('ip daddr None')+len(('ip daddr None'))+1:].strip()
-      print('confition2====',rule)
    #####cas sport is None
    if sport is None:
       rule=rule[:rule.find(('{} sport None').format(protocol))]+rule[rule.find(('{} sport None').format(protocol))+len(('{} sport None').format(protocol)):].strip()
-      print('confition3====',rule)
    #####cas dport is None
    if dport is None:
       rule=rule[:rule.find(('{} dport None').format(protocol))]+rule[rule.find(('{} dport None').format(protocol))+len(('{} dport None').format(protocol)):].strip()
-      print('confition4====',rule)
-   # print(rule)
    return rule
 ###function to add rule
 def add_rule_remote(rule,ifname,type_rule):
@@ -100,7 +82,6 @@ def add_rule_remote(rule,ifname,type_rule):
          stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
          error = stderr.read().decode('utf-8')
          if error: 
-            print(error)
             return False
       return True
 ###function to get handle rule   
@@ -112,10 +93,9 @@ def get_handle_rule(ifname,type_rule,rule):
    error = stderr.read().decode('utf-8')
    output = stdout.read().decode('utf-8').split('#')
    if error:
-      print("error ",error,"    :",cmd)
+      return None
    else:
-     print(output)
-   return output[1].strip('\n').strip()
+      return output[1].strip('\n').strip()
 ###function to delete rule
 def delete_rule_remote(ifname,type_rule,handle):
    ##initialiser les commanndes pour supprimer une règle et l'entregistrer dans nftables.conf
@@ -138,11 +118,7 @@ def add_rule_DB(data,rule,type_rule):
    data["rule_status"]=True
    data["type_rule"]=type_rule
    
-   print(data)
    InboundSerializer = RuleSerializer(data=data)
-   print("aaaa")
-   print(InboundSerializer.is_valid())
-
    if InboundSerializer.is_valid():
       InboundSerializer.save()
       return True
@@ -152,9 +128,6 @@ def add_rule_DB(data,rule,type_rule):
 def update_rule_DB(rule,rules,data):
          data['rule']=rule
          InboundSerializer = RuleSerializer(rules,data=data)
-         print(data)
-         print(InboundSerializer.is_valid())
-         
          if InboundSerializer.is_valid():
             InboundSerializer.save()
             return True

@@ -4,10 +4,11 @@ from . import views
 
 urlpatterns = [
      path('GetAllRules', views.GetAllRules, name="GetAllRules"),
-     path('addRule/<int:id>', views.addRule, name="addRule"),
+     path('addRule/<str:name_interface>', views.addRule, name="addRule"),
      path('deleteRule/<int:id>', views.deleteRule, name="deleteRule"),
      path('updateRule/<int:id>', views.updateRule, name="updateRule"),
-     path('GetRulesByInterface/<int:id>', views.GetRulesByInterface, name="GetRulesByInterface"),
+     path('GetRulesByInterface/<str:name_interface>', views.GetRulesByInterface, name="GetRulesByInterface"),
+     path('GetRulesByType/<str:name_interface>/<str:type_rule>', views.GetRulesByType, name="GetRulesByInterface"),
      
      
      

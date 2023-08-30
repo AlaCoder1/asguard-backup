@@ -45,7 +45,7 @@ class Command(BaseCommand):
 
             # Open the remote file in write mode
             remote_file = sftp.open(server_path, 'w')
-            list_LAN_WAN = ['LAN', 'WAN', "LAN1", "WAN1"]
+            list_LAN_WAN = ['LAN', 'WAN', "LAN1", "WAN1","LAN2"]
             content=""
             num_elements_to_select=len(liste_interfaces)
             print({"num_elements_to_select":num_elements_to_select})
@@ -76,11 +76,10 @@ class Command(BaseCommand):
                     existing_interface = Interface.objects.filter(ifname=lines[i].split(':')[0]).exists()
                     print(existing_interface)
                     # print({"loul":lines[i].split(':')[0],"thani":lines[i].split(':')[1].strip()})
-                    if existing_interface:
-                        pass
-                    else:
+                    if existing_interface != True:
                         Interface.objects.create(ifname=lines[i].split(':')[0],name_interface=lines[i].split(':')[1].strip())
                         return "ALL Interfaces from ConfigInterfaces added succesffuly"
+                        
                     
             else:
                 return "erreur: "+stderr.read().decode('utf-8')           

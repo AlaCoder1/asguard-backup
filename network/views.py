@@ -12,6 +12,8 @@ from .functions import *
 from django.views.decorators.csrf import csrf_exempt
 from gateway.models import *
 from gateway.functions import *
+from django.db.models import Q
+
 def device_nameInterface(name_interface):
     data = Interface.objects.get(name_interface=name_interface)
     return data
@@ -35,7 +37,6 @@ def add_interface(request):
 # @authentication_classes([AllowAny])
 # @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
-from django.db.models import Q
 @csrf_exempt
 def conf(request,name_interface):
     msg="Failed to configure Network!"
@@ -89,7 +90,8 @@ def conf(request,name_interface):
                         commandes,output_service,cmd_final_ipv4=update_conn_None_IPV4(output_service,ifname)
                     case "static":
                         typeDHCP4=''
-                        addmac = data.get('addmac')
+                        # addmac = data.get('addmac')
+                        addmac = None
                         ip_address4 = data.get('value_setup_Ipv4')['ip_address4']
                         netmask4 = data.get('value_setup_Ipv4')['netmask4']
                         gateway4=data.get('value_setup_Ipv4')['gateway4']
@@ -195,6 +197,7 @@ def conf(request,name_interface):
                     #     commandesIPV6,output_service,cmd_final_ipv6=update_conn_dhcp_ipv6(output_service,ifname)
                                 #clean list of cmd to block address
                 
+                
                 ##for generic config 
                 cmds=[]       
                 cmds,output_service,cmd_final_Gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuV,mssV)
@@ -212,6 +215,7 @@ def conf(request,name_interface):
                 #ajouter au liste des commandes finales à executer (ssh.exec_command) 
                 commandes_final+=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_Gen+cmd_final_Block
                 cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
+
 {}
 EOF""".format('\n'.join(output_service))
                 # print("1111",run_all_commands(commandes_final,setuptypeIP4,typeDHCP4))
@@ -282,3 +286,65 @@ def delete_interface(request,id):
                 
     return JsonResponse({"mssg":msg})
             
+            
+@api_view(['GET'])
+@permission_classes([AllowAny])            
+def AllInterfaces(request):
+    list_interface = []
+    if (request.method == 'GET'):
+        interfaces = Interface.objects.all()
+        interfaceDict = serializers.serialize("json", interfaces)
+        res = json.loads(interfaceDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_interface.append(res[i]['fields'])
+        # return a Json response
+        return JsonResponse(list_interface, safe=False)
+    
+def GetInformationsByInterface(request,name_interface):
+    info={}
+    interface={}
+    if (request.method == 'GET'):
+        interfaceObject = Interface.objects.get(name_interface=name_interface)
+        interface['id']=interfaceObject.id
+        interface['ifname']=interfaceObject.ifname
+        interface['private_aux']=interfaceObject.private_aux
+        interface['bogon_aux']=interfaceObject.bogon_aux
+        interface['service_status']=interfaceObject.service_status
+        interface['name_interface']=interfaceObject.name_interface
+        interface['description']=interfaceObject.description
+        info['interface']=interface
+        print({"interfaceObject":interfaceObject})
+        genericConfigObject = GenericConfig.objects.filter(interface_id=interfaceObject.id)
+        genericConfigDict = serializers.serialize("json", genericConfigObject)
+        res = json.loads(genericConfigDict)
+        genericConfigList = list(genericConfigDict)
+        print({"genericConfigList":res})
+        if res != []:
+            id = res[0]['pk']
+            res[0]['fields']['id'] = id
+            res[0].pop('model')
+            res[0].pop('pk')
+            res[0]['fields'].pop('interface')
+            info['genericConfig']=res[0]['fields']
+        else:
+            info['genericConfig']=[]
+        # print({"res":res[0]['fields']})
+        IPV4ConfigObject = IP4Config.objects.filter(interface_id=interfaceObject.id)
+        print({"IPV4ConfigObject":IPV4ConfigObject})
+        IPV4ConfigObjectDict = serializers.serialize("json", IPV4ConfigObject)
+        resultat = json.loads(IPV4ConfigObjectDict)
+        if resultat != []:
+            id = resultat[0]['pk']
+            resultat[0]['fields']['id'] = id
+            resultat[0].pop('model')
+            resultat[0].pop('pk')
+            resultat[0]['fields'].pop('interface')
+            info['IPV4Config']=resultat[0]['fields']
+        else:
+            info['IPV4Config']=[]
+        # print({"resultat":resultat[0]['fields']})
+    return JsonResponse(info)

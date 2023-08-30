@@ -28,6 +28,8 @@ class Interface(models.Model):
 
     class Meta:
         db_table = 'Interface'
+    description=models.CharField(max_length=200, null=True,default=None)
+
 
     
 #model generic config

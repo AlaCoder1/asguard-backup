@@ -31,7 +31,17 @@ def GetRulesByInterface(request,name_interface):
         ruleDict = serializers.serialize("json", rules)
         resRules = json.loads(ruleDict)
         return JsonResponse({"Rules:": resRules})
-            
+      
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
+def GetRulesByType(request,type_rule):
+    if (request.method == 'GET'):
+        rules= Rule.objects.filter(type_rule=type_rule)
+        ruleDict = serializers.serialize("json", rules)
+        resRules = json.loads(ruleDict)
+        return JsonResponse({"Rules:": resRules})      
+          
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])

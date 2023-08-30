@@ -52,6 +52,7 @@
 
 <script>
 import { AgGridVue } from 'ag-grid-vue';
+import axios from 'axios';
 
 export default {
     name: 'FirewallComponent',
@@ -67,7 +68,7 @@ export default {
                     maxWidth: 50,
                     rowDrag: true,
                     rowDragText: (params) => {
-                        return params.rowNode.data.ruleDescription;
+                        return params.rowNode.data.Rule_description;
                     },
                 },
                 {
@@ -79,7 +80,8 @@ export default {
                     maxWidth: 100,
                 },
                 {
-                    field: 'Policy',
+                    field: 'policy',
+                    headerName: 'Policy',
                     cellEditor: 'agSelectCellEditor',
                     cellEditorParams: {
                         values: ['Allow', 'Deny'],
@@ -87,12 +89,14 @@ export default {
                     editable: params => params.node.data.isRowSelected
                 },
                 {
-                    field: 'ruleDescription',
+                    field: 'Rule_description',
+                    headerName: 'Rule Description',
                     editable: params => params.node.data.isRowSelected,
                     headerName: 'Rule Description',
                 },
                 {
-                    field: 'Protocol',
+                    field: 'protocol',
+                    headerName: 'Protocol',
                     cellEditor: 'agSelectCellEditor',
                     cellEditorParams: {
                         values: ['TCP', 'UDP', 'ICMP'],
@@ -100,22 +104,27 @@ export default {
                     editable: params => params.node.data.isRowSelected
                 },
                 {
-                    field: 'Source',
-                    editable: params => params.node.data.isRowSelected
+                    field: 'saddr',
+                    headerName: 'Src Address',
+                    editable: params => params.node.data.isRowSelected,
+
                 },
                 {
                     field: 'srcPort',
                     headerName: 'Src Port',
+                    editable: params => params.node.data.isRowSelected,
+                    valueParser: this.numericValueParser
+                },
+                {
+                    headerName: 'Dst Address',
+                    field: 'daddr',
                     editable: params => params.node.data.isRowSelected
                 },
                 {
-                    headerName: 'Destination',
-                    editable: params => params.node.data.isRowSelected
-                },
-                {
-                    field: 'dstPort',
+                    field: 'dport',
                     headerName: 'Dst Port',
-                    editable: params => params.node.data.isRowSelected
+                    editable: params => params.node.data.isRowSelected,
+                    valueParser: this.numericValueParser
                 },
                 {
                     headerName: 'Action',
@@ -132,42 +141,42 @@ export default {
             },
             editType: null,
             rowData: [
-                {
-                    isSelected: false,
-                    isRowSelected: false,
-                    Policy: 'Allow',
-                    ruleDescription: 'Rule 1',
-                    Protocol: 'TCP',
-                    Source: ' ',
-                    srcPort: 'ANY',
-                    Destination: ' ',
-                    dstPort: 'ANY',
-                    Action: ' ',
-                },
-                {
-                    isSelected: false,
-                    isRowSelected: false,
-                    Policy: 'Allow',
-                    ruleDescription: 'Rule 2',
-                    Protocol: 'UDP',
-                    Source: ' ',
-                    srcPort: 'ANY ',
-                    Destination: ' ',
-                    dstPort: 'ANY',
-                    Action: ' ',
-                },
-                {
-                    isSelected: false,
-                    isRowSelected: false,
-                    Policy: 'Allow',
-                    ruleDescription: 'Rule 3',
-                    Protocol: 'ICMP',
-                    Source: ' ',
-                    srcPort: 'ANY',
-                    Destination: ' ',
-                    dstPort: 'ANY',
-                    Action: ' ',
-                }
+                // {
+                //     isSelected: false,
+                //     isRowSelected: false,
+                //     policy: 'Allow',
+                //     Rule_description: 'Rule 1',
+                //     protocol: 'TCP',
+                //     saddr: ' ',
+                //     srcPort: 'ANY',
+                //     daddr: ' ',
+                //     dport: 'ANY',
+                //     Action: ' ',
+                // },
+                // {
+                //     isSelected: false,
+                //     isRowSelected: false,
+                //     Policy: 'Allow',
+                //     Rule_description: 'Rule 2',
+                //     protocol: 'UDP',
+                //     saddr: ' ',
+                //     srcPort: 'ANY ',
+                //     daddr: ' ',
+                //     dport: 'ANY',
+                //     Action: ' ',
+                // },
+                // {
+                //     isSelected: false,
+                //     isRowSelected: false,
+                //     Policy: 'Allow',
+                //     Rule_description: 'Rule 3',
+                //     protocol: 'ICMP',
+                //     saddr: ' ',
+                //     srcPort: 'ANY',
+                //     daddr: ' ',
+                //     dport: 'ANY',
+                //     Action: ' ',
+                // }
             ],
             filterText: null,
             columnOrder: [],
@@ -178,11 +187,11 @@ export default {
     },
     methods: {
         onCellValueChanged(event) {
-            console.log('onCellValueChanged: ' + event.colDef.field + ' = ' + event.newValue);
+            const row = event.data;
+            row.isModified = true;
         },
         onRowValueChanged(event) {
             var data = event.data;
-            console.log('onRowValueChanged: (' + data.Policy + ', ' + data.ruleDescription + ', ' + data.Protocol + ', ' + data.Source + ', ' + data.srcPort + ', ' + data.Destination + ', ' + data.dstPort + ', ' + data.Action + ')');
         },
         onGridReady(params) {
             this.gridApi = params.api;
@@ -199,7 +208,7 @@ export default {
                 row.isRowSelected = row.isSelected;
             });
 
-            this.gridApi.refreshCells({ columns: ['Policy', 'ruleDescription', 'Protocol', 'Source', 'srcPort', 'Destination', 'dstPort', 'Action'] });
+            this.gridApi.refreshCells({ columns: ['Policy', 'Rule_description', 'protocol', 'saddr', 'srcPort', 'daddr', 'dport', 'Action'] });
         },
         actionCellRenderer(params) {
             let eGui = document.createElement('div');
@@ -240,11 +249,7 @@ export default {
         },
         handleAction(action, rowData) {
             switch (action) {
-                case 'edit':
-                    console.log('Edit clicked for row:', rowData);
-                    break;
                 case 'delete':
-                    console.log('Delete clicked for row:', rowData);
                     const index = this.rowData.findIndex(item => item.id === rowData.id);
                     if (index !== -1) {
                         this.rowData.splice(index, 1);
@@ -254,23 +259,18 @@ export default {
                     break;
             }
         },
-        cancel() {
-            console.log('Cancel clicked');
-        },
-        save() {
-            console.log('Save clicked');
-        },
         addRow() {
             const newRow = {
                 isSelected: false,
                 isRowSelected: false,
-                Policy: 'Allow',
-                ruleDescription: '',
-                Protocol: 'TCP',
-                Source: '',
+                 isModified: false,
+                policy: 'Allow',
+                Rule_description: '',
+                protocol: 'TCP',
+                saddr: '',
                 srcPort: 'ANY',
-                Destination: '',
-                dstPort: 'ANY',
+                daddr: '',
+                dport: 'ANY',
                 Action: '',
             };
             this.rowData.push(newRow);
@@ -298,7 +298,6 @@ export default {
             this.gridApi.setColumnOrder(newColumnOrder);    
         },
         onColumnRowDragEnd(event) {
-            console.log('event:', event); // Log the event to see its structure
             if (event && event.columns) {
                 this.columnOrder = event.columns.map(column => column.colId);
 
@@ -309,7 +308,71 @@ export default {
                 console.log('event.columns is undefined or null');
             }
         },
+        
+        cancel() {
+            console.log('Cancel clicked');
+        },
+        async save() {
+            // Filter the modified rows
+            const modifiedRows = this.rowData.filter(row => row.isModified);
+            console.log('Modified rows:', modifiedRows);
 
+            // Prepare data for API
+            const dataToSend = modifiedRows.map(row => {
+                // Convert row data to the required format for your API
+                return {
+                    policy: row.policy === 'Allow' ? 'accept' : 'drop',
+                    Rule_description: row.Rule_description,
+                    protocol: row.protocol === 'TCP' ? 'tcp' : row.protocol === 'UDP' ? 'udp' : 'icmp',
+                    saddr: row.saddr,
+                    daddr: row.daddr,
+                    sport: row.srcPort === 'ANY' ? '' : row.srcPort,
+                    dport: row.dport,
+                    type_rule: "inbound",
+                };
+            });
+            console.log('Data to send:', dataToSend[0]);
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrfToken = getCookie('csrftoken')
+            axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+            try {
+                // Send data to API
+                const response = await axios.post('http://127.0.0.1:8000/rules/addRule/LAN', dataToSend[0]);
+
+                // Handle API response
+                if (response.status === 200) {
+                    // Clear the modified flag for the saved rows
+                    modifiedRows.forEach(row => row.isModified = false);
+                } else {
+                    console.error('Failed to save data');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        },
+        numericValueParser(params) {
+            const parsedValue = parseInt(params.newValue);
+            if (isNaN(parsedValue)) {
+                // Return the original value if parsing fails
+                return params.oldValue;
+            }
+            return parsedValue;
+        }
     },
 };
 

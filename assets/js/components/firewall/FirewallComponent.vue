@@ -27,7 +27,7 @@
                         @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
                         @row-drag-end="onRowDragEnd"
                         :pagination="true" 
-                        :paginationPageSize="2" 
+                        :paginationPageSize="10" 
                         :rowSelection="'multiple'"
                         />
                 </v-card-text>

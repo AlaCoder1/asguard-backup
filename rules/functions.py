@@ -42,6 +42,7 @@ EOF""".format(include_rules)
       stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
       error = stderr.read().decode('utf-8')
       output = stdout.read().decode('utf-8').split('\n')
+      # print("error",error,"cmd",cmd)
       if error:
          return False
    return True
@@ -114,11 +115,14 @@ def delete_rule_remote(ifname,type_rule,handle):
    
 ###function to add in DB
 def add_rule_DB(data,rule,type_rule):
+   data={key: value for key, value in data.items() if value is not None}
+   print("data",data)
    data['rule']=rule
    data["rule_status"]=True
    data["type_rule"]=type_rule
    
    InboundSerializer = RuleSerializer(data=data)
+   # InboundSerializer.is_valid(raise_exception=True)
    if InboundSerializer.is_valid():
       InboundSerializer.save()
       return True
@@ -126,14 +130,58 @@ def add_rule_DB(data,rule,type_rule):
 
 ###function to update rule in DB
 def update_rule_DB(rule,rules,data):
-         data['rule']=rule
-         InboundSerializer = RuleSerializer(rules,data=data)
-         if InboundSerializer.is_valid():
-            InboundSerializer.save()
-            return True
-         return False
-
-
+   data={key: value for key, value in data.items() if value is not None}
+   print("data",data)
+   data['rule']=rule
+   InboundSerializer = RuleSerializer(rules,data=data)
+   # InboundSerializer.is_valid(raise_exception=True)
+   if InboundSerializer.is_valid():
+      InboundSerializer.save()
+      return True
+   return False
+##### 
+def add_rules(data,interfaceObject,ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
+   #appel la fonction pour initialiser les fichies nftables.conf
+   print("init_file_nftables(ifname)",init_file_nftables(ifname))
+   if init_file_nftables(ifname):
+          #appel la fonction pour retourner rule à ajouter 
+          rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
+          if not Rule.objects.filter(rule=rule).exists():
+          #appel la fonction pour ajouter rule dans le système
+            add_rule=add_rule_remote(rule,ifname,type_rule)
+            print("add_rule(ifname)",add_rule)
+            if add_rule:
+                  data['interface']=interfaceObject.id
+                  print("add_rule_DB(data,rule,type_rule)",add_rule_DB(data,rule,type_rule))
+                   #appel la fonction pour ajouter rule dans la base de données 
+                  data={key: value for key, value in data.items() if value is not None}
+                  if add_rule_DB(data,rule,type_rule):
+                     ruleObject=Rule.objects.get(rule=rule)
+                     id=ruleObject.id
+                     
+                     return True,id
+   return False,None
+##############
+def update_rules(data,id,ifname,policy,saddr,daddr,sport,dport,protocol):
+      rulesObject = Rule.objects.get(id=id)
+      rule=rulesObject.rule
+      type_rules=rulesObject.type_rule
+      #appel la fonction pour retrouver handle rule à supprimer
+      handle=get_handle_rule(ifname,type_rules,rule)
+      #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
+      if delete_rule_remote(ifname,type_rules,handle):
+            #appel la fonction pour retourner rule à ajouter 
+            ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
+            if not Rule.objects.filter(rule=ruleupdate).exists():
+            #appel la fonction pour ajouter rule dans le système
+               add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
+               if add_rule:
+                  #appel la fonction pour update rule dans la base de données 
+                  data['interface']=rulesObject.interface_id
+                  
+                  if update_rule_DB(ruleupdate,rulesObject,data) :
+                     return True
+      return False
 
 
 

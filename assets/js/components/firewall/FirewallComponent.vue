@@ -21,15 +21,13 @@
                 </v-card-title>
                 <v-card-text>
                     <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
-                        :rowData="rowData" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef" :editType="editType"
-                        style="width: 100%;" @cell-value-changed="onCellValueChanged" @row-value-changed="onRowValueChanged"
-                        @selection-changed="onSelectionChanged" 
+                        :rowData="rowData" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef"
+                        :editType="editType" style="width: 100%;" @cell-value-changed="onCellValueChanged"
+                        @row-value-changed="onRowValueChanged" @selection-changed="onSelectionChanged"
                         @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
-                        @row-drag-end="onRowDragEnd"
-                        :pagination="true" 
-                        :paginationPageSize="10" 
-                        :rowSelection="'multiple'"
-                        />
+                        @row-drag-end="onRowDragEnd" :pagination="true" :paginationPageSize="10"
+                        :rowSelection="'multiple'" >
+                </ag-grid-vue>
                 </v-card-text>
             </v-card>
         </div>
@@ -57,7 +55,7 @@ import axios from 'axios';
 export default {
     name: 'FirewallComponent',
     components: {
-        AgGridVue
+        AgGridVue,
     },
     data() {
         return {
@@ -86,13 +84,18 @@ export default {
                     cellEditorParams: {
                         values: ['Allow', 'Deny'],
                     },
-                    editable: params => params.node.data.isRowSelected
+                    editable: params => params.node.data.isRowSelected,
+                    required: true,
                 },
                 {
                     field: 'Rule_description',
                     headerName: 'Rule Description',
                     editable: params => params.node.data.isRowSelected,
                     headerName: 'Rule Description',
+                    required: true,
+                    textArea: true,
+                    min: 5,
+                    max: 10,
                 },
                 {
                     field: 'protocol',
@@ -101,30 +104,74 @@ export default {
                     cellEditorParams: {
                         values: ['TCP', 'UDP', 'ICMP'],
                     },
-                    editable: params => params.node.data.isRowSelected
+                    editable: params => params.node.data.isRowSelected,
+                    required: true,
                 },
                 {
                     field: 'saddr',
                     headerName: 'Src Address',
                     editable: params => params.node.data.isRowSelected,
-
+                    valueSetter: (params) => {
+                        const value = params.newValue;
+                        if (this.isValidIPAddress(value)) {
+                            params.data.saddr = value;
+                            return true; // Value is valid, update the cell
+                        } else {
+                            // Value is invalid, display a validation message
+                            alert('Please enter a valid source IP address');
+                            return false; // Value is not updated
+                        }
+                    },
                 },
                 {
                     field: 'srcPort',
                     headerName: 'Src Port',
                     editable: params => params.node.data.isRowSelected,
-                    valueParser: this.numericValueParser
+                    valueParser: this.numericValueParser,
+                    valueSetter: (params) => {
+                        const value = params.newValue;
+                        if (this.isValidPortNumber(value)) {
+                            params.data.srcPort = value;
+                            return true; // Value is valid, update the cell
+                        } else {
+                            // Value is invalid, display a validation message
+                            alert('Please enter a valid source port number');
+                            return false; // Value is not updated
+                        }
+                    },
                 },
                 {
                     headerName: 'Dst Address',
                     field: 'daddr',
-                    editable: params => params.node.data.isRowSelected
+                    editable: params => params.node.data.isRowSelected,
+                    valueSetter: (params) => {
+                        const value = params.newValue;
+                        if (this.isValidIPAddress(value)) {
+                            params.data.daddr = value;
+                            return true; // Value is valid, update the cell
+                        } else {
+                            // Value is invalid, display a validation message without using alert
+                            alert('Please enter a valid destination IP address');
+                            return false; // Value is not updated
+                        }
+                    },
                 },
                 {
                     field: 'dport',
                     headerName: 'Dst Port',
                     editable: params => params.node.data.isRowSelected,
-                    valueParser: this.numericValueParser
+                    valueParser: this.numericValueParser,
+                    valueSetter: (params) => {
+                        const value = params.newValue;
+                        if (this.isValidPortNumber(value)) {
+                            params.data.dport = value;
+                            return true; // Value is valid, update the cell
+                        } else {
+                            // Value is invalid, display a validation message
+                            alert('Please enter a valid destination port number');
+                            return false; // Value is not updated
+                        }
+                    },
                 },
                 {
                     headerName: 'Action',
@@ -140,44 +187,7 @@ export default {
                 cellDataType: false,
             },
             editType: null,
-            rowData: [
-                // {
-                //     isSelected: false,
-                //     isRowSelected: false,
-                //     policy: 'Allow',
-                //     Rule_description: 'Rule 1',
-                //     protocol: 'TCP',
-                //     saddr: ' ',
-                //     srcPort: 'ANY',
-                //     daddr: ' ',
-                //     dport: 'ANY',
-                //     Action: ' ',
-                // },
-                // {
-                //     isSelected: false,
-                //     isRowSelected: false,
-                //     Policy: 'Allow',
-                //     Rule_description: 'Rule 2',
-                //     protocol: 'UDP',
-                //     saddr: ' ',
-                //     srcPort: 'ANY ',
-                //     daddr: ' ',
-                //     dport: 'ANY',
-                //     Action: ' ',
-                // },
-                // {
-                //     isSelected: false,
-                //     isRowSelected: false,
-                //     Policy: 'Allow',
-                //     Rule_description: 'Rule 3',
-                //     protocol: 'ICMP',
-                //     saddr: ' ',
-                //     srcPort: 'ANY',
-                //     daddr: ' ',
-                //     dport: 'ANY',
-                //     Action: ' ',
-                // }
-            ],
+            rowData: [],
             filterText: null,
             columnOrder: [],
         };
@@ -263,7 +273,7 @@ export default {
             const newRow = {
                 isSelected: false,
                 isRowSelected: false,
-                 isModified: false,
+                isModified: false,
                 policy: 'Allow',
                 Rule_description: '',
                 protocol: 'TCP',
@@ -279,13 +289,13 @@ export default {
             this.gridApi.forEachNode(node => node.setSelected(node.data === newRow));
 
         },
-         arrayMove(arr, fromIndex, toIndex) {
+        arrayMove(arr, fromIndex, toIndex) {
             const element = arr[fromIndex];
             arr.splice(fromIndex, 1);
             arr.splice(toIndex, 0, element);
             return arr.slice(); // Create a new array reference
         },
-         onRowDragEnd(event) {
+        onRowDragEnd(event) {
             const updatedRows = event.overIndex !== undefined
                 ? this.arrayMove(this.rowData, event.node.rowIndex, event.overIndex)
                 : this.rowData;
@@ -295,7 +305,7 @@ export default {
         onColumnRowGroupChanged(event) {
             const newColumnOrder = event.columns.map(column => column.colId);
             this.gridApi.setColumnDefs(this.columnDefs);
-            this.gridApi.setColumnOrder(newColumnOrder);    
+            this.gridApi.setColumnOrder(newColumnOrder);
         },
         onColumnRowDragEnd(event) {
             if (event && event.columns) {
@@ -308,63 +318,6 @@ export default {
                 console.log('event.columns is undefined or null');
             }
         },
-        
-        cancel() {
-            console.log('Cancel clicked');
-        },
-        async save() {
-            // Filter the modified rows
-            const modifiedRows = this.rowData.filter(row => row.isModified);
-            console.log('Modified rows:', modifiedRows);
-
-            // Prepare data for API
-            const dataToSend = modifiedRows.map(row => {
-                // Convert row data to the required format for your API
-                return {
-                    policy: row.policy === 'Allow' ? 'accept' : 'drop',
-                    Rule_description: row.Rule_description,
-                    protocol: row.protocol === 'TCP' ? 'tcp' : row.protocol === 'UDP' ? 'udp' : 'icmp',
-                    saddr: row.saddr,
-                    daddr: row.daddr,
-                    sport: row.srcPort === 'ANY' ? '' : row.srcPort,
-                    dport: row.dport,
-                    type_rule: "inbound",
-                };
-            });
-            console.log('Data to send:', dataToSend[0]);
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        // Does this cookie string begin with the name we want?
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
-                        }
-                    }
-                }
-                return cookieValue;
-            }
-            const csrfToken = getCookie('csrftoken')
-            axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-
-            try {
-                // Send data to API
-                const response = await axios.post('http://127.0.0.1:8000/rules/addRule/LAN', dataToSend[0]);
-
-                // Handle API response
-                if (response.status === 200) {
-                    // Clear the modified flag for the saved rows
-                    modifiedRows.forEach(row => row.isModified = false);
-                } else {
-                    console.error('Failed to save data');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        },
         numericValueParser(params) {
             const parsedValue = parseInt(params.newValue);
             if (isNaN(parsedValue)) {
@@ -372,7 +325,100 @@ export default {
                 return params.oldValue;
             }
             return parsedValue;
-        }
+        },
+        isValidIPAddress(value) {
+            const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
+            return ipRegex.test(value);
+        },
+        isValidPortNumber(value) {
+            const portRegex = /^\d{1,5}$/;
+            return portRegex.test(value);
+        },
+        isValidRowData(rowData) {
+            const requiredColumns = ['policy', 'Rule_description', 'protocol', 'saddr', 'daddr'];
+            for (const column of requiredColumns) {
+                if (!rowData[column]) {
+                    return false; // Data in a required column is missing
+                }
+            }
+            return true; // All required columns have data
+        },
+        validateGridData(gridData) {
+            const requiredColumns = ['policy', 'Rule_description', 'protocol', 'saddr', 'daddr'];
+            for (const row of gridData) {
+                for (const column of requiredColumns) {
+                    if (!row[column]) {
+                        return false; // Data in a required column is missing
+                    }
+                }
+            }
+            return true; // All required columns have data
+        },
+        cancel() {
+            console.log('Cancel clicked');
+        },
+        async save() {
+
+             const isValid = this.validateGridData(this.rowData);
+            if (isValid) {
+                // Data is valid, proceed with your logic
+                
+                // Filter the modified rows
+                const modifiedRows = this.rowData.filter(row => row.isModified);
+                console.log('Modified rows:', modifiedRows);
+
+                // Prepare data for API
+                const dataToSend = modifiedRows.map(row => {
+                    // Convert row data to the required format for your API
+                    return {
+                        policy: row.policy === 'Allow' ? 'accept' : 'drop',
+                        Rule_description: row.Rule_description,
+                        protocol: row.protocol === 'TCP' ? 'tcp' : row.protocol === 'UDP' ? 'udp' : 'icmp',
+                        saddr: row.saddr,
+                        daddr: row.daddr,
+                        sport: row.srcPort === 'ANY' ? '' : row.srcPort,
+                        dport: row.dport,
+                        type_rule: "inbound",
+                    };
+                });
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+                const csrfToken = getCookie('csrftoken')
+                axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+                try {
+                    // Send data to API
+                    const response = await axios.post('http://127.0.0.1:8000/rules/addRule/LAN', dataToSend[0]);
+
+                    // Handle API response
+                    if (response.status === 200) {
+                        // Clear the modified flag for the saved rows
+                        modifiedRows.forEach(row => row.isModified = false);
+                    } else {
+                        console.error('Failed to save data');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            } else {
+                // Data is not valid, show an error message or take appropriate action
+                console.error('Data is not valid');
+                this.$toast.error('Data is not valid. Please check required fields.');
+            }
+        },
     },
 };
 

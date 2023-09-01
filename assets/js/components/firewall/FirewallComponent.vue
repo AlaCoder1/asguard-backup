@@ -259,11 +259,7 @@ export default {
         },
         handleAction(action, rowData) {
             switch (action) {
-                case 'delete':
-                    const index = this.rowData.findIndex(item => item.id === rowData.id);
-                    if (index !== -1) {
-                        this.rowData.splice(index, 1);
-                    }
+                case 'delete':axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowData.id);
                     break;
                 default:
                     break;

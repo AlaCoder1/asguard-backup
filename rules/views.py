@@ -11,6 +11,7 @@ from network.address import *
 from .functions import *
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -45,12 +46,36 @@ def GetRulesByInterface(request,name_interface):
 #         return JsonResponse({"Rules:": resRules})      
 ####
 @csrf_exempt
+# @api_view(['GET'])
+# @authentication_classes([SessionAuthentication])
+# #@permission_classes([IsAuthenticated])
+# def GetRulesByType(request,name_interface,type_rule):
+#     if (request.method == 'GET'):
+#         interfaceObject= Interface.objects.get(name_interface=name_interface)
+#         rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
+#         ruleDict = serializers.serialize("json", rules)
+#         resRules = json.loads(ruleDict)
+#         return JsonResponse({"Rules:": resRules})      
+####
+@csrf_exempt
 def GetRulesByType(request,name_interface,type_rule):
     list_rules = []
     if (request.method == 'GET'):
         interfaceObject= Interface.objects.get(name_interface=name_interface)
         rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
         ruleDict = serializers.serialize("json", rules)
+        res = json.loads(ruleDict)
+        for i in range(0, len(res)):
+          interfaceDict=[]
+          res[i].pop('model')
+          id = res[i]['pk']
+          res[i].pop('pk')
+          res[i]['fields']['id'] = id
+          interface=Interface.objects.get(id=res[i]['fields']['interface'])
+          interfaceDict.append({"name":interface.name_interface,"id":interface.id})
+          res[i]['fields']['interface']=interfaceDict
+          list_rules.append(res[i]['fields'])
+        return JsonResponse({"Rules:": list_rules})
         res = json.loads(ruleDict)
         for i in range(0, len(res)):
           interfaceDict=[]
@@ -217,33 +242,32 @@ def saveRules(request,name_interface):
         type_rules=rulesObject.type_rule
         #appel la fonction pour retrouver handle rule à supprimer
         handle=get_handle_rule(ifname,type_rules,rule)
-        if handle is not None:
-          #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
-          return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
-          if return_delete_rule_remote:
-            #appel la fonction pour retourner rule à ajouter 
-            ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
-            #appel la fonction pour ajouter rule dans le système
+        #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
+        return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
+        if return_delete_rule_remote:
+          #appel la fonction pour retourner rule à ajouter 
+          ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
+          if not Rule.objects.filter(rule=ruleupdate).exists():
+          #appel la fonction pour ajouter rule dans le système
             return_add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
             if return_add_rule:
                 #appel la fonction pour update rule dans la base de données 
                 data={key: value for key, value in data.items() if value is not None}
                 data['interface']=rulesObject.interface_id
-                data['rule']=ruleupdate
+                data['rule']=rule
                 InboundSerializer = RuleSerializer(rulesObject,data=data)
                 InboundSerializer.is_valid(raise_exception=True)
                 if InboundSerializer.is_valid():
                   InboundSerializer.save()
-                  msg = "Rule updated Successfully!!"
-
+                  msg = "ya3tik esa7a sar el update"
                 else:
                   msg= InboundSerializer.errors
             else:
               msg= return_add_rule
           else:
-            msg = return_delete_rule_remote
+            msg = "hathi mawjouda y 3ami"
         else:
-          msg="Rule not exist in system !!"
+          msg = return_delete_rule_remote
       else:
         #appel la fonction pour initialiser les fichies nftables.conf
         return_init_file_nftables = init_file_nftables(ifname)
@@ -264,16 +288,11 @@ def saveRules(request,name_interface):
               InboundSerializer.is_valid(raise_exception=True)
               if InboundSerializer.is_valid():
                 InboundSerializer.save()
-                
-                msg = "Rule Saved Successfully!!"
+                msg = "haw zednaha sidi"
               else:
                 msg = InboundSerializer.errors
-            else:
-              msg = return_add_rule
           else:
-            msg="Rule already exist!"
+            msg = return_add_rule
         else:
           msg = return_init_file_nftables
-      # msgs.append(msg)
-      response={"id":id,"rule":rule,"msg":msg}
   return JsonResponse({"response": msg})    

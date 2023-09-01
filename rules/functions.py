@@ -43,8 +43,8 @@ EOF""".format(include_rules)
       error = stderr.read().decode('utf-8')
       output = stdout.read().decode('utf-8').split('\n')
       # print("error",error,"cmd",cmd)
-      if error:
-         return False
+      if error !="":
+         return error
    return True
 
 
@@ -82,8 +82,8 @@ def add_rule_remote(rule,ifname,type_rule):
       for cmd in commandes:
          stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
          error = stderr.read().decode('utf-8')
-         if error: 
-            return False
+         if error!='': 
+            return error
       return True
 ###function to get handle rule   
 def get_handle_rule(ifname,type_rule,rule):
@@ -108,21 +108,19 @@ def delete_rule_remote(ifname,type_rule,handle):
    for cmd in commandes:
       stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
       error = stderr.read().decode('utf-8')
-      if error:
-        return False    
+      if error !="":
+        return error    
    return True
 
    
 ###function to add in DB
 def add_rule_DB(data,rule,type_rule):
    data={key: value for key, value in data.items() if value is not None}
-   print("data",data)
    data['rule']=rule
    data["rule_status"]=True
    data["type_rule"]=type_rule
-   
    InboundSerializer = RuleSerializer(data=data)
-   # InboundSerializer.is_valid(raise_exception=True)
+   InboundSerializer.is_valid(raise_exception=True)
    if InboundSerializer.is_valid():
       InboundSerializer.save()
       return True
@@ -134,7 +132,7 @@ def update_rule_DB(rule,rules,data):
    print("data",data)
    data['rule']=rule
    InboundSerializer = RuleSerializer(rules,data=data)
-   # InboundSerializer.is_valid(raise_exception=True)
+   InboundSerializer.is_valid(raise_exception=True)
    if InboundSerializer.is_valid():
       InboundSerializer.save()
       return True
@@ -142,25 +140,18 @@ def update_rule_DB(rule,rules,data):
 ##### 
 def add_rules(data,interfaceObject,ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
    #appel la fonction pour initialiser les fichies nftables.conf
-   print("init_file_nftables(ifname)",init_file_nftables(ifname))
    if init_file_nftables(ifname):
           #appel la fonction pour retourner rule à ajouter 
           rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
           if not Rule.objects.filter(rule=rule).exists():
           #appel la fonction pour ajouter rule dans le système
             add_rule=add_rule_remote(rule,ifname,type_rule)
-            print("add_rule(ifname)",add_rule)
             if add_rule:
                   data['interface']=interfaceObject.id
-                  print("add_rule_DB(data,rule,type_rule)",add_rule_DB(data,rule,type_rule))
-                   #appel la fonction pour ajouter rule dans la base de données 
-                  data={key: value for key, value in data.items() if value is not None}
+                  #appel la fonction pour ajouter rule dans la base de données 
                   if add_rule_DB(data,rule,type_rule):
-                     ruleObject=Rule.objects.get(rule=rule)
-                     id=ruleObject.id
-                     
-                     return True,id
-   return False,None
+                     return True
+   return False
 ##############
 def update_rules(data,id,ifname,policy,saddr,daddr,sport,dport,protocol):
       rulesObject = Rule.objects.get(id=id)
@@ -178,7 +169,6 @@ def update_rules(data,id,ifname,policy,saddr,daddr,sport,dport,protocol):
                if add_rule:
                   #appel la fonction pour update rule dans la base de données 
                   data['interface']=rulesObject.interface_id
-                  
                   if update_rule_DB(ruleupdate,rulesObject,data) :
                      return True
       return False

@@ -3,7 +3,8 @@ from managementUsers.views import *
 from managementUsers.models import User
 from django.contrib.auth.decorators import login_required
 from managementServers.models import * 
-
+from network.models import *
+from rules.models import *
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -62,6 +63,26 @@ def getServers(request):
             res[i]['fields']['type_name'] = type.type_name
             list_servers.append(res[i]['fields'])
         return list_servers
+#######
+def GetRulesByType(request,name_interface,type_rule):
+    list_rules = []
+    if (request.method == 'GET'):
+        interfaceObject= Interface.objects.get(name_interface=name_interface)
+        rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
+        ruleDict = serializers.serialize("json", rules)
+        res = json.loads(ruleDict)
+        for i in range(0, len(res)):
+          interfaceDict=[]
+          res[i].pop('model')
+          id = res[i]['pk']
+          res[i].pop('pk')
+          res[i]['fields']['id'] = id
+          interface=Interface.objects.get(id=res[i]['fields']['interface'])
+          interfaceDict.append({"name":interface.name_interface,"id":interface.id})
+          res[i]['fields']['interface']=interfaceDict
+          list_rules.append(res[i]['fields'])
+        return list_rules
+##########    
 @login_required(login_url='/')
 def index_page(request):
     usr=getUsers(request)
@@ -112,3 +133,9 @@ def index_page_test(request):
     tab = "fefef"
     context = {'tab':tab}
     return render(request, 'index_page_test.html' ,context)
+
+@login_required(login_url='/')
+def GetRules(request,name_interface,type_rule):
+    rules=GetRulesByType(request,name_interface,type_rule)
+    context = {'rules':rules}
+    return render(request, 'login.html',context)

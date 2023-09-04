@@ -93,7 +93,7 @@ def get_handle_rule(ifname,type_rule,rule):
    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
    error = stderr.read().decode('utf-8')
    output = stdout.read().decode('utf-8').split('#')
-   if error:
+   if error!="" or len(output)<1:
       return None
    else:
       return output[1].strip('\n').strip()

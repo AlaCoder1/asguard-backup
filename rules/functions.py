@@ -32,9 +32,7 @@ EOF""".format(ifname,rules),
 "sudo nft add chain inet filter_{} outbound {{ type filter hook input priority 0 \; }}".format(ifname),
 "sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 \; }}".format(ifname),
 "sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}".format(ifname),
-"""sudo cat <<EOF >> /etc/nftables.conf
-{} 
-EOF""".format(include_rules)
+"grep -q '{}' /etc/nftables.conf || echo '{}' | sudo tee -a /etc/nftables.conf".format(include_rules,include_rules)
 ]
 
 ##executer le script créée précédamment retourner true si pas d'error sinon false en cas d'error
@@ -84,7 +82,8 @@ def add_rule_remote(rule,ifname,type_rule):
          error = stderr.read().decode('utf-8')
          if error!='': 
             return error
-      return True
+         else:
+            return True
 ###function to get handle rule   
 def get_handle_rule(ifname,type_rule,rule):
    ##cmd pour obtenir handle number pour supprimer rule 
@@ -93,7 +92,8 @@ def get_handle_rule(ifname,type_rule,rule):
    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
    error = stderr.read().decode('utf-8')
    output = stdout.read().decode('utf-8').split('#')
-   if error!="" or len(output)<1:
+   print("output",output)
+   if len(output)<2:
       return None
    else:
       return output[1].strip('\n').strip()
@@ -109,8 +109,9 @@ def delete_rule_remote(ifname,type_rule,handle):
       stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
       error = stderr.read().decode('utf-8')
       if error !="":
-        return error    
-   return True
+         return error  
+      else:  
+         return True
 
    
 ###function to add in DB

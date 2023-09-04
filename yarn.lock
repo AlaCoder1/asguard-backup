@@ -4630,10 +4630,10 @@ vary@~1.1.2:
   resolved "https://registry.npmjs.org/vary/-/vary-1.1.2.tgz"
   integrity sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==
 
-vee-validate@<3.0.0:
-  version "2.2.15"
-  resolved "https://registry.npmjs.org/vee-validate/-/vee-validate-2.2.15.tgz"
-  integrity sha512-4TOsI8XwVkKVLkg8Nhmy+jyoJrR6XcTRDyxBarzcCvYzU61zamipS1WsB6FlDze8eJQpgglS4NXAS6o4NDPs1g==
+vee-validate@3:
+  version "3.4.15"
+  resolved "https://registry.yarnpkg.com/vee-validate/-/vee-validate-3.4.15.tgz#d1b2fe2120d28bd833efadce15d73b482f6f7bcb"
+  integrity sha512-qEtvq9X2N7l5pjBe/6YGrrIBHxJA4KTrb3QrER3qzM7fzkH730m8LyVWMIzM47l//618nlUa7VvTdMFTRKr8tQ==
 
 vue-apexcharts@^1.6.2:
   version "1.6.2"
@@ -4700,6 +4700,11 @@ vue-template-es2015-compiler@^1.9.0:
   version "1.9.1"
   resolved "https://registry.npmjs.org/vue-template-es2015-compiler/-/vue-template-es2015-compiler-1.9.1.tgz"
   integrity sha512-4gDntzrifFnCEvyoO8PqyJDmguXgVPxKiIxrBKjIowvL9l+N66196+72XVYR8BBf1Uv1Fgt3bGevJ+sEmxfZzw==
+
+vue-toast-notification@^3.1.1:
+  version "3.1.1"
+  resolved "https://registry.yarnpkg.com/vue-toast-notification/-/vue-toast-notification-3.1.1.tgz#334e9e71996c884a58c70a0fa011424f767d87bb"
+  integrity sha512-DXEE38NxXFCNinKI+MyZBMWsaqE9Lwxg9GkMVkzKXY1ACCeNztBXuUiSvKMe36dnnYd1qnlP+cWNSvHlkt5xNA==
 
 vue2-leaflet@^2.7.1:
   version "2.7.1"

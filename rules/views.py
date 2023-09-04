@@ -264,7 +264,7 @@ def saveRules(request,name_interface):
               InboundSerializer.is_valid(raise_exception=True)
               if InboundSerializer.is_valid():
                 InboundSerializer.save()
-              
+                
                 msg = "Rule Saved Successfully!!"
               else:
                 msg = InboundSerializer.errors

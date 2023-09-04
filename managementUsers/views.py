@@ -3,7 +3,6 @@ from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from .models import *
 from django.views.decorators.csrf import csrf_protect
-
 from .serializers import *
 from managementGroup.serializers import *
 from managementGroup.views import *

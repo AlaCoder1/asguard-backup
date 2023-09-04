@@ -25,9 +25,8 @@
                         :editType="editType" style="width: 100%;" @cell-value-changed="onCellValueChanged"
                         @row-value-changed="onRowValueChanged" @selection-changed="onSelectionChanged"
                         @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
-                        @row-drag-end="onRowDragEnd" :pagination="true" :paginationPageSize="10"
-                        :rowSelection="'multiple'" >
-                </ag-grid-vue>
+                        @row-drag-end="onRowDragEnd" :pagination="true" :paginationPageSize="10" :rowSelection="'multiple'">
+                    </ag-grid-vue>
                 </v-card-text>
             </v-card>
         </div>
@@ -85,17 +84,12 @@ export default {
                         values: ['Allow', 'Deny'],
                     },
                     editable: params => params.node.data.isRowSelected,
-                    required: true,
                 },
                 {
                     field: 'Rule_description',
                     headerName: 'Rule Description',
                     editable: params => params.node.data.isRowSelected,
                     headerName: 'Rule Description',
-                    required: true,
-                    textArea: true,
-                    min: 5,
-                    max: 10,
                 },
                 {
                     field: 'protocol',
@@ -105,7 +99,6 @@ export default {
                         values: ['TCP', 'UDP', 'ICMP'],
                     },
                     editable: params => params.node.data.isRowSelected,
-                    required: true,
                 },
                 {
                     field: 'saddr',
@@ -258,8 +251,17 @@ export default {
             );
         },
         handleAction(action, rowData) {
+            console.log('Row data:', rowData);
             switch (action) {
-                case 'delete':axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowData.id);
+                case 'delete':
+                    if (rowData.id) {
+                        axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowData.id);
+                    } else {
+                        const index = this.rowData.indexOf(rowData);
+                        if (index > -1) {
+                            this.rowData.splice(index, 1);
+                        }
+                    }
                     break;
                 default:
                     break;
@@ -355,10 +357,10 @@ export default {
         },
         async save() {
 
-             const isValid = this.validateGridData(this.rowData);
+            const isValid = this.validateGridData(this.rowData);
             if (isValid) {
                 // Data is valid, proceed with your logic
-                
+
                 // Filter the modified rows
                 const modifiedRows = this.rowData.filter(row => row.isModified);
                 console.log('Modified rows:', modifiedRows);

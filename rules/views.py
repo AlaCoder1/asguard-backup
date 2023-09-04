@@ -127,7 +127,6 @@ def addRule(request,name_interface):
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 ###function to delete rule
-# def deleteRule(request,idInter,id):
 def deleteRule(request,id):
       if (request.method == 'DELETE'):
         msg="failed to delete rule!!"
@@ -146,7 +145,7 @@ def deleteRule(request,id):
             if handle is not None:
               #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
               return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
-              if return_delete_rule_remote:
+              if return_delete_rule_remote is True:
                 #appel la fonction pour supprimer  rule de la base de données 
                 rules.delete()
                 msg="delete rule Successfully!!"
@@ -200,13 +199,13 @@ def updateRule(request,id):
                         msg="Update rule Successfully!!"
                   
         return JsonResponse({"msg": msg})
-# @api_view(['POST'])
-# @authentication_classes([SessionAuthentication])
-
-@csrf_exempt
+      
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
 def saveRules(request,name_interface):
   msgs=[]
   msg=''
+  ruleMsg=''
   if (request.method == 'POST'):
     # parse the incoming information
     data_list = JSONParser().parse(request)
@@ -240,6 +239,9 @@ def saveRules(request,name_interface):
         rulesObject = Rule.objects.get(id=id)
         rule=rulesObject.rule
         type_rules=rulesObject.type_rule
+        #appel la fonction pour retourner rule à ajouter 
+        ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
+        ruleMsg=ruleupdate
         #appel la fonction pour retrouver handle rule à supprimer
         handle=get_handle_rule(ifname,type_rules,rule)
         #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
@@ -249,8 +251,13 @@ def saveRules(request,name_interface):
           ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
           if not Rule.objects.filter(rule=ruleupdate).exists():
           #appel la fonction pour ajouter rule dans le système
+        if handle is not None:
+          #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
+          return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
+          if return_delete_rule_remote is True:
+            #appel la fonction pour ajouter rule dans le système
             return_add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
-            if return_add_rule:
+            if  return_add_rule is True:
                 #appel la fonction pour update rule dans la base de données 
                 data={key: value for key, value in data.items() if value is not None}
                 data['interface']=rulesObject.interface_id
@@ -259,25 +266,27 @@ def saveRules(request,name_interface):
                 InboundSerializer.is_valid(raise_exception=True)
                 if InboundSerializer.is_valid():
                   InboundSerializer.save()
-                  msg = "ya3tik esa7a sar el update"
+                  msg = "Rule updated Successfully!!"
                 else:
                   msg= InboundSerializer.errors
             else:
+              add_rule_remote(rule,ifname,type_rules)
               msg= return_add_rule
           else:
             msg = "hathi mawjouda y 3ami"
         else:
-          msg = return_delete_rule_remote
+          msg="Rule doesn't exist in system !!"
       else:
         #appel la fonction pour initialiser les fichies nftables.conf
         return_init_file_nftables = init_file_nftables(ifname)
         if return_init_file_nftables:
           #appel la fonction pour retourner rule à ajouter 
           rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
+          ruleMsg=rule
           if not Rule.objects.filter(rule=rule).exists():
           #appel la fonction pour ajouter rule dans le système
             return_add_rule=add_rule_remote(rule,ifname,type_rule)
-            if return_add_rule:
+            if return_add_rule is True:
               data['interface']=interfaceObject.id
               #appel la fonction pour ajouter rule dans la base de données 
               data={key: value for key, value in data.items() if value is not None}
@@ -288,12 +297,18 @@ def saveRules(request,name_interface):
               InboundSerializer.is_valid(raise_exception=True)
               if InboundSerializer.is_valid():
                 InboundSerializer.save()
-                
+                id=Rule.objects.get(rule=rule).pk
                 msg = "Rule Saved Successfully!!"
               else:
                 msg = InboundSerializer.errors
+            else:
+              msg = return_add_rule
           else:
-            msg = return_add_rule
+            id=Rule.objects.get(rule=rule).pk
+            msg="Rule already exist!"
         else:
           msg = return_init_file_nftables
-  return JsonResponse({"response": msg})    
+      
+      response={"id":id,"rule":ruleMsg,"msg":msg}
+      msgs.append(response)
+  return JsonResponse({"response": msgs})    

@@ -259,7 +259,7 @@ EOF""".format('\n'.join(output_service))
                         print(aux_ipv4 and aux_gen and aux_inter)
                         if aux_ipv4 and aux_gen and aux_inter:
                             msg="Your interface {} was configured Successfully!!".format(name_interface)
-
+                            
                 
 
         

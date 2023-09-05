@@ -212,7 +212,7 @@ def differentMetric(exclude_list):
     return max(exclude_list)+1
 
 def return_Gateway_system(ifname,addrgw,far_aux,multiWan_aux,metric):
-    cmd="sudo ip route add default via {} dev {} proto static".format(addrgw,ifname)
+    cmd="sudo ip route add default via {} dev {} ".format(addrgw,ifname)
     ##test multiwan is true
     if multiWan_aux:
         cmd+=" metric {}".format(metric)
@@ -228,15 +228,15 @@ def update_conn_static_IPV4(config,ifname,ip_address,netmask,cmdgw):
     #la liste des commandes pour l'IPV4 static
     commands=[
          "#Start IP4Config {}".format(ifname),
-        "ExecStart=/usr/bin/ifconfig {} 0.0.0.0".format(ifname),
+        "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
         "ExecStart=/usr/bin/ip addr add {}/{} dev {}".format(ip_address,netmask,ifname),
         "ExecStart=/usr/bin/{}".format(cmdgw),
          "#End IP4Config {}".format(ifname)
     ]
     cmd_final=[ 
-        # "sudo ip addr flush dev {}".format(ifname),
-        "sudo ifconfig {} 0.0.0.0".format(ifname),
-        "sudo dhclient -r {}".format(ifname),  
+        # "sudo ifconfig {} 0.0.0.0".format(ifname),
+        "sudo ip addr flush dev {}".format(ifname),
+        # "sudo dhclient -r {}".format(ifname),  
         "sudo ip addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
     cmd_final.append(cmdgw)
     return commands,config,cmd_final
@@ -390,7 +390,7 @@ def update_conn_dhcp_IPV4(config,ifname):
     commandes=[
      "#Start IP4Config {}".format(ifname),   
      "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
-     "ExecStart=/usr/bin/dhclient -4 -cf  /etc/Dhcp4Config/{}/dhclient.conf -d {} ".format(ifname,ifname),
+     "ExecStart=/usr/bin/dhclient -4 -cf  /etc/Dhcp4Config/{}/dhclient.conf  {} ".format(ifname,ifname),
      "#End IP4Config {}".format(ifname)
     ]
     cmd_final=[
@@ -650,7 +650,7 @@ def create_file_nftables(ifname,rules):
         #cmd pour supprimer la configuration ancienne
         'if nft list tables | grep -q "filter_{}"; then sudo nft delete table inet filter_{} ; fi'.format(ifname,ifname),
         #cmd ajouter un dossier contenant le fichier config
-        """bash -c 'sudo mkdir -p /etc/rules/{} && cat <<EOF > /etc/rules/{}/nftables.conf
+        """bash -c 'sudo mkdir -p /etc/rulesNetwork/{} && cat <<EOF > /etc/rulesNetwork/{}/nftables.conf
 {}
 EOF' """.format(ifname, ifname, '\n'.join(rules))
       ]
@@ -694,11 +694,11 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux):
         ##cmd to block address
         commandes=[
             "#Start nftables config {}".format(ifname),
-            'ExecStart=/usr/bin/nft -f /etc/rules/{}/nftables.conf'.format(ifname),
+            'ExecStart=/usr/bin/nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
             "#End nftables config {}".format(ifname)
             ]
         cmd_final=[
-            'sudo nft -f /etc/rules/{}/nftables.conf'.format(ifname),
+            'sudo nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
         ]
     else:
         #call function to clean old config

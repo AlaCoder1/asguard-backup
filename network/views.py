@@ -219,7 +219,7 @@ def conf(request,name_interface):
 {}
 EOF""".format('\n'.join(output_service))
                 # print("1111",run_all_commands(commandes_final,setuptypeIP4,typeDHCP4))
-                if run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,5):
+                if run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,20):
                     stdin, stdout, stderr = ssh.exec_command(cmd_asguard)  
                     if not (stderr.read().decode('utf-8')):
                         if setuptypeIP4=="dhcp":

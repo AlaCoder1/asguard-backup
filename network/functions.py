@@ -212,7 +212,7 @@ def differentMetric(exclude_list):
     return max(exclude_list)+1
 
 def return_Gateway_system(ifname,addrgw,far_aux,multiWan_aux,metric):
-    cmd="sudo ip route add default via {} dev {} ".format(addrgw,ifname)
+    cmd="sudo ip route add default via {} dev {} proto static".format(addrgw,ifname)
     ##test multiwan is true
     if multiWan_aux:
         cmd+=" metric {}".format(metric)

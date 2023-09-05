@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from managementServers.models import * 
 from network.models import *
 from rules.models import *
+
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -44,8 +45,7 @@ def getGroups(request):
             else:
                 res[i]['fields']['sudoers']=True
             list_group.append(res[i]['fields'])
-        return list_group
-    
+        return list_group 
 def getServers(request):
     list_servers = []
     if (request.method == 'GET'):
@@ -82,7 +82,8 @@ def GetRulesByType(request,name_interface,type_rule):
           res[i]['fields']['interface']=interfaceDict
           list_rules.append(res[i]['fields'])
         return list_rules
-##########    
+##########   
+
 @login_required(login_url='/')
 def index_page(request):
     usr=getUsers(request)
@@ -111,8 +112,9 @@ def lan_page(request):
 @login_required(login_url='/')
 def firewall_page(request):
     return render(request, 'firewall_page.html')
-    firewall=getNetworkData(request)
-    context = {'firewall':firewall}
+    rules=getRules(request)
+    context = {'rules':rules}
+    print(context)
     return render(request, 'firewall_page.html',context)
 
 @login_required(login_url='/')

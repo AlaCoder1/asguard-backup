@@ -82,6 +82,43 @@ def GetRulesByType(request,name_interface,type_rule):
           res[i]['fields']['interface']=interfaceDict
           list_rules.append(res[i]['fields'])
         return list_rules
+###############
+def GetAllRules(request):
+    if (request.method == 'GET'):
+        all_rules={}
+        set_type=[]
+        allinterfaces=Interface.objects.all()
+        interfaceDict = serializers.serialize("json", allinterfaces)
+        resInterface = json.loads(interfaceDict)
+        ########## get all types 
+        rules= Rule.objects.all()
+        ruleDict = serializers.serialize("json", rules)
+        resRules = json.loads(ruleDict)
+        for j in range(0, len(resRules)):
+            set_type.append(resRules[j]['fields']['type_rule'])
+        for x in range(0, len(resInterface)):
+          idInterface=resInterface[x]['pk']
+          # rules= Rule.objects.get(interface=idInterface)
+          for elem in list(set(set_type)): 
+            rules_type={}
+            rules= Rule.objects.filter(interface=idInterface,type_rule=elem)
+            ruleDict = serializers.serialize("json", rules)
+            res = json.loads(ruleDict)
+            list_rules=[]
+            for i in range(0, len(res)):
+              interfaceDict=[]
+              res[i].pop('model')
+              id = res[i]['pk']
+              res[i].pop('pk')
+              res[i]['fields']['id'] = id
+              res[i]['fields'].pop("interface")
+              list_rules.append(res[i]['fields'])
+             ########## 
+            rules_type[elem]=list_rules
+          all_rules[resInterface[x]['fields']['name_interface']]=rules_type
+          print(resInterface)
+          print(resInterface[x]['fields']['name_interface'])
+        return all_rules
 ##########    
 @login_required(login_url='/')
 def index_page(request):
@@ -136,6 +173,6 @@ def index_page_test(request):
 
 @login_required(login_url='/')
 def GetRules(request,name_interface,type_rule):
-    rules=GetRulesByType(request,name_interface,type_rule)
+    rules=GetAllRules(request,name_interface,type_rule)
     context = {'rules':rules}
     return render(request, 'login.html',context)

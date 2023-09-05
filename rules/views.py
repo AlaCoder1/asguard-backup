@@ -12,15 +12,47 @@ from .functions import *
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
+# @api_view(['GET'])
+# @authentication_classes([SessionAuthentication])
+@csrf_exempt
 #@permission_classes([IsAuthenticated])
 def GetAllRules(request):
     if (request.method == 'GET'):
-        rules = Rule.objects.all()
+        all_rules={}
+        set_type=[]
+        allinterfaces=Interface.objects.all()
+        interfaceDict = serializers.serialize("json", allinterfaces)
+        resInterface = json.loads(interfaceDict)
+        ########## get all types 
+        rules= Rule.objects.all()
         ruleDict = serializers.serialize("json", rules)
         resRules = json.loads(ruleDict)
-        return JsonResponse({"Rules:": resRules})
+        for j in range(0, len(resRules)):
+            set_type.append(resRules[j]['fields']['type_rule'])
+        for x in range(0, len(resInterface)):
+          idInterface=resInterface[x]['pk']
+          rules_type={}
+          # rules= Rule.objects.get(interface=idInterface)
+          for elem in list(set(set_type)): 
+            
+            rules= Rule.objects.filter(interface=idInterface,type_rule=elem)
+            ruleDict = serializers.serialize("json", rules)
+            res = json.loads(ruleDict)
+            list_rules=[]
+            for i in range(0, len(res)):
+              interfaceDict=[]
+              res[i].pop('model')
+              id = res[i]['pk']
+              res[i].pop('pk')
+              res[i]['fields']['id'] = id
+              res[i]['fields'].pop("interface")
+              list_rules.append(res[i]['fields'])
+             ########## 
+            rules_type[elem]=list_rules
+          all_rules[resInterface[x]['fields']['name_interface']]=rules_type
+          print(resInterface)
+          print(resInterface[x]['fields']['name_interface'])
+        return JsonResponse({"Rules:": all_rules})
       
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -183,7 +215,7 @@ def saveRules(request,name_interface):
   ruleMsg=''
   if (request.method == 'POST'):
     # parse the incoming information
-    data_list = JSONParser().parse(request)
+    data_list =request.data
     #get object of interface type
     interfaceObject= Interface.objects.get(name_interface=name_interface)
     #get interface name to execute command systeme

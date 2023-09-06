@@ -63,26 +63,43 @@ def getServers(request):
             res[i]['fields']['type_name'] = type.type_name
             list_servers.append(res[i]['fields'])
         return list_servers
-#######
-def GetRulesByType(request,name_interface,type_rule):
-    list_rules = []
+
+def GetAllRules(request):
     if (request.method == 'GET'):
-        interfaceObject= Interface.objects.get(name_interface=name_interface)
-        rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
+        all_rules={}
+        set_type=[]
+        allinterfaces=Interface.objects.all()
+        interfaceDict = serializers.serialize("json", allinterfaces)
+        resInterface = json.loads(interfaceDict)
+        ########## get all types 
+        rules= Rule.objects.all()
         ruleDict = serializers.serialize("json", rules)
-        res = json.loads(ruleDict)
-        for i in range(0, len(res)):
-          interfaceDict=[]
-          res[i].pop('model')
-          id = res[i]['pk']
-          res[i].pop('pk')
-          res[i]['fields']['id'] = id
-          interface=Interface.objects.get(id=res[i]['fields']['interface'])
-          interfaceDict.append({"name":interface.name_interface,"id":interface.id})
-          res[i]['fields']['interface']=interfaceDict
-          list_rules.append(res[i]['fields'])
-        return list_rules
-##########   
+        resRules = json.loads(ruleDict)
+        for j in range(0, len(resRules)):
+            set_type.append(resRules[j]['fields']['type_rule'])
+        for x in range(0, len(resInterface)):
+          idInterface=resInterface[x]['pk']
+          rules_type={}
+          # rules= Rule.objects.get(interface=idInterface)
+          for elem in list(set(set_type)): 
+            rules= Rule.objects.filter(interface=idInterface,type_rule=elem)
+            ruleDict = serializers.serialize("json", rules)
+            res = json.loads(ruleDict)
+            list_rules=[]
+            for i in range(0, len(res)):
+              interfaceDict=[]
+              res[i].pop('model')
+              id = res[i]['pk']
+              res[i].pop('pk')
+              res[i]['fields']['id'] = id
+              res[i]['fields'].pop("interface")
+              res[i]['fields'].pop("rule")
+              list_rules.append(res[i]['fields'])
+             ########## 
+            rules_type[elem]=list_rules
+          all_rules[resInterface[x]['fields']['name_interface']]=rules_type
+          
+        return all_rules
 
 @login_required(login_url='/')
 def index_page(request):
@@ -111,8 +128,7 @@ def lan_page(request):
 
 @login_required(login_url='/')
 def firewall_page(request):
-    return render(request, 'firewall_page.html')
-    rules=getRules(request)
+    rules=GetAllRules(request)
     context = {'rules':rules}
     print(context)
     return render(request, 'firewall_page.html',context)
@@ -135,9 +151,3 @@ def index_page_test(request):
     tab = "fefef"
     context = {'tab':tab}
     return render(request, 'index_page_test.html' ,context)
-
-@login_required(login_url='/')
-def GetRules(request,name_interface,type_rule):
-    rules=GetRulesByType(request,name_interface,type_rule)
-    context = {'rules':rules}
-    return render(request, 'login.html',context)

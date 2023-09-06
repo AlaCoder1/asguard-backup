@@ -56,6 +56,11 @@ export default {
     components: {
         AgGridVue,
     },
+    props: {
+        activeTab: {
+            type: String,
+        },
+    },
     data() {
         return {
             columnDefs: [
@@ -117,14 +122,14 @@ export default {
                     },
                 },
                 {
-                    field: 'srcPort',
+                    field: 'sport',
                     headerName: 'Src Port',
                     editable: params => params.node.data.isRowSelected,
                     valueParser: this.numericValueParser,
                     valueSetter: (params) => {
                         const value = params.newValue;
                         if (this.isValidPortNumber(value)) {
-                            params.data.srcPort = value;
+                            params.data.sport = value;
                             return true; // Value is valid, update the cell
                         } else {
                             // Value is invalid, display a validation message
@@ -183,6 +188,7 @@ export default {
             rowData: [],
             filterText: null,
             columnOrder: [],
+            rules: [],
         };
     },
     created() {
@@ -211,7 +217,7 @@ export default {
                 row.isRowSelected = row.isSelected;
             });
 
-            this.gridApi.refreshCells({ columns: ['Policy', 'Rule_description', 'protocol', 'saddr', 'srcPort', 'daddr', 'dport', 'Action'] });
+            this.gridApi.refreshCells({ columns: ['Policy', 'Rule_description', 'protocol', 'saddr', 'sport', 'daddr', 'dport', 'Action'] });
         },
         actionCellRenderer(params) {
             let eGui = document.createElement('div');
@@ -255,7 +261,24 @@ export default {
             switch (action) {
                 case 'delete':
                     if (rowData.id) {
-                        axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowData.id);
+                        axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowData.id)
+                            .then(response => {
+                                // Access response data
+                                const responseData = response.data;
+                                if (responseData.msg === "delete rule Successfully!!") {
+                                    // Delete the row from the grid
+                                    const index = this.rowData.indexOf(rowData);
+                                    if (index > -1) {
+                                        this.rowData.splice(index, 1);
+                                    }
+                                } else {
+                                    console.error('Failed to delete row');
+                                }
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            });
+
                     } else {
                         const index = this.rowData.indexOf(rowData);
                         if (index > -1) {
@@ -276,7 +299,7 @@ export default {
                 Rule_description: '',
                 protocol: 'TCP',
                 saddr: '',
-                srcPort: 'ANY',
+                sport: 'ANY',
                 daddr: '',
                 dport: 'ANY',
                 Action: '',
@@ -374,7 +397,7 @@ export default {
                         protocol: row.protocol === 'TCP' ? 'tcp' : row.protocol === 'UDP' ? 'udp' : 'icmp',
                         saddr: row.saddr,
                         daddr: row.daddr,
-                        sport: row.srcPort === 'ANY' ? '' : row.srcPort,
+                        sport: row.sport === 'ANY' ? '' : row.sport,
                         dport: row.dport,
                         type_rule: "inbound",
                     };
@@ -399,7 +422,7 @@ export default {
 
                 try {
                     // Send data to API
-                    const response = await axios.post('http://127.0.0.1:8000/rules/addRule/LAN', dataToSend[0]);
+                    const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/LAN', dataToSend);
 
                     // Handle API response
                     if (response.status === 200) {
@@ -418,6 +441,27 @@ export default {
             }
         },
     },
+    mounted() {
+        this.rules = this.$root.$data.rules;
+        let validJsonString = this.rules
+            .replace(/'/g, '"')
+            .replace(/True/g, 'true')
+            .replace(/False/g, 'false')
+            .replace(/None/g, 'null');
+        let parsedArray = JSON.parse(validJsonString);
+        this.rules = parsedArray;
+    },
+    watch: {
+        // Whenever rules changes, rowData will be updated
+        rules: {
+            handler: function (val, oldVal) {
+                this.rowData = val[this.activeTab]['inbound'];
+            },
+            deep: true,
+        },
+
+    },
+
 };
 
 </script>

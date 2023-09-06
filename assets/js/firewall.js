@@ -36,12 +36,10 @@ new Vue({
   store,
   vuetify,
   data: {
-    rules: '',
+    rules: {},
   },
   beforeMount: function () {
-
     this.rules = this.$el.attributes['rules'] ? this.$el.attributes['rules'].value : '';
-    console.log(this.rules);
   },
   render: (h) => h(App),
 }).$mount('#app');

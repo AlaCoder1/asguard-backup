@@ -7,7 +7,7 @@ from network.models import Interface
 class Gateway(models.Model):
     # interfaces = models.ManyToManyField(Interface, related_name='Interfaces', through='GatewayInterface')
     gwname=models.CharField(max_length=200, null=True,unique=True)
-    gwaddress=models.CharField(max_length=200, null=True,unique=True)
+    gwaddress=models.CharField(max_length=200, null=True)
     staticgw=models.BooleanField(default=False)
     description=models.CharField(max_length=200, null=True)
     default_aux= models.BooleanField(default=True)

@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import login_required
 from managementServers.models import * 
 from network.models import *
 from rules.models import *
+
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -44,8 +45,7 @@ def getGroups(request):
             else:
                 res[i]['fields']['sudoers']=True
             list_group.append(res[i]['fields'])
-        return list_group
-    
+        return list_group 
 def getServers(request):
     list_servers = []
     if (request.method == 'GET'):
@@ -63,25 +63,24 @@ def getServers(request):
             res[i]['fields']['type_name'] = type.type_name
             list_servers.append(res[i]['fields'])
         return list_servers
-#######
-def GetRulesByType(request,name_interface,type_rule):
-    list_rules = []
-    if (request.method == 'GET'):
-        interfaceObject= Interface.objects.get(name_interface=name_interface)
-        rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
-        ruleDict = serializers.serialize("json", rules)
-        res = json.loads(ruleDict)
-        for i in range(0, len(res)):
-          interfaceDict=[]
-          res[i].pop('model')
-          id = res[i]['pk']
-          res[i].pop('pk')
-          res[i]['fields']['id'] = id
-          interface=Interface.objects.get(id=res[i]['fields']['interface'])
-          interfaceDict.append({"name":interface.name_interface,"id":interface.id})
-          res[i]['fields']['interface']=interfaceDict
-          list_rules.append(res[i]['fields'])
-        return list_rules
+
+# def GetAllRules(request):
+#     if (request.method == 'GET'):
+#         interfaceObject= Interface.objects.get(name_interface=name_interface)
+#         rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
+#         ruleDict = serializers.serialize("json", rules)
+#         res = json.loads(ruleDict)
+#         for i in range(0, len(res)):
+#           interfaceDict=[]
+#           res[i].pop('model')
+#           id = res[i]['pk']
+#           res[i].pop('pk')
+#           res[i]['fields']['id'] = id
+#           interface=Interface.objects.get(id=res[i]['fields']['interface'])
+#           interfaceDict.append({"name":interface.name_interface,"id":interface.id})
+#           res[i]['fields']['interface']=interfaceDict
+#           list_rules.append(res[i]['fields'])
+#         return list_rules
 ###############
 def GetAllRules(request):
     if (request.method == 'GET'):
@@ -112,12 +111,11 @@ def GetAllRules(request):
               res[i].pop('pk')
               res[i]['fields']['id'] = id
               res[i]['fields'].pop("interface")
+              res[i]['fields'].pop("rule")
               list_rules.append(res[i]['fields'])
              ########## 
             rules_type[elem]=list_rules
           all_rules[resInterface[x]['fields']['name_interface']]=rules_type
-          print(resInterface)
-          print(resInterface[x]['fields']['name_interface'])
         return all_rules
 ##########    
 @login_required(login_url='/')
@@ -147,9 +145,9 @@ def lan_page(request):
 
 @login_required(login_url='/')
 def firewall_page(request):
-    return render(request, 'firewall_page.html')
-    firewall=getNetworkData(request)
-    context = {'firewall':firewall}
+    rules=GetAllRules(request)
+    context = {'rules':rules}
+    print(context)
     return render(request, 'firewall_page.html',context)
 
 @login_required(login_url='/')
@@ -170,9 +168,3 @@ def index_page_test(request):
     tab = "fefef"
     context = {'tab':tab}
     return render(request, 'index_page_test.html' ,context)
-
-@login_required(login_url='/')
-def GetRules(request,name_interface,type_rule):
-    rules=GetAllRules(request,name_interface,type_rule)
-    context = {'rules':rules}
-    return render(request, 'login.html',context)

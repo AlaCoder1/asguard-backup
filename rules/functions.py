@@ -2,9 +2,6 @@ import paramiko
 from rules.serializers import *
 from django.conf import settings
 from authentification.views import *
-# ssh = paramiko.SSHClient()
-# ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-# ssh.connect('10.1.12.163', username='root', password='root')
  
 ##function initial nftables.conf et /rules/ifname/nftables.conf
 def init_file_nftables(ifname):
@@ -82,8 +79,7 @@ def add_rule_remote(rule,ifname,type_rule):
          error = stderr.read().decode('utf-8')
          if error!='': 
             return error
-         else:
-            return True
+      return True
 ###function to get handle rule   
 def get_handle_rule(ifname,type_rule,rule):
    ##cmd pour obtenir handle number pour supprimer rule 
@@ -92,7 +88,6 @@ def get_handle_rule(ifname,type_rule,rule):
    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
    error = stderr.read().decode('utf-8')
    output = stdout.read().decode('utf-8').split('#')
-   print("output",output)
    if len(output)<2:
       return None
    else:
@@ -110,8 +105,7 @@ def delete_rule_remote(ifname,type_rule,handle):
       error = stderr.read().decode('utf-8')
       if error !="":
          return error  
-      else:  
-         return True
+   return True
 
    
 ###function to add in DB
@@ -138,41 +132,3 @@ def update_rule_DB(rule,rules,data):
       InboundSerializer.save()
       return True
    return False
-##### 
-def add_rules(data,interfaceObject,ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
-   #appel la fonction pour initialiser les fichies nftables.conf
-   if init_file_nftables(ifname):
-          #appel la fonction pour retourner rule à ajouter 
-          rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
-          if not Rule.objects.filter(rule=rule).exists():
-          #appel la fonction pour ajouter rule dans le système
-            add_rule=add_rule_remote(rule,ifname,type_rule)
-            if add_rule:
-                  data['interface']=interfaceObject.id
-                  #appel la fonction pour ajouter rule dans la base de données 
-                  if add_rule_DB(data,rule,type_rule):
-                     return True
-   return False
-##############
-def update_rules(data,id,ifname,policy,saddr,daddr,sport,dport,protocol):
-      rulesObject = Rule.objects.get(id=id)
-      rule=rulesObject.rule
-      type_rules=rulesObject.type_rule
-      #appel la fonction pour retrouver handle rule à supprimer
-      handle=get_handle_rule(ifname,type_rules,rule)
-      #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
-      if delete_rule_remote(ifname,type_rules,handle):
-            #appel la fonction pour retourner rule à ajouter 
-            ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
-            if not Rule.objects.filter(rule=ruleupdate).exists():
-            #appel la fonction pour ajouter rule dans le système
-               add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
-               if add_rule:
-                  #appel la fonction pour update rule dans la base de données 
-                  data['interface']=rulesObject.interface_id
-                  if update_rule_DB(ruleupdate,rulesObject,data) :
-                     return True
-      return False
-
-
-

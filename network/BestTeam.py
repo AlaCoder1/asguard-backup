@@ -2,7 +2,7 @@ import json
 import requests
 import time
 
-url = "http://127.0.0.1:8000/network/conf/LAN"
+url = "http://127.0.0.1:8000/network/conf/WAN1"
 CSRFToken = "jsHCrsc11AUYIBr0hW7gbCEsc9Hy9DK3"
 sessionid = "dxe3lck99i6nas2donr75q1duq8fz572"
 payloadStaticWithGenericConf = json.dumps({
@@ -17,7 +17,8 @@ payloadStaticWithGenericConf = json.dumps({
   "setuptypeIP4": "static",
   "value_setup_Ipv4": {
     "ip_address4": "10.1.12.7",
-    "netmask4": 32
+    "netmask4": 32,
+    "gateway4": {"value":"10.1.12.1"}
   }
 })
 payloaStaticdWithOutGenericConf = json.dumps({
@@ -29,7 +30,8 @@ payloaStaticdWithOutGenericConf = json.dumps({
   "setuptypeIP4": "static",
   "value_setup_Ipv4": {
     "ip_address4": "10.1.12.7",
-    "netmask4": 32
+    "netmask4": 32,
+    "gateway4": {"value":"10.1.12.1"}
   }
 })
 payloadDhcpBaseWithGenericConf = json.dumps({
@@ -45,7 +47,7 @@ payloadDhcpBaseWithGenericConf = json.dumps({
   "value_setup_Ipv4": {
     "typeDHCP4": "Base",
     "alias_add": "192.5.5.210",
-    "alias_mask": "255.255.255.0",
+    "alias_mask": 32,
     "reject": "192.33.137.209",
     "hostname": "andare.fugue.com"
   }
@@ -60,7 +62,7 @@ payloadDhcpBaseWithOutGenericConf = json.dumps({
   "value_setup_Ipv4": {
     "typeDHCP4": "Base",
     "alias_add": "192.5.5.210",
-    "alias_mask": "255.255.255.0",
+    "alias_mask": 32,
     "reject": "192.33.137.209",
     "hostname": "andare.fugue.com"
   }
@@ -78,7 +80,7 @@ payloadDhcpAdvancedWithGenericConf = json.dumps({
   "value_setup_Ipv4": {
     "typeDHCP4": "Advanced",
     "alias_add": "192.5.5.215",
-    "alias_mask": "255.255.255.255",
+    "alias_mask": 32,
     "reject": "192.33.137.209",
     "hostname": "andare.fugue.com",
     "timeout": 60,
@@ -105,7 +107,7 @@ payloadDhcpAdvancedWithOutGenericConf = json.dumps({
   "value_setup_Ipv4": {
     "typeDHCP4": "Advanced",
     "alias_add": "192.5.5.215",
-    "alias_mask": "255.255.255.255",
+    "alias_mask": 32,
     "reject": "192.33.137.209",
     "hostname": "andare.fugue.com",
     "timeout": 60,
@@ -164,5 +166,9 @@ for i in range(0, 11):
         end_time = time.time()
         elapsed_time = end_time - start_time
         print(f"Elapsed Time: {task_name}", elapsed_time, "seconds")
+        if response.status_code !=200: 
+          print("error in API!")
+        else:
+          print("successfully executed API!")
         print("\\\\\\\\\\\\\\\\\\\\\\\\",task_name)
   print("\\\\\\\\\\\\\\\\\\\\\\\\",i)

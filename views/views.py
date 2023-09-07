@@ -111,12 +111,11 @@ def GetAllRules(request):
               res[i].pop('pk')
               res[i]['fields']['id'] = id
               res[i]['fields'].pop("interface")
+              res[i]['fields'].pop("rule")
               list_rules.append(res[i]['fields'])
              ########## 
             rules_type[elem]=list_rules
           all_rules[resInterface[x]['fields']['name_interface']]=rules_type
-          print(resInterface)
-          print(resInterface[x]['fields']['name_interface'])
         return all_rules
 ##########    
 @login_required(login_url='/')

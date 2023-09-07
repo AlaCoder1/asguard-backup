@@ -56,17 +56,6 @@ def update_interface_table(name_interface,data,InterfaceSerializer):
             return True
     return False 
 ############################################################  
-def get_conn_name(ifname):
-    cmd = "sudo nmcli connection show | awk '$NF == \"{}\" {{print}}'".format(ifname)
-      ##executer cette commande
-    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-    output = stdout.read().decode('utf-8').split('  ')
-    if len(output)==0:
-        return None
-    else:
-        output=[value for value in output if value]
-        uuid=output[1]
-        return uuid
 ##get old configuration in service
 def get_old_config():
         cmd = "cat /etc/systemd/system/Asguard-Networking.service"
@@ -222,28 +211,54 @@ def differentMetric(exclude_list):
             return num_start
     return max(exclude_list)+1
 
-def return_Gateway_system(uuid,addrgw,far_aux,multiWan_aux,metric):
-    cmd= "sudo nmcli connection modify {} ipv4.gateway {} ".format(uuid,addrgw),
+def return_Gateway_system(ifname,addrgw,far_aux,multiWan_aux,metric):
+    cmd="sudo ip route add default via {} dev {} proto static".format(addrgw,ifname)
     ##test multiwan is true
     if multiWan_aux:
-        cmd+=" ipv4.route-metric {}".format(metric)
+        cmd+=" metric {}".format(metric)
     if far_aux :
         cmd+=" onlink"
     return cmd
   
 # convert  to static connexion 
-def update_conn_static_IPV4(config,ifname,uuid,ipaddress,netmask,gwaddr):
+def update_conn_static_IPV4(config,ifname,ip_address,netmask,cmdgw):
+    print("cmdgw",cmdgw)
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
-    commands=[]
+    commands=[
+         "#Start IP4Config {}".format(ifname),
+        "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
+        "ExecStart=/usr/bin/ip addr add {}/{} dev {}".format(ip_address,netmask,ifname),
+        "ExecStart=/usr/bin/{}".format(cmdgw),
+         "#End IP4Config {}".format(ifname)
+    ]
     cmd_final=[ 
-        "sudo nmcli connection modify {} ipv4.method manual ipv4.addresses {}/{}".format(uuid,ipaddress,netmask),
-        "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),]
-    
+        # "sudo ifconfig {} 0.0.0.0".format(ifname),
+        "sudo ip addr flush dev {}".format(ifname),
+        # "sudo dhclient -r {}".format(ifname),  
+        "sudo ip addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
+    cmd_final.append(cmdgw)
     return commands,config,cmd_final
 
 ################### Dhcp
+####function to get gateway if typeIPV4 est DHCP Base or Advanced
+# def get_gateway_dhcp(ifname,ssh_client):
+#     # command="ip route list | grep {} | cut -d ' ' -f 3-".format(ifname)
+#     command="ip route list | grep default |  grep {} | cut -d ' ' -f 3-".format(ifname)
+    
+#     output,error=run_command(ssh_client, command)
+#     print("command ",command,"output ",output)
+#     metric=0
+#     if error or len(output)==0:
+#         gwaddr=None
+#     else:
+#         gwaddr=output.split()[0]
+#         if output.find('metric')!=-1:
+#             metric=int(output[output.find('metric')+len('metric'):])
+#             print(metric)
+    # return gwaddr,metric
+
 def get_gateway_dhcp(ifname,ssh_client):
     # command="ip route list | grep {} | cut -d ' ' -f 3-".format(ifname)
     command="ip route list | grep default |  grep {} | cut -d ' ' -f 3-".format(ifname)
@@ -368,19 +383,21 @@ EOF'""".format(ifname, ifname, '\n'.join(config_contenu))]
     return commands
 
 # convert  to dhcp  connexion base and advanced
-def update_conn_dhcp_IPV4(config,ifname,uuid):
+def update_conn_dhcp_IPV4(config,ifname):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 dhcp
     commandes=[
      "#Start IP4Config {}".format(ifname),   
+     "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
      "ExecStart=/usr/bin/dhclient -4 -cf  /etc/Dhcp4Config/{}/dhclient.conf  {} ".format(ifname,ifname),
      "#End IP4Config {}".format(ifname)
     ]
     cmd_final=[
-        "sudo nmcli connection modify {} ipv4.method auto ipv4.addresses '' ipv4.gateway '' ipv4.route-metric '' ".format(uuid),
-        "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),
-        "sudo dhclient -v -cf  /etc/Dhcp4Config/{}/dhclient.conf".format(ifname),
+    # "sudo ip addr flush dev {}".format(ifname),
+    "sudo ifconfig {} 0.0.0.0".format(ifname),
+    "sudo dhclient -v  -1 -cf  /etc/Dhcp4Config/{}/dhclient.conf {} ".format(ifname,ifname,ifname),
+    "sudo systemctl restart NetworkManager"
     ]
     
     return commandes,config,cmd_final

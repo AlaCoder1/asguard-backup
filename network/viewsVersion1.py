@@ -8,7 +8,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.core import serializers
 from authentification.views import *
-from .functionsVersion2 import *
+from .functionsVersion1 import *
 from django.views.decorators.csrf import csrf_exempt
 from gateway.models import *
 from gateway.functions import *
@@ -44,10 +44,6 @@ def conf(request,name_interface):
     if (request.method == 'PUT'):
         interfaceObject = Interface.objects.get(name_interface=name_interface)
         id_interface = interfaceObject.id
-        ###### get object Config
-        IP4ConfigObject=IP4Config.objects.get(interface_id=id_interface)
-        genericConfigObject=GenericConfig.objects.get(interface_id=id_interface)
-        ###############
         print("id_interface",id_interface)
         #get object of interface type
         deviceInfo = device_nameInterface(name_interface)
@@ -56,10 +52,7 @@ def conf(request,name_interface):
         #get interface name to execute command systeme
         ifname=deviceInfo.ifname
         nameInterface=deviceInfo.name_interface
-        ##get uuid to reference to connection
-        uuid=get_conn_name(ifname)
         ####
-       
         # parse the incoming information
         data = JSONParser().parse(request)
         # return JsonResponse({"data":data})
@@ -124,7 +117,7 @@ def conf(request,name_interface):
                         addGatewayInterfaceDB(GatewayObject,name_interface,metric)
                         #gateway ??????????
                         #call function to convert address to static
-                        commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,uuid,ip_address4,netmask4,addrgw)
+                        commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,ip_address4,netmask4,cmdgw)
                         jsonIPV4={
                     "nameInterface":nameInterface,"ifname":ifname,
                     "ip_address":ip_address4,"netmask":netmask4,
@@ -184,7 +177,7 @@ def conf(request,name_interface):
                         #add commands of create file dhclient to list of commandes to execute    
                         commandes_final+=create_file_IPV4(ifname,configContenu)
                         #call function to convert address to dhcp advanced /Base  in service
-                        commandes,output_service,cmd_final_ipv4=update_conn_dhcp_IPV4(output_service,ifname,uuid)
+                        commandes,output_service,cmd_final_ipv4=update_conn_dhcp_IPV4(output_service,ifname)
                 # match typeIP6:
                     # case "None":
                     #     pass
@@ -222,6 +215,7 @@ def conf(request,name_interface):
                 #ajouter au liste des commandes finales à executer (ssh.exec_command) 
                 commandes_final+=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_Gen+cmd_final_Block
                 cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
+
 {}
 EOF""".format('\n'.join(output_service))
                 # print("1111",run_all_commands(commandes_final,setuptypeIP4,typeDHCP4))

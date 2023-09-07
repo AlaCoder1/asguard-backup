@@ -50,8 +50,7 @@ def GetAllRules(request):
              ########## 
             rules_type[elem]=list_rules
           all_rules[resInterface[x]['fields']['name_interface']]=rules_type
-          print(resInterface)
-          print(resInterface[x]['fields']['name_interface'])
+ 
         return JsonResponse({"Rules:": all_rules})
       
 @api_view(['GET'])

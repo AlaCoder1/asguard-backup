@@ -11,41 +11,23 @@ from network.address import *
 from .functions import *
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
+# @api_view(['GET'])
+# @authentication_classes([SessionAuthentication])
+@csrf_exempt
 #@permission_classes([IsAuthenticated])
 def GetAllRules(request):
     if (request.method == 'GET'):
-        rules = Rule.objects.all()
+        all_rules={}
+        set_type=[]
+        allinterfaces=Interface.objects.all()
+        interfaceDict = serializers.serialize("json", allinterfaces)
+        resInterface = json.loads(interfaceDict)
+        ########## get all types 
+        rules= Rule.objects.all()
         ruleDict = serializers.serialize("json", rules)
         resRules = json.loads(ruleDict)
-        for j in range(0, len(resRules)):
-            set_type.append(resRules[j]['fields']['type_rule'])
-        for x in range(0, len(resInterface)):
-          idInterface=resInterface[x]['pk']
-          rules_type={}
-          # rules= Rule.objects.get(interface=idInterface)
-          for elem in list(set(set_type)): 
-            
-            rules= Rule.objects.filter(interface=idInterface,type_rule=elem)
-            ruleDict = serializers.serialize("json", rules)
-            res = json.loads(ruleDict)
-            list_rules=[]
-            for i in range(0, len(res)):
-              interfaceDict=[]
-              res[i].pop('model')
-              id = res[i]['pk']
-              res[i].pop('pk')
-              res[i]['fields']['id'] = id
-              res[i]['fields'].pop("interface")
-              list_rules.append(res[i]['fields'])
-             ########## 
-            rules_type[elem]=list_rules
-          all_rules[resInterface[x]['fields']['name_interface']]=rules_type
-      
-        return JsonResponse({"Rules:": all_rules})
+        return JsonResponse({"Rules:": resRules})
       
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -70,36 +52,12 @@ def GetRulesByInterface(request,name_interface):
 #         return JsonResponse({"Rules:": resRules})      
 ####
 @csrf_exempt
-# @api_view(['GET'])
-# @authentication_classes([SessionAuthentication])
-# #@permission_classes([IsAuthenticated])
-# def GetRulesByType(request,name_interface,type_rule):
-#     if (request.method == 'GET'):
-#         interfaceObject= Interface.objects.get(name_interface=name_interface)
-#         rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
-#         ruleDict = serializers.serialize("json", rules)
-#         resRules = json.loads(ruleDict)
-#         return JsonResponse({"Rules:": resRules})      
-####
-@csrf_exempt
 def GetRulesByType(request,name_interface,type_rule):
     list_rules = []
     if (request.method == 'GET'):
         interfaceObject= Interface.objects.get(name_interface=name_interface)
         rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
         ruleDict = serializers.serialize("json", rules)
-        res = json.loads(ruleDict)
-        for i in range(0, len(res)):
-          interfaceDict=[]
-          res[i].pop('model')
-          id = res[i]['pk']
-          res[i].pop('pk')
-          res[i]['fields']['id'] = id
-          interface=Interface.objects.get(id=res[i]['fields']['interface'])
-          interfaceDict.append({"name":interface.name_interface,"id":interface.id})
-          res[i]['fields']['interface']=interfaceDict
-          list_rules.append(res[i]['fields'])
-        return JsonResponse({"Rules:": list_rules})
         res = json.loads(ruleDict)
         for i in range(0, len(res)):
           interfaceDict=[]
@@ -232,7 +190,7 @@ def saveRules(request,name_interface):
   ruleMsg=''
   if (request.method == 'POST'):
     # parse the incoming information
-    data_list = JSONParser().parse(request)
+    data_list =request.data
     #get object of interface type
     interfaceObject= Interface.objects.get(name_interface=name_interface)
     #get interface name to execute command systeme
@@ -268,13 +226,6 @@ def saveRules(request,name_interface):
         ruleMsg=ruleupdate
         #appel la fonction pour retrouver handle rule à supprimer
         handle=get_handle_rule(ifname,type_rules,rule)
-        #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
-        return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
-        if return_delete_rule_remote:
-          #appel la fonction pour retourner rule à ajouter 
-          ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
-          if not Rule.objects.filter(rule=ruleupdate).exists():
-          #appel la fonction pour ajouter rule dans le système
         if handle is not None:
           #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
           return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
@@ -285,7 +236,7 @@ def saveRules(request,name_interface):
                 #appel la fonction pour update rule dans la base de données 
                 data={key: value for key, value in data.items() if value is not None}
                 data['interface']=rulesObject.interface_id
-                data['rule']=rule
+                data['rule']=ruleupdate
                 InboundSerializer = RuleSerializer(rulesObject,data=data)
                 InboundSerializer.is_valid(raise_exception=True)
                 if InboundSerializer.is_valid():
@@ -297,7 +248,7 @@ def saveRules(request,name_interface):
               add_rule_remote(rule,ifname,type_rules)
               msg= return_add_rule
           else:
-            msg = "hathi mawjouda y 3ami"
+            msg = return_delete_rule_remote
         else:
           msg="Rule doesn't exist in system !!"
       else:

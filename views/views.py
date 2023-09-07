@@ -66,6 +66,24 @@ def getServers(request):
 
 def GetAllRules(request):
     if (request.method == 'GET'):
+        interfaceObject= Interface.objects.get(name_interface=name_interface)
+        rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
+        ruleDict = serializers.serialize("json", rules)
+        res = json.loads(ruleDict)
+        for i in range(0, len(res)):
+          interfaceDict=[]
+          res[i].pop('model')
+          id = res[i]['pk']
+          res[i].pop('pk')
+          res[i]['fields']['id'] = id
+          interface=Interface.objects.get(id=res[i]['fields']['interface'])
+          interfaceDict.append({"name":interface.name_interface,"id":interface.id})
+          res[i]['fields']['interface']=interfaceDict
+          list_rules.append(res[i]['fields'])
+        return list_rules
+###############
+def GetAllRules(request):
+    if (request.method == 'GET'):
         all_rules={}
         set_type=[]
         allinterfaces=Interface.objects.all()
@@ -79,9 +97,9 @@ def GetAllRules(request):
             set_type.append(resRules[j]['fields']['type_rule'])
         for x in range(0, len(resInterface)):
           idInterface=resInterface[x]['pk']
-          rules_type={}
           # rules= Rule.objects.get(interface=idInterface)
           for elem in list(set(set_type)): 
+            rules_type={}
             rules= Rule.objects.filter(interface=idInterface,type_rule=elem)
             ruleDict = serializers.serialize("json", rules)
             res = json.loads(ruleDict)
@@ -93,14 +111,14 @@ def GetAllRules(request):
               res[i].pop('pk')
               res[i]['fields']['id'] = id
               res[i]['fields'].pop("interface")
-              res[i]['fields'].pop("rule")
               list_rules.append(res[i]['fields'])
              ########## 
             rules_type[elem]=list_rules
           all_rules[resInterface[x]['fields']['name_interface']]=rules_type
-          
+          print(resInterface)
+          print(resInterface[x]['fields']['name_interface'])
         return all_rules
-
+##########    
 @login_required(login_url='/')
 def index_page(request):
     usr=getUsers(request)

@@ -3,6 +3,17 @@
         <div class="container">
             <h4>Inbound rules</h4>
             <v-divider></v-divider>
+            <v-alert type="success" class="d-flex mt-3" v-if="alert">
+                <span class="justify-end">
+                    <i class="fas fa-check-circle "></i>
+                </span>
+                <span class="c-o ml-3">
+                    <strong>Success!</strong> Rules saved successfully.
+                </span>
+                <span class="ml-16" style="margin-top: 20px !important;">
+                    <i class="fas fa-times justify-end cursor" @click="handleRemove"></i>
+                </span>
+            </v-alert>
             <v-card class="mt-3">
                 <v-card-title>
                     <v-row>
@@ -86,7 +97,7 @@ export default {
                     headerName: 'Policy',
                     cellEditor: 'agSelectCellEditor',
                     cellEditorParams: {
-                        values: ['Allow', 'Deny'],
+                        values: ['accept', 'drop'],
                     },
                     editable: params => params.node.data.isRowSelected,
                 },
@@ -101,7 +112,7 @@ export default {
                     headerName: 'Protocol',
                     cellEditor: 'agSelectCellEditor',
                     cellEditorParams: {
-                        values: ['TCP', 'UDP', 'ICMP'],
+                        values: ['tcp', 'udp', 'icmp request', 'icmp reply'],
                     },
                     editable: params => params.node.data.isRowSelected,
                 },
@@ -137,6 +148,15 @@ export default {
                             return false; // Value is not updated
                         }
                     },
+                     // Add cellStyle function to disable cell based on protocol value
+                    cellStyle: (params) => {
+                        // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
+                        if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
+                            return { 'pointer-events': 'none', 'background-color': '#eee', 'opacity': '0.6' };
+                        }
+                        // Return null to enable the cell for other values
+                        return null;
+                    },
                 },
                 {
                     headerName: 'Dst Address',
@@ -170,6 +190,15 @@ export default {
                             return false; // Value is not updated
                         }
                     },
+                     // Add cellStyle function to disable cell based on protocol value
+                    cellStyle: (params) => {
+                        // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
+                        if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
+                            return { 'pointer-events': 'none', 'background-color': '#eee', 'opacity': '0.6' };
+                        }
+                        // Return null to enable the cell for other values
+                        return null;
+                    },
                 },
                 {
                     headerName: 'Action',
@@ -189,6 +218,7 @@ export default {
             filterText: null,
             columnOrder: [],
             rules: [],
+            alert: false,
         };
     },
     created() {
@@ -295,9 +325,9 @@ export default {
                 isSelected: false,
                 isRowSelected: false,
                 isModified: false,
-                policy: 'Allow',
+                policy: 'accept',
                 Rule_description: '',
-                protocol: 'TCP',
+                protocol: 'tcp',
                 saddr: '',
                 sport: 'ANY',
                 daddr: '',
@@ -376,25 +406,26 @@ export default {
             return true; // All required columns have data
         },
         cancel() {
-            console.log('Cancel clicked');
+            this.rowData = this.rules[this.activeTab]['inbound'].filter(row => row.id);
+            // cancel the changes of modfied rows
+            this.rowData.forEach(row => {
+                if (row.isModified) {
+                    row.isModified = false;
+                }
+            });
+            console.log('Cancel:', this.rowData);
         },
         async save() {
 
             const isValid = this.validateGridData(this.rowData);
             if (isValid) {
-                // Data is valid, proceed with your logic
-
-                // Filter the modified rows
                 const modifiedRows = this.rowData.filter(row => row.isModified);
                 console.log('Modified rows:', modifiedRows);
-
-                // Prepare data for API
                 const dataToSend = modifiedRows.map(row => {
-                    // Convert row data to the required format for your API
                     return {
-                        policy: row.policy === 'Allow' ? 'accept' : 'drop',
+                        policy: row.policy,
                         Rule_description: row.Rule_description,
-                        protocol: row.protocol === 'TCP' ? 'tcp' : row.protocol === 'UDP' ? 'udp' : 'icmp',
+                        protocol: row.protocol === 'icmp request' ? 'icmp type echo-request' : row.protocol === 'icmp reply' ? 'icmp type echo-reply' : row.protocol,
                         saddr: row.saddr,
                         daddr: row.daddr,
                         sport: row.sport === 'ANY' ? '' : row.sport,
@@ -421,13 +452,14 @@ export default {
                 axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
                 try {
-                    // Send data to API
                     const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/LAN', dataToSend);
-
-                    // Handle API response
                     if (response.status === 200) {
-                        // Clear the modified flag for the saved rows
                         modifiedRows.forEach(row => row.isModified = false);
+                        this.alert = true;
+                        setTimeout(() => {
+                            this.alert = false;
+                        }, 5000);
+
                     } else {
                         console.error('Failed to save data');
                     }
@@ -435,10 +467,12 @@ export default {
                     console.error('Error:', error);
                 }
             } else {
-                // Data is not valid, show an error message or take appropriate action
                 console.error('Data is not valid');
                 this.$toast.error('Data is not valid. Please check required fields.');
             }
+        },
+        handleRemove() {
+            this.alert = false;
         },
     },
     mounted() {
@@ -460,8 +494,29 @@ export default {
             deep: true,
         },
 
+        // Whenever activeTab changes, rowData will be updated
+        activeTab: {
+            handler: function (val, oldVal) {
+                this.rowData = this.rules[val]['inbound'];
+            },
+            deep: true,
+        },
     },
 
+    computed: {
+        // Whenever protocol is icmp request or icmp reply, disable the sport and dport columns and set their values to ANY
+        // This is done to prevent users from entering values in sport and dport columns when protocol is icmp request or icmp reply
+
+        // code 
+        cellStyle: (params) => {
+            // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
+            if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
+                return { 'pointer-events': 'none', 'background-color': '#eee', 'opacity': '0.6' };
+            }
+            // Return null to enable the cell for other values
+            return null;
+        },
+    },
 };
 
 </script>
@@ -522,5 +577,10 @@ export default {
     line-height: normal;
     text-align: center;
     text-transform: capitalize;
+}
+
+.v-alert.d-flex.mt-3.v-sheet.theme--dark.success {
+    width: 28%;
+    margin-left: auto;
 }
 </style>

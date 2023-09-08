@@ -43,11 +43,13 @@ def differentMetric(exclude_list):
     return max(exclude_list)+1
 #######
 ### function to return gateway wwith choices
-def return_Gateway_system(uuid,addrgw,far_aux,multiWan_aux,metric):
-    cmd= "sudo nmcli connection modify {} ipv4.gateway {} ".format(uuid,addrgw),
-    ##test multiwan is true
-    if multiWan_aux:
-        cmd+=" ipv4.route-metric {}".format(metric)
+def return_Gateway_system(uuid,addrgw,far_aux,multiWan_aux,metric,IP4ConfigObject):
+    cmd=""
+    if addrgw is not None and addrgw!=IP4ConfigObject.addrgw:
+        cmd= "sudo nmcli connection modify {} ipv4.gateway {} ".format(uuid,addrgw)
+        ##test multiwan is true
+        if multiWan_aux:
+            cmd+=" ipv4.route-metric {}".format(metric)
     return cmd
 ###########DHCP
 def get_gateway_dhcp(ifname,ssh_client):

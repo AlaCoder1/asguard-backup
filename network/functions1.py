@@ -2,7 +2,6 @@ from .models import *
 from authentification.views import *
 from network.address import *
 ####background task to execute it 
-from background_task import background
 from django.conf import settings
 import subprocess
 ###############################################################
@@ -35,31 +34,7 @@ def update_interface_table(id,data,InterfaceSerializer):
     serializerInterface= InterfaceSerializer(objectConfig,data=data)
     if serializerInterface.is_valid():
             serializerInterface.save()      
-############################################################
-@background
-def your_background_task(commands):
-    # Code to execute in the background
-    ssh_conx = paramiko.SSHClient()
-    ssh_conx.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    # connect to SSH server
-    ssh_conx.connect("10.1.12.74", username="root",
-                password="root", port="22")
-    # username=settings.CurrentUserId
-    print({"heniiiiiiiiiiiiii":settings.USERNAME})
-    # print({"HOST":settings.SSH_HOST,"username":settings.USERNAME,"password":settings.PASSWORD})
-    # ssh.connect(settings.SSH_HOST, username=settings.USERNAME,
-    #                         password=settings.PASSWORD)
-    for cmd in commands:
-        stdin, stdout, stderr = ssh_conx.exec_command('{}'.format(cmd))
-        error = stderr.read().decode('utf-8')
-        output = stdout.read().decode('utf-8').split('\n')
-        if error:
-            print("error ",error,"    :",cmd)
-            # break
-        else:
-            print("service created successufully!!",cmd)
-    ssh_conx.close()    
-###################    
+   
 ##get old configuration in service
 def get_old_config():
         cmd = "cat /etc/systemd/system/Asguard-Networking.service"

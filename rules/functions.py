@@ -1,4 +1,3 @@
-import paramiko
 from rules.serializers import *
 from django.conf import settings
 from authentification.views import *
@@ -37,7 +36,6 @@ EOF""".format(ifname,rules),
       stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
       error = stderr.read().decode('utf-8')
       output = stdout.read().decode('utf-8').split('\n')
-      # print("error",error,"cmd",cmd)
       if error !="":
          return error
    return True
@@ -70,7 +68,6 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
    if dport is None and not protocol.startswith("icmp") :
       rule=rule[:rule.find(('{} dport {}').format(protocol,dport))]+rule[rule.find(('{} dport {}').format(protocol,dport))+len(('{} dport {}').format(protocol,dport)):].strip()
    
-   print({"ruleee":rule})
    return rule
 ###function to add rule
 def add_rule_remote(rule,ifname,type_rule):
@@ -114,27 +111,3 @@ def delete_rule_remote(ifname,type_rule,handle):
    return True
 
    
-###function to add in DB
-def add_rule_DB(data,rule,type_rule):
-   data={key: value for key, value in data.items() if value is not None}
-   data['rule']=rule
-   data["rule_status"]=True
-   data["type_rule"]=type_rule
-   InboundSerializer = RuleSerializer(data=data)
-   InboundSerializer.is_valid(raise_exception=True)
-   if InboundSerializer.is_valid():
-      InboundSerializer.save()
-      return True
-   return False
-
-###function to update rule in DB
-def update_rule_DB(rule,rules,data):
-   data={key: value for key, value in data.items() if value is not None}
-   print("data",data)
-   data['rule']=rule
-   InboundSerializer = RuleSerializer(rules,data=data)
-   InboundSerializer.is_valid(raise_exception=True)
-   if InboundSerializer.is_valid():
-      InboundSerializer.save()
-      return True
-   return False

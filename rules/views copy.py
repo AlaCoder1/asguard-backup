@@ -12,9 +12,10 @@ from .functions import *
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
-##API to get all Rules
+# @api_view(['GET'])
+# @authentication_classes([SessionAuthentication])
+@csrf_exempt
+#@permission_classes([IsAuthenticated])
 def GetAllRules(request):
     if (request.method == 'GET'):
         all_rules={}
@@ -33,6 +34,7 @@ def GetAllRules(request):
           rules_type={}
           # rules= Rule.objects.get(interface=idInterface)
           for elem in list(set(set_type)): 
+            
             rules= Rule.objects.filter(interface=idInterface,type_rule=elem)
             ruleDict = serializers.serialize("json", rules)
             res = json.loads(ruleDict)
@@ -51,9 +53,117 @@ def GetAllRules(request):
  
         return JsonResponse({"Rules:": all_rules})
       
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
+def GetRulesByInterface(request,name_interface):
+    if (request.method == 'GET'):
+        interfaceObject= Interface.objects.get(name_interface=name_interface)
+        rules= Rule.objects.filter(interface=interfaceObject.id)
+        ruleDict = serializers.serialize("json", rules)
+        resRules = json.loads(ruleDict)
+        return JsonResponse({"Rules:": resRules})
+      
 
+@csrf_exempt
+def GetRulesByType(request,name_interface,type_rule):
+    list_rules = []
+    if (request.method == 'GET'):
+        interfaceObject= Interface.objects.get(name_interface=name_interface)
+        rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
+        ruleDict = serializers.serialize("json", rules)
+        res = json.loads(ruleDict)
+        for i in range(0, len(res)):
+          interfaceDict=[]
+          res[i].pop('model')
+          id = res[i]['pk']
+          res[i].pop('pk')
+          res[i]['fields']['id'] = id
+          interface=Interface.objects.get(id=res[i]['fields']['interface'])
+          interfaceDict.append({"name":interface.name_interface,"id":interface.id})
+          res[i]['fields']['interface']=interfaceDict
+          list_rules.append(res[i]['fields'])
+        return JsonResponse({"Rules:": list_rules})
+          
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
+def addRule(request,name_interface):
+    if (request.method == 'POST'):
+        #get object of interface type
+        interfaceObject= Interface.objects.get(name_interface=name_interface)
+        #get interface name to execute command systeme
+        ifname=interfaceObject.ifname
+        data = request.data
+        policy = data.get('policy', None)
+        saddr = None if data.get('saddr', None) == "" else data.get('saddr', None)
+        daddr = None if data.get('daddr', None) == "" else data.get('daddr', None)
+        sport = None if data.get('sport', None) == "" else data.get('sport', None)
+        dport = data.get('dport', None)
+        protocol = None if data.get('protocol', None) == "" else data.get('protocol', None)
+        type_rule = data.get('type_rule', None)
+        Rule_description=data.get('Rule_description', None)
+        msg="Failed to add rule"
+        #appel la fonction pour initialiser les fichies nftables.conf
+        if init_file_nftables(ifname):
+          #appel la fonction pour retourner rule à ajouter 
+          rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
+          if not Rule.objects.filter(rule=rule).exists():
+          #appel la fonction pour ajouter rule dans le système
+            add_rule=add_rule_remote(rule,ifname,type_rule)
+            if add_rule:
+                  data['interface']=interfaceObject.id
+                   #appel la fonction pour ajouter rule dans la base de données 
+                  if add_rule_DB(data,rule,type_rule):
+                      msg="add rule Successufully!!"
+               
+        return JsonResponse({"msg:": msg})
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
+###function to delete rule
+def updateRule(request,id):
+      if (request.method == 'PUT'):
+        data = request.data
+        policy = data.get('policy', None)
+        saddr = None if data.get('saddr', None) == "" else data.get('saddr', None)
+        daddr = None if data.get('daddr', None) == "" else data.get('daddr', None)
+        sport = None if data.get('sport', None) == "" else data.get('sport', None)
+        dport = data.get('dport', None)
+        protocol = None if data.get('protocol', None) == "" else data.get('protocol', None)
+        type_rule = data.get('type_rule', None)
+        Rule_description=data.get('Rule_description', None)
+        # type_rule = data.get('type_rule', None)
+        msg="Failed to update rule!!"
+        #tester si rule exist ou non
+        if (Rule.objects.filter(id=id).exists()):
+            rulesObject = Rule.objects.get(id=id)
+            rule=rulesObject.rule
+            type_rules=rulesObject.type_rule
+             #get object of interface type
+            interfaceObject= Interface.objects.get(id=rulesObject.interface_id)
+            #get interface name to execute command systeme
+            ifname=interfaceObject.ifname
+            #appel la fonction pour retrouver handle rule à supprimer
+            handle=get_handle_rule(ifname,type_rules,rule)
+             #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
+            if delete_rule_remote(ifname,type_rules,handle):
+                 #appel la fonction pour retourner rule à ajouter 
+                ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
+                if not Rule.objects.filter(rule=ruleupdate).exists():
+                #appel la fonction pour ajouter rule dans le système
+                    add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
+                    if add_rule:
+                      #appel la fonction pour update rule dans la base de données 
+                      data['interface']=rulesObject.interface_id
+                      if update_rule_DB(ruleupdate,rulesObject,data) :
+                        msg="Update rule Successfully!!"
+                  
+        return JsonResponse({"msg": msg})
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 ###function to delete rule
 def deleteRule(request,id):
       if (request.method == 'DELETE'):
@@ -88,6 +198,8 @@ def deleteRule(request,id):
           msg="Rule not exist in database!!"
           status=400
         return JsonResponse({"msg": msg},status=status)
+    
+
       
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -158,6 +270,7 @@ def saveRules(request,name_interface):
             msg = return_delete_rule_remote
         else:
           msg="Rule doesn't exist in system !!"
+          status=400  
       else:
         #appel la fonction pour initialiser les fichies nftables.conf
         return_init_file_nftables = init_file_nftables(ifname)

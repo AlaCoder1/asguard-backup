@@ -64,23 +64,23 @@ def getServers(request):
             list_servers.append(res[i]['fields'])
         return list_servers
 
-def GetAllRules(request):
-    if (request.method == 'GET'):
-        interfaceObject= Interface.objects.get(name_interface=name_interface)
-        rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
-        ruleDict = serializers.serialize("json", rules)
-        res = json.loads(ruleDict)
-        for i in range(0, len(res)):
-          interfaceDict=[]
-          res[i].pop('model')
-          id = res[i]['pk']
-          res[i].pop('pk')
-          res[i]['fields']['id'] = id
-          interface=Interface.objects.get(id=res[i]['fields']['interface'])
-          interfaceDict.append({"name":interface.name_interface,"id":interface.id})
-          res[i]['fields']['interface']=interfaceDict
-          list_rules.append(res[i]['fields'])
-        return list_rules
+# def GetAllRules(request):
+#     if (request.method == 'GET'):
+#         interfaceObject= Interface.objects.get(name_interface=name_interface)
+#         rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
+#         ruleDict = serializers.serialize("json", rules)
+#         res = json.loads(ruleDict)
+#         for i in range(0, len(res)):
+#           interfaceDict=[]
+#           res[i].pop('model')
+#           id = res[i]['pk']
+#           res[i].pop('pk')
+#           res[i]['fields']['id'] = id
+#           interface=Interface.objects.get(id=res[i]['fields']['interface'])
+#           interfaceDict.append({"name":interface.name_interface,"id":interface.id})
+#           res[i]['fields']['interface']=interfaceDict
+#           list_rules.append(res[i]['fields'])
+#         return list_rules
 ###############
 def GetAllRules(request):
     if (request.method == 'GET'):

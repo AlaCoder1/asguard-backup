@@ -27,7 +27,7 @@ class Interface(models.Model):
         super(Interface, self).save(*args, **kwargs)
 
     class Meta:
-        db_table = 'Interface'
+        db_table = 'interface'
     description=models.CharField(max_length=200, null=True,default=None)
 
 
@@ -55,7 +55,7 @@ class GenericConfig(models.Model):
         self.updated_at = timezone.now()
         super(GenericConfig, self).save(*args, **kwargs)
     class Meta:
-        db_table = 'GenericConfig'
+        db_table = 'genericConfig'
 
 
 #model to configure ipv4
@@ -103,7 +103,7 @@ class IP4Config(models.Model):
         self.updated_at = timezone.now()
         super(IP4Config, self).save(*args, **kwargs)
     class Meta:
-        db_table = 'IP4Config'
+        db_table = 'iP4Config'
         
 
 #model to configure ipv6
@@ -170,7 +170,7 @@ class IP6Config(models.Model):
         self.updated_at = timezone.now()
         super(IP6Config, self).save(*args, **kwargs)
     class Meta:
-        db_table = 'IP6Config'
+        db_table = 'iP6Config'
 
 
 

@@ -36,11 +36,10 @@ new Vue({
   store,
   vuetify,
   data: {
-    firewall: '',
+    rules: {},
   },
   beforeMount: function () {
-    console.log(this);
-    this.firewall = this.$el.attributes['firewall'] ? this.$el.attributes['firewall'].value : '';
+    this.rules = this.$el.attributes['rules'] ? this.$el.attributes['rules'].value : '';
   },
   render: (h) => h(App),
 }).$mount('#app');

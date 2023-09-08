@@ -3,7 +3,7 @@ import vuetify from '@/plugins/vuetify';
 import 'vuetify/dist/vuetify.min.css'
 import App from '@/pages/seetings';
 
-import VeeValidate from 'vee-validate';
+// import VeeValidate from 'vee-validate';
 import VueI18n from 'vue-i18n';
 import dictionnary from './dictionnary';
 import enJson from './translations/en.json'; 
@@ -20,7 +20,7 @@ const i18n = new VueI18n({
   },
 });
 
-Vue.use(VeeValidate, {
+Vue.use( {
   i18n,
   classes: true,
   fieldsBagName: 'formFields',

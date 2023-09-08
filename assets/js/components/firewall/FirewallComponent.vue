@@ -53,7 +53,60 @@
                 </div>
             </div>
         </div>
-        <br /><br /><br />
+        <!-- outbound -->
+        <!-- <div class="container">
+                <h4>outbound rules</h4>
+                <v-divider></v-divider>
+                <v-alert type="success" class="d-flex mt-3" v-if="alert">
+                    <span class="justify-end">
+                        <i class="fas fa-check-circle "></i>
+                    </span>
+                    <span class="c-o ml-3">
+                        <strong>Success!</strong> Rules saved successfully.
+                    </span>
+                    <span class="ml-16" style="margin-top: 20px !important;">
+                        <i class="fas fa-times justify-end cursor" @click="handleRemove"></i>
+                    </span>
+                </v-alert>
+                <v-card class="mt-3">
+                    <v-card-title>
+                        <v-row>
+                            <v-col cols="12" md="6">
+                                <v-text-field id="filter-text-box" v-model="filterText" append-icon="mdi-magnify" label="Search"
+                                    single-line hide-details rounded outlined dense
+                                    @input="onFilterTextBoxChanged"></v-text-field>
+                            </v-col>
+                            <v-col cols="12" md="6" class="d-flex justify-end">
+                                <v-btn class="ml-3 mt-2 " color="primary" text @click="addRow">
+                                    <i class="fas fa-plus"></i>
+                                    <span class="ml-2">Add</span>
+                                </v-btn>
+                            </v-col>
+                        </v-row>
+                    </v-card-title>
+                    <v-card-text>
+                        <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
+                            :rowData="rowDataoutbound" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef"
+                            :editType="editType" style="width: 100%;" @cell-value-changed="onCellValueChanged"
+                            @row-value-changed="onRowValueChanged" @selection-changed="onSelectionChanged"
+                            @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
+                            @row-drag-end="onRowDragEnd" :pagination="true" :paginationPageSize="10" :rowSelection="'multiple'">
+                        </ag-grid-vue>
+                    </v-card-text>
+                </v-card>
+            </div>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-12 text-center">
+                        <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel">
+                            Cancel
+                        </v-btn>
+                        <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="save">
+                            Save
+                        </v-btn>
+                    </div>
+                </div>
+            </div> -->
     </div>
 </template>
 
@@ -219,6 +272,7 @@ export default {
             columnOrder: [],
             rules: [],
             alert: false,
+            rowDataoutbound: [],
         };
     },
     created() {

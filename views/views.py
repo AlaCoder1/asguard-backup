@@ -97,9 +97,9 @@ def GetAllRules(request):
             set_type.append(resRules[j]['fields']['type_rule'])
         for x in range(0, len(resInterface)):
           idInterface=resInterface[x]['pk']
+          rules_type={}
           # rules= Rule.objects.get(interface=idInterface)
           for elem in list(set(set_type)): 
-            rules_type={}
             rules= Rule.objects.filter(interface=idInterface,type_rule=elem)
             ruleDict = serializers.serialize("json", rules)
             res = json.loads(ruleDict)
@@ -111,7 +111,6 @@ def GetAllRules(request):
               res[i].pop('pk')
               res[i]['fields']['id'] = id
               res[i]['fields'].pop("interface")
-              res[i]['fields'].pop("rule")
               list_rules.append(res[i]['fields'])
              ########## 
             rules_type[elem]=list_rules

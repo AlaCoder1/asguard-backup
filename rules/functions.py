@@ -1,4 +1,3 @@
-import paramiko
 from rules.serializers import *
 from django.conf import settings
 from authentification.views import *
@@ -37,7 +36,6 @@ EOF""".format(ifname,rules),
       stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
       error = stderr.read().decode('utf-8')
       output = stdout.read().decode('utf-8').split('\n')
-      # print("error",error,"cmd",cmd)
       if error !="":
          return error
    return True
@@ -49,22 +47,27 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
    rule=''
    ##cas inbound
    if type_rule=='inbound':
-         rule='iifname "{}" ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(ifname,saddr,daddr,protocol,sport,protocol,dport,policy)
+      rule='iifname "{}" ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(ifname,saddr,daddr,protocol,sport,protocol,dport,policy)
     ##cas outbound
    elif type_rule=='outbound':
-         rule='oifname "{}" ip daddr {} ip saddr {} {} dport {} {} sport {} {}'.format(ifname,daddr,saddr,protocol,dport,protocol,sport,policy)
+      rule='oifname "{}" ip daddr {} ip saddr {} {} dport {} {} sport {} {}'.format(ifname,daddr,saddr,protocol,dport,protocol,sport,policy)
+   
    #####cas saddr is None
    if saddr is None:
       rule=rule[:rule.find('ip saddr None')]+rule[rule.find('ip saddr None')+len(('ip saddr None'))+1:].strip()
    #####cas daddr is None
    if daddr is None:
       rule=rule[:rule.find('ip daddr None')]+rule[rule.find('ip daddr None')+len(('ip daddr None'))+1:].strip()
+     ####### cas protocol icmp sans port
+   if protocol.startswith("icmp")  :
+      rule=rule[:rule.find(protocol)+len(protocol)]+" "+rule[rule.find('{}'.format(policy)):]
    #####cas sport is None
-   if sport is None:
-      rule=rule[:rule.find(('{} sport None').format(protocol))]+rule[rule.find(('{} sport None').format(protocol))+len(('{} sport None').format(protocol)):].strip()
+   if sport is None and not protocol.startswith("icmp") :
+      rule=rule[:rule.find(('{} sport {}').format(protocol,sport))]+rule[rule.find(('{} sport {}').format(protocol,sport))+len(('{} sport {}').format(protocol,sport)):].strip()
    #####cas dport is None
-   if dport is None:
-      rule=rule[:rule.find(('{} dport None').format(protocol))]+rule[rule.find(('{} dport None').format(protocol))+len(('{} dport None').format(protocol)):].strip()
+   if dport is None and not protocol.startswith("icmp") :
+      rule=rule[:rule.find(('{} dport {}').format(protocol,dport))]+rule[rule.find(('{} dport {}').format(protocol,dport))+len(('{} dport {}').format(protocol,dport)):].strip()
+   
    return rule
 ###function to add rule
 def add_rule_remote(rule,ifname,type_rule):
@@ -82,6 +85,8 @@ def add_rule_remote(rule,ifname,type_rule):
       return True
 ###function to get handle rule   
 def get_handle_rule(ifname,type_rule,rule):
+   rule=rule.replace("echo-request","8")
+   rule=rule.replace("echo-reply","0")
    ##cmd pour obtenir handle number pour supprimer rule 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
@@ -91,7 +96,7 @@ def get_handle_rule(ifname,type_rule,rule):
    if len(output)<2:
       return None
    else:
-      return output[1].strip('\n').strip()
+      return output[1].strip().split("\n")[0]
 ###function to delete rule
 def delete_rule_remote(ifname,type_rule,handle):
    ##initialiser les commanndes pour supprimer une règle et l'entregistrer dans nftables.conf
@@ -108,27 +113,3 @@ def delete_rule_remote(ifname,type_rule,handle):
    return True
 
    
-###function to add in DB
-def add_rule_DB(data,rule,type_rule):
-   data={key: value for key, value in data.items() if value is not None}
-   data['rule']=rule
-   data["rule_status"]=True
-   data["type_rule"]=type_rule
-   InboundSerializer = RuleSerializer(data=data)
-   InboundSerializer.is_valid(raise_exception=True)
-   if InboundSerializer.is_valid():
-      InboundSerializer.save()
-      return True
-   return False
-
-###function to update rule in DB
-def update_rule_DB(rule,rules,data):
-   data={key: value for key, value in data.items() if value is not None}
-   print("data",data)
-   data['rule']=rule
-   InboundSerializer = RuleSerializer(rules,data=data)
-   InboundSerializer.is_valid(raise_exception=True)
-   if InboundSerializer.is_valid():
-      InboundSerializer.save()
-      return True
-   return False

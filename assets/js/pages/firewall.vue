@@ -3,11 +3,14 @@
     <base-layout title="Rules" active-menu="firewall">
       <template #content>
         <v-tabs v-model="activeTab">
-          <v-tab v-for="tab in tabs" :key="tab.id">
-            {{ tab.label }}
+          <v-tab v-for="tab in tabs" :key="tab.name_interface">
+            {{ tab.name_interface }}
           </v-tab>
-          <v-tab-item v-for="tab in tabs" :key="tab.id">
-            <FirewallComponent :id="tab.id" :activeTab="tab.name_interface" />
+          <v-tab-item v-for="tab in tabs" :key="tab.name_interface">
+            <FirewallComponent 
+            :id="tab.name_interface" 
+            :activeTab="tab.name_interface"
+            />
           </v-tab-item>
         </v-tabs>
       </template>
@@ -27,16 +30,12 @@ export default {
   },
   data() {
     return {
-      activeTab: 0,
+      activeTab: null,
       tabs: [],
-      firewall: ""
     };
   },
-  beforeMount() {
-    this.firewall = this.$root.$data.firewall;
-  },
   methods: {
-    getFirewall() {
+    getAllInterfaces() {
       function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -60,8 +59,6 @@ export default {
         .then(response => {
           response.data.forEach(element => {
             this.tabs.push({
-              id: element.id,
-              label: element.name_interface,
               name_interface: element.name_interface
             });
           });
@@ -69,11 +66,11 @@ export default {
         .catch(error => {
           console.log(error);
         });
-    }
+    },
   },
   mounted() {
-    this.getFirewall();
-  }
+    this.getAllInterfaces();
+  },
 };
 </script>
 

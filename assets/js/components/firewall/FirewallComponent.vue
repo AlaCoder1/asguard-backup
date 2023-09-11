@@ -3,6 +3,17 @@
         <div class="container">
             <h4>Inbound rules</h4>
             <v-divider></v-divider>
+            <v-alert type="success" class="d-flex mt-3" v-if="alert">
+                <span class="justify-end">
+                    <i class="fas fa-check-circle "></i>
+                </span>
+                <span class="c-o ml-3">
+                    <strong>Success!</strong> Rules saved successfully.
+                </span>
+                <span class="ml-16" style="margin-top: 20px !important;">
+                    <i class="fas fa-times justify-end cursor" @click="handleRemove"></i>
+                </span>
+            </v-alert>
             <v-card class="mt-3">
                 <v-card-title>
                     <v-row>
@@ -42,7 +53,60 @@
                 </div>
             </div>
         </div>
-        <br /><br /><br />
+        <!-- outbound -->
+        <!-- <div class="container">
+                <h4>outbound rules</h4>
+                <v-divider></v-divider>
+                <v-alert type="success" class="d-flex mt-3" v-if="alert">
+                    <span class="justify-end">
+                        <i class="fas fa-check-circle "></i>
+                    </span>
+                    <span class="c-o ml-3">
+                        <strong>Success!</strong> Rules saved successfully.
+                    </span>
+                    <span class="ml-16" style="margin-top: 20px !important;">
+                        <i class="fas fa-times justify-end cursor" @click="handleRemove"></i>
+                    </span>
+                </v-alert>
+                <v-card class="mt-3">
+                    <v-card-title>
+                        <v-row>
+                            <v-col cols="12" md="6">
+                                <v-text-field id="filter-text-box" v-model="filterText" append-icon="mdi-magnify" label="Search"
+                                    single-line hide-details rounded outlined dense
+                                    @input="onFilterTextBoxChanged"></v-text-field>
+                            </v-col>
+                            <v-col cols="12" md="6" class="d-flex justify-end">
+                                <v-btn class="ml-3 mt-2 " color="primary" text @click="addRow">
+                                    <i class="fas fa-plus"></i>
+                                    <span class="ml-2">Add</span>
+                                </v-btn>
+                            </v-col>
+                        </v-row>
+                    </v-card-title>
+                    <v-card-text>
+                        <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
+                            :rowData="rowDataoutbound" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef"
+                            :editType="editType" style="width: 100%;" @cell-value-changed="onCellValueChanged"
+                            @row-value-changed="onRowValueChanged" @selection-changed="onSelectionChanged"
+                            @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
+                            @row-drag-end="onRowDragEnd" :pagination="true" :paginationPageSize="10" :rowSelection="'multiple'">
+                        </ag-grid-vue>
+                    </v-card-text>
+                </v-card>
+            </div>
+            <div class="container">
+                <div class="row justify-content-center">
+                    <div class="col-12 text-center">
+                        <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel">
+                            Cancel
+                        </v-btn>
+                        <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="save">
+                            Save
+                        </v-btn>
+                    </div>
+                </div>
+            </div> -->
     </div>
 </template>
 
@@ -55,6 +119,11 @@ export default {
     name: 'FirewallComponent',
     components: {
         AgGridVue,
+    },
+    props: {
+        activeTab: {
+            type: String,
+        },
     },
     data() {
         return {
@@ -81,7 +150,7 @@ export default {
                     headerName: 'Policy',
                     cellEditor: 'agSelectCellEditor',
                     cellEditorParams: {
-                        values: ['Allow', 'Deny'],
+                        values: ['accept', 'drop'],
                     },
                     editable: params => params.node.data.isRowSelected,
                 },
@@ -96,7 +165,7 @@ export default {
                     headerName: 'Protocol',
                     cellEditor: 'agSelectCellEditor',
                     cellEditorParams: {
-                        values: ['TCP', 'UDP', 'ICMP'],
+                        values: ['tcp', 'udp', 'icmp request', 'icmp reply'],
                     },
                     editable: params => params.node.data.isRowSelected,
                 },
@@ -117,20 +186,29 @@ export default {
                     },
                 },
                 {
-                    field: 'srcPort',
+                    field: 'sport',
                     headerName: 'Src Port',
                     editable: params => params.node.data.isRowSelected,
                     valueParser: this.numericValueParser,
                     valueSetter: (params) => {
                         const value = params.newValue;
                         if (this.isValidPortNumber(value)) {
-                            params.data.srcPort = value;
+                            params.data.sport = value;
                             return true; // Value is valid, update the cell
                         } else {
                             // Value is invalid, display a validation message
                             alert('Please enter a valid source port number');
                             return false; // Value is not updated
                         }
+                    },
+                     // Add cellStyle function to disable cell based on protocol value
+                    cellStyle: (params) => {
+                        // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
+                        if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
+                            return { 'pointer-events': 'none', 'background-color': '#eee', 'opacity': '0.6' };
+                        }
+                        // Return null to enable the cell for other values
+                        return null;
                     },
                 },
                 {
@@ -165,6 +243,15 @@ export default {
                             return false; // Value is not updated
                         }
                     },
+                     // Add cellStyle function to disable cell based on protocol value
+                    cellStyle: (params) => {
+                        // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
+                        if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
+                            return { 'pointer-events': 'none', 'background-color': '#eee', 'opacity': '0.6' };
+                        }
+                        // Return null to enable the cell for other values
+                        return null;
+                    },
                 },
                 {
                     headerName: 'Action',
@@ -183,6 +270,9 @@ export default {
             rowData: [],
             filterText: null,
             columnOrder: [],
+            rules: [],
+            alert: false,
+            rowDataoutbound: [],
         };
     },
     created() {
@@ -211,7 +301,7 @@ export default {
                 row.isRowSelected = row.isSelected;
             });
 
-            this.gridApi.refreshCells({ columns: ['Policy', 'Rule_description', 'protocol', 'saddr', 'srcPort', 'daddr', 'dport', 'Action'] });
+            this.gridApi.refreshCells({ columns: ['Policy', 'Rule_description', 'protocol', 'saddr', 'sport', 'daddr', 'dport', 'Action'] });
         },
         actionCellRenderer(params) {
             let eGui = document.createElement('div');
@@ -255,7 +345,24 @@ export default {
             switch (action) {
                 case 'delete':
                     if (rowData.id) {
-                        axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowData.id);
+                        axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowData.id)
+                            .then(response => {
+                                // Access response data
+                                const responseData = response.data;
+                                if (responseData.msg === "delete rule Successfully!!") {
+                                    // Delete the row from the grid
+                                    const index = this.rowData.indexOf(rowData);
+                                    if (index > -1) {
+                                        this.rowData.splice(index, 1);
+                                    }
+                                } else {
+                                    console.error('Failed to delete row');
+                                }
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            });
+
                     } else {
                         const index = this.rowData.indexOf(rowData);
                         if (index > -1) {
@@ -272,11 +379,11 @@ export default {
                 isSelected: false,
                 isRowSelected: false,
                 isModified: false,
-                policy: 'Allow',
+                policy: 'accept',
                 Rule_description: '',
-                protocol: 'TCP',
+                protocol: 'tcp',
                 saddr: '',
-                srcPort: 'ANY',
+                sport: 'ANY',
                 daddr: '',
                 dport: 'ANY',
                 Action: '',
@@ -353,28 +460,29 @@ export default {
             return true; // All required columns have data
         },
         cancel() {
-            console.log('Cancel clicked');
+            this.rowData = this.rules[this.activeTab]['inbound'].filter(row => row.id);
+            // cancel the changes of modfied rows
+            this.rowData.forEach(row => {
+                if (row.isModified) {
+                    row.isModified = false;
+                }
+            });
+            console.log('Cancel:', this.rowData);
         },
         async save() {
 
             const isValid = this.validateGridData(this.rowData);
             if (isValid) {
-                // Data is valid, proceed with your logic
-
-                // Filter the modified rows
                 const modifiedRows = this.rowData.filter(row => row.isModified);
                 console.log('Modified rows:', modifiedRows);
-
-                // Prepare data for API
                 const dataToSend = modifiedRows.map(row => {
-                    // Convert row data to the required format for your API
                     return {
-                        policy: row.policy === 'Allow' ? 'accept' : 'drop',
+                        policy: row.policy,
                         Rule_description: row.Rule_description,
-                        protocol: row.protocol === 'TCP' ? 'tcp' : row.protocol === 'UDP' ? 'udp' : 'icmp',
+                        protocol: row.protocol === 'icmp request' ? 'icmp type echo-request' : row.protocol === 'icmp reply' ? 'icmp type echo-reply' : row.protocol,
                         saddr: row.saddr,
                         daddr: row.daddr,
-                        sport: row.srcPort === 'ANY' ? '' : row.srcPort,
+                        sport: row.sport === 'ANY' ? '' : row.sport,
                         dport: row.dport,
                         type_rule: "inbound",
                     };
@@ -398,13 +506,14 @@ export default {
                 axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
                 try {
-                    // Send data to API
-                    const response = await axios.post('http://127.0.0.1:8000/rules/addRule/LAN', dataToSend[0]);
-
-                    // Handle API response
+                    const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/LAN', dataToSend);
                     if (response.status === 200) {
-                        // Clear the modified flag for the saved rows
                         modifiedRows.forEach(row => row.isModified = false);
+                        this.alert = true;
+                        setTimeout(() => {
+                            this.alert = false;
+                        }, 5000);
+
                     } else {
                         console.error('Failed to save data');
                     }
@@ -412,10 +521,54 @@ export default {
                     console.error('Error:', error);
                 }
             } else {
-                // Data is not valid, show an error message or take appropriate action
                 console.error('Data is not valid');
                 this.$toast.error('Data is not valid. Please check required fields.');
             }
+        },
+        handleRemove() {
+            this.alert = false;
+        },
+    },
+    mounted() {
+        this.rules = this.$root.$data.rules;
+        let validJsonString = this.rules
+            .replace(/'/g, '"')
+            .replace(/True/g, 'true')
+            .replace(/False/g, 'false')
+            .replace(/None/g, 'null');
+        let parsedArray = JSON.parse(validJsonString);
+        this.rules = parsedArray;
+    },
+    watch: {
+        // Whenever rules changes, rowData will be updated
+        rules: {
+            handler: function (val, oldVal) {
+                this.rowData = val[this.activeTab]['inbound'];
+            },
+            deep: true,
+        },
+
+        // Whenever activeTab changes, rowData will be updated
+        activeTab: {
+            handler: function (val, oldVal) {
+                this.rowData = this.rules[val]['inbound'];
+            },
+            deep: true,
+        },
+    },
+
+    computed: {
+        // Whenever protocol is icmp request or icmp reply, disable the sport and dport columns and set their values to ANY
+        // This is done to prevent users from entering values in sport and dport columns when protocol is icmp request or icmp reply
+
+        // code 
+        cellStyle: (params) => {
+            // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
+            if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
+                return { 'pointer-events': 'none', 'background-color': '#eee', 'opacity': '0.6' };
+            }
+            // Return null to enable the cell for other values
+            return null;
         },
     },
 };
@@ -478,5 +631,10 @@ export default {
     line-height: normal;
     text-align: center;
     text-transform: capitalize;
+}
+
+.v-alert.d-flex.mt-3.v-sheet.theme--dark.success {
+    width: 28%;
+    margin-left: auto;
 }
 </style>

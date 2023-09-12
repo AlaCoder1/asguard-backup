@@ -17,7 +17,7 @@ const i18n = new VueI18n({
   },
 });
 
-Vue.use( {
+Vue.use({
   i18n,
   classes: true,
   fieldsBagName: 'formFields',
@@ -37,9 +37,12 @@ new Vue({
   vuetify,
   data: {
     rules: {},
+    interfaces: []
   },
   beforeMount: function () {
     this.rules = this.$el.attributes['rules'] ? this.$el.attributes['rules'].value : '';
+    this.interfaces = this.$el.attributes['interfaces'] ? this.$el.attributes['interfaces'].value : '';
   },
   render: (h) => h(App),
 }).$mount('#app');
+

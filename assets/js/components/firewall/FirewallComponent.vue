@@ -53,60 +53,58 @@
                 </div>
             </div>
         </div>
-        <!-- outbound -->
-        <!-- <div class="container">
-                <h4>outbound rules</h4>
-                <v-divider></v-divider>
-                <v-alert type="success" class="d-flex mt-3" v-if="alert">
-                    <span class="justify-end">
-                        <i class="fas fa-check-circle "></i>
-                    </span>
-                    <span class="c-o ml-3">
-                        <strong>Success!</strong> Rules saved successfully.
-                    </span>
-                    <span class="ml-16" style="margin-top: 20px !important;">
-                        <i class="fas fa-times justify-end cursor" @click="handleRemove"></i>
-                    </span>
-                </v-alert>
-                <v-card class="mt-3">
-                    <v-card-title>
-                        <v-row>
-                            <v-col cols="12" md="6">
-                                <v-text-field id="filter-text-box" v-model="filterText" append-icon="mdi-magnify" label="Search"
-                                    single-line hide-details rounded outlined dense
-                                    @input="onFilterTextBoxChanged"></v-text-field>
-                            </v-col>
-                            <v-col cols="12" md="6" class="d-flex justify-end">
-                                <v-btn class="ml-3 mt-2 " color="primary" text @click="addRow">
-                                    <i class="fas fa-plus"></i>
-                                    <span class="ml-2">Add</span>
-                                </v-btn>
-                            </v-col>
-                        </v-row>
-                    </v-card-title>
-                    <v-card-text>
-                        <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
-                            :rowData="rowDataoutbound" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef"
-                            :editType="editType" style="width: 100%;" @cell-value-changed="onCellValueChanged"
-                            @row-value-changed="onRowValueChanged" @selection-changed="onSelectionChanged"
-                            @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
-                            @row-drag-end="onRowDragEnd" :pagination="true" :paginationPageSize="10" :rowSelection="'multiple'">
+
+        <!-- Outbound -->
+        <div class="container">
+            <h4>Outbound rules</h4>
+            <v-divider></v-divider>
+            <v-alert type="success" class="d-flex mt-3" v-if="alertOutbound">
+                <span class="justify-end">
+                    <i class="fas fa-check-circle "></i>
+                </span>
+                <span class="c-o ml-3">
+                    <strong>Success!</strong> Rules saved successfully.
+                </span>
+                <span class="ml-16" style="margin-top: 20px !important;">
+                    <i class="fas fa-times justify-end cursor" @click="handleRemoveOutbound"></i>
+                </span>
+            </v-alert>
+            <v-card class="mt-3">
+                <v-card-title>
+                    <v-row>
+                        <v-col cols="12" md="6">
+                            <v-text-field id="filter-text-box" v-model="filterTextOutbound" append-icon="mdi-magnify"
+                                label="Search" single-line hide-details rounded outlined dense
+                                @input="onFilterTextBoxChangedOutbound"></v-text-field>
+                        </v-col>
+                        <v-col cols="12" md="6" class="d-flex justify-end">
+                            <v-btn class="ml-3 mt-2 " color="primary" text @click="addRowOutbound">
+                                <i class="fas fa-plus"></i>
+                                <span class="ml-2">Add</span>
+                            </v-btn>
+                        </v-col>
+                    </v-row>
+                </v-card-title>
+                <v-card-text>
+                    <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
+                            :rowData="rowDataOutbound" :rowDrag="true"  style="width: 100%;" :pagination="true" :paginationPageSize="10" :rowSelection="'multiple'">
                         </ag-grid-vue>
-                    </v-card-text>
-                </v-card>
-            </div>
-            <div class="container">
-                <div class="row justify-content-center">
-                    <div class="col-12 text-center">
-                        <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel">
-                            Cancel
-                        </v-btn>
-                        <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="save">
-                            Save
-                        </v-btn>
-                    </div>
+                </v-card-text>
+            </v-card>
+        </div>
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 text-center">
+                    <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancelOutbound">
+                        Cancel
+                    </v-btn>
+                    <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="saveOutbound">
+                        Save
+                    </v-btn>
                 </div>
-            </div> -->
+            </div>
+        </div>
+        <br /> <br /> <br />
     </div>
 </template>
 
@@ -201,7 +199,7 @@ export default {
                             return false; // Value is not updated
                         }
                     },
-                     // Add cellStyle function to disable cell based on protocol value
+                    // Add cellStyle function to disable cell based on protocol value
                     cellStyle: (params) => {
                         // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
                         if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
@@ -243,7 +241,7 @@ export default {
                             return false; // Value is not updated
                         }
                     },
-                     // Add cellStyle function to disable cell based on protocol value
+                    // Add cellStyle function to disable cell based on protocol value
                     cellStyle: (params) => {
                         // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
                         if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
@@ -272,7 +270,10 @@ export default {
             columnOrder: [],
             rules: [],
             alert: false,
-            rowDataoutbound: [],
+            alertOutbound: false,
+            filterTextOutbound: null,
+            rowDataOutbound: [],
+
         };
     },
     created() {
@@ -290,7 +291,7 @@ export default {
             this.gridApi = params.api;
             this.gridColumnApi = params.columnApi;
 
-            if (this.rowData.length > 0) {
+            if (this.rowData && this.rowData.length > 0) {
                 this.gridApi.forEachNode(node => node.setSelected(node.rowIndex === 0));
             }
         },
@@ -340,8 +341,12 @@ export default {
                 document.getElementById('filter-text-box').value
             );
         },
+        onFilterTextBoxChangedOutbound() {
+            this.gridApi.setQuickFilter(
+                document.getElementById('filter-text-box').value
+            );
+        },
         handleAction(action, rowData) {
-            console.log('Row data:', rowData);
             switch (action) {
                 case 'delete':
                     if (rowData.id) {
@@ -388,10 +393,48 @@ export default {
                 dport: 'ANY',
                 Action: '',
             };
-            this.rowData.push(newRow);
+            // Ensure this.rowData is defined before pushing the new row
+            if (this.rowData === undefined) {
+                this.rowData = [];
+            }
 
-            // Select the newly added row
-            this.gridApi.forEachNode(node => node.setSelected(node.data === newRow));
+            if (this.rowData) {
+                this.rowData.push(newRow);
+
+                // Select the newly added row
+                this.gridApi.forEachNode(node => node.setSelected(node.data === newRow));
+            } else {
+                console.error('this.rowData is undefined');
+            }
+
+        },
+        addRowOutbound() {
+            const newRow = {
+                isSelected: false,
+                isRowSelected: false,
+                isModified: false,
+                policy: 'accept',
+                Rule_description: '',
+                protocol: 'tcp',
+                saddr: '',
+                sport: 'ANY',
+                daddr: '',
+                dport: 'ANY',
+                Action: '',
+            };
+            // Ensure this.rowData is defined before pushing the new row
+            if (this.rowDataOutbound === undefined) {
+                this.rowDataOutbound = [];
+            }
+
+            if (this.rowDataOutbound) {
+                this.rowDataOutbound.push(newRow);
+
+                // Select the newly added row
+                this.gridApi.forEachNode(node => node.setSelected(node.data === newRow));
+            } else {
+                console.error('this.rowData is undefined');
+            }
 
         },
         arrayMove(arr, fromIndex, toIndex) {
@@ -467,7 +510,15 @@ export default {
                     row.isModified = false;
                 }
             });
-            console.log('Cancel:', this.rowData);
+        },
+        cancelOutbound() {
+            this.rowDataOutbound = this.rules[this.activeTab]['outbound'].filter(row => row.id);
+            // cancel the changes of modfied rows
+            this.rowDataOutbound.forEach(row => {
+                if (row.isModified) {
+                    row.isModified = false;
+                }
+            });
         },
         async save() {
 
@@ -525,6 +576,62 @@ export default {
                 this.$toast.error('Data is not valid. Please check required fields.');
             }
         },
+        async saveOutbound() {
+
+            const isValid = this.validateGridData(this.rowDataOutbound);
+            if (isValid) {
+                const modifiedRows = this.rowDataOutbound.filter(row => row.isModified);
+                console.log('Modified rows:', modifiedRows);
+                const dataToSend = modifiedRows.map(row => {
+                    return {
+                        policy: row.policy,
+                        Rule_description: row.Rule_description,
+                        protocol: row.protocol === 'icmp request' ? 'icmp type echo-request' : row.protocol === 'icmp reply' ? 'icmp type echo-reply' : row.protocol,
+                        saddr: row.saddr,
+                        daddr: row.daddr,
+                        sport: row.sport === 'ANY' ? '' : row.sport,
+                        dport: row.dport,
+                        type_rule: "outbound",
+                    };
+                });
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+                const csrfToken = getCookie('csrftoken')
+                axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+                try {
+                    const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/LAN', dataToSend);
+                    if (response.status === 200) {
+                        modifiedRows.forEach(row => row.isModified = false);
+                        this.alertOutbound = true;
+                        setTimeout(() => {
+                            this.alertOutbound = false;
+                        }, 5000);
+
+                    } else {
+                        console.error('Failed to save data');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                }
+            } else {
+                console.error('Data is not valid');
+                this.$toast.error('Data is not valid. Please check required fields.');
+            }
+        },
         handleRemove() {
             this.alert = false;
         },
@@ -540,10 +647,14 @@ export default {
         this.rules = parsedArray;
     },
     watch: {
-        // Whenever rules changes, rowData will be updated
+        // Whenever rules changes, rowData will be updated and if rules is empty, rowData will be set to empty array
         rules: {
             handler: function (val, oldVal) {
-                this.rowData = val[this.activeTab]['inbound'];
+                if (val) {
+                    this.rowData = this.rules[this.activeTab]['inbound'];
+                } else {
+                    this.rowData = [];
+                }
             },
             deep: true,
         },
@@ -561,7 +672,6 @@ export default {
         // Whenever protocol is icmp request or icmp reply, disable the sport and dport columns and set their values to ANY
         // This is done to prevent users from entering values in sport and dport columns when protocol is icmp request or icmp reply
 
-        // code 
         cellStyle: (params) => {
             // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
             if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
@@ -570,6 +680,7 @@ export default {
             // Return null to enable the cell for other values
             return null;
         },
+
     },
 };
 

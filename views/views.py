@@ -111,6 +111,7 @@ def GetAllRules(request):
               res[i].pop('pk')
               res[i]['fields']['id'] = id
               res[i]['fields'].pop("interface")
+              res[i]['fields'].pop("rule")
               list_rules.append(res[i]['fields'])
              ########## 
             rules_type[elem]=list_rules

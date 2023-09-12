@@ -117,6 +117,22 @@ def GetAllRules(request):
           all_rules[resInterface[x]['fields']['name_interface']]=rules_type
         return all_rules
 ##########    
+def AllInterfaces(request):
+    list_interface = []
+    if (request.method == 'GET'):
+        interfaces = Interface.objects.all()
+        interfaceDict=serializers.serialize("json",interfaces)
+        # interfaceDict = serializers.serialize("json", interfaces)
+        res = json.loads(interfaceDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_interface.append(res[i]['fields'])
+        return list_interface
+
+#########
 @login_required(login_url='/')
 def index_page(request):
     usr=getUsers(request)
@@ -145,8 +161,8 @@ def lan_page(request):
 @login_required(login_url='/')
 def firewall_page(request):
     rules=GetAllRules(request)
-    context = {'rules':rules}
-    print(context)
+    interfaces=AllInterfaces(request)
+    context = {'rules':rules, 'interfaces':interfaces}
     return render(request, 'firewall_page.html',context)
 
 @login_required(login_url='/')

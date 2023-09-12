@@ -4,18 +4,18 @@
 {% load encore %}
 
 {% block stylesheets %}
-    {{ block.super }}
+{{ block.super }}
 
-    {% encore_entry_link_tags 'firewall' %}
+{% encore_entry_link_tags 'firewall' %}
 {% endblock %}
 
 {% block javascripts %}
-    {% encore_entry_script_tags 'firewall' %}
+{% encore_entry_script_tags 'firewall' %}
 {% endblock %}
 
 {% block body %}
 
-    <div id='app' rules='{{ rules }}'>
-    </div>
+<div id='app' rules='{{ rules }}' interfaces='{{ interfaces }}'>
+</div>
 
 {% endblock %}

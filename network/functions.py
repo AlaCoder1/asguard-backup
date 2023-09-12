@@ -14,8 +14,8 @@ from gateway.serializers import *
 
 #function to update config tables
 def update_DB(id,data,model,IP4serializer):
+    data={key: value for key, value in data.items() if value is not None}
     data['interface']=id
-    print({'id in update':id})
     if model.objects.filter(interface_id=id).exists():
         objectConfig=model.objects.get(interface_id=id)
         # Set all attributes to None
@@ -29,10 +29,12 @@ def update_DB(id,data,model,IP4serializer):
     if (serializerIP4Config.is_valid()):
         serializerIP4Config.save()
         return True
-    return False
+    return serializerIP4Config.errors
+   
 
 #function to update interface tables  
 def update_interface_table(name_interface,data,InterfaceSerializer):
+    data={key: value for key, value in data.items() if value is not None}
     objectConfig=Interface.objects.get(name_interface=name_interface)
     # Set all attributes to None
     for field in objectConfig._meta.fields:
@@ -42,7 +44,7 @@ def update_interface_table(name_interface,data,InterfaceSerializer):
     if serializerInterface.is_valid():
             serializerInterface.save()     
             return True
-    return False 
+    return serializerInterface.errors 
 ############################################################  
 def get_conn_name(ifname):
     cmd = "sudo nmcli connection show | awk '$NF == \"{}\" {{print}}'".format(ifname)
@@ -105,16 +107,16 @@ def run_remote_command_with_timeout(type, typeDHCP4, ssh_client, command, timeou
     new_entry = tempsExucution(type=type, cmd=command, temps=elapsed_time)
     # Save the instance to the database
     new_entry.save()
-    if  (command.find("sudo dhclient")==-1) and error!="":
+    if  (command.find("sudo dhclient")==-1) and error!="" and (error is not None and not error.startwith("Warning")) :
         # print("error::::",error)
-        return False
+        return error
     elif command_thread.is_alive():
         print(f"Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}")
         stdin, stdout, stderr = ssh_client.exec_command('\x03')
         # interrupt_command = "sudo pkill -INT -f 'some_long_running_command'"
         # output,error=run_command(ssh_client, interrupt_command)
         print("Ctrl+C sent.")
-        return False
+        return "Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}"
         
     else:
         print(f"Command not too long ({elapsed_time:.2f} seconds). {command}")
@@ -123,8 +125,9 @@ def run_remote_command_with_timeout(type, typeDHCP4, ssh_client, command, timeou
 #function to run all commandes
 def run_all_commands(commandes,setuptypeIP4,typeDHCP4,timeout):
     for cmd in commandes:
-        if not run_remote_command_with_timeout(setuptypeIP4,typeDHCP4,ssh, cmd, timeout) :
-            return False
+        out=run_remote_command_with_timeout(setuptypeIP4,typeDHCP4,ssh, cmd, timeout)
+        if  out is not True :
+            return out
     return True
 
 #################################
@@ -138,7 +141,6 @@ def desactiver_interface_remote(ifname,output):
          "ExecStart=/usr/bin/ip link set dev {} down".format(ifname),        
          "#End IP4Config {}".format(ifname)
     ]
-    print(output)
     output=add_requirement(ifname,output)
     output=add_cmd(output,commands)
     #la liste des commandes à executer pour désactiver l'interface
@@ -158,7 +160,6 @@ EOF""".format('\n'.join(output))
         output = stdout.read().decode('utf-8').split('\n')
         if error:
             msg=error,"    :"+cmd
-            print({"msg":msg})
             return False
     return True
 
@@ -316,7 +317,16 @@ def update_conn_dhcp_IPV4(config,ifname,uuid):
     
     return commandes,config,cmd_final
 
-
+def get_address_dhcp(ifname,ssh):
+    cmd = "ip -4 -o addr show dev {} | awk '{{split($4, a); print a[1]}}'".format(ifname)
+    output, error = run_command(ssh, cmd)
+    if error!="" or len(output)==0:
+        return None,None
+    else:
+        output=output.split("\n")
+        address=output[0].strip().split('/')[0]
+        mask=output[0].strip().split('/')[1]
+        return address,int(mask)
 ###################generic configuration
 
 def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObject):

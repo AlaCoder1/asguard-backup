@@ -87,12 +87,8 @@
                 </v-card-title>
                 <v-card-text>
                     <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
-                        :rowData="rowDataOutbound" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef"
-                        :editType="editType" style="width: 100%;" @cell-value-changed="onCellValueChanged"
-                        @row-value-changed="onRowValueChanged" @selection-changed="onSelectionChanged"
-                        @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
-                        @row-drag-end="onRowDragEnd" :pagination="true" :paginationPageSize="10" :rowSelection="'multiple'">
-                    </ag-grid-vue>
+                            :rowData="rowDataOutbound" :rowDrag="true"  style="width: 100%;" :pagination="true" :paginationPageSize="10" :rowSelection="'multiple'">
+                        </ag-grid-vue>
                 </v-card-text>
             </v-card>
         </div>

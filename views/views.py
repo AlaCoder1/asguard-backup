@@ -161,8 +161,8 @@ def lan_page(request):
 @login_required(login_url='/')
 def firewall_page(request):
     rules=GetAllRules(request)
-    context = {'rules':rules}
-    print(context)
+    interfaces=AllInterfaces(request)
+    context = {'rules':rules, 'interfaces':interfaces}
     return render(request, 'firewall_page.html',context)
 
 @login_required(login_url='/')

@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from managementServers.models import * 
 from network.models import *
 from rules.models import *
-
+from gateway.models import *
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -117,6 +117,36 @@ def GetAllRules(request):
             rules_type[elem]=list_rules
           all_rules[resInterface[x]['fields']['name_interface']]=rules_type
         return all_rules
+#################"Gateways
+############ getAll
+def getAllGateways(request):
+    if (request.method == 'GET'):
+        gateways = Gateway.objects.all()
+        gatewaysDict = serializers.serialize("json", gateways)
+        res = json.loads(gatewaysDict)
+        list_gateways=[]
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_gateways.append(res[i]['fields'])
+    return list_gateways
+############# GET static
+def getAllStaticGateways(request):
+    if (request.method == 'GET'):
+        gateways= Gateway.objects.filter(staticgw=True)
+        gatewaysDict = serializers.serialize("json", gateways)
+        res = json.loads(gatewaysDict)
+        list_gateways=[]
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_gateways.append(res[i]['fields'])
+    return  list_gateways
+
 ##########    
 def AllInterfaces(request):
     list_interface = []

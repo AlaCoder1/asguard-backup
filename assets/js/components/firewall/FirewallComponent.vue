@@ -131,9 +131,7 @@ export default {
                     minWidth: 50,
                     maxWidth: 50,
                     rowDrag: true,
-                    rowDragText: (params) => {
-                        return params.rowNode.data.Rule_description;
-                    },
+                    editable: false,
                 },
                 {
                     headerCheckboxSelection: true,
@@ -350,6 +348,23 @@ export default {
             switch (action) {
                 case 'delete':
                     if (rowData.id) {
+                        function getCookie(name) {
+                            let cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                const cookies = document.cookie.split(';');
+                                for (let i = 0; i < cookies.length; i++) {
+                                    const cookie = cookies[i].trim();
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+                        const csrfToken = getCookie('csrftoken')
+                        axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
                         axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowData.id)
                             .then(response => {
                                 // Access response data
@@ -557,7 +572,7 @@ export default {
                 axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
                 try {
-                    const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/LAN', dataToSend);
+                    const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/' + this.activeTab, dataToSend);
                     if (response.status === 200) {
                         modifiedRows.forEach(row => row.isModified = false);
                         this.alert = true;
@@ -666,8 +681,23 @@ export default {
             },
             deep: true,
         },
-    },
 
+        // Whenever protocol is icmp request or icmp reply, disable the sport and dport columns and set their values to null
+        // This is done to prevent users from entering values in sport and dport columns when protocol is icmp request or icmp reply
+        'rowData': {
+            handler: function (val, oldVal) {
+                if (val) {
+                    val.forEach(row => {
+                        if (row.protocol === 'icmp request' || row.protocol === 'icmp reply') {
+                            row.sport = null;
+                            row.dport = null;
+                        }
+                    });
+                }
+            },
+            deep: true,
+        },
+    },
     computed: {
         // Whenever protocol is icmp request or icmp reply, disable the sport and dport columns and set their values to ANY
         // This is done to prevent users from entering values in sport and dport columns when protocol is icmp request or icmp reply

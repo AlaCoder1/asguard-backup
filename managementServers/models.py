@@ -7,7 +7,7 @@ class Type(models.Model):
     type_name = models.CharField(max_length=200, null=True)
 
     class Meta:
-        db_table = 'Type'
+        db_table = 'type'
 
 
 class Server(models.Model):

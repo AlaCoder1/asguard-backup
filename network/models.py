@@ -27,7 +27,7 @@ class Interface(models.Model):
         super(Interface, self).save(*args, **kwargs)
 
     class Meta:
-        db_table = 'Interface'
+        db_table = 'interface'
     description=models.CharField(max_length=200, null=True,default=None)
 
 

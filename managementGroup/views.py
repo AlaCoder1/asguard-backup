@@ -59,11 +59,7 @@ def createGroup(request):
         data = request.data
         groupname = data['groupname']
         if (validInput(groupname)):
-            # Execute the command on the remote machine
-            stdin, stdout, stderr = addRemoteGroup(groupname)
-            # convert the stderr stream to a string
-            error_str = stderr.read().decode('utf-8')
-            if error_str == "":
+            if addGroup(groupname) == 0:
                 msg = groupname+" added sucessfully"
                 gid = getRemoteGidGroup()
                 data['gid'] = gid
@@ -77,7 +73,7 @@ def createGroup(request):
                 # provide a Json Response with the necessary error information
                 return JsonResponse(serializer.errors, status=400)
             else:
-                msg = error_str
+                msg = "Failed to add group."
         else:
             msg = "groupname invalid"
             return JsonResponse({"msg": msg}, status=201)
@@ -92,12 +88,7 @@ def deleteGroup(request, id):
     msg = ''
     if (request.method == 'DELETE'):
         group = Group.objects.get(id=id)
-        # Execute the command on the remote machine
-        stdin, stdout, stderr = deleteRemoteGroup(group.groupname)
-        # convert the stderr stream to a string
-        error_str = stderr.read().decode('utf-8')
-        print(stdout.read().decode('utf-8'))
-        if error_str == "":
+        if delete_group(group.groupname) == 0:
             group.delete()
             msg = "delete succesfully"
         else:
@@ -106,13 +97,7 @@ def deleteGroup(request, id):
         return JsonResponse({"msg": msg})
 
 
-# API to update group
-def updateGroup(request, id):
-    return True
-
 # API to change groupname
-
-
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -126,11 +111,11 @@ def changeGroupname(request, id):
         oldgroupname = groupDict['groupname']
         Newgroupname = data['Newgroupname']
         if validInput(Newgroupname):
-            if RemoteGroupExists(Newgroupname):
+            if group_exists(Newgroupname):
                 msg = f"Username {Newgroupname} exists."
                 return JsonResponse({"msg": msg})
             else:
-                changeRemoteGroupname(oldgroupname, Newgroupname)
+                change_groupname(oldgroupname, Newgroupname)
                 msg = "updated succesfully"
                 group.groupname = Newgroupname
                 group.save()

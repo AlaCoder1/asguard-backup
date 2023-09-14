@@ -5,14 +5,10 @@ from django.conf import settings
 from authentification.views import *
 
 # function to add sudo to command
-
-
 def sudo(cmd):
     return "sudo "+cmd
 
 # validation name of group and users (must content char and int)
-
-
 def validInput(var):
     regexp = re.compile('[^0-9a-zA-Z-_]+')
     if regexp.search(var):
@@ -21,8 +17,6 @@ def validInput(var):
         return True
 
 # function to add group
-
-
 def addRemoteGroup(groupname):
     # Run the getent group command and capture its output
     command = "groupadd "+groupname
@@ -31,8 +25,6 @@ def addRemoteGroup(groupname):
     return ssh.exec_command(cmd)
 
 # function to delete group
-
-
 def deleteRemoteGroup(groupname):
     # Run the getent group command and capture its output
     command = "groupdel "+groupname
@@ -40,8 +32,6 @@ def deleteRemoteGroup(groupname):
     return ssh.exec_command(command)
 
 # functio to change username
-
-
 def changeRemoteGroupname(oldgroupname, Newgroupname):
     # Run the getent group command and capture its output
     command = "groupmod -n " + Newgroupname + " "+oldgroupname
@@ -49,8 +39,6 @@ def changeRemoteGroupname(oldgroupname, Newgroupname):
     return ssh.exec_command(command)
 
 # function to get UID from system
-
-
 def getRemoteLastGroupName():
     # Run the getent group command and capture its output
     command = "getent group"
@@ -65,8 +53,6 @@ def getRemoteLastGroupName():
     return group_name
 
 # function de get id group
-
-
 def getRemoteGidGroup():
     # Run the getent group command and capture its output
     command = "getent group"
@@ -81,8 +67,6 @@ def getRemoteGidGroup():
     return gid
 
 # function to test if groupname exit
-
-
 def RemoteGroupExists(group_name):
     try:
         grp.getgrnam(group_name)
@@ -91,8 +75,6 @@ def RemoteGroupExists(group_name):
         return False
 
 # function de get all groupname by id
-
-
 def getGroupNameById(pk):
     group = Group.objects.get(id=pk)
     return str(group)

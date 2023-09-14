@@ -568,7 +568,7 @@ export default {
                         }
                         const csrfToken = getCookie('csrftoken')
                         axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-                        axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowData.id)
+                        axios.delete('/rules/deleteRule/' + rowData.id)
                             .then(response => {
                                 // Access response data
                                 const responseData = response.data;
@@ -618,7 +618,7 @@ export default {
                         }
                         const csrfToken = getCookie('csrftoken')
                         axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-                        axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowDataOutbound.id)
+                        axios.delete('/rules/deleteRule/' + rowData.id)
                             .then(response => {
                                 // Access response data
                                 const responseData = response.data;
@@ -831,7 +831,7 @@ export default {
                 axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
                 try {
-                    const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/' + this.activeTab, dataToSend);
+                    const response = await axios.post('/rules/saveRules/' + this.activeTab, dataToSend);
                     if (response.status === 200 && modifiedRows.length > 0) {
                         modifiedRows.forEach(row => row.isModified = false);
                         this.alert = true;
@@ -887,7 +887,7 @@ export default {
                 axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
                 try {
-                    const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/' + this.activeTab, dataToSend);
+                    const response = await axios.post('/rules/saveRules/' + this.activeTab, dataToSend);
                     if (response.status === 200) {
                         modifiedRows.forEach(row => row.isModified = false);
                         this.alertOutbound = true;

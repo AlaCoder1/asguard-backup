@@ -609,7 +609,7 @@ export default {
             console.log(csrfToken);
             axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
-            axios.put('http://127.0.0.1:8000/network/conf/LAN/2', params)
+            axios.put('/network/conf/LAN/2', params)
                 .then((response) => {
                     console.log(response);
                     this.showAlert = true;

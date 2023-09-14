@@ -87,7 +87,14 @@
                 </v-card-title>
                 <v-card-text>
                     <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
-                            :rowData="rowDataOutbound" :rowDrag="true"  style="width: 100%;" :pagination="true" :paginationPageSize="10" :rowSelection="'multiple'">
+                        :rowData="rowDataOutbound"
+                        @grid-ready="onGridReadyOutbound" :rowDrag="true" :defaultColDef="defaultColDefOutbound"
+                        :editType="editType" style="width: 100%;" @cell-value-changed="onCellValueChangedOutbound"
+                        @row-value-changed="onRowValueChangedOutbound" @selection-changed="onSelectionChangedOutbound"
+                        @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
+                        @row-drag-end="onRowDragEndOutbound" :pagination="true" :paginationPageSize="10"
+                        :rowSelection="'multiple'"
+                        >
                         </ag-grid-vue>
                 </v-card-text>
             </v-card>
@@ -131,9 +138,7 @@ export default {
                     minWidth: 50,
                     maxWidth: 50,
                     rowDrag: true,
-                    rowDragText: (params) => {
-                        return params.rowNode.data.Rule_description;
-                    },
+                    editable: false,
                 },
                 {
                     headerCheckboxSelection: true,
@@ -258,8 +263,15 @@ export default {
                 },
             ],
             gridApi: null,
+            gridApiOutbound: null,
             columnApi: null,
+            columnApiOutbound: null,
             defaultColDef: {
+                flex: 1,
+                editable: true,
+                cellDataType: false,
+            },
+            defaultColDefOutbound: {
                 flex: 1,
                 editable: true,
                 cellDataType: false,
@@ -284,7 +296,14 @@ export default {
             const row = event.data;
             row.isModified = true;
         },
+        onCellValueChangedOutbound(event) {
+            const row = event.data;
+            row.isModified = true;
+        },
         onRowValueChanged(event) {
+            var data = event.data;
+        },
+        onRowValueChangedOutbound(event) {
             var data = event.data;
         },
         onGridReady(params) {
@@ -295,6 +314,14 @@ export default {
                 this.gridApi.forEachNode(node => node.setSelected(node.rowIndex === 0));
             }
         },
+        onGridReadyOutbound(params) {
+            this.gridApiOutbound = params.api;
+            this.gridColumnApiOutbound = params.columnApi;
+
+            if (this.rowDataOutbound && this.rowDataOutbound.length > 0) {
+                this.gridApiOutbound.forEachNode(node => node.setSelected(node.rowIndex === 0));
+            }
+        },
         onSelectionChanged() {
             const selectedNodes = this.gridApi.getSelectedNodes();
             this.rowData.forEach(row => {
@@ -303,6 +330,15 @@ export default {
             });
 
             this.gridApi.refreshCells({ columns: ['Policy', 'Rule_description', 'protocol', 'saddr', 'sport', 'daddr', 'dport', 'Action'] });
+        },
+        onSelectionChangedOutbound() {
+            const selectedNodes = this.gridApiOutbound.getSelectedNodes();
+            this.rowDataOutbound.forEach(row => {
+                row.isSelected = selectedNodes.some(node => node.data === row);
+                row.isRowSelected = row.isSelected;
+            });
+
+            this.gridApiOutbound.refreshCells({ columns: ['Policy', 'Rule_description', 'protocol', 'saddr', 'sport', 'daddr', 'dport', 'Action'] });
         },
         actionCellRenderer(params) {
             let eGui = document.createElement('div');
@@ -336,6 +372,38 @@ export default {
             });
             return eGui;
         },
+        actionCellRendererOutbound(params) {
+            let eGui = document.createElement('div');
+            let editingCells = params.api.getEditingCells();
+            let isCurrentRowEditing = editingCells.some((cell) => {
+                return cell.rowIndex === params.node.rowIndex;
+            });
+            if (isCurrentRowEditing) {
+                eGui.innerHTML = `
+        <button
+            class="action-button delete"
+            data-action="delete">
+                <i class="fas fa-times" style="color: #086eae;"></i>
+        </button>
+        `;
+            }
+            else {
+                eGui.innerHTML = `
+        <button
+            class="action-button delete"
+            data-action="delete">
+                <i class="fas fa-times" style="color: #086eae;"></i>
+        </button>
+        `;
+            }
+            eGui.querySelectorAll('.action-button').forEach((button) => {
+                button.addEventListener('click', () => {
+                    const action = button.getAttribute('data-action');
+                    this.handleActionOutbound(action, params.node.data);
+                });
+            });
+            return eGui;
+        },
         onFilterTextBoxChanged() {
             this.gridApi.setQuickFilter(
                 document.getElementById('filter-text-box').value
@@ -346,10 +414,32 @@ export default {
                 document.getElementById('filter-text-box').value
             );
         },
+        onFilterTextBoxChangedOutbound() {
+            this.gridApiOutbound.setQuickFilter(
+                document.getElementById('filter-text-box').value
+            );
+        },
         handleAction(action, rowData) {
             switch (action) {
                 case 'delete':
                     if (rowData.id) {
+                        function getCookie(name) {
+                            let cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                const cookies = document.cookie.split(';');
+                                for (let i = 0; i < cookies.length; i++) {
+                                    const cookie = cookies[i].trim();
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+                        const csrfToken = getCookie('csrftoken')
+                        axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
                         axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowData.id)
                             .then(response => {
                                 // Access response data
@@ -372,6 +462,55 @@ export default {
                         const index = this.rowData.indexOf(rowData);
                         if (index > -1) {
                             this.rowData.splice(index, 1);
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+        },
+        handleActionOutbound(action, rowData) {
+            switch (action) {
+                case 'delete':
+                    if (rowData.id) {
+                        function getCookie(name) {
+                            let cookieValue = null;
+                            if (document.cookie && document.cookie !== '') {
+                                const cookies = document.cookie.split(';');
+                                for (let i = 0; i < cookies.length; i++) {
+                                    const cookie = cookies[i].trim();
+                                    // Does this cookie string begin with the name we want?
+                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                        break;
+                                    }
+                                }
+                            }
+                            return cookieValue;
+                        }
+                        const csrfToken = getCookie('csrftoken')
+                        axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+                        axios.delete('http://127.0.0.1:8000/rules/deleteRule/' + rowData.id)
+                            .then(response => {
+                                // Access response data
+                                const responseData = response.data;
+                                if (responseData.msg === "delete rule Successfully!!") {
+                                    // Delete the row from the grid
+                                    const index = this.rowDataOutbound.indexOf(rowData);
+                                    if (index > -1) {
+                                        this.rowDataOutbound.splice(index, 1);
+                                    }
+                                } else {
+                                    console.error('Failed to delete row');
+                                }
+                            })
+                            .catch(error => {
+                                console.error(error);
+                            });
+                    } else {
+                        const index = this.rowDataOutbound.indexOf(rowData);
+                        if (index > -1) {
+                            this.rowDataOutbound.splice(index, 1);
                         }
                     }
                     break;
@@ -431,7 +570,7 @@ export default {
                 this.rowDataOutbound.push(newRow);
 
                 // Select the newly added row
-                this.gridApi.forEachNode(node => node.setSelected(node.data === newRow));
+                this.gridApiOutbound.forEachNode(node => node.setSelected(node.data === newRow));
             } else {
                 console.error('this.rowData is undefined');
             }
@@ -449,6 +588,13 @@ export default {
                 : this.rowData;
 
             this.rowData = updatedRows;
+        },
+        onRowDragEndOutbound(event) {
+            const updatedRows = event.overIndex !== undefined
+                ? this.arrayMove(this.rowDataOutbound, event.node.rowIndex, event.overIndex)
+                : this.rowDataOutbound;
+
+            this.rowDataOutbound = updatedRows;
         },
         onColumnRowGroupChanged(event) {
             const newColumnOrder = event.columns.map(column => column.colId);
@@ -557,7 +703,7 @@ export default {
                 axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
                 try {
-                    const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/LAN', dataToSend);
+                    const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/' + this.activeTab, dataToSend);
                     if (response.status === 200) {
                         modifiedRows.forEach(row => row.isModified = false);
                         this.alert = true;
@@ -573,7 +719,7 @@ export default {
                 }
             } else {
                 console.error('Data is not valid');
-                this.$toast.error('Data is not valid. Please check required fields.');
+                alert('Data is not valid. Please check required fields.');
             }
         },
         async saveOutbound() {
@@ -613,7 +759,7 @@ export default {
                 axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
                 try {
-                    const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/LAN', dataToSend);
+                    const response = await axios.post('http://127.0.0.1:8000/rules/saveRules/' + this.activeTab, dataToSend);
                     if (response.status === 200) {
                         modifiedRows.forEach(row => row.isModified = false);
                         this.alertOutbound = true;
@@ -635,6 +781,9 @@ export default {
         handleRemove() {
             this.alert = false;
         },
+        handleRemoveOutbound() {
+            this.alertOutbound = false;
+        },
     },
     mounted() {
         this.rules = this.$root.$data.rules;
@@ -652,8 +801,10 @@ export default {
             handler: function (val, oldVal) {
                 if (val) {
                     this.rowData = this.rules[this.activeTab]['inbound'];
+                    this.rowDataOutbound = this.rules[this.activeTab]['outbound'];
                 } else {
                     this.rowData = [];
+                    this.rowDataOutbound = [];
                 }
             },
             deep: true,
@@ -663,24 +814,39 @@ export default {
         activeTab: {
             handler: function (val, oldVal) {
                 this.rowData = this.rules[val]['inbound'];
+                this.rowDataOutbound = this.rules[val]['outbound'];
             },
             deep: true,
         },
-    },
 
-    computed: {
-        // Whenever protocol is icmp request or icmp reply, disable the sport and dport columns and set their values to ANY
+        // Whenever protocol is icmp request or icmp reply, disable the sport and dport columns and set their values to null
         // This is done to prevent users from entering values in sport and dport columns when protocol is icmp request or icmp reply
-
-        cellStyle: (params) => {
-            // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
-            if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
-                return { 'pointer-events': 'none', 'background-color': '#eee', 'opacity': '0.6' };
-            }
-            // Return null to enable the cell for other values
-            return null;
+        'rowData': {
+            handler: function (val, oldVal) {
+                if (val) {
+                    val.forEach(row => {
+                        if (row.protocol === 'icmp request' || row.protocol === 'icmp reply') {
+                            row.sport = null;
+                            row.dport = null;
+                        }
+                    });
+                }
+            },
+            deep: true,
         },
-
+        'rowDataOutbound': {
+            handler: function (val, oldVal) {
+                if (val) {
+                    val.forEach(row => {
+                        if (row.protocol === 'icmp request' || row.protocol === 'icmp reply') {
+                            row.sport = null;
+                            row.dport = null;
+                        }
+                    });
+                }
+            },
+            deep: true,
+        }
     },
 };
 

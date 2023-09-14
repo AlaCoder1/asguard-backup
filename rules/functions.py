@@ -50,7 +50,7 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
       rule='iifname "{}" ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(ifname,saddr,daddr,protocol,sport,protocol,dport,policy)
     ##cas outbound
    elif type_rule=='outbound':
-      rule='oifname "{}" ip daddr {} ip saddr {} {} dport {} {} sport {} {}'.format(ifname,daddr,saddr,protocol,dport,protocol,sport,policy)
+      rule='oifname "{}" ip daddr {} ip saddr {} {} sport {} {} dport {} {}'.format(ifname,daddr,saddr,protocol,sport,protocol,dport,policy)
    
    #####cas saddr is None
    if saddr is None:
@@ -67,7 +67,6 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
    #####cas dport is None
    if dport is None and not protocol.startswith("icmp") :
       rule=rule[:rule.find(('{} dport {}').format(protocol,dport))]+rule[rule.find(('{} dport {}').format(protocol,dport))+len(('{} dport {}').format(protocol,dport)):].strip()
-   
    return rule
 ###function to add rule
 def add_rule_remote(rule,ifname,type_rule):

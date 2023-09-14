@@ -1,8 +1,7 @@
-from openvpn.functions import connect_ssh
-
-from openvpn.server_openvpn import execute_command_with_arguments, execute_list_commands_without_arguments, execute_list_of_commands
+from openvpn.functions import connect_ssh, execute_command_with_arguments, execute_list_commands_without_arguments
 
 
+################ Authority ####################
 def create_ca_in_system(ca_name, updated_fields_vars):
     """Function to create in system an authority certificate"""
     ssh = connect_ssh()
@@ -52,6 +51,7 @@ def delete_ca_in_system(ca_name):
     execute_list_commands_without_arguments(ssh_connect=ssh, commands_list=commands_list_without_arguments)
 
 
+################ Certificate ####################
 def create_certificate_in_system(cert_name, ca_name, type_cert, updated_fields_vars):
     """Function to create in system an authority certificate"""
     ssh = connect_ssh()
@@ -79,9 +79,12 @@ def create_certificate_in_system(cert_name, ca_name, type_cert, updated_fields_v
 
     # Creating Certificates (server or client)
     if type_cert == 'server':
-    
-        execute_command_with_arguments(ssh, 'sudo easyrsa build-server-full server', ['akrampass','akrampass','yes'], time_sleep)
-        # execute_command_with_arguments(ssh, 'sudo easyrsa gen-dh', ['yes'], time_sleep + 5)
+        # Create certificate without password
+        execute_command_with_arguments(ssh, 'sudo easyrsa build-server-full server nopass', ['yes'], time_sleep)
+
+        # Create certificate with password
+        # execute_command_with_arguments(ssh, 'sudo easyrsa build-server-full server nopass', ['akrampass','akrampass','yes'], time_sleep)
+
         commands_list_without_arguments = ['sudo easyrsa gen-dh',
                                            f'mkdir -p /etc/openvpn/certificates_{cert_name}/',
                                            f'cp {current_dir}/pki/issued/server.crt "/etc/openvpn/certificates_{cert_name}/server.crt"',
@@ -89,8 +92,12 @@ def create_certificate_in_system(cert_name, ca_name, type_cert, updated_fields_v
                                            f'cp {current_dir}/pki/dh.pem "/etc/openvpn/certificates_{cert_name}/dh.pem"',
                                            ]
     elif type_cert == 'client':
+        # Create client without password
+        execute_command_with_arguments(ssh, f'sudo easyrsa build-client-full {cert_name} nopass', ['yes'], time_sleep)
 
-        execute_command_with_arguments(ssh, f'sudo easyrsa build-client-full {cert_name}', ['clientpass', 'clientpass', 'yes'], time_sleep)
+        # Create client with password
+        # execute_command_with_arguments(ssh, f'sudo easyrsa build-client-full {cert_name}', ['clientpass', 'clientpass', 'yes'], time_sleep)
+        
         commands_list_without_arguments = [f'mkdir -p /etc/openvpn/client/certificates_{cert_name}/',
                                            f'cp {current_dir}/pki/issued/{cert_name}.crt "/etc/openvpn/client/certificates_{cert_name}/{cert_name}.crt"',
                                            f'cp {current_dir}/pki/private/{cert_name}.key "/etc/openvpn/client/certificates_{cert_name}/{cert_name}.key"',
@@ -133,7 +140,9 @@ def delete_certificate_in_system(cert_name, type_cert):
     elif type_cert == 'client':
         commands_list_without_arguments = [f'sudo rm -r /etc/openvpn/client/certificates_{cert_name}',
                                            f'sudo rm -f {current_dir}/pki/issued/{cert_name}.crt',
-                                           f'sudo rm -f {current_dir}/pki/private/{cert_name}.key',]
+                                           f'sudo rm -f {current_dir}/pki/private/{cert_name}.key',
+                                           f'sudo rm -f {current_dir}/pki/reqs/{cert_name}.req',
+                                           f'sudo rm -f {current_dir}/pki/inline/{cert_name}.inline',]
     execute_list_commands_without_arguments(ssh_connect=ssh, commands_list=commands_list_without_arguments)
 
 

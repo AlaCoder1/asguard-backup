@@ -44,10 +44,12 @@
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-12 text-center">
-                    <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel">
+                    <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel"
+                        :disabled="isSaveDisabled">
                         Cancel
                     </v-btn>
-                    <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="save">
+                    <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="save"
+                        :disabled="isSaveDisabled">
                         Save
                     </v-btn>
                 </div>
@@ -73,8 +75,8 @@
                 <v-card-title>
                     <v-row>
                         <v-col cols="12" md="6">
-                            <v-text-field id="filter-text-box" v-model="filterTextOutbound" append-icon="mdi-magnify"
-                                label="Search" single-line hide-details rounded outlined dense
+                            <v-text-field id="filter-text-box-outbound" v-model="filterTextOutbound"
+                                append-icon="mdi-magnify" label="Search" single-line hide-details rounded outlined dense
                                 @input="onFilterTextBoxChangedOutbound"></v-text-field>
                         </v-col>
                         <v-col cols="12" md="6" class="d-flex justify-end">
@@ -86,26 +88,26 @@
                     </v-row>
                 </v-card-title>
                 <v-card-text>
-                    <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
-                        :rowData="rowDataOutbound"
-                        @grid-ready="onGridReadyOutbound" :rowDrag="true" :defaultColDef="defaultColDefOutbound"
-                        :editType="editType" style="width: 100%;" @cell-value-changed="onCellValueChangedOutbound"
-                        @row-value-changed="onRowValueChangedOutbound" @selection-changed="onSelectionChangedOutbound"
-                        @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
-                        @row-drag-end="onRowDragEndOutbound" :pagination="true" :paginationPageSize="10"
-                        :rowSelection="'multiple'"
-                        >
-                        </ag-grid-vue>
+                    <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine"
+                        :columnDefs="columnDefsOutbound" :rowData="rowDataOutbound" @grid-ready="onGridReadyOutbound"
+                        :rowDrag="true" :defaultColDef="defaultColDefOutbound" :editType="editType" style="width: 100%;"
+                        @cell-value-changed="onCellValueChangedOutbound" @row-value-changed="onRowValueChangedOutbound"
+                        @selection-changed="onSelectionChangedOutbound" @column-row-group-changed="onColumnRowGroupChanged"
+                        @column-row-drag-end="onColumnRowDragEnd" @row-drag-end="onRowDragEndOutbound" :pagination="true"
+                        :paginationPageSize="10" :rowSelection="'multiple'">
+                    </ag-grid-vue>
                 </v-card-text>
             </v-card>
         </div>
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-12 text-center">
-                    <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancelOutbound">
+                    <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancelOutbound"
+                        :disabled="isSaveDisabledOutbound">
                         Cancel
                     </v-btn>
-                    <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="saveOutbound">
+                    <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="saveOutbound"
+                        :disabled="isSaveDisabledOutbound">
                         Save
                     </v-btn>
                 </div>
@@ -262,6 +264,136 @@ export default {
                     editable: false,
                 },
             ],
+            columnDefsOutbound: [
+                {
+                    width: 50,
+                    minWidth: 50,
+                    maxWidth: 50,
+                    rowDrag: true,
+                    editable: false,
+                },
+                {
+                    headerCheckboxSelection: true,
+                    checkboxSelection: true,
+                    editable: false,
+                    width: 100,
+                    minWidth: 100,
+                    maxWidth: 100,
+                },
+                {
+                    field: 'policy',
+                    headerName: 'Policy',
+                    cellEditor: 'agSelectCellEditor',
+                    cellEditorParams: {
+                        values: ['accept', 'drop'],
+                    },
+                    editable: params => params.node.data.isRowSelected,
+                },
+                {
+                    field: 'Rule_description',
+                    headerName: 'Rule Description',
+                    editable: params => params.node.data.isRowSelected,
+                    headerName: 'Rule Description',
+                },
+                {
+                    field: 'protocol',
+                    headerName: 'Protocol',
+                    cellEditor: 'agSelectCellEditor',
+                    cellEditorParams: {
+                        values: ['tcp', 'udp', 'icmp request', 'icmp reply'],
+                    },
+                    editable: params => params.node.data.isRowSelected,
+                },
+                {
+                    field: 'saddr',
+                    headerName: 'Src Address',
+                    editable: params => params.node.data.isRowSelected,
+                    valueSetter: (params) => {
+                        const value = params.newValue;
+                        if (this.isValidIPAddress(value)) {
+                            params.data.saddr = value;
+                            return true; // Value is valid, update the cell
+                        } else {
+                            // Value is invalid, display a validation message
+                            alert('Please enter a valid source IP address');
+                            return false; // Value is not updated
+                        }
+                    },
+                },
+                {
+                    field: 'sport',
+                    headerName: 'Src Port',
+                    editable: params => params.node.data.isRowSelected,
+                    valueParser: this.numericValueParser,
+                    valueSetter: (params) => {
+                        const value = params.newValue;
+                        if (this.isValidPortNumber(value)) {
+                            params.data.sport = value;
+                            return true; // Value is valid, update the cell
+                        } else {
+                            // Value is invalid, display a validation message
+                            alert('Please enter a valid source port number');
+                            return false; // Value is not updated
+                        }
+                    },
+                    // Add cellStyle function to disable cell based on protocol value
+                    cellStyle: (params) => {
+                        // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
+                        if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
+                            return { 'pointer-events': 'none', 'background-color': '#eee', 'opacity': '0.6' };
+                        }
+                        // Return null to enable the cell for other values
+                        return null;
+                    },
+                },
+                {
+                    headerName: 'Dst Address',
+                    field: 'daddr',
+                    editable: params => params.node.data.isRowSelected,
+                    valueSetter: (params) => {
+                        const value = params.newValue;
+                        if (this.isValidIPAddress(value)) {
+                            params.data.daddr = value;
+                            return true; // Value is valid, update the cell
+                        } else {
+                            // Value is invalid, display a validation message without using alert
+                            alert('Please enter a valid destination IP address');
+                            return false; // Value is not updated
+                        }
+                    },
+                },
+                {
+                    field: 'dport',
+                    headerName: 'Dst Port',
+                    editable: params => params.node.data.isRowSelected,
+                    valueParser: this.numericValueParser,
+                    valueSetter: (params) => {
+                        const value = params.newValue;
+                        if (this.isValidPortNumber(value)) {
+                            params.data.dport = value;
+                            return true; // Value is valid, update the cell
+                        } else {
+                            // Value is invalid, display a validation message
+                            alert('Please enter a valid destination port number');
+                            return false; // Value is not updated
+                        }
+                    },
+                    // Add cellStyle function to disable cell based on protocol value
+                    cellStyle: (params) => {
+                        // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
+                        if (params.data.protocol === 'icmp request' || params.data.protocol === 'icmp reply') {
+                            return { 'pointer-events': 'none', 'background-color': '#eee', 'opacity': '0.6' };
+                        }
+                        // Return null to enable the cell for other values
+                        return null;
+                    },
+                },
+                {
+                    headerName: 'Action',
+                    cellRenderer: this.actionCellRendererOutbound,
+                    editable: false,
+                },
+            ],
             gridApi: null,
             gridApiOutbound: null,
             columnApi: null,
@@ -285,7 +417,8 @@ export default {
             alertOutbound: false,
             filterTextOutbound: null,
             rowDataOutbound: [],
-
+            isSaveDisabled: true,
+            isSaveDisabledOutbound: true,
         };
     },
     created() {
@@ -410,13 +543,8 @@ export default {
             );
         },
         onFilterTextBoxChangedOutbound() {
-            this.gridApi.setQuickFilter(
-                document.getElementById('filter-text-box').value
-            );
-        },
-        onFilterTextBoxChangedOutbound() {
             this.gridApiOutbound.setQuickFilter(
-                document.getElementById('filter-text-box').value
+                document.getElementById('filter-text-box-outbound').value
             );
         },
         handleAction(action, rowData) {
@@ -469,10 +597,10 @@ export default {
                     break;
             }
         },
-        handleActionOutbound(action, rowData) {
+        handleActionOutbound(action, rowDataOutbound) {
             switch (action) {
                 case 'delete':
-                    if (rowData.id) {
+                    if (rowDataOutbound.id) {
                         function getCookie(name) {
                             let cookieValue = null;
                             if (document.cookie && document.cookie !== '') {
@@ -496,7 +624,7 @@ export default {
                                 const responseData = response.data;
                                 if (responseData.msg === "delete rule Successfully!!") {
                                     // Delete the row from the grid
-                                    const index = this.rowDataOutbound.indexOf(rowData);
+                                    const index = this.rowDataOutbound.indexOf(rowDataOutbound);
                                     if (index > -1) {
                                         this.rowDataOutbound.splice(index, 1);
                                     }
@@ -508,7 +636,7 @@ export default {
                                 console.error(error);
                             });
                     } else {
-                        const index = this.rowDataOutbound.indexOf(rowData);
+                        const index = this.rowDataOutbound.indexOf(rowDataOutbound);
                         if (index > -1) {
                             this.rowDataOutbound.splice(index, 1);
                         }
@@ -527,9 +655,9 @@ export default {
                 Rule_description: '',
                 protocol: 'tcp',
                 saddr: '',
-                sport: 'ANY',
+                sport: '',
                 daddr: '',
-                dport: 'ANY',
+                dport: '',
                 Action: '',
             };
             // Ensure this.rowData is defined before pushing the new row
@@ -556,9 +684,9 @@ export default {
                 Rule_description: '',
                 protocol: 'tcp',
                 saddr: '',
-                sport: 'ANY',
+                sport: '',
                 daddr: '',
-                dport: 'ANY',
+                dport: '',
                 Action: '',
             };
             // Ensure this.rowData is defined before pushing the new row
@@ -679,7 +807,7 @@ export default {
                         protocol: row.protocol === 'icmp request' ? 'icmp type echo-request' : row.protocol === 'icmp reply' ? 'icmp type echo-reply' : row.protocol,
                         saddr: row.saddr,
                         daddr: row.daddr,
-                        sport: row.sport === 'ANY' ? '' : row.sport,
+                        sport: row.sport,
                         dport: row.dport,
                         type_rule: "inbound",
                     };
@@ -704,7 +832,7 @@ export default {
 
                 try {
                     const response = await axios.post('/rules/saveRules/' + this.activeTab, dataToSend);
-                    if (response.status === 200) {
+                    if (response.status === 200 && modifiedRows.length > 0) {
                         modifiedRows.forEach(row => row.isModified = false);
                         this.alert = true;
                         setTimeout(() => {
@@ -735,7 +863,7 @@ export default {
                         protocol: row.protocol === 'icmp request' ? 'icmp type echo-request' : row.protocol === 'icmp reply' ? 'icmp type echo-reply' : row.protocol,
                         saddr: row.saddr,
                         daddr: row.daddr,
-                        sport: row.sport === 'ANY' ? '' : row.sport,
+                        sport: row.sport,
                         dport: row.dport,
                         type_rule: "outbound",
                     };
@@ -829,6 +957,7 @@ export default {
                             row.sport = null;
                             row.dport = null;
                         }
+
                     });
                 }
             },
@@ -846,7 +975,35 @@ export default {
                 }
             },
             deep: true,
-        }
+        },
+        // if rowData is modified, enable the save button
+        'rowData': {
+            handler: function (val, oldVal) {
+                if (val) {
+                    const modifiedRows = val.filter(row => row.isModified || row.isRowSelected);
+                    if (modifiedRows.length > 0) {
+                        this.isSaveDisabled = false;
+                    } else {
+                        this.isSaveDisabled = true;
+                    }
+                }
+            },
+            deep: true,
+        },
+        // if rowDataOutbound is modified, enable the save button
+        'rowDataOutbound': {
+            handler: function (val, oldVal) {
+                if (val) {
+                    const modifiedRows = val.filter(row => row.isModified || row.isRowSelected);
+                    if (modifiedRows.length > 0) {
+                        this.isSaveDisabledOutbound = false;
+                    } else {
+                        this.isSaveDisabledOutbound = true;
+                    }
+                }
+            },
+            deep: true,
+        },
     },
 };
 

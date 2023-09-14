@@ -4,7 +4,6 @@ import App from '@/pages/home';
 import store from '@/store/index';
 
 
-import VeeValidate from 'vee-validate';
 import VueI18n from 'vue-i18n';
 import enJson from './translations/en.json'; 
 import frJson from './translations/fr.json'; 
@@ -19,7 +18,7 @@ const i18n = new VueI18n({
   },
 });
 
-Vue.use(VeeValidate, {
+Vue.use( {
   i18n,
   classes: true,
   fieldsBagName: 'formFields',

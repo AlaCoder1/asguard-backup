@@ -1,8 +1,15 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Firewall" active-menu="firewall">
+    <base-layout title="Rules" active-menu="firewall">
       <template #content>
-        <FirewallComponent />
+        <v-tabs v-model="activeTab">
+          <v-tab v-for="tab in tabs" :key="tab.name_interface">
+            {{ tab.name_interface }}
+          </v-tab>
+          <v-tab-item v-for="tab in tabs" :key="tab.name_interface">
+            <FirewallComponent :id="tab.name_interface" :activeTab="tab.name_interface" />
+          </v-tab-item>
+        </v-tabs>
       </template>
     </base-layout>
   </v-app>
@@ -16,14 +23,34 @@ export default {
   components: {
     BaseLayout,
     FirewallComponent
-},
+  },
   data() {
     return {
+      activeTab: null,
+      interfaces: [],
     };
   },
-  beforeMount() {
-    this.firewall = this.$root.$data.firewall;
+  computed: {
+    tabs() {
+      //  convert interfaces from string to array
+      return this.interfaces.map(element => ({
+        name_interface: element.name_interface,
+      }));
+    },
+  },
+  methods: {},
+  mounted() {
+    this.interfaces = this.$root.$data.interfaces;
+    let validJsonString = this.interfaces
+      .replace(/'/g, '"')
+      .replace(/True/g, 'true')
+      .replace(/False/g, 'false')
+      .replace(/None/g, 'null');
+    let parsedArray = JSON.parse(validJsonString);
+    this.interfaces = parsedArray;
   },
 };
 </script>
+
+
 

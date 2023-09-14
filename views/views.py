@@ -3,7 +3,9 @@ from managementUsers.views import *
 from managementUsers.models import User
 from django.contrib.auth.decorators import login_required
 from managementServers.models import * 
-
+from network.models import *
+from rules.models import *
+from gateway.models import *
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -43,8 +45,7 @@ def getGroups(request):
             else:
                 res[i]['fields']['sudoers']=True
             list_group.append(res[i]['fields'])
-        return list_group
-    
+        return list_group 
 def getServers(request):
     list_servers = []
     if (request.method == 'GET'):
@@ -62,6 +63,107 @@ def getServers(request):
             res[i]['fields']['type_name'] = type.type_name
             list_servers.append(res[i]['fields'])
         return list_servers
+
+# def GetAllRules(request):
+#     if (request.method == 'GET'):
+#         interfaceObject= Interface.objects.get(name_interface=name_interface)
+#         rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
+#         ruleDict = serializers.serialize("json", rules)
+#         res = json.loads(ruleDict)
+#         for i in range(0, len(res)):
+#           interfaceDict=[]
+#           res[i].pop('model')
+#           id = res[i]['pk']
+#           res[i].pop('pk')
+#           res[i]['fields']['id'] = id
+#           interface=Interface.objects.get(id=res[i]['fields']['interface'])
+#           interfaceDict.append({"name":interface.name_interface,"id":interface.id})
+#           res[i]['fields']['interface']=interfaceDict
+#           list_rules.append(res[i]['fields'])
+#         return list_rules
+###############
+def GetAllRules(request):
+    if (request.method == 'GET'):
+        all_rules={}
+        set_type=[]
+        allinterfaces=Interface.objects.all()
+        interfaceDict = serializers.serialize("json", allinterfaces)
+        resInterface = json.loads(interfaceDict)
+        ########## get all types 
+        rules= Rule.objects.all()
+        ruleDict = serializers.serialize("json", rules)
+        resRules = json.loads(ruleDict)
+        for j in range(0, len(resRules)):
+            set_type.append(resRules[j]['fields']['type_rule'])
+        for x in range(0, len(resInterface)):
+          idInterface=resInterface[x]['pk']
+          rules_type={}
+          # rules= Rule.objects.get(interface=idInterface)
+          for elem in list(set(set_type)): 
+            rules= Rule.objects.filter(interface=idInterface,type_rule=elem)
+            ruleDict = serializers.serialize("json", rules)
+            res = json.loads(ruleDict)
+            list_rules=[]
+            for i in range(0, len(res)):
+              interfaceDict=[]
+              res[i].pop('model')
+              id = res[i]['pk']
+              res[i].pop('pk')
+              res[i]['fields']['id'] = id
+              res[i]['fields'].pop("interface")
+              res[i]['fields'].pop("rule")
+              list_rules.append(res[i]['fields'])
+             ########## 
+            rules_type[elem]=list_rules
+          all_rules[resInterface[x]['fields']['name_interface']]=rules_type
+        return all_rules
+#################"Gateways
+############ getAll
+def getAllGateways(request):
+    if (request.method == 'GET'):
+        gateways = Gateway.objects.all()
+        gatewaysDict = serializers.serialize("json", gateways)
+        res = json.loads(gatewaysDict)
+        list_gateways=[]
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_gateways.append(res[i]['fields'])
+    return list_gateways
+############# GET static
+def getAllStaticGateways(request):
+    if (request.method == 'GET'):
+        gateways= Gateway.objects.filter(staticgw=True)
+        gatewaysDict = serializers.serialize("json", gateways)
+        res = json.loads(gatewaysDict)
+        list_gateways=[]
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_gateways.append(res[i]['fields'])
+    return  list_gateways
+
+##########    
+def AllInterfaces(request):
+    list_interface = []
+    if (request.method == 'GET'):
+        interfaces = Interface.objects.all()
+        interfaceDict=serializers.serialize("json",interfaces)
+        # interfaceDict = serializers.serialize("json", interfaces)
+        res = json.loads(interfaceDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_interface.append(res[i]['fields'])
+        return list_interface
+
+#########
 @login_required(login_url='/')
 def index_page(request):
     usr=getUsers(request)
@@ -89,9 +191,9 @@ def lan_page(request):
 
 @login_required(login_url='/')
 def firewall_page(request):
-    return render(request, 'firewall_page.html')
-    firewall=getNetworkData(request)
-    context = {'firewall':firewall}
+    rules=GetAllRules(request)
+    interfaces=AllInterfaces(request)
+    context = {'rules':rules, 'interfaces':interfaces}
     return render(request, 'firewall_page.html',context)
 
 @login_required(login_url='/')

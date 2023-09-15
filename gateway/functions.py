@@ -53,9 +53,9 @@ def return_Gateway_system(uuid,addrgw,far_aux,multiWan_aux,metric,IP4ConfigObjec
             cmd+=" ipv4.route-metric {}".format(metric)
     return cmd
 ###########DHCP
-def get_gateway_dhcp(ifname,ssh_client):
+def get_gateway_dhcp(ifname):
     command="ip route show default | grep {} | grep 'proto'| cut -d ' ' -f 3-".format(ifname)
-    output, error = run_command(ssh_client, command)
+    output, error = run_command(command)
     if  not output.strip():
         return None, 0, False, False, False  # Return None and metric 0 in case of failure
     gwaddr = output.split()[0]

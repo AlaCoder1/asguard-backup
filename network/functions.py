@@ -90,10 +90,10 @@ def run_command(command):
     error = completed_process.stderr
     return output, error
 
-def run_remote_command_with_timeout(type, typeDHCP4, ssh_client, command, timeout_seconds):
+def run_remote_command_with_timeout(type, typeDHCP4, command, timeout_seconds):
     def run_command_thread():
         nonlocal output, error
-        output, error = run_command(ssh_client, command)
+        output, error = run_command(command)
 
     start_time = time.time()
     output = None
@@ -113,9 +113,10 @@ def run_remote_command_with_timeout(type, typeDHCP4, ssh_client, command, timeou
         return error
     elif command_thread.is_alive():
         print(f"Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}")
-        stdin, stdout, stderr = ssh_client.exec_command('\x03')
+        completed_process = subprocess.run('\x03', shell=True, capture_output=True, text=True)
+        output = completed_process.stdout
+        error = completed_process.stderr
         # interrupt_command = "sudo pkill -INT -f 'some_long_running_command'"
-        # output,error=run_command(ssh_client, interrupt_command)
         print("Ctrl+C sent.")
         return "Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}"
         
@@ -126,7 +127,7 @@ def run_remote_command_with_timeout(type, typeDHCP4, ssh_client, command, timeou
 #function to run all commandes
 def run_all_commands(commandes,setuptypeIP4,typeDHCP4,timeout):
     for cmd in commandes:
-        out=run_remote_command_with_timeout(setuptypeIP4,typeDHCP4,ssh, cmd, timeout)
+        out=run_remote_command_with_timeout(setuptypeIP4,typeDHCP4, cmd, timeout)
         if  out is not True :
             return out
     return True
@@ -318,7 +319,7 @@ def update_conn_dhcp_IPV4(config,ifname,uuid):
     
     return commandes,config,cmd_final
 
-def get_address_dhcp(ifname,ssh):
+def get_address_dhcp(ifname):
     cmd = "ip -4 -o addr show dev {} | awk '{{split($4, a); print a[1]}}'".format(ifname)
     output, error = run_command(cmd)
     if error!="" or len(output)==0:

@@ -6,14 +6,13 @@ from rest_framework.parsers import JSONParser
 import json
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.core import serializers
 from authentification.views import *
 from .functions import *
 from django.views.decorators.csrf import csrf_exempt
 from gateway.models import *
 from gateway.functions import *
 from django.db.models import Q
-
+from django.core import serializers
 def device_nameInterface(name_interface):
     data = Interface.objects.get(name_interface=name_interface)
     return data
@@ -228,7 +227,7 @@ def conf(request,name_interface):
                 commandes+=commandesIPV6+cmds+cmdsBlock
                 ###call function to add all commandes to the service
                 output_service = add_cmd(output_service,commandes)
-                #ajouter au liste des commandes finales à executer (ssh.exec_command) 
+                #ajouter au liste des commandes finales à executer  
                 commandes_final+=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_Gen+cmd_final_Block
                 cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 {}
@@ -241,9 +240,9 @@ EOF""".format('\n'.join(output_service))
                     if  (error==""):
                         if setuptypeIP4=="dhcp":
                             ##function to get gateway if typeIPV4 est DHCP Base or Advanced
-                            gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname,ssh)
+                            gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname)
                             jsonIPV4["addrgw"]=gwaddr4
-                            ip_address4,netmask4=get_address_dhcp(ifname,ssh)
+                            ip_address4,netmask4=get_address_dhcp(ifname)
                             # print(ip_address4,"======>",netmask4)
                             jsonIPV4["ip_address"]=ip_address4
                             jsonIPV4["netmask"]=netmask4

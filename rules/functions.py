@@ -79,8 +79,9 @@ def add_rule_remote(rule,ifname,type_rule):
    ]
       ###executer ces commandes
       for cmd in commandes:
-         stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-         error = stderr.read().decode('utf-8')
+         completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+         output = completed_process.stdout
+         error = completed_process.stderr
          if error!='': 
             return error
       return True

@@ -1,3 +1,4 @@
+import subprocess
 from network.models import *
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
@@ -18,20 +19,13 @@ class Command(BaseCommand):
         try:
             name = kwargs['name']
             pw = kwargs['pw']
-            def connect_ssh():
-                ssh = paramiko.SSHClient()
-                # automatically add host key when connecting to a new host
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                # connect to SSH server
-                ssh.connect(settings.SSH_HOST, username=name,
-                            password=pw, port=settings.SSH_PORT)
-                return ssh
-            ssh = connect_ssh()
             server_path = "/etc/ConfigInterfaces"
-            cmd = f"cat {server_path}"
-            stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
-            if stderr.read().decode('utf-8') == '':
-                lines = stdout.read().decode('utf-8').split('\n')
+            cmd = f"sudo cat {server_path}"
+            completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            output = completed_process.stdout
+            error = completed_process.stderr
+            if error == '':
+                lines = output.split('\n')
                 lines.pop()
                 print({"lines":lines})
                 for i in range(0,len(lines)):
@@ -46,6 +40,6 @@ class Command(BaseCommand):
                         
                     
             else:
-                return "erreur: "+stderr.read().decode('utf-8')           
+                return "erreur: "+error          
         except IntegrityError as e:
             return "Error: " + str(e)

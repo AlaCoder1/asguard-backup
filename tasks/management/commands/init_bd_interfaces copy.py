@@ -1,3 +1,4 @@
+import subprocess
 from network.models import *
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
@@ -18,20 +19,14 @@ class Command(BaseCommand):
         try:
             name = kwargs['name']
             pw = kwargs['pw']
-            def connect_ssh():
-                ssh = paramiko.SSHClient()
-                # automatically add host key when connecting to a new host
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                # connect to SSH server
-                ssh.connect(settings.SSH_HOST, username=name,
-                            password=pw, port=settings.SSH_PORT)
-                return ssh
-            ssh = connect_ssh()
+            
             liste_interfaces =[]
-            cmd1="ip route list | grep default | cut -d ' ' -f 3-5"
-            stdin1, stdout1, stderr1 = ssh.exec_command(cmd1)
-            print({'stderr1':stderr1.read().decode('utf-8')})
-            output_getway_interface=stdout1.read().decode('utf-8').split('\n')
+            cmd1="sudo ip route list | grep default | cut -d ' ' -f 3-5"
+            completed_process1 = subprocess.run(cmd1, shell=True, capture_output=True, text=True)
+            output1 = completed_process1.stdout
+            error1 = completed_process1.stderr
+            print({'stderr1':error1})
+            output_getway_interface=output1.split('\n')
             output_getway_interface.pop()
             print({'output_getway_interface':output_getway_interface})
             print({'len_output_getway_interface':len(output_getway_interface)})
@@ -40,11 +35,7 @@ class Command(BaseCommand):
             server_path = "/etc/ConfigInterfaces"
             print({"liste_interfaces":liste_interfaces})
             
-            # Open an SFTP session
-            sftp = ssh.open_sftp()
-
-            # Open the remote file in write mode
-            remote_file = sftp.open(server_path, 'w')
+            
             list_LAN_WAN = ['LAN', 'WAN', "LAN1", "WAN1","LAN2"]
             content=""
             num_elements_to_select=len(liste_interfaces)
@@ -55,19 +46,16 @@ class Command(BaseCommand):
                     print({"random_element":random_element})
                 #content
                 content+="{}: {} \n".format(i,random_element)
-            # Write content to the remote file
-            print({"content":content})
-            remote_file.write(content)
-
-            # Close the remote file
-            remote_file.close()
-
-            # Close the SFTP session
-            sftp.close()
+            # Write content to the local file
+            with open(server_path, 'w') as local_file:
+                local_file.write(content)
+                
             cmd = f"cat {server_path}"
-            stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
-            if stderr.read().decode('utf-8') == '':
-                lines = stdout.read().decode('utf-8').split('\n')
+            completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            output = completed_process.stdout
+            error = completed_process.stderr
+            if error == '':
+                lines = output.split('\n')
                 lines.pop()
                 print({"lines":lines})
                 for i in range(0,len(lines)):
@@ -82,6 +70,6 @@ class Command(BaseCommand):
                         
                     
             else:
-                return "erreur: "+stderr.read().decode('utf-8')           
+                return "erreur: "+error          
         except IntegrityError as e:
             return "Error: " + str(e)

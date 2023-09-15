@@ -48,6 +48,7 @@ export default {
       .replace(/None/g, 'null');
     let parsedArray = JSON.parse(validJsonString);
     this.interfaces = parsedArray;
+
   },
 };
 </script>

@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from rest_framework.parsers import JSONParser
 from .functions import *
 from django.core import serializers
+from rest_framework.permissions import IsAuthenticated, AllowAny
 # API to get all gateways
 @api_view(['GET'])
 @permission_classes([])

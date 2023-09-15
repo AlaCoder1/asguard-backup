@@ -235,8 +235,10 @@ def conf(request,name_interface):
 EOF""".format('\n'.join(output_service))
                 # print("1111",run_all_commands(commandes_final,setuptypeIP4,typeDHCP4))
                 if run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,10) is True:
-                    stdin, stdout, stderr = ssh.exec_command(cmd_asguard)  
-                    if  (stderr.read().decode('utf-8')==""):
+                    completed_process = subprocess.run(cmd_asguard, shell=True, capture_output=True, text=True)
+                    output = completed_process.stdout
+                    error = completed_process.stderr
+                    if  (error==""):
                         if setuptypeIP4=="dhcp":
                             ##function to get gateway if typeIPV4 est DHCP Base or Advanced
                             gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname,ssh)
@@ -294,7 +296,7 @@ EOF""".format('\n'.join(output_service))
                             msg=aux_ipv4
                             status=400
                     else:
-                        msg=stderr.read().decode('utf-8')
+                        msg=error
                         status=400        
                 else:
                     msg=run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,10)

@@ -191,11 +191,11 @@ export default {
               active: 'Diagnostics',
             },
             {
-              title: 'LAN / WAN',
+              title: 'List of interface',
               icon: '',
               href: '/lan',
               href: '/lan',
-              active: 'LAN / WAN',
+              active: 'List of interface',
             }, {
               title: 'Settings',
               icon: '',

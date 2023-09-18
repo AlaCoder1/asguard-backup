@@ -37,10 +37,11 @@ new Vue({
   vuetify,
   data: {
     lan: '',
+    interfaces: []
   },
   beforeMount: function () {
-    console.log(this);
     this.lan = this.$el.attributes['lan'] ? this.$el.attributes['lan'].value : '';
+    this.interfaces = this.$el.attributes['interfaces'] ? this.$el.attributes['interfaces'].value : '';
   },
   render: (h) => h(App),
 }).$mount('#app');

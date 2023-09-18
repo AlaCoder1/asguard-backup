@@ -63,25 +63,6 @@ def getServers(request):
             res[i]['fields']['type_name'] = type.type_name
             list_servers.append(res[i]['fields'])
         return list_servers
-
-# def GetAllRules(request):
-#     if (request.method == 'GET'):
-#         interfaceObject= Interface.objects.get(name_interface=name_interface)
-#         rules= Rule.objects.filter(interface=interfaceObject.id,type_rule=type_rule)
-#         ruleDict = serializers.serialize("json", rules)
-#         res = json.loads(ruleDict)
-#         for i in range(0, len(res)):
-#           interfaceDict=[]
-#           res[i].pop('model')
-#           id = res[i]['pk']
-#           res[i].pop('pk')
-#           res[i]['fields']['id'] = id
-#           interface=Interface.objects.get(id=res[i]['fields']['interface'])
-#           interfaceDict.append({"name":interface.name_interface,"id":interface.id})
-#           res[i]['fields']['interface']=interfaceDict
-#           list_rules.append(res[i]['fields'])
-#         return list_rules
-###############
 def GetAllRules(request):
     if (request.method == 'GET'):
         all_rules={}
@@ -117,8 +98,6 @@ def GetAllRules(request):
             rules_type[elem]=list_rules
           all_rules[resInterface[x]['fields']['name_interface']]=rules_type
         return all_rules
-#################"Gateways
-############ getAll
 def getAllGateways(request):
     if (request.method == 'GET'):
         gateways = Gateway.objects.all()
@@ -146,7 +125,6 @@ def getAllStaticGateways(request):
             res[i]['fields']['id'] = id
             list_gateways.append(res[i]['fields'])
     return  list_gateways
-
 ##########    
 def AllInterfaces(request):
     list_interface = []
@@ -161,8 +139,8 @@ def AllInterfaces(request):
             res[i].pop('pk')
             res[i]['fields']['id'] = id
             list_interface.append(res[i]['fields'])
+            print(list_interface)
         return list_interface
-
 #########
 @login_required(login_url='/')
 def index_page(request):
@@ -184,9 +162,8 @@ def user_certificate_managment_page(request):
 
 @login_required(login_url='/')
 def lan_page(request):
-    return render(request, 'lan_page.html')
-    lan=getNetworkData(request)
-    context = {'lan':lan}
+    interfaces=AllInterfaces(request)
+    context = {'interfaces':interfaces}
     return render(request, 'lan_page.html',context)
 
 @login_required(login_url='/')

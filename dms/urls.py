@@ -42,6 +42,6 @@ urlpatterns = [
     path('ipsec/', include('ipsec.urls')),
     path('rules/', include('rules.urls')),
     path('openvpn/', include('openvpn.urls')),
-    path('certificates/', include('managementCertificates.urls'))
-    path('gateway/', include('gateway.urls'))
+    path('certificates/', include('managementCertificates.urls')),
+    path('gateway/', include('gateway.urls')),
 ]

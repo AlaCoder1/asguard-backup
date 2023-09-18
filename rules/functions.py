@@ -1,10 +1,6 @@
-import paramiko
 from rules.serializers import *
 from django.conf import settings
 from authentification.views import *
-# ssh = paramiko.SSHClient()
-# ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-# ssh.connect('10.1.12.163', username='root', password='root')
  
 ##function initial nftables.conf et /rules/ifname/nftables.conf
 def init_file_nftables(ifname):
@@ -22,25 +18,26 @@ def init_file_nftables(ifname):
          5-créer les chaines de filtrage (inbound,outbound,cellular,inbound cellular)
          6-ajouter include_rules contenu in central file /etc/nftables.conf
    """
-   cmd="""bash -c 'sudo mkdir -p /etc/rules/{}
-sudo cat <<EOF >> /etc/rules/{}/nftables.conf
+
+   commandes=[ 'sudo mkdir -p /etc/rules/{}'.format(ifname),
+              """sudo cat <<EOF >> /etc/rules/{}/nftables.conf
 {} 
-EOF
-sudo nft add table inet filter_{} 
-sudo nft add chain inet filter_{} inbound {{ type filter hook input priority 0 \; }}
-sudo nft add chain inet filter_{} outbound {{ type filter hook input priority 0 \; }}
-sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 \; }}
-sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}
-sudo cat <<EOF >> /etc/nftables.conf
-{} 
-EOF'""" .format(ifname,ifname,ifname,rules,ifname,ifname,ifname,ifname,ifname,include_rules)
+EOF""".format(ifname,rules),
+"sudo nft add table inet filter_{} ".format(ifname),
+"sudo nft add chain inet filter_{} inbound {{ type filter hook input priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} outbound {{ type filter hook input priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}".format(ifname),
+"grep -q '{}' /etc/nftables.conf || echo '{}' | sudo tee -a /etc/nftables.conf".format(include_rules,include_rules)
+]
+
 ##executer le script créée précédamment retourner true si pas d'error sinon false en cas d'error
-   stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-   error = stderr.read().decode('utf-8')
-   output = stdout.read().decode('utf-8').split('\n')
-   if error:
-      print(error)
-      return False
+   for cmd in commandes:
+      stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+      error = stderr.read().decode('utf-8')
+      output = stdout.read().decode('utf-8').split('\n')
+      if error !="":
+         return error
    return True
 
 
@@ -50,28 +47,26 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
    rule=''
    ##cas inbound
    if type_rule=='inbound':
-         rule='iifname "{}" ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(ifname,saddr,daddr,protocol,sport,protocol,dport,policy)
+      rule='iifname "{}" ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(ifname,saddr,daddr,protocol,sport,protocol,dport,policy)
     ##cas outbound
    elif type_rule=='outbound':
-         print("outbound==========")
-         rule='oifname "{}" ip daddr {} ip saddr {} {} dport {} {} sport {} {}'.format(ifname,daddr,saddr,protocol,dport,protocol,sport,policy)
+      rule='oifname "{}" ip daddr {} ip saddr {} {} sport {} {} dport {} {}'.format(ifname,daddr,saddr,protocol,sport,protocol,dport,policy)
+   
    #####cas saddr is None
    if saddr is None:
       rule=rule[:rule.find('ip saddr None')]+rule[rule.find('ip saddr None')+len(('ip saddr None'))+1:].strip()
-      print('confition1====',rule)
    #####cas daddr is None
    if daddr is None:
       rule=rule[:rule.find('ip daddr None')]+rule[rule.find('ip daddr None')+len(('ip daddr None'))+1:].strip()
-      print('confition2====',rule)
+     ####### cas protocol icmp sans port
+   if protocol.startswith("icmp")  :
+      rule=rule[:rule.find(protocol)+len(protocol)]+" "+rule[rule.find('{}'.format(policy)):]
    #####cas sport is None
-   if sport is None:
-      rule=rule[:rule.find(('{} sport None').format(protocol))]+rule[rule.find(('{} sport None').format(protocol))+len(('{} sport None').format(protocol)):].strip()
-      print('confition3====',rule)
+   if sport is None and not protocol.startswith("icmp") :
+      rule=rule[:rule.find(('{} sport {}').format(protocol,sport))]+rule[rule.find(('{} sport {}').format(protocol,sport))+len(('{} sport {}').format(protocol,sport)):].strip()
    #####cas dport is None
-   if dport is None:
-      rule=rule[:rule.find(('{} dport None').format(protocol))]+rule[rule.find(('{} dport None').format(protocol))+len(('{} dport None').format(protocol)):].strip()
-      print('confition4====',rule)
-   # print(rule)
+   if dport is None and not protocol.startswith("icmp") :
+      rule=rule[:rule.find(('{} dport {}').format(protocol,dport))]+rule[rule.find(('{} dport {}').format(protocol,dport))+len(('{} dport {}').format(protocol,dport)):].strip()
    return rule
 ###function to add rule
 def add_rule_remote(rule,ifname,type_rule):
@@ -84,23 +79,23 @@ def add_rule_remote(rule,ifname,type_rule):
       for cmd in commandes:
          stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
          error = stderr.read().decode('utf-8')
-         if error: 
-            print(error)
-            return False
+         if error!='': 
+            return error
       return True
 ###function to get handle rule   
 def get_handle_rule(ifname,type_rule,rule):
+   rule=rule.replace("echo-request","8")
+   rule=rule.replace("echo-reply","0")
    ##cmd pour obtenir handle number pour supprimer rule 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
    error = stderr.read().decode('utf-8')
    output = stdout.read().decode('utf-8').split('#')
-   if error:
-      print("error ",error,"    :",cmd)
+   if len(output)<2:
+      return None
    else:
-     print(output)
-   return output[1].strip('\n').strip()
+      return output[1].strip().split("\n")[0]
 ###function to delete rule
 def delete_rule_remote(ifname,type_rule,handle):
    ##initialiser les commanndes pour supprimer une règle et l'entregistrer dans nftables.conf
@@ -112,40 +107,8 @@ def delete_rule_remote(ifname,type_rule,handle):
    for cmd in commandes:
       stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
       error = stderr.read().decode('utf-8')
-      if error:
-        return False    
+      if error !="":
+         return error  
    return True
 
    
-###function to add in DB
-def add_rule_DB(data,rule,type_rule):
-   data['rule']=rule
-   data["rule_status"]=True
-   data["type_rule"]=type_rule
-   
-   print(data)
-   InboundSerializer = RuleSerializer(data=data)
-   print("aaaa")
-   print(InboundSerializer.is_valid())
-
-   if InboundSerializer.is_valid():
-      InboundSerializer.save()
-      return True
-   return False
-
-###function to update rule in DB
-def update_rule_DB(rule,rules,data):
-         data['rule']=rule
-         InboundSerializer = RuleSerializer(rules,data=data)
-         print(data)
-         print(InboundSerializer.is_valid())
-         
-         if InboundSerializer.is_valid():
-            InboundSerializer.save()
-            return True
-         return False
-
-
-
-
-

@@ -7,8 +7,8 @@
             {{ tab.label }}
           </v-tab>
           <v-tab-item v-for="tab in tabs" :key="tab.id">
-            <LanComponent v-if="tab.id == 1" />
-            <WanComponent v-if="tab.id == 2" />
+            <LanComponent v-if="tab.id == 1" activeTab="LAN" />
+            <WanComponent v-if="tab.id == 2" activeTab="WAN" />
           </v-tab-item>
         </v-tabs>
       </template>

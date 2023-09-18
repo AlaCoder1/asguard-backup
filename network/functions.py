@@ -2,14 +2,19 @@ from .models import *
 from authentification.views import *
 from network.address import *
 ####background task to execute it 
-from background_task import background
 from django.conf import settings
-import subprocess
 import re
+import time
+import threading
+from .models import *
+from gateway.models import *
+from gateway.serializers import *
 ###############################################################
 ####update in Database functions
+
 #function to update config tables
 def update_DB(id,data,model,IP4serializer):
+    data={key: value for key, value in data.items() if value is not None}
     data['interface']=id
     if model.objects.filter(interface_id=id).exists():
         objectConfig=model.objects.get(interface_id=id)
@@ -19,32 +24,47 @@ def update_DB(id,data,model,IP4serializer):
                 setattr(objectConfig, field.attname, None)
         setattr(objectConfig, 'updated_by', settings.CurrentUserId)
         serializerIP4Config = IP4serializer(objectConfig,data=data)
-        print(data)
     else:
         serializerIP4Config = IP4serializer(data=data)
-    print(serializerIP4Config.is_valid())
     if (serializerIP4Config.is_valid()):
         serializerIP4Config.save()
+        return True
+    return serializerIP4Config.errors
+   
 
 #function to update interface tables  
 def update_interface_table(name_interface,data,InterfaceSerializer):
+    data={key: value for key, value in data.items() if value is not None}
     objectConfig=Interface.objects.get(name_interface=name_interface)
     # Set all attributes to None
     for field in objectConfig._meta.fields:
-        if field.attname not in ["id",'ifname','created_at','updated_at','name_interface','description']: 
+        if field.attname not in ["id",'ifname','created_at','updated_at','name_interface','description','private_aux','bogon_aux']: 
             setattr(objectConfig, field.attname, None)
     serializerInterface= InterfaceSerializer(objectConfig,data=data)
     if serializerInterface.is_valid():
-            serializerInterface.save()      
+            serializerInterface.save()     
+            return True
+    return serializerInterface.errors 
 ############################################################  
+def get_conn_name(ifname):
+    cmd = "sudo nmcli connection show | awk '$NF == \"{}\" {{print}}'".format(ifname)
+      ##executer cette commande
+    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+    output = stdout.read().decode('utf-8').split('  ')
+    if len(output)==0:
+        return None
+    else:
+        output=[value for value in output if value]
+        uuid=output[1]
+        return uuid
 ##get old configuration in service
 def get_old_config():
-        cmd = "cat /etc/systemd/system/Asguard-Networking.service"
-        ssh.exec_command(cmd)
-        stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-        error = stderr.read().decode('utf-8')
-        output = stdout.read().decode('utf-8').split('\n')
-        return output,error
+    cmd = "cat /etc/systemd/system/Asguard-Networking.service"
+    ssh.exec_command(cmd)
+    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+    error = stderr.read().decode('utf-8')
+    output = stdout.read().decode('utf-8').split('\n')
+    return output,error
    
 ##add requirement
 def add_requirement(ifname,output):
@@ -62,9 +82,56 @@ def add_cmd(output,commandes):
     
     output = output[:index_cmd] + commandes + output[index_cmd:]
     return output
-###################
-###################    
+################################# Function to execute command with timeout
+def run_command(ssh_client, command):
+    stdin, stdout, stderr = ssh_client.exec_command(command)
+    output = stdout.read().decode('utf-8')
+    error = stderr.read().decode('utf-8')
+    return output, error
 
+def run_remote_command_with_timeout(type, typeDHCP4, ssh_client, command, timeout_seconds):
+    def run_command_thread():
+        nonlocal output, error
+        output, error = run_command(ssh_client, command)
+
+    start_time = time.time()
+    output = None
+    error = None
+
+    command_thread = threading.Thread(target=run_command_thread)
+    command_thread.start()
+    command_thread.join(timeout=timeout_seconds)
+    elapsed_time = time.time() - start_time
+
+    # Create a new instance of your model
+    new_entry = tempsExucution(type=type, cmd=command, temps=elapsed_time)
+    # Save the instance to the database
+    new_entry.save()
+    if  (command.find("sudo dhclient")==-1) and error!="" and (error is not None and not error.startwith("Warning")) :
+        # print("error::::",error)
+        return error
+    elif command_thread.is_alive():
+        print(f"Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}")
+        stdin, stdout, stderr = ssh_client.exec_command('\x03')
+        # interrupt_command = "sudo pkill -INT -f 'some_long_running_command'"
+        # output,error=run_command(ssh_client, interrupt_command)
+        print("Ctrl+C sent.")
+        return "Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}"
+        
+    else:
+        print(f"Command not too long ({elapsed_time:.2f} seconds). {command}")
+        return True
+        
+#function to run all commandes
+def run_all_commands(commandes,setuptypeIP4,typeDHCP4,timeout):
+    for cmd in commandes:
+        out=run_remote_command_with_timeout(setuptypeIP4,typeDHCP4,ssh, cmd, timeout)
+        if  out is not True :
+            return out
+    return True
+
+#################################
+###################
 ##désactiver interface dans le système
 def desactiver_interface_remote(ifname,output):
     #la liste des commandes pour la désactivation de l'interface dans Asguard Service
@@ -74,12 +141,12 @@ def desactiver_interface_remote(ifname,output):
          "ExecStart=/usr/bin/ip link set dev {} down".format(ifname),        
          "#End IP4Config {}".format(ifname)
     ]
-    print(output)
     output=add_requirement(ifname,output)
     output=add_cmd(output,commands)
     #la liste des commandes à executer pour désactiver l'interface
     cmd_final=[ 
         "sudo sed -i '/{}/d' /etc/systemd/system/Asguard-Networking.service".format(ifname),
+        "sudo sed -i '/{}/d' /etc/ConfigInterfaces".format(ifname),
         "sudo ip addr flush dev {}".format(ifname),
         "sudo ip link set dev {} down".format(ifname),
         """sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
@@ -93,10 +160,9 @@ EOF""".format('\n'.join(output))
         output = stdout.read().decode('utf-8').split('\n')
         if error:
             msg=error,"    :"+cmd
-            print({"msg":msg})
             return False
     return True
-    
+
     # return commands,cmd_final
    
         
@@ -131,67 +197,98 @@ def update_conn_None_IPV4(config,ifname):
         "sudo ip addr flush dev {}".format(ifname),]
     return commands,config,cmd_final
 ################### Static 
-     
+###################
 # convert  to static connexion 
-def update_conn_static_IPV4(config,ifname,ip_address,netmask):
+def update_conn_static_IPV4(config,ifname,uuid,ipaddress,netmask,cmdgw,IP4ConfigObject):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
-    commands=[
-         "#Start IP4Config {}".format(ifname),
-        "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
-        "ExecStart=/usr/bin/ip addr add {}/{} dev {}".format(ip_address,netmask,ifname),
-         "#End IP4Config {}".format(ifname)
-    ]
-    cmd_final=[ 
-        "sudo ip addr flush dev {}".format(ifname),
-        "sudo ip addr add {}/{} dev {}".format(ip_address,netmask,ifname)]
+    commands=[]
+    cmd_final=[]
+    if ipaddress is not None and ipaddress!=IP4ConfigObject.ip_address:
+        cmd_final.append("sudo nmcli connection modify {} ipv4.method manual ipv4.addresses {}/{}".format(uuid,ipaddress,netmask))
+    cmd_final+=[ 
+         cmdgw,      
+        "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),]
+    
     return commands,config,cmd_final
+
 ################### Dhcp
+####function to convert_to_subnet_mask 
+def convert_to_subnet_mask(bits):
+    cidr_bits = int(bits)
+    if cidr_bits < 0 or cidr_bits > 32:
+        return "Invalid CIDR bits"
+    
+    binary_mask = "1" * cidr_bits + "0" * (32 - cidr_bits)
+    subnet_mask = ".".join([str(int(binary_mask[i:i+8], 2)) for i in range(0, 32, 8)])
+    return subnet_mask
+################
 ###return base config
 def return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask):
+    configContenu=[]
     #contenu de fichier dhclient.conf "config base"
-    configContenu=[
-        'reject {};'.format(reject),
-        'interface "{}"'.format(ifname),
+    if reject is not None:
+        configContenu.append('reject {};'.format(reject))
+    if hostname is not None:
+        configContenu+=['interface "{}"'.format(ifname),
             '{',
         'send host-name "{}";'.format(hostname),
-        '}',
-        'alias {',
+        '}']
+    if alias_add is not None and alias_mask is not None:
+         configContenu+=[ 'alias {',
         'interface "{}";'.format(ifname),
         'fixed-address {};'.format(alias_add),
         'option subnet-mask {};'.format(alias_mask),
-        '}',
-                        ]
+        '}',]
+        
     return configContenu
 
 ###return advanced config
 def return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domaine_name,domain_server,lease_time,request,require):
     #contenu de fichier dhclient.conf "config advanced"
-    configContenu=[
-        'timeout {};'.format(timeout),
-        'retry {};'.format(retry),
-        'reboot {};'.format(reboot),
-        'backoff-cutoff {};'.format(backoff),
-        'select-timeout {};'.format(select_timeout),
-        'initial-interval {};'.format(initial_interval),
-            'reject {};'.format(reject),
-            'interface "{}"'.format(ifname),
-                '{',
-        'send host-name "{}";'.format(hostname),
-        'send dhcp-client-identifier {};'.format(dhcp_client),
-        'supersede domain-name "{}";'.format(domaine_name),
-        'prepend domain-name-servers {};'.format(domain_server),
-        'send dhcp-lease-time {};'.format(lease_time),
-        ' request {};'.format(request),
-            'require {};'.format(require),
-            '}',
-        'alias {',
-        'interface "{}";'.format(ifname),
-        'fixed-address {};'.format(alias_add),
-        'option subnet-mask {};'.format(alias_mask),
-        '}'
-                                        ]
+    config_settings = [
+    (timeout, 'timeout {};'),
+    (retry, 'retry {};'),
+    (reboot, 'reboot {};'),
+    (backoff, 'backoff-cutoff {};'),
+    (select_timeout, 'select-timeout {};'),
+    (initial_interval, 'initial-interval {};'),
+    (reject, 'reject {};')
+    ]
+
+    configContenu = []
+    for value, config_format in config_settings:
+        if value is not None:
+            configContenu.append(config_format.format(value))
+    variables_to_check = [hostname, dhcp_client, domaine_name, domain_server, lease_time, request, require]
+
+    if any(variable is not None for variable in variables_to_check):
+        configContenu+=['interface "{}"'.format(ifname),
+                '{',]
+        if hostname is not None:
+            configContenu.append('send host-name "{}";'.format(hostname))
+        if dhcp_client is not None:
+            configContenu.append('send dhcp-client-identifier {};'.format(dhcp_client))
+        if domaine_name is not None:
+            configContenu.append('supersede domain-name "{}";'.format(domaine_name)) 
+        if  domain_server is not None:
+            configContenu.append( 'prepend domain-name-servers {};'.format(domain_server)) 
+        if lease_time is not None:
+            configContenu.append( 'send dhcp-lease-time {};'.format(lease_time)) 
+        if request is not None:
+            configContenu.append( ' request {};'.format(request)) 
+        if require is not None:
+            configContenu.append( 'require {};'.format(require)) 
+        configContenu.append("}")    
+    if alias_add is not None and alias_mask is not None:
+        configContenu+=[ 'alias {',
+    'interface "{}";'.format(ifname),
+    'fixed-address {};'.format(alias_add),
+    'option subnet-mask {};'.format(alias_mask),
+    '}',]        
+         
+ 
     return configContenu
 
 ####create file
@@ -203,22 +300,181 @@ EOF'""".format(ifname, ifname, '\n'.join(config_contenu))]
     return commands
 
 # convert  to dhcp  connexion base and advanced
-def update_conn_dhcp_IPV4(config,ifname):
+def update_conn_dhcp_IPV4(config,ifname,uuid):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 dhcp
     commandes=[
      "#Start IP4Config {}".format(ifname),   
-     "ExecStart=/usr/bin/ip addr flush dev {}".format(ifname),
-    "ExecStart=/usr/bin/dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf {}".format(ifname,ifname),
+     "ExecStart=/usr/bin/dhclient -4 -cf  /etc/Dhcp4Config/{}/dhclient.conf  {} ".format(ifname,ifname),
      "#End IP4Config {}".format(ifname)
     ]
     cmd_final=[
-    "sudo ip addr flush dev {}".format(ifname),
-    "sudo dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf {}".format(ifname,ifname),
+        "sudo nmcli connection modify {} ipv4.method auto ipv4.addresses '' ipv4.gateway '' ipv4.route-metric '' ".format(uuid),
+        "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),
+        "sudo dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf".format(ifname),
     ]
     
     return commandes,config,cmd_final
+
+def get_address_dhcp(ifname,ssh):
+    cmd = "ip -4 -o addr show dev {} | awk '{{split($4, a); print a[1]}}'".format(ifname)
+    output, error = run_command(ssh, cmd)
+    if error!="" or len(output)==0:
+        return None,None
+    else:
+        output=output.split("\n")
+        address=output[0].strip().split('/')[0]
+        mask=output[0].strip().split('/')[1]
+        return address,int(mask)
+###################generic configuration
+
+def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObject):
+    commandes=[]
+    cmd_final=[]
+    #traiter le speed_duplex
+    match speed_duplex:
+        case '100baseTx-FD':
+            speedV=100
+            duplexV='full'
+        case '100baseTx-HD':
+            speedV=100
+            duplexV='half'
+        case '10baseT-FD':
+            speedV=10
+            duplexV='full'
+        case '10baseT-HD':
+            speedV=10
+            duplexV='half'
+   #tester si addmac is not None
+    if addmac is not None and genericConfigObject.addmac!=addmac:
+            #lancer la fonction de "remove old config"
+            config=clean_old_config(config,"addmac config {}".format(ifname))
+             #la liste des commandes pour l'address mac
+            commandes+=[
+            "#Start addmac config {}".format(ifname),
+            'ExecStart=/usr/bin/ip link set dev {} address {}'.format(ifname,addmac),
+            "#End addmac config {}".format(ifname)
+            ]
+            cmd_final+=[
+                'sudo ip link set dev {} address {}'.format(ifname,addmac),
+            ]
+    #tester si mtu is not None
+    if mtuV is not None and mtuV!=genericConfigObject.mtuV!=mtuV:
+        #lancer la fonction de "remove old config"
+        config=clean_old_config(config,"mtu config {}".format(ifname))
+        #la liste des commandes pour mtu
+        commandes+=[
+        "#Start mtu config {}".format(ifname),
+        'ExecStart=/usr/bin/ip link set dev {} mtu {}'.format(ifname,mtuV),
+        "#End mtu config {}".format(ifname)
+            ]
+        cmd_final+=[
+        'sudo ip link set dev {} mtu {}'.format(ifname,mtuV),
+         ]
+    #tester si mtu is not None
+    if mssV is not None and mssV!=genericConfigObject.mssV:
+        #lancer la fonction de "remove old config"
+        config=clean_old_config(config,"mss config {}".format(ifname))
+         #la liste des commandes pour mss
+        commandes+=[
+        "#Start mss config {}".format(ifname),
+        'ExecStart=/usr/bin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
+        "#End mss config {}".format(ifname),
+            ]
+        cmd_final+=[
+        'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
+         ]
+    #tester si speed_duplex is not None
+    if speed_duplex is not None and speed_duplex!=genericConfigObject.speed_duplex:
+        #lancer la fonction de "remove old config"
+        config=clean_old_config(config,"speed duplex config {}".format(ifname))
+        #la liste des commandes pour speed duplex
+        commandes+=[
+        "#Start speed duplex config {}".format(ifname),
+        'ExecStart=/usr/bin/ethtool -s {} speed {} duplex {}'.format(ifname,speedV,duplexV),
+        "#End speed duplex config {}".format(ifname),
+                    ]
+        cmd_final+=[
+        'sudo ethtool -s {} speed {} duplex {}'.format(ifname,speedV,duplexV),
+         ]
+    return commandes,config,cmd_final
+#####################################################################################
+#################Blockage address
+####add all addresse 
+def create_rule(address):
+    #concatener tous les addresses à bloquer
+    block=''
+    for i in range(len(address)-1):
+        block+=address[i]+','
+    block+=address[-1]
+    block='{ '+block+' } drop'
+    return block
+
+
+####create file
+def create_file_nftables(ifname,rules):
+    commands = [
+        #cmd pour supprimer la configuration ancienne
+        'if nft list tables | grep -q "filter_{}"; then sudo nft delete table inet filter_{} ; fi'.format(ifname,ifname),
+        #cmd ajouter un dossier contenant le fichier config
+        """bash -c 'sudo mkdir -p /etc/rulesNetwork/{} && cat <<EOF > /etc/rulesNetwork/{}/nftables.conf
+{}
+EOF' """.format(ifname, ifname, '\n'.join(rules))
+      ]
+    return commands
+
+###Function to block private or bogons address
+def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject):
+    rule=''
+    commandes=[]
+    configuration=[]
+    cmd_final=[]
+    #tester si on bloque les addresses bogons ou private
+    if bogon_aux or private_aux:
+        #tester si on bloque les addresses bogons and private
+        if bogon_aux and private_aux:
+            #rules pour les adresses ipv4
+            rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
+            #rules pour les adresses IPV6
+            rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))    
+        #tester si on bloque les addresses bogons seulement
+        elif bogon_aux and not private_aux:
+            #rules pour les adresses ipv4
+            rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
+            #rules pour les adresses IPV6
+            rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))
+         #tester si on bloque les addresses privées seulement   
+        elif private_aux and not bogon_aux:
+            #rules pour les adresses ipv4
+            rule='iifname {} ip saddr {}'.format(ifname,create_rule(private_address))
+        #le contenu de fichier config nftables.conf    
+        rules=[
+            'table inet filter_'+ifname+' {',
+                    'chain input {',
+                            'type filter hook input priority filter; policy accept;',
+                            '{}'.format(rule),
+            '        }',
+            '}'
+        ]  
+        #call function to create file nftables.conf
+        configuration=create_file_nftables(ifname,rules)
+        ##cmd to block address
+        commandes=[
+            "#Start nftables config {}".format(ifname),
+            'ExecStart=/usr/bin/nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
+            "#End nftables config {}".format(ifname)
+            ]
+        if private_aux!=interfaceObject.private_aux or bogon_aux!=interfaceObject.bogon_aux:
+            cmd_final+=[
+                'sudo nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
+            ]
+    else:
+        #call function to clean old config
+       config=clean_old_config(config,"nftables config {}".format(ifname))
+    return configuration,commandes,config,cmd_final
+
+#############################################################################################################################################
 #############################################ipv6#############################################
 ##static ipv6
 # convert  to static connexion  ipv6 
@@ -376,152 +632,3 @@ def update_conn_dhcp_ipv6(config,ifname):
     ]
     
     return commandes,config,cmd_final
-
-###################generic configuration
-
-def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV):
-    commandes=[]
-    cmd_final=[]
-    #traiter le speed_duplex
-    match speed_duplex:
-        case '100baseTx-FD':
-            speedV=100
-            duplexV='full'
-        case '100baseTx-HD':
-            speedV=100
-            duplexV='half'
-        case '10baseT-FD':
-            speedV=10
-            duplexV='full'
-        case '10baseT-HD':
-            speedV=10
-            duplexV='half'
-   #tester si addmac is not None
-    if addmac is not None:
-            #lancer la fonction de "remove old config"
-            config=clean_old_config(config,"addmac config {}".format(ifname))
-             #la liste des commandes pour l'address mac
-            commandes+=[
-            "#Start addmac config {}".format(ifname),
-            'ExecStart=/usr/bin/ip link set dev {} address {}'.format(ifname,addmac),
-            "#End addmac config {}".format(ifname)
-            ]
-            cmd_final+=[
-                'sudo ip link set dev {} address {}'.format(ifname,addmac),
-            ]
-    #tester si mtu is not None
-    if mtuV is not None:
-        #lancer la fonction de "remove old config"
-        config=clean_old_config(config,"mtu config {}".format(ifname))
-        #la liste des commandes pour mtu
-        commandes+=[
-        "#Start mtu config {}".format(ifname),
-        'ExecStart=/usr/bin/ip link set dev {} mtu {}'.format(ifname,mtuV),
-        "#End mtu config {}".format(ifname)
-            ]
-        cmd_final+=[
-        'sudo ip link set dev {} mtu {}'.format(ifname,mtuV),
-         ]
-    #tester si mtu is not None
-    if mssV is not None:
-        #lancer la fonction de "remove old config"
-        config=clean_old_config(config,"mss config {}".format(ifname))
-         #la liste des commandes pour mss
-        commandes+=[
-        "#Start mss config {}".format(ifname),
-        'ExecStart=/usr/bin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
-        "#End mss config {}".format(ifname),
-            ]
-        cmd_final+=[
-        'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
-         ]
-    #tester si speed_duplex is not None
-    if speed_duplex is not None:
-        #lancer la fonction de "remove old config"
-        config=clean_old_config(config,"speed duplex config {}".format(ifname))
-        #la liste des commandes pour speed duplex
-        commandes+=[
-        "#Start speed duplex config {}".format(ifname),
-        'ExecStart=/usr/bin/ethtool -s {} speed {} duplex {}'.format(ifname,speedV,duplexV),
-        "#End speed duplex config {}".format(ifname),
-                    ]
-        cmd_final+=[
-        'sudo ethtool -s {} speed {} duplex {}'.format(ifname,speedV,duplexV),
-         ]
-    return commandes,config,cmd_final
-
-#################Blockage address
-####add all addresse 
-def create_rule(address):
-    #concatener tous les addresses à bloquer
-    block=''
-    for i in range(len(address)-1):
-        block+=address[i]+','
-    block+=address[-1]
-    block='{ '+block+' } drop'
-    return block
-
-
-####create file
-def create_file_nftables(ifname,rules):
-    commands = [
-        #cmd pour supprimer la configuration ancienne
-        'if nft list tables | grep -q "filter_{}"; then sudo nft delete table inet filter_{} ; fi'.format(ifname,ifname),
-        #cmd ajouter un dossier contenant le fichier config
-        """bash -c 'sudo mkdir -p /etc/rules/{} && cat <<EOF > /etc/rules/{}/nftables.conf
-{}
-EOF' """.format(ifname, ifname, '\n'.join(rules))
-      ]
-    return commands
-
-###Function to block private or bogons address
-def block_address_commandes(config,ifname,bogon_aux,private_aux):
-    rule=''
-    commandes=[]
-    configuration=[]
-    cmd_final=[]
-    #tester si on bloque les addresses bogons ou private
-    if bogon_aux or private_aux:
-        #tester si on bloque les addresses bogons and private
-        if bogon_aux and private_aux:
-            #rules pour les adresses ipv4
-            rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
-            #rules pour les adresses IPV6
-            rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))    
-        #tester si on bloque les addresses bogons seulement
-        elif bogon_aux and not private_aux:
-            #rules pour les adresses ipv4
-            rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
-            #rules pour les adresses IPV6
-            rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))
-         #tester si on bloque les addresses privées seulement   
-        elif private_aux and not bogon_aux:
-            #rules pour les adresses ipv4
-            rule='iifname {} ip saddr {}'.format(ifname,create_rule(private_address))
-        #le contenu de fichier config nftables.conf    
-        rules=[
-            'table inet filter_'+ifname+' {',
-                    'chain input {',
-                            'type filter hook input priority filter; policy accept;',
-                            '{}'.format(rule),
-            '        }',
-            '}'
-        ]  
-        #call function to create file nftables.conf
-        configuration=create_file_nftables(ifname,rules)
-        ##cmd to block address
-        commandes=[
-            "#Start nftables config {}".format(ifname),
-            'ExecStart=/usr/bin/nft -f /etc/rules/{}/nftables.conf'.format(ifname),
-            "#End nftables config {}".format(ifname)
-            ]
-        cmd_final=[
-            'sudo nft -f /etc/rules/{}/nftables.conf'.format(ifname),
-        ]
-    else:
-        #call function to clean old config
-       config=clean_old_config(config,"nftables config {}".format(ifname))
-    
-   
-    
-    return configuration,commandes,config,cmd_final

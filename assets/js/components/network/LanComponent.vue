@@ -4,24 +4,16 @@
             <v-col cols="12" sm="6">
                         <v-card-title>{{ $t('PageNetwork.BasicConfiguration') }}</v-card-title>
                     <v-divider class="ml-3"></v-divider>
-
                 <v-row class="ml-3 mt-3">
                     <div style="color: black;">Interface</div>
                     <input type="checkbox" class="ml-5" v-model="activate">
                     <label class="ml-2">Activate</label>
                 </v-row>
-                <div style="background-color: #F6F6F6;" class="ml-3">
-                <v-row class="ml-3 mt-5">
-                    <div style="color: black;">Lock</div>
-                    <input type="checkbox" class="ml-12">
-                    <label class="ml-2">Prevent interface removal</label>
-                </v-row>
-                </div>
                 <div style="background-color: #D0D3D4;" class="ml-3">
                     <v-row class="ml-3 mt-5">
                         <div style="color: black;">Device</div>
                     </v-row>
-                    <v-text-field label="Enter device name" class="ml-3 mt-2" v-model="deviceName"></v-text-field>
+                    <v-text-field label="Enter device name" class="ml-3 mt-2" v-model="device"></v-text-field>
                 </div>
                 <div style="background-color: #F6F6F6;" class="ml-3">
 
@@ -44,7 +36,7 @@
                 </v-row>
                 <v-row class="ml-3 mt-9">
                     <div style="color: black;" class=" mt-3">IPV4 Setup Type</div>
-                    <v-select :items="items" label="Setup IPV4 Type" class="ml-3" dense v-model="typeIP4"></v-select>
+                    <v-select :items="items" label="Setup IPV4 Type" class="ml-3" dense v-model="setuptypeIP4"></v-select>
                 </v-row>
                 <v-row class="ml-3 mt-9">
                     <div style="color: black;" class=" mt-6">IPV6 Setup Type</div>
@@ -74,16 +66,16 @@
                         as a gateway.</label>
                 </div>
             </v-col>
-            <v-col cols="12" sm="6" v-if="ip_address != null || ip_address != null">
-                <div v-if="typeIP4 === 'static'">
+            <v-col cols="12" sm="6" v-if="value_setup_Ipv4.ip_address4 != null || value_setup_Ipv4.ip_address4 != null">
+                <div v-if="setuptypeIP4 === 'static'">
                     <v-card-title class="bold-title">Static IPV4 address configuration</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <div class="ml-3 mt-3">
                         <div style="color: black;" class="inline-input">IPV4 address</div>
                         <v-text-field label="Enter IP address" class="ml-3 mt-2 inline-input"
-                            v-model="ip_address"></v-text-field>
+                            v-model="value_setup_Ipv4.ip_address4"></v-text-field>
                         <v-select :items="netmaskItems" label="netmask" class="ml-3 mt-2 inline-input"
-                            v-model="netmask"></v-select>
+                            v-model="value_setup_Ipv4.netmask4"></v-select>
                     </div>
                     <div class="ml-3">
                         <div style="color: black;" class="inline-input">IPV4 gateway</div>
@@ -91,7 +83,7 @@
                             <i class="fas fa-plus"></i>
                             <span class="ml-2">Add</span>
                         </v-btn>
-                        <v-select label="IPv4 gateway" class="ml-3 mt-2 inline-input" v-model="gateway"></v-select>
+                        <v-select label="IPv4 gateway" class="ml-3 mt-2 inline-input" v-model="value_setup_Ipv4.gateway"></v-select>
                     </div>
                 </div>
                 <div v-if="ipv6SetupType === 'DHCP'">
@@ -222,7 +214,7 @@
                         <v-text-field label="expire" class="ml-3 inline-input"></v-text-field>
                     </div>
                 </div>
-                <div v-if="typeIP4 === 'DHCP'">
+                <div v-if="setuptypeIP4 === 'DHCP'">
                     <v-card-title class="bold-title">Configuring the DHCP Client</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <v-row class="ml-3 mt-3">
@@ -297,7 +289,7 @@
                         <v-text-field label="Prepend domain server" class="ml-3 inline-input"></v-text-field>
                     </div>
                 </div>
-                <div v-if="typeIP4 === 'PPP'">
+                <div v-if="setuptypeIP4 === 'PPP'">
                     <v-card-title class="bold-title">Configuration PPP</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <v-card elevation="9" class="ml-3 mt-3 mr-3" title="Service provider (FAI)">
@@ -441,6 +433,7 @@
             style="width: 20%;" border="top" v-if="showAlert" :style="alertStyle">
             Configuration saved successfully
         </v-alert>
+        <br /><br /><br /><br />
     </v-card>
 </template>
 
@@ -460,9 +453,14 @@ export default {
         AdvancedConfigDHCPv6,
         BasicConfigDHCPv6
     },
+    props: {
+        activeTab: {
+            type: String,
+            default: "lan",
+        },
+    },
     data() {
         return {
-            activeTab: 0,
             activeTabIPV6: 0,
             tabs: [
                 { id: 1, label: "Basic" },
@@ -471,7 +469,6 @@ export default {
             tabsIPV6: [
                 { id: 1, label: "Basic" },
                 { id: 2, label: "Advanced" },
-
             ],
             items: [
                 { text: "DHCP", value: "DHCP" },
@@ -532,25 +529,35 @@ export default {
             ],
             ipv6Items: [
                 'DHCPv6',
-                'SLAAC',
                 'Static',
+                'SLAAC',
+                '6to4',
+                '6RD',
+                'Track Interface',
+                'PPPoE',
             ],
             activate: false,
-            deviceName: "",
+            device: "",
             description: "",
             private_aux: false,
             bogon_aux: false,
-            typeIP4: "",
+            setuptypeIP4: "",
             ipv6SetupType: "",
             addmac: "",
             mtuV: "",
             mssV: "",
             speed_duplex: "",
             dynamicGatewayPolicy: false,
-            ip_address: "",
-            gateway: "",
-            netmask: "",
             showAlert: false,
+            name_interface: "",
+            value_setup_Ipv4: {
+                ip_address4: "",
+                netmask4: "",
+                gateway:{
+                    id: "",
+                    value: ""
+                },
+            }
         };
     },
     computed: {
@@ -564,25 +571,45 @@ export default {
         },
     },
     methods: {
+     
         addNetwork() {
             const params = {
-
-                // deviceName: this.deviceName,
-                // description: this.description,
-                // dynamicGatewayPolicy: this.dynamicGatewayPolicy,
-                // ipv6SetupType: this.ipv6SetupType,
+                name_interface: this.activeTab,
+                device: this.device,
+                description: this.description,
                 private_aux: this.private_aux,
                 bogon_aux: this.bogon_aux,
-                typeIP4: this.typeIP4,
-                // addmac: this.addmac,
+                addmac: this.addmac,
                 mtuV: this.mtuV,
                 mssV: this.mssV,
                 speed_duplex: this.speed_duplex,
-                ip_address: this.ip_address,
-                gateway: this.gateway,
-                netmask: this.netmask,
+                setuptypeIP4: this.setuptypeIP4,
+                value_setup_Ipv4: {
+                    ip_address4: this.value_setup_Ipv4.ip_address4,
+                    netmask4: this.value_setup_Ipv4.netmask4,
+                    //  "gateway": {"id": 1, value:"10.1.12.1"},
+                }
             };
-            axios.put('http://127.0.0.1:8000/network/conf/2', params)
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrfToken = getCookie('csrftoken')
+            console.log(csrfToken);
+            axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+            axios.put('/network/conf/LAN/2', params)
                 .then((response) => {
                     console.log(response);
                     this.showAlert = true;
@@ -594,21 +621,7 @@ export default {
                 });
         },
         cancel() {
-            // this.activate = false;
-            // this.deviceName = "";
-            // this.description = "";
-            // this.dynamicGatewayPolicy = false;
-            // this.ipv6SetupType = "";
-            this.private_aux = false;
-            this.bogon_aux = false;
-            this.typeIP4 = "";
-            this.addmac = "";
-            this.mtuV = "";
-            this.mssV = "";
-            this.speed_duplex = "";
-            this.ip_address = "";
-            this.gateway = "";
-            this.netmask = "";
+            this.$emit("cancel");
         },
     },
 };

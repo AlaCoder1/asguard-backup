@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import vuetify from '@/plugins/vuetify';
 import 'vuetify/dist/vuetify.min.css';
-import App from '@/pages/lan';
+import App from '@/pages/firewall';
 import VueI18n from 'vue-i18n';
 import enJson from './translations/en.json';
 import frJson from './translations/fr.json';
@@ -17,7 +17,7 @@ const i18n = new VueI18n({
   },
 });
 
-Vue.use( {
+Vue.use({
   i18n,
   classes: true,
   fieldsBagName: 'formFields',
@@ -36,11 +36,13 @@ new Vue({
   store,
   vuetify,
   data: {
-    lan: '',
+    rules: {},
+    interfaces: []
   },
   beforeMount: function () {
-    console.log(this);
-    this.lan = this.$el.attributes['lan'] ? this.$el.attributes['lan'].value : '';
+    this.rules = this.$el.attributes['rules'] ? this.$el.attributes['rules'].value : '';
+    this.interfaces = this.$el.attributes['interfaces'] ? this.$el.attributes['interfaces'].value : '';
   },
   render: (h) => h(App),
 }).$mount('#app');
+

@@ -36,11 +36,7 @@ def authentification(request):
                 # connect to SSH server
                 ssh.connect(settings.SSH_HOST, username=username,
                             password=password, port=settings.SSH_PORT)
-                # def getUserCredentials():
-                #     settings.USERNAME = username
-                #     settings.PASSWORD = username
-                #     return username,password
-                # getUserCredentials()
+                
                 settings.USERNAME = username
                 settings.PASSWORD = password
                 ## add this code so that logout work with jwt and timeleft
@@ -52,13 +48,14 @@ def authentification(request):
                 # userObject.save()
                 
                 ## end code
+                userObject = User.objects.get(username=username)
+                userDict = userObject.__dict__
+                CurrentUser = {"username":userDict['username'],"email":userDict['email']}
                 # userDict = userObject.__dict__
                 # del userDict['_state']
                 # del userDict['password']
                 # del userDict['last_login']
                 # del userDict['token_last_expired']
-                userObject = User.objects.get(username=username)
-                userDict = userObject.__dict__
                 settings.CurrentUserId = userDict['id']
                 # def getCurrentUserId():
                 #     userObject = User.objects.get(username=username)
@@ -70,7 +67,7 @@ def authentification(request):
                 
                 # return JsonResponse({'message': ' Success Authentification','jwt':jwt_token}, status=status.HTTP_200_OK)
                 ## end code
-                return JsonResponse({'message': ' Success Authentification'}, status=status.HTTP_200_OK)
+                return JsonResponse({'message': ' Success Authentification',"current user":CurrentUser}, status=status.HTTP_200_OK)
             else:
                 return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
@@ -78,12 +75,17 @@ def authentification(request):
 
 
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication])
+@permission_classes([AllowAny])
+#@authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def logout_view(request):
-    logout(request)
+    # username = request.user.username
     print({"logout": logout(request)})
     if logout(request) is None:
         # close the SSH connection
         ssh.close()
+    # userObject = User.objects.get(username=username)
+    # userObject.token_last_expired = datetime.now()+timedelta(hours=0)
+    # userObject.save()
     return JsonResponse({"msg": 'User Logged out successfully'})
+

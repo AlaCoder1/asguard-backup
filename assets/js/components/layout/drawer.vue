@@ -106,7 +106,7 @@ export default {
   name: 'DrawerComponent',
   props: {
     activeMenu: {
-      type: String,
+      type: Number,
       required: true,
       default: null,
     },

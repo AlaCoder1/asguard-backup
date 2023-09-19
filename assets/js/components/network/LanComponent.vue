@@ -2,8 +2,8 @@
     <v-card>
         <v-row class="fill-height ml-3">
             <v-col cols="12" sm="6">
-                        <v-card-title>{{ $t('PageNetwork.BasicConfiguration') }}</v-card-title>
-                    <v-divider class="ml-3"></v-divider>
+                <v-card-title>{{ $t('PageNetwork.BasicConfiguration') }}</v-card-title>
+                <v-divider class="ml-3"></v-divider>
                 <v-row class="ml-3 mt-3">
                     <div style="color: black;">Interface</div>
                     <input type="checkbox" class="ml-5" v-model="activate">
@@ -79,11 +79,12 @@
                     </div>
                     <div class="ml-3">
                         <div style="color: black;" class="inline-input">IPV4 gateway</div>
-                        <v-btn class="ml-3 mt-2 " color="primary" text>
-                            <i class="fas fa-plus"></i>
+                            <v-btn class="ml-3 mt-2 " color="primary" text @click="openModal">
+                                <i class="fas fa-plus"></i>
                             <span class="ml-2">Add</span>
                         </v-btn>
-                        <v-select label="IPv4 gateway" class="ml-3 mt-2 inline-input" v-model="value_setup_Ipv4.gateway"></v-select>
+                        <v-select label="IPv4 gateway" class="ml-3 mt-2 inline-input"
+                        :items="allStaticGateways" v-model="value_setup_Ipv4.gateway"></v-select>
                     </div>
                 </div>
                 <div v-if="ipv6SetupType === 'DHCP'">
@@ -434,6 +435,44 @@
             Configuration saved successfully
         </v-alert>
         <br /><br /><br /><br />
+           <v-dialog max-width="500px" v-model="showModal">
+                <v-card class="ml-3 mr-3">
+                    <v-card-title>
+                        <span class="headline font-weight-bold">Add IPv4 Gateway</span>
+                    </v-card-title>
+                    <v-card-text>
+                        <v-container>
+                            <v-row>
+                                <v-text-field label="Enter Gateway Name" v-model="gateway.gwname"></v-text-field>
+                            </v-row>
+                            <v-row>
+                                <v-text-field label="Enter Gateway IPV4" v-model="gateway.gwaddress"></v-text-field></v-row>
+                            <v-row> <v-text-field label="Enter Description" v-model="gateway.description"></v-text-field></v-row>
+                            <v-row>
+                                <input type="checkbox" v-model="gateway.default_aux">
+                                <label class="ml-3">Default Gateway</label>
+                            </v-row>
+                            <v-row>
+                                <input type="checkbox" v-model="gateway.far_aux">
+                                <label class="ml-3">Far Gateway</label>
+                            </v-row>
+                            <v-row>
+                                <input type="checkbox" v-model="gateway.multiwan_aux">
+                                <label class="ml-3">Multi-WAN Gateway</label>
+                            </v-row>
+                        </v-container>
+                    </v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                        <v-btn style="background-color: #042439;" @click="cancelGateway" rounded>
+                            <span style="color: #fff">Cancel</span>
+                        </v-btn>
+                        <v-btn style="background-color: #042439;" @click="addGateway" rounded>
+                            <span style="color: #fff">Save</span>
+                        </v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
     </v-card>
 </template>
 
@@ -541,23 +580,37 @@ export default {
             description: "",
             private_aux: false,
             bogon_aux: false,
+
             setuptypeIP4: "",
             ipv6SetupType: "",
+
             addmac: "",
             mtuV: "",
             mssV: "",
             speed_duplex: "",
+
             dynamicGatewayPolicy: false,
             showAlert: false,
+            showModal: false,
+            gateway: {
+                    gwname: "",
+                    gwaddress: "",
+                    description: "",
+                    default_aux: false,
+                    far_aux: false,
+                    multiwan_aux: false,
+                },
             name_interface: "",
             value_setup_Ipv4: {
                 ip_address4: "",
                 netmask4: "",
-                gateway:{
+                gateway: {
                     id: "",
                     value: ""
                 },
-            }
+            },
+            IPV4Config: {},
+            allStaticGateways: [],
         };
     },
     computed: {
@@ -571,7 +624,6 @@ export default {
         },
     },
     methods: {
-     
         addNetwork() {
             const params = {
                 name_interface: this.activeTab,
@@ -587,7 +639,9 @@ export default {
                 value_setup_Ipv4: {
                     ip_address4: this.value_setup_Ipv4.ip_address4,
                     netmask4: this.value_setup_Ipv4.netmask4,
-                    //  "gateway": {"id": 1, value:"10.1.12.1"},
+                    gateway: {
+                        value: this.gateway.value
+                    },
                 }
             };
             function getCookie(name) {
@@ -606,7 +660,6 @@ export default {
                 return cookieValue;
             }
             const csrfToken = getCookie('csrftoken')
-            console.log(csrfToken);
             axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
             axios.put('/network/conf/LAN/2', params)
@@ -623,6 +676,137 @@ export default {
         cancel() {
             this.$emit("cancel");
         },
+        openModal() {
+            this.showModal = true;
+        },
+        addGateway() {
+            const params = {
+                gwname: this.gateway.gwname,
+                gwaddress: this.gateway.gwaddress,
+                description: this.gateway.description,
+                default_aux: this.gateway.default_aux,
+                far_aux: this.gateway.far_aux,
+                multiwan_aux: this.gateway.multiwan_aux,
+            };
+            console.log(params);
+             function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrfToken = getCookie('csrftoken')
+            axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+            axios.post('/gateway/addStaticGateway', params)
+                .then((response) => {
+                    console.log(response);
+                    this.showAlert = true;
+                    setTimeout(() => {
+                        this.showAlert = false;
+                    }, 3000);
+                }, (error) => {
+                    console.log(error);
+                });
+        },
+        cancelGateway() {
+            this.showModal = false;
+            this.gateway = {
+                gwname: "",
+                gwaddress: "",
+                description: "",
+                default_aux: false,
+                far_aux: false,
+                multiwan_aux: false,
+            }
+        },
+        updateGateway() {
+            const params = {
+                gwname: this.gateway.gwname,
+                gwaddress: this.gateway.gwaddress,
+                description: this.gateway.description,
+                default_aux: this.gateway.default_aux,
+                far_aux: this.gateway.far_aux,
+                multiwan_aux: this.gateway.multiwan_aux,
+            };
+            console.log(params);
+             function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+             }
+            const csrfToken = getCookie('csrftoken')
+            axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+            axios.put('/gateway/updateStaticGateway', params)
+                .then((response) => {
+                    console.log(response);
+                    this.showAlert = true;
+                    setTimeout(() => {
+                        this.showAlert = false;
+                    }, 3000);
+                }, (error) => {
+                    console.log(error);
+                });
+        }
+    },
+    mounted() {
+        this.IPV4Config = this.$root.$data.IPV4Config;
+        let validJsonString = this.IPV4Config
+            .replace(/'/g, '"')
+            .replace(/True/g, 'true')
+            .replace(/False/g, 'false')
+            .replace(/None/g, 'null');
+        let parsedArray = JSON.parse(validJsonString);
+        this.IPV4Config = parsedArray;
+
+        this.allStaticGateways = this.$root.$data.allStaticGateways;
+        validJsonString = this.allStaticGateways
+            .replace(/'/g, '"')
+            .replace(/True/g, 'true')
+            .replace(/False/g, 'false')
+            .replace(/None/g, 'null');
+        parsedArray = JSON.parse(validJsonString);
+        this.allStaticGateways = parsedArray;
+
+        this.activate = this.IPV4Config.interface !== null ? true : false;
+        this.device = this.IPV4Config.interface.ifname;
+        this.description = this.IPV4Config.interface.description;
+        
+        this.private_aux = this.IPV4Config.interface.private;
+        this.bogon_aux = this.IPV4Config.interface.bogon;
+
+        this.addmac = this.IPV4Config.genericConfig.addmac;
+        this.mtuV = this.IPV4Config.genericConfig.mtuV;
+        this.mssV = this.IPV4Config.genericConfig.mssV;
+        this.speed_duplex = this.IPV4Config.genericConfig.speed_duplex;
+
+        this.setuptypeIP4 = this.IPV4Config.IPV4Config.typeIP4;
+        this.value_setup_Ipv4.ip_address4 = this.IPV4Config.IPV4Config.ip_address;
+        this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
+
+        this.name_interface = this.IPV4Config.interface.name_interface;
+
+        this.ipv6SetupType = this.IPV4Config.IPV4Config.typeDHCP;
     },
 };
 </script>
@@ -645,5 +829,4 @@ export default {
     padding-top: 12px;
     margin-top: -2px;
 }
-
 </style>

@@ -6,6 +6,7 @@ from managementServers.models import *
 from network.models import *
 from rules.models import *
 from gateway.models import *
+
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -111,7 +112,6 @@ def getAllGateways(request):
             res[i]['fields']['id'] = id
             list_gateways.append(res[i]['fields'])
     return list_gateways
-############# GET static
 def getAllStaticGateways(request):
     if (request.method == 'GET'):
         gateways= Gateway.objects.filter(staticgw=True)
@@ -125,7 +125,6 @@ def getAllStaticGateways(request):
             res[i]['fields']['id'] = id
             list_gateways.append(res[i]['fields'])
     return  list_gateways
-##########    
 def AllInterfaces(request):
     list_interface = []
     if (request.method == 'GET'):
@@ -139,9 +138,48 @@ def AllInterfaces(request):
             res[i].pop('pk')
             res[i]['fields']['id'] = id
             list_interface.append(res[i]['fields'])
-            print(list_interface)
         return list_interface
-#########
+def GetInformationsByInterface(request,name_interface):
+    info={}
+    interface={}
+    if (request.method == 'GET'):
+        interfaceObject = Interface.objects.get(name_interface=name_interface)
+        interface['id']=interfaceObject.id
+        interface['ifname']=interfaceObject.ifname
+        interface['private_aux']=interfaceObject.private_aux
+        interface['bogon_aux']=interfaceObject.bogon_aux
+        interface['service_status']=interfaceObject.service_status
+        interface['name_interface']=interfaceObject.name_interface
+        interface['description']=interfaceObject.description
+        info['interface']=interface
+        genericConfigObject = GenericConfig.objects.filter(interface_id=interfaceObject.id)
+        genericConfigDict = serializers.serialize("json", genericConfigObject)
+        res = json.loads(genericConfigDict)
+        genericConfigList = list(genericConfigDict)
+        if res != []:
+            id = res[0]['pk']
+            res[0]['fields']['id'] = id
+            res[0].pop('model')
+            res[0].pop('pk')
+            res[0]['fields'].pop('interface')
+            info['genericConfig']=res[0]['fields']
+        else:
+            info['genericConfig']=[]
+        # print({"res":res[0]['fields']})
+        IPV4ConfigObject = IP4Config.objects.filter(interface_id=interfaceObject.id)
+        IPV4ConfigObjectDict = serializers.serialize("json", IPV4ConfigObject)
+        resultat = json.loads(IPV4ConfigObjectDict)
+        if resultat != []:
+            id = resultat[0]['pk']
+            resultat[0]['fields']['id'] = id
+            resultat[0].pop('model')
+            resultat[0].pop('pk')
+            resultat[0]['fields'].pop('interface')
+            info['IPV4Config']=resultat[0]['fields']
+        else:
+            info['IPV4Config']=[]
+    return info
+
 @login_required(login_url='/')
 def index_page(request):
     usr=getUsers(request)
@@ -163,7 +201,9 @@ def user_certificate_managment_page(request):
 @login_required(login_url='/')
 def lan_page(request):
     interfaces=AllInterfaces(request)
-    context = {'interfaces':interfaces}
+    IPV4Config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
+    allStaticGateways=getAllStaticGateways(request)
+    context = {'interfaces':interfaces,'IPV4Config':IPV4Config,'allStaticGateways':allStaticGateways}
     return render(request, 'lan_page.html',context)
 
 @login_required(login_url='/')
@@ -185,9 +225,3 @@ def login(request):
     usr=getAllUsers(request)
     context = {'users':usr}
     return render(request, 'login.html',context)
-
-def index_page_test(request):
-    
-    tab = "fefef"
-    context = {'tab':tab}
-    return render(request, 'index_page_test.html' ,context)

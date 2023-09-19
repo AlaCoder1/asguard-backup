@@ -36,12 +36,14 @@ new Vue({
   store,
   vuetify,
   data: {
-    lan: '',
-    interfaces: []
+    IPV4Config: '',
+    interfaces: '',
+    allStaticGateways: '',
   },
   beforeMount: function () {
-    this.lan = this.$el.attributes['lan'] ? this.$el.attributes['lan'].value : '';
+    this.IPV4Config = this.$el.attributes['IPV4Config'] ? this.$el.attributes['IPV4Config'].value : '';
     this.interfaces = this.$el.attributes['interfaces'] ? this.$el.attributes['interfaces'].value : '';
+    this.allStaticGateways = this.$el.attributes['allStaticGateways'] ? this.$el.attributes['allStaticGateways'].value : '';
   },
   render: (h) => h(App),
 }).$mount('#app');

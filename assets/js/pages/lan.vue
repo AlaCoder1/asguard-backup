@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="List of interface" active-menu="lan">
+    <base-layout title="List of interface" :activeMenu="activeTab">
       <template #content>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id">
@@ -30,13 +30,13 @@ export default {
   data() {
     return {
       activeTab: 0,
-      lan: "",
       interfaces: [],
+      IPV4Config: {},
+      allStaticGateways: [],
     };
   },
   computed: {
     tabs() {
-      //  convert interfaces from string to array
       return this.interfaces.map(element => ({
         name_interface: element.name_interface,
       }));
@@ -51,6 +51,24 @@ export default {
       .replace(/None/g, 'null');
     let parsedArray = JSON.parse(validJsonString);
     this.interfaces = parsedArray;
+
+    this.IPV4Config = this.$root.$data.IPV4Config;
+    validJsonString = this.IPV4Config
+      .replace(/'/g, '"')
+      .replace(/True/g, 'true')
+      .replace(/False/g, 'false')
+      .replace(/None/g, 'null');
+    parsedArray = JSON.parse(validJsonString);
+    this.IPV4Config = parsedArray;
+
+    this.allStaticGateways = this.$root.$data.allStaticGateways;
+    validJsonString = this.allStaticGateways
+      .replace(/'/g, '"')
+      .replace(/True/g, 'true')
+      .replace(/False/g, 'false')
+      .replace(/None/g, 'null');
+    parsedArray = JSON.parse(validJsonString);
+    this.allStaticGateways = parsedArray;
   },
 };
 </script>

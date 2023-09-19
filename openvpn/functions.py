@@ -19,7 +19,7 @@ def connect_ssh():
     """A function to connect with SSH"""
     ssh = paramiko.SSHClient()
     ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('10.1.12.148', username='root', password='root')
+    ssh.connect('10.1.12.104', username='root', password='root')
     return ssh
 
 
@@ -154,7 +154,7 @@ verb {json_object["verbosity_level"]}'''
         config_input = config_input.replace("#ca /etc/certificates_ca/ca.crt", f'ca /etc/certificates_{json_object["cert_method"]["ca_name"]}/ca.crt')
         config_input = config_input.replace("#cert /etc/openvpn/certificates_server/server.crt", f'cert /etc/openvpn/certificates_{json_object["cert_method"]["server_cert"]}/server.crt')
         config_input = config_input.replace("#key /etc/openvpn/certificates_server/server.key", f'key /etc/openvpn/certificates_{json_object["cert_method"]["server_cert"]}/server.key')
-        config_input = config_input.replace("#dh /etc/openvpn/certificates_server/dh.pem", f'dh /etc/openvpn/certificates_{json_object["cert_method"]["server_cert"]}/dh.pem')
+        config_input = config_input.replace("#dh /etc/openvpn/certificates_server/dh.pem", f'dh /etc/openvpn/server/dh_{json_object["name"]}.pem')
     else:
         config_input = config_input.replace("#secret /etc/openvpn/", "secret /etc/openvpn/")
 
@@ -166,7 +166,7 @@ verb {json_object["verbosity_level"]}'''
         prefix = int(local_address[local_address.find("/")+1:])
         mask = prefix_to_masque(prefix)
         config_input = config_input.replace("push \"route 192.168.0.0 255.255.255.0\"", 
-                                            f"push \"route {local_address[:local_address.find('/')+1]} {mask}\"")
+                                            f"push \"route {local_address[:local_address.find('/')]} {mask}\"")
         
     if json_object["ipv4_remote_network"] != '':
         remote_address = json_object["ipv4_remote_network"]
@@ -245,9 +245,9 @@ auth {json_object["auth_digest_algorithm"]}
 verb {json_object["verbosity_level"]}
 
 #Server Key and keep this is secret
-ca /etc/certificates_{json_object["ca_name"]}/ca.crt
-cert /etc/openvpn/client/certificates_{json_object["client_cert"]}/{json_object["client_cert"]}.crt
-key /etc/openvpn/client/certificates_{json_object["client_cert"]}/{json_object["client_cert"]}.key
+ca /etc/certificates_{json_object["cert_method"]["ca_name"]}/ca.crt
+cert /etc/openvpn/client/certificates_{json_object["cert_method"]["client_cert"]}/{json_object["cert_method"]["client_cert"]}.crt
+key /etc/openvpn/client/certificates_{json_object["cert_method"]["client_cert"]}/{json_object["cert_method"]["client_cert"]}.key
 #secret
 tls-version-min 1.2
 tls-cipher TLS-DHE-RSA-WITH-AES-256-GCM-SHA384:TLS-DHE-RSA-WITH-AES-128-GCM-SHA256:TLS-DHE-RSA-WITH-AES-256-CBC-SHA256:TLS-DHE-RSA-WITH-AES-128-CBC-SHA256'''

@@ -148,11 +148,12 @@ def createServerOpenvpn(request):
             if serializer_server.is_valid():
 
                 # Install the server in system
-                install_server_openvpn(server_name=data["name"], ca_name=ca_name, server_conf=server_conf, cert_method=cert_method)
+                install_server_openvpn(server_name=data["name"], ca_name=ca_name, server_conf=server_conf, cert_method=cert_method,
+                                       dh_length=dh)
 
                 # Add the server to the database
                 serializer_server.save()
-                return JsonResponse({"msg": "Server Configuration is done"}, status=201)
+                return JsonResponse({"msg": f"Server {server_name} Configuration is done"}, status=201)
             else:
                 print(serializer_server.errors)
                 return JsonResponse({"msg": "Error in server configuration"}, status=401)
@@ -242,7 +243,7 @@ def updateServerOpenVPN(request, id):
         
             #updating the server in system
             print('name= ', server.name)
-            update_server_openvpn(server_name=server.name, server_conf=server_conf, cert_method=cert_method)
+            update_server_openvpn(server_name=server.name, server_conf=server_conf, cert_method=cert_method, dh_length=server.dh)
 
             #updating the server in database
             server_serializer.save()
@@ -323,8 +324,8 @@ def createClientOpenvpn(request):
             key = ''
             secret = ''
             if cert_method.get('method_name', '') == 'cert':
-                ca_name = data.get('ca_name', '')
-                client_cert_name = data.get('client_cert', '')
+                ca_name = cert_method.get('ca_name', '')
+                client_cert_name = cert_method.get('client_cert', '')
                 ca = f'/etc/certificates_{ca_name}/ca.crt'
                 cert = f'/etc/openvpn/client/certificates_{client_cert_name}/{client_cert_name}.crt'
                 key = f'/etc/openvpn/client/certificates_{client_cert_name}/{client_cert_name}.key'

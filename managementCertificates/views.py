@@ -268,10 +268,10 @@ def createCertificate(request):
 
                         if serializer_cert.is_valid():
                             serializer_cert.save()
-                            return JsonResponse({"msg": "CA Configuration is done"}, status=201)
+                            return JsonResponse({"msg": "Certificate Configuration is done"}, status=201)
                 else:
                     print('error in creating cert= ', serializer_cert.errors)
-                    return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                    return JsonResponse({"msg": "Error in Certificate configuration"}, status=401)
             elif method.get("method_name", "") == 'import':
                 certificate_data = method.get("certificate_data", "")
                 certificate_key = method.get("certificate_key", "")
@@ -291,13 +291,13 @@ def createCertificate(request):
                 serializer_cert = CertificateSerializer(data=cert_data)
                 if serializer_cert.is_valid():
                     serializer_cert.save()
-                    return JsonResponse({"msg": "CA Configuration is done"}, status=201)
+                    return JsonResponse({"msg": "Certificate Configuration is done"}, status=201)
                 else:
                     print('error in creating cert= ', serializer_cert.errors)
-                    return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                    return JsonResponse({"msg": "Error in Certificate configuration"}, status=401)
 
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in creating CA"}, status=401)
+            return JsonResponse({"msg": "Error in creating Certificate"}, status=401)
 
 
 @api_view(['Delete'])

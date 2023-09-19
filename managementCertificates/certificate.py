@@ -64,7 +64,7 @@ def create_certificate_in_system(cert_name, ca_name, type_cert, updated_fields_v
     change_vars(ssh, current_dir, updated_fields_vars)
     time_sleep = 1
     if updated_fields_vars["KEY_SIZE"] >= 8192:
-        time_sleep += 12
+        time_sleep += 20
     elif updated_fields_vars["KEY_SIZE"] > 2048:
         time_sleep += 2
     execute_command_with_arguments(ssh, 'sudo easyrsa build-ca nopass', [f'{ca_name}'], time_sleep)
@@ -85,11 +85,11 @@ def create_certificate_in_system(cert_name, ca_name, type_cert, updated_fields_v
         # Create certificate with password
         # execute_command_with_arguments(ssh, 'sudo easyrsa build-server-full server nopass', ['akrampass','akrampass','yes'], time_sleep)
 
-        commands_list_without_arguments = ['sudo easyrsa gen-dh',
-                                           f'mkdir -p /etc/openvpn/certificates_{cert_name}/',
+        commands_list_without_arguments = [f'mkdir -p /etc/openvpn/certificates_{cert_name}/',
                                            f'cp {current_dir}/pki/issued/server.crt "/etc/openvpn/certificates_{cert_name}/server.crt"',
                                            f'cp {current_dir}/pki/private/server.key "/etc/openvpn/certificates_{cert_name}/server.key"',
-                                           f'cp {current_dir}/pki/dh.pem "/etc/openvpn/certificates_{cert_name}/dh.pem"',
+                                        #    'sudo easyrsa gen-dh',
+                                        #    f'cp {current_dir}/pki/dh.pem "/etc/openvpn/certificates_{cert_name}/dh.pem"',
                                            ]
     elif type_cert == 'client':
         # Create client without password
@@ -136,7 +136,8 @@ def delete_certificate_in_system(cert_name, type_cert):
         commands_list_without_arguments = [f'sudo rm -r /etc/openvpn/certificates_{cert_name}',
                                            f'sudo rm -f {current_dir}/pki/issued/server.crt',
                                            f'sudo rm -f {current_dir}/pki/private/server.key',
-                                           f'sudo rm -f {current_dir}/pki/dh.pem',]
+                                        #    f'sudo rm -f {current_dir}/pki/dh.pem',
+                                           ]
     elif type_cert == 'client':
         commands_list_without_arguments = [f'sudo rm -r /etc/openvpn/client/certificates_{cert_name}',
                                            f'sudo rm -f {current_dir}/pki/issued/{cert_name}.crt',

@@ -1,10 +1,16 @@
-from openvpn.functions import CommandExecutionError, connect_ssh, execute_list_commands_without_arguments
+from openvpn.functions import CommandExecutionError, connect_ssh, execute_command_with_arguments, execute_list_commands_without_arguments
 
 
-def install_server_openvpn(server_name, ca_name, server_conf, cert_method):
+def install_server_openvpn(server_name, ca_name, server_conf, cert_method, dh_length):
     """Function to install an openvpn server in system using easyrsa package to generate keys and certificates"""
     ssh = connect_ssh()
-    commands_list_without_arguments = [f'rm -f /etc/openvpn/server/server_{server_name}.conf',
+    stdin, stdout, stderr = ssh.exec_command('pwd')
+    current_dir = stdout.read().decode('utf-8')
+    current_dir = current_dir[:len(current_dir)-1]
+    execute_command_with_arguments(ssh, 'sudo easyrsa init-pki', ['yes', 'yes'])
+    commands_list_without_arguments = [f'sudo easyrsa gen-dh {dh_length}',
+                                       f'cp {current_dir}/pki/dh.pem "/etc/openvpn/server/dh_{server_name}.pem"',
+                                       f'rm -f /etc/openvpn/server/server_{server_name}.conf',
                                        f'''echo '{server_conf.strip()}' >>/etc/openvpn/server/server_{server_name}.conf''',
                                        'chown -R openvpn:network /etc/openvpn/*',
                                        f'chown -R openvpn:openvpn /etc/certificates_{ca_name}/*',
@@ -27,16 +33,19 @@ def delete_server_openvpn(server_name):
     ssh = connect_ssh()
     commands_list_without_arguments = [f'sudo systemctl stop openvpn-server@server_{server_name}',
                                        f'sudo rm -f /etc/openvpn/server/server_{server_name}.conf',
+                                       f'/etc/openvpn/server/dh_{server_name}.pem',
                                        f'sudo rm -f /etc/openvpn/server/static_{server_name}.key',
                                        f'sudo rm -f /var/log/openvpn/status-server_{server_name}.log',
                                        ]
     execute_list_commands_without_arguments(ssh_connect=ssh, commands_list=commands_list_without_arguments)
 
 
-def update_server_openvpn(server_name, server_conf, cert_method):
+def update_server_openvpn(server_name, server_conf, cert_method, dh_length):
     """Function to update an openvpn server in system"""
     ssh = connect_ssh()
-    commands_list_without_arguments = [f'rm /etc/openvpn/server/server_{server_name}.conf',
+    execute_command_with_arguments(ssh, 'sudo easyrsa init-pki', ['yes', 'yes'])
+    commands_list_without_arguments = [f'sudo easyrsa gen-dh {dh_length}',
+                                       f'rm /etc/openvpn/server/server_{server_name}.conf',
                                        f'''echo '{server_conf.strip()}' >>/etc/openvpn/server/server_{server_name}.conf''']
     if cert_method["method_name"] == 'shared_key':
         shared_key = f'''-----BEGIN OpenVPN Static key V1-----\n{cert_method["shared_key"]}\n-----END OpenVPN Static key V1-----'''

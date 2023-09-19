@@ -84,7 +84,7 @@
                             <span class="ml-2">Add</span>
                         </v-btn>
                         <v-select label="IPv4 gateway" class="ml-3 mt-2 inline-input"
-                        :items="allStaticGateways" v-model="value_setup_Ipv4.gateway"></v-select>
+                        :items="allStaticGatewaysAddresses" v-model="value_setup_Ipv4.gateway"></v-select>
                     </div>
                 </div>
                 <div v-if="ipv6SetupType === 'DHCP'">
@@ -621,6 +621,9 @@ export default {
                 right: "20px",
                 width: "20%",
             };
+        },
+        allStaticGatewaysAddresses() {
+            return this.allStaticGateways.map((gateway) => gateway.gwaddress);
         },
     },
     methods: {

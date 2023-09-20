@@ -106,7 +106,7 @@ export default {
   name: 'DrawerComponent',
   props: {
     activeMenu: {
-      type: String,
+      type: Number,
       required: true,
       default: null,
     },
@@ -191,11 +191,11 @@ export default {
               active: 'Diagnostics',
             },
             {
-              title: 'LAN / WAN',
+              title: 'List of interface',
               icon: '',
               href: '/lan',
               href: '/lan',
-              active: 'LAN / WAN',
+              active: 'List of interface',
             }, {
               title: 'Settings',
               icon: '',

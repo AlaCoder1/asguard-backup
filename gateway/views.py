@@ -72,11 +72,11 @@ def getGatewayById(request, id):
             return JsonResponse({"error": "Gateway not found"}, status=404)     
 # API to add  static gateway
 @api_view(['POST'])
-@permission_classes(["SessionAuthentication"])
+@authentication_classes([SessionAuthentication])
 def addStaticGateway(request):
     msg="Failed to add gateway!" 
     if (request.method == 'POST'):
-        data = JSONParser().parse(request)
+        data = request.data
         gwname=data.get('namegw', None)
         gwaddress = data.get('gwaddress', None)
         description = data.get('description', None)
@@ -94,7 +94,7 @@ def addStaticGateway(request):
             if add_gateway_DB(data):
                 msg="Add gateway Successfully!!"
            
-    return JsonResponse({"msg:": msg})       
+        return JsonResponse({"msg:": msg})       
    
 @api_view(['DELETE'])
 @permission_classes([])

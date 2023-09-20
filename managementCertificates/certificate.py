@@ -86,6 +86,7 @@ def create_certificate_in_system(cert_name, ca_name, type_cert, updated_fields_v
         # execute_command_with_arguments(ssh, 'sudo easyrsa build-server-full server nopass', ['akrampass','akrampass','yes'], time_sleep)
 
         commands_list_without_arguments = [f'mkdir -p /etc/openvpn/certificates_{cert_name}/',
+                                           f'cp {current_dir}/pki/vars "/etc/openvpn/certificates_{cert_name}/vars"',
                                            f'cp {current_dir}/pki/issued/server.crt "/etc/openvpn/certificates_{cert_name}/server.crt"',
                                            f'cp {current_dir}/pki/private/server.key "/etc/openvpn/certificates_{cert_name}/server.key"',
                                         #    'sudo easyrsa gen-dh',
@@ -99,6 +100,7 @@ def create_certificate_in_system(cert_name, ca_name, type_cert, updated_fields_v
         # execute_command_with_arguments(ssh, f'sudo easyrsa build-client-full {cert_name}', ['clientpass', 'clientpass', 'yes'], time_sleep)
         
         commands_list_without_arguments = [f'mkdir -p /etc/openvpn/client/certificates_{cert_name}/',
+                                           f'cp {current_dir}/pki/vars "/etc/openvpn/client/certificates_{cert_name}/vars"',
                                            f'cp {current_dir}/pki/issued/{cert_name}.crt "/etc/openvpn/client/certificates_{cert_name}/{cert_name}.crt"',
                                            f'cp {current_dir}/pki/private/{cert_name}.key "/etc/openvpn/client/certificates_{cert_name}/{cert_name}.key"',
                                            ]

@@ -38,9 +38,6 @@ yarn-error.log
 /tasks/migrations/__pycache__/
 /tasks/__pycache__/
 
-/managementCertificates/migrations/__pycache__/
-/managementCertificates/__pycache__/
-
 /dms/__pycache__/
 
 /views/__pycache__/

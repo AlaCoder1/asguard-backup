@@ -47,7 +47,6 @@ INSTALLED_APPS = [
     'managementUsers',
     'managementGroup',
     "managementServers",
-    "managementCertificates",
     "settings",
     "authentification",
     "subscription",

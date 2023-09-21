@@ -3,13 +3,6 @@ from .models import *
 
 class ServerOpenvpnSerializer(serializers.ModelSerializer):
     class Meta:
-        model = ServerOpenvpn
-        # fields = ('name', 'description', 'port', 'proto', 'dev', 'topology', 'compression', 'dh','cipher','verb','interface')
-        fields = '__all__'
-
-
-class ClientOpenvpnSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = ClientOpenvpn
-        # fields = ('server_openvpn', 'client_name', 'port', 'proto', 'dev', 'auth', 'cipher','verb')
-        fields = '__all__'
+            model = ServerOpenvpn
+            # fields = ('port','proto','dev','user','group','persist_key','persist_tun','keepalive','topology','server','ifconfig_pool_persist','push_ipv4_option1','push_ipv4_option2','push_ipv4_option3','server_ipv6','tun_ipv6','push_ipv6_option1','push_ipv6_option2','push_ipv6_option3','dh','ecdh_curve','tls_crypt','crl_verify','ca','cert','key','auth','cipher','ncp_ciphers','tls_server','tls_version_min','tls_cipher','client_config_dir','status','verb',)
+            fields = '__all__'

@@ -2,92 +2,366 @@
     <v-card>
         <v-row class="fill-height ml-3">
             <v-col cols="12" sm="6">
-                        <v-card-title>{{ $t('PageNetwork.BasicConfiguration') }}</v-card-title>
-                    <v-divider class="ml-3"></v-divider>
+                <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">{{ $t('PageNetwork.BasicConfiguration') }}</v-card-title>
+                <v-divider class="ml-3"></v-divider>
                 <v-row class="ml-3 mt-3">
                     <div style="color: black;">Interface</div>
                     <input type="checkbox" class="ml-5" v-model="activate">
                     <label class="ml-2">Activate</label>
                 </v-row>
-                <div style="background-color: #D0D3D4;" class="ml-3">
+                <div style="background-color: #F6F6F6;" class="ml-3">
                     <v-row class="ml-3 mt-5">
-                        <div style="color: black;">Device</div>
+                        <div style="color: #838383;
+                                    font-family: Nunito;
+                                    font-size: 16px;
+                                    font-style: normal;
+                                    font-weight: 400;
+                                    line-height: normal;">Device</div>
                     </v-row>
                     <v-text-field label="Enter device name" class="ml-3 mt-2" v-model="device"></v-text-field>
                 </div>
                 <div style="background-color: #F6F6F6;" class="ml-3">
 
                     <v-row class="ml-3 mt-2">
-                        <div style="color: black;">Description</div>
+                        <div style="color: #838383;
+                                font-family: Nunito;
+                                font-size: 16px;
+                                font-style: normal;
+                                font-weight: 400;
+                                line-height: normal;">Description</div>
                     </v-row>
                     <v-text-field label="Enter Description" class="ml-3 mt-2" v-model="description"></v-text-field>
                 </div>
-                <v-card-title class="bold-title">Generic configuration</v-card-title>
-                <v-divider class="ml-3"></v-divider>
-                <v-row class="ml-3 mt-2">
-                    <div style="color: black;">Block networks</div>
-                    <input type="checkbox" class="ml-16" v-model="private_aux">
-                    <label class="ml-2">Private</label>
-                </v-row>
-                <v-row class="ml-3 mt-9">
-                    <div style="color: black;">Block Bogon addresses</div>
-                    <input type="checkbox" class="ml-2" v-model="bogon_aux">
-                    <label class="ml-2">Not assigned by IANA</label>
-                </v-row>
-                <v-row class="ml-3 mt-9">
-                    <div style="color: black;" class=" mt-3">IPV4 Setup Type</div>
-                    <v-select :items="items" label="Setup IPV4 Type" class="ml-3" dense v-model="setuptypeIP4"></v-select>
-                </v-row>
-                <v-row class="ml-3 mt-9">
-                    <div style="color: black;" class=" mt-6">IPV6 Setup Type</div>
-                    <v-select :items="ipv6Items" label="Setup IPV6 Type" class="ml-3" v-model="ipv6SetupType"></v-select>
-                </v-row>
-                <v-row class="ml-3 mt-9">
-                    <div style="color: black;" class=" mt-6">MAC address</div>
-                    <v-text-field label="Enter MAC address" class="ml-3 mt-2" v-model="addmac"></v-text-field>
-                </v-row>
-                <v-row class="ml-3 mt-9">
-                    <div style="color: black;" class=" mt-6">MTU (Maximum Transmission Unit)</div>
-                    <v-text-field label="Enter MTU" class="ml-3 mt-2" v-model="mtuV"></v-text-field>
-                </v-row>
-                <v-row class="ml-3 mt-9">
-                    <div style="color: black;" class=" mt-6">MSS</div>
-                    <v-text-field label="Enter MSS" class="ml-3 mt-2" v-model="mssV"></v-text-field>
-                </v-row>
-                <v-row class="ml-3 mt-9">
-                    <div style="color: black;" class=" mt-6">Speed and Duplex</div>
-                    <v-select label="Speed and Duplex" class="ml-3" :items="speedDuplexItems" default-value="100baseTX"
-                        v-model="speed_duplex"></v-select>
-                </v-row>
-                <div class="ml-3 mt-9">
-                    <div style="color: black;" class="inline-input">Dynamic gateway policy</div>
-                    <input type="checkbox" class="ml-5 inline-input" v-model="dynamicGatewayPolicy">
-                    <label class=" inline-label">The interface does not require an intermediate system to act
-                        as a gateway.</label>
-                </div>
+                <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Generic configuration</v-card-title>
+                <v-divider class="ml-3 mb-5"></v-divider>
+                <v-table class="ml-3">
+                    <tbody>
+                        <tr>
+                            <td>
+                                <div>Block networks</div>
+                            </td>
+                            <td><input type="checkbox" v-model="private_aux" class="ml-5">
+                                <label>Private</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mt-5">Block Bogon addresses</div>
+                            </td>
+                            <td><input type="checkbox" v-model="bogon_aux" class="ml-5">
+                                <label>Not assigned by IANA</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mt-5 mt-3">IPV4 Setup Type</div>
+                            </td>
+                            <td> <select class="ml-3" v-model="setuptypeIP4" style=" height: 39px;
+                    width: 100%;
+                    border-radius: 4px;
+                    border: 1px solid #F6F6F6;
+                    background-color: #F6F6F6;
+                    color: #020202;
+                    font-family: Nunito;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: normal;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                    border-color: #F6F6F6;
+                    box-shadow: none;
+                    outline: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    appearance: none;
+                    align-items: center;
+                    justify-content: center;
+
+                    ">
+                                    <option v-for="item in items" :value="item.value">{{ item.text }}</option>
+                                    <v-icon>mdi-chevron-down</v-icon>
+                                </select></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mt-5 mt-6">IPV6 Setup Type</div>
+                            </td>
+                            <td><select class="ml-3 mt-5" v-model="ipv6SetupType" style=" height: 39px;
+                    width: 100%;
+                    border-radius: 4px;
+                    border: 1px solid #F6F6F6;
+                    background-color: #F6F6F6;
+                    color: #020202;
+                    font-family: Nunito;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: normal;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                    border-color: #F6F6F6;
+                    box-shadow: none;
+                    outline: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    appearance: none;
+                    align-items: center;
+                    justify-content: center;
+
+                    ">
+                                    <option v-for="item in ipv6Items" :value="item">{{ item }}</option>
+                                    <v-icon>mdi-chevron-down</v-icon>
+                                </select></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div style="color: #020202;
+" class="mt-5 mt-6">MAC address</div>
+                            </td>
+                            <td><v-text-field style=" height: 39px;
+                    width: 100%;
+                    border-radius: 4px;
+                    border: 1px solid #F6F6F6;
+                    background-color: #F6F6F6;
+                    color: #020202;
+                    font-family: Nunito;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: normal;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                    border-color: #F6F6F6;
+                    box-shadow: none;
+                    outline: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    appearance: none;
+                    align-items: center;
+                    justify-content: center;
+
+                    " label="Enter MAC address" class="ml-3 mt-2" v-model="addmac"></v-text-field></td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <div class="mt-5 mt-6">MTU (Maximum Transmission Unit)</div>
+                            </td>
+                            <td> <v-text-field label="Enter MTU" class="ml-3 mt-2" v-model="mtuV"></v-text-field>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td> <span style="color: #020202;" class="mt-5 mt-6">Speed and Duplex</span>
+                            </td>
+                            <td>
+                                <select class="ml-3" v-model="speed_duplex" style=" height: 39px;
+                    width: 100%;
+                    border-radius: 4px;
+                    border: 1px solid #F6F6F6;
+                    background-color: #F6F6F6;
+                    color: #020202;
+                    font-family: Nunito;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: normal;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                    border-color: #F6F6F6;
+                    box-shadow: none;
+                    outline: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    appearance: none;
+                    align-items: center;
+                    justify-content: center;
+
+                    ">
+                                    <option style=" height: 39px;
+                    width: 100%;
+                    border-radius: 4px;
+                    border: 1px solid #F6F6F6;
+                    border-color: #F6F6F6;
+                    background-color: #F6F6F6;
+                    color: #020202;
+                    font-family: Nunito;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: normal;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                    border-color: #F6F6F6;
+                    box-shadow: none;
+                    outline: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    appearance: none;
+                    align-items: center;
+                    justify-content: center;
+                    " v-for="item in speedDuplexItems" :value="item">{{ item }}</option>
+                                    <v-icon>mdi-chevron-down</v-icon>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><span style="color: #020202;" class="mt-5 inline-input">Dynamic gateway policy</span></td>
+                            <td>
+                                <div style="display: flex;">
+                                    <input type="checkbox" class="mb-5" v-model="dynamicGatewayPolicy">
+                                    <label class="">The interface does not require an intermediate system to act
+                                        as a gateway.</label>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </v-table>
+
             </v-col>
             <v-col cols="12" sm="6" v-if="value_setup_Ipv4.ip_address4 != null || value_setup_Ipv4.ip_address4 != null">
                 <div v-if="setuptypeIP4 === 'static'">
-                    <v-card-title class="bold-title">Static IPV4 address configuration</v-card-title>
-                    <v-divider class="ml-3"></v-divider>
-                    <div class="ml-3 mt-3">
-                        <div style="color: black;" class="inline-input">IPV4 address</div>
-                        <v-text-field label="Enter IP address" class="ml-3 mt-2 inline-input"
-                            v-model="value_setup_Ipv4.ip_address4"></v-text-field>
-                        <v-select :items="netmaskItems" label="netmask" class="ml-3 mt-2 inline-input"
-                            v-model="value_setup_Ipv4.netmask4"></v-select>
-                    </div>
-                    <div class="ml-3">
-                        <div style="color: black;" class="inline-input">IPV4 gateway</div>
-                        <v-btn class="ml-3 mt-2 " color="primary" text>
-                            <i class="fas fa-plus"></i>
-                            <span class="ml-2">Add</span>
-                        </v-btn>
-                        <v-select label="IPv4 gateway" class="ml-3 mt-2 inline-input" v-model="value_setup_Ipv4.gateway"></v-select>
-                    </div>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Static IPV4 address configuration</v-card-title>
+                    <v-divider class="ml-3" style="height: 39px;
+                    width: 425px;"></v-divider>
+                    <v-table class="ml-3 mt-3">
+                        <tbody>
+                            <tr>
+                                <td><span style="color: black;" class="inline-input">IPV4 address</span></td>
+                                <td></td>
+                                <td>
+                                    <div style="display: flex">
+                                        <v-text-field label="Enter IP address" class="ml-3 mt-2 inline-input"
+                                            v-model="value_setup_Ipv4.ip_address4"></v-text-field>
+                                        <select v-model="value_setup_Ipv4.netmask4" class="ml-3 mt-5 inline-input" style="height: 39px;
+                    width: 111px;
+                    border-radius: 4px;
+                    border: 1px solid #F6F6F6;
+                    background-color: #F6F6F6;
+                    color: #020202;
+                    font-family: Nunito;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: normal;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                    border-color: #F6F6F6;
+                    box-shadow: none;
+                    outline: none;">
+                                            <option style=" height: 39px;
+                    border-radius: 4px;
+                    border: 1px solid #F6F6F6;
+                    border-color: #F6F6F6;
+                    background-color: #F6F6F6;
+                    color: #020202;
+                    font-family: Nunito;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: normal;" v-for="item in netmaskItems" :value="item">{{ item }}</option>
+                                            <v-icon>mdi-chevron-down</v-icon>
+                                        </select>
+                                    </div>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td><span style="color: black;" class="inline-input">IPV4 gateway</span></td>
+                                <td><v-btn class="ml-3 mt-2 " color="primary" text @click="openModal">
+                                        <i class="fas fa-plus"></i>
+                                        <span class="ml-2">Add</span>
+                                    </v-btn></td>
+                                <td> <select class="ml-3" v-model="value_setup_Ipv4.gateway" style="height: 39px;
+                    width: 312px;
+                    margin-bottom: 5px;
+                    border-radius: 4px;
+                    border: 1px solid #F6F6F6;
+                    background-color: #F6F6F6;
+                    color: #020202;
+                    font-family: Nunito;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: normal;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                    border-color: #F6F6F6;
+                    box-shadow: none;
+                    outline: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    appearance: none;
+                    align-items: center;
+                    justify-content: center;
+
+                    ">
+                                        <option style=" height: 39px;
+                    width: 100%;
+                    border-radius: 4px;
+                    border: 1px solid #F6F6F6;
+                    border-color: #F6F6F6;
+                    background-color: #F6F6F6;
+                    color: #020202;
+                    font-family: Nunito;
+                    font-size: 16px;
+                    font-style: normal;
+                    font-weight: 400;
+                    line-height: normal;
+                    padding-left: 10px;
+                    padding-right: 10px;
+                    padding-top: 5px;
+                    padding-bottom: 5px;
+                    border-color: #F6F6F6;
+                    box-shadow: none;
+                    outline: none;
+                    -webkit-appearance: none;
+                    -moz-appearance: none;
+                    appearance: none;
+                    align-items: center;
+                    justify-content: center;
+                    " v-for="item in allStaticGatewaysAddresses" :value="item">{{ item }}</option>
+                                        <v-icon>mdi-chevron-down</v-icon>
+                                    </select></td>
+                            </tr>
+                        </tbody>
+                    </v-table>
                 </div>
                 <div v-if="ipv6SetupType === 'DHCP'">
-                    <v-card-title class="bold-title">Configuring the DHCPv6 client</v-card-title>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Configuring the DHCPv6 client</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <v-row class="ml-3 mt-3">
                         <v-tabs v-model="activeTabIPV6" fixed-tabs background-color="#fff" color="#FFC300" dark>
@@ -102,7 +376,12 @@
                             </v-tab-item>
                         </v-tabs>
                     </v-row>
-                    <v-card-title class="bold-title">Interface status</v-card-title>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Interface status</v-card-title>
                     <v-row class="ml-3 mt-9">
                         <div style="color: black;" class="ml-3">Use IPV4 connectivity</div>
                         <input type="checkbox" class="ml-5">
@@ -173,7 +452,12 @@
                     </v-row>
                 </div>
                 <div v-if="false">
-                    <v-card-title class="bold-title">Authentication</v-card-title>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Authentication</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <div class="ml-3">
                         <div style="color: black;" class="ml-3 inline-input">Authname</div>
@@ -191,7 +475,12 @@
                         <div style="color: black;" class="ml-3 inline-input">rdm</div>
                         <v-text-field label="rdm" class="ml-3 inline-input"></v-text-field>
                     </div>
-                    <v-card-title class="bold-title">Key info</v-card-title>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Key info</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <div class="ml-3">
                         <div style="color: black;" class="ml-3 inline-input">Keyname</div>
@@ -215,7 +504,12 @@
                     </div>
                 </div>
                 <div v-if="setuptypeIP4 === 'DHCP'">
-                    <v-card-title class="bold-title">Configuring the DHCP Client</v-card-title>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Configuring the DHCP Client</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <v-row class="ml-3 mt-3">
                         <v-tabs v-model="activeTab" fixed-tabs background-color="#fff" color="#FFC300" dark>
@@ -234,7 +528,12 @@
                     </v-row>
                 </div>
                 <div v-if="false">
-                    <v-card-title class="bold-title">Protocol Timing</v-card-title>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Protocol Timing</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <div class="ml-3 mt-3">
                         <div style="color: black;" class="ml-3 inline-input">Timeout</div>
@@ -262,7 +561,12 @@
                         <div style="color: black;" class="ml-3 inline-input">Initial Interval</div>
                         <v-text-field label="Initial Interval" class="ml-3 inline-input"></v-text-field>
                     </div>
-                    <v-card-title class="bold-title">Lease Requirements</v-card-title>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Lease Requirements</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <div class="ml-3 mt-3">
                         <div style="color: black;" class="ml-3 inline-input">Send options DHCP Client</div>
@@ -290,7 +594,12 @@
                     </div>
                 </div>
                 <div v-if="setuptypeIP4 === 'PPP'">
-                    <v-card-title class="bold-title">Configuration PPP</v-card-title>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Configuration PPP</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <v-card elevation="9" class="ml-3 mt-3 mr-3" title="Service provider (FAI)">
                         <v-card-title class="headline grey lighten-2 text-center" primary-title>
@@ -358,7 +667,12 @@
                     </div>
                 </div>
                 <div v-if="ipv6SetupType === 'static'">
-                    <v-card-title class="bold-title">Static IPv6 address configuration</v-card-title>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Static IPv6 address configuration</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <div class="ml-3 mt-3">
                         <div style="color: black;" class="ml-3 inline-input">Username</div>
@@ -380,7 +694,12 @@
                     </div>
                 </div>
                 <div v-if="false">
-                    <v-card-title class="bold-title">6RD Rapid Deployment</v-card-title>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">6RD Rapid Deployment</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <div class="ml-3 mt-3">
                         <div style="color: black;" class="ml-3 inline-input">Préfix 6RD</div>
@@ -400,7 +719,12 @@
                     </div>
                 </div>
                 <div v-if="false">
-                    <v-card-title class="bold-title">Track IPv6 interface</v-card-title>
+                    <v-card-title style="color: #020202;
+font-family: Nunito;
+font-size: 18px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;">Track IPv6 interface</v-card-title>
                     <v-divider class="ml-3"></v-divider>
                     <div class="ml-3 mt-3">
                         <div style="color: black;" class="ml-3 inline-input">IPv6 interface</div>
@@ -423,9 +747,9 @@
         <v-spacer></v-spacer>
         <br />
         <div class="text-center">
-            <v-btn large rounded outlined color="#213E9F" @click="cancel">Cancel</v-btn>
-            <v-btn large rounded color="#213E9F" @click="addNetwork">
-                <span class="mr-2 c-o">Save</span>
+            <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel">Cancel</v-btn>
+            <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="addNetwork">
+                Save
             </v-btn>
         </div>
         <br />
@@ -434,6 +758,49 @@
             Configuration saved successfully
         </v-alert>
         <br /><br /><br /><br />
+        <v-dialog style="
+    position: fixed;
+    overflow-x: unset; /* Hide horizontal overflow */
+    overflow-y: unset; /* Remove the vertical scroll */
+    " max-width="600px" v-model="showModal">
+            <v-card class="ml-3 mr-3">
+                <v-card-title>
+                    <span class="headline font-weight-bold">Add IPv4 Gateway</span>
+                </v-card-title>
+                <v-card-text>
+                    <v-container>
+                        <v-row>
+                            <v-text-field label="Enter Gateway Name" v-model="gateway.gwname"></v-text-field>
+                        </v-row>
+                        <v-row>
+                            <v-text-field label="Enter Gateway IPV4" v-model="gateway.gwaddress"></v-text-field></v-row>
+                        <v-row> <v-text-field label="Enter Description"
+                                v-model="gateway.description"></v-text-field></v-row>
+                        <v-row>
+                            <input type="checkbox" v-model="gateway.default_aux">
+                            <label class="ml-3">Default Gateway</label>
+                        </v-row>
+                        <v-row>
+                            <input type="checkbox" v-model="gateway.far_aux">
+                            <label class="ml-3">Far Gateway</label>
+                        </v-row>
+                        <v-row>
+                            <input type="checkbox" v-model="gateway.multiwan_aux">
+                            <label class="ml-3">Multi-WAN Gateway</label>
+                        </v-row>
+                    </v-container>
+                </v-card-text>
+                <v-card-actions>
+                    <v-spacer></v-spacer>
+                    <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancelGateway">
+                        Cancel
+                    </v-btn>
+                    <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="addGateway">
+                        Save
+                    </v-btn>
+                </v-card-actions>
+            </v-card>
+        </v-dialog>
     </v-card>
 </template>
 
@@ -541,23 +908,37 @@ export default {
             description: "",
             private_aux: false,
             bogon_aux: false,
+
             setuptypeIP4: "",
             ipv6SetupType: "",
+
             addmac: "",
             mtuV: "",
             mssV: "",
             speed_duplex: "",
+
             dynamicGatewayPolicy: false,
             showAlert: false,
+            showModal: false,
+            gateway: {
+                gwname: "",
+                gwaddress: "",
+                description: "",
+                default_aux: false,
+                far_aux: false,
+                multiwan_aux: false,
+            },
             name_interface: "",
             value_setup_Ipv4: {
                 ip_address4: "",
                 netmask4: "",
-                gateway:{
+                gateway: {
                     id: "",
                     value: ""
                 },
-            }
+            },
+            IPV4Config: {},
+            allStaticGateways: [],
         };
     },
     computed: {
@@ -569,9 +950,11 @@ export default {
                 width: "20%",
             };
         },
+        allStaticGatewaysAddresses() {
+            return this.allStaticGateways.map((gateway) => gateway.gwaddress);
+        },
     },
     methods: {
-     
         addNetwork() {
             const params = {
                 name_interface: this.activeTab,
@@ -587,7 +970,9 @@ export default {
                 value_setup_Ipv4: {
                     ip_address4: this.value_setup_Ipv4.ip_address4,
                     netmask4: this.value_setup_Ipv4.netmask4,
-                    //  "gateway": {"id": 1, value:"10.1.12.1"},
+                    gateway: {
+                        value: this.gateway.value
+                    },
                 }
             };
             function getCookie(name) {
@@ -606,10 +991,9 @@ export default {
                 return cookieValue;
             }
             const csrfToken = getCookie('csrftoken')
-            console.log(csrfToken);
             axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
-            axios.put('http://127.0.0.1:8000/network/conf/LAN/2', params)
+            axios.put('/network/conf/LAN/2', params)
                 .then((response) => {
                     console.log(response);
                     this.showAlert = true;
@@ -623,6 +1007,137 @@ export default {
         cancel() {
             this.$emit("cancel");
         },
+        openModal() {
+            this.showModal = true;
+        },
+        addGateway() {
+            const params = {
+                gwname: this.gateway.gwname,
+                gwaddress: this.gateway.gwaddress,
+                description: this.gateway.description,
+                default_aux: this.gateway.default_aux,
+                far_aux: this.gateway.far_aux,
+                multiwan_aux: this.gateway.multiwan_aux,
+            };
+            console.log(params);
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrfToken = getCookie('csrftoken')
+            axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+            axios.post('/gateway/addStaticGateway', params)
+                .then((response) => {
+                    console.log(response);
+                    this.showAlert = true;
+                    setTimeout(() => {
+                        this.showAlert = false;
+                    }, 3000);
+                }, (error) => {
+                    console.log(error);
+                });
+        },
+        cancelGateway() {
+            this.showModal = false;
+            this.gateway = {
+                gwname: "",
+                gwaddress: "",
+                description: "",
+                default_aux: false,
+                far_aux: false,
+                multiwan_aux: false,
+            }
+        },
+        updateGateway() {
+            const params = {
+                gwname: this.gateway.gwname,
+                gwaddress: this.gateway.gwaddress,
+                description: this.gateway.description,
+                default_aux: this.gateway.default_aux,
+                far_aux: this.gateway.far_aux,
+                multiwan_aux: this.gateway.multiwan_aux,
+            };
+            console.log(params);
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        // Does this cookie string begin with the name we want?
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+            }
+            const csrfToken = getCookie('csrftoken')
+            axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+            axios.put('/gateway/updateStaticGateway', params)
+                .then((response) => {
+                    console.log(response);
+                    this.showAlert = true;
+                    setTimeout(() => {
+                        this.showAlert = false;
+                    }, 3000);
+                }, (error) => {
+                    console.log(error);
+                });
+        }
+    },
+    mounted() {
+        this.IPV4Config = this.$root.$data.IPV4Config;
+        let validJsonString = this.IPV4Config
+            .replace(/'/g, '"')
+            .replace(/True/g, 'true')
+            .replace(/False/g, 'false')
+            .replace(/None/g, 'null');
+        let parsedArray = JSON.parse(validJsonString);
+        this.IPV4Config = parsedArray;
+
+        this.allStaticGateways = this.$root.$data.allStaticGateways;
+        validJsonString = this.allStaticGateways
+            .replace(/'/g, '"')
+            .replace(/True/g, 'true')
+            .replace(/False/g, 'false')
+            .replace(/None/g, 'null');
+        parsedArray = JSON.parse(validJsonString);
+        this.allStaticGateways = parsedArray;
+
+        this.activate = this.IPV4Config.interface !== null ? true : false;
+        this.device = this.IPV4Config.interface.ifname;
+        this.description = this.IPV4Config.interface.description;
+
+        this.private_aux = this.IPV4Config.interface.private;
+        this.bogon_aux = this.IPV4Config.interface.bogon;
+
+        this.addmac = this.IPV4Config.genericConfig.addmac;
+        this.mtuV = this.IPV4Config.genericConfig.mtuV;
+        this.mssV = this.IPV4Config.genericConfig.mssV;
+        this.speed_duplex = this.IPV4Config.genericConfig.speed_duplex;
+
+        this.setuptypeIP4 = this.IPV4Config.IPV4Config.typeIP4;
+        this.value_setup_Ipv4.ip_address4 = this.IPV4Config.IPV4Config.ip_address;
+        this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
+
+        this.name_interface = this.IPV4Config.interface.name_interface;
+
+        this.ipv6SetupType = this.IPV4Config.IPV4Config.typeDHCP;
     },
 };
 </script>
@@ -646,4 +1161,58 @@ export default {
     margin-top: -2px;
 }
 
+.text-label-title {
+    color: #838383;
+    font-family: Nunito;
+    font-size: 16px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+}
+
+.action-button:hover {
+    color: #086eae;
+}
+
+.action-button.update {
+    color: #00b300;
+}
+
+.action-button.cancel {
+    color: #ff0000;
+}
+
+.action-button.edit {
+    color: #086eae;
+}
+
+.action-button.delete {
+    color: #086eae;
+}
+
+
+.trac-edit {
+    height: 43px;
+    width: 183px;
+    background-color: #086eae;
+    color: #ffffff;
+    font-family: "Nunito-Regular", Helvetica;
+    left: 0;
+    letter-spacing: 0;
+    line-height: normal;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+.trac-cancel {
+    height: 43px;
+    width: 183px;
+
+    font-family: "Nunito-Regular", Helvetica;
+    left: 0;
+    letter-spacing: 0;
+    line-height: normal;
+    text-align: center;
+    text-transform: capitalize;
+}
 </style>

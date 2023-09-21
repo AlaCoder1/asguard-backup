@@ -60,6 +60,7 @@ class IP4Config(models.Model):
     ##static
     ip_address=models.CharField(max_length=200, null=True,default=None)
     netmask=models.IntegerField(null=True,default=None)
+    addrgw=models.CharField(max_length=200, null=True,default=None)
     ##dhcp base 
     reject=models.CharField(max_length=200, null=True,default=None)
     hostname=models.CharField(max_length=200, null=True,default=None)

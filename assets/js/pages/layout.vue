@@ -52,7 +52,7 @@ export default {
             required: true,
         },
         activeMenu: {
-            type: String,
+            type: Number,
             required: true,
             default: null,
         },

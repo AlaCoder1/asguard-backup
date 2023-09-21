@@ -17,7 +17,7 @@ const i18n = new VueI18n({
   },
 });
 
-Vue.use( {
+Vue.use({
   i18n,
   classes: true,
   fieldsBagName: 'formFields',
@@ -36,11 +36,13 @@ new Vue({
   store,
   vuetify,
   data: {
-    firewall: '',
+    rules: {},
+    interfaces: []
   },
   beforeMount: function () {
-    console.log(this);
-    this.firewall = this.$el.attributes['firewall'] ? this.$el.attributes['firewall'].value : '';
+    this.rules = this.$el.attributes['rules'] ? this.$el.attributes['rules'].value : '';
+    this.interfaces = this.$el.attributes['interfaces'] ? this.$el.attributes['interfaces'].value : '';
   },
   render: (h) => h(App),
 }).$mount('#app');
+

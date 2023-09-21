@@ -19,21 +19,9 @@ class Command(BaseCommand):
         try:
             name = kwargs['name']
             pw = kwargs['pw']
-            def connect_ssh():
-                ssh = paramiko.SSHClient()
-                # automatically add host key when connecting to a new host
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                # connect to SSH server
-                ssh.connect(settings.SSH_HOST, username=name,
-                            password=pw, port=settings.SSH_PORT)
-                return ssh
-            file_path = "/etc/systemd/system/Asguard-Networking.service"
-            ssh = connect_ssh()
-            # Open an SFTP session
-            sftp = ssh.open_sftp()
+            
 
-            # Open the remote file in write mode
-            remote_file = sftp.open(file_path, 'w')
+            file_path = "/etc/systemd/system/Asguard-Networking.service"
             #content
             content="""
 [Unit]
@@ -44,14 +32,9 @@ Type=oneshot
 [Install]
 WantedBy=multi-user.target
             """
-            # Write content to the remote file
-            remote_file.write(content)
-
-            # Close the remote file
-            remote_file.close()
-
-            # Close the SFTP session
-            sftp.close()
+            # Write content to the local file
+            with open(file_path, 'w') as local_file:
+                local_file.write(content)
 
         except IntegrityError as e:
             return "Error: " + str(e)

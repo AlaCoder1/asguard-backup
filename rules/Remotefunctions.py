@@ -1,4 +1,3 @@
-import subprocess
 from rules.serializers import *
 from django.conf import settings
 from authentification.views import *
@@ -34,10 +33,9 @@ EOF""".format(ifname,rules),
 
 ##executer le script créée précédamment retourner true si pas d'error sinon false en cas d'error
    for cmd in commandes:
-      completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-      output = completed_process.stdout
-      error = completed_process.stderr
-      output = output.split('\n')
+      stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+      error = stderr.read().decode('utf-8')
+      output = stdout.read().decode('utf-8').split('\n')
       if error !="":
          return error
    return True
@@ -79,9 +77,8 @@ def add_rule_remote(rule,ifname,type_rule):
    ]
       ###executer ces commandes
       for cmd in commandes:
-         completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
-         output = completed_process.stdout
-         error = completed_process.stderr
+         stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+         error = stderr.read().decode('utf-8')
          if error!='': 
             return error
       return True
@@ -92,10 +89,9 @@ def get_handle_rule(ifname,type_rule,rule):
    ##cmd pour obtenir handle number pour supprimer rule 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
-   completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-   output = completed_process.stdout
-   error = completed_process.stderr
-   output = output.split('#')
+   stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+   error = stderr.read().decode('utf-8')
+   output = stdout.read().decode('utf-8').split('#')
    if len(output)<2:
       return None
    else:
@@ -109,9 +105,8 @@ def delete_rule_remote(ifname,type_rule,handle):
    ]
    ##executer ces commandes
    for cmd in commandes:
-      completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-      output = completed_process.stdout
-      error = completed_process.stderr
+      stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+      error = stderr.read().decode('utf-8')
       if error !="":
          return error  
    return True

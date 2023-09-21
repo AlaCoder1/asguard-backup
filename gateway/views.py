@@ -9,6 +9,7 @@ from django.http import JsonResponse
 from rest_framework.parsers import JSONParser
 from .functions import *
 from django.core import serializers
+from rest_framework.permissions import IsAuthenticated, AllowAny
 # API to get all gateways
 @api_view(['GET'])
 @permission_classes([])
@@ -42,16 +43,6 @@ def getAllStaticGateways(request):
             list_gateways.append(res[i]['fields'])
     return JsonResponse({"Gateways:": list_gateways})
 
-# API to get gateway by id
-# @api_view(['GET'])
-# @permission_classes([])
-# def getGatewayById(request,id):
-#     if (request.method == 'GET'):
-#          if (Gateway.objects.filter(id=id).exists()):
-#             gateways = Gateway.objects.get(id=id)
-#             gatewaysDict = serializers.serialize("json", gateways)
-#             # resgateways = json.loads(gatewaysDict)
-#     return JsonResponse({"Gateways:": gateways}) 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def getGatewayById(request, id):
@@ -79,11 +70,6 @@ def addStaticGateway(request):
         data = request.data
         gwname=data.get('namegw', None)
         gwaddress = data.get('gwaddress', None)
-        description = data.get('description', None)
-        default_aux = data.get('default_aux', None)
-        far_aux = data.get('far_aux', None)
-        multiwan_aux = data.get('multiwan_aux', None)
-        interfaces = data.get('interfaces', None)
         data['staticgw']=True
         msg=""
         if Gateway.objects.filter(gwaddress=gwaddress).exists():
@@ -105,10 +91,8 @@ def deleteGateway(request,id):
         #tester si rule exist ou non
         if (Gateway.objects.filter(id=id).exists()):
             gateways = Gateway.objects.get(id=id)
-            gwaddr=gateways.gwaddress
             gateways.delete()
             msg="Delete gateway successfully!!"
-            
     return JsonResponse({"msg:": msg})      
 
 @api_view(['PUT'])
@@ -120,12 +104,6 @@ def updateGateway(request,id):
         #tester si rule exist ou non
         if (Gateway.objects.filter(id=id).exists()):
             data = JSONParser().parse(request)
-            gwname=data.get('namegw', None)
-            gwaddress = data.get('gwaddress', None)
-            description = data.get('description', None)
-            default_aux = data.get('default_aux', None)
-            far_aux = data.get('far_aux', None)
-            multiwan_aux = data.get('multiwan_aux', None)
             if update_gateway_DB(data,id):
                 msg="update gateway Successfully!!"
     return JsonResponse({"msg:": msg})      

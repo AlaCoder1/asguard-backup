@@ -1,3 +1,4 @@
+import subprocess
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 import paramiko
@@ -18,20 +19,14 @@ class Command(BaseCommand):
         try:
             name = kwargs['name']
             pw = kwargs['pw']
-            def connect_ssh():
-                ssh = paramiko.SSHClient()
-                # automatically add host key when connecting to a new host
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                # connect to SSH server
-                ssh.connect(settings.SSH_HOST, username=name,
-                            password=pw, port=settings.SSH_PORT)
-                return ssh
-            ssh = connect_ssh()
             commandes_final = ["pacman -Syu --noconfirm","pacman -S iptables --noconfirm","pacman -S nftables --noconfirm","pacman -S dhclient --noconfirm","pacman -S ethtool --noconfirm","mkdir /etc/Dhcp4Config","mkdir /etc/nftables"]
             for cmd in commandes_final:
-                stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-                if stderr.read().decode('utf-8') != "":
-                    print(stderr.read().decode('utf-8'))
+                command = "sudo "+cmd
+                completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+                output = completed_process.stdout
+                error = completed_process.stderr
+                if error != "":
+                    print(error)
 
         except IntegrityError as e:
             return "Error: " + str(e)

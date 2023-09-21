@@ -1,5 +1,5 @@
-import subprocess
 from .models import *
+from authentification.views import *
 from network.address import *
 ####background task to execute it 
 from django.conf import settings
@@ -45,14 +45,12 @@ def update_interface_table(name_interface,data,InterfaceSerializer):
             serializerInterface.save()     
             return True
     return serializerInterface.errors 
-############################################################ 
+############################################################  
 def get_conn_name(ifname):
     cmd = "sudo nmcli connection show | awk '$NF == \"{}\" {{print}}'".format(ifname)
       ##executer cette commande
-    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    output = completed_process.stdout
-    error = completed_process.stderr
-    output = output.split('  ')
+    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+    output = stdout.read().decode('utf-8').split('  ')
     if len(output)==0:
         return None
     else:
@@ -62,9 +60,10 @@ def get_conn_name(ifname):
 ##get old configuration in service
 def get_old_config():
     cmd = "cat /etc/systemd/system/Asguard-Networking.service"
-    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    output = completed_process.stdout
-    error = completed_process.stderr
+    ssh.exec_command(cmd)
+    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+    error = stderr.read().decode('utf-8')
+    output = stdout.read().decode('utf-8').split('\n')
     return output,error
    
 ##add requirement
@@ -84,16 +83,16 @@ def add_cmd(output,commandes):
     output = output[:index_cmd] + commandes + output[index_cmd:]
     return output
 ################################# Function to execute command with timeout
-def run_command(command):
-    completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
-    output = completed_process.stdout
-    error = completed_process.stderr
+def run_command(ssh_client, command):
+    stdin, stdout, stderr = ssh_client.exec_command(command)
+    output = stdout.read().decode('utf-8')
+    error = stderr.read().decode('utf-8')
     return output, error
 
-def run_remote_command_with_timeout(type, typeDHCP4, command, timeout_seconds):
+def run_remote_command_with_timeout(type, typeDHCP4, ssh_client, command, timeout_seconds):
     def run_command_thread():
         nonlocal output, error
-        output, error = run_command(command)
+        output, error = run_command(ssh_client, command)
 
     start_time = time.time()
     output = None
@@ -113,10 +112,9 @@ def run_remote_command_with_timeout(type, typeDHCP4, command, timeout_seconds):
         return error
     elif command_thread.is_alive():
         print(f"Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}")
-        completed_process = subprocess.run('\x03', shell=True, capture_output=True, text=True)
-        output = completed_process.stdout
-        error = completed_process.stderr
+        stdin, stdout, stderr = ssh_client.exec_command('\x03')
         # interrupt_command = "sudo pkill -INT -f 'some_long_running_command'"
+        # output,error=run_command(ssh_client, interrupt_command)
         print("Ctrl+C sent.")
         return "Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}"
         
@@ -127,7 +125,7 @@ def run_remote_command_with_timeout(type, typeDHCP4, command, timeout_seconds):
 #function to run all commandes
 def run_all_commands(commandes,setuptypeIP4,typeDHCP4,timeout):
     for cmd in commandes:
-        out=run_remote_command_with_timeout(setuptypeIP4,typeDHCP4, cmd, timeout)
+        out=run_remote_command_with_timeout(setuptypeIP4,typeDHCP4,ssh, cmd, timeout)
         if  out is not True :
             return out
     return True
@@ -157,9 +155,9 @@ EOF""".format('\n'.join(output))
         
         ]
     for cmd in cmd_final:
-        completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        output = completed_process.stdout
-        error = completed_process.stderr
+        stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+        error = stderr.read().decode('utf-8')
+        output = stdout.read().decode('utf-8').split('\n')
         if error:
             msg=error,"    :"+cmd
             return False
@@ -319,9 +317,9 @@ def update_conn_dhcp_IPV4(config,ifname,uuid):
     
     return commandes,config,cmd_final
 
-def get_address_dhcp(ifname):
+def get_address_dhcp(ifname,ssh):
     cmd = "ip -4 -o addr show dev {} | awk '{{split($4, a); print a[1]}}'".format(ifname)
-    output, error = run_command(cmd)
+    output, error = run_command(ssh, cmd)
     if error!="" or len(output)==0:
         return None,None
     else:

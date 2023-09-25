@@ -14,7 +14,6 @@ from gateway.functions import *
 from django.db.models import Q
 from django.core import serializers
 
-
 def device_nameInterface(name_interface):
     data = Interface.objects.get(name_interface=name_interface)
     return data

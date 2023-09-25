@@ -200,10 +200,13 @@ def user_certificate_managment_page(request):
 
 @login_required(login_url='/')
 def lan_page(request):
+    config={}
     interfaces=AllInterfaces(request)
-    IPV4Config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
+    for i in range(len(interfaces)):
+        IPV4Config=GetInformationsByInterface(request, interfaces[i]['name_interface'])
+        config[interfaces[i]['name_interface']]=IPV4Config
     allStaticGateways=getAllStaticGateways(request)
-    context = {'interfaces':interfaces,'IPV4Config':IPV4Config,'allStaticGateways':allStaticGateways}
+    context = {'interfaces':interfaces,'IPV4Config':config,'allStaticGateways':allStaticGateways}
     return render(request, 'lan_page.html',context)
 
 @login_required(login_url='/')

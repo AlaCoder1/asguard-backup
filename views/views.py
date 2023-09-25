@@ -199,12 +199,12 @@ def user_certificate_managment_page(request):
     return render(request, 'user_certificate_managment.html',context)
 
 @login_required(login_url='/')
-def lan_page(request):
+def interface_page(request):
     interfaces=AllInterfaces(request)
     IPV4Config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
     allStaticGateways=getAllStaticGateways(request)
     context = {'interfaces':interfaces,'IPV4Config':IPV4Config,'allStaticGateways':allStaticGateways}
-    return render(request, 'lan_page.html',context)
+    return render(request, 'interface_page.html',context)
 
 @login_required(login_url='/')
 def firewall_page(request):

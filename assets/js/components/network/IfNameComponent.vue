@@ -89,7 +89,6 @@ line-height: normal;">Generic configuration</v-card-title>
                     appearance: none;
                     align-items: center;
                     justify-content: center;
-
                     ">
                                     <option v-for="item in items" :value="item.value">{{ item.text }}</option>
                                     <v-icon>mdi-chevron-down</v-icon>
@@ -813,7 +812,7 @@ import AdvancedConfigDHCPv6 from '../shared/AdvancedConfigDHCPv6.vue';
 import BasicConfigDHCPv6 from '../shared/BasicConfigDHCPv6.vue';
 
 export default {
-    name: "LanComponent",
+    name: "IfNameComponent",
     components: {
         BasicConfigDHCPv4,
         AdvancedConfigDHCPv4,
@@ -823,7 +822,6 @@ export default {
     props: {
         activeTab: {
             type: String,
-            default: "lan",
         },
     },
     data() {
@@ -993,7 +991,7 @@ export default {
             const csrfToken = getCookie('csrftoken')
             axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
-            axios.put('/network/conf/LAN/2', params)
+            axios.put('/network/conf/' + this.activeTab, params)
                 .then((response) => {
                     console.log(response);
                     this.showAlert = true;
@@ -1019,7 +1017,6 @@ export default {
                 far_aux: this.gateway.far_aux,
                 multiwan_aux: this.gateway.multiwan_aux,
             };
-            console.log(params);
             function getCookie(name) {
                 let cookieValue = null;
                 if (document.cookie && document.cookie !== '') {

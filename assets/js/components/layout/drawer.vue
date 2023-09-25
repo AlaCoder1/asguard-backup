@@ -1,47 +1,6 @@
-<template>
+<!-- <template>
   <div>
-    <v-toolbar flat class="dms_blue_dark dms-media-print-hide dms-sticky" height="70">
-      <v-toolbar-title class="dms-font-size-three white--text ml-8">
-        <img src="../../../images/logoDMS.svg" height="50" />
-      </v-toolbar-title>
-      <v-spacer />
-      <v-select v-model="lang" :items="['English', 'French']" class="select-lang" hide-details>
-        <template v-slot:selection="{ item, index }">
-          <v-chip class="dms_blue_dark white--text" small>
-            <span>{{ item }}</span>
-          </v-chip>
-        </template>
-      </v-select>
-      <v-text-field
-        background-color="white"
-        rounded
-        class="ml-3 input-search"
-        hide-details
-        v-model="searchText"
-        append-icon="mdi-magnify"
-      ></v-text-field>
-      <v-menu offset-y>
-        <template v-slot:activator="{ on }">
-          <v-avatar class="ml-3 mr-3" size="30" v-on="on">
-            <img src="../../../images/user.png" alt="Account logo">
-          </v-avatar>
-        </template>
-        <v-list>
-          <v-list-item>
-            <v-list-item-title>Profile</v-list-item-title>
-          </v-list-item>
-          <v-list-item>
-            <v-list-item-title>Settings</v-list-item-title>
-          </v-list-item>
-          <v-list-item>
-            <v-list-item-title>
-              <v-btn @click="logout" text>Logout</v-btn>
-            </v-list-item-title>
-          </v-list-item>
-        </v-list>
-      </v-menu>
-      <span style="color: white;"> {{user.message}} </span>
-    </v-toolbar>
+    
     <v-navigation-drawer :mini-variant.sync="mini" class="global-drawer" permanent app>
       <v-app-bar dense flat class="row-pointer dms_white" @click.stop="mini = !mini">
     <v-app-bar-nav-icon color="dms_teal" />
@@ -98,18 +57,111 @@
     </v-navigation-drawer>
   </div>
 </template>
+-->
+
+<template>
+  <div>
+    <v-toolbar flat class="dms_blue_dark dms-media-print-hide dms-sticky" height="70">
+        <v-toolbar-title class="dms-font-size-three white--text ml-8">
+          <img src="../../../images/logoDMS.svg" height="50" />
+        </v-toolbar-title>
+        <v-spacer />
+        <v-select v-model="lang" :items="['English', 'French']" class="select-lang" hide-details>
+          <template v-slot:selection="{ item, index }">
+            <v-chip class="dms_blue_dark white--text" small>
+              <span>{{ item }}</span>
+            </v-chip>
+          </template>
+        </v-select>
+        <v-text-field
+          background-color="white"
+          rounded
+          class="ml-3 input-search"
+          hide-details
+          v-model="searchText"
+          append-icon="mdi-magnify"
+        ></v-text-field>
+        <v-menu offset-y>
+          <template v-slot:activator="{ on }">
+            <v-avatar class="ml-3 mr-3" size="30" v-on="on">
+              <img src="../../../images/user.png" alt="Account logo">
+            </v-avatar>
+          </template>
+          <v-list>
+            <v-list-item>
+              <v-list-item-title>Profile</v-list-item-title>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-title>Settings</v-list-item-title>
+            </v-list-item>
+            <v-list-item>
+              <v-list-item-title>
+                <v-btn @click="logout" text>Logout</v-btn>
+              </v-list-item-title>
+            </v-list-item>
+          </v-list>
+        </v-menu>
+        <span style="color: white;"> {{ user.message }} </span>
+      </v-toolbar>
+
+      <v-navigation-drawer :mini-variant.sync="mini" class="global-drawer" permanent app>
+         <v-app-bar dense flat class="row-pointer dms_white" @click.stop="mini = !mini">
+      <v-app-bar-nav-icon color="dms_teal" />
+      <v-toolbar-title>
+      </v-toolbar-title>
+      <v-spacer></v-spacer>
+      <v-icon v-if="mini">mdi-menu</v-icon>
+
+    </v-app-bar>
+        <v-list dense>
+        <template v-for="item in items">
+          <v-list-item @click="showSubMenu(item)">
+            <v-list-item-icon>
+              <v-icon>{{ item.icon }}</v-icon>
+            </v-list-item-icon>
+            <a :href="item.href">
+              <v-list-item-content>
+                <v-list-item-title>{{ item.title }}</v-list-item-title>
+              </v-list-item-content>
+            </a>
+            <v-list-item-action>
+              <v-icon v-if="item.subMenuVisible">mdi-chevron-up</v-icon>
+              <v-icon v-else>mdi-chevron-down</v-icon>
+            </v-list-item-action>
+          </v-list-item>
+          <v-list-item v-if="item.subMenuVisible" v-for="subItem in item.subItems" :key="subItem.title">
+            <v-list-item-icon>
+              <v-icon>{{ subItem.icon }}</v-icon>
+            </v-list-item-icon>
+            <a :href="subItem.href">
+              <v-list-item-content>
+                <v-list-item-title>{{ subItem.title }}</v-list-item-title>
+              </v-list-item-content>
+            </a>
+          </v-list-item>
+        </template>
+      </v-list>
+    </v-navigation-drawer>
+  </div>
+</template>
 
 <script>
 import { mapState, mapActions } from 'vuex';
+import {
+  mdiAccount,
+  mdiHome,
+  mdiTrendingUp,
+  mdiAccountGroup,
+  mdiNetwork,
+  mdiCog,
+  mdiViewDashboard,
+} from '@mdi/js';
 
 export default {
   name: 'DrawerComponent',
   props: {
-    activeMenu: {
-      type: Number,
-      required: true,
-      default: null,
-    },
+  },
+  components: {
   },
   data() {
     return {
@@ -119,13 +171,17 @@ export default {
       lang: 'English',
       items: [
         {
-          title: 'Dashboard', icon: 'icon-home', href: '/', active: 'home',
+          title: 'Dashboard',
+          icon: 'mdi-view-dashboard',
+          href: '/', active: 'home',
           subItems: [],
-          showSubMenu: false,
           mouseOverSubMenu: false,
+          subMenuVisible: false,
         },
         {
-          title: 'System', icon: 'icon-trending', href: '/system', active: 'system',
+          title: 'System',
+          icon: 'mdi-cog',
+          href: '/system', active: 'system',
           subItems: [
             {
               title: 'Assistante',
@@ -160,11 +216,13 @@ export default {
             }
 
           ],
-          showSubMenu: false,
           mouseOverSubMenu: false,
+          subMenuVisible: false,
         },
         {
-          title: 'Interfaces', icon: 'icon-business', href: '/interfaces', active: 'interfaces',
+          title: 'Interfaces',
+          icon: 'mdi-network',
+          href: '/interfaces', active: 'interfaces',
           subItems: [
             {
               title: 'Overview',
@@ -193,8 +251,7 @@ export default {
             {
               title: 'List of interface',
               icon: '',
-              href: '/lan',
-              href: '/lan',
+              href: '/interfaces/list-of-interface',
               active: 'List of interface',
             }, {
               title: 'Settings',
@@ -204,9 +261,12 @@ export default {
               active: 'Settings',
             }
           ],
+          subMenuVisible: false,
         },
         {
-          title: 'Firewall', icon: 'icon-business', href: '/firewall', active: 'Firewall',
+          title: 'Firewall',
+          icon: 'mdi-account-group',
+          href: '/firewall', active: 'Firewall',
           subItems: [
             {
               title: 'Rules',
@@ -227,6 +287,7 @@ export default {
               active: 'Advanced settings',
             }
           ],
+          subMenuVisible: false,
         },
         {
           title: 'Services', icon: 'icon-business', href: '/services', active: 'Firewall',
@@ -282,6 +343,7 @@ export default {
             }
 
           ],
+          subMenuVisible: false,
         },
         {
           title: 'Reports', icon: 'icon-business', href: '/reports', active: 'Firewall',
@@ -310,10 +372,12 @@ export default {
               active: 'Event logs',
             }
           ],
+          subMenuVisible: false,
         },
         {
           title: 'Subscription', icon: 'icon-business', href: '/subscription', active: 'Firewall',
           subItems: [],
+          subMenuVisible: false,
         },
       ]
     };
@@ -323,30 +387,15 @@ export default {
     logout() {
       this.$store.dispatch('auth/logout');
     },
-    showSubMenu(item, event) {
-      item.showSubMenu = true;
-
-      if (event.relatedTarget && event.relatedTarget.parentElement === event.currentTarget) {
-        // If the user is already hovering over the sub-menu, don't hide it when leaving the list item
-        item.mouseOverSubMenu = true;
-      }
-    },
-    hideSubMenu(item, event) {
-      item.showSubMenu = false;
-      console.log(event);
-      //if (event.relatedTarget && event.relatedTarget.parentElement !== event.currentTarget) {
-      // If the user is already hovering over the sub-menu, don't hide it when leaving the list item
-      item.mouseOverSubMenu = false;
-      //}
-
+    showSubMenu(item) {
+      item.subMenuVisible = !item.subMenuVisible;
     },
   },
   computed: {
-      ...mapState('auth', ['loggedIn', 'user']),
+    ...mapState('auth', ['loggedIn', 'user']),
   },
 };
 </script>
-
 <style lang="sass">
 // src/sass/main.scss
 @import '~vuetify/src/styles/styles.sass';

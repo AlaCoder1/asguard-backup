@@ -25,7 +25,7 @@ urlpatterns = [
     path('', login ),
     path('dashboard/', index_page),
     path('userCertifMang/', user_certificate_managment_page),
-    path('lan/', lan_page),
+    path('interfaces/list-of-interface', interface_page),
     path('firewall/rules', firewall_page),
     path('settings/', settings_page),
     path('openvpn/', openvpn_page),

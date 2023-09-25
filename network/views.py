@@ -6,13 +6,14 @@ from rest_framework.parsers import JSONParser
 import json
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.core import serializers
 from authentification.views import *
 from .functions import *
 from django.views.decorators.csrf import csrf_exempt
 from gateway.models import *
 from gateway.functions import *
 from django.db.models import Q
+from django.core import serializers
+
 
 def device_nameInterface(name_interface):
     data = Interface.objects.get(name_interface=name_interface)

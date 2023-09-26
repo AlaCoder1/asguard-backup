@@ -7,12 +7,10 @@ from django.conf import settings
 from .serializers import *
 import json
 from django.http import JsonResponse
-import paramiko
 from .models import *
 # Create your views here.
 
 User = get_user_model()
-ssh = paramiko.SSHClient()
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def authentification(request):

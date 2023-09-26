@@ -1,6 +1,9 @@
 from .models import *
 from .serializers import *
+# this import to run this on local machine
 from network.functions import *
+# this import to run this on macine distant
+# from network.Remotefunctions import *
 ########### 
 def add_gateway_DB(data):
     Gatewayerializer = GatewaySerializer(data=data)

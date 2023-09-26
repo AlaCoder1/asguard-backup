@@ -1,17 +1,18 @@
-from django.shortcuts import render
 from network.serializers import *
 from .models import *
 from settings.serializers import *
-from rest_framework.parsers import JSONParser
 import json
 from rest_framework.authentication import SessionAuthentication
 from django.core import serializers
 from authentification.views import *
 from network.address import *
+# this import to run this on local machine
 from .functions import *
+# this import to run this on macine distant
+# from .RemoteFunctions import *
 from django.core import serializers
-from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 ##API to get all Rules

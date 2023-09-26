@@ -1,70 +1,60 @@
 <template>
   <div>
     <v-toolbar flat class="dms_blue_dark dms-media-print-hide dms-sticky" height="70">
-        <v-toolbar-title class="dms-font-size-three white--text ml-8">
-          <img src="../../../images/logoDMS.svg" height="50" />
-        </v-toolbar-title>
-        <v-spacer />
-        <v-select v-model="lang" :items="['English', 'French']" class="select-lang" hide-details>
-          <template v-slot:selection="{ item, index }">
-            <v-chip class="dms_blue_dark white--text" small>
-              <span>{{ item }}</span>
-            </v-chip>
-          </template>
-        </v-select>
-        <v-text-field
-          background-color="white"
-          rounded
-          class="ml-3 input-search"
-          hide-details
-          v-model="searchText"
-          append-icon="mdi-magnify"
-        ></v-text-field>
-        <v-menu offset-y>
-          <template v-slot:activator="{ on }">
-            <v-avatar class="ml-3 mr-3" size="30" v-on="on">
-              <v-icon 
-              size="30"
-              class="dms_blue_dark white--text"
-              color="white"
-              >mdi-account-circle-outline</v-icon>
-            </v-avatar>
-          </template>
-          <v-list>
-            <v-list-item>
-              <v-btn text>Profile</v-btn>
-            </v-list-item>
-            <v-list-item>
-              <v-btn text>Settings</v-btn>
-            </v-list-item>
-            <v-list-item>
-              <v-list-item-title>
-                <v-btn @click="logout" text>Logout</v-btn>
-              </v-list-item-title>
-            </v-list-item>
-          </v-list>
-        </v-menu>
-        <span style="color: white;"> {{ user.message }} </span>
-      </v-toolbar>
-
-      <v-navigation-drawer :mini-variant.sync="mini" class="global-drawer" permanent app>
-         <v-app-bar dense flat class="row-pointer dms_white" @click.stop="mini = !mini">
-      <v-toolbar-title>
-                <v-typography>Asguard</v-typography>
+      <v-toolbar-title class="dms-font-size-three white--text ml-8">
+        <img src="../../../images/logoDMS.svg" height="50" />
       </v-toolbar-title>
-      <v-spacer></v-spacer>
+      <v-spacer />
+      <v-select v-model="lang" :items="['English', 'French']" class="select-lang" hide-details>
+        <template v-slot:selection="{ item }">
+          <v-chip class="dms_blue_dark white--text" small>
+            <span>{{ item }}</span>
+          </v-chip>
+        </template>
+      </v-select>
+      <v-text-field background-color="white" rounded class="ml-3 input-search" hide-details v-model="searchText"
+        append-icon="mdi-magnify"></v-text-field>
+      <v-menu offset-y>
+        <template v-slot:activator="{ on }">
+          <v-avatar class="ml-3 mr-3" size="30" v-on="on">
+            <v-icon size="30" class="dms_blue_dark white--text" color="white">mdi-account-circle-outline</v-icon>
+          </v-avatar>
+        </template>
+        <v-list>
+          <v-list-item>
+            <v-btn text>Profile</v-btn>
+          </v-list-item>
+          <v-list-item>
+            <v-btn text>Settings</v-btn>
+          </v-list-item>
+          <v-list-item>
+            <v-list-item-title>
+              <v-btn @click="logout" text>Logout</v-btn>
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+      <span style="color: white;"> {{ user.message }} </span>
+    </v-toolbar>
+
+    <v-navigation-drawer :mini-variant.sync="mini" class="global-drawer" permanent app>
+      <v-app-bar dense flat class="row-pointer dms_white" @click.stop="mini = !mini">
+        <v-toolbar-title>
+          <span>Asguard</span>
+        </v-toolbar-title>
+        <v-spacer></v-spacer>
         <v-icon v-if="mini">mdi-close</v-icon>
         <v-icon v-if="!mini">mdi-menu</v-icon>
-    </v-app-bar>
-        <v-list dense>
+      </v-app-bar>
+      <v-list dense>
         <template v-for="item in items">
           <v-list-item @click="showSubMenu(item)">
             <v-list-item-icon>
               <v-icon>{{ item.icon }}</v-icon>
             </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>{{ item.title }}</v-list-item-title>
-              </v-list-item-content>
+            <v-list-item-content>
+              <v-list-item-title>{{ item.title }}</v-list-item-title>
+            </v-list-item-content>
             <v-list-item-action v-if="item.subItems.length > 0">
               <v-icon v-if="item.subMenuVisible">mdi-chevron-up</v-icon>
               <v-icon v-else>mdi-chevron-down</v-icon>
@@ -74,9 +64,9 @@
             <v-list-item-icon>
               <v-icon>{{ subItem.icon }}</v-icon>
             </v-list-item-icon>
-              <v-list-item-content>
-                <v-list-item-title>{{ subItem.title }}</v-list-item-title>
-              </v-list-item-content>
+            <v-list-item-content>
+              <v-list-item-title>{{ subItem.title }}</v-list-item-title>
+            </v-list-item-content>
           </v-list-item>
         </template>
       </v-list>
@@ -333,19 +323,7 @@ export default {
   },
 };
 </script>
-<style lang="sass">
-// src/sass/main.scss
-@import '~vuetify/src/styles/styles.sass';
-
-// You need to map-merge your new SASS variables
-$grid-breakpoints: map-merge($grid-breakpoints, (
-  xs: 0,
-  sm: 476px,
-  md: 668px,
-  lg: 1000px,
-  xl: 1300px
-));
-
+<style>
 .drawer_hover {
   &:hover {
     &::before {
@@ -447,50 +425,14 @@ a:hover .dms_teal--text,
   color: white;
 }
 
-.select-lang {
-  max-width: 110px;
-  margin-top: 0% !important;
-  margin-right: 1% !important;
-  item-align: center;
-  background-color: #213E9F;;
-  border-radius: 5px;
-  padding: 0px 10px;
-  height: 30px;
-  color: #43aaf5;
-  font-size: 18.16px;
-  font-weight: 500;
-  font-family: 'Nunito';
-  border: none;
-  line-height: normal;
-  text-align: center;
-  max-height: 20px;
-}
-
 .input-search {
   max-width: 250px;
 }
 
-.v-menu__content {
-  background-color: white;
-  min-width: 200px;
-  top: 71px !important;
-  left: 257px;
-  z-index: 10;
-  height: 500px;
-  min-height: 94px;
-}
-
-#overlay {
-    position: absolute;
-    z-index:100;
-}
-
-.v-list-item--link:hover {
-  background-color: #FFC300 !important;
-}
-
-.v-application--is-ltr .v-toolbar__content > .v-btn.v-btn--icon:first-child, .v-application--is-ltr .v-toolbar__extension > .v-btn.v-btn--icon:first-child {
-    margin-left: 180px;
+.select-lang {
+  max-width: 100px;
+  max-height: 100px;
+  
 }
 
 </style>

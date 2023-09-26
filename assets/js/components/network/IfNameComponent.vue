@@ -44,7 +44,7 @@ font-style: normal;
 font-weight: 700;
 line-height: normal;">Generic configuration</v-card-title>
                 <v-divider class="ml-3 mb-5"></v-divider>
-                <v-table class="ml-3">
+                <table class="ml-3">
                     <tbody>
                         <tr>
                             <td>
@@ -234,7 +234,7 @@ line-height: normal;">Generic configuration</v-card-title>
                             </td>
                         </tr>
                     </tbody>
-                </v-table>
+                </table>
 
             </v-col>
             <v-col cols="12" sm="6" v-if="value_setup_Ipv4.ip_address4 != null || value_setup_Ipv4.ip_address4 != null">
@@ -247,7 +247,7 @@ font-weight: 700;
 line-height: normal;">Static IPV4 address configuration</v-card-title>
                     <v-divider class="ml-3" style="height: 39px;
                     width: 425px;"></v-divider>
-                    <v-table class="ml-3 mt-3">
+                    <table class="ml-3 mt-3">
                         <tbody>
                             <tr>
                                 <td><span style="color: black;" class="inline-input">IPV4 address</span></td>
@@ -352,7 +352,7 @@ line-height: normal;">Static IPV4 address configuration</v-card-title>
                                     </select></td>
                             </tr>
                         </tbody>
-                    </v-table>
+                    </table>
                 </div>
                 <div v-if="ipv6SetupType === 'DHCP'">
                     <v-card-title style="color: #020202;
@@ -838,16 +838,16 @@ export default {
             items: [
                 { text: "DHCP", value: "DHCP" },
                 { text: "Static", value: "static" },
-                { text: "PPP", value: "PPP" },
-                { text: "PPPoE", value: "PPPoE" },
-                { text: "L2TP", value: "L2TP" },
-                { text: "PPTP", value: "PPTP" },
-                { text: "SLIP", value: "SLIP" },
-                { text: "6RD", value: "6RD" },
-                { text: "6to4", value: "6to4" },
-                { text: "Track Interface", value: "Track Interface" },
-                { text: "GRE", value: "GRE" },
-                { text: "IPsec", value: "IPsec" },
+                // { text: "PPP", value: "PPP" },
+                // { text: "PPPoE", value: "PPPoE" },
+                // { text: "L2TP", value: "L2TP" },
+                // { text: "PPTP", value: "PPTP" },
+                // { text: "SLIP", value: "SLIP" },
+                // { text: "6RD", value: "6RD" },
+                // { text: "6to4", value: "6to4" },
+                // { text: "Track Interface", value: "Track Interface" },
+                // { text: "GRE", value: "GRE" },
+                // { text: "IPsec", value: "IPsec" },
             ],
             speedDuplexItems: [
                 '100baseTx-FD',

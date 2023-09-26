@@ -201,7 +201,9 @@ def user_certificate_managment_page(request):
 @login_required(login_url='/')
 def interface_page(request):
     interfaces=AllInterfaces(request)
-    IPV4Config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
+    for i in range(len(interfaces)):
+        IPV4Config=GetInformationsByInterface(request, interfaces[i]['name_interface'])
+        config[interfaces[i]['name_interface']]=IPV4Config
     allStaticGateways=getAllStaticGateways(request)
     context = {'interfaces':interfaces,'IPV4Config':IPV4Config,'allStaticGateways':allStaticGateways}
     return render(request, 'interface_page.html',context)

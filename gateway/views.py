@@ -1,6 +1,6 @@
 
 from django.shortcuts import render
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from .models import *
 from .serializers import *
 from django.core import serializers
@@ -10,6 +10,7 @@ from rest_framework.parsers import JSONParser
 from .functions import *
 from django.core import serializers
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.authentication import SessionAuthentication
 # API to get all gateways
 @api_view(['GET'])
 @permission_classes([])

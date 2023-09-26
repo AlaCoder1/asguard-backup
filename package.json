@@ -1,7 +1,6 @@
 {
     "devDependencies": {
         "@hotwired/stimulus": "^3.0.0",
-        "@mdi/font": "^7.2.96",
         "@symfony/stimulus-bridge": "^3.0.0",
         "@symfony/webpack-encore": "^1.7.0",
         "axios": "^0.26.1",
@@ -30,6 +29,7 @@
     },
     "dependencies": {
         "@highcharts/map-collection": "^2.0.0",
+        "@mdi/font": "^7.2.96",
         "@vee-validate/i18n": "^4.6.10",
         "ag-grid-community": "^27.2.1",
         "ag-grid-enterprise": "^27.2.1",

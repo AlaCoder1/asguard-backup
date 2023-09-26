@@ -15,7 +15,7 @@
       <v-text-field background-color="white" rounded class="ml-3 input-search" hide-details v-model="searchText"
         append-icon="mdi-magnify"></v-text-field>
       <v-menu offset-y>
-        <template v-slot:activator="{ on }">
+        <template v-slot:activator="{ on }" style=" margin-right: 10px; margin-left: 10px;">
           <v-avatar class="ml-3 mr-3" size="30" v-on="on">
             <v-icon size="30" class="dms_blue_dark white--text" color="white">mdi-account-circle-outline</v-icon>
           </v-avatar>
@@ -34,11 +34,14 @@
           </v-list-item>
         </v-list>
       </v-menu>
-      <span style="color: white;"> {{ user.message }} </span>
+      <div style="display: flex; flex-direction: column; margin-right: 10px; margin-left: 10px;">
+        <span style="color: white;">{{ user.currentUser.username }}</span>
+        <span style="color: white;">{{ user.currentUser.email }}</span>
+      </div>
+      <br />
     </v-toolbar>
-
     <v-navigation-drawer :mini-variant.sync="mini" class="global-drawer" permanent app>
-      <v-app-bar dense flat class="row-pointer dms_white" @click.stop="mini = !mini">
+      <v-app-bar dense flat class="row-pointer dms_white" @click.stop="closeSidebar">
         <v-toolbar-title>
           <span>Asguard</span>
         </v-toolbar-title>
@@ -60,7 +63,8 @@
               <v-icon v-else>mdi-chevron-down</v-icon>
             </v-list-item-action>
           </v-list-item>
-          <v-list-item v-if="item.subMenuVisible" v-for="subItem in item.subItems" :key="subItem.title">
+          <v-list-item v-if="item.subMenuVisible" v-for="subItem in item.subItems" :key="subItem.title"
+            :class="{ 'sub-menu-visible': item.subMenuVisible }">
             <v-list-item-icon>
               <v-icon>{{ subItem.icon }}</v-icon>
             </v-list-item-icon>
@@ -315,7 +319,24 @@ export default {
       this.$store.dispatch('auth/logout');
     },
     showSubMenu(item) {
+      // Close all submenus except for the clicked item
+      this.items.forEach((menuItem) => {
+        if (menuItem !== item) {
+          menuItem.subMenuVisible = false;
+        }
+      });
+
+      // Toggle the submenu visibility for the clicked item
       item.subMenuVisible = !item.subMenuVisible;
+    },
+    closeSidebar() {
+      // Close the sidebar
+      this.mini = !this.mini;
+
+      // Close all submenus
+      this.items.forEach((menuItem) => {
+        menuItem.subMenuVisible = false;
+      });
     },
   },
   computed: {
@@ -329,6 +350,7 @@ export default {
     &::before {
       opacity: 1 !important;
     }
+
     .dms_teal--text,
     .text-wrap {
       color: white !important;
@@ -336,6 +358,7 @@ export default {
       z-index: 1 !important;
     }
   }
+
   &::before {
     -webkit-border-top-left-radius: 10px;
     -webkit-border-bottom-left-radius: 10px;
@@ -348,21 +371,6 @@ export default {
   }
 }
 
-.axe-active-menu {
-  &::before {
-    opacity: 1 !important;
-  }
-  .v-list-item__icon,
-  .v-list-item__content {
-    .dms_teal--text,
-    .text-wrap {
-      color: white !important;
-      opacity: 1 !important;
-      z-index: 1 !important;
-    }
-  }
-}
-
 .row-pointer {
   cursor: pointer;
 }
@@ -372,20 +380,13 @@ export default {
 }
 
 .drawer-width {
-  max-width: 120px;
+  max-width: 180px;
 }
 
 .dms-tabs {
   .v-tabs-bar {
     height: auto;
   }
-}
-
-.item {
-  height: 25px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .dms-tabs {
@@ -412,7 +413,7 @@ export default {
 }
 
 a:hover,
-.v-list-item--active > .v-list-item__title {
+.v-list-item--active>.v-list-item__title {
   background-color: #FFC300;
 }
 
@@ -432,7 +433,26 @@ a:hover .dms_teal--text,
 .select-lang {
   max-width: 100px;
   max-height: 100px;
-  
+  margin-top: 50px;
 }
 
+.v-list-item--link:hover {
+  background-color: #FFC300 !important;
+}
+
+.v-application--is-ltr .v-toolbar__content>.v-btn.v-btn--icon:first-child,
+.v-application--is-ltr .v-toolbar__extension>.v-btn.v-btn--icon:first-child {
+  margin-left: 180px;
+}
+
+/* Ajouter une ligne à côté des sous-menus visibles */
+.v-list-item.sub-menu-visible::before {
+  content: "";
+  position: absolute;
+  left: 20%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: hsla(47, 100%, 50%, 0.551);
+}
 </style>

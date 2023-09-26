@@ -922,7 +922,7 @@ export default {
                 gwname: "",
                 gwaddress: "",
                 description: "",
-                default_aux: false,
+                default_aux: true,
                 far_aux: false,
                 multiwan_aux: false,
             },
@@ -1052,7 +1052,7 @@ export default {
                 gwname: "",
                 gwaddress: "",
                 description: "",
-                default_aux: false,
+                default_aux: true,
                 far_aux: false,
                 multiwan_aux: false,
             }

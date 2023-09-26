@@ -67,7 +67,7 @@ def authentification(request):
                 
                 # return JsonResponse({'message': ' Success Authentification','jwt':jwt_token}, status=status.HTTP_200_OK)
                 ## end code
-                return JsonResponse({'message': ' Success Authentification',"current user":CurrentUser}, status=status.HTTP_200_OK)
+                return JsonResponse({'message': ' Success Authentification',"currentUser":CurrentUser}, status=status.HTTP_200_OK)
             else:
                 return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
         else:

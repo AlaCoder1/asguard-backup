@@ -216,6 +216,7 @@ def update_conn_static_IPV4(config,ifname,uuid,ipaddress,netmask,cmdgw,IP4Config
 ################### Dhcp
 ####function to convert_to_subnet_mask 
 def convert_to_subnet_mask(bits):
+    
     cidr_bits = int(bits)
     if cidr_bits < 0 or cidr_bits > 32:
         return "Invalid CIDR bits"
@@ -386,9 +387,9 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObje
         'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
          ]
     #tester si speed_duplex is not None
+    #lancer la fonction de "remove old config"
+    config=clean_old_config(config,"speed duplex config {}".format(ifname))
     if speed_duplex is not None and (genericConfigObject!="" and speed_duplex!=genericConfigObject.speed_duplex):
-        #lancer la fonction de "remove old config"
-        config=clean_old_config(config,"speed duplex config {}".format(ifname))
         #la liste des commandes pour speed duplex
         commandes+=[
         "#Start speed duplex config {}".format(ifname),
@@ -397,6 +398,10 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObje
                     ]
         cmd_final+=[
         'sudo ethtool -s {} speed {} duplex {}'.format(ifname,speedV,duplexV),
+         ]
+    elif speed_duplex is not None:
+         cmd_final+=[
+        'sudo ethtool -s {} autoneg on'.format(ifname),
          ]
     return commandes,config,cmd_final
 #####################################################################################

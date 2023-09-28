@@ -137,7 +137,8 @@ def conf(request,name_interface):
                         data["reject"]=reject
                         data["hostname"]=hostname
                         #call function to convert mask format to bits
-                        alias_mask=convert_to_subnet_mask(alias_mask)
+                        if alias_mask is not None:
+                            alias_mask=convert_to_subnet_mask(alias_mask)
                         ####
                         if typeDHCP4=="Base" :
                             #contenu de dhclient.conf dhcp Base

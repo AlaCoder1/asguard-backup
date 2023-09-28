@@ -10,6 +10,8 @@ from django.http import JsonResponse
 from rest_framework.parsers import JSONParser
 from .functions import *
 from django.core import serializers
+from django.db.models import Q
+
 # API to get all gateways
 @api_view(['GET'])
 @permission_classes([])
@@ -43,16 +45,6 @@ def getAllStaticGateways(request):
             list_gateways.append(res[i]['fields'])
     return JsonResponse({"Gateways:": list_gateways})
 
-# API to get gateway by id
-# @api_view(['GET'])
-# @permission_classes([])
-# def getGatewayById(request,id):
-#     if (request.method == 'GET'):
-#          if (Gateway.objects.filter(id=id).exists()):
-#             gateways = Gateway.objects.get(id=id)
-#             gatewaysDict = serializers.serialize("json", gateways)
-#             # resgateways = json.loads(gatewaysDict)
-#     return JsonResponse({"Gateways:": gateways}) 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def getGatewayById(request, id):
@@ -75,27 +67,19 @@ def getGatewayById(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def addStaticGateway(request):
-    msg="Failed to add gateway!" 
     if (request.method == 'POST'):
         data = request.data
         gwname=data.get('namegw', None)
         gwaddress = data.get('gwaddress', None)
-        description = data.get('description', None)
-        default_aux = data.get('default_aux', None)
-        far_aux = data.get('far_aux', None)
-        multiwan_aux = data.get('multiwan_aux', None)
-        interfaces = data.get('interfaces', None)
         data['staticgw']=True
-        msg=""
-        if Gateway.objects.filter(gwaddress=gwaddress).exists():
-            gatewayObject=Gateway.objects.get(gwaddress=gwaddress)
-            if gatewayObject.staticgw==True:
-                msg="Gateway Already exist!"
+        if Gateway.objects.filter(Q(gwaddress=gwaddress) & Q(staticgw=True)).exists():
+            msg="Gateway Already exist!"
         else:
-            if add_gateway_DB(data):
+            if add_gateway_DB(data) is True:
                 msg="Add gateway Successfully!!"
-           
-        return JsonResponse({"msg:": msg})       
+            else:
+                msg=add_gateway_DB(data)
+        return JsonResponse({"msg:": msg})         
    
 @api_view(['DELETE'])
 @permission_classes([])

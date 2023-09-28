@@ -1,7 +1,6 @@
 
 import queue
-from django.shortcuts import render
-from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.decorators import api_view, permission_classes, authentication_classes, parser_classes
 from .models import *
 from .serializers import *
 from django.core import serializers
@@ -81,8 +80,7 @@ def addStaticGateway(request):
             else:
                 msg=add_gateway_DB(data)
            
-        return JsonResponse({"msg:": msg})       
-   
+        return JsonResponse({"msg:": msg})    
 @api_view(['DELETE'])
 @permission_classes([])
 ###API to delete gateway

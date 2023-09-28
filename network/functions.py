@@ -210,8 +210,9 @@ def update_conn_static_IPV4(config,ifname,uuid,ipaddress,netmask,cmdgw,IP4Config
     if ipaddress is not None and ipaddress!=IP4ConfigObject.ip_address:
         cmd_final.append("sudo nmcli connection modify {} ipv4.method manual ipv4.addresses {}/{}".format(uuid,ipaddress,netmask))
     cmd_final+=[ 
-         cmdgw,      
-        "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),]
+         cmdgw, 
+        "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),
+        ]
     
     return commands,config,cmd_final
 

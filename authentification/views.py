@@ -8,6 +8,7 @@ from .serializers import *
 import json
 from django.http import JsonResponse
 from .models import *
+
 # Create your views here.
 
 User = get_user_model()
@@ -39,8 +40,8 @@ def authentification(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-#@authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+
 def logout_view(request):
+    logout(request)
     return JsonResponse({"msg": 'User Logged out successfully'})
 

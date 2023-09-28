@@ -569,7 +569,7 @@ export default {
                         }
                         const csrfToken = getCookie('csrftoken')
                         axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-                        axios.delete('/rules/deleteRule/' + rowData.id)
+                        axios.delete('/rules/deleteRule/' + rowDataOutbound.id)
                             .then(response => {
                                 // Access response data
                                 const responseData = response.data;
@@ -818,6 +818,7 @@ export default {
                         sport: row.sport,
                         dport: row.dport,
                         type_rule: "outbound",
+                        id: row.id,
                     };
                 });
                 function getCookie(name) {

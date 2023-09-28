@@ -33,11 +33,9 @@ def add_interface(request):
     return JsonResponse({"msg:": "interface added successfully!!!!!"})
 
 ###########################
-# @api_view(['PUT'])
-# @authentication_classes([AllowAny])
-# @authentication_classes([SessionAuthentication])
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
-@csrf_exempt
 def conf(request,name_interface):
     msg="Failed to configure Network!"
     status=400
@@ -46,23 +44,23 @@ def conf(request,name_interface):
         interfaceObject = Interface.objects.get(name_interface=name_interface)
         id_interface = interfaceObject.id
         ###### get object Config
-        IP4ConfigObject=IP4Config.objects.get(interface_id=id_interface)
-        genericConfigObject=GenericConfig.objects.get(interface_id=id_interface)
+        IP4ConfigObject=""
+        genericConfigObject=""
+        if IP4Config.objects.filter(interface_id=id_interface).exists():
+            IP4ConfigObject=IP4Config.objects.get(interface_id=id_interface)
+        if GenericConfig.objects.filter(interface_id=id_interface).exists():
+            genericConfigObject=GenericConfig.objects.get(interface_id=id_interface)
         ###############
-        # print("id_interface",id_interface)
         #get object of interface type
         deviceInfo = device_nameInterface(name_interface)
-        # print({"ifname":deviceInfo.ifname})
-        # print({"name_interface":deviceInfo.name_interface})
         #get interface name to execute command systeme
         ifname=deviceInfo.ifname
         nameInterface=deviceInfo.name_interface
         ##get uuid to reference to connection
         uuid=get_conn_name(ifname)
         ####
-       
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # return JsonResponse({"data":data})
         setuptypeIP4 = data.get('setuptypeIP4')
         description = data.get('description')

@@ -47,10 +47,10 @@ def main():
             # Convert the formatted timestamp to a Unix timestamp
             unix_timestamp = convert_to_unix_timestamp(current_time)
             # Print the data with timestamp
-            print(f"Timestamp: {unix_timestamp}")
-            print(f"CPU Usage: {cpu_usage}%")
-            print(f"Memory Usage: {memory_usage}%")
-            print("=" * 40)
+            # print(f"Timestamp: {unix_timestamp}")
+            # print(f"CPU Usage: {cpu_usage}%")
+            # print(f"Memory Usage: {memory_usage}%")
+            # print("=" * 40)
             # Append data to the lists
             timestamps.append(current_time)
             cpu_percentages.append(cpu_usage)
@@ -80,7 +80,7 @@ def main():
             plt.ylabel('Memory Usage (%)')
 
             plt.tight_layout()
-            plt.show()
+
             # Pause for 1 second between updates
             plt.pause(1)
                

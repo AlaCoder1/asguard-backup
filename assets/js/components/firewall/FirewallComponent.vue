@@ -569,7 +569,7 @@ export default {
                         }
                         const csrfToken = getCookie('csrftoken')
                         axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-                        axios.delete('/rules/deleteRule/' + rowDataOutbound.id)
+                        axios.delete('/rules/deleteRule/' + rowData.id)
                             .then(response => {
                                 // Access response data
                                 const responseData = response.data;

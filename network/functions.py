@@ -347,7 +347,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObje
             speedV=10
             duplexV='half'
    #tester si addmac is not None
-    if addmac is not None and (genericConfigObject!="" and genericConfigObject.addmac!=addmac):
+    if addmac is not None and genericConfigObject.addmac!=addmac:
             #lancer la fonction de "remove old config"
             config=clean_old_config(config,"addmac config {}".format(ifname))
              #la liste des commandes pour l'address mac
@@ -360,7 +360,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObje
                 'sudo ip link set dev {} address {}'.format(ifname,addmac),
             ]
     #tester si mtu is not None
-    if mtuV is not None and (genericConfigObject!="" and mtuV!=genericConfigObject.mtuV!=mtuV):
+    if mtuV is not None and mtuV!=genericConfigObject.mtuV!=mtuV:
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mtu config {}".format(ifname))
         #la liste des commandes pour mtu
@@ -373,7 +373,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObje
         'sudo ip link set dev {} mtu {}'.format(ifname,mtuV),
          ]
     #tester si mtu is not None
-    if mssV is not None and (genericConfigObject!="" and  mssV!=genericConfigObject.mssV):
+    if mssV is not None and mssV!=genericConfigObject.mssV:
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mss config {}".format(ifname))
          #la liste des commandes pour mss
@@ -386,7 +386,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObje
         'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
          ]
     #tester si speed_duplex is not None
-    if speed_duplex is not None and (genericConfigObject!="" and speed_duplex!=genericConfigObject.speed_duplex):
+    if speed_duplex is not None and speed_duplex!=genericConfigObject.speed_duplex:
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"speed duplex config {}".format(ifname))
         #la liste des commandes pour speed duplex
@@ -465,7 +465,7 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject)
             'ExecStart=/usr/bin/nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
             "#End nftables config {}".format(ifname)
             ]
-        if interfaceObject !="" and private_aux!=interfaceObject.private_aux or bogon_aux!=interfaceObject.bogon_aux:
+        if private_aux!=interfaceObject.private_aux or bogon_aux!=interfaceObject.bogon_aux:
             cmd_final+=[
                 'sudo nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
             ]

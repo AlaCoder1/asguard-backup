@@ -1,5 +1,6 @@
 
 from django.shortcuts import render
+import requests
 from rest_framework.decorators import api_view, permission_classes
 from .models import *
 from .serializers import *
@@ -129,3 +130,46 @@ def updateGateway(request,id):
             if update_gateway_DB(data,id):
                 msg="update gateway Successfully!!"
     return JsonResponse({"msg:": msg})      
+
+from rest_framework.response import Response
+from rest_framework.decorators import api_view
+import paramiko
+import time
+
+def execute_remote_command(ssh_client, command):
+    stdin, stdout, stderr = ssh_client.exec_command(command)
+    return stdout.readlines()
+
+@api_view(['GET'])
+def monitor_stats(request):
+    host = request.query_params.get('host', "10.1.12.98")
+    username = request.query_params.get('username', "root")
+    password = request.query_params.get('password', "root")
+
+    ssh_client = paramiko.SSHClient()
+    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    list_data=[]
+
+    try:
+        ssh_client.connect(host, username=username, password=password)
+        while True:
+            command = "top -bn 1 | awk 'NR==3{print $2}' && free | awk '/Mem/{printf \"%.2f\", $3/$2*100}'"
+            output = execute_remote_command(ssh_client, command)
+            cpu_usage, memory_usage = map(float, output)
+
+            data = {
+                'Timestamp': time.strftime("%Y-%m-%d %H:%M:%S"),
+                'CPU Usage': cpu_usage,
+                'Memory Usage': memory_usage
+            }
+            list_data.append(data)
+            print({"list_data":list_data})
+
+    except paramiko.AuthenticationException:
+        return Response({"error": "Authentication failed, please check your credentials."}, status=401)
+    except paramiko.SSHException as e:
+        return Response({"error": f"SSH error: {e}"}, status=500)
+    # finally:
+    #     ssh_client.close()
+
+# Add your helper function execute_remote_command and others here...

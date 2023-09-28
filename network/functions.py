@@ -108,7 +108,7 @@ def run_remote_command_with_timeout(type, typeDHCP4, command, timeout_seconds):
     new_entry = tempsExucution(type=type, cmd=command, temps=elapsed_time)
     # Save the instance to the database
     new_entry.save()
-    if  (command.find("sudo dhclient")==-1) and error!="" and (error is not None and not error.startwith("Warning")) :
+    if  (command.find("sudo dhclient")==-1) and error!="" and (error is not None and not error.startswith("Warning")) :
         # print("error::::",error)
         return error
     elif command_thread.is_alive():
@@ -331,7 +331,7 @@ def get_address_dhcp(ifname):
         return address,int(mask)
 ###################generic configuration
 
-def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObject):
+def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObject):
     commandes=[]
     cmd_final=[]
     #traiter le speed_duplex
@@ -349,7 +349,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObje
             speedV=10
             duplexV='half'
    #tester si addmac is not None
-    if addmac is not None and genericConfigObject.addmac!=addmac:
+    if addmac is not None and (genericConfigObject!="" and genericConfigObject.addmac!=addmac):
             #lancer la fonction de "remove old config"
             config=clean_old_config(config,"addmac config {}".format(ifname))
              #la liste des commandes pour l'address mac
@@ -362,33 +362,33 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObje
                 'sudo ip link set dev {} address {}'.format(ifname,addmac),
             ]
     #tester si mtu is not None
-    if mtuV is not None and mtuV!=genericConfigObject.mtuV!=mtuV:
+    if mtuv is not None and (genericConfigObject!="" and mtuv!=genericConfigObject.mtuv!=mtuv):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mtu config {}".format(ifname))
         #la liste des commandes pour mtu
         commandes+=[
         "#Start mtu config {}".format(ifname),
-        'ExecStart=/usr/bin/ip link set dev {} mtu {}'.format(ifname,mtuV),
+        'ExecStart=/usr/bin/ip link set dev {} mtu {}'.format(ifname,mtuv),
         "#End mtu config {}".format(ifname)
             ]
         cmd_final+=[
-        'sudo ip link set dev {} mtu {}'.format(ifname,mtuV),
+        'sudo ip link set dev {} mtu {}'.format(ifname,mtuv),
          ]
     #tester si mtu is not None
-    if mssV is not None and mssV!=genericConfigObject.mssV:
+    if mssv is not None and (genericConfigObject!="" and  mssv!=genericConfigObject.mssv):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mss config {}".format(ifname))
          #la liste des commandes pour mss
         commandes+=[
         "#Start mss config {}".format(ifname),
-        'ExecStart=/usr/bin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
+        'ExecStart=/usr/bin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssv),
         "#End mss config {}".format(ifname),
             ]
         cmd_final+=[
-        'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
+        'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssv),
          ]
     #tester si speed_duplex is not None
-    if speed_duplex is not None and speed_duplex!=genericConfigObject.speed_duplex:
+    if speed_duplex is not None and (genericConfigObject!="" and speed_duplex!=genericConfigObject.speed_duplex):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"speed duplex config {}".format(ifname))
         #la liste des commandes pour speed duplex
@@ -446,7 +446,7 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject)
             rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
             #rules pour les adresses IPV6
             rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))
-         #tester si on bloque les addresses privées seulement   
+         #tester si on bloque les addresses privées seulement  
         elif private_aux and not bogon_aux:
             #rules pour les adresses ipv4
             rule='iifname {} ip saddr {}'.format(ifname,create_rule(private_address))
@@ -467,11 +467,12 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject)
             'ExecStart=/usr/bin/nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
             "#End nftables config {}".format(ifname)
             ]
-        if private_aux!=interfaceObject.private_aux or bogon_aux!=interfaceObject.bogon_aux:
+        if interfaceObject !="" and private_aux!=interfaceObject.private_aux or bogon_aux!=interfaceObject.bogon_aux:
             cmd_final+=[
                 'sudo nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
             ]
     else:
+
         #call function to clean old config
        config=clean_old_config(config,"nftables config {}".format(ifname))
     return configuration,commandes,config,cmd_final

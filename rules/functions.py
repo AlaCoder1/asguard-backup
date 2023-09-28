@@ -79,7 +79,7 @@ def add_rule_remote(rule,ifname,type_rule):
    ]
       ###executer ces commandes
       for cmd in commandes:
-         completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+         completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
          output = completed_process.stdout
          error = completed_process.stderr
          if error!='': 

@@ -39,7 +39,8 @@ def add_interface(request):
 # @authentication_classes([AllowAny])
 # @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
-@csrf_exempt
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
 def conf(request,name_interface):
     msg="Failed to configure Network!"
     status=400
@@ -48,8 +49,12 @@ def conf(request,name_interface):
         interfaceObject = Interface.objects.get(name_interface=name_interface)
         id_interface = interfaceObject.id
         ###### get object Config
-        IP4ConfigObject=IP4Config.objects.get(interface_id=id_interface)
-        genericConfigObject=GenericConfig.objects.get(interface_id=id_interface)
+        IP4ConfigObject=""
+        genericConfigObject=""
+        if IP4Config.objects.filter(interface_id=id_interface).exists():
+            IP4ConfigObject=IP4Config.objects.get(interface_id=id_interface)
+        if GenericConfig.objects.filter(interface_id=id_interface).exists():
+            genericConfigObject=GenericConfig.objects.get(interface_id=id_interface)
         ###############
         # print("id_interface",id_interface)
         #get object of interface type
@@ -64,18 +69,18 @@ def conf(request,name_interface):
         ####
        
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # return JsonResponse({"data":data})
         setuptypeIP4 = data.get('setuptypeIP4')
         description = data.get('description')
         bogon_aux = data.get('bogon_aux')
         private_aux = data.get('private_aux')
-        mtuV =  None if data.get('mtuV', None) == "" else data.get('mtuV', None)
-        mssV =  None if data.get('mssV', None) == "" else data.get('mssV', None)
+        mtuv =  None if data.get('mtuv', None) == "" else data.get('mtuv', None)
+        mssv =  None if data.get('mssv', None) == "" else data.get('mssv', None)
         speed_duplex =  None if data.get('speed_duplex', None) == "" else data.get('speed_duplex', None)
         addmac =  None if data.get('addmac', None) == "" else data.get('addmac', None)
-        data["mtuV"]=mtuV
-        data["mssV"]=mssV
+        data["mtuv"]=mtuv
+        data["mssv"]=mssv
         data["speed_duplex"]=speed_duplex
         data["addmac"]=addmac
         commandes=[]
@@ -85,6 +90,7 @@ def conf(request,name_interface):
         cmd_final_ipv4=[]
         ##get old configuration in service
         output_service,error=get_old_config()
+        output_service=output_service.split('\n')
         if error!="":
             msg=error
             status=400
@@ -92,6 +98,7 @@ def conf(request,name_interface):
             if len(output_service)!=0:
                 #delete empty value
                 output_service = [x for x in output_service if x]
+                print("output_service",output_service)
                 ##add requirement service
                 output_service=add_requirement(ifname,output_service)
                 ###set gatewayObject to None
@@ -141,14 +148,15 @@ def conf(request,name_interface):
                         data["reject"]=reject
                         data["hostname"]=hostname
                         #call function to convert mask format to bits
-                        alias_mask=convert_to_subnet_mask(alias_mask)
+                        if alias_mask is not None:
+                            alias_mask=convert_to_subnet_mask(alias_mask)
                         ####
                         if typeDHCP4=="Base" :
                             #contenu de dhclient.conf dhcp Base
                             configContenu=return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask)
                             jsonIPV4={
                     "nameInterface":nameInterface,"ifname":ifname,
-                    "typeIP4":setuptypeIP4,"typeDHCP":typeDHCP4,
+                    "typeIP4":setuptypeIP4,"typedhcp":typeDHCP4,
                     "alias_add":alias_add,"alias_mask":alias_mask,
                     "reject":reject,"hostname":hostname}
                         if typeDHCP4=="Advanced":
@@ -180,7 +188,7 @@ def conf(request,name_interface):
                             configContenu=return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,send_options_dhcp_client,supersede_domaine_name,prepend_domain_server,send_options_lease_time,request,require)
                             jsonIPV4={
                     "nameInterface":nameInterface,"ifname":ifname,
-                    "typeIP4":setuptypeIP4,"typeDHCP":typeDHCP4,
+                    "typeIP4":setuptypeIP4,"typedhcp":typeDHCP4,
                     "alias_add":alias_add,"alias_mask":alias_mask,
                     "reject":reject,"hostname":hostname,
                     "timeout":timeout,"retry":retry,
@@ -218,7 +226,7 @@ def conf(request,name_interface):
                 
                 ##for generic config 
                 cmds=[]       
-                cmds,output_service,cmd_final_Gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObject)
+                cmds,output_service,cmd_final_Gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObject)
                 ##blocages des adresses
                 cmdsBlock=[]
                 configs=[]
@@ -260,10 +268,10 @@ EOF""".format('\n'.join(output_service))
                                 "multiwan_aux":multiwan_aux
                                     }
                                 aux_exist=Gateway.objects.filter(Q(gwaddress=gwaddr4) & Q(staticgw=False)).exists()
+                                GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
                                 if not aux_exist:
                                     aux_GW=add_gateway_DB(dataGw)
                                 else:
-                                    GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
                                     idGW=GatewayObject.id
                                     aux_GW=update_gateway_DB(dataGw,idGW)
                                 if aux_GW is True:

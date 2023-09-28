@@ -49,7 +49,7 @@ class GenericConfig(models.Model):
         self.updated_at = timezone.now()
         super(GenericConfig, self).save(*args, **kwargs)
     class Meta:
-        db_table = 'genericConfig'
+        db_table = 'genericonfig'
 
 
 class IP4Config(models.Model):

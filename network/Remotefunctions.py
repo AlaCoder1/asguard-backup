@@ -329,7 +329,7 @@ def get_address_dhcp(ifname,ssh):
         return address,int(mask)
 ###################generic configuration
 
-def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObject):
+def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObject):
     commandes=[]
     cmd_final=[]
     #traiter le speed_duplex
@@ -360,30 +360,30 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObje
                 'sudo ip link set dev {} address {}'.format(ifname,addmac),
             ]
     #tester si mtu is not None
-    if mtuV is not None and mtuV!=genericConfigObject.mtuV!=mtuV:
+    if mtuv is not None and mtuv!=genericConfigObject.mtuv!=mtuv:
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mtu config {}".format(ifname))
         #la liste des commandes pour mtu
         commandes+=[
         "#Start mtu config {}".format(ifname),
-        'ExecStart=/usr/bin/ip link set dev {} mtu {}'.format(ifname,mtuV),
+        'ExecStart=/usr/bin/ip link set dev {} mtu {}'.format(ifname,mtuv),
         "#End mtu config {}".format(ifname)
             ]
         cmd_final+=[
-        'sudo ip link set dev {} mtu {}'.format(ifname,mtuV),
+        'sudo ip link set dev {} mtu {}'.format(ifname,mtuv),
          ]
     #tester si mtu is not None
-    if mssV is not None and mssV!=genericConfigObject.mssV:
+    if mssv is not None and mssv!=genericConfigObject.mssv:
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mss config {}".format(ifname))
          #la liste des commandes pour mss
         commandes+=[
         "#Start mss config {}".format(ifname),
-        'ExecStart=/usr/bin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
+        'ExecStart=/usr/bin/iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssv),
         "#End mss config {}".format(ifname),
             ]
         cmd_final+=[
-        'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssV),
+        'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssv),
          ]
     #tester si speed_duplex is not None
     if speed_duplex is not None and speed_duplex!=genericConfigObject.speed_duplex:

@@ -1,7 +1,7 @@
 <template>
 
     <v-app id="inspire">
-        <Drawer :active-menu="activeMenu" />
+        <Drawer />
         <v-main>
             <!-- header -->
             <v-toolbar
@@ -50,11 +50,6 @@ export default {
         title: {
             type: String,
             required: true,
-        },
-        activeMenu: {
-            type: Number,
-            required: true,
-            default: null,
         },
         back: {
             type: Boolean,

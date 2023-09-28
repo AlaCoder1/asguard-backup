@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import vuetify from '@/plugins/vuetify';
 import 'vuetify/dist/vuetify.min.css';
-import App from '@/pages/lan';
+import App from '@/pages/ifName';
 import VueI18n from 'vue-i18n';
 import enJson from './translations/en.json';
 import frJson from './translations/fr.json';

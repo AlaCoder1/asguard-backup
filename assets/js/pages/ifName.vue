@@ -1,14 +1,13 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="List of interface" :activeMenu="activeTab">
+    <base-layout title="List of interface">
       <template #content>
-        <v-tabs v-model="activeTab">
+        <v-tabs v-model="activeTab" background-color="#fff" color="#FFC300" dark>
           <v-tab v-for="tab in tabs" :key="tab.id">
-            {{ tab.name_interface }}
+             <span style="color: #020202;">{{ tab.name_interface }}</span>
           </v-tab>
-          <v-tab-item v-for="tab in tabs" :key="tab.id">
-            <LanComponent v-if="tab.name_interface === 'LAN'" activeTab="LAN" />
-            <WanComponent v-if="tab.name_interface === 'WAN'" activeTab="WAN" />
+          <v-tab-item v-for="tab in tabs" :key="tab.name_interface">
+            <IfNameComponent :id="tab.name_interface" :activeTab="tab.name_interface"/>
           </v-tab-item>
         </v-tabs>
       </template>
@@ -18,14 +17,12 @@
 
 <script>
 import BaseLayout from '@/pages/layout.vue';
-import LanComponent from '@/components/network/LanComponent.vue';
-import WanComponent from '@/components/network/WanComponent.vue';
+import IfNameComponent from '@/components/network/IfNameComponent.vue';
 
 export default {
   components: {
     BaseLayout,
-    LanComponent,
-    WanComponent,
+    IfNameComponent
   },
   data() {
     return {

@@ -993,7 +993,6 @@ export default {
 
             axios.put('/network/conf/' + this.activeTab, params)
                 .then((response) => {
-                    console.log(response);
                     this.showAlert = true;
                     setTimeout(() => {
                         this.showAlert = false;
@@ -1037,7 +1036,6 @@ export default {
 
             axios.post('/gateway/addStaticGateway', params)
                 .then((response) => {
-                    console.log(response);
                     this.showAlert = true;
                     setTimeout(() => {
                         this.showAlert = false;
@@ -1066,7 +1064,6 @@ export default {
                 far_aux: this.gateway.far_aux,
                 multiwan_aux: this.gateway.multiwan_aux,
             };
-            console.log(params);
             function getCookie(name) {
                 let cookieValue = null;
                 if (document.cookie && document.cookie !== '') {
@@ -1087,7 +1084,6 @@ export default {
 
             axios.put('/gateway/updateStaticGateway', params)
                 .then((response) => {
-                    console.log(response);
                     this.showAlert = true;
                     setTimeout(() => {
                         this.showAlert = false;
@@ -1105,7 +1101,7 @@ export default {
             .replace(/False/g, 'false')
             .replace(/None/g, 'null');
         let parsedArray = JSON.parse(validJsonString);
-        this.IPV4Config = parsedArray;
+        this.IPV4Config = parsedArray[this.activeTab]
 
         this.allStaticGateways = this.$root.$data.allStaticGateways;
         validJsonString = this.allStaticGateways

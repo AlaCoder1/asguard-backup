@@ -201,11 +201,14 @@ def user_certificate_managment_page(request):
 @login_required(login_url='/')
 def interface_page(request):
     interfaces=AllInterfaces(request)
+    config={}
     for i in range(len(interfaces)):
         IPV4Config=GetInformationsByInterface(request, interfaces[i]['name_interface'])
         config[interfaces[i]['name_interface']]=IPV4Config
+    # IPV4Config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
     allStaticGateways=getAllStaticGateways(request)
-    context = {'interfaces':interfaces,'IPV4Config':IPV4Config,'allStaticGateways':allStaticGateways}
+    print("config",config)
+    context = {'interfaces':interfaces,'IPV4Config':config,'allStaticGateways':allStaticGateways}
     return render(request, 'interface_page.html',context)
 
 @login_required(login_url='/')

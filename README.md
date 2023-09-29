@@ -24,7 +24,6 @@ python manage.py initBD_subscription
 
 python manage.py init_openVPN -u root -p root
 
-python manage.py init_network
 
 python manage.py init_ASGUARD -u root -p root
 
@@ -32,9 +31,11 @@ python manage.py create_wheel_group
 
 python manage.py conf_nftable_dhclient -u root -p root
 
-python manage.py confInterfaces -u root -p root 
+// a ne pas exécuter python manage.py confInterfaces -u root -p root 
 
 python manage.py init_bd_interfaces -u root -p root
+python manage.py init_network
+
 //need to pull and migrate 
 
 dans l'autre terminal pour la build des assets lors la modification de n'importe quel fichier JS

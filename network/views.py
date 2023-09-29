@@ -270,13 +270,14 @@ EOF""".format('\n'.join(output_service))
                                 "multiwan_aux":multiwan_aux
                                     }
                                 aux_exist=Gateway.objects.filter(Q(gwaddress=gwaddr4) & Q(staticgw=False)).exists()
-                                GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
                                 if not aux_exist:
                                     aux_GW=add_gateway_DB(dataGw)
                                 else:
+                                    GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
                                     idGW=GatewayObject.id
                                     aux_GW=update_gateway_DB(dataGw,idGW)
                                 if aux_GW is True:
+                                    GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
                                     addGatewayInterfaceDB(GatewayObject,name_interface,metric)  
                                 else:
                                     msg=aux_GW

@@ -2,6 +2,9 @@ import Vue from 'vue';
 import vuetify from '@/plugins/vuetify';
 import App from '@/pages/home';
 import store from '@/store/index';
+import VueRouter from 'vue-router';
+import router from './routes/router';
+
 
 
 import VueI18n from 'vue-i18n';
@@ -9,6 +12,8 @@ import enJson from './translations/en.json';
 import frJson from './translations/fr.json'; 
 
 Vue.use(VueI18n);
+Vue.use(VueRouter);
+
 
 const i18n = new VueI18n({
   locale: 'en',
@@ -36,6 +41,7 @@ new Vue({
     store,
     i18n,
     vuetify,
+    router,
     data: {
         tab: '',
     },

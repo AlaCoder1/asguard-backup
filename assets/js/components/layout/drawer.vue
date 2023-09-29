@@ -6,32 +6,26 @@
       </v-toolbar-title>
       <v-spacer />
       <v-select v-model="lang" :items="['English', 'French']" class="select-lang" hide-details>
-        <template v-slot:selection="{ item, index }">
+        <template v-slot:selection="{ item }">
           <v-chip class="dms_blue_dark white--text" small>
             <span>{{ item }}</span>
           </v-chip>
         </template>
       </v-select>
-      <v-text-field
-        background-color="white"
-        rounded
-        class="ml-3 input-search"
-        hide-details
-        v-model="searchText"
-        append-icon="mdi-magnify"
-      ></v-text-field>
+      <v-text-field background-color="white" rounded class="ml-3 input-search" hide-details v-model="searchText"
+        append-icon="mdi-magnify"></v-text-field>
       <v-menu offset-y>
-        <template v-slot:activator="{ on }">
+        <template v-slot:activator="{ on }" style=" margin-right: 10px; margin-left: 10px;">
           <v-avatar class="ml-3 mr-3" size="30" v-on="on">
-            <img src="../../../images/user.png" alt="Account logo">
+            <v-icon size="30" class="dms_blue_dark white--text" color="white">mdi-account-circle-outline</v-icon>
           </v-avatar>
         </template>
         <v-list>
           <v-list-item>
-            <v-list-item-title>Profile</v-list-item-title>
+            <v-btn text>Profile</v-btn>
           </v-list-item>
           <v-list-item>
-            <v-list-item-title>Settings</v-list-item-title>
+            <v-btn text>Settings</v-btn>
           </v-list-item>
           <v-list-item>
             <v-list-item-title>
@@ -40,60 +34,45 @@
           </v-list-item>
         </v-list>
       </v-menu>
-      <span style="color: white;"> {{user.message}} </span>
+      <div style="display: flex; flex-direction: column; margin-right: 10px; margin-left: 10px;">
+        <span style="color: white;">{{ user.currentUser.username }}</span>
+        <span style="color: white;">{{ user.currentUser.email }}</span>
+      </div>
+      <br />
     </v-toolbar>
     <v-navigation-drawer :mini-variant.sync="mini" class="global-drawer" permanent app>
-      <v-app-bar dense flat class="row-pointer dms_white" @click.stop="mini = !mini">
-    <v-app-bar-nav-icon color="dms_teal" />
-    <v-toolbar-title>
-    </v-toolbar-title>
-    <v-spacer></v-spacer>
-    <v-icon v-if="mini">mdi-menu</v-icon>
-  </v-app-bar>
-
+      <v-app-bar dense flat class="row-pointer dms_white" @click.stop="closeSidebar">
+        <v-toolbar-title>
+          <span>Asguard</span>
+        </v-toolbar-title>
+        <v-spacer></v-spacer>
+        <v-icon v-if="mini">mdi-close</v-icon>
+        <v-icon v-if="!mini">mdi-menu</v-icon>
+      </v-app-bar>
       <v-list dense>
-        <v-list-item v-for="item in items" :key="item.title" link>
-          <v-list-item-icon v-if="mini">
-            <span :class="[item.icon, 'icon-size-two axe_teal--text']"></span>
-          </v-list-item-icon>
-          <v-list-item-content>
-            <v-list-item-icon v-if="!mini" class="dms-menu-open">
-              <span :class="[item.icon, 'icon-size-two axe_teal--text']"></span>
+        <template v-for="item in items">
+          <v-list-item @click="showSubMenu(item)">
+            <v-list-item-icon>
+              <v-icon>{{ item.icon }}</v-icon>
             </v-list-item-icon>
-            <v-list-item-title class="dms_teal--text item">{{ item.title }}</v-list-item-title>
-          </v-list-item-content>
-          <v-list-item-action>
-          </v-list-item-action>
-          <v-menu v-if="item.subItems.length >= 1" v-model="item.showSubMenu" :close-on-content-click="false" offset-y
-            :nudge-width="290" min-width="200px" :return-value.sync="item.showSubMenu" transition="scale-transition"
-            offset-x max-width="200px" max-height="909px" min-height="909px" background-color="white"
-            :top="mini ? true : false">
-            <template v-slot:activator="{ on }"
-              :class="{ 'drawer_hover': !mini, 'axe-active-menu': activeMenu === item.active }">
-              <v-list-item v-on="on">
-                <v-list-item-content id='overlay'
-                  :class="{ 'text-white-space': !mini, 'dms_teal--text': activeMenu === item.active }">
-                  <v-list-item-icon v-if="!mini" class="dms-menu-open">
-                    <span :class="[item.icon, 'icon-size-two axe_teal--text']"></span>
-                  </v-list-item-icon>
-                  <v-list-item-title class="dms_teal--text item">{{ item.title }}</v-list-item-title>
-                </v-list-item-content>
-              </v-list-item>
-            </template>
-            <v-list dense>
-              <v-list-item v-for="(subItem, subIndex) in item.subItems" :key="subIndex" @click="selectSubItem(subItem)">
-                <a :href="subItem.href">
-                  <v-list-item-content>
-                    <v-list-item-icon v-if="!mini" class="dms-menu-open">
-                      <span :class="[subItem.icon, 'icon-size-two axe_teal--text']"></span>
-                    </v-list-item-icon>
-                    <v-list-item-title class="dms_teal--text item">{{ subItem.title }}</v-list-item-title>
-                  </v-list-item-content>
-                </a>
-              </v-list-item>
-            </v-list>
-          </v-menu>
-        </v-list-item>
+            <v-list-item-content>
+              <v-list-item-title>{{ item.title }}</v-list-item-title>
+            </v-list-item-content>
+            <v-list-item-action v-if="item.subItems.length > 0">
+              <v-icon v-if="item.subMenuVisible">mdi-chevron-up</v-icon>
+              <v-icon v-else>mdi-chevron-down</v-icon>
+            </v-list-item-action>
+          </v-list-item>
+          <v-list-item v-if="item.subMenuVisible" v-for="subItem in item.subItems" :key="subItem.title"
+            :class="{ 'sub-menu-visible': item.subMenuVisible }">
+            <v-list-item-icon>
+              <v-icon>{{ subItem.icon }}</v-icon>
+            </v-list-item-icon>
+            <v-list-item-content>
+              <v-list-item-title>{{ subItem.title }}</v-list-item-title>
+            </v-list-item-content>
+          </v-list-item>
+        </template>
       </v-list>
     </v-navigation-drawer>
   </div>
@@ -101,15 +80,13 @@
 
 <script>
 import { mapState, mapActions } from 'vuex';
+import '@mdi/font/css/materialdesignicons.min.css';
 
 export default {
   name: 'DrawerComponent',
   props: {
-    activeMenu: {
-      type: String,
-      required: true,
-      default: null,
-    },
+  },
+  components: {
   },
   data() {
     return {
@@ -119,13 +96,17 @@ export default {
       lang: 'English',
       items: [
         {
-          title: 'Dashboard', icon: 'icon-home', href: '/', active: 'home',
+          title: 'Dashboard',
+          icon: 'mdi-view-dashboard',
+          href: '/', active: 'home',
           subItems: [],
-          showSubMenu: false,
           mouseOverSubMenu: false,
+          subMenuVisible: false,
         },
         {
-          title: 'System', icon: 'icon-trending', href: '/system', active: 'system',
+          title: 'System',
+          icon: 'mdi-laptop',
+          href: '/system', active: 'system',
           subItems: [
             {
               title: 'Assistante',
@@ -160,11 +141,13 @@ export default {
             }
 
           ],
-          showSubMenu: false,
           mouseOverSubMenu: false,
+          subMenuVisible: false,
         },
         {
-          title: 'Interfaces', icon: 'icon-business', href: '/interfaces', active: 'interfaces',
+          title: 'Interfaces',
+          icon: 'mdi-network',
+          href: '/interfaces', active: 'interfaces',
           subItems: [
             {
               title: 'Overview',
@@ -191,11 +174,10 @@ export default {
               active: 'Diagnostics',
             },
             {
-              title: 'LAN / WAN',
+              title: 'List of interface',
               icon: '',
-              href: '/lan',
-              href: '/lan',
-              active: 'LAN / WAN',
+              href: '/interfaces/list-of-interface',
+              active: 'List of interface',
             }, {
               title: 'Settings',
               icon: '',
@@ -204,9 +186,12 @@ export default {
               active: 'Settings',
             }
           ],
+          subMenuVisible: false,
         },
         {
-          title: 'Firewall', icon: 'icon-business', href: '/firewall', active: 'Firewall',
+          title: 'Firewall',
+          icon: 'mdi-wall-fire',
+          href: '/firewall', active: 'Firewall',
           subItems: [
             {
               title: 'Rules',
@@ -227,9 +212,12 @@ export default {
               active: 'Advanced settings',
             }
           ],
+          subMenuVisible: false,
         },
         {
-          title: 'Services', icon: 'icon-business', href: '/services', active: 'Firewall',
+          title: 'Services',
+          icon: 'mdi-cog',
+          href: '/services', active: 'Firewall',
           subItems: [
             {
               title: 'Site to site VPN',
@@ -282,9 +270,12 @@ export default {
             }
 
           ],
+          subMenuVisible: false,
         },
         {
-          title: 'Reports', icon: 'icon-business', href: '/reports', active: 'Firewall',
+          title: 'Reports',
+          icon: 'mdi-chart-bar',
+          href: '/reports', active: 'Firewall',
           subItems: [
             {
               title: 'Health',
@@ -310,10 +301,14 @@ export default {
               active: 'Event logs',
             }
           ],
+          subMenuVisible: false,
         },
         {
-          title: 'Subscription', icon: 'icon-business', href: '/subscription', active: 'Firewall',
+          title: 'Subscription',
+          icon: 'mdi-cash-sync',
+          href: '/subscription', active: 'Firewall',
           subItems: [],
+          subMenuVisible: false,
         },
       ]
     };
@@ -323,48 +318,39 @@ export default {
     logout() {
       this.$store.dispatch('auth/logout');
     },
-    showSubMenu(item, event) {
-      item.showSubMenu = true;
+    showSubMenu(item) {
+      // Close all submenus except for the clicked item
+      this.items.forEach((menuItem) => {
+        if (menuItem !== item) {
+          menuItem.subMenuVisible = false;
+        }
+      });
 
-      if (event.relatedTarget && event.relatedTarget.parentElement === event.currentTarget) {
-        // If the user is already hovering over the sub-menu, don't hide it when leaving the list item
-        item.mouseOverSubMenu = true;
-      }
+      // Toggle the submenu visibility for the clicked item
+      item.subMenuVisible = !item.subMenuVisible;
     },
-    hideSubMenu(item, event) {
-      item.showSubMenu = false;
-      console.log(event);
-      //if (event.relatedTarget && event.relatedTarget.parentElement !== event.currentTarget) {
-      // If the user is already hovering over the sub-menu, don't hide it when leaving the list item
-      item.mouseOverSubMenu = false;
-      //}
+    closeSidebar() {
+      // Close the sidebar
+      this.mini = !this.mini;
 
+      // Close all submenus
+      this.items.forEach((menuItem) => {
+        menuItem.subMenuVisible = false;
+      });
     },
   },
   computed: {
-      ...mapState('auth', ['loggedIn', 'user']),
+    ...mapState('auth', ['loggedIn', 'user']),
   },
 };
 </script>
-
-<style lang="sass">
-// src/sass/main.scss
-@import '~vuetify/src/styles/styles.sass';
-
-// You need to map-merge your new SASS variables
-$grid-breakpoints: map-merge($grid-breakpoints, (
-  xs: 0,
-  sm: 476px,
-  md: 668px,
-  lg: 1000px,
-  xl: 1300px
-));
-
+<style>
 .drawer_hover {
   &:hover {
     &::before {
       opacity: 1 !important;
     }
+
     .dms_teal--text,
     .text-wrap {
       color: white !important;
@@ -372,6 +358,7 @@ $grid-breakpoints: map-merge($grid-breakpoints, (
       z-index: 1 !important;
     }
   }
+
   &::before {
     -webkit-border-top-left-radius: 10px;
     -webkit-border-bottom-left-radius: 10px;
@@ -384,21 +371,6 @@ $grid-breakpoints: map-merge($grid-breakpoints, (
   }
 }
 
-.axe-active-menu {
-  &::before {
-    opacity: 1 !important;
-  }
-  .v-list-item__icon,
-  .v-list-item__content {
-    .dms_teal--text,
-    .text-wrap {
-      color: white !important;
-      opacity: 1 !important;
-      z-index: 1 !important;
-    }
-  }
-}
-
 .row-pointer {
   cursor: pointer;
 }
@@ -408,20 +380,13 @@ $grid-breakpoints: map-merge($grid-breakpoints, (
 }
 
 .drawer-width {
-  max-width: 120px;
+  max-width: 180px;
 }
 
 .dms-tabs {
   .v-tabs-bar {
     height: auto;
   }
-}
-
-.item {
-  height: 25px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 .dms-tabs {
@@ -448,7 +413,7 @@ $grid-breakpoints: map-merge($grid-breakpoints, (
 }
 
 a:hover,
-.v-list-item--active > .v-list-item__title {
+.v-list-item--active>.v-list-item__title {
   background-color: #FFC300;
 }
 
@@ -461,50 +426,33 @@ a:hover .dms_teal--text,
   color: white;
 }
 
-.select-lang {
-  max-width: 110px;
-  margin-top: 0% !important;
-  margin-right: 1% !important;
-  item-align: center;
-  background-color: #213E9F;;
-  border-radius: 5px;
-  padding: 0px 10px;
-  height: 30px;
-  color: #43aaf5;
-  font-size: 18.16px;
-  font-weight: 500;
-  font-family: 'Nunito';
-  border: none;
-  line-height: normal;
-  text-align: center;
-  max-height: 20px;
-}
-
 .input-search {
   max-width: 250px;
 }
 
-.v-menu__content {
-  background-color: white;
-  min-width: 200px;
-  top: 71px !important;
-  left: 257px;
-  z-index: 10;
-  height: 500px;
-  min-height: 94px;
-}
-
-#overlay {
-    position: absolute;
-    z-index:100;
+.select-lang {
+  max-width: 100px;
+  max-height: 100px;
+  margin-top: 50px;
 }
 
 .v-list-item--link:hover {
   background-color: #FFC300 !important;
 }
 
-.v-application--is-ltr .v-toolbar__content > .v-btn.v-btn--icon:first-child, .v-application--is-ltr .v-toolbar__extension > .v-btn.v-btn--icon:first-child {
-    margin-left: 180px;
+.v-application--is-ltr .v-toolbar__content>.v-btn.v-btn--icon:first-child,
+.v-application--is-ltr .v-toolbar__extension>.v-btn.v-btn--icon:first-child {
+  margin-left: 180px;
 }
 
+/* Ajouter une ligne à côté des sous-menus visibles */
+.v-list-item.sub-menu-visible::before {
+  content: "";
+  position: absolute;
+  left: 20%;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: hsla(47, 100%, 50%, 0.551);
+}
 </style>

@@ -20,4 +20,4 @@ class Server(models.Model):
     type = models.ForeignKey(Type, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'Server'
+        db_table = 'server'

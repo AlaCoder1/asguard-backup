@@ -1,28 +1,22 @@
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from .models import *
-from django.views.decorators.csrf import csrf_protect
-
 from .serializers import *
 from managementGroup.serializers import *
 from managementGroup.views import *
 from subscription.views import *
+# this import to run this on local machine
 from .functions import *
+# this import to run this on macine distant
+# from .remoteFunctions import *
 import json
-from rest_framework.parsers import JSONParser
 from django.core import serializers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.hashers import make_password
-from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 
 # API to get all users
-
-
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])

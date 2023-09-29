@@ -3,13 +3,13 @@ from django.http import JsonResponse
 from .models import *
 from .serializers import *
 import json
-from rest_framework.parsers import JSONParser
 from rest_framework.authentication import SessionAuthentication
+# this import to run this on local machine
 from .functions import *
-from .remoteFunctions import *
+# this import to run this on macine distant
+# from .remoteFunctions import *
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
-from authentification.authentication import JWTAuthentication
 from django.core import serializers
 # Create your views here.
 

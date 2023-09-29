@@ -1,7 +1,7 @@
 import Vue from 'vue';
 import vuetify from '@/plugins/vuetify';
 import 'vuetify/dist/vuetify.min.css';
-import App from '@/pages/lan';
+import App from '@/pages/ifName';
 import VueI18n from 'vue-i18n';
 import enJson from './translations/en.json';
 import frJson from './translations/fr.json';
@@ -36,11 +36,14 @@ new Vue({
   store,
   vuetify,
   data: {
-    lan: '',
+    IPV4Config: '',
+    interfaces: '',
+    allStaticGateways: '',
   },
   beforeMount: function () {
-    console.log(this);
-    this.lan = this.$el.attributes['lan'] ? this.$el.attributes['lan'].value : '';
+    this.IPV4Config = this.$el.attributes['IPV4Config'] ? this.$el.attributes['IPV4Config'].value : '';
+    this.interfaces = this.$el.attributes['interfaces'] ? this.$el.attributes['interfaces'].value : '';
+    this.allStaticGateways = this.$el.attributes['allStaticGateways'] ? this.$el.attributes['allStaticGateways'].value : '';
   },
   render: (h) => h(App),
 }).$mount('#app');

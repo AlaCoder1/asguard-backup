@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+import paramiko
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import  AllowAny
@@ -7,12 +8,11 @@ from django.conf import settings
 from .serializers import *
 import json
 from django.http import JsonResponse
-import paramiko
 from .models import *
-# Create your views here.
 
-User = get_user_model()
+# Create your views here.
 ssh = paramiko.SSHClient()
+User = get_user_model()
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def authentification(request):
@@ -26,12 +26,20 @@ def authentification(request):
             user = authenticate(request, username=username, password=password)
             if (user is not None):
                 login(request, user)
+                # to work with ssh connection just uncommit this lignes 
+                # # automatically add host key when connecting to a new host
+                # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                # # connect to SSH server
+                # ssh.connect(settings.SSH_HOST, username=username,
+                #             password=password, port=settings.SSH_PORT)
+                # end of this lignes
                 settings.USERNAME = username
                 settings.PASSWORD = password
                 userObject = User.objects.get(username=username)
                 userDict = userObject.__dict__
                 CurrentUser = {"username":userDict['username'],"email":userDict['email']}
                 settings.CurrentUserId = userDict['id']
+
                 return JsonResponse({'message': ' Success Authentification',"current user":CurrentUser}, status=status.HTTP_200_OK)
             else:
                 return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
@@ -41,8 +49,8 @@ def authentification(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-#@authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+
 def logout_view(request):
+    logout(request)
     return JsonResponse({"msg": 'User Logged out successfully'})
 

@@ -128,9 +128,8 @@ export default {
         AgGridVue,
     },
     props: {
-        activeTab: {
-            type: String,
-        },
+        id: String,
+        activeTab: String,
     },
     data() {
         return {
@@ -194,18 +193,6 @@ export default {
                     field: 'sport',
                     headerName: 'Src Port',
                     editable: params => params.node.data.isRowSelected,
-                    valueParser: this.numericValueParser,
-                    valueSetter: (params) => {
-                        const value = params.newValue;
-                        if (this.isValidPortNumber(value)) {
-                            params.data.sport = value;
-                            return true; // Value is valid, update the cell
-                        } else {
-                            // Value is invalid, display a validation message
-                            alert('Please enter a valid source port number');
-                            return false; // Value is not updated
-                        }
-                    },
                     // Add cellStyle function to disable cell based on protocol value
                     cellStyle: (params) => {
                         // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
@@ -236,18 +223,6 @@ export default {
                     field: 'dport',
                     headerName: 'Dst Port',
                     editable: params => params.node.data.isRowSelected,
-                    valueParser: this.numericValueParser,
-                    valueSetter: (params) => {
-                        const value = params.newValue;
-                        if (this.isValidPortNumber(value)) {
-                            params.data.dport = value;
-                            return true; // Value is valid, update the cell
-                        } else {
-                            // Value is invalid, display a validation message
-                            alert('Please enter a valid destination port number');
-                            return false; // Value is not updated
-                        }
-                    },
                     // Add cellStyle function to disable cell based on protocol value
                     cellStyle: (params) => {
                         // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
@@ -324,18 +299,6 @@ export default {
                     field: 'sport',
                     headerName: 'Src Port',
                     editable: params => params.node.data.isRowSelected,
-                    valueParser: this.numericValueParser,
-                    valueSetter: (params) => {
-                        const value = params.newValue;
-                        if (this.isValidPortNumber(value)) {
-                            params.data.sport = value;
-                            return true; // Value is valid, update the cell
-                        } else {
-                            // Value is invalid, display a validation message
-                            alert('Please enter a valid source port number');
-                            return false; // Value is not updated
-                        }
-                    },
                     // Add cellStyle function to disable cell based on protocol value
                     cellStyle: (params) => {
                         // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
@@ -366,18 +329,6 @@ export default {
                     field: 'dport',
                     headerName: 'Dst Port',
                     editable: params => params.node.data.isRowSelected,
-                    valueParser: this.numericValueParser,
-                    valueSetter: (params) => {
-                        const value = params.newValue;
-                        if (this.isValidPortNumber(value)) {
-                            params.data.dport = value;
-                            return true; // Value is valid, update the cell
-                        } else {
-                            // Value is invalid, display a validation message
-                            alert('Please enter a valid destination port number');
-                            return false; // Value is not updated
-                        }
-                    },
                     // Add cellStyle function to disable cell based on protocol value
                     cellStyle: (params) => {
                         // Assuming you want to disable the cell if protocol is "icmp request" or "icmp reply"
@@ -618,7 +569,7 @@ export default {
                         }
                         const csrfToken = getCookie('csrftoken')
                         axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-                        axios.delete('/rules/deleteRule/' + rowData.id)
+                        axios.delete('/rules/deleteRule/' + rowDataOutbound.id)
                             .then(response => {
                                 // Access response data
                                 const responseData = response.data;
@@ -752,10 +703,10 @@ export default {
             const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
             return ipRegex.test(value);
         },
-        isValidPortNumber(value) {
-            const portRegex = /^\d{1,5}$/;
-            return portRegex.test(value);
-        },
+        // isValidPortNumber(value) {
+        //     const portRegex = /^\d{1,5}$/;
+        //     return portRegex.test(value);
+        // },
         isValidRowData(rowData) {
             const requiredColumns = ['policy', 'Rule_description', 'protocol', 'saddr', 'daddr'];
             for (const column of requiredColumns) {
@@ -810,6 +761,7 @@ export default {
                         sport: row.sport,
                         dport: row.dport,
                         type_rule: "inbound",
+                        id: row.id,
                     };
                 });
                 function getCookie(name) {
@@ -866,6 +818,7 @@ export default {
                         sport: row.sport,
                         dport: row.dport,
                         type_rule: "outbound",
+                        id: row.id,
                     };
                 });
                 function getCookie(name) {
@@ -943,6 +896,11 @@ export default {
             handler: function (val, oldVal) {
                 this.rowData = this.rules[val]['inbound'];
                 this.rowDataOutbound = this.rules[val]['outbound'];
+
+                // if activeTab is changed, set filterText and filterTextOutbound to null to clear the filter text boxes in the grid header row
+                this.filterText = null;
+                this.filterTextOutbound = null;
+
             },
             deep: true,
         },

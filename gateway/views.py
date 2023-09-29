@@ -1,6 +1,6 @@
 
-from django.shortcuts import render
-from rest_framework.decorators import api_view, permission_classes
+import queue
+from rest_framework.decorators import api_view, permission_classes, authentication_classes, parser_classes
 from .models import *
 from .serializers import *
 from django.core import serializers
@@ -10,6 +10,8 @@ from rest_framework.parsers import JSONParser
 from .functions import *
 from django.core import serializers
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.authentication import SessionAuthentication
+from django.db.models import Q
 # API to get all gateways
 @api_view(['GET'])
 @permission_classes([])
@@ -63,24 +65,22 @@ def getGatewayById(request, id):
             return JsonResponse({"error": "Gateway not found"}, status=404)     
 # API to add  static gateway
 @api_view(['POST'])
-@permission_classes(["SessionAuthentication"])
+@authentication_classes([SessionAuthentication])
 def addStaticGateway(request):
-    msg="Failed to add gateway!" 
     if (request.method == 'POST'):
-        data = JSONParser().parse(request)
+        data = request.data
+        gwname=data.get('namegw', None)
         gwaddress = data.get('gwaddress', None)
         data['staticgw']=True
-        msg=""
-        if Gateway.objects.filter(gwaddress=gwaddress).exists():
-            gatewayObject=Gateway.objects.get(gwaddress=gwaddress)
-            if gatewayObject.staticgw==True:
-                msg="Gateway Already exist!"
+        if Gateway.objects.filter(Q(gwaddress=gwaddress) & Q(staticgw=True)).exists():
+            msg="Gateway Already exist!"
         else:
-            if add_gateway_DB(data):
+            if add_gateway_DB(data) is True:
                 msg="Add gateway Successfully!!"
+            else:
+                msg=add_gateway_DB(data)
            
-    return JsonResponse({"msg:": msg})       
-   
+        return JsonResponse({"msg:": msg})    
 @api_view(['DELETE'])
 @permission_classes([])
 ###API to delete gateway

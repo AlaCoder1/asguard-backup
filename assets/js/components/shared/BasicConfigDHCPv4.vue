@@ -2,23 +2,23 @@
     <v-app class="ml-3 mt-3 mr-3">
         <div style="display: flex; align-items: center; margin-top: 8px;">
             <label style="width: 150px;">IPv4 Adress Alias</label>
-            <v-text-field v-model="lan.ipv4_adress" class="ml-3"></v-text-field>
-            <v-select v-model="lan.ipv4_netmask" :items="netmasks" label="Netmask" class="ml-3 mr-3"></v-select>
+            <v-text-field v-model="interface.ipv4_adress" class="ml-3"></v-text-field>
+            <v-select v-model="interface.ipv4_netmask" :items="netmasks" label="Netmask" class="ml-3 mr-3"></v-select>
         </div>
 
         <div style="display: flex; align-items: center; margin-top: 8px;">
             <label style="width: 150px;">Reject leases from</label>
-            <v-text-field v-model="lan.rejectLeases" class="ml-3  mr-3"></v-text-field>
+            <v-text-field v-model="interface.rejectLeases" class="ml-3  mr-3"></v-text-field>
         </div>
 
         <div style="display: flex; align-items: center; margin-top: 8px;">
             <label style="width: 150px;">Hostname</label>
-            <v-text-field v-model="lan.hostname" class="ml-3 mr-3"></v-text-field>
+            <v-text-field v-model="interface.hostname" class="ml-3 mr-3"></v-text-field>
         </div>
 
         <div style="display: flex; align-items: center; margin-top: 8px;">
             <label style="width: 150px;">Override MTU</label>
-            <input type="checkbox" v-model="lan.overrideMTU" class="ml-3 mr-3" />
+            <input type="checkbox" v-model="interface.overrideMTU" class="ml-3 mr-3" />
             <label>MTU</label>
         </div>
     </v-app>
@@ -42,7 +42,7 @@ export default {
                 " /21",
                 " /20"
             ],
-            lan: {
+            interface: {
                 ipv4_adress: "",
                 ipv4_netmask: "",
                 rejectLeases: "",
@@ -53,7 +53,6 @@ export default {
         };
     },
     beforeMount() {
-        this.lan = this.$root.$data.lan;
     },
 };
 

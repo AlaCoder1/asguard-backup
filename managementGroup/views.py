@@ -5,10 +5,10 @@ from .serializers import *
 import json
 from rest_framework.authentication import SessionAuthentication
 # Version without SSh connection
-# from .functions import *
+from .functions import *
 # end Version without SSh connection
 # Version SSh connection
-from .remoteFunctions import *
+# from .remoteFunctions import *
 # end Version SSh connection
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated

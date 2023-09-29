@@ -27,9 +27,9 @@ def authentification(request):
             if (user is not None):
                 login(request, user)
                 # Version SSH connection 
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                ssh.connect(settings.SSH_HOST, username=username,
-                            password=password, port=settings.SSH_PORT)
+                # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                # ssh.connect(settings.SSH_HOST, username=username,
+                #             password=password, port=settings.SSH_PORT)
                 # end Version SSH connection
                 settings.USERNAME = username
                 settings.PASSWORD = password
@@ -50,12 +50,12 @@ def authentification(request):
 
 def logout_view(request):
     # verison without SSH
-    # logout(request)
+    logout(request)
     # end without ssh version
     # ssh version
-    if logout(request) is None:
-        # close the SSH connection
-        ssh.close()
+    # if logout(request) is None:
+    #     # close the SSH connection
+    #     ssh.close()
     # end ssh version
     return JsonResponse({"msg": 'User Logged out successfully'})
 

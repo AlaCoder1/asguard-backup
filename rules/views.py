@@ -7,10 +7,10 @@ from django.core import serializers
 from authentification.views import *
 from network.address import *
 # Version without SSh connection
-# from .functions import *
+from .functions import *
 # end Version without SSh connection
 # Version SSh connection
-from .remoteFunctions import *
+# from .remoteFunctions import *
 # end Version SSh connection
 from django.core import serializers
 # Create your views here.

@@ -61,8 +61,6 @@ def conf(request,name_interface):
         # print("id_interface",id_interface)
         #get object of interface type
         deviceInfo = device_nameInterface(name_interface)
-        # print({"ifname":deviceInfo.ifname})
-        # print({"name_interface":deviceInfo.name_interface})
         #get interface name to execute command systeme
         ifname=deviceInfo.ifname
         nameInterface=deviceInfo.name_interface

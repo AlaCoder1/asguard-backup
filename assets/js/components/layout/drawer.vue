@@ -51,26 +51,30 @@
       </v-app-bar>
       <v-list dense>
         <template v-for="item in items">
-          <v-list-item @click="showSubMenu(item)">
-            <v-list-item-icon>
-              <v-icon>{{ item.icon }}</v-icon>
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-list-item-title>{{ item.title }}</v-list-item-title>
-            </v-list-item-content>
-            <v-list-item-action v-if="item.subItems.length > 0">
-              <v-icon v-if="item.subMenuVisible">mdi-chevron-up</v-icon>
-              <v-icon v-else>mdi-chevron-down</v-icon>
-            </v-list-item-action>
-          </v-list-item>
+          <a :href="item.href" class="custom-a">
+            <v-list-item @click="showSubMenu(item)">
+              <v-list-item-icon>
+                <v-icon>{{ item.icon }}</v-icon>
+              </v-list-item-icon>
+              <v-list-item-content>
+                <v-list-item-title>{{ item.title }}</v-list-item-title>
+              </v-list-item-content>
+              <v-list-item-action v-if="item.subItems.length > 0">
+                <v-icon v-if="item.subMenuVisible">mdi-chevron-up</v-icon>
+                <v-icon v-else>mdi-chevron-down</v-icon>
+              </v-list-item-action>
+            </v-list-item>
+          </a>
           <v-list-item v-if="item.subMenuVisible" v-for="subItem in item.subItems" :key="subItem.title"
             :class="{ 'sub-menu-visible': item.subMenuVisible }">
-            <v-list-item-icon>
-              <v-icon>{{ subItem.icon }}</v-icon>
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-list-item-title>{{ subItem.title }}</v-list-item-title>
-            </v-list-item-content>
+            <a :href="subItem.href" class="custom-sub-a">
+              <!-- <v-list-item-icon>
+              <v-icon size="20" v-if="subItem.icon !== ''">{{ subItem.icon }}</v-icon>
+            </v-list-item-icon> -->
+              <v-list-item-content>
+                <v-list-item-title class="text-white-space">{{ subItem.title }}</v-list-item-title>
+              </v-list-item-content>
+            </a>
           </v-list-item>
         </template>
       </v-list>
@@ -98,7 +102,7 @@ export default {
         {
           title: 'Dashboard',
           icon: 'mdi-view-dashboard',
-          href: '/', active: 'home',
+          href: '/dashboard', active: 'dashboard',
           subItems: [],
           mouseOverSubMenu: false,
           subMenuVisible: false,
@@ -106,7 +110,7 @@ export default {
         {
           title: 'System',
           icon: 'mdi-laptop',
-          href: '/system', active: 'system',
+          active: 'system',
           subItems: [
             {
               title: 'Assistante',
@@ -147,7 +151,7 @@ export default {
         {
           title: 'Interfaces',
           icon: 'mdi-network',
-          href: '/interfaces', active: 'interfaces',
+          active: 'interfaces',
           subItems: [
             {
               title: 'Overview',
@@ -190,8 +194,7 @@ export default {
         },
         {
           title: 'Firewall',
-          icon: 'mdi-wall-fire',
-          href: '/firewall', active: 'Firewall',
+          icon: 'mdi-wall-fire', active: 'Firewall',
           subItems: [
             {
               title: 'Rules',
@@ -216,8 +219,7 @@ export default {
         },
         {
           title: 'Services',
-          icon: 'mdi-cog',
-          href: '/services', active: 'Firewall',
+          icon: 'mdi-cog', active: 'Firewall',
           subItems: [
             {
               title: 'Site to site VPN',
@@ -274,8 +276,7 @@ export default {
         },
         {
           title: 'Reports',
-          icon: 'mdi-chart-bar',
-          href: '/reports', active: 'Firewall',
+          icon: 'mdi-chart-bar', active: 'Firewall',
           subItems: [
             {
               title: 'Health',
@@ -328,6 +329,11 @@ export default {
 
       // Toggle the submenu visibility for the clicked item
       item.subMenuVisible = !item.subMenuVisible;
+
+      // Navigate to the selected item's href
+      if (item.href) {
+        window.location.href = item.href;
+      }
     },
     closeSidebar() {
       // Close the sidebar
@@ -339,6 +345,7 @@ export default {
       });
     },
   },
+
   computed: {
     ...mapState('auth', ['loggedIn', 'user']),
   },
@@ -445,7 +452,6 @@ a:hover .dms_teal--text,
   margin-left: 180px;
 }
 
-/* Ajouter une ligne à côté des sous-menus visibles */
 .v-list-item.sub-menu-visible::before {
   content: "";
   position: absolute;
@@ -454,5 +460,43 @@ a:hover .dms_teal--text,
   bottom: 0;
   width: 2px;
   background-color: hsla(47, 100%, 50%, 0.551);
+}
+
+.custom-a {
+  text-decoration: none;
+  color: inherit;
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  outline: none;
+  border: none;
+  background: none;
+  font-family: inherit;
+}
+
+.custom-sub-a {
+  margin-left: 50px;
+  text-decoration: none;
+  color: #000;
+  display: inline-block;
+  padding: 0;
+  width: 100%;
+  height: 1%;
+  cursor: pointer;
+  outline: none;
+  border: none;
+  background: none;
+  font-family: inherit;
+  display: flex;
+  align-items: center;
+}
+
+.v-list-item {
+  color: #ffffff;
+  font-size: 16px;
+  padding: 10px 20px;
 }
 </style>

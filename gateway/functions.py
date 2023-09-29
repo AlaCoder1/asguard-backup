@@ -1,7 +1,13 @@
 from .models import *
 from .serializers import *
 # this import to run this on local machine
-from network.functions import *
+# Version without SSH connection
+# from network.functions import *
+# Version without SSH connection
+############
+# Version with SSH connection
+from network.remoteFunctions import *
+# Version with SSH connection
 # this import to run this on macine distant
 # from network.Remotefunctions import *
 ########### 
@@ -56,9 +62,9 @@ def return_Gateway_system(uuid,addrgw,far_aux,multiWan_aux,metric,IP4ConfigObjec
             cmd+=" ipv4.route-metric {}".format(metric)
     return cmd
 ###########DHCP
-def get_gateway_dhcp(ifname):
+def get_gateway_dhcp(ssh,ifname):
     command="ip route show default | grep {} | grep 'proto'| cut -d ' ' -f 3-".format(ifname)
-    output, error = run_command(command)
+    output, error = run_command(ssh,command)
     if  not output.strip():
         return None, 0, False, False, False  # Return None and metric 0 in case of failure
     gwaddr = output.split()[0]

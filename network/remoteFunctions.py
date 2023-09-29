@@ -60,7 +60,6 @@ def get_conn_name(ifname):
 ##get old configuration in service
 def get_old_config():
     cmd = "cat /etc/systemd/system/Asguard-Networking.service"
-    ssh.exec_command(cmd)
     stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
     error = stderr.read().decode('utf-8')
     output = stdout.read().decode('utf-8').split('\n')
@@ -107,15 +106,22 @@ def run_remote_command_with_timeout(type, typeDHCP4, ssh_client, command, timeou
     new_entry = tempsExucution(type=type, cmd=command, temps=elapsed_time)
     # Save the instance to the database
     new_entry.save()
-    if  (command.find("sudo dhclient")==-1) and error!="" and (error is not None and not error.startwith("Warning")) :
+    if  (command.find("sudo dhclient")==-1) and error!="" and (error is not None and not error.startswith("Warning")) :
         # print("error::::",error)
-        return error
+        return error+command
     elif command_thread.is_alive():
         print(f"Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}")
-        stdin, stdout, stderr = ssh_client.exec_command('\x03')
-        # interrupt_command = "sudo pkill -INT -f 'some_long_running_command'"
-        # output,error=run_command(ssh_client, interrupt_command)
-        print("Ctrl+C sent.")
+        try:
+                # Open a shell channel
+                shell = ssh_client.invoke_shell()
+                # Send Control+C
+                shell.send('\x03')
+                
+                # Close the shell channel
+                shell.close()
+        except Exception as e:
+                print(f"Failed to send Ctrl+C: {str(e)}")
+        
         return "Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}"
         
     else:
@@ -205,7 +211,7 @@ def update_conn_static_IPV4(config,ifname,uuid,ipaddress,netmask,cmdgw,IP4Config
     #la liste des commandes pour l'IPV4 static
     commands=[]
     cmd_final=[]
-    if ipaddress is not None and ipaddress!=IP4ConfigObject.ip_address:
+    if ipaddress is not None and (IP4ConfigObject!="" and ipaddress!=IP4ConfigObject.ip_address or IP4ConfigObject=="" ):
         cmd_final.append("sudo nmcli connection modify {} ipv4.method manual ipv4.addresses {}/{}".format(uuid,ipaddress,netmask))
     cmd_final+=[ 
          cmdgw,      
@@ -317,7 +323,7 @@ def update_conn_dhcp_IPV4(config,ifname,uuid):
     
     return commandes,config,cmd_final
 
-def get_address_dhcp(ifname,ssh):
+def get_address_dhcp(ssh,ifname):
     cmd = "ip -4 -o addr show dev {} | awk '{{split($4, a); print a[1]}}'".format(ifname)
     output, error = run_command(ssh, cmd)
     if error!="" or len(output)==0:
@@ -347,7 +353,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
             speedV=10
             duplexV='half'
    #tester si addmac is not None
-    if addmac is not None and genericConfigObject.addmac!=addmac:
+    if addmac is not None and (genericConfigObject!="" and genericConfigObject.addmac!=addmac or genericConfigObject==""):
             #lancer la fonction de "remove old config"
             config=clean_old_config(config,"addmac config {}".format(ifname))
              #la liste des commandes pour l'address mac
@@ -360,7 +366,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
                 'sudo ip link set dev {} address {}'.format(ifname,addmac),
             ]
     #tester si mtu is not None
-    if mtuv is not None and mtuv!=genericConfigObject.mtuv!=mtuv:
+    if mtuv is not None and (genericConfigObject!="" and mtuv!=genericConfigObject.mtuv!=mtuv or genericConfigObject==""):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mtu config {}".format(ifname))
         #la liste des commandes pour mtu
@@ -373,7 +379,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
         'sudo ip link set dev {} mtu {}'.format(ifname,mtuv),
          ]
     #tester si mtu is not None
-    if mssv is not None and mssv!=genericConfigObject.mssv:
+    if mssv is not None and (genericConfigObject!="" and mssv!=genericConfigObject.mssv or genericConfigObject==""):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mss config {}".format(ifname))
          #la liste des commandes pour mss
@@ -386,7 +392,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
         'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssv),
          ]
     #tester si speed_duplex is not None
-    if speed_duplex is not None and speed_duplex!=genericConfigObject.speed_duplex:
+    if speed_duplex is not None and (genericConfigObject!="" and  speed_duplex!=genericConfigObject.speed_duplex or genericConfigObject==""):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"speed duplex config {}".format(ifname))
         #la liste des commandes pour speed duplex

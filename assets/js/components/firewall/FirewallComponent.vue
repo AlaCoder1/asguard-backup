@@ -818,6 +818,7 @@ export default {
                         sport: row.sport,
                         dport: row.dport,
                         type_rule: "outbound",
+                        id: row.id,
                     };
                 });
                 function getCookie(name) {

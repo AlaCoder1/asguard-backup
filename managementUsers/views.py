@@ -5,10 +5,12 @@ from .serializers import *
 from managementGroup.serializers import *
 from managementGroup.views import *
 from subscription.views import *
-# this import to run this on local machine
-from .functions import *
-# this import to run this on macine distant
-# from .remoteFunctions import *
+# Version without SSh connection
+# from .functions import *
+# end Version without SSh connection
+# Version SSh connection
+from .remoteFunctions import *
+# end Version SSh connection
 import json
 from django.core import serializers
 from rest_framework.authentication import SessionAuthentication

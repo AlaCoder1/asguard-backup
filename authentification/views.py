@@ -26,13 +26,11 @@ def authentification(request):
             user = authenticate(request, username=username, password=password)
             if (user is not None):
                 login(request, user)
-                # to work with ssh connection just uncommit this lignes 
-                # # automatically add host key when connecting to a new host
-                # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                # # connect to SSH server
-                # ssh.connect(settings.SSH_HOST, username=username,
-                #             password=password, port=settings.SSH_PORT)
-                # end of this lignes
+                # Version SSH connection 
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(settings.SSH_HOST, username=username,
+                            password=password, port=settings.SSH_PORT)
+                # end Version SSH connection
                 settings.USERNAME = username
                 settings.PASSWORD = password
                 userObject = User.objects.get(username=username)
@@ -51,6 +49,13 @@ def authentification(request):
 @permission_classes([AllowAny])
 
 def logout_view(request):
-    logout(request)
+    # verison without SSH
+    # logout(request)
+    # end without ssh version
+    # ssh version
+    if logout(request) is None:
+        # close the SSH connection
+        ssh.close()
+    # end ssh version
     return JsonResponse({"msg": 'User Logged out successfully'})
 

@@ -5,7 +5,7 @@ from authentification.views import *
 def sudo(cmd):
     return "sudo "+cmd
 
-def getRemoteUidUser():
+def getUidUser():
     # Run the getent group command and capture its output
     command = "getent passwd"
     # Execute the command on the remote machine
@@ -35,7 +35,7 @@ def validPassword(password):
         return True
 
 # function to test if username exit
-def RemoteUsernameExists(username):
+def username_exists(username):
     # Check if the username exists in the /etc/passwd file
     cmd="cat /etc/passwd"
     stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
@@ -47,7 +47,7 @@ def RemoteUsernameExists(username):
     return False
     
 # function to add user
-def addRemoteUser(username, password):
+def addUser(username, password):
     # Run the getent group command and capture its output
     command = "sudo useradd -m " + username + " && sudo echo " + \
         username+":"+password + " | sudo chpasswd"
@@ -61,7 +61,7 @@ def addMailSpool(username):
 # function to delete user
 
 
-def deleteRemoteUser(username):
+def deleteUser(username):
     # Run the getent group command and capture its output
     # command = "userdel -r "+username
     command = "userdel "+username
@@ -71,7 +71,7 @@ def deleteRemoteUser(username):
 # functio to change username
 
 
-def RemotechangeUsername(newusername, oldusername):
+def changeUsername(newusername, oldusername):
     # Run the getent group command and capture its output
     command = "usermod -l " + newusername + " "+oldusername
     # Execute the command on the remote machine
@@ -80,7 +80,7 @@ def RemotechangeUsername(newusername, oldusername):
 # function to add user in group
 
 
-def RemoteAddUserGroup(groupname, username):
+def add_user_group(groupname, username):
     # Run the getent group command and capture its output
     command = "usermod -aG " + groupname + " "+username
     # Execute the command on the remote machine
@@ -104,7 +104,7 @@ def checkSameGroupnameWithUsername(username):
 
 
 # function to delete user from group
-def RemoteDeleteUserGroup(groupname, username):
+def delete_user_group(groupname, username):
     # Run the getent group command and capture its output
     command = "gpasswd -d "+username+" "+groupname
     # Execute the command on the remote machine
@@ -112,7 +112,7 @@ def RemoteDeleteUserGroup(groupname, username):
 
 
 # function to add user to group
-def RemoteAddUserGroup(groupname, username):
+def add_user_group(groupname, username):
     # Run the getent group command and capture its output
     command = "gpasswd -a "+username+" "+groupname
     # Execute the command on the remote machine

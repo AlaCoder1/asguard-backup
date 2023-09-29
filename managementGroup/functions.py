@@ -1,7 +1,6 @@
 import grp
 import os
 import subprocess
-import sys
 import re
 from .models import *
 

@@ -4,10 +4,12 @@ from .models import *
 from .serializers import *
 import json
 from rest_framework.authentication import SessionAuthentication
-# this import to run this on local machine
-from .functions import *
-# this import to run this on macine distant
-# from .remoteFunctions import *
+# Version without SSh connection
+# from .functions import *
+# end Version without SSh connection
+# Version SSh connection
+from .remoteFunctions import *
+# end Version SSh connection
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
@@ -61,7 +63,7 @@ def createGroup(request):
         if (validInput(groupname)):
             if addGroup(groupname) == 0:
                 msg = groupname+" added sucessfully"
-                gid = getRemoteGidGroup()
+                gid = getGidGroup()
                 data['gid'] = gid
                 serializer = GroupSerializer(data=data)
                 # check if the sent information is okay

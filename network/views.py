@@ -7,10 +7,12 @@ import json
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from authentification.views import *
-# this import to run this on local machine
-from .functions import *
-# this import to run this on macine distant
-# from .RemoteFunctions import *
+# Version without SSh connection
+# from .functions import *
+# end Version without SSh connection
+# Version SSh connection
+from .remoteFunctions import *
+# end Version SSh connection
 from django.views.decorators.csrf import csrf_exempt
 from gateway.models import *
 from gateway.functions import *

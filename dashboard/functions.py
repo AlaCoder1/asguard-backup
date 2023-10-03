@@ -64,7 +64,13 @@ def plot_data():
 # # Call the plot_data function periodically to update the plot in real-time
 # while True:
 #     plot_data()
-   
+host = "10.1.12.110"
+username = "root"
+password = "root"
+ssh_client = paramiko.SSHClient()
+ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())  
+ # Connect to the remote server
+ssh_client.connect(host, username=username, password=password)
 def main():
     # Remote server details
     host = "10.1.12.98"
@@ -72,8 +78,7 @@ def main():
     password = "root"
 
     # SSH client setup
-    ssh_client = paramiko.SSHClient()
-    ssh_client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+    
 
     try:
         # Connect to the remote server
@@ -113,5 +118,5 @@ def main():
     finally:
         ssh_client.close()
         conn.close()
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()

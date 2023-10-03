@@ -13,7 +13,7 @@ class IP4ConfigSerializer(serializers.ModelSerializer):
     interface = serializers.PrimaryKeyRelatedField(queryset=Interface.objects.all())
     class Meta:
             model = IP4Config
-            fields = ['typeIP4','typeDHCP', 'ip_address','netmask','addrgw',
+            fields = ['typeip4','typedhcp', 'ip_address','netmask','addrgw',
                       'reject','hostname','alias_add','alias_mask',
                       'timeout','retry','reboot','backoff','select_timeout','initial_interval',
                       'dhcp_client','domaine_name','domain_server','lease_time','request','require',
@@ -24,7 +24,7 @@ class IP6ConfigSerializer(serializers.ModelSerializer):
     interface = serializers.PrimaryKeyRelatedField(queryset=Interface.objects.all())
     class Meta:
             model = IP6Config
-            fields = ['typeIP6','typeDHCP6', 'ip6_address','netmask6',
+            fields = ['typeip6','typedhcp6', 'ip6_address','netmask6',
                       'Request_only','Prefix_delegation','prefix_hint',
                       'IPv4_connectivity','VLAN_priority','information_only',
                       'send_options','request_options','script',
@@ -42,6 +42,6 @@ class GenericConfigSerializer(serializers.ModelSerializer):
     interface = serializers.PrimaryKeyRelatedField(queryset=Interface.objects.all())
     class Meta:
             model = GenericConfig
-            fields = ['mtuV','addmac','mssV','speed_duplex','interface']
+            fields = ['mtuv','addmac','mssv','speed_duplex','interface']
             
 

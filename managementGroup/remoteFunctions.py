@@ -5,14 +5,10 @@ from django.conf import settings
 from authentification.views import *
 
 # function to add sudo to command
-
-
 def sudo(cmd):
     return "sudo "+cmd
 
 # validation name of group and users (must content char and int)
-
-
 def validInput(var):
     regexp = re.compile('[^0-9a-zA-Z-_]+')
     if regexp.search(var):
@@ -21,9 +17,7 @@ def validInput(var):
         return True
 
 # function to add group
-
-
-def addRemoteGroup(groupname):
+def addGroup(groupname):
     # Run the getent group command and capture its output
     command = "groupadd "+groupname
     cmd = sudo(command)
@@ -31,27 +25,21 @@ def addRemoteGroup(groupname):
     return ssh.exec_command(cmd)
 
 # function to delete group
-
-
-def deleteRemoteGroup(groupname):
+def delete_group(groupname):
     # Run the getent group command and capture its output
     command = "groupdel "+groupname
     # Execute the command on the remote machine
     return ssh.exec_command(command)
 
 # functio to change username
-
-
-def changeRemoteGroupname(oldgroupname, Newgroupname):
+def change_groupname(oldgroupname, Newgroupname):
     # Run the getent group command and capture its output
     command = "groupmod -n " + Newgroupname + " "+oldgroupname
     # Execute the command on the remote machine
     return ssh.exec_command(command)
 
 # function to get UID from system
-
-
-def getRemoteLastGroupName():
+def getLastGroupName():
     # Run the getent group command and capture its output
     command = "getent group"
     # Execute the command on the remote machine
@@ -65,9 +53,7 @@ def getRemoteLastGroupName():
     return group_name
 
 # function de get id group
-
-
-def getRemoteGidGroup():
+def getGidGroup():
     # Run the getent group command and capture its output
     command = "getent group"
     # Execute the command on the remote machine
@@ -81,9 +67,7 @@ def getRemoteGidGroup():
     return gid
 
 # function to test if groupname exit
-
-
-def RemoteGroupExists(group_name):
+def group_exists(group_name):
     try:
         grp.getgrnam(group_name)
         return True
@@ -91,21 +75,19 @@ def RemoteGroupExists(group_name):
         return False
 
 # function de get all groupname by id
-
-
 def getGroupNameById(pk):
     group = Group.objects.get(id=pk)
     return str(group)
 
 
 # function to change groupname if groupname=username
-def remote_change_groupname_username(oldgroupname, Newgroupname):
+def change_groupname_username(oldgroupname, Newgroupname):
     msg = ''
-    if RemoteGroupExists(Newgroupname):
+    if group_exists(Newgroupname):
         msg = f"Username {Newgroupname} exists."
         return JsonResponse({"msg": msg})
     else:
-        stdin, stdout, stderr = changeRemoteGroupname(oldgroupname, Newgroupname) 
+        stdin, stdout, stderr = change_groupname(oldgroupname, Newgroupname) 
         if stderr.read().decode()=='':
             reporter = Group.objects.get(groupname=oldgroupname)
             reporter.groupname = Newgroupname

@@ -1,38 +1,11 @@
-from django.conf import settings
-import base64
-import logging
-import traceback
-from cryptography.fernet import Fernet
 import re
-import pam
-import hashlib
 from authentification.views import *
-
 
 
 def sudo(cmd):
     return "sudo "+cmd
 
-
-def changePW_byAdmin(newPassword, username):
-    # run 'passwd' command to change password
-    cmd = f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}"
-    stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
-    return stdin, stdout, stderr
-
-
-def changePW(currentPassword, newPassword, username):
-    # run 'passwd' command to change password
-    cmd = f"echo '{currentPassword}\n{newPassword}\n{newPassword}' | passwd"
-
-    # stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
-    stdin, stdout, stderr = ssh.exec_command(
-        f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}")
-
-    return stdin, stdout, stderr
-
-
-def getRemoteUidUser():
+def getUidUser():
     # Run the getent group command and capture its output
     command = "getent passwd"
     # Execute the command on the remote machine
@@ -44,9 +17,7 @@ def getRemoteUidUser():
     # Split the last line into fields and extract the group name (the first field)
     fields = last_line.split(":")
     uid = fields[2]
-
     return uid
-
 
 # validation name of group and users (must content char and int)
 def validInput(var):
@@ -57,8 +28,6 @@ def validInput(var):
         return True
 
 # validation password mustn't conetent " or '
-
-
 def validPassword(password):
     if re.findall(r'["|\'|;|\|]', password):
         return False
@@ -66,9 +35,7 @@ def validPassword(password):
         return True
 
 # function to test if username exit
-
-
-def RemoteUsernameExists(username):
+def username_exists(username):
     # Check if the username exists in the /etc/passwd file
     cmd="cat /etc/passwd"
     stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
@@ -80,15 +47,13 @@ def RemoteUsernameExists(username):
     return False
     
 # function to add user
-
-
-def addRemoteUser(username, password):
+def addUser(username, password):
     # Run the getent group command and capture its output
     command = "sudo useradd -m " + username + " && sudo echo " + \
         username+":"+password + " | sudo chpasswd"
     # Execute the command on the remote machine
     return ssh.exec_command(command)
-    # return ssh.exec_command(command)
+
 def addMailSpool(username):
     cmd=["touch /var/mail/"+username,"chown "+username+":mail /var/mail/"+username,"chmod 660 /var/mail/"+username]
     for i in cmd:
@@ -96,7 +61,7 @@ def addMailSpool(username):
 # function to delete user
 
 
-def deleteRemoteUser(username):
+def deleteUser(username):
     # Run the getent group command and capture its output
     # command = "userdel -r "+username
     command = "userdel "+username
@@ -106,7 +71,7 @@ def deleteRemoteUser(username):
 # functio to change username
 
 
-def RemotechangeUsername(newusername, oldusername):
+def changeUsername(newusername, oldusername):
     # Run the getent group command and capture its output
     command = "usermod -l " + newusername + " "+oldusername
     # Execute the command on the remote machine
@@ -115,7 +80,7 @@ def RemotechangeUsername(newusername, oldusername):
 # function to add user in group
 
 
-def RemoteAddUserGroup(groupname, username):
+def add_user_group(groupname, username):
     # Run the getent group command and capture its output
     command = "usermod -aG " + groupname + " "+username
     # Execute the command on the remote machine
@@ -139,7 +104,7 @@ def checkSameGroupnameWithUsername(username):
 
 
 # function to delete user from group
-def RemoteDeleteUserGroup(groupname, username):
+def delete_user_group(groupname, username):
     # Run the getent group command and capture its output
     command = "gpasswd -d "+username+" "+groupname
     # Execute the command on the remote machine
@@ -147,7 +112,7 @@ def RemoteDeleteUserGroup(groupname, username):
 
 
 # function to add user to group
-def RemoteAddUserGroup(groupname, username):
+def add_user_group(groupname, username):
     # Run the getent group command and capture its output
     command = "gpasswd -a "+username+" "+groupname
     # Execute the command on the remote machine
@@ -165,17 +130,21 @@ def whoami():
     last_line = lines[-2] if lines[-1] == "" else lines[-1]
     return last_line
 
+def changePW_byAdmin(newPassword, username):
+    # run 'passwd' command to change password
+    cmd = f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}"
+    stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
+    return stdin, stdout, stderr
 
-def decrypt(encrypted_text):
-    try:
-        # get the key from settings
-        cipher_suite = Fernet(settings.ENCRYPT_KEY)  # key should be byte
-        # decode from urlsafe base64 format
-        encrypted_text = base64.urlsafe_b64decode(encrypted_text)
-        # decrypt the text and convert it to string
-        decrypted_text = cipher_suite.decrypt(encrypted_text).decode('ascii')
-        return decrypted_text
-    except Exception as e:
-        # log the error if any
-        logging.getLogger("error_logger").error(traceback.format_exc())
-        return None
+
+def changePW(currentPassword, newPassword, username):
+    # run 'passwd' command to change password
+    cmd = f"echo '{currentPassword}\n{newPassword}\n{newPassword}' | passwd"
+
+    # stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
+    stdin, stdout, stderr = ssh.exec_command(
+        f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}")
+
+    return stdin, stdout, stderr
+
+

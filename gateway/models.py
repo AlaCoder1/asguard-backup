@@ -25,11 +25,11 @@ class Gateway(models.Model):
         super(Gateway, self).save(*args, **kwargs)
 
     class Meta:
-        db_table = 'Gateway'    
+        db_table = 'gateway'    
         
 class GatewayInterface(models.Model):
     interface = models.ForeignKey(Interface, on_delete=models.CASCADE)
     gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
     metric=models.IntegerField(null=True,default=0)
     class Meta:
-        db_table = 'GatewayInterface'    
+        db_table = 'gatewayinterface'    

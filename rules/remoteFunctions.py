@@ -67,6 +67,8 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
    #####cas dport is None
    if dport is None and not protocol.startswith("icmp") :
       rule=rule[:rule.find(('{} dport {}').format(protocol,dport))]+rule[rule.find(('{} dport {}').format(protocol,dport))+len(('{} dport {}').format(protocol,dport)):].strip()
+   if sport is None and dport is None and not protocol.startswith("icmp"):
+      rule=rule[:rule.find(policy)]+"ip protocol {} ".format(protocol)+rule[rule.find(policy):]
    return rule
 ###function to add rule
 def add_rule_remote(rule,ifname,type_rule):
@@ -84,8 +86,12 @@ def add_rule_remote(rule,ifname,type_rule):
       return True
 ###function to get handle rule   
 def get_handle_rule(ifname,type_rule,rule):
-   rule=rule.replace("echo-request","8")
-   rule=rule.replace("echo-reply","0")
+   # if not(rule.find('sport')==-1 and rule.find('dport')==-1):
+   if 'sport' not in rule and 'dport' not in rule:
+      rule=rule.replace("echo-request","8")
+      rule=rule.replace("echo-reply","0")
+      rule=rule.replace("tcp","6")
+      rule=rule.replace("udp","17")
    ##cmd pour obtenir handle number pour supprimer rule 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande

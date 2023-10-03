@@ -61,15 +61,12 @@ def conf(request,name_interface):
         # print("id_interface",id_interface)
         #get object of interface type
         deviceInfo = device_nameInterface(name_interface)
-        # print({"ifname":deviceInfo.ifname})
-        # print({"name_interface":deviceInfo.name_interface})
         #get interface name to execute command systeme
         ifname=deviceInfo.ifname
         nameInterface=deviceInfo.name_interface
         ##get uuid to reference to connection
         uuid=get_conn_name(ifname)
         ####
-       
         # parse the incoming information
         data = request.data
         # return JsonResponse({"data":data})
@@ -92,7 +89,6 @@ def conf(request,name_interface):
         cmd_final_ipv4=[]
         ##get old configuration in service
         output_service,error=get_old_config()
-        output_service=output_service.split('\n')
         if error!="":
             msg=error
             status=400
@@ -100,7 +96,6 @@ def conf(request,name_interface):
             if len(output_service)!=0:
                 #delete empty value
                 output_service = [x for x in output_service if x]
-                print("output_service",output_service)
                 ##add requirement service
                 output_service=add_requirement(ifname,output_service)
                 ###set gatewayObject to None
@@ -247,15 +242,14 @@ def conf(request,name_interface):
 EOF""".format('\n'.join(output_service))
                 # print("1111",run_all_commands(commandes_final,setuptypeIP4,typeDHCP4))
                 if run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,10) is True:
-                    completed_process = subprocess.run(cmd_asguard, shell=True, capture_output=True, text=True)
-                    output = completed_process.stdout
-                    error = completed_process.stderr
+                    output,error=run_command(ssh,cmd_asguard)
+                    #end env with ssh 
                     if  (error==""):
                         if setuptypeIP4=="dhcp":
                             ##function to get gateway if typeIPV4 est DHCP Base or Advanced
-                            gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname)
+                            gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ssh,ifname)
                             jsonIPV4["addrgw"]=gwaddr4
-                            ip_address4,netmask4=get_address_dhcp(ifname)
+                            ip_address4,netmask4=get_address_dhcp(ssh,ifname)
                             # print(ip_address4,"======>",netmask4)
                             jsonIPV4["ip_address"]=ip_address4
                             jsonIPV4["netmask"]=netmask4
@@ -270,13 +264,14 @@ EOF""".format('\n'.join(output_service))
                                 "multiwan_aux":multiwan_aux
                                     }
                                 aux_exist=Gateway.objects.filter(Q(gwaddress=gwaddr4) & Q(staticgw=False)).exists()
-                                GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
                                 if not aux_exist:
                                     aux_GW=add_gateway_DB(dataGw)
                                 else:
+                                    GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
                                     idGW=GatewayObject.id
                                     aux_GW=update_gateway_DB(dataGw,idGW)
                                 if aux_GW is True:
+                                    GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
                                     addGatewayInterfaceDB(GatewayObject,name_interface,metric)  
                                 else:
                                     msg=aux_GW

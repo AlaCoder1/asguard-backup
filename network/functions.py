@@ -63,7 +63,7 @@ def get_conn_name(ifname):
 def get_old_config():
     cmd = "cat /etc/systemd/system/Asguard-Networking.service"
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    output = completed_process.stdout
+    output = completed_process.stdout.split("\n")
     error = completed_process.stderr
     return output,error
    
@@ -207,18 +207,18 @@ def update_conn_static_IPV4(config,ifname,uuid,ipaddress,netmask,cmdgw,IP4Config
     #la liste des commandes pour l'IPV4 static
     commands=[]
     cmd_final=[]
-    if ipaddress is not None and ipaddress!=IP4ConfigObject.ip_address:
+    if ipaddress is not None and (IP4ConfigObject!="" and ipaddress!=IP4ConfigObject.ip_address or IP4ConfigObject=="" ):
         cmd_final.append("sudo nmcli connection modify {} ipv4.method manual ipv4.addresses {}/{}".format(uuid,ipaddress,netmask))
     cmd_final+=[ 
-         cmdgw, 
-        "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),
-        ]
+         cmdgw,      
+        "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),]
     
     return commands,config,cmd_final
 
 ################### Dhcp
 ####function to convert_to_subnet_mask 
 def convert_to_subnet_mask(bits):
+    
     cidr_bits = int(bits)
     if cidr_bits < 0 or cidr_bits > 32:
         return "Invalid CIDR bits"
@@ -350,7 +350,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
             speedV=10
             duplexV='half'
    #tester si addmac is not None
-    if addmac is not None and (genericConfigObject!="" and genericConfigObject.addmac!=addmac):
+    if addmac is not None and (genericConfigObject!="" and genericConfigObject.addmac!=addmac or genericConfigObject==""):
             #lancer la fonction de "remove old config"
             config=clean_old_config(config,"addmac config {}".format(ifname))
              #la liste des commandes pour l'address mac
@@ -363,7 +363,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
                 'sudo ip link set dev {} address {}'.format(ifname,addmac),
             ]
     #tester si mtu is not None
-    if mtuv is not None and (genericConfigObject!="" and mtuv!=genericConfigObject.mtuv!=mtuv):
+    if mtuv is not None and (genericConfigObject!="" and mtuv!=genericConfigObject.mtuv!=mtuv or genericConfigObject==""):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mtu config {}".format(ifname))
         #la liste des commandes pour mtu
@@ -376,7 +376,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
         'sudo ip link set dev {} mtu {}'.format(ifname,mtuv),
          ]
     #tester si mtu is not None
-    if mssv is not None and (genericConfigObject!="" and  mssv!=genericConfigObject.mssv):
+    if mssv is not None and (genericConfigObject!="" and mssv!=genericConfigObject.mssv or genericConfigObject==""):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mss config {}".format(ifname))
          #la liste des commandes pour mss
@@ -389,7 +389,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
         'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssv),
          ]
     #tester si speed_duplex is not None
-    if speed_duplex is not None and (genericConfigObject!="" and speed_duplex!=genericConfigObject.speed_duplex):
+    if speed_duplex is not None and (genericConfigObject!="" and  speed_duplex!=genericConfigObject.speed_duplex or genericConfigObject==""):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"speed duplex config {}".format(ifname))
         #la liste des commandes pour speed duplex

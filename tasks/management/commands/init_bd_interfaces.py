@@ -5,6 +5,7 @@ from django.db import IntegrityError
 import paramiko
 from django.conf import settings
 import random
+ssh = paramiko.SSHClient()
 
 def sudo(cmd):
     return "sudo "+cmd
@@ -21,9 +22,20 @@ class Command(BaseCommand):
             pw = kwargs['pw']
             server_path = "/etc/ConfigInterfaces"
             cmd = f"sudo cat {server_path}"
-            completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            output = completed_process.stdout
-            error = completed_process.stderr
+            # Version SSH connection 
+            ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+            ssh.connect(settings.SSH_HOST, username=name,
+                            password=pw, port=settings.SSH_PORT)
+            stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
+            error = stderr.read().decode('utf-8')
+            output = stdout.read().decode('utf-8')
+            # end Version SSH connection
+            
+           # verison without SSH
+            # completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            # output = completed_process.stdout
+            # error = completed_process.stderr
+           #end  verison without SSH
             if error == '':
                 lines = output.split('\n')
                 lines.pop()

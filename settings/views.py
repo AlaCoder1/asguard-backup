@@ -14,7 +14,6 @@ import socket
 import datetime
 import subprocess
 import random
-from rest_framework.authentication import SessionAuthentication
 # Create your views here.
 
 @api_view(['GET'])
@@ -165,11 +164,10 @@ def sys(request):
 def InsertInterface(request):
     liste_getway =[]
     liste_interfaces =[]
-    cmd1="sudo ip route list | grep default | cut -d ' ' -f 3-5"
-    completed_process1 = subprocess.run(cmd1, shell=True, capture_output=True, text=True)
-    output1 = completed_process1.stdout
-    error1 = completed_process1.stderr
-    output_getway_interface=output1.split('\n')
+    cmd1="ip route list | grep default | cut -d ' ' -f 3-5"
+    stdin1, stdout1, stderr1 = ssh.exec_command(cmd1)
+    print({'stderr1':stderr1.read().decode('utf-8')})
+    output_getway_interface=stdout1.read().decode('utf-8').split('\n')
     output_getway_interface.pop()
     print({'output_getway_interface':output_getway_interface})
     print({'len_output_getway_interface':len(output_getway_interface)})
@@ -177,33 +175,33 @@ def InsertInterface(request):
         liste_getway.append(i.split(' ')[0])
         liste_interfaces.append(i.split(' ')[2])
     file_path = "/etc/ConfigInterfaces"
+    # Open an SFTP session
+    sftp = ssh.open_sftp()
+
+    # Open the remote file in write mode
+    remote_file = sftp.open(file_path, 'w')
     list_LAN_WAN = ['LAN', 'WAN', "LAN1", "WAN1"]
-    content = ""
-
-    num_elements_to_select = len(list_LAN_WAN)
-    print({"num_elements_to_select": num_elements_to_select})
-
+    content=""
+    num_elements_to_select=len(liste_interfaces)
+    print({"num_elements_to_select":num_elements_to_select})
     for i in liste_interfaces:
         if num_elements_to_select <= len(list_LAN_WAN):
             random_element = random.choice(list_LAN_WAN)
-            print({"random_element": random_element})
-        content += "{}: {} \n".format(i, random_element)
+            print({"random_element":random_element})
+        #content
+        content+="{}: {} \n".format(i,random_element)
+    # Write content to the remote file
+    remote_file.write(content)
 
-    # Write content to the local file
-    with open(file_path, 'w') as local_file:
-        local_file.write(content)
+    # Close the remote file
+    remote_file.close()
 
-
-
-
-
-
+    # Close the SFTP session
+    sftp.close()
     cmd = f"cat {file_path}"
-    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    output = completed_process.stdout
-    error = completed_process.stderr
-    if error == '':
-        lines = output.split('\n')
+    stdin, stdout, stderr = ssh.exec_command(sudo(cmd))
+    if stderr.read().decode('utf-8') == '':
+        lines = stdout.read().decode('utf-8').split('\n')
         lines.pop()
         for i in range(0,len(lines)):
             # Check if an object with the same ifname exists
@@ -214,7 +212,7 @@ def InsertInterface(request):
             else:
                 Interface.objects.create(ifname=lines[i].split(':')[0],name_interface=lines[i].split(':')[1].strip())
     else:
-        return JsonResponse({"msg": "erreur: "+error}) 
+        return JsonResponse({"msg": "erreur: "+stderr.read().decode('utf-8')}) 
     # Gateway_Interface = GateWayInterface(gateway=i.split(' ')[0],interface=i.split(' ')[2])
     # Gateway_Interface.save()
     print({'liste_getway':liste_getway})
@@ -247,20 +245,19 @@ def AllGateway():
 def initDB_by_timeZone(request):
     msg=""
     if (request.method == 'GET'):
-        cmd = "sudo timedatectl list-timezones"
-        completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        output = completed_process.stdout
-        error = completed_process.stderr
-        listesOfTimezone = output.split('\n')
+        cmd = "timedatectl list-timezones"
+        stdin, stdout, stderr = ssh.exec_command(cmd)
+        error_str = stderr.read().decode('utf-8')
+        listesOfTimezone = stdout.read().decode('utf-8').split('\n')
         listesOfTimezone.pop()
-        print({"error_str":error})
-        if error =='':
+        print({"error_str":error_str})
+        if error_str =='':
             for time_data in listesOfTimezone:
                 timezone = Timezone(name=time_data)
                 timezone.save()
                 msg="timezone added succesfully"
         else:
-            msg=error
+            msg=error_str
         return JsonResponse({"msg": msg})
 
 from django.core import serializers   
@@ -300,16 +297,14 @@ def createNetwork(request):
         # check if the sent information is okay
         if (serializerNetwork.is_valid()):
             if data['prever_IPV4_IPV6']:
-                cmdNetwork="sudo nmcli connection mod "+InterfaceFromGateway(data['gateway'])+" +ipv4.dns "+data['server_DNS']
+                cmdNetwork="nmcli connection mod "+InterfaceFromGateway(data['gateway'])+" +ipv4.dns "+data['server_DNS']
             else:
-                cmdNetwork="sudo nmcli connection mod "+InterfaceFromGateway(data['gateway'])+" +ipv6.dns "+data['server_DNS']+" ipv6.method auto"
+                cmdNetwork="nmcli connection mod "+InterfaceFromGateway(data['gateway'])+" +ipv6.dns "+data['server_DNS']+" ipv6.method auto"
             # Execute the command on the remote machine
-            completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-            output = completed_process.stdout
-            error = completed_process.stderr
-            print({'stdout':output})
-            print({'stderr':error})
-            if error =="":
+            stdin, stdout, stderr = ssh.exec_command(cmdNetwork)
+            print({'stdout':stdout.read().decode('utf-8')})
+            print({'stderr':stderr.read().decode('utf-8')})
+            if stderr.read().decode('utf-8') =="":
                 msg = 'Network added succesfully'
                 # if okay, save it on the database
                 serializerNetwork.save()

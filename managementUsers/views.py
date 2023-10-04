@@ -1,6 +1,9 @@
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from .models import *
+from django.views.decorators.csrf import csrf_protect
+
 from .serializers import *
 from managementGroup.serializers import *
 from managementGroup.views import *
@@ -12,13 +15,19 @@ from .functions import *
 # from .remoteFunctions import *
 # end Version SSh connection
 import json
+from rest_framework.parsers import JSONParser
 from django.core import serializers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.hashers import make_password
+from django.conf import settings
+from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 
 # API to get all users
+
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
@@ -59,6 +68,8 @@ def getUser(request, id):
 
 
 # API to create user
+
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
@@ -78,13 +89,19 @@ def createUser(request):
                     data['organisation'] = organisation.id
                     if (validInput(username)):
                         if (validInput(password)):
-                            if addUser(username, password) == 0:
-                                addMailSpool(username)
+                            # Execute the command on the remote machine
+                            stdin, stdout, stderr = addUser(
+                                username, password)
+                            addMailSpool(username)
+                            # convert the stderr stream to a string
+                            error_str = stderr.read().decode('utf-8')
+                            if error_str == "":
                                 msg = username+" added sucessfully"
                                 uid = getUidUser()
                                 data['password'] = make_password(
                                     data['password'])
                                 data['uid'] = uid
+
                                 if ('group' in data):
                                     groups = data['group']
                                     for i in range(0, len(groups)):
@@ -92,7 +109,7 @@ def createUser(request):
                                             getGroupNameById(groups[i]), username)
                                     serializerUser = UserSerializerPost(
                                         data=data)
-                                    gid = getGidGroup()
+                                    gid = getUidGroup()
                                     groupname = {"groupname": username}
                                     groupname['gid'] = gid
                                     groupname['createdBySystem'] = True
@@ -113,7 +130,7 @@ def createUser(request):
                                 else:
                                     serializerUser = UserSerializerPostWithoutGroupAndPermission(
                                         data=data)
-                                    gid = getGidGroup()
+                                    gid = getUidGroup()
                                     groupname = {"groupname": username}
                                     groupname['gid'] = gid
                                     groupname['createdBySystem'] = True
@@ -132,7 +149,7 @@ def createUser(request):
                                     # provide a Json Response with the necessary error information
                                     return JsonResponse(serializerUser.errors, status=400)
                             else:
-                                msg = "Failed adding user"
+                                msg = error_str
                                 return JsonResponse({"msg": msg}, status=400)
                         else:
                             msg = "invalid password"
@@ -157,12 +174,16 @@ def delete_user(request, id):
     if (request.method == 'DELETE'):
         user = User.objects.get(id=id)
         group = Group.objects.filter(groupname=user.username)
-        if deleteUser(user.username) == 0:
+        # Execute the command on the remote machine
+        stdin, stdout, stderr = deleteUser(user.username)
+        # convert the stderr stream to a string
+        error_str = stderr.read().decode('utf-8')
+        if error_str == "":
             user.delete()
             group.delete()
             msg = "delete succesfully"
         else:
-            msg = "Failed deleting user"
+            msg = error_str
         # return a no content response.
         return JsonResponse({"msg": msg})
 
@@ -236,6 +257,8 @@ def modifyUser(request, id):
 
 
 # API to change password user
+
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
@@ -254,7 +277,7 @@ def changePasswordByAdmin(request, id):
             return JsonResponse({"msg": "Passwords do not match. Please try again."})
         else:
             # run 'passwd' command to change password
-            stdin, stdout, stderr = changePW_byAdmin(
+            stdout, stderr = changePW_byAdmin(
                 new_password, userObject.username)
             # check if password change was successful
             if stdout.channel.recv_exit_status() == 0:

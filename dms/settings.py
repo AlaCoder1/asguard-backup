@@ -50,6 +50,7 @@ INSTALLED_APPS = [
     "settings",
     "authentification",
     "subscription",
+    "background_task",
     "network",
     "openvpn",
     "ipsec",

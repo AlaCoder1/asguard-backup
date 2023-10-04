@@ -18,6 +18,7 @@ from gateway.models import *
 from gateway.functions import *
 from django.db.models import Q
 from django.core import serializers
+
 def device_nameInterface(name_interface):
     data = Interface.objects.get(name_interface=name_interface)
     return data
@@ -41,8 +42,7 @@ def add_interface(request):
 # @authentication_classes([AllowAny])
 # @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
-@api_view(['PUT'])
-@authentication_classes([SessionAuthentication])
+@csrf_exempt
 def conf(request,name_interface):
     msg="Failed to configure Network!"
     status=400
@@ -51,12 +51,8 @@ def conf(request,name_interface):
         interfaceObject = Interface.objects.get(name_interface=name_interface)
         id_interface = interfaceObject.id
         ###### get object Config
-        IP4ConfigObject=""
-        genericConfigObject=""
-        if IP4Config.objects.filter(interface_id=id_interface).exists():
-            IP4ConfigObject=IP4Config.objects.get(interface_id=id_interface)
-        if GenericConfig.objects.filter(interface_id=id_interface).exists():
-            genericConfigObject=GenericConfig.objects.get(interface_id=id_interface)
+        IP4ConfigObject=IP4Config.objects.get(interface_id=id_interface)
+        genericConfigObject=GenericConfig.objects.get(interface_id=id_interface)
         ###############
         # print("id_interface",id_interface)
         #get object of interface type
@@ -71,7 +67,7 @@ def conf(request,name_interface):
         ####
        
         # parse the incoming information
-        data = request.data
+        data = JSONParser().parse(request)
         # return JsonResponse({"data":data})
         setuptypeIP4 = data.get('setuptypeIP4')
         description = data.get('description')
@@ -92,7 +88,6 @@ def conf(request,name_interface):
         cmd_final_ipv4=[]
         ##get old configuration in service
         output_service,error=get_old_config()
-        output_service=output_service.split('\n')
         if error!="":
             msg=error
             status=400
@@ -100,7 +95,6 @@ def conf(request,name_interface):
             if len(output_service)!=0:
                 #delete empty value
                 output_service = [x for x in output_service if x]
-                print("output_service",output_service)
                 ##add requirement service
                 output_service=add_requirement(ifname,output_service)
                 ###set gatewayObject to None
@@ -150,15 +144,14 @@ def conf(request,name_interface):
                         data["reject"]=reject
                         data["hostname"]=hostname
                         #call function to convert mask format to bits
-                        if alias_mask is not None:
-                            alias_mask=convert_to_subnet_mask(alias_mask)
+                        alias_mask=convert_to_subnet_mask(alias_mask)
                         ####
                         if typeDHCP4=="Base" :
                             #contenu de dhclient.conf dhcp Base
                             configContenu=return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask)
                             jsonIPV4={
                     "nameInterface":nameInterface,"ifname":ifname,
-                    "typeIP4":setuptypeIP4,"typedhcp":typeDHCP4,
+                    "typeIP4":setuptypeIP4,"typeDHCP":typeDHCP4,
                     "alias_add":alias_add,"alias_mask":alias_mask,
                     "reject":reject,"hostname":hostname}
                         if typeDHCP4=="Advanced":
@@ -190,7 +183,7 @@ def conf(request,name_interface):
                             configContenu=return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,send_options_dhcp_client,supersede_domaine_name,prepend_domain_server,send_options_lease_time,request,require)
                             jsonIPV4={
                     "nameInterface":nameInterface,"ifname":ifname,
-                    "typeIP4":setuptypeIP4,"typedhcp":typeDHCP4,
+                    "typeIP4":setuptypeIP4,"typeDHCP":typeDHCP4,
                     "alias_add":alias_add,"alias_mask":alias_mask,
                     "reject":reject,"hostname":hostname,
                     "timeout":timeout,"retry":retry,
@@ -240,22 +233,20 @@ def conf(request,name_interface):
                 commandes+=commandesIPV6+cmds+cmdsBlock
                 ###call function to add all commandes to the service
                 output_service = add_cmd(output_service,commandes)
-                #ajouter au liste des commandes finales à executer  
+                #ajouter au liste des commandes finales à executer (ssh.exec_command) 
                 commandes_final+=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_Gen+cmd_final_Block
                 cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 {}
 EOF""".format('\n'.join(output_service))
                 # print("1111",run_all_commands(commandes_final,setuptypeIP4,typeDHCP4))
                 if run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,10) is True:
-                    completed_process = subprocess.run(cmd_asguard, shell=True, capture_output=True, text=True)
-                    output = completed_process.stdout
-                    error = completed_process.stderr
-                    if  (error==""):
+                    stdin, stdout, stderr = ssh.exec_command(cmd_asguard)  
+                    if  (stderr.read().decode('utf-8')==""):
                         if setuptypeIP4=="dhcp":
                             ##function to get gateway if typeIPV4 est DHCP Base or Advanced
-                            gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname)
+                            gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname,ssh)
                             jsonIPV4["addrgw"]=gwaddr4
-                            ip_address4,netmask4=get_address_dhcp(ifname)
+                            ip_address4,netmask4=get_address_dhcp(ifname,ssh)
                             # print(ip_address4,"======>",netmask4)
                             jsonIPV4["ip_address"]=ip_address4
                             jsonIPV4["netmask"]=netmask4
@@ -309,7 +300,7 @@ EOF""".format('\n'.join(output_service))
                             msg=aux_ipv4
                             status=400
                     else:
-                        msg=error
+                        msg=stderr.read().decode('utf-8')
                         status=400        
                 else:
                     msg=run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,10)

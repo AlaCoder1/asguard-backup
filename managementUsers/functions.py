@@ -1,13 +1,24 @@
 import os
 import subprocess
+import sys
+import base64
+import logging
+import traceback
+from django.conf import settings
+from cryptography.fernet import Fernet
 import re
-
+import pam
 
 # function to get UID from system
+
+
 def getUidUser():
-    return subprocess.run(["sudo", "getent", "passwd"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
+    return subprocess.run(["getent", "passwd"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
+
 
 # validation name of group and users (must content char and int)
+
+
 def validInput(var):
     regexp = re.compile('[^0-9a-zA-Z-_]+')
     if regexp.search(var):
@@ -16,6 +27,8 @@ def validInput(var):
         return True
 
 # validation password mustn't conetent " or '
+
+
 def validPassword(password):
     if re.findall(r'["|\'|;|\|]', password):
         return False
@@ -23,6 +36,8 @@ def validPassword(password):
         return True
 
 # function to test if username exit
+
+
 def username_exists(username):
     # Check if the username exists in the /etc/passwd file
     with open("/etc/passwd", "r") as passwd_file:
@@ -32,27 +47,40 @@ def username_exists(username):
     return False
 
 # function to add user
-def addUser(username, password):
-    return os.system("sudo useradd " + username + " && sudo echo "+username+":"+password + " | sudo chpasswd")
 
-def addMailSpool(username):
-    cmd=["touch /var/mail/"+username,"chown "+username+":mail /var/mail/"+username,"chmod 660 /var/mail/"+username]
-    for i in cmd:
-        os.system(i)
-        
+
+def addUser(username, password):
+    try:
+        return os.system("useradd " + username + " && echo "+username+":"+password + " | chpasswd")
+    except:
+        print(f"Failed to add user.")
+        sys.exit(1)
+
 # function to delete user
+
+
 def deleteUser(username):
-    return os.system("sudo userdel " + "-r " + username)
+    return os.system("userdel " + "-r " + username)
 
 # functio to change username
+
+
 def changeUsername(newusername, oldusername):
-    return os.system("sudo usermod -l " + newusername + " "+oldusername)
+    return os.system("usermod -l " + newusername + " "+oldusername)
 
 # function to add user in group
+
+
 def add_user_group(groupname, username):
-    return os.system("sudo usermod -aG " + groupname + " "+username)
+    try:
+        return os.system("usermod -aG " + groupname + " "+username)
+    except:
+        print(f"Failed to add user in group.")
+        sys.exit(1)
 
 # function  to check if username=groupname
+
+
 def checkSameGroupnameWithUsername(username):
     out = os.popen("id "+username).readline().strip('\n').strip()
     print(out)
@@ -60,23 +88,32 @@ def checkSameGroupnameWithUsername(username):
         return True
     return False
 
+
 # function to delete user from group
+
+
 def delete_user_group(groupname, username):
-    return os.system("sudo gpasswd -d "+username+" "+groupname)
+    return os.system("gpasswd -d "+username+" "+groupname)
+
 
 # function to add user to group
+
+
 def add_user_group(groupname, username):
-    return os.system("sudo gpasswd -a "+username+" "+groupname)
+    return os.system("gpasswd -a "+username+" "+groupname)
 
-def changePW_byAdmin(newPassword, username):
-    # run 'passwd' command to change password
-    cmd = f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}"
-    return os.system(cmd)
 
-def changePW(currentPassword, newPassword, username):
-    # run 'passwd' command to change password
-    cmd = f"echo '{currentPassword}\n{newPassword}\n{newPassword}' | passwd"
-    return os.system(cmd)
+# function to auth
+
+
+def authenticate(username, password):
+    service = 'login'
+    try:
+        authenticated = pam.authenticate(username, password, service)
+        return authenticated
+    except pam.exception as e:
+        print(e)
+        return False
 
     # function to get group users
 # def getGroupByUsers(groupname):

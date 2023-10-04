@@ -256,7 +256,7 @@ EOF""".format('\n'.join(output_service))
                             # print(gwaddr4,metric,default_aux,far_aux,multiwan_aux)
                             if gwaddr4 is not None:
                                 dataGw={
-                                "gwname":"DHCP_GW_{}".format(gwaddr4),
+                                "gwname":"DHCP_GW_{}".format(name_interface),
                                 "gwaddress":"{}".format(gwaddr4),
                                 "description":"DHCP gateway generated automatically ",
                                 "default_aux":default_aux,

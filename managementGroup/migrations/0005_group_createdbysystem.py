@@ -12,7 +12,7 @@ class Migration(migrations.Migration):
     operations = [
         migrations.AddField(
             model_name='group',
-            name='createdBySystem',
+            name='created_by_system',
             field=models.BooleanField(default=False),
         ),
     ]

@@ -4,21 +4,21 @@ from django.db import models
 class System(models.Model):
     hostname = models.CharField(max_length=200, null=True)
     domaine = models.CharField(max_length=200, null=True)
-    Time_zone = models.DateTimeField( null=True)
+    time_zone = models.DateTimeField( null=True)
     
     class Meta:
-        db_table = 'System'
+        db_table = 'system'
         
 class Network(models.Model):
-    prever_IPV4_IPV6 = models.BooleanField(default=False, null=True)
+    prever_ipv4_ipv6 = models.BooleanField(default=False, null=True)
     # server_DNS = models.JSONField(null=True)
-    server_DNS =  models.CharField(max_length=800, null=True)
+    server_dns =  models.CharField(max_length=800, null=True)
     gateway =  models.CharField(max_length=800, null=True)
-    allow_server_DNS = models.BooleanField(default=False, null=True)
+    allow_server_dns = models.BooleanField(default=False, null=True)
     exclude_interfaces = models.CharField(max_length=800, null=True)
     getway_failover = models.BooleanField(default=False, null=True)
     class Meta:
-        db_table = 'Network'
+        db_table = 'network'
         
 class ServerReseau(models.Model):
     circular_logs = models.BooleanField(default=False, null=True)
@@ -27,18 +27,18 @@ class ServerReseau(models.Model):
     exclude_interfaces = models.CharField(max_length=800, null=True)
     xxx = models.BooleanField(default=False, null=True)
     class Meta:
-        db_table = 'ServerReseau'
+        db_table = 'server_reseau'
         
         
 class Timezone(models.Model):
     name = models.CharField(max_length=800, null=True,unique=True)
 
     class Meta:
-        db_table = 'Timezone'
+        db_table = 'timezone'
         
-class GateWayInterface(models.Model):
-    gateway = models.CharField(max_length=800, null=True)
-    interface = models.CharField(max_length=800, null=True)
+# class GateWayInterface(models.Model):
+#     gateway = models.CharField(max_length=800, null=True)
+#     interface = models.CharField(max_length=800, null=True)
 
-    class Meta:
-        db_table = 'Gateway_Interface'
+#     class Meta:
+#         db_table = 'gateway_Interface'

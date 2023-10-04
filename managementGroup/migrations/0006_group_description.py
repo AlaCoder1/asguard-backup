@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('managementGroup', '0005_group_createdbysystem'),
+        ('managementGroup', '0005_group_created_by_system'),
     ]
 
     operations = [

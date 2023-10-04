@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('managementUsers', '0007_user_createdbysystem'),
+        ('managementUsers', '0007_user_created_by_system'),
     ]
 
     operations = [
         migrations.AlterField(
             model_name='user',
-            name='createdBySystem',
+            name='created_by_system',
             field=models.BooleanField(default=False),
         ),
     ]

@@ -112,7 +112,7 @@ def createUser(request):
                                     gid = getUidGroup()
                                     groupname = {"groupname": username}
                                     groupname['gid'] = gid
-                                    groupname['createdBySystem'] = True
+                                    groupname['created_by_system'] = True
                                     serializerGroup = GroupSerializer(
                                         data=groupname)
                                     # check if the sent information is okay
@@ -133,7 +133,7 @@ def createUser(request):
                                     gid = getUidGroup()
                                     groupname = {"groupname": username}
                                     groupname['gid'] = gid
-                                    groupname['createdBySystem'] = True
+                                    groupname['created_by_system'] = True
                                     serializerGroup = GroupSerializer(
                                         data=groupname)
                                     # check if the sent information is okay

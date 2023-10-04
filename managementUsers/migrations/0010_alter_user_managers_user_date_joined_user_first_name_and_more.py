@@ -9,7 +9,7 @@ class Migration(migrations.Migration):
 
     dependencies = [
         ('auth', '0012_alter_user_first_name_max_length'),
-        ('managementUsers', '0009_remove_user_createdbysystem'),
+        ('managementUsers', '0009_remove_user_created_by_system'),
     ]
 
     operations = [

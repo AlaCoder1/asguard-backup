@@ -25,14 +25,14 @@ from django.core import serializers
 def getAllGroups(request):
     list_group = []
     if (request.method == 'GET'):
-        groups = Group.objects.filter(createdBySystem=0)
+        groups = Group.objects.filter(created_by_system=0)
         groupDict = serializers.serialize("json", groups)
         res = json.loads(groupDict)
         for i in range(0, len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
-            res[i]['fields'].pop('createdBySystem')
+            res[i]['fields'].pop('created_by_system')
             res[i]['fields']['id'] = id
             list_group.append(res[i]['fields'])
         # return a Json response

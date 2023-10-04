@@ -37,9 +37,9 @@ from django.conf import settings
 class GenericConfig(models.Model):
     interface = models.ForeignKey(
             Interface, on_delete=models.CASCADE)
-    mtuV = models.IntegerField(null=True)
+    mtuv = models.IntegerField(null=True)
     addmac=models.CharField(max_length=200, null=True)
-    mssV=models.IntegerField(null=True)
+    mssv=models.IntegerField(null=True)
     speed_duplex=models.CharField(max_length=200, null=True)
       # Created and updated timestamps
     created_at = models.DateTimeField(default=timezone.now, editable=False,null=True)
@@ -55,7 +55,7 @@ class GenericConfig(models.Model):
         self.updated_at = timezone.now()
         super(GenericConfig, self).save(*args, **kwargs)
     class Meta:
-        db_table = 'GenericConfig'
+        db_table = 'genericConfig'
 
 
 #model to configure ipv4

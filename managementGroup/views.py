@@ -3,15 +3,13 @@ from django.http import JsonResponse
 from .models import *
 from .serializers import *
 import json
+from rest_framework.parsers import JSONParser
 from rest_framework.authentication import SessionAuthentication
-# Version without SSh connection
-# from .functions import *
-# end Version without SSh connection
-# Version SSh connection
+from .functions import *
 from .remoteFunctions import *
-# end Version SSh connection
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
+from authentification.authentication import JWTAuthentication
 from django.core import serializers
 # Create your views here.
 
@@ -61,9 +59,13 @@ def createGroup(request):
         data = request.data
         groupname = data['groupname']
         if (validInput(groupname)):
-            if addGroup(groupname) == 0:
+            # Execute the command on the remote machine
+            stdin, stdout, stderr = addRemoteGroup(groupname)
+            # convert the stderr stream to a string
+            error_str = stderr.read().decode('utf-8')
+            if error_str == "":
                 msg = groupname+" added sucessfully"
-                gid = getGidGroup()
+                gid = getRemoteGidGroup()
                 data['gid'] = gid
                 serializer = GroupSerializer(data=data)
                 # check if the sent information is okay
@@ -75,7 +77,7 @@ def createGroup(request):
                 # provide a Json Response with the necessary error information
                 return JsonResponse(serializer.errors, status=400)
             else:
-                msg = "Failed to add group."
+                msg = error_str
         else:
             msg = "groupname invalid"
             return JsonResponse({"msg": msg}, status=201)
@@ -90,7 +92,12 @@ def deleteGroup(request, id):
     msg = ''
     if (request.method == 'DELETE'):
         group = Group.objects.get(id=id)
-        if delete_group(group.groupname) == 0:
+        # Execute the command on the remote machine
+        stdin, stdout, stderr = deleteRemoteGroup(group.groupname)
+        # convert the stderr stream to a string
+        error_str = stderr.read().decode('utf-8')
+        print(stdout.read().decode('utf-8'))
+        if error_str == "":
             group.delete()
             msg = "delete succesfully"
         else:
@@ -99,7 +106,13 @@ def deleteGroup(request, id):
         return JsonResponse({"msg": msg})
 
 
+# API to update group
+def updateGroup(request, id):
+    return True
+
 # API to change groupname
+
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -113,11 +126,11 @@ def changeGroupname(request, id):
         oldgroupname = groupDict['groupname']
         Newgroupname = data['Newgroupname']
         if validInput(Newgroupname):
-            if group_exists(Newgroupname):
+            if RemoteGroupExists(Newgroupname):
                 msg = f"Username {Newgroupname} exists."
                 return JsonResponse({"msg": msg})
             else:
-                change_groupname(oldgroupname, Newgroupname)
+                changeRemoteGroupname(oldgroupname, Newgroupname)
                 msg = "updated succesfully"
                 group.groupname = Newgroupname
                 group.save()

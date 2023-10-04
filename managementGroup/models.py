@@ -8,7 +8,7 @@ class Group(models.Model):
     createdBySystem = models.BooleanField(default=False)
     
     class Meta:
-        db_table = 'group'
+        db_table = 'Group'
     
     def __str__(self):
         return self.groupname

@@ -1,6 +1,5 @@
 import subprocess
 from .models import *
-from authentification.views import *
 from network.address import *
 ####background task to execute it 
 from django.conf import settings
@@ -46,12 +45,14 @@ def update_interface_table(name_interface,data,InterfaceSerializer):
             serializerInterface.save()     
             return True
     return serializerInterface.errors 
-############################################################  
+############################################################ 
 def get_conn_name(ifname):
     cmd = "sudo nmcli connection show | awk '$NF == \"{}\" {{print}}'".format(ifname)
       ##executer cette commande
-    stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-    output = stdout.read().decode('utf-8').split('  ')
+    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout
+    error = completed_process.stderr
+    output = output.split('  ')
     if len(output)==0:
         return None
     else:
@@ -83,16 +84,16 @@ def add_cmd(output,commandes):
     output = output[:index_cmd] + commandes + output[index_cmd:]
     return output
 ################################# Function to execute command with timeout
-def run_command(ssh_client, command):
-    stdin, stdout, stderr = ssh_client.exec_command(command)
-    output = stdout.read().decode('utf-8')
-    error = stderr.read().decode('utf-8')
+def run_command(command):
+    completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout
+    error = completed_process.stderr
     return output, error
 
-def run_remote_command_with_timeout(type, typedhcp4, ssh_client, command, timeout_seconds):
+def run_remote_command_with_timeout(type, typeDHCP4, command, timeout_seconds):
     def run_command_thread():
         nonlocal output, error
-        output, error = run_command(ssh_client, command)
+        output, error = run_command(command)
 
     start_time = time.time()
     output = None
@@ -107,14 +108,11 @@ def run_remote_command_with_timeout(type, typedhcp4, ssh_client, command, timeou
     new_entry = tempsExucution(type=type, cmd=command, temps=elapsed_time)
     # Save the instance to the database
     new_entry.save()
-    if  (command.find("sudo dhclient")==-1) and error!="" and (error is not None and not error.startwith("Warning")) :
+    if  (command.find("sudo dhclient")==-1) and error!="" and (error is not None and not error.startswith("Warning")) :
         # print("error::::",error)
         return error
     elif command_thread.is_alive():
         print(f"Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}")
-        # completed_process = subprocess.run('\x03', shell=True, capture_output=True, text=True)
-        # output = completed_process.stdout
-        # error = completed_process.stderr
         try:
             # Send a Control+C signal using subprocess
             completed_process = subprocess.run('kill -INT ' + str(command_thread.ident), shell=True,
@@ -132,9 +130,9 @@ def run_remote_command_with_timeout(type, typedhcp4, ssh_client, command, timeou
         return True
         
 #function to run all commandes
-def run_all_commands(commandes,setuptypeip4,typedhcp4,timeout):
+def run_all_commands(commandes,setuptypeIP4,typeDHCP4,timeout):
     for cmd in commandes:
-        out=run_remote_command_with_timeout(setuptypeip4,typedhcp4,ssh, cmd, timeout)
+        out=run_remote_command_with_timeout(setuptypeIP4,typeDHCP4, cmd, timeout)
         if  out is not True :
             return out
     return True
@@ -164,9 +162,9 @@ EOF""".format('\n'.join(output))
         
         ]
     for cmd in cmd_final:
-        stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-        error = stderr.read().decode('utf-8')
-        output = stdout.read().decode('utf-8').split('\n')
+        completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+        output = completed_process.stdout
+        error = completed_process.stderr
         if error:
             msg=error,"    :"+cmd
             return False
@@ -327,9 +325,9 @@ def update_conn_dhcp_IPV4(config,ifname,uuid):
     
     return commandes,config,cmd_final
 
-def get_address_dhcp(ifname,ssh):
+def get_address_dhcp(ifname):
     cmd = "ip -4 -o addr show dev {} | awk '{{split($4, a); print a[1]}}'".format(ifname)
-    output, error = run_command(ssh, cmd)
+    output, error = run_command(cmd)
     if error!="" or len(output)==0:
         return None,None
     else:
@@ -454,7 +452,7 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject)
             rule='iifname {} ip saddr {}'.format(ifname,create_rule(bogon_address_ip4))
             #rules pour les adresses IPV6
             rule+='\n iifname {} ip6 saddr {}'.format(ifname,create_rule(bogon_address_ip6))
-         #tester si on bloque les addresses privées seulement   
+         #tester si on bloque les addresses privées seulement  
         elif private_aux and not bogon_aux:
             #rules pour les adresses ipv4
             rule='iifname {} ip saddr {}'.format(ifname,create_rule(private_address))
@@ -475,11 +473,12 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject)
             'ExecStart=/usr/bin/nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
             "#End nftables config {}".format(ifname)
             ]
-        if private_aux!=interfaceObject.private_aux or bogon_aux!=interfaceObject.bogon_aux:
+        if interfaceObject !="" and private_aux!=interfaceObject.private_aux or bogon_aux!=interfaceObject.bogon_aux:
             cmd_final+=[
                 'sudo nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
             ]
     else:
+
         #call function to clean old config
        config=clean_old_config(config,"nftables config {}".format(ifname))
     return configuration,commandes,config,cmd_final
@@ -505,30 +504,30 @@ def update_conn_static_ipv6(config,ifname,ip_address,netmask):
 ##dhcp ipv6
 ###############
 ###return base config
-def return_config_base_ipv6(ifname,id,request_only,prefix_delegation,prefix_hint,ipv4_connectivity,vlan_priority):
+def return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority):
     #contenu de fichier dhclient.conf "config base"
     configContenu=["interface {} {".format(ifname)]
-    if request_only==False:
+    if Request_only==False:
         configContenu.append("  send ia-na {}; # request stateful address".format(id))
     configContenu += ["  request domain-name-servers;", 
                       "  request domain-name;",
                           "};"]   
-    if request_only==False:
+    if Request_only==False:
         configContenu.append("id-assoc na {} { };".format(id))
-    if prefix_delegation is not None:
+    if Prefix_delegation is not None:
         # Setup the prefix delegation 
             configContenu.append("id-assoc pd {} {".format(id))
             if  prefix_hint is not None:
-                preflen = 64 - prefix_delegation
+                preflen = 64 - Prefix_delegation
                 configContenu.append("  prefix ::/{} infinity;".format(preflen))
                         
     return configContenu
 
 ###return advanced config
 def return_config_advanced_ipv6(ifname,
-id,ipv4_connectivity,vlan_priority,information_only,
-send_options,request_options,script,non_temporary,id_assoc,address,nlifetime,nvalid_time,
-prefix_delegation,id_assoc_pd,ipv6_prefix,plifetime,pvalid_time,
+id,IPv4_connectivity,VLAN_priority,information_only,
+send_options,request_options,script,non_temporary,id_assoc,address,Nlifetime,Nvalid_time,
+prefix_delegation,id_assoc_pd,IPv6_Prefix,Plifetime,Pvalid_time,
 authname,protocol,algorithm,
 rdm,keyname,royaume,keyid,secret,expire):
     #contenu de fichier dhcp6c.conf "config advanced"
@@ -565,10 +564,10 @@ rdm,keyname,royaume,keyid,secret,expire):
         else:
             id_assoc_statement_address+=id
         id_assoc_statement_address+="{\n"
-        if address!='' and nlifetime.isdigit() or nlifetime == 'infinity':
-            id_assoc_statement_address+=" address "+ address+nlifetime
-            if nvalid_time.isdigit() or nvalid_time == 'infinity':
-                id_assoc_statement_address+=nvalid_time
+        if address!='' and Nlifetime.isdigit() or Nlifetime == 'infinity':
+            id_assoc_statement_address+=" address "+ address+Nlifetime
+            if Nvalid_time.isdigit() or Nvalid_time == 'infinity':
+                id_assoc_statement_address+=Nvalid_time
             id_assoc_statement_address+=";\n"
         id_assoc_statement_address+="};\n"
     
@@ -580,10 +579,10 @@ rdm,keyname,royaume,keyid,secret,expire):
         else:
             id_assoc_statement_prefix += id_assoc_pd
         id_assoc_statement_prefix += "{\n"
-        if ipv6_prefix != '' and plifetime.isdigit() and plifetime == 'infinity':
-            id_assoc_statement_prefix += " prefix " + ipv6_prefix + plifetime
-            if pvalid_time.isdigit() or pvalid_time == 'infinity':
-                id_assoc_statement_prefix+=pvalid_time
+        if IPv6_Prefix != '' and Plifetime.isdigit() and Plifetime == 'infinity':
+            id_assoc_statement_prefix += " prefix " + IPv6_Prefix + Plifetime
+            if Pvalid_time.isdigit() or Pvalid_time == 'infinity':
+                id_assoc_statement_prefix+=Pvalid_time
             id_assoc_statement_prefix+=";\n"
         id_assoc_statement_prefix  += "};\n"
     authentication_statement = ""

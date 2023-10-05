@@ -50,23 +50,8 @@ def authentification(request):
                 userObject = User.objects.get(username=username)
                 userDict = userObject.__dict__
                 CurrentUser = {"username":userDict['username'],"email":userDict['email']}
-                # userDict = userObject.__dict__
-                # del userDict['_state']
-                # del userDict['password']
-                # del userDict['last_login']
-                # del userDict['token_last_expired']
                 settings.CurrentUserId = userDict['id']
-                # def getCurrentUserId():
-                #     userObject = User.objects.get(username=username)
-                #     userDict = userObject.__dict__
-                #     settings.CurrentUserId = userDict['id']
-                #     return userDict['id']
-                # getCurrentUserId()
-                ## add this code so that logout work with jwt and timeleft
-                
-                # return JsonResponse({'message': ' Success Authentification','jwt':jwt_token}, status=status.HTTP_200_OK)
-                ## end code
-                return JsonResponse({'message': ' Success Authentification',"p":CurrentUser}, status=status.HTTP_200_OK)
+                return JsonResponse({'message': ' Success Authentification',"currentUser":CurrentUser}, status=status.HTTP_200_OK)
             else:
                 return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
@@ -75,16 +60,7 @@ def authentification(request):
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
-#@authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
 def logout_view(request):
-    # verison without SSH
     logout(request)
-    # end without ssh version
-    # ssh version
-    # if logout(request) is None:
-    #     # close the SSH connection
-    #     ssh.close()
-    # end ssh version
     return JsonResponse({"msg": 'User Logged out successfully'})
 

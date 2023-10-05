@@ -1,3 +1,4 @@
+import subprocess
 from rules.serializers import *
 from django.conf import settings
 from authentification.views import *
@@ -33,9 +34,10 @@ EOF""".format(ifname,rules),
 
 ##executer le script créée précédamment retourner true si pas d'error sinon false en cas d'error
    for cmd in commandes:
-      stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-      error = stderr.read().decode('utf-8')
-      output = stdout.read().decode('utf-8').split('\n')
+      completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+      output = completed_process.stdout
+      error = completed_process.stderr
+      output = output.split('\n')
       if error !="":
          return error
    return True
@@ -67,7 +69,10 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
    #####cas dport is None
    if dport is None and not protocol.startswith("icmp") :
       rule=rule[:rule.find(('{} dport {}').format(protocol,dport))]+rule[rule.find(('{} dport {}').format(protocol,dport))+len(('{} dport {}').format(protocol,dport)):].strip()
+   if sport is None and dport is None and not protocol.startswith("icmp"):
+      rule=rule[:rule.find(policy)]+"ip protocol {} ".format(protocol)+rule[rule.find(policy):]
    return rule
+
 ###function to add rule
 def add_rule_remote(rule,ifname,type_rule):
    ##initialiser les commanndes pour ajouter une règle et l'entregistrer 
@@ -77,15 +82,20 @@ def add_rule_remote(rule,ifname,type_rule):
    ]
       ###executer ces commandes
       for cmd in commandes:
-         stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-         error = stderr.read().decode('utf-8')
+         completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+         output = completed_process.stdout
+         error = completed_process.stderr
          if error!='': 
             return error
       return True
 ###function to get handle rule   
 def get_handle_rule(ifname,type_rule,rule):
-   rule=rule.replace("echo-request","8")
-   rule=rule.replace("echo-reply","0")
+   # if not(rule.find('sport')==-1 and rule.find('dport')==-1):
+   if 'sport' not in rule and 'dport' not in rule:
+      rule=rule.replace("echo-request","8")
+      rule=rule.replace("echo-reply","0")
+      rule=rule.replace("tcp","6")
+      rule=rule.replace("udp","17")
    ##cmd pour obtenir handle number pour supprimer rule 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
@@ -96,6 +106,7 @@ def get_handle_rule(ifname,type_rule,rule):
       return None
    else:
       return output[1].strip().split("\n")[0]
+
 ###function to delete rule
 def delete_rule_remote(ifname,type_rule,handle):
    ##initialiser les commanndes pour supprimer une règle et l'entregistrer dans nftables.conf
@@ -105,8 +116,9 @@ def delete_rule_remote(ifname,type_rule,handle):
    ]
    ##executer ces commandes
    for cmd in commandes:
-      stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-      error = stderr.read().decode('utf-8')
+      completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+      output = completed_process.stdout
+      error = completed_process.stderr
       if error !="":
          return error  
    return True

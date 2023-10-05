@@ -99,9 +99,9 @@ def get_handle_rule(ifname,type_rule,rule):
    ##cmd pour obtenir handle number pour supprimer rule 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
-   stdin, stdout, stderr = ssh.exec_command('{}'.format(cmd))
-   error = stderr.read().decode('utf-8')
-   output = stdout.read().decode('utf-8').split('#')
+   completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+   output = completed_process.stdout.split('#')
+   error = completed_process.stderr
    if len(output)<2:
       return None
    else:

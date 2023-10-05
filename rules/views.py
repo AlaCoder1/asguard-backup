@@ -119,7 +119,7 @@ def saveRules(request,name_interface):
         dport = None if data.get('dport', None) == "" else data.get('dport', None)
         protocol = None if data.get('protocol', None) == "" else data.get('protocol', None)
         type_rule = data.get('type_rule', None)
-        Rule_description=data.get('Rule_description', None)
+        rule_description=data.get('rule_description', None)
         data = {
           "id":id,
           'policy': policy,
@@ -129,7 +129,7 @@ def saveRules(request,name_interface):
           'dport': dport,
           'protocol': protocol,
           'type_rule': type_rule,
-          'Rule_description': Rule_description
+          'rule_description': rule_description
           }
         #test if rule exist or not with id 
         if (id is not None and Rule.objects.filter(id=id).exists()):

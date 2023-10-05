@@ -32,15 +32,26 @@
                 </v-col>
 
                 <v-col cols="12">
-                  <v-autocomplete :items="['root', 'admin', 'user']" label="Role user" v-model="formData.role"></v-autocomplete>
+                  <v-autocomplete :items="['root', 'admin', 'user']" label="Role user"
+                    v-model="formData.role"></v-autocomplete>
                 </v-col>
 
+                <v-col cols="12">
+                  <v-autocomplete :items="groups" label="Assign to Group" multiple item-text="groupname" item-value="id"  v-model="formData.groups"
+                    @change="handleGroupChange"></v-autocomplete>
+                </v-col>
+
+                <v-col cols="12">
+                  <label for="Deactivate User">Deactivate User</label>
+                  <input type="checkbox" id="Deactivate User" v-model="formData.deactivateUser" />
+                </v-col>
                 <!-- User Modal -->
               </v-row>
             </v-container>
             <small>*indicates required field</small>
           </v-card-text>
           <v-card-actions>
+
             <v-spacer></v-spacer>
             <v-btn color="blue-darken-1" variant="text" type="submit">
               Save
@@ -69,7 +80,11 @@ export default {
     },
     mode: {
       type: String,
-      required: true
+      required: true,
+    },
+    groups: {
+      type: Array,
+      required: true,
     },
   },
   data() {
@@ -87,6 +102,11 @@ export default {
     }
   },
   methods: {
+    handleGroupChange(selectedItems) {
+      console.log('Selected Groups:', JSON.stringify(selectedItems));
+      console.log('formData Groups:', JSON.stringify(this.formData.groups));
+    },
+
     closeModal() {
       // this.resetForm();
       this.$emit('closeModal');

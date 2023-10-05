@@ -6,6 +6,7 @@
     <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-server" @click="openModal">
       <span>Add Server </span>
     </v-btn>
+    
     <Modal 
     :mode="modalMode"
     :isOpen="isModalOpen"
@@ -27,7 +28,6 @@ export default {
     AgGridVue,
     Modal,
     // NetworkModal : WithModal(Modal),
-    
   },
   data() {
     return {

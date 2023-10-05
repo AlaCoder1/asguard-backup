@@ -23,7 +23,7 @@
                                 <v-tab-item :value="'user-management'" :transition="false">
                                     <v-row no-gutters align="center" class=" pr-4 axe-media-print-hide axe-sticky-three">
                                         <v-col cols="6" style="height: 100%;">
-                                            <user-management :DataList="users" />
+                                            <user-management :DataList="{'groups': groups, 'users': users}" />
                                         </v-col>
                                         <v-col cols="6" style="height: 100%;">
                                             <network-server-management />

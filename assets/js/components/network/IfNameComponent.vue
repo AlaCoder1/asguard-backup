@@ -57,7 +57,7 @@
                                     </td>
                                     <td>
                                         <ValidationProvider name="IPV4 Setup Type" rules="required" v-slot="{ errors }">
-                                            <select class="ml-3 setuptypeIP4-style" v-model="setuptypeIP4"
+                                            <select class="ml-3 setuptypeip4-style" v-model="setuptypeip4"
                                                 :error-messages="errors">
                                                 <option v-for="item in items" :value="item.value">{{ item.text }}</option>
                                                 <v-icon>mdi-chevron-down</v-icon>
@@ -98,7 +98,7 @@
                                     <td>
                                         <ValidationProvider name="MTU" v-slot="{ errors }"
                                             :rules="{ regex: /^(1[5-9][0-9]{2}|[2-8][0-9]{3}|9000)$/ }">
-                                            <v-text-field label="Enter MTU" class="ml-3 mt-2" v-model="mtuV"
+                                            <v-text-field label="Enter MTU" class="ml-3 mt-2" v-model="mtuv"
                                                 :error-messages="errors"></v-text-field>
                                         </ValidationProvider>
                                     </td>
@@ -109,7 +109,7 @@
                                     </td>
                                     <td>
                                         <ValidationProvider name="MSS">
-                                            <v-text-field label="Enter MSS" class="ml-3 mt-2" v-model="mssV"
+                                            <v-text-field label="Enter MSS" class="ml-3 mt-2" v-model="mssv"
                                                 @input="validateMSS"></v-text-field>
                                             <div class="message-error">
                                                 <div v-if="mssError" class="message-error">{{ mssError }}</div>
@@ -144,7 +144,7 @@
                     </v-col>
                     <v-col cols="12" sm="6"
                         v-if="value_setup_Ipv4.ip_address4 != null || value_setup_Ipv4.ip_address4 != null">
-                        <div v-if="setuptypeIP4 === 'static'">
+                        <div v-if="setuptypeip4 === 'static'">
                             <v-card-title class="title-text">Static IPV4 address configuration</v-card-title>
                             <v-divider class="ml-3" style="height: 39px;width: 425px;"></v-divider>
                             <table class="ml-3 mt-3">
@@ -321,7 +321,7 @@
                                 <v-text-field label="expire" class="ml-3 inline-input"></v-text-field>
                             </div>
                         </div>
-                        <div v-if="setuptypeIP4 === 'DHCP'">
+                        <div v-if="setuptypeip4 === 'DHCP'">
                             <v-card-title class="title-text">Configuring the DHCP Client</v-card-title>
                             <v-divider class="ml-3"></v-divider>
                             <v-row class="ml-3 mt-3">
@@ -395,7 +395,7 @@
                                 <v-text-field label="Prepend domain server" class="ml-3 inline-input"></v-text-field>
                             </div>
                         </div>
-                        <div v-if="setuptypeIP4 === 'PPP'">
+                        <div v-if="setuptypeip4 === 'PPP'">
                             <v-card-title class="title-text">Configuration PPP</v-card-title>
                             <v-divider class="ml-3"></v-divider>
                             <v-card elevation="9" class="ml-3 mt-3 mr-3" title="Service provider (FAI)">
@@ -899,7 +899,7 @@ export default {
             return `The ${field} field is required.`;
         },
         validateMSS() {
-            if (parseInt(this.mssV) > parseInt(this.mtuV)) {
+            if (parseInt(this.mssv) > parseInt(this.mtuv)) {
                 this.mssError = 'MSS must be less than or equal to MTU';
             } else {
                 this.mssError = '';
@@ -962,7 +962,7 @@ export default {
                 return true;
             },
         },
-        setuptypeIP4: {
+        setuptypeip4: {
             required: function (value) {
                 if (!value) {
                     return this.customRequiredMessage("IPV4 Setup Type");
@@ -1096,7 +1096,7 @@ export default {
     line-height: normal;
 }
 
-.setuptypeIP4-style {
+.setuptypeip4-style {
     height: 39px;
     width: 100%;
     border-radius: 4px;

@@ -3,7 +3,6 @@ import vuetify from '@/plugins/vuetify';
 import App from '@/pages/user_certificate_managment';
 
 // any CSS you import will output into a single css file (app.css in this case)
-import VeeValidate from 'vee-validate';
 import VueI18n from 'vue-i18n';
 import dictionnary from './dictionnary';
 import enJson from './translations/en.json'; 
@@ -20,7 +19,7 @@ const i18n = new VueI18n({
   },
 });
 
-Vue.use(VeeValidate, {
+Vue.use( {
   i18n,
   store,
   classes: true,

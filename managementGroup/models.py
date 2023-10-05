@@ -6,7 +6,7 @@ class Group(models.Model):
     description = models.CharField(max_length=200, null=True)
     gid = models.IntegerField(null=True,unique=True)
     created_by_system = models.BooleanField(default=False)
-    
+    #test git
     class Meta:
         db_table = 'group'
     

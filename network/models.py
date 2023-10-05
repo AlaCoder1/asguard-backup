@@ -37,9 +37,9 @@ from django.conf import settings
 class GenericConfig(models.Model):
     interface = models.ForeignKey(
             Interface, on_delete=models.CASCADE)
-    mtuV = models.IntegerField(null=True)
+    mtuv = models.IntegerField(null=True)
     addmac=models.CharField(max_length=200, null=True)
-    mssV=models.IntegerField(null=True)
+    mssv=models.IntegerField(null=True)
     speed_duplex=models.CharField(max_length=200, null=True)
       # Created and updated timestamps
     created_at = models.DateTimeField(default=timezone.now, editable=False,null=True)
@@ -104,7 +104,7 @@ class IP4Config(models.Model):
         self.updated_at = timezone.now()
         super(IP4Config, self).save(*args, **kwargs)
     class Meta:
-        db_table = 'IP4Config'
+        db_table = 'ip4config'
         
 
 #model to configure ipv6
@@ -119,11 +119,11 @@ class IP6Config(models.Model):
     ip6_address=models.CharField(max_length=200, null=True,default=None)
     netmask6=models.IntegerField(null=True,default=None)
     ##dhcp base 
-    Request_only= models.BooleanField(default=False)
-    Prefix_delegation=models.IntegerField(null=True,default=None)
+    request_only= models.BooleanField(default=False)
+    prefix_delegation=models.IntegerField(null=True,default=None)
     prefix_hint= models.BooleanField(default=False)
-    IPv4_connectivity= models.BooleanField(default=False)
-    VLAN_priority=models.CharField(max_length=200, null=True,default=None)
+    ipv4_connectivity= models.BooleanField(default=False)
+    vlan_priority=models.CharField(max_length=200, null=True,default=None)
     ##dhcp advanced
      #interface status
     information_only=models.BooleanField(default=False)
@@ -141,9 +141,9 @@ class IP6Config(models.Model):
     prefix_delegation=models.CharField(max_length=200, null=True,default=None)
     ####if prefix_delegation is true
     id_assoc_pd=models.CharField(max_length=200, null=True,default=None)
-    IPv6_Prefix=models.CharField(max_length=200, null=True,default=None)
-    Plifetime=models.CharField(max_length=200, null=True,default=None)
-    Pvalid_time=models.CharField(max_length=200, null=True,default=None)
+    ipv6_prefix=models.CharField(max_length=200, null=True,default=None)
+    plifetime=models.CharField(max_length=200, null=True,default=None)
+    pvalid_time=models.CharField(max_length=200, null=True,default=None)
     #####
     
     #authentification
@@ -185,4 +185,4 @@ class tempsExucution(models.Model):
     temps=models.FloatField(null=True)
 
     class Meta:
-        db_table = 'tempsExucution'
+        db_table = 'temps_exucution'

@@ -69,7 +69,7 @@ def conf(request,name_interface):
         # parse the incoming information
         data = JSONParser().parse(request)
         # return JsonResponse({"data":data})
-        setuptypeIP4 = data.get('setuptypeIP4')
+        setuptypeip4 = data.get('setuptypeip4')
         description = data.get('description')
         bogon_aux = data.get('bogon_aux')
         private_aux = data.get('private_aux')
@@ -100,12 +100,12 @@ def conf(request,name_interface):
                 ###set gatewayObject to None
                 GatewayObject=None
                 ##IPV4 configuration cases 
-                match setuptypeIP4:
+                match setuptypeip4:
                     case "None":
                          #call function to convert address to None
                         commandes,output_service,cmd_final_ipv4=update_conn_None_IPV4(output_service,ifname)
                     case "static":
-                        typeDHCP4=''
+                        typedhcp4=''
                         ip_address4 =  None if data['value_setup_Ipv4'].get('ip_address4', None) == "" else  data['value_setup_Ipv4'].get('ip_address4', None)
                         netmask4 =  None if data['value_setup_Ipv4'].get('netmask4', None) == "" else  data['value_setup_Ipv4'].get('netmask4', None)
                         gateway4 =  None if data['value_setup_Ipv4']['gateway4'].get('value', None) == "" else  data['value_setup_Ipv4']['gateway4'].get('value', None)
@@ -131,10 +131,10 @@ def conf(request,name_interface):
                     "nameInterface":nameInterface,"ifname":ifname,
                     "ip_address":ip_address4,"netmask":netmask4,
                     "addrgw":addrgw4,
-                    "typeIP4":setuptypeIP4}
+                    "typeip4":setuptypeip4}
                     case "dhcp":
                         addmac = None
-                        typeDHCP4 = data.get('value_setup_Ipv4')['typeDHCP4']
+                        typedhcp4 = data.get('value_setup_Ipv4')['typedhcp4']
                         alias_add =  None if data['value_setup_Ipv4'].get('alias_add', None) == "" else  data['value_setup_Ipv4'].get('alias_add', None)
                         alias_mask =  None if data['value_setup_Ipv4'].get('alias_mask', None) == "" else  data['value_setup_Ipv4'].get('alias_mask', None)
                         reject =  None if data['value_setup_Ipv4'].get('reject', None) == "" else  data['value_setup_Ipv4'].get('reject', None)
@@ -146,15 +146,15 @@ def conf(request,name_interface):
                         #call function to convert mask format to bits
                         alias_mask=convert_to_subnet_mask(alias_mask)
                         ####
-                        if typeDHCP4=="Base" :
+                        if typedhcp4=="Base" :
                             #contenu de dhclient.conf dhcp Base
                             configContenu=return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask)
                             jsonIPV4={
                     "nameInterface":nameInterface,"ifname":ifname,
-                    "typeIP4":setuptypeIP4,"typeDHCP":typeDHCP4,
+                    "typeip4":setuptypeip4,"typedhcp":typedhcp4,
                     "alias_add":alias_add,"alias_mask":alias_mask,
                     "reject":reject,"hostname":hostname}
-                        if typeDHCP4=="Advanced":
+                        if typedhcp4=="Advanced":
                             timeout =  None if data['value_setup_Ipv4'].get('timeout', None) == "" else  data['value_setup_Ipv4'].get('timeout', None)
                             retry =  None if data['value_setup_Ipv4'].get('retry', None) == "" else  data['value_setup_Ipv4'].get('retry', None)
                             select_timeout =  None if data['value_setup_Ipv4'].get('select_timeout', None) == "" else  data['value_setup_Ipv4'].get('select_timeout', None)
@@ -183,7 +183,7 @@ def conf(request,name_interface):
                             configContenu=return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,send_options_dhcp_client,supersede_domaine_name,prepend_domain_server,send_options_lease_time,request,require)
                             jsonIPV4={
                     "nameInterface":nameInterface,"ifname":ifname,
-                    "typeIP4":setuptypeIP4,"typeDHCP":typeDHCP4,
+                    "typeip4":setuptypeip4,"typedhcp":typedhcp4,
                     "alias_add":alias_add,"alias_mask":alias_mask,
                     "reject":reject,"hostname":hostname,
                     "timeout":timeout,"retry":retry,
@@ -206,12 +206,12 @@ def conf(request,name_interface):
                     #     #call function to convert address to static ipv6
                     #     commandesIPV6,output_service,cmd_final_ipv6=update_conn_static_ipv6(output_service,ifname,ip6_address,netmask6)
                     # case "dhcp":
-                    #     if typeDHCP=="Base" :
+                    #     if typedhcp=="Base" :
                     #     #contenu de dhclient.conf dhcp Base
-                    #         configContenu=return_config_base_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
-                    #     if typeDHCP=="Advanced":
+                    #         configContenu=return_config_base_ipv6(ifname,id,request_only,prefix_delegation,prefix_hint,ipv4_connectivity,vlan_priority)
+                    #     if typedhcp=="Advanced":
                     #     #contenu de dhclient.conf dhcp advanced
-                    #         configContenu=return_config_advanced_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
+                    #         configContenu=return_config_advanced_ipv6(ifname,id,request_only,prefix_delegation,prefix_hint,ipv4_connectivity,vlan_priority)
                     #     #add commands of create file dhclient to list of commandes to execute    
                     #     commandes_final+=create_file_ipv6(ifname,configContenu)
                     #     #call function to convert address to dhcp advanced /Base  in service
@@ -238,11 +238,11 @@ def conf(request,name_interface):
                 cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 {}
 EOF""".format('\n'.join(output_service))
-                # print("1111",run_all_commands(commandes_final,setuptypeIP4,typeDHCP4))
-                if run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,10) is True:
+                # print("1111",run_all_commands(commandes_final,setuptypeip4,typedhcp4))
+                if run_all_commands(commandes_final,setuptypeip4,typedhcp4,10) is True:
                     stdin, stdout, stderr = ssh.exec_command(cmd_asguard)  
                     if  (stderr.read().decode('utf-8')==""):
-                        if setuptypeIP4=="dhcp":
+                        if setuptypeip4=="dhcp":
                             ##function to get gateway if typeIPV4 est DHCP Base or Advanced
                             gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname,ssh)
                             jsonIPV4["addrgw"]=gwaddr4
@@ -303,7 +303,7 @@ EOF""".format('\n'.join(output_service))
                         msg=stderr.read().decode('utf-8')
                         status=400        
                 else:
-                    msg=run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,10)
+                    msg=run_all_commands(commandes_final,setuptypeip4,typedhcp4,10)
                     status=400
             else:
                 msg="Failed to configure Network Service not found!!"

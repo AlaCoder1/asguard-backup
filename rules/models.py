@@ -16,7 +16,7 @@ class Rule(models.Model):
     interface = models.ForeignKey(
             Interface, on_delete=models.CASCADE, null=True)
     class Meta:
-        db_table = 'Rule'
+        db_table = 'rule'
 
     def __str__(self):
         return self.rule

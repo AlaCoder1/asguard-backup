@@ -66,7 +66,7 @@ line-height: normal;">Generic configuration</v-card-title>
                             <td>
                                 <div class="mt-5 mt-3">IPV4 Setup Type</div>
                             </td>
-                            <td> <select class="ml-3" v-model="setuptypeIP4" style=" height: 39px;
+                            <td> <select class="ml-3" v-model="setuptypeip4" style=" height: 39px;
                     width: 100%;
                     border-radius: 4px;
                     border: 1px solid #F6F6F6;
@@ -162,7 +162,7 @@ line-height: normal;">Generic configuration</v-card-title>
                             <td>
                                 <div class="mt-5 mt-6">MTU (Maximum Transmission Unit)</div>
                             </td>
-                            <td> <v-text-field label="Enter MTU" class="ml-3 mt-2" v-model="mtuV"></v-text-field>
+                            <td> <v-text-field label="Enter MTU" class="ml-3 mt-2" v-model="mtuv"></v-text-field>
                             </td>
                         </tr>
                         <tr>
@@ -238,7 +238,7 @@ line-height: normal;">Generic configuration</v-card-title>
 
             </v-col>
             <v-col cols="12" sm="6" v-if="value_setup_Ipv4.ip_address4 != null || value_setup_Ipv4.ip_address4 != null">
-                <div v-if="setuptypeIP4 === 'static'">
+                <div v-if="setuptypeip4 === 'static'">
                     <v-card-title style="color: #020202;
 font-family: Nunito;
 font-size: 18px;
@@ -502,7 +502,7 @@ line-height: normal;">Key info</v-card-title>
                         <v-text-field label="expire" class="ml-3 inline-input"></v-text-field>
                     </div>
                 </div>
-                <div v-if="setuptypeIP4 === 'DHCP'">
+                <div v-if="setuptypeip4 === 'DHCP'">
                     <v-card-title style="color: #020202;
 font-family: Nunito;
 font-size: 18px;
@@ -592,7 +592,7 @@ line-height: normal;">Lease Requirements</v-card-title>
                         <v-text-field label="Prepend domain server" class="ml-3 inline-input"></v-text-field>
                     </div>
                 </div>
-                <div v-if="setuptypeIP4 === 'PPP'">
+                <div v-if="setuptypeip4 === 'PPP'">
                     <v-card-title style="color: #020202;
 font-family: Nunito;
 font-size: 18px;
@@ -907,12 +907,12 @@ export default {
             private_aux: false,
             bogon_aux: false,
 
-            setuptypeIP4: "",
+            setuptypeip4: "",
             ipv6SetupType: "",
 
             addmac: "",
-            mtuV: "",
-            mssV: "",
+            mtuv: "",
+            mssv: "",
             speed_duplex: "",
 
             dynamicGatewayPolicy: false,
@@ -961,10 +961,10 @@ export default {
                 private_aux: this.private_aux,
                 bogon_aux: this.bogon_aux,
                 addmac: this.addmac,
-                mtuV: this.mtuV,
-                mssV: this.mssV,
+                mtuv: this.mtuv,
+                mssv: this.mssv,
                 speed_duplex: this.speed_duplex,
-                setuptypeIP4: this.setuptypeIP4,
+                setuptypeip4: this.setuptypeip4,
                 value_setup_Ipv4: {
                     ip_address4: this.value_setup_Ipv4.ip_address4,
                     netmask4: this.value_setup_Ipv4.netmask4,
@@ -1120,17 +1120,17 @@ export default {
         this.bogon_aux = this.IPV4Config.interface.bogon;
 
         this.addmac = this.IPV4Config.genericConfig.addmac;
-        this.mtuV = this.IPV4Config.genericConfig.mtuV;
-        this.mssV = this.IPV4Config.genericConfig.mssV;
+        this.mtuv = this.IPV4Config.genericConfig.mtuv;
+        this.mssv = this.IPV4Config.genericConfig.mssv;
         this.speed_duplex = this.IPV4Config.genericConfig.speed_duplex;
 
-        this.setuptypeIP4 = this.IPV4Config.IPV4Config.typeIP4;
+        this.setuptypeip4 = this.IPV4Config.IPV4Config.typeip4;
         this.value_setup_Ipv4.ip_address4 = this.IPV4Config.IPV4Config.ip_address;
         this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 
         this.name_interface = this.IPV4Config.interface.name_interface;
 
-        this.ipv6SetupType = this.IPV4Config.IPV4Config.typeDHCP;
+        this.ipv6SetupType = this.IPV4Config.IPV4Config.typedhcp;
     },
 };
 </script>

@@ -55,7 +55,7 @@ class GenericConfig(models.Model):
         self.updated_at = timezone.now()
         super(GenericConfig, self).save(*args, **kwargs)
     class Meta:
-        db_table = 'GenericConfig'
+        db_table = 'genericConfig'
 
 
 #model to configure ipv4
@@ -64,8 +64,8 @@ class IP4Config(models.Model):
     interface = models.ForeignKey(
             Interface, on_delete=models.CASCADE, null=True)
 
-    typeIP4=models.CharField(max_length=200, null=True,default=None)
-    typeDHCP=models.CharField(max_length=200, null=True,default=None)
+    typeip4=models.CharField(max_length=200, null=True,default=None)
+    typedhcp=models.CharField(max_length=200, null=True,default=None)
     ##static
     ip_address=models.CharField(max_length=200, null=True,default=None)
     netmask=models.IntegerField(null=True,default=None)
@@ -113,8 +113,8 @@ class IP6Config(models.Model):
     interface = models.ForeignKey(
             Interface, on_delete=models.CASCADE, null=True)
 
-    typeIP6=models.CharField(max_length=200, null=True,default=None)
-    typeDHCP6=models.CharField(max_length=200, null=True,default=None)
+    typeip6=models.CharField(max_length=200, null=True,default=None)
+    typedhcp6=models.CharField(max_length=200, null=True,default=None)
     ##static
     ip6_address=models.CharField(max_length=200, null=True,default=None)
     netmask6=models.IntegerField(null=True,default=None)
@@ -134,8 +134,8 @@ class IP6Config(models.Model):
     ####if non_temporary is true
     id_assoc=models.CharField(max_length=200, null=True,default=None)
     address=models.CharField(max_length=200, null=True,default=None)
-    Nlifetime=models.CharField(max_length=200, null=True,default=None)
-    Nvalid_time=models.CharField(max_length=200, null=True,default=None)
+    nlifetime=models.CharField(max_length=200, null=True,default=None)
+    nvalid_time=models.CharField(max_length=200, null=True,default=None)
     ####
     
     prefix_delegation=models.CharField(max_length=200, null=True,default=None)
@@ -171,7 +171,10 @@ class IP6Config(models.Model):
         self.updated_at = timezone.now()
         super(IP6Config, self).save(*args, **kwargs)
     class Meta:
-        db_table = 'IP6Config'
+        db_table = 'ip6config'
+
+
+
 
 
 

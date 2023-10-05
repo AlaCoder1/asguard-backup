@@ -7,7 +7,12 @@ import json
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from authentification.views import *
+# Version without SSh connection
 from .functions import *
+# end Version without SSh connection
+# Version SSh connection
+# from .remoteFunctions import *
+# end Version SSh connection
 from django.views.decorators.csrf import csrf_exempt
 from gateway.models import *
 from gateway.functions import *
@@ -68,12 +73,12 @@ def conf(request,name_interface):
         description = data.get('description')
         bogon_aux = data.get('bogon_aux')
         private_aux = data.get('private_aux')
-        mtuV =  None if data.get('mtuV', None) == "" else data.get('mtuV', None)
-        mssV =  None if data.get('mssV', None) == "" else data.get('mssV', None)
+        mtuv =  None if data.get('mtuv', None) == "" else data.get('mtuv', None)
+        mssv =  None if data.get('mssv', None) == "" else data.get('mssv', None)
         speed_duplex =  None if data.get('speed_duplex', None) == "" else data.get('speed_duplex', None)
         addmac =  None if data.get('addmac', None) == "" else data.get('addmac', None)
-        data["mtuV"]=mtuV
-        data["mssV"]=mssV
+        data["mtuv"]=mtuv
+        data["mssv"]=mssv
         data["speed_duplex"]=speed_duplex
         data["addmac"]=addmac
         commandes=[]
@@ -216,7 +221,7 @@ def conf(request,name_interface):
                 
                 ##for generic config 
                 cmds=[]       
-                cmds,output_service,cmd_final_Gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObject)
+                cmds,output_service,cmd_final_Gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObject)
                 ##blocages des adresses
                 cmdsBlock=[]
                 configs=[]
@@ -263,6 +268,7 @@ EOF""".format('\n'.join(output_service))
                                     idGW=GatewayObject.id
                                     aux_GW=update_gateway_DB(dataGw,idGW)
                                 if aux_GW is True:
+                                    GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
                                     addGatewayInterfaceDB(GatewayObject,name_interface,metric)  
                                 else:
                                     msg=aux_GW

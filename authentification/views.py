@@ -31,12 +31,11 @@ def authentification(request):
             user = authenticate(request, username=username, password=password)
             if (user is not None):
                 login(request, user)
-                # automatically add host key when connecting to a new host
-                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                # connect to SSH server
-                ssh.connect(settings.SSH_HOST, username=username,
-                            password=password, port=settings.SSH_PORT)
-                
+                # Version SSH connection 
+                # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                # ssh.connect(settings.SSH_HOST, username=username,
+                #             password=password, port=settings.SSH_PORT)
+                # end Version SSH connection
                 settings.USERNAME = username
                 settings.PASSWORD = password
                 ## add this code so that logout work with jwt and timeleft
@@ -79,13 +78,13 @@ def authentification(request):
 #@authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def logout_view(request):
-    # username = request.user.username
-    print({"logout": logout(request)})
-    if logout(request) is None:
-        # close the SSH connection
-        ssh.close()
-    # userObject = User.objects.get(username=username)
-    # userObject.token_last_expired = datetime.now()+timedelta(hours=0)
-    # userObject.save()
+    # verison without SSH
+    logout(request)
+    # end without ssh version
+    # ssh version
+    # if logout(request) is None:
+    #     # close the SSH connection
+    #     ssh.close()
+    # end ssh version
     return JsonResponse({"msg": 'User Logged out successfully'})
 

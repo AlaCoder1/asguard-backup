@@ -104,16 +104,27 @@ def add_user_group(groupname, username):
 
 
 # function to auth
+def addMailSpool(username):
+    cmd=["touch /var/mail/"+username,"chown "+username+":mail /var/mail/"+username,"chmod 660 /var/mail/"+username]
+    for i in cmd:
+        os.system(i)
 
+def changePW_byAdmin(newPassword, username):
+    # run 'passwd' command to change password
+    cmd = f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}"
+    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout.split("\n")
+    error = completed_process.stderr
+    return output,error
 
-def authenticate(username, password):
-    service = 'login'
-    try:
-        authenticated = pam.authenticate(username, password, service)
-        return authenticated
-    except pam.exception as e:
-        print(e)
-        return False
+def changePW(currentPassword, newPassword, username):
+    # run 'passwd' command to change password
+    cmd = f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}"
+    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout.split("\n")
+    error = completed_process.stderr
+    return output,error
+
 
     # function to get group users
 # def getGroupByUsers(groupname):

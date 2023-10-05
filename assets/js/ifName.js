@@ -6,8 +6,12 @@ import VueI18n from 'vue-i18n';
 import enJson from './translations/en.json';
 import frJson from './translations/fr.json';
 import store from '@/store/index';
+import { ValidationProvider } from 'vee-validate/dist/vee-validate.full.esm';
+import { ValidationObserver } from 'vee-validate';
 
 Vue.use(VueI18n);
+Vue.component('ValidationProvider', ValidationProvider);
+Vue.component('ValidationObserver', ValidationObserver);
 
 const i18n = new VueI18n({
   locale: 'en',
@@ -17,7 +21,7 @@ const i18n = new VueI18n({
   },
 });
 
-Vue.use( {
+Vue.use({
   i18n,
   classes: true,
   fieldsBagName: 'formFields',

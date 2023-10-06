@@ -34,6 +34,7 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
+    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -54,8 +55,15 @@ INSTALLED_APPS = [
     "openvpn",
     "ipsec",
     "rules",
-    "gateway"
+    "gateway",
+    "dashboard"
 ]
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer"
+    }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -87,6 +95,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'dms.wsgi.application'
+ASGI_APPLICATION = 'dms.asgi.application'
 
 
 # Database

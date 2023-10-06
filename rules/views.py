@@ -117,9 +117,22 @@ def saveRules(request,name_interface):
         daddr = None if data.get('daddr', None) == "" else data.get('daddr', None)
         sport = None if data.get('sport', None) == "" else data.get('sport', None)
         dport = None if data.get('dport', None) == "" else data.get('dport', None)
-        protocol = None if data.get('protocol', None) == "" else data.get('protocol', None)
+        protocols = None if data.get('protocol', None) == "" else data.get('protocol', None)
         type_rule = data.get('type_rule', None)
         rule_description=data.get('rule_description', None)
+        #####
+        protocol=''
+        if protocols is not None :
+            if len(protocols)>1:
+              for i in range(len(protocols)-1):
+                  protocol+=protocols[i]+', '
+              protocol+=protocols[-1]
+              protocol='{ '+protocol+' }'
+            else:
+              protocol=protocols[0]
+        else:
+            protocol=protocols
+        #####
         data = {
           "id":id,
           'policy': policy,

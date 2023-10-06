@@ -18,17 +18,18 @@ class CertificateAuthority(models.Model):
     organization = models.CharField(max_length=100, default=None, blank=True, null=True)
     email = models.CharField(max_length=100, default=None, blank=True, null=True)
     common_name = models.CharField(max_length=100, default=None, blank=True, null=True)
+    serial = models.CharField(max_length=100, default=None, blank=True, null=True)
 
     class Meta:
-        db_table = 'CertificateAuthority'
+        db_table = 'certificate_authority'
 
 
 class Certificate(models.Model):
     """Model of activated certificates or keys"""
-    certificate_authority = models.ForeignKey(CertificateAuthority, on_delete=models.CASCADE, default=None, blank=True, null=True)
+    certificate_authority = models.ForeignKey(CertificateAuthority, on_delete=models.PROTECT, default=None, blank=True, null=True)
     name = models.CharField(max_length=300, unique=True, default=None, blank=True, null=True)
     certificate_path = models.CharField(max_length=1000, default=None, blank=True, null=True)
-    certificate_type = models.CharField(default=None, blank=True, null=True)  # can be certificate or key or Diffie-Hellman
+    certificate_type = models.CharField(max_length=1000, default=None, blank=True, null=True)  # can be certificate or key or Diffie-Hellman
     activation = models.BooleanField(default=True)  # Activated or Revoked
     valid_from = models.DateTimeField(default=None, blank=True, null=True)
     valid_until = models.DateTimeField(default=None, blank=True, null=True)
@@ -43,6 +44,7 @@ class Certificate(models.Model):
     organization = models.CharField(max_length=100, default=None, blank=True, null=True)
     email = models.CharField(max_length=100, default=None, blank=True, null=True)
     common_name = models.CharField(max_length=100, default=None, blank=True, null=True)
+    serial = models.CharField(max_length=100, default=None, blank=True, null=True)
 
     class Meta:
-        db_table = 'Certificate'
+        db_table = 'certificate'

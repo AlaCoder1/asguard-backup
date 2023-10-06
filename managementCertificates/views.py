@@ -1,5 +1,9 @@
 from datetime import datetime, timedelta
-from django.http import JsonResponse
+import os
+from django.conf import settings
+from django.http import FileResponse, JsonResponse
+from django.db.models import Q
+from django.db.models.deletion import ProtectedError
 import json
 from rest_framework.authentication import SessionAuthentication
 from django.core import serializers
@@ -7,7 +11,7 @@ from django.core import serializers
 from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from managementCertificates.certificate import create_ca_in_system, create_certificate_in_system, delete_ca_in_system, delete_certificate_in_system, import_ca_in_system, import_certificate_in_system, read_certificate_value
+from managementCertificates.certificate import create_ca_in_system, create_certificate_in_system, delete_ca_in_system, delete_certificate_in_system, export_ca_in_system, export_ca_list_rev_in_system, export_certificate_in_system, import_ca_in_system, import_certificate_in_system, revoke_certificates_in_system, unrevoke_certificates_in_system
 
 from managementCertificates.models import Certificate, CertificateAuthority
 from managementCertificates.serializers import CertificateAuthoritySerializer, CertificateSerializer
@@ -15,10 +19,13 @@ from openvpn.functions import CommandExecutionError
 
 # Create your views here.
 
+##################################################
 ############# Certificates Authority #############
+##################################################
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def getAllCertAuth(request):
     """Getting all Certificates Authority from database"""
     list_ca = []
@@ -37,7 +44,7 @@ def getAllCertAuth(request):
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def getCertAuth(request, id):
     """Getting a Certificates Authority by id from database"""
     if (request.method == 'GET'):
@@ -50,9 +57,10 @@ def getCertAuth(request, id):
         res[0]['fields']['id'] = id
         return JsonResponse(res[0]['fields'], safe=False)
 
+
 @api_view(['POST'])
-# @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def createCertAuth(request):
     """Creating a new Certificates Authority in system and adding it to the database"""
     if request.method == 'POST':
@@ -106,14 +114,15 @@ def createCertAuth(request):
                                         #    "REQ_CN": common_name
                                            }
                     # Install the server in system
-                    create_ca_in_system(ca_name=data["name"], updated_fields_vars=updated_fields_vars)
+                    serial = create_ca_in_system(ca_name=data["name"], updated_fields_vars=updated_fields_vars)
+                    ca_data['serial'] = serial
                     ca_data["certificate_path"] = f'/etc/certificates_{name}/ca.crt\n/etc/certificates_{name}/ca.key'
                     serializer_ca = CertificateAuthoritySerializer(data=ca_data)
                     if serializer_ca.is_valid():
 
                         # Add the server to the database
                         serializer_ca.save()
-                        return JsonResponse({"msg": "CA Configuration is done"}, status=201)
+                        return JsonResponse({"msg": f"CA {name} is created"}, status=201)
                     else:
                         print(serializer_ca.errors)
                 else:
@@ -129,13 +138,14 @@ def createCertAuth(request):
                 input_ca = {"certificate_data": certificate_data,
                             "certificate_private_key": certificate_private_key,
                             }
-                import_ca_in_system(name, input_ca)
+                serial = import_ca_in_system(name, input_ca)
+                ca_data['serial'] = serial
                 ca_data = {"name": name,
                            "certificate_path": f'/etc/certificates_{name}/ca.crt\n/etc/certificates_{name}/ca.key'}
                 serializer_ca = CertificateAuthoritySerializer(data=ca_data)
                 if serializer_ca.is_valid():
                     serializer_ca.save()
-                    return JsonResponse({"msg": "CA Configuration is done"}, status=201)
+                    return JsonResponse({"msg": f"CA {name} is created"}, status=201)
 
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in creating CA"}, status=401)
@@ -143,22 +153,65 @@ def createCertAuth(request):
 
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def deleteCertAuth(request, id):
     """Deleting a Certificates Authority from system and then from database"""
-    if (request.method == 'DELETE'):
-        ca = CertificateAuthority.objects.get(id=id)
-        # delete from system
-        delete_ca_in_system(ca.name)
-        # delete from database
-        ca.delete()
-        return JsonResponse({"msg": f"delete {ca.name} succesfully"})
+    try:
+        if (request.method == 'DELETE'):
+            ca = CertificateAuthority.objects.get(id=id)
+            # delete from system
+            delete_ca_in_system(ca.name)
+            # delete from database
+            ca.delete()
+            return JsonResponse({"msg": f"delete {ca.name} succesfully"})
+    except ProtectedError:
+        return JsonResponse({"msg": "You have to delete Certificates authoried by this CA"})
 
 
-############# Certificates #############
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def exportCertAuth(request, id):
+    """Exporting a Certificate Authority"""
+    if request.method == 'POST':
+        try:
+            ca = CertificateAuthority.objects.get(id=id)
+            data = request.data
+            download_cert_path = data.get('path', '')
+            download_type = data.get('type', '')
+            if download_type == 'certificate':
+                export_ca_in_system(f'/etc/certificates_{ca.name}/ca.crt', f'{download_cert_path}')
+            else:
+                export_ca_in_system(f'/etc/certificates_{ca.name}/ca.key', f'{download_cert_path}')
+            return JsonResponse({"msg": f"Export CA {ca.name} {download_type}"}, status=201)
+
+        except CommandExecutionError:
+            return JsonResponse({"msg": "Error in exporting CA"}, status=401)
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def exportCertAuthListRev(request, id):
+    """Exporting a Certificate Authority"""
+    if request.method == 'POST':
+        try:
+            ca = CertificateAuthority.objects.get(id=id)
+            data = request.data
+            download_cert_path = data.get('path', '')
+            export_ca_list_rev_in_system(ca.name, f'{download_cert_path}')
+            return JsonResponse({"msg": f"Export list of revocation of CA {ca.name} "}, status=201)
+
+        except CommandExecutionError:
+            return JsonResponse({"msg": "Error in exporting list of revocation"}, status=401)
+
+
+##################################################
+################## Certificates ##################
+##################################################
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def getAllCertificates(request):
     """Getting all Certificates from database"""
     list_cert = []
@@ -177,7 +230,7 @@ def getAllCertificates(request):
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def getCertificate(request, id):
     """Getting a Certificate by id from database"""
     if (request.method == 'GET'):
@@ -190,9 +243,10 @@ def getCertificate(request, id):
         res[0]['fields']['id'] = id
         return JsonResponse(res[0]['fields'], safe=False)
 
+
 @api_view(['POST'])
-# @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def createCertificate(request):
     """Creating a new Certificates Authority in system and adding it to the database"""
     if request.method == 'POST':
@@ -201,7 +255,6 @@ def createCertificate(request):
             data = request.data
             name = data.get('name', '')
             method = data.get('method', '')
-            print('method= ', method)
             certificate_type = data.get('certificate_type', 'True')
             activation = data.get('activation', '')
             if method.get("method_name", "") == 'create':
@@ -256,8 +309,9 @@ def createCertificate(request):
                                                "DIGEST": digest_algorithm,
                                             #    "REQ_CN": common_name
                                                }
-                        create_certificate_in_system(cert_name=name, ca_name=ca.name, type_cert=certificate_type, 
-                                                     updated_fields_vars=updated_fields_vars)
+                        serial = create_certificate_in_system(cert_name=name, ca_name=ca.name, type_cert=certificate_type, 
+                                                              updated_fields_vars=updated_fields_vars)
+                        cert_data["serial"] = serial
 
                         # Add the certificate to the database
                         if certificate_type == 'server':
@@ -268,21 +322,21 @@ def createCertificate(request):
 
                         if serializer_cert.is_valid():
                             serializer_cert.save()
-                            return JsonResponse({"msg": "Certificate Configuration is done"}, status=201)
+                            return JsonResponse({"msg": f"Certificate {name} is created"}, status=201)
                 else:
-                    print('error in creating cert= ', serializer_cert.errors)
-                    return JsonResponse({"msg": "Error in Certificate configuration"}, status=401)
+                    return JsonResponse({"msg": f"Error in Certificate configuration\n{serializer_cert.errors}"}, status=401)
             elif method.get("method_name", "") == 'import':
                 certificate_data = method.get("certificate_data", "")
                 certificate_key = method.get("certificate_key", "")
                 input_cert = {"certificate_data": certificate_data,
-                            "certificate_private_key": certificate_key,
-                            }
+                              "certificate_private_key": certificate_key,
+                              }
 
-                import_certificate_in_system(name, certificate_type, input_cert)
+                serial = import_certificate_in_system(name, certificate_type, input_cert)
                 cert_data = {"name": name,
                              "certificate_type": certificate_type,
-                             "activation": activation
+                             "activation": activation,
+                             "serial": serial
                              }
                 if certificate_type == 'server':
                     cert_data["certificate_path"] = f'''/etc/openvpn/certificates_{name}/server.crt\n/etc/openvpn/certificates_{name}/server.key'''
@@ -302,7 +356,7 @@ def createCertificate(request):
 
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def deleteCertificate(request, id):
     """Deleting a Certificates from system and then from database"""
     if (request.method == 'DELETE'):
@@ -312,3 +366,68 @@ def deleteCertificate(request, id):
         # delete from database
         cert.delete()
         return JsonResponse({"msg": f"delete {cert.name} succesfully"})
+
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def revokeCertificate(request, id):
+    if request.method == 'PUT':
+        cert = Certificate.objects.get(id=id)
+        ca = cert.certificate_authority
+
+        # Importing all the CA previous revoked certificates and add the new certificate
+        list_revoked = Certificate.objects.filter(Q(certificate_authority=ca, activation=False) | Q(id=id))
+        # all_revoked = [revoked_cert for revoked_cert in list_revoked]
+        # all_revoked.append(cert)
+        
+        # Revoking all the certificates in system and generate a crl file
+        revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
+        cert.activation = False
+        cert.save()
+        return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def unrevokeCertificate(request, id):
+    if request.method == 'PUT':
+        cert = Certificate.objects.get(id=id)
+        ca = cert.certificate_authority
+
+        # Importing all the CA previous revoked certificates and add the new certificate
+        list_revoked = Certificate.objects.filter(~Q(id=cert.id), certificate_authority=ca, activation=False)
+        
+        # Revoking all the certificates in system and generate a crl file
+        unrevoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
+        cert.activation = True
+        cert.save()
+        return JsonResponse({"msg": f"Certificate {cert.name} is unrevoked and removed from the crl file of the ca {ca.name}"})
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def exportCert(request, id):
+    """Creating a new Certificates Authority in system and adding it to the database"""
+    if request.method == 'POST':
+        try:
+            cert = Certificate.objects.get(id=id)
+            data = request.data
+            download_cert_path = data.get('path', '')
+            download_type = data.get('download_type', '')  # Certificate, private key or .p12
+            cert_type = cert.certificate_type  # server or client
+            if download_type == 'p12':
+                password = data.get('password', '')
+                confirm_password = data.get('confirm_password', '')
+                export_certificate_in_system(cert_name=cert.name, cert_type=cert.certificate_type, download_cert_path=download_cert_path,
+                                             download_type=download_type, password=password, confirm_password=confirm_password)
+            else:
+                export_certificate_in_system(cert_name=cert.name, cert_type=cert.certificate_type, download_cert_path=download_cert_path,
+                                             download_type=download_type)
+            
+            return JsonResponse({"msg": f"Export {cert_type} Certificate {cert.name} {download_type}"}, status=201)
+
+        except CommandExecutionError:
+            return JsonResponse({"msg": "Error in exporting CA"}, status=401)

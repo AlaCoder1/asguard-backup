@@ -8,6 +8,9 @@ urlpatterns = [
     path('createServerOpenvpn', views.createServerOpenvpn, name="createServerOpenvpn"),
     path('deleteServerOpenvpn/<int:id>', views.deleteServerOpenvpn, name="deleteServerOpenvpn"),
     path('updateServerOpenVPN/<int:id>', views.updateServerOpenVPN, name="updateServerOpenVPN"),
+    path('startServerOpenvpn/<int:id>', views.startServerOpenvpn, name="startServerOpenvpn"),
+    path('restartServerOpenvpn/<int:id>', views.restartServerOpenvpn, name="restartServerOpenvpn"),
+    path('stopServerOpenvpn/<int:id>', views.stopServerOpenvpn, name="stopServerOpenvpn"),
     
     ####### Client ######
     path('getAllClientOpenvpn', views.getAllClientOpenvpn, name="getAllClientOpenvpn"),

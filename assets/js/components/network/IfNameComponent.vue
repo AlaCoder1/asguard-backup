@@ -65,7 +65,7 @@
                                         </ValidationProvider>
                                     </td>
                                 </tr>
-                                <tr>
+                                <!-- <tr>
                                     <td>
                                         <div class="mt-5 mt-6">IPV6 Setup Type</div>
                                     </td>
@@ -78,7 +78,7 @@
                                             </select>
                                         </ValidationProvider>
                                     </td>
-                                </tr>
+                                </tr> -->
                                 <tr>
                                     <td>
                                         <div style="color: #020202;" class="mt-5 mt-6">MAC address</div>
@@ -142,8 +142,8 @@
                             </tbody>
                         </table>
                     </v-col>
-                    <v-col cols="12" sm="6"
-                        v-if="value_setup_Ipv4.ip_address4 != null || value_setup_Ipv4.ip_address4 != null">
+                    <v-col cols="12" sm="6">
+                        <!-- v-if="value_setup_Ipv4.ip_address4 != null || value_setup_Ipv4.ip_address4 != null" -->
                         <div v-if="setuptypeip4 === 'static'">
                             <v-card-title class="title-text">Static IPV4 address configuration</v-card-title>
                             <v-divider class="ml-3" style="height: 39px;width: 425px;"></v-divider>
@@ -195,7 +195,7 @@
                         </div>
                         <div v-if="ipv6SetupType === 'DHCP'">
                             <v-card-title class="title-text">Configuring the DHCPv6 client</v-card-title>
-                            <v-divider class="ml-3"></v-divider>
+                            <v-divider class="ml-3" style="height: 39px;width: 425px;"></v-divider>
                             <v-row class="ml-3 mt-3">
                                 <v-tabs v-model="activeTabIPV6" fixed-tabs background-color="#fff" color="#FFC300" dark>
                                     <span style="color: #020202; background-color: #fff; height: ;" class="mt-4">
@@ -829,10 +829,19 @@ export default {
 
             axios.post('/gateway/addStaticGateway', params)
                 .then((response) => {
-                    this.showAlert = true;
-                    setTimeout(() => {
-                        this.showAlert = false;
-                    }, 3000);
+                    if (response.status == '200') {
+                        this.showModal = false;
+                        this.gateway = {
+                            gwname: "",
+                            gwaddress: "",
+                            description: "",
+                            default_aux: true,
+                            far_aux: false,
+                            multiwan_aux: false,
+                        }
+                    } else {
+                        this.showModal = true;
+                    }
                 }, (error) => {
                     console.log(error);
                 });

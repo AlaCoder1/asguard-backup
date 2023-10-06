@@ -1,26 +1,56 @@
 <template>
     <v-app class="ml-3 mt-3 mr-3">
-        <div style="display: flex; align-items: center; margin-top: 8px;">
-            <label style="width: 150px;">IPv4 Adress Alias</label>
-            <v-text-field v-model="interface.ipv4_adress" class="ml-3"></v-text-field>
-            <v-select v-model="interface.ipv4_netmask" :items="netmasks" label="Netmask" class="ml-3 mr-3"></v-select>
-        </div>
-
-        <div style="display: flex; align-items: center; margin-top: 8px;">
-            <label style="width: 150px;">Reject leases from</label>
-            <v-text-field v-model="interface.rejectLeases" class="ml-3  mr-3"></v-text-field>
-        </div>
-
-        <div style="display: flex; align-items: center; margin-top: 8px;">
-            <label style="width: 150px;">Hostname</label>
-            <v-text-field v-model="interface.hostname" class="ml-3 mr-3"></v-text-field>
-        </div>
-
-        <div style="display: flex; align-items: center; margin-top: 8px;">
-            <label style="width: 150px;">Override MTU</label>
-            <input type="checkbox" v-model="interface.overrideMTU" class="ml-3 mr-3" />
-            <label>MTU</label>
-        </div>
+        <table class="ml-3 mt-3 mr-5">
+            <tbody>
+                <tr>
+                    <td><span style="color: black;" class="">IPv4 Adress Alias</span></td>
+                    <td>
+                        <div style="display: flex">
+                            <ValidationProvider name="IPv4AdressAlias"
+                                :rules="{ regex: /^(?:(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/ }"
+                                v-slot="{ errors }">
+                                <v-text-field label="Enter IP Adress Alias" class="ml-3 mt-1"
+                                    v-model="interface.ipv4_adress" :error-messages="errors"></v-text-field>
+                            </ValidationProvider>
+                            <ValidationProvider name="netmask4" :rules="netmaskValidationRule" v-slot="{ errors }">
+                                <v-select v-model="interface.ipv4_netmask" :items="netmasks" :error-messages="errors"
+                                    label="Netmask" class="ml-3 mr-3"></v-select>
+                            </ValidationProvider>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span style="color: black;" class="">Reject leases from</span></td>
+                    <td>
+                        <ValidationProvider name="rejectLeases"
+                            :rules="{ regex: /^(?:(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/ }"
+                            v-slot="{ errors }">
+                            <v-text-field label="Enter Reject leases from" class="ml-3 mt-1"
+                                v-model="interface.rejectLeases" :error-messages="errors"></v-text-field>
+                        </ValidationProvider>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span style="color: black;" class="">Hostname</span></td>
+                    <td>
+                        <ValidationProvider name="hostname" :rules="{ regex: / ^[a-zA-Z0-9-]{1,63}$'] / }"
+                            v-slot="{ errors }">
+                            <v-text-field label="Enter Hostname" class="ml-3 mt-1" v-model="interface.hostname"
+                                :error-messages="errors"></v-text-field>
+                        </ValidationProvider>
+                    </td>
+                </tr>
+                <tr>
+                    <td><span style="color: black;" class="">Override MTU</span></td>
+                    <td>
+                        <ValidationProvider name="overrideMTU" rules="required" v-slot="{ errors }">
+                            <input type="checkbox" v-model="interface.overrideMTU" class="ml-3 mr-3" />
+                            <label>MTU</label>
+                        </ValidationProvider>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
     </v-app>
 </template>
 <script>
@@ -49,11 +79,23 @@ export default {
                 hostname: "",
                 overrideMTU: false,
                 mtu: ""
-            }
+            },
+            ipAddressValid: false, // Track the validity of the IP address
         };
     },
     beforeMount() {
     },
+    computed: {
+        netmaskValidationRule() {
+            return this.ipAddressValid ? 'required' : '';
+        },
+    },
+    watch: {
+        'interface.ipv4_address': function (newVal) {
+            this.ipAddressValid = /^(?:(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/.test(newVal);
+        },
+    },
+
 };
 
 </script>

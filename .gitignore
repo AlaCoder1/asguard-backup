@@ -44,3 +44,6 @@ yarn-error.log
 
 /gateway/__pycache__/
 /gateway/migrations/__pycache__/
+
+/dashboard/__pycache__/
+/dashboard/migrations/__pycache__/

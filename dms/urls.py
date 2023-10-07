@@ -47,8 +47,6 @@ urlpatterns = [
 ]
 
 from dashboard import consumers
-
-from django.urls import re_path
 # ws/wss url patterns
 websocket_urlpatterns = [
     # consumer for a particular user

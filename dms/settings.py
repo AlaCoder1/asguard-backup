@@ -58,13 +58,12 @@ INSTALLED_APPS = [
     "gateway",
     "dashboard"
 ]
-
+# Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "channels.layers.InMemoryChannelLayer"
-    }
+        "BACKEND": "channels.layers.InMemoryChannelLayer",  # You can use other backends as needed
+    },
 }
-
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',

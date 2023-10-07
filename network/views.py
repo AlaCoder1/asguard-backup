@@ -133,7 +133,7 @@ def conf(request,name_interface):
                         #call function to convert address to static
                         commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,uuid,ip_address4,netmask4,cmdgw4,IP4ConfigObject)
                         jsonIPV4={
-                    "nameInterface":nameInterface,"ifname":ifname,
+                    "name_interface":nameInterface,"ifname":ifname,
                     "ip_address":ip_address4,"netmask":netmask4,
                     "addrgw":addrgw4,
                     "typeip4":setuptypeIP4}
@@ -156,7 +156,7 @@ def conf(request,name_interface):
                             #contenu de dhclient.conf dhcp Base
                             configContenu=return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask)
                             jsonIPV4={
-                    "nameInterface":nameInterface,"ifname":ifname,
+                    "name_interface":nameInterface,"ifname":ifname,
                     "typeip4":setuptypeIP4,"typedhcp":typeDHCP4,
                     "alias_add":alias_add,"alias_mask":alias_mask,
                     "reject":reject,"hostname":hostname}

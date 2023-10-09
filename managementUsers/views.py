@@ -10,6 +10,7 @@ from managementGroup.views import *
 from subscription.views import *
 # Version without SSh connection
 from .functions import *
+from managementGroup.functions import *
 # end Version without SSh connection
 # Version SSh connection
 # from .remoteFunctions import *

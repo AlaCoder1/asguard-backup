@@ -180,7 +180,7 @@
                                             </v-btn></td>
                                         <td>
                                             <ValidationProvider name="gateway4" rules="required" v-slot="{ errors }">
-                                                <select class="gateway ml-3" v-model="value_setup_Ipv4.gateway4"
+                                                <select class="gateway ml-3" v-model="value_setup_Ipv4.gateway4.value"
                                                     :error-messages="errors">
                                                     <option class="gateway-option"
                                                         v-for="item in allStaticGatewaysAddresses" :value="item">{{ item }}
@@ -325,7 +325,7 @@
                             <v-card-title class="title-text">Configuring the DHCP Client</v-card-title>
                             <v-divider class="ml-3"></v-divider>
                             <v-row class="ml-3 mt-3">
-                                <v-tabs v-model="activeTab" fixed-tabs background-color="#fff" color="#FFC300" dark>
+                                <v-tabs v-model="activeTabSetupMode" fixed-tabs background-color="#fff" color="#FFC300" dark>
                                     <span style="color: #020202; background-color: #fff;height: ;" class="mt-4">
                                         Setup mode</span>
                                     <v-tab v-for="tab in tabs" :key="tab.id" class="ml-2">
@@ -612,9 +612,8 @@ export default {
         BasicConfigDHCPv6
     },
     props: {
-        activeTab: {
-            type: String,
-        },
+            activeTab: String,
+
     },
     data() {
         return {
@@ -730,6 +729,7 @@ export default {
             IPV4Config: {},
             allStaticGateways: [],
             mssError: '',
+            activeTabSetupMode: 0,
         };
     },
     computed: {
@@ -757,12 +757,12 @@ export default {
                 mtuv: this.mtuv,
                 mssv: this.mssv,
                 speed_duplex: this.speed_duplex,
-                setuptypeip4: this.setuptypeip4,
+                setuptypeIP4: this.setuptypeip4,
                 value_setup_Ipv4: {
                     ip_address4: this.value_setup_Ipv4.ip_address4,
                     netmask4: this.value_setup_Ipv4.netmask4,
                     gateway4: {
-                        value: this.gateway.value
+                        value: this.value_setup_Ipv4.gateway4.value
                     },
                 }
             };

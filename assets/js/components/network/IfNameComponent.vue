@@ -65,7 +65,7 @@
                                         </ValidationProvider>
                                     </td>
                                 </tr>
-                                <tr>
+                                <!-- <tr>
                                     <td>
                                         <div class="mt-5 mt-6">IPV6 Setup Type</div>
                                     </td>
@@ -78,7 +78,7 @@
                                             </select>
                                         </ValidationProvider>
                                     </td>
-                                </tr>
+                                </tr> -->
                                 <tr>
                                     <td>
                                         <div style="color: #020202;" class="mt-5 mt-6">MAC address</div>
@@ -142,8 +142,8 @@
                             </tbody>
                         </table>
                     </v-col>
-                    <v-col cols="12" sm="6"
-                        v-if="value_setup_Ipv4.ip_address4 != null || value_setup_Ipv4.ip_address4 != null">
+                    <v-col cols="12" sm="6">
+                        <!-- v-if="value_setup_Ipv4.ip_address4 != null || value_setup_Ipv4.ip_address4 != null" -->
                         <div v-if="setuptypeip4 === 'static'">
                             <v-card-title class="title-text">Static IPV4 address configuration</v-card-title>
                             <v-divider class="ml-3" style="height: 39px;width: 425px;"></v-divider>
@@ -180,7 +180,7 @@
                                             </v-btn></td>
                                         <td>
                                             <ValidationProvider name="gateway4" rules="required" v-slot="{ errors }">
-                                                <select class="gateway ml-3" v-model="value_setup_Ipv4.gateway4"
+                                                <select class="gateway ml-3" v-model="value_setup_Ipv4.gateway4.value"
                                                     :error-messages="errors">
                                                     <option class="gateway-option"
                                                         v-for="item in allStaticGatewaysAddresses" :value="item">{{ item }}
@@ -195,7 +195,7 @@
                         </div>
                         <div v-if="ipv6SetupType === 'DHCP'">
                             <v-card-title class="title-text">Configuring the DHCPv6 client</v-card-title>
-                            <v-divider class="ml-3"></v-divider>
+                            <v-divider class="ml-3" style="height: 39px;width: 425px;"></v-divider>
                             <v-row class="ml-3 mt-3">
                                 <v-tabs v-model="activeTabIPV6" fixed-tabs background-color="#fff" color="#FFC300" dark>
                                     <span style="color: #020202; background-color: #fff; height: ;" class="mt-4">
@@ -325,7 +325,7 @@
                             <v-card-title class="title-text">Configuring the DHCP Client</v-card-title>
                             <v-divider class="ml-3"></v-divider>
                             <v-row class="ml-3 mt-3">
-                                <v-tabs v-model="activeTab" fixed-tabs background-color="#fff" color="#FFC300" dark>
+                                <v-tabs v-model="activeTabSetupMode" fixed-tabs background-color="#fff" color="#FFC300" dark>
                                     <span style="color: #020202; background-color: #fff;height: ;" class="mt-4">
                                         Setup mode</span>
                                     <v-tab v-for="tab in tabs" :key="tab.id" class="ml-2">
@@ -612,9 +612,8 @@ export default {
         BasicConfigDHCPv6
     },
     props: {
-        activeTab: {
-            type: String,
-        },
+            activeTab: String,
+
     },
     data() {
         return {
@@ -730,6 +729,7 @@ export default {
             IPV4Config: {},
             allStaticGateways: [],
             mssError: '',
+            activeTabSetupMode: 0,
         };
     },
     computed: {
@@ -757,12 +757,12 @@ export default {
                 mtuv: this.mtuv,
                 mssv: this.mssv,
                 speed_duplex: this.speed_duplex,
-                setuptypeip4: this.setuptypeip4,
+                setuptypeIP4: this.setuptypeip4,
                 value_setup_Ipv4: {
                     ip_address4: this.value_setup_Ipv4.ip_address4,
                     netmask4: this.value_setup_Ipv4.netmask4,
                     gateway4: {
-                        value: this.gateway.value
+                        value: this.value_setup_Ipv4.gateway4.value
                     },
                 }
             };
@@ -829,10 +829,19 @@ export default {
 
             axios.post('/gateway/addStaticGateway', params)
                 .then((response) => {
-                    this.showAlert = true;
-                    setTimeout(() => {
-                        this.showAlert = false;
-                    }, 3000);
+                    if (response.status == '200') {
+                        this.showModal = false;
+                        this.gateway = {
+                            gwname: "",
+                            gwaddress: "",
+                            description: "",
+                            default_aux: true,
+                            far_aux: false,
+                            multiwan_aux: false,
+                        }
+                    } else {
+                        this.showModal = true;
+                    }
                 }, (error) => {
                     console.log(error);
                 });

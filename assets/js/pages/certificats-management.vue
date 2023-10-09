@@ -6,12 +6,12 @@
         <v-divider></v-divider>
         <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" :columnDefs="columnAuthority"
           :rowData="rowDataAuthority" :gridOptions="gridOptions" style="width: 100%; height: 100%;"
-          @first-data-rendered="onFirstDataRendered" @grid-size-changed="onGridSizeChanged" />
-      </div>
-      <div style="margin-left: 400px !important;">
+          @grid-size-changed="onGridSizeChanged" />
+          <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
         <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-user">
           <span class="text-white" style="text-transform: lowercase;">Ajouter Authorités</span>
         </v-btn>
+        </div>
       </div>
     </div>
     <div>
@@ -20,12 +20,12 @@
         <v-divider></v-divider>
         <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" :columnDefs="columnCertificats"
           :rowData="rowDataCertificats" :gridOptions="gridOptions" style="width: 100%; height: 100%;"
-          @first-data-rendered="onFirstDataRendered" @grid-size-changed="onGridSizeChanged" />
-      </div>
-      <div style="margin-left: 400px !important;">
+          @grid-size-changed="onGridSizeChanged" />
+              <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
         <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-user">
           <span class="text-white" style="text-transform: lowercase;">Ajouter certificats</span>
         </v-btn>
+        </div>
       </div>
     </div>
     <div>
@@ -34,16 +34,18 @@
         <v-divider></v-divider>
         <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" :columnDefs="columnRevocation"
           :rowData="rowDataRevocation" :gridOptions="gridOptions" style="width: 100%; height: 100%;"
-          @first-data-rendered="onFirstDataRendered" @grid-size-changed="onGridSizeChanged" />
-      </div>
-      <div style="margin-left: 400px !important;">
+          @grid-size-changed="onGridSizeChanged" />
+              <div style="display: flex; justify-content: flex-end; margin-top: 20px;">
         <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-user">
           <span class="text-white" style="text-transform: lowercase;">Ajouter révocation</span>
         </v-btn>
       </div>
+      </div>
     </div>
+    <br /><br />
   </div>
 </template>
+
 <script>
 import { AgGridVue } from 'ag-grid-vue';
 export default {
@@ -52,10 +54,6 @@ export default {
     AgGridVue,
   },
   props: {
-    users: {
-      type: Object,
-      required: true,
-    }
   },
   data() {
     return {

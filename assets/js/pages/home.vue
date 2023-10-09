@@ -9,7 +9,6 @@
 
 <script>
 import BaseLayout from '@/pages/layout.vue';
-import UserManagement from '@/pages/user-management.vue';
 import GroupManagement from '@/pages/group-management.vue';
 import NetworkServerManagement from '@/pages/network-server-management.vue';
 import CertificatsManagement from '@/pages/certificats-management.vue';
@@ -18,7 +17,6 @@ export default {
     name: 'HomeComponent',
     components: {
         BaseLayout,
-        UserManagement,
         NetworkServerManagement,
         GroupManagement,
         CertificatsManagement,
@@ -28,7 +26,6 @@ export default {
         return {
             tab: null,
             data: [],
-            users: '',
         };
     },
     methods: {

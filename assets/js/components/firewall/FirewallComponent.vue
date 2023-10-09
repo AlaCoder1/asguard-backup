@@ -708,7 +708,7 @@ export default {
         //     return portRegex.test(value);
         // },
         isValidRowData(rowData) {
-            const requiredColumns = ['policy', 'rule_description', 'protocol', 'saddr', 'daddr'];
+            const requiredColumns = ['rule_description'];
             for (const column of requiredColumns) {
                 if (!rowData[column]) {
                     return false; // Data in a required column is missing
@@ -717,7 +717,7 @@ export default {
             return true; // All required columns have data
         },
         validateGridData(gridData) {
-            const requiredColumns = ['policy', 'rule_description', 'protocol', 'saddr', 'daddr'];
+            const requiredColumns = ['rule_description'];
             for (const row of gridData) {
                 for (const column of requiredColumns) {
                     if (!row[column]) {

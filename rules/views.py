@@ -170,15 +170,19 @@ def saveRules(request,name_interface):
                   if InboundSerializer.is_valid():
                     InboundSerializer.save()
                     msg = "Rule updated Successfully!!"
+                    status=200
                   else:
                     msg= InboundSerializer.errors
+                    status=400
               else:
                 add_rule_remote(rule,ifname,type_rules)
                 msg= return_add_rule
+                status=400
             else:
               msg = return_delete_rule_remote
           else:
             msg="Rule doesn't exist in system !!"
+            status=400
         else:
           #appel la fonction pour initialiser les fichies nftables.conf
           return_init_file_nftables = init_file_nftables(ifname)
@@ -202,16 +206,22 @@ def saveRules(request,name_interface):
                   InboundSerializer.save()
                   id=Rule.objects.get(rule=rule).pk
                   msg = "Rule Saved Successfully!!"
+                  status=200
                 else:
                   msg = InboundSerializer.errors
+                  status=400
               else:
                 msg = return_add_rule
+                status=400
                 
             else:
               id=Rule.objects.get(rule=rule).pk
               msg="Rule already exist!"
+              status=400
           else:
             msg = return_init_file_nftables
-        response={"id":id,"rule":ruleMsg,"msg":msg}
+            status=400
+            
+        response={"id":id,"rule":ruleMsg,"msg":msg,"status":status}
         msgs.append(response)
       return JsonResponse({"response": msgs})    

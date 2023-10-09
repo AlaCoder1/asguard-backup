@@ -9,9 +9,10 @@ import threading
 from .models import *
 from gateway.models import *
 from gateway.serializers import *
+import os
+import signal
 ###############################################################
 ####update in Database functions
-
 #function to update config tables
 def update_DB(id,data,model,IP4serializer):
     data={key: value for key, value in data.items() if value is not None}
@@ -46,12 +47,10 @@ def update_interface_table(name_interface,data,InterfaceSerializer):
             return True
     return serializerInterface.errors 
 ############################################################ 
-def get_conn_name(ifname):
+def get_uuid_con(ifname):
     cmd = "sudo nmcli connection show | awk '$NF == \"{}\" {{print}}'".format(ifname)
       ##executer cette commande
-    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    output = completed_process.stdout
-    error = completed_process.stderr
+    output,error=run_command(cmd)
     output = output.split('  ')
     if len(output)==0:
         return None
@@ -62,9 +61,8 @@ def get_conn_name(ifname):
 ##get old configuration in service
 def get_old_config():
     cmd = "cat /etc/systemd/system/Asguard-Networking.service"
-    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    output = completed_process.stdout.split("\n")
-    error = completed_process.stderr
+    output,error=run_command(cmd)
+    output=output.split("\n")
     return output,error
    
 ##add requirement
@@ -80,7 +78,6 @@ def add_requirement(ifname,output):
 ##add exec_cmd
 def add_cmd(output,commandes):
     index_cmd=output.index('[Install]') 
-    
     output = output[:index_cmd] + commandes + output[index_cmd:]
     return output
 ################################# Function to execute command with timeout
@@ -90,51 +87,47 @@ def run_command(command):
     error = completed_process.stderr
     return output, error
 
-def run_remote_command_with_timeout(type, typeDHCP4, command, timeout_seconds):
-    def run_command_thread():
-        nonlocal output, error
-        output, error = run_command(command)
+#### run command with time
+def run_command_with_timeout(type, command, timeout):
+    try:
+        start_time = time.time()
+        # Start the subprocess with a timeout
+        process = subprocess.Popen(
+            command,
+            shell=True,  # Use shell=True to interpret the entire command as a single string
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True  # Use text=True to handle the output as text (Python 3.7+)
+        )
+        stdout, stderr = process.communicate(timeout=timeout)
+        elapsed_time = time.time() - start_time
+          # Create a new instance of your model
+        new_entry = tempsExucution(type=type, cmd=command, temps=elapsed_time)
+        # Save the instance to the database
+        new_entry.save()
+        # If the subprocess completed within the timeout
+        if process.returncode == 0:
+            print(f"Command not too long ({elapsed_time:.2f} seconds). {command}")
+            return (stdout, stderr)
+        else:
+           return None,stderr
 
-    start_time = time.time()
-    output = None
-    error = None
-
-    command_thread = threading.Thread(target=run_command_thread)
-    command_thread.start()
-    command_thread.join(timeout=timeout_seconds)
-    elapsed_time = time.time() - start_time
-
-    # Create a new instance of your model
-    new_entry = tempsExucution(type=type, cmd=command, temps=elapsed_time)
-    # Save the instance to the database
-    new_entry.save()
-    if  (command.find("sudo dhclient")==-1) and error!="" and (error is not None and not error.startswith("Warning")) :
-        # print("error::::",error)
-        return error
-    elif command_thread.is_alive():
-        print(f"Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}")
-        try:
-            # Send a Control+C signal using subprocess
-            completed_process = subprocess.run('kill -INT ' + str(command_thread.ident), shell=True,
-                                               capture_output=True, text=True)
-            output = completed_process.stdout
-            error = completed_process.stderr
-            print("Ctrl+C sent.")
-        except Exception as e:
-            print(f"Failed to send Ctrl+C: {str(e)}")
-        print("Ctrl+C sent.")
-        return "Command took too long ({elapsed_time:.2f} seconds). Sending Ctrl+C... {command}"
-        
-    else:
-        print(f"Command not too long ({elapsed_time:.2f} seconds). {command}")
-        return True
-        
+    except subprocess.TimeoutExpired:
+        elapsed_time = time.time() - start_time
+        # If the subprocess exceeded the timeout, send a Ctrl+C signal
+        process.terminate()
+        process.wait()
+        print(f"Command too long ({elapsed_time:.2f} seconds). {command}")
+        return None, "Command timed out and was terminated."
+ 
 #function to run all commandes
-def run_all_commands(commandes,setuptypeIP4,typeDHCP4,timeout):
+def run_all_commands(commandes,setuptypeIP4,timeout):
     for cmd in commandes:
-        out=run_remote_command_with_timeout(setuptypeIP4,typeDHCP4, cmd, timeout)
-        if  out is not True :
-            return out
+        output,error=run_command_with_timeout(setuptypeIP4, cmd, timeout)
+        if output is None:
+            return error
+        elif cmd.find("sudo dhclient") == -1 and error!="" and (error is not None and not error.startswith("Warning")):
+            return error
     return True
 
 #################################
@@ -162,15 +155,12 @@ EOF""".format('\n'.join(output))
         
         ]
     for cmd in cmd_final:
-        completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-        output = completed_process.stdout
-        error = completed_process.stderr
+        output,error=run_command(cmd)
         if error:
             msg=error,"    :"+cmd
             return False
     return True
 
-    # return commands,cmd_final
    
         
 ################### 
@@ -212,7 +202,7 @@ def update_conn_static_IPV4(config,ifname,uuid,ipaddress,netmask,cmdgw,IP4Config
     #la liste des commandes pour l'IPV4 static
     commands=[]
     cmd_final=[]
-    if ipaddress is not None and (IP4ConfigObject!="" and ipaddress!=IP4ConfigObject.ip_address or IP4ConfigObject=="" ):
+    if ipaddress is not None:
         cmd_final.append("sudo nmcli connection modify {} ipv4.method manual ipv4.addresses {}/{}".format(uuid,ipaddress,netmask))
     cmd_final+=[ 
          cmdgw,      
@@ -355,7 +345,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
             speedV=10
             duplexV='half'
    #tester si addmac is not None
-    if addmac is not None and (genericConfigObject!="" and genericConfigObject.addmac!=addmac or genericConfigObject==""):
+    if addmac is not None and (genericConfigObject is not None and genericConfigObject.addmac!=addmac or genericConfigObject is None):
             #lancer la fonction de "remove old config"
             config=clean_old_config(config,"addmac config {}".format(ifname))
              #la liste des commandes pour l'address mac
@@ -368,7 +358,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
                 'sudo ip link set dev {} address {}'.format(ifname,addmac),
             ]
     #tester si mtu is not None
-    if mtuv is not None and (genericConfigObject!="" and mtuv!=genericConfigObject.mtuv!=mtuv or genericConfigObject==""):
+    if mtuv is not None and (genericConfigObject is not None  and mtuv!=genericConfigObject.mtuv!=mtuv or genericConfigObject is None ):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mtu config {}".format(ifname))
         #la liste des commandes pour mtu
@@ -381,7 +371,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
         'sudo ip link set dev {} mtu {}'.format(ifname,mtuv),
          ]
     #tester si mtu is not None
-    if mssv is not None and (genericConfigObject!="" and mssv!=genericConfigObject.mssv or genericConfigObject==""):
+    if mssv is not None and (genericConfigObject is not None  and mssv!=genericConfigObject.mssv or genericConfigObject is None ):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"mss config {}".format(ifname))
          #la liste des commandes pour mss
@@ -394,7 +384,7 @@ def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObje
         'sudo iptables -t mangle -A FORWARD -p tcp --tcp-flags SYN,RST SYN -o {} -j TCPMSS --set-mss {}'.format(ifname,mssv),
          ]
     #tester si speed_duplex is not None
-    if speed_duplex is not None and (genericConfigObject!="" and  speed_duplex!=genericConfigObject.speed_duplex or genericConfigObject==""):
+    if speed_duplex is not None and (genericConfigObject is not None  and  speed_duplex!=genericConfigObject.speed_duplex or genericConfigObject is None ):
         #lancer la fonction de "remove old config"
         config=clean_old_config(config,"speed duplex config {}".format(ifname))
         #la liste des commandes pour speed duplex
@@ -473,7 +463,7 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject)
             'ExecStart=/usr/bin/nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
             "#End nftables config {}".format(ifname)
             ]
-        if interfaceObject !="" and private_aux!=interfaceObject.private_aux or bogon_aux!=interfaceObject.bogon_aux:
+        if interfaceObject is not None and private_aux!=interfaceObject.private_aux or bogon_aux!=interfaceObject.bogon_aux:
             cmd_final+=[
                 'sudo nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
             ]
@@ -482,7 +472,19 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject)
         #call function to clean old config
        config=clean_old_config(config,"nftables config {}".format(ifname))
     return configuration,commandes,config,cmd_final
+############################################################################################################
+##function to modify server name
+def modify_server_name(file_path, new_address):
+    # Read the content of the file
+    with open(file_path, 'r') as file:
+        content = file.read()
 
+    # Use regular expression to replace server_name value
+    modified_content = re.sub(r'server_name\s+[^;]+;', f'server_name {new_address};', content)
+
+    # Write the modified content back to the file
+    with open(file_path, 'w') as file:
+        file.write(modified_content)
 #############################################################################################################################################
 #############################################ipv6#############################################
 ##static ipv6

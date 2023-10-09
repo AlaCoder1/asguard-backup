@@ -239,7 +239,7 @@ def conf(request,name_interface):
                 cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 {}
 EOF""".format('\n'.join(output_service))
-                if run_all_commands(commandes_final,setuptypeIP4,1) is True:
+                if run_all_commands(commandes_final,setuptypeIP4,5) is True:
                     output, error=run_command(cmd_asguard)
                     if  (error==""):
                         if setuptypeIP4.lower()=="dhcp":
@@ -307,7 +307,7 @@ EOF""".format('\n'.join(output_service))
                         msg=error
                         status=400        
                 else:
-                    msg=run_all_commands(commandes_final,setuptypeIP4,1)
+                    msg=run_all_commands(commandes_final,setuptypeIP4,5)
                     status=400
             else:
                 msg="Failed to configure Network Service not found!!"

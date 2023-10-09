@@ -2,7 +2,12 @@ import subprocess
 from rules.serializers import *
 from django.conf import settings
 from authentification.views import *
- 
+######function to run commande
+def run_command(command):
+    completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout
+    error = completed_process.stderr
+    return output, error 
 ##function initial nftables.conf et /rules/ifname/nftables.conf
 def init_file_nftables(ifname):
    #declare this line to be added in central  file nftables.conf
@@ -34,9 +39,7 @@ EOF""".format(ifname,rules),
 
 ##executer le script créée précédamment retourner true si pas d'error sinon false en cas d'error
    for cmd in commandes:
-      completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-      output = completed_process.stdout
-      error = completed_process.stderr
+      output,error=run_command(cmd)
       output = output.split('\n')
       if error !="":
          return error
@@ -84,9 +87,7 @@ def add_rule_remote(rule,ifname,type_rule):
    ]
       ###executer ces commandes
       for cmd in commandes:
-         completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-         output = completed_process.stdout
-         error = completed_process.stderr
+         output,error=run_command(cmd)
          if error!='': 
             return error
       return True
@@ -101,9 +102,8 @@ def get_handle_rule(ifname,type_rule,rule):
    ##cmd pour obtenir handle number pour supprimer rule 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
-   completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-   output = completed_process.stdout.split('#')
-   error = completed_process.stderr
+   output,error=run_command(cmd)
+   output = output.split('#')
    if len(output)<2:
       return None
    else:
@@ -118,9 +118,7 @@ def delete_rule_remote(ifname,type_rule,handle):
    ]
    ##executer ces commandes
    for cmd in commandes:
-      completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-      output = completed_process.stdout
-      error = completed_process.stderr
+      output,error=run_command(cmd)
       if error !="":
          return error  
    return True

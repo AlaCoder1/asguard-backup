@@ -90,12 +90,14 @@ def createUser(request):
                     if (validInput(username)):
                         if (validInput(password)):
                             # Execute the command on the remote machine
-                            stdin, stdout, stderr = addUser(
+                            stdout, stderr = addUser(
                                 username, password)
-                            addMailSpool(username)
+                            print({"stdout":stdout.decode('utf-8')})
+                            print({"stderr":stderr.decode('utf-8')})
+                            
                             # convert the stderr stream to a string
-                            error_str = stderr.read().decode('utf-8')
-                            if error_str == "":
+                            if stderr.decode('utf-8') == "":
+                                addMailSpool(username)
                                 msg = username+" added sucessfully"
                                 uid = getUidUser()
                                 data['password'] = make_password(
@@ -149,7 +151,7 @@ def createUser(request):
                                     # provide a Json Response with the necessary error information
                                     return JsonResponse(serializerUser.errors, status=400)
                             else:
-                                msg = error_str
+                                msg = stderr.decode('utf-8')
                                 return JsonResponse({"msg": msg}, status=400)
                         else:
                             msg = "invalid password"
@@ -167,23 +169,23 @@ def createUser(request):
 
 # API to delete group
 @api_view(['DELETE'])
-@authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+# @authentication_classes([AllowAny])
+@permission_classes([AllowAny])
 def delete_user(request, id):
     msg = ""
     if (request.method == 'DELETE'):
         user = User.objects.get(id=id)
         group = Group.objects.filter(groupname=user.username)
-        # Execute the command on the remote machine
-        stdin, stdout, stderr = deleteUser(user.username)
-        # convert the stderr stream to a string
-        error_str = stderr.read().decode('utf-8')
-        if error_str == "":
+        print({"username":user.username})
+        # # Execute the command on the remote machine
+        stdout, stderr = deleteUser(user.username)
+        # # convert the stderr stream to a string
+        if stderr == "":
             user.delete()
             group.delete()
             msg = "delete succesfully"
         else:
-            msg = error_str
+            msg = stderr
         # return a no content response.
         return JsonResponse({"msg": msg})
 
@@ -299,9 +301,6 @@ def changePassword(request, id):
         if userObject.is_verified == True:
             return JsonResponse({"msg": "your account is verified"})
         else:
-            # print({'username': userObject.username})
-            # print({'vérifier': userObject.is_verified})
-            # print({'password': userObject.password})
             data = request.data
             current_password = data['current_password']
             new_password = data['new_password']
@@ -311,13 +310,14 @@ def changePassword(request, id):
                 if new_password != confirm_password:
                     print("Passwords do not match. Please try again.")
                     msg = "Passwords do not match. Please try again."
-                    return JsonResponse({"msg": "Passwords do not match. Please try again."})
                 else:
                     # run 'passwd' command to change password
-                    stdin, stdout, stderr = changePW(
+                    stdout, stderr = changePW(
                         current_password, new_password, userObject.username)
+                    print({"stdout":stdout})
+                    print({"stderr":stderr})
                     # check if password change was successful
-                    if stdout.channel.recv_exit_status() == 0:
+                    if stderr == "":
                         userObject.password = make_password(new_password)
                         userObject.is_verified = True
                         userObject.save()
@@ -325,8 +325,8 @@ def changePassword(request, id):
                         msg = "Password change successful"
                     else:
                         print(
-                            f"Error changing password: {stderr.read().decode()}")
-                        msg = f"Error changing password: {stderr.read().decode()}"
+                            f"Error changing password: {stderr}")
+                        msg = f"Error changing password: {stderr}"
             else:
                 print('Passwords do not match')
                 msg = 'Passwords do not match'

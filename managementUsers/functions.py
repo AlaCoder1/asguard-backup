@@ -50,17 +50,37 @@ def username_exists(username):
 
 
 def addUser(username, password):
-    try:
-        return os.system("useradd " + username + " && echo "+username+":"+password + " | chpasswd")
-    except:
-        print(f"Failed to add user.")
-        sys.exit(1)
+#    try:
+        # Create user with home directory
+    result = subprocess.run(['sudo', 'useradd', '-m', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print(result.stdout.decode())
+    if result.stderr:
+        print(f"Error: {result.stderr.decode()}")
+
+    # Set the password for the user
+    proc = subprocess.Popen(['sudo', 'chpasswd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = proc.communicate(input=f"{username}:{password}".encode())
+
+    print(stdout.decode())
+    if stderr:
+        print(f"Error: {stderr.decode()}")
+
+    print(f"User {username} created successfully!")
+    return stdout, stderr
+    # except subprocess.CalledProcessError as e:
+    #     print(f"Failed to create user {username}.")
+    #     print(e.output)
 
 # function to delete user
 
 
 def deleteUser(username):
-    return os.system("userdel " + "-r " + username)
+    cmd = "userdel " + "-r " + username
+    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout
+    error = completed_process.stderr
+    return output,error
+    # return os.system("userdel " + "-r " + username)
 
 # functio to change username
 

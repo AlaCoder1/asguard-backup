@@ -121,7 +121,7 @@ export default {
             {
               title: 'User & certificat management',
               icon: '',
-              href: '/system/user-certificat-management',
+              href: '/userCertifMang',
               active: 'User & certificat management',
             },
             {

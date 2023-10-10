@@ -1,85 +1,124 @@
 <template>
-        <div> 
-            <h4>Networks groups</h4>
-            <ag-grid-vue
-                domLayout="autoHeight"
-                class="ag-theme-alpine mt-3 m-w-80"
-                :columnDefs="columnDefs"
-                :rowData="rowData"
-                :gridOptions="gridOptions"
-            />        
-            <v-btn
-                color="dms_blue_dark"
-                :rounded="true"
-                class="mt-3 add-btn-user"
-            >
-                <span class="text-white" >Add Group</span>
-            </v-btn>       
-         </div>
-        
+  <div>
+    <h4>Networks groups</h4>
+    <ag-grid-vue domLayout="autoHeight" class="ag-theme-alpine mt-3 m-w-80" :columnDefs="columnDefs" :rowData="rowData"
+      :gridOptions="gridOptions" />
+    <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-user"  @click="openModal">
+      <span class="text-white">Add Group</span>
+    </v-btn>
+    <Modal_Group :mode="modalMode" :isOpen="isModalOpen" @closeModal="closeModal" :initialData="modalData"
+      @updateModalData="handleModalUpdate" />
+  </div>
 </template>
 <script>
 import { AgGridVue } from 'ag-grid-vue';
+import Modal_Group from '../components/layout/Modal_Group.vue';
+import axios from 'axios';
+
 export default {
-    name: 'GroupManagement',
-    components: {
-        AgGridVue,
+  name: 'GroupManagement',
+  components: {
+    AgGridVue,
+    Modal_Group
+  },
+  props: {
+    DataList: {
+      type: Array,
+      required: true,
     },
-    props: {
-        users: {
-            type: Object,
-            required: true,
-        }
+  },
+  data() {
+    return {
+      modalMode: '',
+      isModalOpen: false,
+      modalData: {},
+      selectedRowIndex: null,
+      columnDefs: [
+        { headerName: "Group", field: "groupname" },
+        { headerName: "Description", field: "description" },
+        { headerName: "Actions", cellRenderer: this.actionCellRenderer },
+      ],
+      rowData: [
+      ],
+      gridOptions: {
+        pagination: true,
+        paginationPageSize: 5,
+        rowSelection: 'single',
+
+      }
+    };
+  },
+
+  watch: {
+    DataList: {
+      handler(newData) {
+        this.rowData = newData; // Update rowData with the new prop value
+      },
+      immediate: true, // This will trigger the watcher when the component is created to initialize rowData
     },
-    data() {
-        return {
-            columnDefs: [
-                { headerName: "Group", field: "group" },
-                { headerName: "Description", field: "description" },
-                { headerName: "Actions", cellRenderer: this.actionCellRenderer },
-            ],
-            rowData: [
-                { id:1, group:"Support", description: "Super Root"  },
-                { id:2, group: "Sudoers", description: "Sudoers"  },
-                { id:3, group: "Observateurs", description: "Observateurs"  },
-                { id:4, group: "Admins", description: "Admins"  },
-                { id:5, group: "Users", description: "Users"  },
-                { id:6, group: "tests", description: "tests"  },
-            ],
-            gridOptions: {
-               pagination: true,
-               paginationPageSize: 5,
-               rowSelection: 'single',
-                onRowEditingStarted: (params) => {
-                    params.api.refreshCells({
-                    columns: ['action'],
-                    rowNodes: [params.node],
-                    force: true,
-                    });
-                },
-                onRowEditingStopped: (params) => {
-                    params.api.refreshCells({
-                    columns: ['action'],
-                    rowNodes: [params.node],
-                    force: true,
-                    });
-                },
-            }  
-        };
+  },
+
+  methods: {
+    openModal() {
+      this.modalData = {
+      };
+      this.modalMode = 'create'; // Assuming you want to open the modal in create mode
+      this.isModalOpen = true;
+    },
+    closeModal() {
+      this.isModalOpen = false;
     },
 
-    methods: {
- actionCellRenderer(params) {
-  let eGui = document.createElement('div');
+    handleModalUpdate(formData) {
+      //
+      this.modalData = formData;
+      console.log("formData", formData)
+      console.log("this.selectedRowIndex", this.rowData[this.selectedRowIndex])
 
-  let editingCells = params.api.getEditingCells();
-  // checks if the rowIndex matches in at least one of the editing cells
-  let isCurrentRowEditing = editingCells.some((cell) => {
-    return cell.rowIndex === params.node.rowIndex;
-  });
+      // this.rowData[this.modalData.id - 1] = updatedData;
+      if (this.modalMode === "update") {
+        console.log("update action ..." + JSON.stringify(this.rowData))
+        this.update(formData,
+          () => {
 
-  if (isCurrentRowEditing) {
-    eGui.innerHTML = `
+            console.log("old DataList :" + JSON.stringify(this.DataList[this.selectedRowIndex]))
+
+            this.DataList[this.selectedRowIndex] =
+            {
+              id: formData.id,
+              groupname: formData.groupname,
+              description: formData.description,
+              sudoers: formData.sudoers,
+
+            };
+
+            console.log("new formData :" + JSON.stringify(formData))
+            // this.selectedRowIndex = null;
+          })
+      }
+      else {
+        console.log("create action ...")
+
+        console.log("formData : " + JSON.stringify(formData))
+        // Handle the data returned from the modal here
+        this.Create(formData, () => { this.DataList.push(formData) })
+
+        // this.$set(this.rowData, this.rowData.length, formData);
+      }
+      this.closeModal();
+    },
+
+    actionCellRenderer(params) {
+      let eGui = document.createElement('div');
+
+      let editingCells = params.api.getEditingCells();
+      // checks if the rowIndex matches in at least one of the editing cells
+      let isCurrentRowEditing = editingCells.some((cell) => {
+        return cell.rowIndex === params.node.rowIndex;
+      });
+
+      if (isCurrentRowEditing) {
+        eGui.innerHTML = `
         <button  
           class="action-button update"
           data-action="update">
@@ -91,8 +130,8 @@ export default {
                cancel
         </button>
         `;
-  } else {
-    eGui.innerHTML = `
+      } else {
+        eGui.innerHTML = `
         <button 
           class="action-button edit"  
           data-action="edit">
@@ -104,51 +143,187 @@ export default {
             <i class="fas fa-times" style="color: #086eae;"></i>
         </button>
         `;
-  }
+      }
 
-  // Add event listeners to handle button clicks
-    eGui.querySelectorAll('.action-button').forEach((button) => {
-      button.addEventListener('click', () => {
-        const action = button.getAttribute('data-action');
-        this.handleAction(action, params.node.data);
+      // Add event listeners to handle button clicks
+      eGui.querySelectorAll('.action-button').forEach((button) => {
+        button.addEventListener('click', () => {
+          const action = button.getAttribute('data-action');
+          this.handleAction(action, params.node.data, params.node.rowIndex);
+        });
       });
-    });
 
-    return eGui;
-},
-      handleAction(action, rowData) {
-    // Perform the desired action based on the action type
-    switch (action) {
-      case 'edit':
-        console.log('Edit clicked for row:', rowData);
-        // Perform edit action
-        break;
-      case 'delete':
-        console.log('Delete clicked for row:', rowData);
-        // Perform delete action
-        const index = this.rowData.findIndex(item => item.id === rowData.id);
-        console.log(index);
-        if (index !== -1) {
-          this.rowData.splice(index, 1); // Remove the element from the rowData array
-        }
-        break;
-      case 'update':
-        console.log('Update clicked for row:', rowData);
-        // Perform update action
-        break;
-      case 'cancel':
-        console.log('Cancel clicked for row:', rowData);
-        // Perform cancel action
-        break;
-      default:
-        break;
-    }
+      return eGui;
     },
+    handleAction(action, rowData, CurrentIndex) {
+      // Perform the desired action based on the action type
+      switch (action) {
+        case 'edit':
+          {
+            this.selectedRowIndex = CurrentIndex;
+
+            this.getgroup(rowData.id, (data) => {
+              console.log('Edit clicked for row:', rowData);
+              console.log('response data local 1:', data);
+
+              this.openModal()
+              this.modalMode = 'update';
+
+              this.modalData = {
+                id: data?.id,
+                gid: data?.gid,
+                groupname: data?.groupname,
+                description: data?.description,
+                sudoers: data?.sudoers,
+                // Add more form fields as needed
+              }
+            })
+
+            break;
+            // Perform edit action
+            break;
+          }
+        case 'delete':
+          console.log('Delete clicked for row:', rowData);
+
+          const index = this.rowData.findIndex(item => item.id === rowData.id);
+
+          this.delete(rowData.id, () => {
+            if (index !== -1) {
+              this.rowData.splice(index, 1);
+            }
+          })
+
+          break;
+        case 'update':
+          console.log('Update clicked for row:', rowData);
+          // Perform update action
+          break;
+        case 'cancel':
+          console.log('Cancel clicked for row:', rowData);
+          // Perform cancel action
+          break;
+        default:
+          break;
+      }
+    },
+
+    // Fetch APIs
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          // Does this cookie string begin with the name we want?
+          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
+    async Create(data, callback) {
+
+      const csrfToken = this.getCookie('csrftoken')
+      axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+      console.log("token :" + csrfToken)
+      console.log("DataList :" + JSON.stringify(this.DataList))
+
+      // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
+
+      const params = {
+        "groupname": data.groupname,
+        "description": data.description,
+        "sudoers": data.sudoers
+      }
+
+      console.log("params are : " + JSON.stringify(params))
+
+      axios.post('/groups/createGroup', params)
+        .then((response) => {
+          callback();
+          console.log(response);
+        }, (err) => {
+          if (err.response && err.response.status === 401) {
+            const responseData = err.response.data; // Access the response data
+            console.log("401 Error Response:", responseData);
+            // this.invalid = true ;
+            this.message = responseData.message;
+            // Handle the 401 error here
+          } else {
+            console.error("Error occurred:", err);
+            // Handle other errors
+          }
+        });
+
+    },
+    async delete(id, callback) {
+
+      const csrfToken = this.getCookie('csrftoken')
+      axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+      console.log("token :" + csrfToken)
+      console.log("group id :" + id)
+
+      axios.delete(`/groups/deleteGroup/${id}`)
+
+        .then((response) => {
+          callback();
+          // Handle the successful response
+          console.log('Resource deleted:', response.data);
+        })
+        .catch((error) => {
+          // Handle any errors that occur during the request
+          console.error('Error deleting resource:', error);
+        });
+
+    },
+    async update(data, callback) {
+
+      const csrfToken = this.getCookie('csrftoken')
+      axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+      console.log("token :" + csrfToken)
+      console.log("DataList :" + JSON.stringify(data))
+
+      axios.put(`/groups/groupChangeGroupname/${data.id}`
+        , {
+          "Newgroupname": data.groupname,
+        })
+        .then((response) => {
+          callback();
+          // Handle the successful response
+          console.log('Resource updated:', response.data);
+        })
+        .catch((error) => {
+          // Handle any errors that occur during the request
+          console.error('Error updating resource:', error);
+        });
+
+    },
+    async getgroup(id, callback) {
+
+      axios.get(`/groups/getGroup/${id}`)
+        .then((response) => {
+          callback(response.data);
+          // Handle the successful response
+          console.log('Data received:', response.data);
+        })
+        .catch((error) => {
+          // Handle any errors that occur during the request
+          console.error('Error fetching data:', error);
+        });
+    }
+    // Fetch APIs
+
 
   }
 };
 </script>
 <style lang="scss">
-   @import "~ag-grid-community/dist/styles/ag-grid.css";
-   @import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
+@import "~ag-grid-community/dist/styles/ag-grid.css";
+@import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
 </style>

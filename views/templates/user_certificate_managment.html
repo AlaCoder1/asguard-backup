@@ -15,10 +15,12 @@
 
 {% block body %}
 
-    <div id='app'  users='{{ users }}'>
+<div id="app" 
+     users="{{ users }}"
+     groups="{{ groups }}"
+     servers="{{ servers }}">
+         <my-component :users="{{users}}" :groups="{{groups}}" :servers="{{servers}}"></my-component>
+</div>
 
-        <my-component :users="{{ users }}"  ></my-component>
-
-    </div>
 
 {% endblock %}

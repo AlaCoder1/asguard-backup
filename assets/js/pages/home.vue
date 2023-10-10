@@ -2,7 +2,7 @@
     <v-app id="inspire">
         <base-layout title="home" active-menu="home">
             <template #content>
-                <data-managment/>
+                <!-- <data-managment/> -->
             </template>
         </base-layout>
     </v-app>

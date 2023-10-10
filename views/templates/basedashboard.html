@@ -111,7 +111,7 @@
                 memoryPercentages.push(data.memory_percentage.toFixed(2));
 
                 // Limit the number of displayed data points (e.g., to the last 5)
-                const maxDataPoints = 5;
+                const maxDataPoints = 10;
                 if (timestamps.length > maxDataPoints) {
                     timestamps.shift();
                     cpuPercentages.shift();

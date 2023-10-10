@@ -1,12 +1,8 @@
 from django.http import JsonResponse
 from django.shortcuts import render
-from dashboard.models import Services
-from dashboard.serializers import ServiceDataSerializer
-from dms.settings import ASGUARD_VERSION
 from .functions import *
-from rest_framework.decorators import api_view, permission_classes, authentication_classes, parser_classes
+from rest_framework.decorators import api_view, authentication_classes, parser_classes
 from rest_framework.authentication import SessionAuthentication
-
 
 # API to set actions service
 @api_view(['PUT'])

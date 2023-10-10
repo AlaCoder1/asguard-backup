@@ -5,6 +5,7 @@ import subprocess
 import time
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
+from dashboard.models import MonitoringData
 from dashboard.serializers import MonitoringDataSerializer
 from channels.db import database_sync_to_async
 
@@ -30,17 +31,28 @@ class DashboardConsumer(AsyncWebsocketConsumer):
     ##function to save in database asynchrononsly
     @database_sync_to_async
     def save_system_usage(self, data):
+    # Create a serializer instance
         Dashboardserializer = MonitoringDataSerializer(data=data)
+        # Check if the data is valid
         if Dashboardserializer.is_valid():
-                Dashboardserializer.save()
-                    
+            # Check the count of existing entries
+            count = MonitoringData.objects.count()
+            # If the count exceeds 20, delete the oldest entry
+            if count >= 20:
+                # Find the record with the minimum timestamp and delete it
+                min_timestamp_record = MonitoringData.objects.order_by('timestamp').first()
+                if min_timestamp_record:
+                    min_timestamp_record.delete()
+            # Save the new data
+            Dashboardserializer.save()
+       
     async def start_data_loop_global_chart(self):
         while True:
             # Execute the command to monitor CPU and memory usage
-            command = "top -bn 1 | awk 'NR==3{print $2}' && free | awk '/Mem/{printf \"%.2f\", $3/$2*100}'"
+            command = "sudo top -bn 1 | awk 'NR==3{print $2}' && free | awk '/Mem/{printf \"%.2f\", $3/$2*100}'"
             completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
             output = completed_process.stdout.splitlines()
-
+            
             # Parse the output
             cpu_percentage, memory_percentage = map(float, output)
 
@@ -48,17 +60,28 @@ class DashboardConsumer(AsyncWebsocketConsumer):
             current_time = time.strftime("%Y-%m-%d %H:%M:%S")
             # Convert the formatted timestamp to a Unix timestamp
             unix_timestamp = int(time.mktime(time.strptime(current_time, "%Y-%m-%d %H:%M:%S")))
-
+            ###uptime & current date
+            ###uptime
+            cmd_uptime="sudo echo \"$(uptime | awk '{{print $1}}') $(uptime | awk -F 'load average: ' '{{print $2}}')\""
+            completed_process_uptime=subprocess.run(cmd_uptime, shell=True, capture_output=True, text=True)
+            uptime=completed_process_uptime.stdout.strip('\n').strip()
+            ###current date
+            cmd_date="sudo date"
+            completed_process_date=subprocess.run(cmd_date, shell=True, capture_output=True, text=True)
+            current_date=completed_process_date.stdout.strip('\n').strip()
             # Create a JSON object with the data
             data = {
                 "timestamp": unix_timestamp,
                 "cpu_percentage": cpu_percentage,
-                "memory_percentage": memory_percentage
+                "memory_percentage": memory_percentage,
+                "uptime":uptime,
+                "current_date":current_date
             }
            # Save the data to the database asynchronously
             await self.save_system_usage(data)
             # Send the JSON data to the WebSocket client
             await self.send(json.dumps(data))
+            # await self.delete_data()
             
             # Sleep for a while before sending the next data (adjust the interval as needed)
             await asyncio.sleep(1)

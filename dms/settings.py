@@ -208,6 +208,7 @@ load_dotenv()
 # SSH settings
 SSH_HOST = os.getenv('SSH_HOST')
 SSH_PORT = int(os.getenv('SSH_PORT'))
+ASGUARD_VERSION = os.getenv('ASGUARD_VERSION')
 
 USERNAME=None
 PASSWORD=None

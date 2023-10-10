@@ -43,5 +43,13 @@ urlpatterns = [
     path('ipsec/', include('ipsec.urls')),
     path('rules/', include('rules.urls')),
     path('openvpn/', include('openvpn.urls')),
-    path('gateway/', include('gateway.urls'))
+    path('gateway/', include('gateway.urls')),
+    path("monitoring/",include("dashboard.urls"))
+]
+
+from dashboard import consumers
+# ws/wss url patterns
+websocket_urlpatterns = [
+    # consumer for a particular user
+      path('ws/data/', consumers.DashboardConsumer.as_asgi()),
 ]

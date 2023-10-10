@@ -16,7 +16,6 @@ def run_command(command):
 
 def service_action(service, status):
     output,error=run_command("sudo systemctl {} {}".format(status,service))
-    print(output,error)
     if error!="":
         return error
     return True
@@ -55,7 +54,6 @@ def add_service_DB():
                 status_enabled=True
             aux_started,error=run_command("sudo systemctl is-active  {}".format(s))
             if aux_started.strip()=="active":
-                
                 status_started=True
         service={
             "service_name":s,

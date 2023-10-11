@@ -289,8 +289,8 @@ EOF""".format('\n'.join(output_service))
                             if aux_gen is True:
                                 if aux_inter is True:
                                     ## add server address to nginx file
-                                    file_path_ngnix="/etc/nginx/sites-available/asguard.conf"
-                                    modify_server_name(file_path_ngnix, ip_address4)   
+                                    # file_path_ngnix="/etc/nginx/sites-available/asguard.conf"
+                                    # modify_server_name(file_path_ngnix, ip_address4)   
                                     ######                                 
                                     msg="Your interface {} was configured Successfully!!".format(name_interface)
                                     status=200

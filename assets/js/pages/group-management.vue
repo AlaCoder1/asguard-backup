@@ -80,17 +80,21 @@ export default {
         console.log("update action ..." + JSON.stringify(this.rowData))
         this.update(formData,
           () => {
-
             console.log("old DataList :" + JSON.stringify(this.DataList[this.selectedRowIndex]))
 
-            this.DataList[this.selectedRowIndex] =
-            {
-              id: formData.id,
+            this.$set(this.DataList, this.selectedRowIndex,   {
               groupname: formData.groupname,
               description: formData.description,
               sudoers: formData.sudoers,
+            });
 
-            };
+
+            // this.DataList[this.selectedRowIndex] =
+            // {
+            //   groupname: formData.groupname,
+            //   description: formData.description,
+            //   sudoers: formData.sudoers,
+            // };
 
             console.log("new formData :" + JSON.stringify(formData))
             // this.selectedRowIndex = null;

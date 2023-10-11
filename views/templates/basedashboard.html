@@ -16,8 +16,8 @@
     <canvas id="chart" width="800" height="600"></canvas>
 
     <script>
-        const socket = new WebSocket('ws://' + window.location.host + '/ws/data/'); // Replace with your WebSocket URL
-        console.log(socket)
+        const socket = new WebSocket('ws://'+window.location.host+'/ws/data/'); // Replace with your WebSocket URL
+
         // Initialize empty arrays to store data points
         const timestamps = [];
         const cpuPercentages = [];

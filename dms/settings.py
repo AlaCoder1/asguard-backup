@@ -34,7 +34,6 @@ ALLOWED_HOSTS = ['*']
 # Application definition
 
 INSTALLED_APPS = [
-    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -56,7 +55,8 @@ INSTALLED_APPS = [
     "ipsec",
     "rules",
     "gateway",
-    "dashboard"
+    "dashboard",
+    'channels',
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {
@@ -93,7 +93,6 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'dms.wsgi.application'
 ASGI_APPLICATION = 'dms.asgi.application'
 
 

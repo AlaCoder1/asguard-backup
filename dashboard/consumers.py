@@ -9,8 +9,7 @@ from dashboard.models import MonitoringData
 from dashboard.serializers import MonitoringDataSerializer
 from channels.db import database_sync_to_async
 
-logger = logging.getLogger(__name__)
-print(logger.name) 
+logger = logging.getLogger(__name__) 
 class DashboardConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         logger.info('WebSocket connection established')

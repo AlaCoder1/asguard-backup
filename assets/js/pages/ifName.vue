@@ -2,16 +2,17 @@
   <v-app id="inspire">
     <base-layout title="List of interface">
       <template #content>
-        <v-tabs v-model="activeTab" background-color="#fff" color="#FFC300" dark>
+        <v-tabs 
+         background-color="#fff" color="#FFC300" dark @change="handleTabChange">
           <v-tab v-for="tab in tabs" :key="tab.id">
              <span style="color: #020202;">{{ tab.name_interface }}</span>
           </v-tab>
           <v-tab-item v-for="tab in tabs" :key="tab.name_interface">
-            <IfNameComponent :id="tab.name_interface" :activeTab="tab.name_interface"/>
+            <IfNameComponent :id="tab.name_interface" :activeTab="activeTabValue" />
           </v-tab-item>
         </v-tabs>
       </template>
-    </base-layout>
+    </base-layout>  
   </v-app>
 </template>
 
@@ -26,17 +27,26 @@ export default {
   },
   data() {
     return {
-      activeTab: 0,
+      activeTabValue: "",
       interfaces: [],
       IPV4Config: {},
       allStaticGateways: [],
     };
   },
+   methods: {
+     handleTabChange(newTabValue) {
+       console.log("newTabValue "+ this.tabs[newTabValue].name_interface);   
+       this.activeTabValue = this.tabs[newTabValue].name_interface;
+    },
+  },
   computed: {
     tabs() {
-      return this.interfaces.map(element => ({
-        name_interface: element.name_interface,
-      }));
+      return this.interfaces.map(element => {
+        return {
+          name_interface: element.name_interface,
+        };
+      });
+      
     },
   },
   mounted() {

@@ -8,7 +8,12 @@ from rest_framework.authentication import SessionAuthentication
 from django.core import serializers
 from authentification.views import *
 from network.address import *
+# Version without SSh connection
 from .functions import *
+# end Version without SSh connection
+# Version SSh connection
+# from .remoteFunctions import *
+# end Version SSh connection
 from django.core import serializers
 from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
@@ -112,9 +117,22 @@ def saveRules(request,name_interface):
         daddr = None if data.get('daddr', None) == "" else data.get('daddr', None)
         sport = None if data.get('sport', None) == "" else data.get('sport', None)
         dport = None if data.get('dport', None) == "" else data.get('dport', None)
-        protocol = None if data.get('protocol', None) == "" else data.get('protocol', None)
+        protocols = None if data.get('protocol', None) == "" else data.get('protocol', None)
         type_rule = data.get('type_rule', None)
-        Rule_description=data.get('Rule_description', None)
+        rule_description=data.get('rule_description', None)
+        #####
+        protocol=''
+        if protocols is not None :
+            if len(protocols)>1:
+              for i in range(len(protocols)-1):
+                  protocol+=protocols[i]+', '
+              protocol+=protocols[-1]
+              protocol='{ '+protocol+' }'
+            else:
+              protocol=protocols[0]
+        else:
+            protocol=protocols
+        #####
         data = {
           "id":id,
           'policy': policy,
@@ -124,7 +142,7 @@ def saveRules(request,name_interface):
           'dport': dport,
           'protocol': protocol,
           'type_rule': type_rule,
-          'Rule_description': Rule_description
+          'rule_description': rule_description
           }
         #test if rule exist or not with id 
         if (id is not None and Rule.objects.filter(id=id).exists()):
@@ -152,15 +170,19 @@ def saveRules(request,name_interface):
                   if InboundSerializer.is_valid():
                     InboundSerializer.save()
                     msg = "Rule updated Successfully!!"
+                    status=200
                   else:
                     msg= InboundSerializer.errors
+                    status=400
               else:
                 add_rule_remote(rule,ifname,type_rules)
                 msg= return_add_rule
+                status=400
             else:
               msg = return_delete_rule_remote
           else:
             msg="Rule doesn't exist in system !!"
+            status=400
         else:
           #appel la fonction pour initialiser les fichies nftables.conf
           return_init_file_nftables = init_file_nftables(ifname)
@@ -184,16 +206,22 @@ def saveRules(request,name_interface):
                   InboundSerializer.save()
                   id=Rule.objects.get(rule=rule).pk
                   msg = "Rule Saved Successfully!!"
+                  status=200
                 else:
                   msg = InboundSerializer.errors
+                  status=400
               else:
                 msg = return_add_rule
+                status=400
                 
             else:
               id=Rule.objects.get(rule=rule).pk
               msg="Rule already exist!"
+              status=400
           else:
             msg = return_init_file_nftables
-        response={"id":id,"rule":ruleMsg,"msg":msg}
+            status=400
+            
+        response={"id":id,"rule":ruleMsg,"msg":msg,"status":status}
         msgs.append(response)
       return JsonResponse({"response": msgs})    

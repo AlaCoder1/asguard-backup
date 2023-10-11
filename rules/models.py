@@ -7,7 +7,7 @@ class Rule(models.Model):
     rule_status = models.BooleanField(default=False)
     type_rule=models.CharField(max_length=200, null=True)
     policy=models.CharField(max_length=200, null=True)
-    Rule_description=models.CharField(max_length=200, null=True)
+    rule_description=models.CharField(max_length=200, null=True)
     protocol=models.CharField(max_length=200, null=True)
     saddr=models.CharField(max_length=200, null=True)
     sport= models.IntegerField(null=True)
@@ -16,7 +16,7 @@ class Rule(models.Model):
     interface = models.ForeignKey(
             Interface, on_delete=models.CASCADE, null=True)
     class Meta:
-        db_table = 'Rule'
+        db_table = 'rule'
 
     def __str__(self):
         return self.rule

@@ -159,7 +159,7 @@ export default {
                     editable: params => params.node.data.isRowSelected,
                 },
                 {
-                    field: 'Rule_description',
+                    field: 'rule_description',
                     headerName: 'Rule Description',
                     editable: params => params.node.data.isRowSelected,
                     headerName: 'Rule Description',
@@ -265,7 +265,7 @@ export default {
                     editable: params => params.node.data.isRowSelected,
                 },
                 {
-                    field: 'Rule_description',
+                    field: 'rule_description',
                     headerName: 'Rule Description',
                     editable: params => params.node.data.isRowSelected,
                     headerName: 'Rule Description',
@@ -413,7 +413,7 @@ export default {
                 row.isRowSelected = row.isSelected;
             });
 
-            this.gridApi.refreshCells({ columns: ['Policy', 'Rule_description', 'protocol', 'saddr', 'sport', 'daddr', 'dport', 'Action'] });
+            this.gridApi.refreshCells({ columns: ['Policy', 'rule_description', 'protocol', 'saddr', 'sport', 'daddr', 'dport', 'Action'] });
         },
         onSelectionChangedOutbound() {
             const selectedNodes = this.gridApiOutbound.getSelectedNodes();
@@ -422,7 +422,7 @@ export default {
                 row.isRowSelected = row.isSelected;
             });
 
-            this.gridApiOutbound.refreshCells({ columns: ['Policy', 'Rule_description', 'protocol', 'saddr', 'sport', 'daddr', 'dport', 'Action'] });
+            this.gridApiOutbound.refreshCells({ columns: ['Policy', 'rule_description', 'protocol', 'saddr', 'sport', 'daddr', 'dport', 'Action'] });
         },
         actionCellRenderer(params) {
             let eGui = document.createElement('div');
@@ -603,7 +603,7 @@ export default {
                 isRowSelected: false,
                 isModified: false,
                 policy: 'accept',
-                Rule_description: '',
+                rule_description: '',
                 protocol: 'tcp',
                 saddr: '',
                 sport: '',
@@ -632,7 +632,7 @@ export default {
                 isRowSelected: false,
                 isModified: false,
                 policy: 'accept',
-                Rule_description: '',
+                rule_description: '',
                 protocol: 'tcp',
                 saddr: '',
                 sport: '',
@@ -708,7 +708,7 @@ export default {
         //     return portRegex.test(value);
         // },
         isValidRowData(rowData) {
-            const requiredColumns = ['policy', 'Rule_description', 'protocol', 'saddr', 'daddr'];
+            const requiredColumns = ['rule_description'];
             for (const column of requiredColumns) {
                 if (!rowData[column]) {
                     return false; // Data in a required column is missing
@@ -717,7 +717,7 @@ export default {
             return true; // All required columns have data
         },
         validateGridData(gridData) {
-            const requiredColumns = ['policy', 'Rule_description', 'protocol', 'saddr', 'daddr'];
+            const requiredColumns = ['rule_description'];
             for (const row of gridData) {
                 for (const column of requiredColumns) {
                     if (!row[column]) {
@@ -754,7 +754,7 @@ export default {
                 const dataToSend = modifiedRows.map(row => {
                     return {
                         policy: row.policy,
-                        Rule_description: row.Rule_description,
+                        rule_description: row.rule_description,
                         protocol: row.protocol === 'icmp request' ? 'icmp type echo-request' : row.protocol === 'icmp reply' ? 'icmp type echo-reply' : row.protocol,
                         saddr: row.saddr,
                         daddr: row.daddr,
@@ -811,7 +811,7 @@ export default {
                 const dataToSend = modifiedRows.map(row => {
                     return {
                         policy: row.policy,
-                        Rule_description: row.Rule_description,
+                        rule_description: row.rule_description,
                         protocol: row.protocol === 'icmp request' ? 'icmp type echo-request' : row.protocol === 'icmp reply' ? 'icmp type echo-reply' : row.protocol,
                         saddr: row.saddr,
                         daddr: row.daddr,

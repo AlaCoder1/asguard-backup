@@ -5,8 +5,12 @@ from .serializers import *
 import json
 from rest_framework.parsers import JSONParser
 from rest_framework.authentication import SessionAuthentication
+# Version without SSh connection
 from .functions import *
-from .remoteFunctions import *
+# end Version without SSh connection
+# Version SSh connection
+# from .remoteFunctions import *
+# end Version SSh connection
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from authentification.authentication import JWTAuthentication
@@ -21,14 +25,14 @@ from django.core import serializers
 def getAllGroups(request):
     list_group = []
     if (request.method == 'GET'):
-        groups = Group.objects.filter(createdBySystem=0)
+        groups = Group.objects.filter(created_by_system=0)
         groupDict = serializers.serialize("json", groups)
         res = json.loads(groupDict)
         for i in range(0, len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
-            res[i]['fields'].pop('createdBySystem')
+            res[i]['fields'].pop('created_by_system')
             res[i]['fields']['id'] = id
             list_group.append(res[i]['fields'])
         # return a Json response
@@ -60,12 +64,12 @@ def createGroup(request):
         groupname = data['groupname']
         if (validInput(groupname)):
             # Execute the command on the remote machine
-            stdin, stdout, stderr = addRemoteGroup(groupname)
+            stdin, stdout, stderr = addGroup(groupname)
             # convert the stderr stream to a string
             error_str = stderr.read().decode('utf-8')
             if error_str == "":
                 msg = groupname+" added sucessfully"
-                gid = getRemoteGidGroup()
+                gid = getUidGroup()
                 data['gid'] = gid
                 serializer = GroupSerializer(data=data)
                 # check if the sent information is okay
@@ -93,7 +97,7 @@ def deleteGroup(request, id):
     if (request.method == 'DELETE'):
         group = Group.objects.get(id=id)
         # Execute the command on the remote machine
-        stdin, stdout, stderr = deleteRemoteGroup(group.groupname)
+        stdin, stdout, stderr = delete_group(group.groupname)
         # convert the stderr stream to a string
         error_str = stderr.read().decode('utf-8')
         print(stdout.read().decode('utf-8'))

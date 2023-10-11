@@ -1,6 +1,6 @@
 <template>
     <div class="d-flex flex-column footer-bg">
-        Asguard 1.0 © 2019-{{ new Date().getFullYear() }} Numeryx.
+        Asguard 1.0 © {{ new Date().getFullYear() }} Numeryx.
     </div>
 </template>
 

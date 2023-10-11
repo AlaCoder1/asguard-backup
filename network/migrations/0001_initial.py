@@ -32,8 +32,8 @@ class Migration(migrations.Migration):
             name='IP4Config',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('typeIP4', models.CharField(default=None, max_length=200, null=True)),
-                ('typeDHCP', models.CharField(default=None, max_length=200, null=True)),
+                ('typeip4', models.CharField(default=None, max_length=200, null=True)),
+                ('typedhcp', models.CharField(default=None, max_length=200, null=True)),
                 ('ip_address', models.CharField(default=None, max_length=200, null=True)),
                 ('netmask', models.IntegerField(default=None, null=True)),
                 ('reject', models.CharField(default=None, max_length=200, null=True)),
@@ -64,9 +64,9 @@ class Migration(migrations.Migration):
             name='GenericConfig',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('mtuV', models.IntegerField(null=True)),
+                ('mtuv', models.IntegerField(null=True)),
                 ('addmac', models.CharField(max_length=200, null=True)),
-                ('mssV', models.IntegerField(null=True)),
+                ('mssv', models.IntegerField(null=True)),
                 ('speed_duplex', models.CharField(max_length=200, null=True)),
                 ('created_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),
                 ('updated_at', models.DateTimeField(default=django.utils.timezone.now, editable=False)),

@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
+from dashboard import consumers
 from views.views import *
 
 
@@ -26,6 +26,7 @@ urlpatterns = [
     path('dashboard/', index_page),
     path('userCertifMang/', user_certificate_managment_page),
     path('interfaces/list-of-interface', interface_page),
+    path('system/user-certificat-management', user_certificate_managment_page),
     path('firewall/rules', firewall_page),
     path('settings/', settings_page),
     path('openvpn/', openvpn_page),
@@ -42,5 +43,13 @@ urlpatterns = [
     path('ipsec/', include('ipsec.urls')),
     path('rules/', include('rules.urls')),
     path('openvpn/', include('openvpn.urls')),
-    path('gateway/', include('gateway.urls'))
+    path('gateway/', include('gateway.urls')),
+    path("monitoring/",include("dashboard.urls"))
 ]
+
+# ws/wss url patterns
+websocket_urlpatterns = [
+    # consumer for a particular user
+      path('ws/data/', consumers.DashboardConsumer.as_asgi()),
+]
+

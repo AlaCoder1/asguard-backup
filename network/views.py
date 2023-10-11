@@ -7,13 +7,17 @@ import json
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from authentification.views import *
+# Version without SSh connection
 from .functions import *
+# end Version without SSh connection
+# Version SSh connection
+# from .remoteFunctions import *
+# end Version SSh connection
 from django.views.decorators.csrf import csrf_exempt
 from gateway.models import *
 from gateway.functions import *
 from django.db.models import Q
 from django.core import serializers
-
 def device_nameInterface(name_interface):
     data = Interface.objects.get(name_interface=name_interface)
     return data
@@ -37,7 +41,8 @@ def add_interface(request):
 # @authentication_classes([AllowAny])
 # @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
-@csrf_exempt
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
 def conf(request,name_interface):
     msg="Failed to configure Network!"
     status=400
@@ -46,34 +51,35 @@ def conf(request,name_interface):
         interfaceObject = Interface.objects.get(name_interface=name_interface)
         id_interface = interfaceObject.id
         ###### get object Config
-        IP4ConfigObject=IP4Config.objects.get(interface_id=id_interface)
-        genericConfigObject=GenericConfig.objects.get(interface_id=id_interface)
+        IP4ConfigObject=None
+        genericConfigObject=None
+        if IP4Config.objects.filter(interface_id=id_interface).exists():
+            IP4ConfigObject=IP4Config.objects.get(interface_id=id_interface)
+        if GenericConfig.objects.filter(interface_id=id_interface).exists():
+            genericConfigObject=GenericConfig.objects.get(interface_id=id_interface)
         ###############
-        # print("id_interface",id_interface)
         #get object of interface type
         deviceInfo = device_nameInterface(name_interface)
-        # print({"ifname":deviceInfo.ifname})
-        # print({"name_interface":deviceInfo.name_interface})
         #get interface name to execute command systeme
         ifname=deviceInfo.ifname
         nameInterface=deviceInfo.name_interface
         ##get uuid to reference to connection
-        uuid=get_conn_name(ifname)
+        uuid=get_uuid_con(ifname)
         ####
        
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         # return JsonResponse({"data":data})
         setuptypeIP4 = data.get('setuptypeIP4')
         description = data.get('description')
         bogon_aux = data.get('bogon_aux')
         private_aux = data.get('private_aux')
-        mtuV =  None if data.get('mtuV', None) == "" else data.get('mtuV', None)
-        mssV =  None if data.get('mssV', None) == "" else data.get('mssV', None)
+        mtuv =  None if data.get('mtuv', None) == "" else data.get('mtuv', None)
+        mssv =  None if data.get('mssv', None) == "" else data.get('mssv', None)
         speed_duplex =  None if data.get('speed_duplex', None) == "" else data.get('speed_duplex', None)
         addmac =  None if data.get('addmac', None) == "" else data.get('addmac', None)
-        data["mtuV"]=mtuV
-        data["mssV"]=mssV
+        data["mtuv"]=mtuv
+        data["mssv"]=mssv
         data["speed_duplex"]=speed_duplex
         data["addmac"]=addmac
         commandes=[]
@@ -95,8 +101,8 @@ def conf(request,name_interface):
                 ###set gatewayObject to None
                 GatewayObject=None
                 ##IPV4 configuration cases 
-                match setuptypeIP4:
-                    case "None":
+                match setuptypeIP4.lower():
+                    case "none":
                          #call function to convert address to None
                         commandes,output_service,cmd_final_ipv4=update_conn_None_IPV4(output_service,ifname)
                     case "static":
@@ -109,9 +115,8 @@ def conf(request,name_interface):
                         default_aux=GatewayObject.default_aux
                         far_aux=GatewayObject.far_aux
                         multiWan_aux=GatewayObject.multiwan_aux
-                        multiWan_aux=GatewayObject.multiwan_aux
                         addrgw4=GatewayObject.gwaddress
-                        #############
+                        ############# generete metric statiquement
                         metric=0
                         allGatewayInterface = GatewayInterface.objects.all()
                         if multiWan_aux:
@@ -123,10 +128,10 @@ def conf(request,name_interface):
                         #call function to convert address to static
                         commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,uuid,ip_address4,netmask4,cmdgw4,IP4ConfigObject)
                         jsonIPV4={
-                    "nameInterface":nameInterface,"ifname":ifname,
+                    "name_interface":nameInterface,"ifname":ifname,
                     "ip_address":ip_address4,"netmask":netmask4,
                     "addrgw":addrgw4,
-                    "typeIP4":setuptypeIP4}
+                    "typeip4":setuptypeIP4}
                     case "dhcp":
                         addmac = None
                         typeDHCP4 = data.get('value_setup_Ipv4')['typeDHCP4']
@@ -139,17 +144,18 @@ def conf(request,name_interface):
                         data["reject"]=reject
                         data["hostname"]=hostname
                         #call function to convert mask format to bits
-                        alias_mask=convert_to_subnet_mask(alias_mask)
+                        if alias_mask is not None:
+                            alias_mask=convert_to_subnet_mask(alias_mask)
                         ####
-                        if typeDHCP4=="Base" :
+                        if typeDHCP4.lower()=="base" :
                             #contenu de dhclient.conf dhcp Base
                             configContenu=return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask)
                             jsonIPV4={
-                    "nameInterface":nameInterface,"ifname":ifname,
-                    "typeIP4":setuptypeIP4,"typeDHCP":typeDHCP4,
+                    "name_interface":nameInterface,"ifname":ifname,
+                    "typeip4":setuptypeIP4,"typedhcp":typeDHCP4,
                     "alias_add":alias_add,"alias_mask":alias_mask,
                     "reject":reject,"hostname":hostname}
-                        if typeDHCP4=="Advanced":
+                        if typeDHCP4.lower()=="advanced":
                             timeout =  None if data['value_setup_Ipv4'].get('timeout', None) == "" else  data['value_setup_Ipv4'].get('timeout', None)
                             retry =  None if data['value_setup_Ipv4'].get('retry', None) == "" else  data['value_setup_Ipv4'].get('retry', None)
                             select_timeout =  None if data['value_setup_Ipv4'].get('select_timeout', None) == "" else  data['value_setup_Ipv4'].get('select_timeout', None)
@@ -178,7 +184,7 @@ def conf(request,name_interface):
                             configContenu=return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,send_options_dhcp_client,supersede_domaine_name,prepend_domain_server,send_options_lease_time,request,require)
                             jsonIPV4={
                     "nameInterface":nameInterface,"ifname":ifname,
-                    "typeIP4":setuptypeIP4,"typeDHCP":typeDHCP4,
+                    "typeip4":setuptypeIP4,"typedhcp":typeDHCP4,
                     "alias_add":alias_add,"alias_mask":alias_mask,
                     "reject":reject,"hostname":hostname,
                     "timeout":timeout,"retry":retry,
@@ -216,7 +222,7 @@ def conf(request,name_interface):
                 
                 ##for generic config 
                 cmds=[]       
-                cmds,output_service,cmd_final_Gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuV,mssV,genericConfigObject)
+                cmds,output_service,cmd_final_Gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObject)
                 ##blocages des adresses
                 cmdsBlock=[]
                 configs=[]
@@ -228,27 +234,26 @@ def conf(request,name_interface):
                 commandes+=commandesIPV6+cmds+cmdsBlock
                 ###call function to add all commandes to the service
                 output_service = add_cmd(output_service,commandes)
-                #ajouter au liste des commandes finales à executer (ssh.exec_command) 
+                #ajouter au liste des commandes finales à executer  
                 commandes_final+=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_Gen+cmd_final_Block
                 cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 {}
 EOF""".format('\n'.join(output_service))
-                # print("1111",run_all_commands(commandes_final,setuptypeIP4,typeDHCP4))
-                if run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,10) is True:
-                    stdin, stdout, stderr = ssh.exec_command(cmd_asguard)  
-                    if  (stderr.read().decode('utf-8')==""):
-                        if setuptypeIP4=="dhcp":
-                            ##function to get gateway if typeIPV4 est DHCP Base or Advanced
-                            gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname,ssh)
-                            jsonIPV4["addrgw"]=gwaddr4
-                            ip_address4,netmask4=get_address_dhcp(ifname,ssh)
-                            # print(ip_address4,"======>",netmask4)
+                if run_all_commands(commandes_final,setuptypeIP4,5) is True:
+                    output, error=run_command(cmd_asguard)
+                    if  (error==""):
+                        if setuptypeIP4.lower()=="dhcp":
+                            #function to get dhcp address and mask
+                            ip_address4,netmask4=get_address_dhcp(ifname)
                             jsonIPV4["ip_address"]=ip_address4
                             jsonIPV4["netmask"]=netmask4
-                            # print(gwaddr4,metric,default_aux,far_aux,multiwan_aux)
+                            ###
+                            ##function to get gateway if typeIPV4 est DHCP Base or Advanced
+                            gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname)
+                            jsonIPV4["addrgw"]=gwaddr4
                             if gwaddr4 is not None:
                                 dataGw={
-                                "gwname":"DHCP_GW_{}".format(name_interface),
+                                "gwname":"DHCP_GW_{}".format(gwaddr4),
                                 "gwaddress":"{}".format(gwaddr4),
                                 "description":"DHCP gateway generated automatically ",
                                 "default_aux":default_aux,
@@ -263,6 +268,7 @@ EOF""".format('\n'.join(output_service))
                                     idGW=GatewayObject.id
                                     aux_GW=update_gateway_DB(dataGw,idGW)
                                 if aux_GW is True:
+                                    GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
                                     addGatewayInterfaceDB(GatewayObject,name_interface,metric)  
                                 else:
                                     msg=aux_GW
@@ -282,6 +288,10 @@ EOF""".format('\n'.join(output_service))
                         if aux_ipv4 is True:
                             if aux_gen is True:
                                 if aux_inter is True:
+                                    ## add server address to nginx file
+                                    file_path_ngnix="/etc/nginx/sites-available/asguard.conf"
+                                    modify_server_name(file_path_ngnix, ip_address4)   
+                                    ######                                 
                                     msg="Your interface {} was configured Successfully!!".format(name_interface)
                                     status=200
                                 else:
@@ -294,10 +304,10 @@ EOF""".format('\n'.join(output_service))
                             msg=aux_ipv4
                             status=400
                     else:
-                        msg=stderr.read().decode('utf-8')
+                        msg=error
                         status=400        
                 else:
-                    msg=run_all_commands(commandes_final,setuptypeIP4,typeDHCP4,10)
+                    msg=run_all_commands(commandes_final,setuptypeIP4,5)
                     status=400
             else:
                 msg="Failed to configure Network Service not found!!"
@@ -310,15 +320,12 @@ EOF""".format('\n'.join(output_service))
 @permission_classes([AllowAny])
 def delete_interface(request,id):
     msg="failed to delete interface!"
-    print(request.method=="DELETE")
     if request.method=="DELETE":
-        print("aaaa",Interface.objects.filter(id=id).exists())
         if (Interface.objects.filter(id=id).exists()):
                 interfaceObject = Interface.objects.get(id=id)
                 ifname=interfaceObject.ifname
                 output_service,error= get_old_config()
                 if not error:
-                    print(desactiver_interface_remote(ifname,output_service))
                     if desactiver_interface_remote(ifname,output_service):
                         interfaceObject.delete() 
                         msg="Delete interface Successfully!!"
@@ -371,9 +378,7 @@ def GetInformationsByInterface(request,name_interface):
             info['genericConfig']=res[0]['fields']
         else:
             info['genericConfig']=[]
-        # print({"res":res[0]['fields']})
         IPV4ConfigObject = IP4Config.objects.filter(interface_id=interfaceObject.id)
-        print({"IPV4ConfigObject":IPV4ConfigObject})
         IPV4ConfigObjectDict = serializers.serialize("json", IPV4ConfigObject)
         resultat = json.loads(IPV4ConfigObjectDict)
         if resultat != []:

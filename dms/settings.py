@@ -50,14 +50,20 @@ INSTALLED_APPS = [
     "settings",
     "authentification",
     "subscription",
-    "background_task",
     "network",
     "openvpn",
     "ipsec",
     "rules",
-    "gateway"
+    "gateway",
+    "dashboard",
+    'channels',
 ]
-
+# Configure the channel layer for WebSocket communication
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",  # You can use other backends as needed
+    },
+}
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -87,7 +93,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'dms.wsgi.application'
+ASGI_APPLICATION = 'dms.asgi.application'
 
 
 # Database
@@ -201,6 +207,7 @@ load_dotenv()
 # SSH settings
 SSH_HOST = os.getenv('SSH_HOST')
 SSH_PORT = int(os.getenv('SSH_PORT'))
+ASGUARD_VERSION = os.getenv('ASGUARD_VERSION')
 
 USERNAME=None
 PASSWORD=None

@@ -21,7 +21,7 @@ const i18n = new VueI18n({
   },
 });
 
-Vue.use( {
+Vue.use({
   i18n,
   classes: true,
   fieldsBagName: 'formFields',

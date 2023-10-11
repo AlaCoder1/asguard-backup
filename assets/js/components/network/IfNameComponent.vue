@@ -57,7 +57,7 @@
                                     </td>
                                     <td>
                                         <ValidationProvider name="IPV4 Setup Type" rules="required" v-slot="{ errors }">
-                                            <select class="ml-3 setuptypeIP4-style" v-model="setuptypeIP4"
+                                            <select class="ml-3 setuptypeip4-style" v-model="setuptypeip4"
                                                 :error-messages="errors">
                                                 <option v-for="item in items" :value="item.value">{{ item.text }}</option>
                                                 <v-icon>mdi-chevron-down</v-icon>
@@ -65,7 +65,7 @@
                                         </ValidationProvider>
                                     </td>
                                 </tr>
-                                <tr>
+                                <!-- <tr>
                                     <td>
                                         <div class="mt-5 mt-6">IPV6 Setup Type</div>
                                     </td>
@@ -78,7 +78,7 @@
                                             </select>
                                         </ValidationProvider>
                                     </td>
-                                </tr>
+                                </tr> -->
                                 <tr>
                                     <td>
                                         <div style="color: #020202;" class="mt-5 mt-6">MAC address</div>
@@ -98,7 +98,7 @@
                                     <td>
                                         <ValidationProvider name="MTU" v-slot="{ errors }"
                                             :rules="{ regex: /^(1[5-9][0-9]{2}|[2-8][0-9]{3}|9000)$/ }">
-                                            <v-text-field label="Enter MTU" class="ml-3 mt-2" v-model="mtuV"
+                                            <v-text-field label="Enter MTU" class="ml-3 mt-2" v-model="mtuv"
                                                 :error-messages="errors"></v-text-field>
                                         </ValidationProvider>
                                     </td>
@@ -109,7 +109,7 @@
                                     </td>
                                     <td>
                                         <ValidationProvider name="MSS">
-                                            <v-text-field label="Enter MSS" class="ml-3 mt-2" v-model="mssV"
+                                            <v-text-field label="Enter MSS" class="ml-3 mt-2" v-model="mssv"
                                                 @input="validateMSS"></v-text-field>
                                             <div class="message-error">
                                                 <div v-if="mssError" class="message-error">{{ mssError }}</div>
@@ -142,9 +142,9 @@
                             </tbody>
                         </table>
                     </v-col>
-                    <v-col cols="12" sm="6"
-                        v-if="value_setup_Ipv4.ip_address4 != null || value_setup_Ipv4.ip_address4 != null">
-                        <div v-if="setuptypeIP4 === 'static'">
+                    <v-col cols="12" sm="6">
+                        <!-- v-if="value_setup_Ipv4.ip_address4 != null || value_setup_Ipv4.ip_address4 != null" -->
+                        <div v-if="setuptypeip4 === 'static'">
                             <v-card-title class="title-text">Static IPV4 address configuration</v-card-title>
                             <v-divider class="ml-3" style="height: 39px;width: 425px;"></v-divider>
                             <table class="ml-3 mt-3">
@@ -180,7 +180,7 @@
                                             </v-btn></td>
                                         <td>
                                             <ValidationProvider name="gateway4" rules="required" v-slot="{ errors }">
-                                                <select class="gateway ml-3" v-model="value_setup_Ipv4.gateway4"
+                                                <select class="gateway ml-3" v-model="value_setup_Ipv4.gateway4.value"
                                                     :error-messages="errors">
                                                     <option class="gateway-option"
                                                         v-for="item in allStaticGatewaysAddresses" :value="item">{{ item }}
@@ -195,7 +195,7 @@
                         </div>
                         <div v-if="ipv6SetupType === 'DHCP'">
                             <v-card-title class="title-text">Configuring the DHCPv6 client</v-card-title>
-                            <v-divider class="ml-3"></v-divider>
+                            <v-divider class="ml-3" style="height: 39px;width: 425px;"></v-divider>
                             <v-row class="ml-3 mt-3">
                                 <v-tabs v-model="activeTabIPV6" fixed-tabs background-color="#fff" color="#FFC300" dark>
                                     <span style="color: #020202; background-color: #fff; height: ;" class="mt-4">
@@ -321,11 +321,11 @@
                                 <v-text-field label="expire" class="ml-3 inline-input"></v-text-field>
                             </div>
                         </div>
-                        <div v-if="setuptypeIP4 === 'DHCP'">
+                        <div v-if="setuptypeip4 === 'DHCP'">
                             <v-card-title class="title-text">Configuring the DHCP Client</v-card-title>
                             <v-divider class="ml-3"></v-divider>
                             <v-row class="ml-3 mt-3">
-                                <v-tabs v-model="activeTab" fixed-tabs background-color="#fff" color="#FFC300" dark>
+                                <v-tabs v-model="activeTabSetupMode" fixed-tabs background-color="#fff" color="#FFC300" dark>
                                     <span style="color: #020202; background-color: #fff;height: ;" class="mt-4">
                                         Setup mode</span>
                                     <v-tab v-for="tab in tabs" :key="tab.id" class="ml-2">
@@ -395,7 +395,7 @@
                                 <v-text-field label="Prepend domain server" class="ml-3 inline-input"></v-text-field>
                             </div>
                         </div>
-                        <div v-if="setuptypeIP4 === 'PPP'">
+                        <div v-if="setuptypeip4 === 'PPP'">
                             <v-card-title class="title-text">Configuration PPP</v-card-title>
                             <v-divider class="ml-3"></v-divider>
                             <v-card elevation="9" class="ml-3 mt-3 mr-3" title="Service provider (FAI)">
@@ -612,9 +612,8 @@ export default {
         BasicConfigDHCPv6
     },
     props: {
-        activeTab: {
-            type: String,
-        },
+            activeTab: String,
+
     },
     data() {
         return {
@@ -699,12 +698,12 @@ export default {
             private_aux: false,
             bogon_aux: false,
 
-            setuptypeIP4: "",
+            setuptypeip4: "",
             ipv6SetupType: "",
 
             addmac: "",
-            mtuV: "",
-            mssV: "",
+            mtuv: "",
+            mssv: "",
             speed_duplex: "",
 
             dynamicGatewayPolicy: false,
@@ -730,6 +729,7 @@ export default {
             IPV4Config: {},
             allStaticGateways: [],
             mssError: '',
+            activeTabSetupMode: 0,
         };
     },
     computed: {
@@ -754,15 +754,15 @@ export default {
                 private_aux: this.private_aux,
                 bogon_aux: this.bogon_aux,
                 addmac: this.addmac,
-                mtuV: this.mtuV,
-                mssV: this.mssV,
+                mtuv: this.mtuv,
+                mssv: this.mssv,
                 speed_duplex: this.speed_duplex,
-                setuptypeIP4: this.setuptypeIP4,
+                setuptypeIP4: this.setuptypeip4,
                 value_setup_Ipv4: {
                     ip_address4: this.value_setup_Ipv4.ip_address4,
                     netmask4: this.value_setup_Ipv4.netmask4,
                     gateway4: {
-                        value: this.gateway.value
+                        value: this.value_setup_Ipv4.gateway4.value
                     },
                 }
             };
@@ -829,10 +829,19 @@ export default {
 
             axios.post('/gateway/addStaticGateway', params)
                 .then((response) => {
-                    this.showAlert = true;
-                    setTimeout(() => {
-                        this.showAlert = false;
-                    }, 3000);
+                    if (response.status == '200') {
+                        this.showModal = false;
+                        this.gateway = {
+                            gwname: "",
+                            gwaddress: "",
+                            description: "",
+                            default_aux: true,
+                            far_aux: false,
+                            multiwan_aux: false,
+                        }
+                    } else {
+                        this.showModal = true;
+                    }
                 }, (error) => {
                     console.log(error);
                 });
@@ -899,7 +908,7 @@ export default {
             return `The ${field} field is required.`;
         },
         validateMSS() {
-            if (parseInt(this.mssV) > parseInt(this.mtuV)) {
+            if (parseInt(this.mssv) > parseInt(this.mtuv)) {
                 this.mssError = 'MSS must be less than or equal to MTU';
             } else {
                 this.mssError = '';
@@ -933,17 +942,17 @@ export default {
         this.bogon_aux = this.IPV4Config.interface.bogon;
 
         this.addmac = this.IPV4Config.genericConfig.addmac;
-        this.mtuV = this.IPV4Config.genericConfig.mtuV;
-        this.mssV = this.IPV4Config.genericConfig.mssV;
+        this.mtuv = this.IPV4Config.genericConfig.mtuv;
+        this.mssv = this.IPV4Config.genericConfig.mssv;
         this.speed_duplex = this.IPV4Config.genericConfig.speed_duplex;
 
-        // this.setuptypeIP4 = this.IPV4Config.IPV4Config.typeIP4;
+        this.setuptypeip4 = this.IPV4Config.IPV4Config.typeip4;
         this.value_setup_Ipv4.ip_address4 = this.IPV4Config.IPV4Config.ip_address;
         this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 
         this.name_interface = this.IPV4Config.interface.name_interface;
 
-        this.ipv6SetupType = this.IPV4Config.IPV4Config.typeDHCP;
+        this.ipv6SetupType = this.IPV4Config.IPV4Config.typedhcp;
     },
     validations: {
         addmac: {
@@ -962,7 +971,7 @@ export default {
                 return true;
             },
         },
-        setuptypeIP4: {
+        setuptypeip4: {
             required: function (value) {
                 if (!value) {
                     return this.customRequiredMessage("IPV4 Setup Type");
@@ -1096,7 +1105,7 @@ export default {
     line-height: normal;
 }
 
-.setuptypeIP4-style {
+.setuptypeip4-style {
     height: 39px;
     width: 100%;
     border-radius: 4px;

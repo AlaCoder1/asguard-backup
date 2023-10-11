@@ -38,6 +38,8 @@ python manage.py init_network
 
 //need to pull and migrate 
 
+pip install -r requirements.txt --break-system-packages
+
 dans l'autre terminal pour la build des assets lors la modification de n'importe quel fichier JS
 
 yarn install

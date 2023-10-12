@@ -1,4 +1,5 @@
 
+import json
 import subprocess
 from dashboard.models import Services
 from dashboard.serializers import ServiceDataSerializer
@@ -62,7 +63,7 @@ def add_service_DB():
             "status_started":status_started,
             "status_install":status_install
         }
-        list_info_services.append(service)
+        list_info_services.append(json.dumps(service))
         if Services.objects.filter(service_name=s).exists():
            update_sevice_DB(s,service)
         else:
@@ -91,4 +92,4 @@ def get_system_infomations():
         "list_info_services":list_info_services
 
         }
-    return context
+    return json.dumps(context)

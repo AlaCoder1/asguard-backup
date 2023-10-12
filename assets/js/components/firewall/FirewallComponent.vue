@@ -179,9 +179,9 @@ export default {
                     field: "protocol",
                     headerName: "Protocol",
                     cellEditor: "multiSelectEditor",
-                    cellRendererParams: {
-                        protocols: this.protocols,
-                    },
+                    // cellRendererParams: {
+                    //     protocols: this.protocols,
+                    // },
                     editable: params => params.node.data.isRowSelected,
                 },
                 {
@@ -190,7 +190,7 @@ export default {
                     editable: params => params.node.data.isRowSelected,
                     valueSetter: (params) => {
                         const value = params.newValue;
-                        if (value !== null) {
+                        if (value?.length > 0) {
                             if (this.isValidIPAddress(value)) {
                                 params.data.saddr = value;
                                 return true; // Value is valid, update the cell
@@ -300,7 +300,7 @@ export default {
                     editable: params => params.node.data.isRowSelected,
                     valueSetter: (params) => {
                         const value = params.newValue;
-                        if (value !== null) {
+                        if (value?.length > 0) {
                             if (this.isValidIPAddress(value)) {
                                 params.data.saddr = value;
                                 return true; // Value is valid, update the cell
@@ -388,8 +388,7 @@ export default {
             filterTextOutbound: null,
             rowDataOutbound: [],
             isSaveDisabled: true,
-            isSaveDisabledOutbound: true,
-            protocols: [],
+            isSaveDisabledOutbound: true, 
              deleteDialog: false,
             rowDataToDelete: null,
         };
@@ -926,7 +925,6 @@ export default {
                     this.rowData = this.rules[this.activeTab]['inbound'];
                     // Assuming you have an array named 'inbound' in your data
                     this.rowDataOutbound = this.rules[this.activeTab]['outbound'];
-                    this.protocols = this.rowData?.map(row => row.protocol);
                 } else {
                     this.rowData = [];
                     this.rowDataOutbound = [];

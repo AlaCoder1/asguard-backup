@@ -2,7 +2,7 @@
     <div class="custom-multi-select">
         <div class="selected-protocols" style="max-height: 60px; overflow-y: auto; overflow-x: hidden;">
             <v-select v-model="selectedValues" :items="availableValues" multiple chips class="custom-select" no-border
-                hide-details item-text="text" @change="handleValueChange"></v-select>
+                hide-details item-text="text" @change="handleValueChange" @input="handleSelectedProtocolsChange"></v-select>
         </div>
     </div>
 </template>
@@ -10,6 +10,7 @@
 <script>
 export default {
     name: "MultiSelectEditor",
+
     data() {
         return {
             selectedValues: [],
@@ -21,13 +22,46 @@ export default {
             ],
         };
     },
+   created() {
+        // Set the initial value of selectedValues when the component is created
+        const initialSelectedValues = this.params.node.data.protocol.map(value => {
+            const matchingItem = this.availableValues.find(item => item.value === value);
+            if (matchingItem) {
+                return { value: matchingItem.value, text: matchingItem.text.toUpperCase() };
+            } else {
+                return { value: value, text: value.toUpperCase() }; // Create an object with value and text properties
+            }
+        });
+       // Transform the initialSelectedValues to the desired format
+        this.selectedValues = initialSelectedValues.map(item => ({
+            value: item.value.trim(), // Remove leading and trailing spaces
+            text: item.text.trim().toUpperCase() // Remove leading and trailing spaces and convert to uppercase
+        }));
+        console.log(this.selectedValues);
+    },
+
     methods: {
         handleValueChange() {
             this.params.node.setDataValue("protocol", this.selectedValues);
         },
+        handleSelectedProtocolsChange() {
+            // Emit a custom event with the selected protocols
+            this.$emit('protocols-selected', this.selectedProtocols);
+        },
     },
-    created() {
-        this.selectedValues = this.params.value;
+    watch: {
+        selectedValues(newValues) {
+            if (newValues.length >= 2) {
+                this.availableValues = [
+                    { value: "tcp", text: "TCP" },
+                    { value: "udp", text: "UDP" },
+                    { value: "icmp", text: "ICMP" },
+                ];
+            } else if (newValues.includes("icmp type echo-request") && newValues.includes("icmp type echo-reply")) {
+                // If both ICMP Request and Reply are selected, update to just "icmp"
+                this.selectedValues = ["icmp"];
+            }
+        }
     },
 };
 </script>

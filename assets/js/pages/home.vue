@@ -1,25 +1,25 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="home" active-menu="home">
+    <base-layout title="Dashboard" active-menu="home">
       <template #content>
-        <div class="mr-1">
+        <div class="mr-3">
           <div
             class="certificats-management mt-6 ml-5"
-            style="display: flex; flex-direction: column; height: 100%"
+            style="display: flex; flex-direction: column"
           >
             <h4>System information</h4>
             <v-divider></v-divider>
             <ag-grid-vue
               id="grid-wrapper"
-              domLayout="autoHeight"
               class="ag-theme-alpine mt-3"
               :columnDefs="columnAuthority"
               :rowData="rowDataAuthority"
-              style="width: 100%; height: 100%"
+              :enableColResize="false"
+              style="width: 100%; height: 155px"
               :gridOptions="gridOptions"
             />
           </div>
-          <div id="chart" class="mt-3 mr-7">
+          <div id="chart" class="mt-3 mr-2">
             <apexchart
               ref="apexChart"
               height="350"
@@ -30,7 +30,7 @@
 
           <div>
             <v-row class="mt-6 ml-2">
-              <v-col cols="4">
+              <v-col cols="12">
                 Services
                 <v-divider></v-divider>
                 <ag-grid-vue
@@ -38,12 +38,16 @@
                   domLayout="autoHeight"
                   class="ag-theme-alpine mt-3"
                   :columnDefs="columnServices"
+                  :alwaysShowHorizontalScroll="false"
+                  :alwaysShowVerticalScroll="false"
                   :rowData="rowDataServices"
                   style="width: 100%; height: 100%"
                   :gridOptions="gridOptionsService"
                 />
               </v-col>
-              <v-col cols="4">
+            </v-row>
+            <v-row class="mt-6 ml-2">
+              <v-col cols="6">
                 Interfaces
                 <v-divider></v-divider>
                 <ag-grid-vue
@@ -52,10 +56,13 @@
                   class="ag-theme-alpine mt-3"
                   :columnDefs="columnInterfaces"
                   :rowData="rowDataInterfaces"
+                  :alwaysShowHorizontalScroll="false"
+                  :alwaysShowVerticalScroll="false"
                   style="width: 100%; height: 100%"
+                  :gridOptions="gridOptionsService"
                 />
               </v-col>
-              <v-col cols="4">
+              <v-col cols="6">
                 Gateways
                 <v-divider></v-divider>
                 <ag-grid-vue
@@ -64,7 +71,10 @@
                   class="ag-theme-alpine mt-3"
                   :columnDefs="columnGateways"
                   :rowData="rowDataGateways"
+                  :alwaysShowHorizontalScroll="false"
+                  :alwaysShowVerticalScroll="false"
                   style="width: 100%; height: 100%"
+                  :gridOptions="gridOptionsService"
                 />
               </v-col>
             </v-row>
@@ -147,7 +157,7 @@ export default {
       infoParser: "",
       data: [],
       columnAuthority: [
-        { headerName: "Name", field: "nom", minWidth: 50 },
+        { headerName: "Name", field: "nom", maxWidth: 100 },
         {
           headerName: "Version",
           cellRenderer: this.actionCellRenderer,
@@ -162,25 +172,23 @@ export default {
         {
           headerName: "Last configuration change",
           field: "last_cong",
-          minWidth: 250,
+          maxWidth: 200,
         },
         {
           headerName: "Operating time",
           field: "operating",
-          minWidth: 250,
+          minWidth: 230,
           editable: false,
           sortable: false,
           filter: false,
         },
       ],
-      // rowDataAuthority: [],
       columnServices: [
-        { headerName: "Service", field: "service", minWidth: 150 },
-        { headerName: "Description", field: "description", minWidth: 50 },
+        { headerName: "Service", field: "service", minWidth: 500 },
+        { headerName: "Description", field: "description", minWidth: 500 },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRendererService,
-          minWidth: 150,
         },
       ],
       rowDataServices: null,
@@ -190,24 +198,15 @@ export default {
         { headerName: "Speed and uplex", field: "speed_uplex", minWidth: 50 },
         { headerName: "Address", field: "address", minWidth: 150 },
       ],
-      rowDataInterfaces: [
-        {
-          id: 1,
-          name: "LAN",
-          speed_uplex: "1000baseT <full-duplex>",
-          address: "192.168.1.171",
-        },
-      ],
+      rowDataInterfaces: [],
       columnGateways: [
         { headerName: "Name", field: "name", minWidth: 150 },
         { headerName: "Address", field: "address", minWidth: 50 },
         { headerName: "Status", field: "status", minWidth: 150 },
       ],
-      rowDataGateways: [
-        { id: 1, name: "GW_Wan_2", address: "10.1.12.1", status: "Online" },
-      ],
+      rowDataGateways: [],
       gridOptions: {
-        rowHeight: 120,
+        rowHeight: 90,
       },
       gridOptionsService: {
         pagination: true,
@@ -216,11 +215,13 @@ export default {
       },
       dataChart: "",
       uptime: "",
+      gateways: null,
+      interfaces: [],
     };
   },
   methods: {
     initializeWebSocket() {
-      this.socket = new WebSocket("ws://" + window.location.host + "/ws/data/"); // Replace with your WebSocket URL
+      this.socket = new WebSocket("wss://" + window.location.host + "/ws/data/"); // Replace with your WebSocket URL
 
       this.socket.onopen = () => {
         console.log("WebSocket connection opened.");
@@ -263,9 +264,10 @@ export default {
     actionCellRenderer() {
       let eGui = document.createElement("div");
 
-      eGui.innerHTML = `Asguard V${this.infoParser.version_asguard} <br/> System V${this.infoParser.system_version}
+      eGui.innerHTML = `Asguard V${this.infoParser.version_asguard}<br/> System V${this.infoParser.system_version}
         <br/>${this.infoParser.version_openssl}
         `;
+      eGui.style.lineHeight = "2";
 
       return eGui;
     },
@@ -279,7 +281,7 @@ export default {
 
       eGui.innerHTML = `${resultWithBr}
       `;
-
+      eGui.style.lineHeight = "2";
       return eGui;
     },
 
@@ -289,10 +291,13 @@ export default {
       {
         eGui.innerHTML = `
               <button class="action-button edit" data-action="edit">
-                <i class="far fa-edit" style="color: #086eae;"></i>
+                <span class="mdi mdi-play-circle fa-2x" style="color: green"></span>
               </button>
               <button class="action-button delete" data-action="delete">
-                <i class="fas fa-times" style="color: #086eae;"></i>
+                <span class="mdi mdi-reload fa-2x"></span>
+              </button>
+              <button class="action-button delete" data-action="delete">
+                <span class="mdi mdi-stop-circle fa-2x" style="color: red"></span>
               </button>
             `;
       }
@@ -324,6 +329,31 @@ export default {
       };
     });
     this.rowDataServices = infoService;
+    this.gateways = this.$root.$data.gateways;
+
+    const element = JSON.parse(this.gateways);
+
+    let infoGateways = element.map((i) => {
+      return {
+        name: i?.gwname,
+        address: i?.gwaddress,
+        status: i?.gwstatus ?? "Online",
+      };
+    });
+    this.rowDataGateways = infoGateways;
+
+    this.interfaces = this.$root.$data.interfaces;
+
+    let parsedArray = JSON.parse(this.interfaces);
+
+    let infoInterfaces = parsedArray.map((element) => {
+      return {
+        name: element.name_interface,
+        speed_uplex: element.speed_duplex,
+        address: element.ip_address,
+      };
+    });
+    this.rowDataInterfaces = infoInterfaces;
   },
 };
 </script>

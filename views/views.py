@@ -110,7 +110,10 @@ def getAllGateways(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
-            list_gateways.append({"gwname":res[i]['fields']['gwname'],"gwaddress":res[i]['fields']['gwaddress']})
+            list_gateways.append({
+                "gwname":res[i]['fields']['gwname'],
+                "gwaddress":res[i]['fields']['gwaddress'],
+                })
     return list_gateways
 def getAllStaticGateways(request):
     if (request.method == 'GET'):
@@ -226,12 +229,11 @@ def login(request):
 
 
 @login_required(login_url='/')
-
 def index_page(request):
     info=get_system_infomations()
     gateways=getAllGateways(request)
     interfaces=AllInterfaces(request)
-    config={}
+    config=[]
     for i in range(len(interfaces)):
         info_interface={}
         IPV4Config=GetInformationsByInterface(request, interfaces[i]['name_interface'])
@@ -242,9 +244,9 @@ def index_page(request):
         if "ip_address" in IPV4Config['IPV4Config'] :
             ip_address=IPV4Config['IPV4Config']['ip_address']
         info_interface={
+            "name_interface":interfaces[i]['name_interface'],
             "speed_duplex":speed_duplex,
             "ip_address":ip_address}
-        config[interfaces[i]['name_interface']]=info_interface
-    context = {"informations":info,"gateways":gateways,"interfaces":config}
-    print({"context":context})
+        config.append(info_interface)
+    context = {"informations":info,"gateways":json.dumps(gateways),"interfaces":json.dumps(config)}
     return render(request, 'index_page.html',context)

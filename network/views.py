@@ -294,6 +294,7 @@ EOF""".format('\n'.join(output_service))
                                     # file_path_ngnix="/etc/nginx/sites-available/asguard.conf"
                                     # modify_server_name(file_path_ngnix, ip_address4)   
                                     ###### 
+                                    ##appel function to update CSRF_TRUSTED_ORIGINS
                                     CSRF_TRUSTED_ORIGINS=get_all_addresses()  
                                     msg="Your interface {} was configured Successfully!!".format(name_interface)
                                     status=200

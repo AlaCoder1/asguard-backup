@@ -31,12 +31,13 @@ SECRET_KEY = 'mmj@uz23n!%6u4#$b1&%f(7l*rr(9qx%am)wyk@s4ugeuam52m'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+##function to run command 
 def run_command(command):
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
     output = completed_process.stdout
     error = completed_process.stderr
     return output, error
-
+##function to get all addresses to be CSRF_TRUSTED_ORIGINS
 def get_all_addresses():
     all_addresses=[]
     cmd="sudo cat /etc/ConfigInterfaces" 
@@ -49,34 +50,9 @@ def get_all_addresses():
             output_addr,error=run_command(cmd_address)
             all_addresses.append("https://"+output_addr.strip('\n').strip().split("/")[0])
     return all_addresses
-# host_name = socket.gethostname()
-# ip_address = socket.gethostbyname(host_name) 
-# print(ip_address)
+
+##appel function to update CSRF_TRUSTED_ORIGINS
 CSRF_TRUSTED_ORIGINS=get_all_addresses()
-
-# ALLOWED_HOSTS = [
-
-#     '*'
-
-# ]
-import socket
-import requests
-
-def get_public_ip():
-    try:
-        # Use a DNS resolver to get the public IP address based on the hostname.
-        host_name = socket.gethostname()
-        public_ip = socket.gethostbyname(host_name)
-        return public_ip
-    except socket.gaierror as e:
-        print(f"An error occurred: {e}")
-        return None
-
-public_ip = get_public_ip()
-if public_ip:
-    print(f"Your public IP address is: {public_ip}")
-else:
-    print("Failed to retrieve the public IP address.")
 
 # Application definition
 

@@ -10,10 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import subprocess
 from dotenv import load_dotenv
 from pathlib import Path
 import os
 import mimetypes
+import socket
 mimetypes.add_type("text/css", ".css", True)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,7 +31,52 @@ SECRET_KEY = 'mmj@uz23n!%6u4#$b1&%f(7l*rr(9qx%am)wyk@s4ugeuam52m'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+def run_command(command):
+    completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout
+    error = completed_process.stderr
+    return output, error
 
+def get_all_addresses():
+    all_addresses=[]
+    cmd="sudo cat /etc/ConfigInterfaces" 
+    output,error=run_command(cmd)  
+    if error=="" and len(output)!=0:
+        output=output.strip().split('\n')
+        for a in output:
+            ifname=a.split(":")[0]
+            cmd_address="sudo ip a show dev {} | grep 'inet ' | cut -d ' ' -f 6".format(ifname)
+            output_addr,error=run_command(cmd_address)
+            all_addresses.append("https://"+output_addr.strip('\n').strip().split("/")[0])
+    return all_addresses
+# host_name = socket.gethostname()
+# ip_address = socket.gethostbyname(host_name) 
+# print(ip_address)
+CSRF_TRUSTED_ORIGINS=get_all_addresses()
+
+# ALLOWED_HOSTS = [
+
+#     '*'
+
+# ]
+import socket
+import requests
+
+def get_public_ip():
+    try:
+        # Use a DNS resolver to get the public IP address based on the hostname.
+        host_name = socket.gethostname()
+        public_ip = socket.gethostbyname(host_name)
+        return public_ip
+    except socket.gaierror as e:
+        print(f"An error occurred: {e}")
+        return None
+
+public_ip = get_public_ip()
+if public_ip:
+    print(f"Your public IP address is: {public_ip}")
+else:
+    print("Failed to retrieve the public IP address.")
 
 # Application definition
 

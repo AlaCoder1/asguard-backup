@@ -2,6 +2,8 @@ import subprocess
 from rules.serializers import *
 from django.conf import settings
 from authentification.views import *
+import socket
+
 ######function to run commande
 def run_command(command):
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -124,3 +126,10 @@ def delete_rule_remote(ifname,type_rule,handle):
    return True
 
    
+### function to get protocol
+def get_protocol_number(protocol_name):
+    try:
+        protocol_number = socket.getprotobyname(protocol_name)
+        return protocol_number
+    except socket.error:
+        return None  # Protocol name not found

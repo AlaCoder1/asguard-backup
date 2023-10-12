@@ -1,7 +1,6 @@
 aioredis==1.3.1
 ansible==7.5.0
 ansible-core==2.14.5
-apparmor
 appdirs==1.4.4
 asgiref==3.6.0
 async-timeout==4.0.3

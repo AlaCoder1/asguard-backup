@@ -6,7 +6,7 @@ from managementServers.models import *
 from network.models import *
 from rules.models import *
 from gateway.models import *
-
+from dashboard.functions import get_system_infomations
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -116,7 +116,7 @@ def getAllGateways(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
-            list_gateways.append(res[i]['fields'])
+            list_gateways.append({"gwname":res[i]['fields']['gwname'],"gwaddress":res[i]['fields']['gwaddress']})
     return list_gateways
 def getAllStaticGateways(request):
     if (request.method == 'GET'):
@@ -236,3 +236,28 @@ def login(request):
     usr=getAllUsers(request)
     context = {'users':usr}
     return render(request, 'login.html',context)
+
+
+@login_required(login_url='/')
+
+def index_page(request):
+    info=get_system_infomations()
+    gateways=getAllGateways(request)
+    interfaces=AllInterfaces(request)
+    config={}
+    for i in range(len(interfaces)):
+        info_interface={}
+        IPV4Config=GetInformationsByInterface(request, interfaces[i]['name_interface'])
+        speed_duplex=""
+        ip_address=""
+        if "speed_duplex" in IPV4Config['genericConfig'] :
+            speed_duplex=IPV4Config['genericConfig']['speed_duplex']
+        if "ip_address" in IPV4Config['IPV4Config'] :
+            ip_address=IPV4Config['IPV4Config']['ip_address']
+        info_interface={
+            "speed_duplex":speed_duplex,
+            "ip_address":ip_address}
+        config[interfaces[i]['name_interface']]=info_interface
+    context = {"infomations":info,"gateways":gateways,"interfaces":config}
+    print({"context":context})
+    return render(request, 'index_page.html',context)

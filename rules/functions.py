@@ -2,6 +2,8 @@ import subprocess
 from rules.serializers import *
 from django.conf import settings
 from authentification.views import *
+import socket
+
 ######function to run commande
 def run_command(command):
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -65,16 +67,16 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
    if daddr is None:
       rule=rule[:rule.find('ip daddr None')]+rule[rule.find('ip daddr None')+len(('ip daddr None'))+1:].strip()
      ####### cas protocol icmp sans port
-   if protocol.startswith("icmp") :
+   if protocol.startswith("icmp type") :
       rule=rule[:rule.find(protocol)+len(protocol)]+" "+rule[rule.find('{}'.format(policy)):]
    #####cas sport is None
-   if sport is None and not protocol.startswith("icmp") :
+   if sport is None and not protocol.startswith("icmp type") :
       rule=rule[:rule.find(('{} sport {}').format(protocol,sport))]+rule[rule.find(('{} sport {}').format(protocol,sport))+len(('{} sport {}').format(protocol,sport)):].strip()
    #####cas dport is None
-   if dport is None and not protocol.startswith("icmp") :
+   if dport is None and not protocol.startswith("icmp type") :
       rule=rule[:rule.find(('{} dport {}').format(protocol,dport))]+rule[rule.find(('{} dport {}').format(protocol,dport))+len(('{} dport {}').format(protocol,dport)):].strip()
    ############ 
-   if sport is None and dport is None and not protocol.startswith("icmp"):
+   if sport is None and dport is None and not protocol.startswith("icmp type") :
       rule=rule[:rule.find(policy)]+"ip protocol {} ".format(protocol)+rule[rule.find(policy):]
    return rule
 
@@ -128,3 +130,10 @@ def delete_rule_remote(ifname,type_rule,handle):
    return True
 
    
+### function to get protocol
+def get_protocol_number(protocol_name):
+    try:
+        protocol_number = socket.getprotobyname(protocol_name)
+        return protocol_number
+    except socket.error:
+        return None  # Protocol name not found

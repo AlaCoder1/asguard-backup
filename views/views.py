@@ -180,28 +180,7 @@ def GetInformationsByInterface(request,name_interface):
             info['IPV4Config']=[]
     return info
 
-@login_required(login_url='/')
-def index_page(request):
-    info=get_system_infomations()
-    gateways=getAllGateways(request)
-    interfaces=AllInterfaces(request)
-    config={}
-    for i in range(len(interfaces)):
-        info={}
-        IPV4Config=GetInformationsByInterface(request, interfaces[i]['name_interface'])
-        print({"IPV4Config":IPV4Config})
-    #     info={
-    #         "name_interface":interfaces[i]['name_interface'],
-    #         "speed_duplex":interfaces[i]['genericConfig']['speed_duplex'],
-    #         "address4":interfaces[i]['IPV4Config']['ip'],
 
-    #         }
-    
-    # interface_info=
-    context = {'informations':info,'gateways':gateways}
-
-    print(context)
-    return render(request, 'index_page.html',context)
 
 @login_required(login_url='/')
 def user_certificate_managment_page(request):
@@ -266,6 +245,6 @@ def index_page(request):
             "speed_duplex":speed_duplex,
             "ip_address":ip_address}
         config[interfaces[i]['name_interface']]=info_interface
-    context = {"infomations":info,"gateways":gateways,"interfaces":config}
+    context = {"informations":info,"gateways":gateways,"interfaces":config}
     print({"context":context})
     return render(request, 'index_page.html',context)

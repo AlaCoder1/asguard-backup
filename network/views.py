@@ -1,4 +1,6 @@
 from django.http import JsonResponse
+from dms.settings import get_all_addresses
+
 from network.serializers import *
 from .models import *
 from settings.serializers import *
@@ -289,9 +291,11 @@ EOF""".format('\n'.join(output_service))
                             if aux_gen is True:
                                 if aux_inter is True:
                                     ## add server address to nginx file
-                                    file_path_ngnix="/etc/nginx/sites-available/asguard.conf"
-                                    modify_server_name(file_path_ngnix, ip_address4)   
-                                    ######                                 
+                                    # file_path_ngnix="/etc/nginx/sites-available/asguard.conf"
+                                    # modify_server_name(file_path_ngnix, ip_address4)   
+                                    ###### 
+                                    ##appel function to update CSRF_TRUSTED_ORIGINS
+                                    CSRF_TRUSTED_ORIGINS=get_all_addresses()  
                                     msg="Your interface {} was configured Successfully!!".format(name_interface)
                                     status=200
                                 else:

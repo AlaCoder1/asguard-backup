@@ -1,4 +1,5 @@
 
+import json
 import subprocess
 from dashboard.models import Services
 from dashboard.serializers import ServiceDataSerializer
@@ -63,7 +64,7 @@ def add_service_DB():
             "status_started":status_started,
             "status_install":status_install
         }
-        list_info_services.append(service)
+        list_info_services.append(json.dumps(service))
         if Services.objects.filter(service_name=s).exists():
            update_sevice_DB(s,service)
         else:
@@ -82,7 +83,7 @@ def get_system_infomations():
     cmd_cpu_type="sudo lscpu | grep \"Model name\" | cut -d':' -f2- | sed 's/^[[:space:]]*//'"
     cpu_type,error=run_command(cmd_cpu_type)
     cpu_type=' '.join(cpu_type.strip().strip('\n').splitlines())
-    ####### data to return 
+    ####### data to return
     list_info_services=add_service_DB()
     context={
         "version_asguard":ASGUARD_VERSION.strip().strip('\n'),
@@ -90,5 +91,6 @@ def get_system_infomations():
         "version_openssl":version_openssl.strip().strip('\n'),
         "cpu_type":cpu_type ,
         "list_info_services":list_info_services
+
         }
-    return context
+    return json.dumps(context)

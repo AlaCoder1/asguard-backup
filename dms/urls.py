@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
+from dashboard import consumers
 from views.views import *
 
 
@@ -47,9 +47,9 @@ urlpatterns = [
     path("monitoring/",include("dashboard.urls"))
 ]
 
-from dashboard import consumers
 # ws/wss url patterns
 websocket_urlpatterns = [
     # consumer for a particular user
       path('ws/data/', consumers.DashboardConsumer.as_asgi()),
 ]
+

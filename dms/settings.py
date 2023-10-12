@@ -10,10 +10,12 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+import subprocess
 from dotenv import load_dotenv
 from pathlib import Path
 import os
 import mimetypes
+import socket
 mimetypes.add_type("text/css", ".css", True)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -29,12 +31,32 @@ SECRET_KEY = 'mmj@uz23n!%6u4#$b1&%f(7l*rr(9qx%am)wyk@s4ugeuam52m'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
+##function to run command 
+def run_command(command):
+    completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout
+    error = completed_process.stderr
+    return output, error
+##function to get all addresses to be CSRF_TRUSTED_ORIGINS
+def get_all_addresses():
+    all_addresses=[]
+    cmd="sudo cat /etc/ConfigInterfaces" 
+    output,error=run_command(cmd)  
+    if error=="" and len(output)!=0:
+        output=output.strip().split('\n')
+        for a in output:
+            ifname=a.split(":")[0]
+            cmd_address="sudo ip a show dev {} | grep 'inet ' | cut -d ' ' -f 6".format(ifname)
+            output_addr,error=run_command(cmd_address)
+            all_addresses.append("https://"+output_addr.strip('\n').strip().split("/")[0])
+    return all_addresses
 
+##appel function to update CSRF_TRUSTED_ORIGINS
+CSRF_TRUSTED_ORIGINS=get_all_addresses()
 
 # Application definition
 
 INSTALLED_APPS = [
-    'channels',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -56,7 +78,8 @@ INSTALLED_APPS = [
     "ipsec",
     "rules",
     "gateway",
-    "dashboard"
+    "dashboard",
+    'channels',
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {
@@ -93,7 +116,6 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'dms.wsgi.application'
 ASGI_APPLICATION = 'dms.asgi.application'
 
 

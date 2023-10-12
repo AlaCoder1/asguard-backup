@@ -14,7 +14,16 @@
         <p class="text" style="margin-top: 5px">Url Not Found.</p>
         <p class="text" style="margin-top: 10px">
           Sorry we couldn't find that page but don't worry you can find plenty
-          of other things on our <span style="color: #f8b724; cursor: pointer; text-decoration-line: underline;" @click="navigateUrl">homepage.</span>
+          of other things on our
+          <span
+            style="
+              color: #f8b724;
+              cursor: pointer;
+              text-decoration-line: underline;
+            "
+            @click="navigateUrl"
+            >homepage.</span
+          >
         </p>
 
         <v-row style="margin-top: 5%">
@@ -25,9 +34,16 @@
             <v-btn
               rounded
               type="submit"
-              style="background: #193286; color: white; margin-bottom: 5px;"
+              style="background: #193286; color: white; margin-bottom: 5px"
               @click="navigateUrl"
             >
+              <img
+                src="../../images/favAsguard.svg"
+                alt="error-server"
+                width="8%"
+                height="10%"
+                style="background: #193286"
+              />
               <span
                 style="
                   font-size: 16px;

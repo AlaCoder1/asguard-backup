@@ -21,17 +21,22 @@ def validInput(var):
 
 
 def addGroup(groupname):
-    try:
-        return os.system("groupadd {}".format(groupname))
-    except:
-        print(f"Failed to add group.")
-        sys.exit(1)
+    cmd = "groupadd " + groupname
+    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout.split("\n")
+    error = completed_process.stderr
+    return output,error
+
 
 # function to delete group
 
 
 def delete_group(groupname):
-    return os.system("groupdel " + groupname)
+    cmd = "groupdel " + groupname
+    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout.split("\n")
+    error = completed_process.stderr
+    return output,error 
 
 # functio to change username
 
@@ -81,7 +86,7 @@ def change_groupname_username(oldgroupname, Newgroupname):
         return JsonResponse({"msg": msg})
     else:
         stdout, stderr = change_groupname(oldgroupname, Newgroupname) 
-        if stderr.read().decode()=='':
+        if stderr=='':
             reporter = Group.objects.get(groupname=oldgroupname)
             reporter.groupname = Newgroupname
             reporter.save()

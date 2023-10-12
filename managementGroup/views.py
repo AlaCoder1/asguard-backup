@@ -64,11 +64,8 @@ def createGroup(request):
         groupname = data['groupname']
         if (validInput(groupname)):
             # Execute the command on the remote machine
-            stdin, stdout, stderr = addGroup(groupname)
-            # convert the stderr stream to a string
-            error_str = stderr.read().decode('utf-8')
-            if error_str == "":
-                msg = groupname+" added sucessfully"
+            stdout, stderr = addGroup(groupname)
+            if stderr == "":
                 gid = getUidGroup()
                 data['gid'] = gid
                 serializer = GroupSerializer(data=data)
@@ -76,12 +73,13 @@ def createGroup(request):
                 if (serializer.is_valid()):
                     # if okay, save it on the database
                     serializer.save()
+                    msg = groupname+" added sucessfully"
                     # provide a Json Response with the data that was saved
                     return JsonResponse({"msg": msg}, status=201)
                 # provide a Json Response with the necessary error information
                 return JsonResponse(serializer.errors, status=400)
             else:
-                msg = error_str
+                msg = stderr
         else:
             msg = "groupname invalid"
             return JsonResponse({"msg": msg}, status=201)
@@ -97,15 +95,12 @@ def deleteGroup(request, id):
     if (request.method == 'DELETE'):
         group = Group.objects.get(id=id)
         # Execute the command on the remote machine
-        stdin, stdout, stderr = delete_group(group.groupname)
-        # convert the stderr stream to a string
-        error_str = stderr.read().decode('utf-8')
-        print(stdout.read().decode('utf-8'))
-        if error_str == "":
+        stdout, stderr = delete_group(group.groupname)
+        if stderr == "":
             group.delete()
             msg = "delete succesfully"
         else:
-            msg = "delete failed"
+            msg = stderr
         # return a no content response.
         return JsonResponse({"msg": msg})
 
@@ -130,11 +125,11 @@ def changeGroupname(request, id):
         oldgroupname = groupDict['groupname']
         Newgroupname = data['Newgroupname']
         if validInput(Newgroupname):
-            if RemoteGroupExists(Newgroupname):
+            if group_exists(Newgroupname):
                 msg = f"Username {Newgroupname} exists."
                 return JsonResponse({"msg": msg})
             else:
-                changeRemoteGroupname(oldgroupname, Newgroupname)
+                change_groupname(oldgroupname, Newgroupname)
                 msg = "updated succesfully"
                 group.groupname = Newgroupname
                 group.save()

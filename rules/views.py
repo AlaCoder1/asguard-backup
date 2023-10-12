@@ -124,6 +124,8 @@ def saveRules(request,name_interface):
         protocol=''
         if protocols is not None :
             if len(protocols)>1:
+             # Sort the protocols based on their protocol numbers
+              protocols = sorted(protocols, key=get_protocol_number)
               for i in range(len(protocols)-1):
                   protocol+=protocols[i]+', '
               protocol+=protocols[-1]

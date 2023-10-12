@@ -3,6 +3,7 @@ import subprocess
 from dashboard.models import Services
 from dashboard.serializers import ServiceDataSerializer
 from dms.settings import ASGUARD_VERSION
+import json
 def run_command(command):
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
     output=""
@@ -80,13 +81,14 @@ def get_system_infomations():
     ########cpu_type
     cmd_cpu_type="sudo lscpu | grep \"Model name\" | cut -d':' -f2- | sed 's/^[[:space:]]*//'"
     cpu_type,error=run_command(cmd_cpu_type)
+    cpu_type=' '.join(cpu_type.strip().strip('\n').splitlines())
     ####### data to return 
     list_info_services=add_service_DB()
     context={
-        "version_asguard":ASGUARD_VERSION,
-        "system_version":system_version,
-        "version_openssl":version_openssl,
-        "cpu_type":cpu_type,
+        "version_asguard":ASGUARD_VERSION.strip().strip('\n'),
+        "system_version":system_version.strip().strip('\n'),
+        "version_openssl":version_openssl.strip().strip('\n'),
+        "cpu_type":cpu_type ,
         "list_info_services":list_info_services
         }
     return context

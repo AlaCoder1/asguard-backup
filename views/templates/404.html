@@ -1,10 +1,21 @@
-<html>
-  <head>
-  </head>
-  <body>
-    <h1> This is a custom 404 error page which will 
-         be shown instead of default 404 error page of Django everytime
-         incorrect urls is entered in browser.
-    </h1>
-  </body>
-</html>
+{% extends 'base.html' %}
+
+{% load static %}
+{% load encore %}
+
+{% block stylesheets %}
+    {{ block.super }}
+
+    {% encore_entry_link_tags '404' %}
+{% endblock %}
+
+{% block javascripts %}
+    {% encore_entry_script_tags '404' %}
+{% endblock %}
+ 
+{% block body %}
+
+    <div id='app'>
+    </div>
+
+{% endblock %}

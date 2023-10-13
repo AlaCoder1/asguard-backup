@@ -17,7 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from dashboard import consumers
 from views.views import *
-
+from django.conf.urls import handler404
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
@@ -53,3 +53,4 @@ websocket_urlpatterns = [
       path('ws/data/', consumers.DashboardConsumer.as_asgi()),
 ]
 
+handler404 = 'views.views.error_404_view'

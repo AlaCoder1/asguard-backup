@@ -7,6 +7,7 @@ from network.models import *
 from rules.models import *
 from gateway.models import *
 from dashboard.functions import get_system_infomations
+
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -255,3 +256,9 @@ def index_page(request):
     context = {"infomations":info,"gateways":gateways,"interfaces":config}
     print({"context":context})
     return render(request, 'index_page.html',context)
+###404 page
+
+def error_404_view(request, exception):
+    # data = {"name": "ThePythonDjango.com"}
+    return render(request,'404.html')
+

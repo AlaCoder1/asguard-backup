@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'mmj@uz23n!%6u4#$b1&%f(7l*rr(9qx%am)wyk@s4ugeuam52m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['*']
 ##function to run command 
@@ -40,20 +40,24 @@ def run_command(command):
 ##function to get all addresses to be CSRF_TRUSTED_ORIGINS
 def get_all_addresses():
     all_addresses=[]
-    cmd="sudo cat /etc/ConfigInterfaces" 
+    cmd="sudo cat /etc/ConfigInterfaces"
     output,error=run_command(cmd)  
     if error=="" and len(output)!=0:
         output=output.strip().split('\n')
         for a in output:
             ifname=a.split(":")[0]
             cmd_address="sudo ip a show dev {} | grep 'inet ' | cut -d ' ' -f 6".format(ifname)
-            output_addr,error=run_command(cmd_address)
-            all_addresses.append("https://"+output_addr.strip('\n').strip().split("/")[0])
+            output_list,error=run_command(cmd_address)
+            list_addr=[]
+            if len(output_list)!=0:
+                list_addr=output_list.strip().split("\n")
+                for output_addr in list_addr:
+                    all_addresses.append("https://"+output_addr.strip('\n').strip().split("/")[0])
     return all_addresses
 
 ##appel function to update CSRF_TRUSTED_ORIGINS
 CSRF_TRUSTED_ORIGINS=get_all_addresses()
-
+CORS_ALLOWED_ORIGINS = get_all_addresses()
 # Application definition
 
 INSTALLED_APPS = [

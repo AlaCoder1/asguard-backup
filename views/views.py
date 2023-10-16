@@ -88,14 +88,20 @@ def GetAllRules(request):
             res = json.loads(ruleDict)
             list_rules=[]
             for i in range(0, len(res)):
-              interfaceDict=[]
-              res[i].pop('model')
-              id = res[i]['pk']
-              res[i].pop('pk')
-              res[i]['fields']['id'] = id
-              res[i]['fields'].pop("interface")
-              res[i]['fields'].pop("rule")
-              list_rules.append(res[i]['fields'])
+                interfaceDict=[]
+                res[i].pop('model')
+                id = res[i]['pk']
+                res[i].pop('pk')
+                res[i]['fields']['id'] = id
+                res[i]['fields'].pop("interface")
+                res[i]['fields'].pop("rule")
+                list_protocols=[]
+                if res[i]['fields']['protocol'].find("{")!=-1:
+                        list_protocols=res[i]['fields']['protocol'].strip('{').strip('}').split(',')
+                else:
+                        list_protocols.append(res[i]['fields']['protocol'])
+                res[i]['fields']['protocol']=list_protocols
+                list_rules.append(res[i]['fields'])
              ########## 
             rules_type[elem]=list_rules
           all_rules[resInterface[x]['fields']['name_interface']]=rules_type

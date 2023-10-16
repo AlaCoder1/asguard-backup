@@ -55,31 +55,29 @@
 </template>
 <script>
 export default {
+    props: {
+        interface: {
+            type: Object,
+            required: true
+        }
+    },
     data() {
         return {
             netmasks: [
-                " /32",
-                " /31",
-                " /30",
-                " /29",
-                " /28",
-                " /27",
-                " /26",
-                " /25",
-                " /24",
-                " /23",
-                " /22",
-                " /21",
-                " /20"
+                " 32",
+                " 31",
+                " 30",
+                " 29",
+                " 28",
+                " 27",
+                " 26",
+                " 25",
+                " 24",
+                " 23",
+                " 22",
+                " 21",
+                " 20"
             ],
-            interface: {
-                ipv4_adress: "",
-                ipv4_netmask: "",
-                rejectLeases: "",
-                hostname: "",
-                overrideMTU: false,
-                mtu: ""
-            },
             ipAddressValid: false, // Track the validity of the IP address
         };
     },

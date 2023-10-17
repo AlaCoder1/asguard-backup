@@ -301,43 +301,41 @@ def changePasswordByAdmin(request, id):
 def changePassword(request, id):
     msg = ""
     if (request.method == 'PUT'):
-        userObject = User.objects.get(id=id)
-        if userObject.is_verified == True:
-            return JsonResponse({"msg": "your account is verified"})
-        else:
+            userObject = User.objects.get(id=id)
+        # if userObject.is_verified == True:
+        #     return JsonResponse({"msg": "your account is verified"})
+        # else:
             data = request.data
-            current_password = data['current_password']
+            # current_password = data['current_password']
             new_password = data['new_password']
             confirm_password = data['confirm_password']
-            if check_password(current_password, userObject.password):
-                print('Passwords match!')
-                if new_password != confirm_password:
-                    print("Passwords do not match. Please try again.")
-                    msg = "Passwords do not match. Please try again."
-                else:
-                    # run 'passwd' command to change password
-                    # stdout, stderr = changePW(
-                    #     current_password, new_password, userObject.username)
-                    # print({"ouuuuuuuuuuuuuuuuuuuuuuuut":stdout})
-                    # print({"errrrrrrrrrrrrrrrrrrrrrrrr":stderr})
-                    # check if password change was successful
-                    # if stderr == "":
-                    if changePW(current_password, new_password, userObject.username) == 0:
-                        userObject.password = make_password(new_password)
-                        userObject.is_verified = True
-                        userObject.save()
-                        print("Password change successful")
-                        msg = "Password change successful"
-                    else:
-                        msg = f"Error changing password"
-                        # print(
-                        #     f"Error changing password: {stderr}")
-                        # msg = f"Error changing password: {stderr}"
+            # if check_password(current_password, userObject.password):
+            #     print('Passwords match!')
+            if new_password != confirm_password:
+                print("Passwords do not match. Please try again.")
+                msg = "Passwords do not match. Please try again."
             else:
-                print('Passwords do not match')
-                msg = 'Passwords do not match'
+                stdout, stderr = resetPW (userObject.username,new_password )
+                print({"str":stderr})
+                print({"std":stdout})
+                # check if password change was successful
+                if stderr == "":
+                    userObject.password = make_password(new_password)
+                    userObject.is_verified = True
+                    userObject.save()
+                    print("Password change successful")
+                    msg = "Password change successful"
+                    status=200
 
-            return JsonResponse({"msg": msg})
+                else:
+                    msg = f"Error changing password"
+                    status=400
+
+            # else:
+            #     print('Passwords do not match')
+            #     msg = 'Passwords do not match'
+            #     status=400
+            return JsonResponse({"msg": msg},status=status)
 
 
 # API de create permission

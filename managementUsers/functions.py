@@ -139,7 +139,7 @@ def changePW_byAdmin(newPassword, username):
 
 def changePW(currentPassword, newPassword, username):
     # Use the subprocess module to run the passwd command
-    process = subprocess.Popen(['passwd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    process = subprocess.Popen(['sudo','passwd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
     # Provide the current and new passwords
     process.stdin.write(currentPassword + '\n')
@@ -151,14 +151,26 @@ def changePW(currentPassword, newPassword, username):
 
     # Wait for the command to complete
     process.wait()
-    return process.returncode
-    # run 'passwd' command to change password
-    # cmd = f"echo '{currentPassword}\n{newPassword}\n{newPassword}' | passwd"
-    # completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    # output = completed_process.stdout.split("\n")
-    # error = completed_process.stderr
-    # return output,error
+    stdout, stderr = process.communicate()
+    print({"str from function":stderr})
+    print({"std from function":stdout})
+    return stdout, stderr
 
+def resetPW(username,newPassword):
+    cmd = f"echo '{username}:{newPassword}' | sudo chpasswd"
+    process = subprocess.Popen(
+            cmd,
+            shell=True,  
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True 
+        )
+    stdout, stderr = process.communicate()
+    print(process.returncode)
+    print ( stdout, stderr)
+    if process.returncode == 0:
+        return (stdout, stderr)
+    
 
     # function to get group users
 # def getGroupByUsers(groupname):

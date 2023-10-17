@@ -147,11 +147,11 @@ def conf(request,name_interface):
                         data["hostname"]=hostname
                         #call function to convert mask format to bits
                         if alias_mask is not None:
-                            alias_mask=convert_to_subnet_mask(alias_mask)
+                            alias_mask_converted=convert_to_subnet_mask(alias_mask)
                         ####
                         if typeDHCP4.lower()=="base" :
                             #contenu de dhclient.conf dhcp Base
-                            configContenu=return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask)
+                            configContenu=return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask_converted)
                             jsonIPV4={
                     "name_interface":nameInterface,"ifname":ifname,
                     "typeip4":setuptypeIP4,"typedhcp":typeDHCP4,

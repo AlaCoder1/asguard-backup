@@ -5,7 +5,7 @@ from network.models import *
 class InterfaceSerializer(serializers.ModelSerializer):
     class Meta:
             model = Interface
-            fields = ['ifname', 'private_aux','bogon_aux','service_status']
+            fields = ['ifname', 'private_aux','bogon_aux','service_status','description']
             
 
 # #serializer for ip4 config   

@@ -107,7 +107,7 @@ def run_command_with_timeout(type, command, timeout):
         new_entry.save()
         # If the subprocess completed within the timeout
         if process.returncode == 0:
-            print(f"Command not too long ({elapsed_time:.2f} seconds). {command}")
+            # print(f"Command not too long ({elapsed_time:.2f} seconds). {command}")
             return (stdout, stderr)
         else:
            return None,stderr
@@ -117,7 +117,7 @@ def run_command_with_timeout(type, command, timeout):
         # If the subprocess exceeded the timeout, send a Ctrl+C signal
         process.terminate()
         process.wait()
-        print(f"Command too long ({elapsed_time:.2f} seconds). {command}")
+        # print(f"Command too long ({elapsed_time:.2f} seconds). {command}")
         return None, "Command timed out and was terminated."
  
 #function to run all commandes
@@ -201,7 +201,7 @@ def update_conn_static_IPV4(config,ifname,uuid,ipaddress,netmask,cmdgw,IP4Config
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
     commands=[]
-    cmd_final=[]
+    cmd_final=["sudo nmcli conn up {}".format(uuid)]
     if ipaddress is not None:
         cmd_final.append("sudo nmcli connection modify {} ipv4.method manual ipv4.addresses {}/{}".format(uuid,ipaddress,netmask))
     cmd_final+=[ 
@@ -308,6 +308,7 @@ def update_conn_dhcp_IPV4(config,ifname,uuid):
      "#End IP4Config {}".format(ifname)
     ]
     cmd_final=[
+        "sudo nmcli conn up {}".format(uuid),
         "sudo nmcli connection modify {} ipv4.method auto ipv4.addresses '' ipv4.gateway '' ipv4.route-metric '' ".format(uuid),
         "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),
         "sudo dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf".format(ifname),

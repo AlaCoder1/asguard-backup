@@ -48,9 +48,14 @@ new Vue({
     router,
     data: {
         tab: '',
+        gateways:null,
+        interfaces: null,
+        
     },
     beforeMount: function () {
-        this.tab = this.$el.attributes['users'].value;
+        this.tab = this.$el.attributes['informations'].value;
+        this.gateways = this.$el.attributes['gateways'].value;
+        this.interfaces = this.$el.attributes['interfaces'] ? this.$el.attributes['interfaces'].value : '';
     },
     render: (h) => h(App),
 }).$mount('#app');

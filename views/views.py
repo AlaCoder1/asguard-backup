@@ -54,13 +54,11 @@ def getServers(request):
         servers = Server.objects.all()
         serverDict = serializers.serialize("json", servers)
         res = json.loads(serverDict)
-        print(res)
         for i in range(0, len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
             type = Type.objects.get(id=res[i]['fields']['type'])
-            print(type.type_name)
             res[i]['fields']['id'] = id
             res[i]['fields']['type_name'] = type.type_name
             list_servers.append(res[i]['fields'])
@@ -175,7 +173,6 @@ def GetInformationsByInterface(request,name_interface):
             info['genericConfig']=res[0]['fields']
         else:
             info['genericConfig']=[]
-        # print({"res":res[0]['fields']})
         IPV4ConfigObject = IP4Config.objects.filter(interface_id=interfaceObject.id)
         IPV4ConfigObjectDict = serializers.serialize("json", IPV4ConfigObject)
         resultat = json.loads(IPV4ConfigObjectDict)
@@ -198,7 +195,6 @@ def user_certificate_managment_page(request):
     grp=getGroups(request)
     srv=getServers(request)
     context = {'users':usr,"groups":grp,"servers":srv}
-    print(context)
     return render(request, 'user_certificate_managment.html',context)
 
 @login_required(login_url='/')
@@ -210,7 +206,6 @@ def interface_page(request):
         config[interfaces[i]['name_interface']]=IPV4Config
     # IPV4Config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
     allStaticGateways=getAllStaticGateways(request)
-    print("config",config)
     context = {'interfaces':interfaces,'IPV4Config':config,'allStaticGateways':allStaticGateways}
     return render(request, 'interface_page.html',context)
 

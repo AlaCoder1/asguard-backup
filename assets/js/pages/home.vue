@@ -89,17 +89,11 @@
 import { AgGridVue } from "ag-grid-vue";
 import ApexCharts from "vue-apexcharts";
 import BaseLayout from "@/pages/layout.vue";
-import GroupManagement from "@/pages/group-management.vue";
-import NetworkServerManagement from "@/pages/network-server-management.vue";
-import CertificatsManagement from "@/pages/certificats-management.vue";
 
 export default {
   name: "HomeComponent",
   components: {
     BaseLayout,
-    NetworkServerManagement,
-    GroupManagement,
-    CertificatsManagement,
     AgGridVue,
     apexchart: ApexCharts,
   },
@@ -221,7 +215,9 @@ export default {
   },
   methods: {
     initializeWebSocket() {
-      this.socket = new WebSocket("wss://" + window.location.host + "/ws/data/"); // Replace with your WebSocket URL
+      this.socket = new WebSocket(
+        "wss://" + window.location.host + "/ws/data/"
+      ); // Replace with your WebSocket URL
 
       this.socket.onopen = () => {
         console.log("WebSocket connection opened.");

@@ -16,8 +16,13 @@
                 </v-col>
 
                 <v-col cols="12">
-                  <v-autocomplete :items="['LDAP', 'LDAP + time based one time password', 'Local + Mot de Passe à Usage Unique Temporel (TOTP)	'
-                    , 'radius']" label="Type" v-model="formData.type"></v-autocomplete>
+                  <v-autocomplete :items="[
+                    { id: 1, name: 'LDAP' },
+                    { id: 2, name: 'LDAP + time based one time password' },
+                    { id: 3, name: 'Local + Mot de Passe à Usage Unique Temporel (TOTP)' },
+                    { id: 4, name: 'LDAP' },
+                    { id: 5, name: 'radius' }
+                  ]" label="Type" v-model="formData.type" item-text="name" item-value="id"></v-autocomplete>
                 </v-col>
 
                 <v-col cols="12">

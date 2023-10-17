@@ -89,7 +89,7 @@ def createUser(request):
                     print({"organisation": organisation.id})
                     data['organisation'] = organisation.id
                     if (validInput(username)):
-                        if (validInput(password)):
+                        if (validPassword(password)):
                             # Execute the command on the remote machine
                             stdout, stderr = addUser(
                                 username, password)

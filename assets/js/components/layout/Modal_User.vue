@@ -302,15 +302,20 @@ export default {
         let groupsIds = this.state.formData.groups.map((i) => {
           return i.id;
         });
+        console.log(groupsIds)
+        console.log({"groupsIds":groupsIds})
+
         const payload = {
           username: this.state.formData.username,
-          password: this.state.formData.username,
+          password: this.state.formData.password,
           fullname: this.state.formData.fullname,
           email: this.state.formData.email,
           role: this.state.formData.role,
           group: groupsIds,
           is_active: this.state.formData.deactivateUser,
         };
+        console.log({payload});
+        console.log("payload");
         function getCookie(name) {
           let cookieValue = null;
           if (document.cookie && document.cookie !== "") {

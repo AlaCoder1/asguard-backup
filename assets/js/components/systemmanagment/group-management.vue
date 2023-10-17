@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h4>Networks groups123</h4>
+    <h4>Networks groups</h4>
     <ag-grid-vue domLayout="autoHeight" class="ag-theme-alpine mt-3 m-w-80" :columnDefs="columnDefs" :rowData="rowData"
       :gridOptions="gridOptions" />
     <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-user"  @click="openModal">
@@ -168,14 +168,15 @@ export default {
         case 'edit':
           {
             this.selectedRowIndex = CurrentIndex;
+            this.openModal()
+              this.modalMode = 'update';
+              this.rowEdit = rowData;
 
             this.getgroup(rowData.id, (data) => {
               console.log('Edit clicked for row Group:', rowData);
               console.log('response data local 1:', data);
 
-              this.openModal()
-              this.modalMode = 'update';
-              this.rowEdit = rowData;
+             
               
 
               // this.modalData = {

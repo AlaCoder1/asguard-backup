@@ -1,12 +1,12 @@
 <template>
   <div>
-    <h4>Networks groups</h4>
+    <h4>Networks groups123</h4>
     <ag-grid-vue domLayout="autoHeight" class="ag-theme-alpine mt-3 m-w-80" :columnDefs="columnDefs" :rowData="rowData"
       :gridOptions="gridOptions" />
     <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-user"  @click="openModal">
       <span class="text-white">Add Group</span>
     </v-btn>
-    <Modal_Group :mode="modalMode" :isOpen="isModalOpen" @closeModal="closeModal" :initialData="modalData"
+    <Modal_Group :editRow="rowEdit" :mode="modalMode" :isOpen="isModalOpen" @closeModal="closeModal" :initialData="modalData"
       @updateModalData="handleModalUpdate" />
   </div>
 </template>
@@ -29,6 +29,7 @@ export default {
   },
   data() {
     return {
+      rowEdit: {},
       modalMode: '',
       isModalOpen: false,
       modalData: {},
@@ -52,6 +53,7 @@ export default {
   watch: {
     DataList: {
       handler(newData) {
+        console.log('datttattata',newData)
         this.rowData = newData; // Update rowData with the new prop value
       },
       immediate: true, // This will trigger the watcher when the component is created to initialize rowData
@@ -70,6 +72,7 @@ export default {
     },
 
     handleModalUpdate(formData) {
+      console.log('formDataformDataformDataformData',formData)
       //
       this.modalData = formData;
       console.log("formData", formData)
@@ -167,25 +170,26 @@ export default {
             this.selectedRowIndex = CurrentIndex;
 
             this.getgroup(rowData.id, (data) => {
-              console.log('Edit clicked for row:', rowData);
+              console.log('Edit clicked for row Group:', rowData);
               console.log('response data local 1:', data);
 
               this.openModal()
               this.modalMode = 'update';
+              this.rowEdit = rowData;
+              
 
-              this.modalData = {
-                id: data?.id,
-                gid: data?.gid,
-                groupname: data?.groupname,
-                description: data?.description,
-                sudoers: data?.sudoers,
-                // Add more form fields as needed
-              }
+              // this.modalData = {
+              //   id: data?.id,
+              //   gid: data?.gid,
+              //   groupname: data?.groupname,
+              //   description: data?.description,
+              //   sudoers: data?.sudoers,
+              //   // Add more form fields as needed
+              // }
             })
 
             break;
             // Perform edit action
-            break;
           }
         case 'delete':
           console.log('Delete clicked for row:', rowData);
@@ -239,9 +243,9 @@ export default {
       // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
 
       const params = {
-        "groupname": data.groupname,
-        "description": data.description,
-        "sudoers": data.sudoers
+        groupname: data.groupname,
+        description: data.description,
+        sudoers: data.sudoers
       }
 
       console.log("params are : " + JSON.stringify(params))

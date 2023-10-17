@@ -12,7 +12,7 @@
               <v-row>
                 <!-- Group Modal -->
                 <v-col cols="12">
-                  <v-text-field label="Group name" v-model="formData.groupname"></v-text-field>
+                  <v-text-field label="Group name*" v-model="formData.groupname"></v-text-field>
                 </v-col>
 
                 <v-col cols="12">
@@ -46,6 +46,7 @@
 </template>
 
 <script>
+import axios from "axios";
 export default {
   name: 'Modal_Group',
   props: {
@@ -92,9 +93,64 @@ export default {
     },
     submitForm() {
       // Perform form submission actions here
-      this.closeModal();
+      
       // Emit an event to send form data to the parent component
-      this.$emit('updateModalData', this.formData);
+      // this.$emit('updateModalData', this.formData);
+      function getCookie(name) {
+          let cookieValue = null;
+          if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === name + "=") {
+                cookieValue = decodeURIComponent(
+                  cookie.substring(name.length + 1)
+                );
+                break;
+              }
+            }
+          }
+          return cookieValue;
+        }
+      const csrfToken = getCookie('csrftoken')
+      axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+      console.log("token :" + csrfToken)
+      console.log("DataList :" + JSON.stringify(this.DataList))
+
+      // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
+
+      const params = {
+        groupname: this.formData.groupname,
+        description: this.formData.description,
+        sudoers: this.formData.sudoers
+      }
+
+      console.log("params are : " + JSON.stringify(params))
+
+      axios.post('/groups/createGroup', params)
+        .then((response) => {
+          this.closeModal();
+          console.log(response);
+        }, (err) => {
+          if (err.response && err.response.status === 401) {
+            const responseData = err.response.data; // Access the response data
+            console.log("401 Error Response:", responseData);
+            // this.invalid = true ;
+            this.message = responseData.message;
+            // Handle the 401 error here
+          } else {
+            console.error("Error occurred:", err);
+            // Handle other errors
+          }
+        });
+
+
+
+
+
+
+
 
       console.log("submitForm :", this.formData)
     },

@@ -59,7 +59,7 @@
 import { mapState } from "vuex";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { required, sameAs,helpers } from "@vuelidate/validators";
+import { required, sameAs, helpers } from "@vuelidate/validators";
 import { reactive, computed } from "vue";
 export default {
   name: "Modal_User",
@@ -93,7 +93,7 @@ export default {
         confirm_password: "",
       },
       userRole: null,
-      userName:null
+      userName: null,
     });
     const rules = computed(() => {
       return {
@@ -165,11 +165,10 @@ export default {
   },
   methods: {
     populate(data) {
-        
       if (this.mode == "Reset Password") {
         this.state.formData.password = data.password;
-        this.state.userName=data.username
-        
+        this.state.userName = data.username;
+
         this.userId = data.id;
       }
     },
@@ -200,12 +199,18 @@ export default {
           }
           return cookieValue;
         }
+        const params = {
+          new_password: this.state.formData.password,
+          confirm_password: this.state.formData.confirm_password,
+        };
+
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-        axios.post(`/users/userChangePW_ByAdmin/${this.userId}`).then(
+        axios.put(`/users/userChangePW/${this.userId}`, params).then(
           (response) => {
-            if (response.status == "201") {
+            console.log('response :',response)
+            if (response.status == 200) {
               this.textAlert = "Password change successfully";
               setTimeout(() => {
                 this.closeModal();

@@ -79,7 +79,7 @@ export default {
     // ... other methods
   },
   beforeMount: async function () {
-    console.log("before mount data.users :" + JSON.stringify(this.$root.$data.users));
+    // console.log("before mount data.users :" + JSON.stringify(this.$root.$data.users));
 
     //   parsing users data
     let parsedData = this.setData(this.$root.$data.users);

@@ -4,6 +4,9 @@ import App from '@/pages/home';
 import store from '@/store/index';
 import VueRouter from 'vue-router';
 import router from './routes/router';
+import VueCompositionAPI from '@vue/composition-api'
+
+
 
 
 
@@ -13,6 +16,7 @@ import frJson from './translations/fr.json';
 
 Vue.use(VueI18n);
 Vue.use(VueRouter);
+Vue.use(VueCompositionAPI)
 
 
 const i18n = new VueI18n({

@@ -138,12 +138,26 @@ def changePW_byAdmin(newPassword, username):
     return output,error
 
 def changePW(currentPassword, newPassword, username):
+    # Use the subprocess module to run the passwd command
+    process = subprocess.Popen(['passwd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+    # Provide the current and new passwords
+    process.stdin.write(currentPassword + '\n')
+    process.stdin.write(newPassword + '\n')
+    process.stdin.write(newPassword + '\n')
+
+    # Close the stdin to signal the end of input
+    process.stdin.close()
+
+    # Wait for the command to complete
+    process.wait()
+    return process.returncode
     # run 'passwd' command to change password
-    cmd = f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}"
-    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
-    output = completed_process.stdout.split("\n")
-    error = completed_process.stderr
-    return output,error
+    # cmd = f"echo '{currentPassword}\n{newPassword}\n{newPassword}' | passwd"
+    # completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    # output = completed_process.stdout.split("\n")
+    # error = completed_process.stderr
+    # return output,error
 
 
     # function to get group users

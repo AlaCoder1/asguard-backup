@@ -1,30 +1,58 @@
 <template>
   <div>
     <h4>Networks admins</h4>
-    <ag-grid-vue domLayout="autoHeight" class="ag-theme-alpine mt-3 m-w-80" :columnDefs="columnDefs" :rowData="rowData"
-        :gridOptions="gridOptions" />
-    <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-user" @click="openModal">
+    <ag-grid-vue
+      domLayout="autoHeight"
+      class="ag-theme-alpine mt-3 m-w-80"
+      :columnDefs="columnDefs"
+      :rowData="rowData"
+      :gridOptions="gridOptions"
+    />
+    <v-btn
+      color="dms_blue_dark"
+      :rounded="true"
+      class="mt-3 add-btn-user"
+      @click="openModal"
+    >
       <span class="text-white">Add user</span>
     </v-btn>
-    <Modal_User :mode="modalMode" :isOpen="isModalOpen" @closeModal="closeModal" :initialData="modalData"
-      @updateModalData="handleModalUpdate" :groups="DataList.groups" />
+    <Modal_User
+      :editRow="rowEdit"
+      :mode="modalMode"
+      :isOpen="isModalOpen"
+      @closeModal="closeModal"
+      :initialData="modalData"
+      @updateModalData="handleModalUpdate"
+      :groups="DataList.groups"
+    />
+    <Modal_Password
+      :editRow="rowEdit"
+      :mode="modalMode"
+      :isOpen="isModalPasswordOpen"
+      @closeModal="closeModalPassword"
+      :initialData="modalData"
+      @updateModalData="handleModalUpdate"
+      :groups="DataList.groups"
+    />
   </div>
 </template>
 
 <script>
-import { AgGridVue } from 'ag-grid-vue';
-import axios from 'axios';
-import Modal_User from '../layout/Modal_User.vue';
+import { AgGridVue } from "ag-grid-vue";
+import axios from "axios";
+import Modal_User from "../layout/Modal_User.vue";
+import Modal_Password from "../layout/Modal_ChangePassword.vue";
 
 // import {
 //   createUser
 // } from '../services/users';
 
 export default {
-  name: 'UserManagement',
+  name: "UserManagement",
   components: {
     AgGridVue,
     Modal_User,
+    Modal_Password
   },
   props: {
     DataList: {
@@ -34,20 +62,22 @@ export default {
   },
   data() {
     return {
+      rowEdit: {},
       isModalOpen: false,
+      isModalPasswordOpen:false,
       selectedRowIndex: null,
       modalData: {},
-      modalMode: '',
+      modalMode: "",
       columnDefs: [
-        { headerName: 'User', field: 'username' },
-        { headerName: 'Role', field: 'role' },
-        { headerName: 'Actions', cellRenderer: this.actionCellRenderer },
+        { headerName: "User", field: "username" },
+        { headerName: "Role", field: "role" },
+        { headerName: "Actions", cellRenderer: this.actionCellRenderer },
       ],
       rowData: [], // Initialize rowData as an empty array
       gridOptions: {
         pagination: true,
         paginationPageSize: 5,
-        rowSelection: 'single',
+        rowSelection: "single",
         // Rest of the gridOptions
       },
     };
@@ -61,9 +91,8 @@ export default {
     },
   },
   methods: {
-
     actionCellRenderer(params) {
-      let eGui = document.createElement('div');
+      let eGui = document.createElement("div");
 
       let editingCells = params.api.getEditingCells();
       let isCurrentRowEditing = editingCells.some((cell) => {
@@ -80,15 +109,20 @@ export default {
           <button class="action-button edit" data-action="edit">
             <i class="far fa-edit" style="color: #086eae;"></i>
           </button>
+          <button class="action-button changePass " data-action="change">
+            <span class="mdi mdi-key-alert-outline"style="color: #086eae;"></span>
+              </button>
           <button class="action-button delete" data-action="delete">
-            <i class="fas fa-times" style="color: #086eae;"></i>
-          </button>
-        `;
+             <i class="fas fa-times" style="color: #086eae;"></i>
+           </button>
+         
+
+          `;
       }
 
-      eGui.querySelectorAll('.action-button').forEach((button) => {
-        button.addEventListener('click', () => {
-          const action = button.getAttribute('data-action');
+      eGui.querySelectorAll(".action-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.getAttribute("data-action");
           this.handleAction(action, params.node.data, params.node.rowIndex);
         });
       });
@@ -98,56 +132,72 @@ export default {
 
     handleAction(action, rowData, CurrentIndex) {
       switch (action) {
+        case "edit": {
+          this.rowEdit = rowData;
+          this.openModal();
+          this.modalMode = "update";
 
-        case 'edit':
-          {
+          // this.selectedRowIndex = CurrentIndex;
 
-            this.selectedRowIndex = CurrentIndex;
+          // this.getuser(rowData.id, (data) => {
+          //   console.log("Edit clicked for row:", rowData);
+          //   console.log("response data local 1:", data);
 
-            this.getuser(rowData.id, (data) => {
-              console.log('Edit clicked for row:', rowData);
-              console.log('response data local 1:', data);
+          //   // this.openModal();
 
-              this.openModal()
-              this.modalMode = 'update';
+          //   this.modalData = {
+          //     id: data.id,
+          //     username: data.username,
+          //     password: data.password,
+          //     fullname: data.fullname,
+          //     email: data.email,
+          //     role: data.role,
+          //     groups: data.group,
+          //     // Add more form fields as needed
+          //   };
+          // });
 
-              this.modalData = {
-                id: data.id,
+          break;
+        }
+        case "change":
+       
+          this.isModalPasswordOpen =true
+          this.modalMode = "Reset Password";
+          this.rowEdit = rowData;
+          break;
+        case "delete":
+          console.log("Delete clicked for row:", rowData);
 
-                username: data.username
-                ,
-                password: data.password
-                ,
-                fullname: data.fullname
-                ,
-                email: data.email
-                ,
-                role: data.role
-                ,
-                groups: data.group
-                // Add more form fields as needed
-              }
+          const csrfToken = this.getCookie("csrftoken");
+          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+          axios
+            .delete(`/users/deleteUser/${rowData.id}`)
+            .then((response) => {
+              console.log("Resource deleted:", response.data);
+              location.reload();
             })
+            .catch((error) => {
+              // Handle any errors that occur during the request
+              console.error("Error deleting resource:", error);
+            });
 
-            break;
-          }
-        case 'delete':
-          console.log('Delete clicked for row:', rowData);
+          // const index = this.rowData.findIndex(
+          //   (item) => item.id === rowData.id
+          // );
 
-          const index = this.rowData.findIndex(item => item.id === rowData.id);
-
-          this.delete(rowData.id, () => {
-            if (index !== -1) {
-              this.rowData.splice(index, 1);
-            }
-          })
+          // this.delete(rowData.id, () => {
+          //   if (index !== -1) {
+          //     this.rowData.splice(index, 1);
+          //   }
+          // });
 
           break;
-        case 'update':
-          console.log('Update clicked for row:', rowData);
+        case "update":
+          console.log("Update clicked for row:", rowData);
           break;
-        case 'cancel':
-          console.log('Cancel clicked for row:', rowData);
+        case "cancel":
+          console.log("Cancel clicked for row:", rowData);
           break;
         default:
           break;
@@ -155,65 +205,67 @@ export default {
     },
 
     openModal() {
-      this.modalData = {
-      };
-      this.modalMode = 'create'; // Assuming you want to open the modal in create mode
+      this.modalData = {};
+      this.modalMode = "create"; // Assuming you want to open the modal in create mode
       this.isModalOpen = true;
     },
     closeModal() {
       this.isModalOpen = false;
     },
+    closeModalPassword() {
+      this.isModalPasswordOpen = false;
+    },
     handleModalUpdate(formData) {
       //
       this.modalData = formData;
-      console.log("formData", formData)
-      console.log("this.selectedRowIndex", this.rowData[this.selectedRowIndex])
+      console.log("formData", formData);
+      console.log("this.selectedRowIndex", this.rowData[this.selectedRowIndex]);
 
       // this.rowData[this.modalData.id - 1] = updatedData;
       if (this.modalMode === "update") {
-        console.log("update action ..." + JSON.stringify(this.rowData))
-        this.update(formData,
-          () => {
+        console.log("update action ..." + JSON.stringify(this.rowData));
+        this.update(formData, () => {
+          console.log(
+            "old DataList :" +
+              JSON.stringify(this.DataList.users[this.selectedRowIndex])
+          );
 
-            console.log("old DataList :" + JSON.stringify(this.DataList.users[this.selectedRowIndex]))
+          this.DataList.users[this.selectedRowIndex] = {
+            id: formData.id,
+            username: formData.username,
+            password: formData.password,
+            fullname: formData.fullname,
+            email: formData.email,
+            role: formData.role,
+            group: formData.groups,
+          };
 
-            this.DataList.users[this.selectedRowIndex] =
-            {
-              id: formData.id,
-              username: formData.username,
-              password: formData.password,
-              fullname: formData.fullname,
-              email: formData.email,
-              role: formData.role,
-              group: formData.groups
-            };
+          console.log("new formData :" + JSON.stringify(formData));
+          // this.selectedRowIndex = null;
+        });
+      } else {
+        console.log("create action ...");
 
-            console.log("new formData :" + JSON.stringify(formData))
-            // this.selectedRowIndex = null;
-          })
-      }
-      else {
-        console.log("create action ...")
-
-        console.log("formData : " + JSON.stringify(formData))
+        console.log("formData : " + JSON.stringify(formData));
         // Handle the data returned from the modal here
-        this.Create(formData, () => { this.DataList.users.push(formData) })
+        this.Create(formData, () => {
+          this.DataList.users.push(formData);
+        });
 
         // this.$set(this.rowData, this.rowData.length, formData);
       }
       this.closeModal();
     },
 
-
     // Fetch APIs
     getCookie(name) {
       let cookieValue = null;
-      if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
         for (let i = 0; i < cookies.length; i++) {
           const cookie = cookies[i].trim();
           // Does this cookie string begin with the name we want?
-          if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          if (cookie.substring(0, name.length + 1) === name + "=") {
             cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
             break;
           }
@@ -222,31 +274,31 @@ export default {
       return cookieValue;
     },
     async Create(data, callback) {
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      const csrfToken = this.getCookie('csrftoken')
-      axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-
-      console.log("token :" + csrfToken)
-      console.log("DataList :" + JSON.stringify(this.DataList))
+      console.log("token :" + csrfToken);
+      console.log("DataList :" + JSON.stringify(this.DataList));
 
       // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
 
       const params = {
-        "username": data.username,
-        "password": data.password,
-        "fullname": data.fullname,
-        "email": data.email,
-        "role": data.role,
-        "group": data.groups
-      }
+        username: data.username,
+        password: data.password,
+        fullname: data.fullname,
+        email: data.email,
+        role: data.role,
+        group: data.groups,
+      };
 
-      console.log("params are : " + JSON.stringify(params))
+      console.log("params are : " + JSON.stringify(params));
 
-      axios.post('/users/createUser', params)
-        .then((response) => {
+      axios.post("/users/createUser", params).then(
+        (response) => {
           callback();
           console.log(response);
-        }, (err) => {
+        },
+        (err) => {
           if (err.response && err.response.status === 401) {
             const responseData = err.response.data; // Access the response data
             console.log("401 Error Response:", responseData);
@@ -257,71 +309,68 @@ export default {
             console.error("Error occurred:", err);
             // Handle other errors
           }
-        });
-
+        }
+      );
     },
     async delete(id, callback) {
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      const csrfToken = this.getCookie('csrftoken')
-      axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+      console.log("token :" + csrfToken);
+      console.log("user id :" + id);
 
-      console.log("token :" + csrfToken)
-      console.log("user id :" + id)
-
-      axios.delete(`/users/deleteUser/${id}`)
+      axios
+        .delete(`/users/deleteUser/${id}`)
 
         .then((response) => {
           callback();
           // Handle the successful response
-          console.log('Resource deleted:', response.data);
+          console.log("Resource deleted:", response.data);
         })
         .catch((error) => {
           // Handle any errors that occur during the request
-          console.error('Error deleting resource:', error);
+          console.error("Error deleting resource:", error);
         });
-
     },
     async update(data, callback) {
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      const csrfToken = this.getCookie('csrftoken')
-      axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+      console.log("token :" + csrfToken);
+      console.log("DataList :" + JSON.stringify(data));
 
-      console.log("token :" + csrfToken)
-      console.log("DataList :" + JSON.stringify(data))
-
-      axios.put(`/users/modifyUser/${data.id}`
-        , {
-          "username": data.username,
-          "password": data.password,
-          "fullname": data.fullname,
-          "email": data.email,
-          "role": data.role,
-          "group": data.groups
+      axios
+        .put(`/users/modifyUser/${data.id}`, {
+          username: data.username,
+          password: data.password,
+          fullname: data.fullname,
+          email: data.email,
+          role: data.role,
+          group: data.groups,
         })
         .then((response) => {
           callback();
           // Handle the successful response
-          console.log('Resource updated:', response.data);
+          console.log("Resource updated:", response.data);
         })
         .catch((error) => {
           // Handle any errors that occur during the request
-          console.error('Error updating resource:', error);
+          console.error("Error updating resource:", error);
         });
-
     },
     async getuser(id, callback) {
-
-      axios.get(`/users/getUser/${id}`)
+      axios
+        .get(`/users/getUser/${id}`)
         .then((response) => {
           callback(response.data);
           // Handle the successful response
-          console.log('Data received:', response.data);
+          console.log("Data received:", response.data);
         })
         .catch((error) => {
           // Handle any errors that occur during the request
-          console.error('Error fetching data:', error);
+          console.error("Error fetching data:", error);
         });
-    }
+    },
     // Fetch APIs
 
     // Rest of the methods
@@ -331,4 +380,5 @@ export default {
 
 <style lang="scss">
 @import "~ag-grid-community/dist/styles/ag-grid.css";
-@import "~ag-grid-community/dist/styles/ag-theme-alpine.css";</style>
+@import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
+</style>

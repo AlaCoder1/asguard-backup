@@ -342,12 +342,10 @@
 
                                     </v-tab>
                                     <v-tab-item v-for="tab in tabs" :key="tab.id">
-                                        <BasicConfigDHCPv4 v-if="tab.id == 1"
-                                        :interface="interface"
-                                            :activeTab="typeDHCP4" />
-                                        <AdvancedConfigDHCPv4 
-                                        :activeTab="typeDHCP4"
-                                        v-if="tab.id == 2" />
+                                        <BasicConfigDHCPv4 v-if="tab.id == 1" :ipAddress="value_setup_Ipv4.ip_address4"
+                                            :interface="interface" :activeTab="typeDHCP4" />
+                                        <AdvancedConfigDHCPv4 :activeTab="typeDHCP4" :interface="interface"
+                                            :ipAddress="value_setup_Ipv4.ip_address4" v-if="tab.id == 2" />
                                     </v-tab-item>
                                 </v-tabs>
                             </v-row>
@@ -632,7 +630,7 @@ export default {
     },
     data() {
         return {
-            activeTabIPV6: 0,
+            activeTabIPV6: "",
             tabs: [
                 { id: 1, label: "Base" },
                 { id: 2, label: "Advanced" },
@@ -644,7 +642,6 @@ export default {
                 rejectLeases: "",
                 hostname: "",
                 overrideMTU: false,
-                mtu: ""
             },
             tabsIPV6: [
                 { id: 1, label: "Basic" },
@@ -1081,8 +1078,8 @@ export default {
         this.device = this.IPV4Config.interface.ifname;
         this.description = this.IPV4Config.interface.description;
 
-        this.private_aux = this.IPV4Config.interface.private;
-        this.bogon_aux = this.IPV4Config.interface.bogon;
+        this.private_aux = this.IPV4Config.interface.private_aux;
+        this.bogon_aux = this.IPV4Config.interface.bogon_aux;
 
         this.addmac = this.IPV4Config.genericConfig.addmac;
         this.mtuv = this.IPV4Config.genericConfig.mtuv;
@@ -1094,8 +1091,14 @@ export default {
         this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 
         this.name_interface = this.IPV4Config.interface.name_interface;
+        this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw
 
-        this.ipv6SetupType = this.IPV4Config.IPV4Config.typedhcp;
+        this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
+        this.interface.ipv4_adress = this.IPV4Config.IPV4Config.alias_add;
+        this.interface.ipv4_netmask = this.IPV4Config.IPV4Config.alias_mask;
+        this.interface.rejectLeases = this.IPV4Config.IPV4Config.reject;
+        this.interface.hostname = this.IPV4Config.IPV4Config.hostname;
+        // this.interface.overrideMTU = this.IPV4Config.IPV4Config.overrideMTU;
     },
     validations: {
         addmac: {

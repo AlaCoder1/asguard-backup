@@ -45,6 +45,7 @@
                         :editType="editType" style="width: 100%;" @cell-value-changed="onCellValueChanged"
                         @row-value-changed="onRowValueChanged" @selection-changed="onSelectionChanged"
                         @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
+                        @firstDataRendered="onFirstDataRendered"
                         @row-drag-end="onRowDragEnd" :pagination="true" :paginationPageSize="10" :rowSelection="'multiple'">
                     </ag-grid-vue>
                 </v-card-text>
@@ -130,13 +131,13 @@
 <script>
 import { AgGridVue } from 'ag-grid-vue';
 import axios from 'axios';
-import multiSelectEditor from '../firewall/MultiSelectEditor.vue';
+import CustomRichSelect from '../firewall/MultiSelectEditor.vue';
 
 export default {
     name: 'FirewallComponent',
     components: {
         AgGridVue,
-        multiSelectEditor,
+        CustomRichSelect,
     },
     props: {
         id: String,
@@ -175,15 +176,33 @@ export default {
                     editable: params => params.node.data.isRowSelected,
                     headerName: 'Rule Description',
                 },
-                {
+             {
                     field: "protocol",
                     headerName: "Protocol",
-                    cellEditor: "multiSelectEditor",
-                    // cellRendererParams: {
-                    //     protocols: this.protocols,
-                    // },
                     editable: params => params.node.data.isRowSelected,
+                    // cellRenderer: (params) => params.data.protocol,
+                    // cellEditor: 'multiSelectEditor',
+                    // cellEditorParams: {
+                    //     values: availableProtocols,
+                    //     cellRenderer: (params) => params.value.toUpperCase(),
+                 // }
+                    cellEditor: 'CustomRichSelect',
+                    cellEditorParams: {
+                        values: ['tcp', 'udp', 'icmp type echo-request', 'icmp type echo-reply'],
+                        cellEditor: 'CustomRichSelect',
+                        cellHeight: 20,
+                        formatValue: value => value.toUpperCase(),
+                        cellRenderer: (params) => params.value.toUpperCase(),
+                        searchDebounceDelay: 200,
+                        // Add a custom event listener to the cell editor
+                        onProtocolsSelected: (event) => {
+                            // Update the cell value with the selected values
+                            params.setValue(event);
+                        },
+
+                    },
                 },
+
                 {
                     field: 'saddr',
                     headerName: 'Src Address',
@@ -397,6 +416,9 @@ export default {
         this.editType = 'fullRow';
     },
     methods: {
+         onFirstDataRendered(params) {
+            params.api.sizeColumnsToFit();
+        },
         onCellValueChanged(event) {
             const row = event.data;
             row.isModified = true;
@@ -418,6 +440,7 @@ export default {
             if (this.rowData && this.rowData.length > 0) {
                 this.gridApi.forEachNode(node => node.setSelected(node.rowIndex === 0));
             }
+            
         },
         onGridReadyOutbound(params) {
             this.gridApiOutbound = params.api;

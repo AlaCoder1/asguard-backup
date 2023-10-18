@@ -33,7 +33,6 @@ def device_nameInterface(name_interface):
 def add_interface(request):
     data = request.data
     serializerIP4Config = InterfaceSerializer(data=data)
-    print(serializerIP4Config.is_valid())
     if (serializerIP4Config.is_valid()):
         serializerIP4Config.save()
     return JsonResponse({"msg:": "interface added successfully!!!!!"})
@@ -146,6 +145,7 @@ def conf(request,name_interface):
                         data["reject"]=reject
                         data["hostname"]=hostname
                         #call function to convert mask format to bits
+                        alias_mask_converted=None
                         if alias_mask is not None:
                             alias_mask_converted=convert_to_subnet_mask(alias_mask)
                         ####
@@ -286,7 +286,6 @@ EOF""".format('\n'.join(output_service))
                         aux_gen=update_DB(id_interface,data,GenericConfig,GenericConfigSerializer)
                         #update changes in DB interface config
                         aux_inter=update_interface_table(name_interface,data,InterfaceSerializer)
-                        # print(aux_ipv4 and aux_gen and aux_inter)
                         if aux_ipv4 is True:
                             if aux_gen is True:
                                 if aux_inter is True:
@@ -367,12 +366,10 @@ def GetInformationsByInterface(request,name_interface):
         interface['name_interface']=interfaceObject.name_interface
         interface['description']=interfaceObject.description
         info['interface']=interface
-        print({"interfaceObject":interfaceObject})
         genericConfigObject = GenericConfig.objects.filter(interface_id=interfaceObject.id)
         genericConfigDict = serializers.serialize("json", genericConfigObject)
         res = json.loads(genericConfigDict)
         genericConfigList = list(genericConfigDict)
-        print({"genericConfigList":res})
         if res != []:
             id = res[0]['pk']
             res[0]['fields']['id'] = id
@@ -394,5 +391,4 @@ def GetInformationsByInterface(request,name_interface):
             info['IPV4Config']=resultat[0]['fields']
         else:
             info['IPV4Config']=[]
-        # print({"resultat":resultat[0]['fields']})
     return JsonResponse(info)

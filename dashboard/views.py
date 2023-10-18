@@ -43,5 +43,4 @@ def set_actions_service(request,service,action):
 
 def monitoring(request):
     context=get_system_infomations()
-    print("context",context)
     return render(request, 'basedashboard.html')

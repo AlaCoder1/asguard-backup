@@ -1,30 +1,100 @@
+import subprocess
 import time
-import paramiko
+from openvpn.manage_errors import create_error
 from openvpn.models import ServerOpenvpn
 from openvpn.serializers import ServerOpenvpnSerializer
 
 
-class CommandExecutionError(Exception):
-    """a class error when execution a command line"""
-    def __init__(self, command, message="Error executing command"):
-        self.command = command
-        self.message = message
-        super().__init__(self.message)
-
-    def __str__(self):
-        return f"{self.message}: {self.command}"
+def execute_command_without_arguments(command, decode=True, shell=False):
+    """Function that execute a command line without arguments"""
+    print(f'command {command}')
+    process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=decode, shell=shell)
+    create_error(process, command)
+    return process
 
 
-def connect_ssh():
-    """A function to connect with SSH"""
-    ssh = paramiko.SSHClient()
-    ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-    ssh.connect('10.1.12.205', username='root', password='root')
-    output_command = ssh.exec_command('pwd')
-    stdout = output_command[1]
-    current_dir = stdout.read().decode('utf-8')
-    current_dir = current_dir[:len(current_dir)-1]
-    return ssh, current_dir
+def execute_list_commands_without_arguments(commands_list):
+    """Function that execute a list of commands line without arguments"""
+    for command in commands_list:
+        execute_command_without_arguments(command)
+
+
+def execute_command_with_arguments(command, arguments, time_sleep=0.5):
+    """Function that execute a command line with arguments"""
+    try:
+        with subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
+            print("Command: ", command)
+            time.sleep(time_sleep)
+            process.communicate(input=arguments)
+
+            create_error(process, command)
+    except subprocess.CalledProcessError as e:
+        print(f'Command failed with error: {e}')
+    except Exception as e:
+        print(f'An unexpected error occurred: {e}')
+
+def execute_list_commands_with_arguments(list_commands, time_sleep=0.5):
+    """Function that execute a list of commands line with arguments"""
+    for command in list_commands:
+        execute_command_with_arguments(command=command['command'], arguments=command['arguments'],
+                                       time_sleep=time_sleep)
+
+
+def get_current_directory():
+    """A function to get the current directory"""
+    process = execute_command_without_arguments(['pwd'])
+    current_directory = process.stdout
+    current_directory = current_directory[:len(current_directory)-1]
+    return current_directory
+
+
+def create_tls_file(tls_auth, path_tls):
+    """Create TLS file by importing tls key or generating it"""
+    print("Creating tls file:")
+    if tls_auth['generate']:
+        command = ['openvpn', '--genkey', 'secret', f'{path_tls}']
+        execute_command_without_arguments(command)
+    else:
+        tls_key = f'-----BEGIN OpenVPN Static key V1-----\n{tls_auth["tls_key"]}\n-----END OpenVPN Static key V1-----'
+        with open(path_tls, 'w') as tls_file:
+            tls_file.write(tls_key)
+
+
+def change_status_server_openvpn(server_name, server_status):
+    """Change the status of a server openvpn: start, restart or stop"""
+    command = ['sudo', 'systemctl', f'{server_status}', f'openvpn-server@server_{server_name}']
+    execute_command_without_arguments(command)
+
+
+def openvpn_interfaces():
+    """A function that return a list of openvpn activated servers"""
+    command = ['sudo', 'ip', 'addr', 'show']
+    process = execute_command_without_arguments(command)
+    with open('list_interfaces.txt', 'w') as interfaces_file:
+        interfaces_file.write(process.stdout)
+
+    command = ['sudo', 'awk', '/^[0-9]+: tun[0-9]+:/ { iface = $2 } /inet / { print iface, $2}', 'list_interfaces.txt']
+    process = execute_command_without_arguments(command)
+
+    interfaces = process.stdout
+    interfaces = list(interfaces.split("\n"))
+    list_vpn_interfaces = []
+    for interface in interfaces:
+        if interface.startswith('tun'):
+            list_vpn_interfaces.append({"ifname": interface[:interface.find(':')],
+                                        "name_interface": "tun",
+                                        "ip_address": interface[interface.find(':')+2:interface.find('/')],
+                                        "netmask": interface[interface.find('/')+1:]})
+
+    return list_vpn_interfaces
+
+
+def delete_openvpn_interface(interfaces_before, interfaces):
+    """Find the name of the deleted openvpn interface in system"""
+    list_name_interfaces = [interface["ifname"] for interface in interfaces]
+    for interface in interfaces_before:
+        if interface["ifname"] not in list_name_interfaces:
+            return interface["ifname"]
 
 
 def prefix_to_masque(prefix):
@@ -51,86 +121,6 @@ def prefix_to_masque(prefix):
     masque_formatte = ".".join(map(str, masque))
 
     return masque_formatte
-
-
-def execute_list_commands_without_arguments(ssh_connect, commands_list):
-    for command_number, command in enumerate(commands_list):
-        stdin, stdout, stderr = ssh_connect.exec_command(command)
-        print(f'command {command}')
-        print('Error: ', stderr.read().decode('utf-8'))
-        print('Output: ', stdout.read().decode('utf-8'))
-        if stderr.read().decode('utf-8') != '':
-            raise CommandExecutionError(command=command, message=stderr.read().decode('utf-8'))
-
-
-def execute_command_with_arguments(ssh_connect, command, arguments, time_sleep=0.5):
-    """Function that execute a command line with arguments like passing a passphrase in building certificate"""
-    print(f"Command: {command}")
-    # Open a session
-    channel = ssh_connect.invoke_shell()
-
-    # Send the command
-    channel.send(f'{command}\n')
-    time.sleep(time_sleep)
-
-    # Send the list of arguments
-    for arg in arguments:
-        channel.send(f'{arg}\n')
-        time.sleep(time_sleep)
-    
-    output_command = channel.recv(4096).decode('utf-8')
-    print(f"output_command: {output_command}")
-
-    # Close the session
-    channel.close()
-    return output_command
-
-
-def execute_list_of_commands(ssh_connect, list_commands, time_sleep=0.5):
-    for command in list_commands:
-        # print(f"Command: {command['command']}")
-        output_command = execute_command_with_arguments(ssh_connect=ssh_connect, command=command['command'], arguments=command['arguments'],
-                                                        time_sleep=time_sleep)
-        # print(f"output_command: {output_command}")
-
-
-def create_tls_file(ssh, tls_auth, path_tls):
-    """Create TLS file by importing tls key or generating it"""
-    if tls_auth['generate']:
-        ssh.exec_command(f'openvpn --genkey secret {path_tls}',)
-    else:
-        tls_key = f'echo -----BEGIN OpenVPN Static key V1-----\n{tls_auth["tls_ley"]}\n-----END OpenVPN Static key V1-----'
-        ssh.exec_command(f'''echo '{tls_key.strip()}' >>{path_tls}''')
-
-
-def change_status_server_openvpn(server_name, server_status):
-    """Change the status of a server openvpn: start, restart or stop"""
-    ssh, current_dir = connect_ssh()
-    ssh.exec_command(f'systemctl {server_status} openvpn-server@server_{server_name}')
-
-
-def openvpn_interfaces():
-    """A function that return a list of openvpn activated servers"""
-    ssh, current_dir = connect_ssh()
-    stdin, stdout, stderr = ssh.exec_command('''ip addr show | awk '/^[0-9]+: tun[0-9]+:/ { iface = $2 } /inet / { print iface, $2 }' ''')
-    interfaces = stdout.read().decode('utf-8').split('\n')
-    list_vpn_interfaces = []
-    for interface in interfaces:
-        if interface.startswith('tun'):
-            list_vpn_interfaces.append({"ifname": interface[:interface.find(':')],
-                                        "name_interface": "tun",
-                                        "ip_address": interface[interface.find(':')+2:interface.find('/')],
-                                        "netmask": interface[interface.find('/')+1:]})
-
-    return list_vpn_interfaces
-
-
-def delete_openvpn_interface(interfaces_before, interfaces):
-    """Find the name of the deleted openvpn interface in system"""
-    list_name_interfaces = [interface["ifname"] for interface in interfaces]
-    for interface in interfaces_before:
-        if interface["ifname"] not in list_name_interfaces:
-            return interface["ifname"]
 
 
 def json_to_str_server(json_object):
@@ -278,13 +268,11 @@ verb {json_object["verbosity_level"]}'''
         if json_object["ntp_servers"]["ntp_server2"] != '':
             config_input = config_input.replace("#push \"dhcp-option NTP server2\"", f"push \"dhcp-option NTP {json_object['ntp_servers']['ntp_server2']}\"")
 
-    print(config_input)
     return config_input
 
 
 def json_to_str_client(json_object):
     """Function to convert a json object to input of client config file"""
-    ssh, current_dir = connect_ssh()
 
     config_input = f'''client
 remote {json_object["server_host"]} {json_object["server_port"]}
@@ -350,8 +338,8 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
         elif json_object["proxy_authentication"]["option"] == 'basic':
             # Create .pas file contains proxy username and password
             file_content = f'{json_object["proxy_authentication"]["username"]}\n{json_object["proxy_authentication"]["password"]}'
-            file_path = f'/etc/openvpn/client/client_{json_object["name"]}.pas'
-            ssh.exec_command(f'''echo '{file_content.strip()}' >>{file_path}''')
+            with open(f'/etc/openvpn/client/client_{json_object["name"]}.pas', 'w') as proxy_auth_file:
+                proxy_auth_file.write(file_content)
             config_input = config_input.replace("#proto tcp-client", "proto tcp-client")
             config_input = config_input.replace("#http-proxy", 
                                                 f"http-proxy {json_object['proxy_host']} {json_object['proxy_port']} /etc/openvpn/client/client_{json_object['name']}.pas basic")
@@ -362,8 +350,8 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
     if json_object["username"] != '' and json_object["password"] != '':
         # Create .up file contains username and password
         file_content = f'{json_object["username"]}\n{json_object["password"]}'
-        file_path = f'/etc/openvpn/client/client_{json_object["name"]}.up'
-        ssh.exec_command(f'''echo '{file_content.strip()}' >>{file_path}''')
+        with open(f'/etc/openvpn/client/client_{json_object["name"]}.up', 'w') as auth_file:
+            auth_file.write(file_content)
         config_input = config_input.replace("#pull", "pull")
         config_input = config_input.replace("#auth-user-pass", f"auth-user-pass /etc/openvpn/client/client_{json_object['name']}.up")
         config_input = config_input.replace("client\n", "#client\n", 1)

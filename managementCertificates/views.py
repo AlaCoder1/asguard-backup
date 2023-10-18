@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-import os
 from django.conf import settings
 from django.http import FileResponse, JsonResponse
 from django.db.models import Q
@@ -15,7 +14,7 @@ from managementCertificates.certificate import create_ca_in_system, create_certi
 
 from managementCertificates.models import Certificate, CertificateAuthority
 from managementCertificates.serializers import CertificateAuthoritySerializer, CertificateSerializer
-from openvpn.functions import CommandExecutionError
+from openvpn.manage_errors import CommandExecutionError
 
 # Create your views here.
 
@@ -123,10 +122,8 @@ def createCertAuth(request):
                         # Add the server to the database
                         serializer_ca.save()
                         return JsonResponse({"msg": f"CA {name} is created"}, status=201)
-                    else:
-                        print(serializer_ca.errors)
-                else:
-                    print(serializer_ca.errors)
+
+                print(serializer_ca.errors)
                 return JsonResponse({"msg": "Error in CA configuration"}, status=401)
             
             elif method.get("name_method", "") == 'import':

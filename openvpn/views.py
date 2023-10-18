@@ -8,14 +8,15 @@ from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
-from network.models import IP4Config
+from network.models import IP4Config, Interface
 from network.serializers import IP4ConfigSerializer, InterfaceSerializer
+from openvpn.manage_errors import CommandExecutionError
 from .service_openvpn import *
 from .models import *
 from .serializers import *
-from .functions import CommandExecutionError, change_status_server_openvpn, delete_openvpn_interface, json_to_str_client, json_to_str_server, openvpn_interfaces
+from .functions import change_status_server_openvpn, delete_openvpn_interface, json_to_str_client, json_to_str_server, openvpn_interfaces
 from .server_openvpn import install_server_openvpn, delete_server_openvpn, update_server_openvpn
-from .client_openvpn import delete_client_openvpn, install_client_openvpn, update_client_openvpn
+from .client_openvpn import delete_client_openvpn, install_client_openvpn
 
 # Create your views here.
 
@@ -214,7 +215,7 @@ def updateServerOpenVPN(request, id):
     if (request.method == 'PUT'):
         # parse the incoming information
         data = request.data
-
+        server = ServerOpenvpn.objects.get(id=id)
         server.name = data.get('name', '')
         server.description = data.get('description', '')
         server_mode = data.get('server_mode', '')
@@ -319,7 +320,8 @@ def startServerOpenvpn(request, id):
                         return JsonResponse({"msg": f"Server {server.name} is started"}, status=201)
                     else:
                         return JsonResponse({"msg": ipv4_serializer.errors}, status=401)
-            return JsonResponse(interfaces, safe=False)
+                else:
+                    return JsonResponse({"msg": "Server was opened"}, status=401)
         
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in starting openvpn server"}, status=401)
@@ -359,12 +361,15 @@ def stopServerOpenvpn(request, id):
             interfaces = change_status_server_openvpn(server_name=server.name, server_status='stop')
             interfaces = openvpn_interfaces()
             interface_deleted_name = delete_openvpn_interface(interfaces_before, interfaces)
-            interface = Interface.objects.get(ifname=interface_deleted_name)
-            interface.delete()
-            return JsonResponse({"msg": f"Server {server.name} is stoped"}, status=201)
+            if interface_deleted_name:
+                interface = Interface.objects.get(ifname=interface_deleted_name)
+                interface.delete()
+                return JsonResponse({"msg": f"Server {server.name} is stoped"}, status=201)
+            else:
+                return JsonResponse({"msg": "Interface dosen't exist"}, status=404)
         
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in starting openvpn server"}, status=401)
+            return JsonResponse({"msg": "Error in stoping openvpn server"}, status=401)
 
 
 ########################################
@@ -610,7 +615,7 @@ def updateClientOpenvpn(request, id):
             client_conf = json_to_str_client(data)
 
             # Updating the client in system
-            update_client_openvpn(client_name=client.name, client_conf=client_conf, tls_auth=tls_auth)
+            install_client_openvpn(client_name=client.name, client_conf=client_conf, tls_auth=tls_auth)
 
             # Updating the client in database
             client_serializer.save()

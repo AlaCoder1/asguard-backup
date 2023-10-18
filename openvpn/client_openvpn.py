@@ -1,39 +1,25 @@
-from openvpn.functions import connect_ssh, create_tls_file
+from openvpn.functions import create_tls_file
 
 from openvpn.functions import execute_list_commands_without_arguments
 
 
 def install_client_openvpn(client_name, client_conf, tls_auth):
-    ssh, current_dir = connect_ssh()
+    """Function to create an openvpn client"""
     
-    create_tls_file(ssh, tls_auth, f'/etc/openvpn/client/static_{client_name}.key')
-
-    execute_list_commands_without_arguments(
-        ssh_connect=ssh, commands_list=[f'rm -f /etc/openvpn/client/client_{client_name}.ovpn',
-                                        f'''echo '{client_conf.strip()}' >>/etc/openvpn/client/client_{client_name}.ovpn''',
-                                        ])
+    create_tls_file(tls_auth, f'/etc/openvpn/client/static_{client_name}.key')
+    
+    with open(f'/etc/openvpn/client/client_{client_name}.ovpn', 'w') as client_file:
+        client_file.write(client_conf)
 
 
 def delete_client_openvpn(client_name):
     """Function to delete an openvpn client"""
-    ssh, current_dir = connect_ssh()
-    commands_list_without_arguments = [f'sudo rm -f /etc/openvpn/client/client_{client_name}.ovpn',
-                                       f'sudo rm -f /etc/openvpn/client/static_{client_name}.key',
-                                       f'sudo rm -f /etc/openvpn/client/client_{client_name}.up',
-                                       f'sudo rm -f /etc/openvpn/client/client_{client_name}.pas',
+    commands_list_without_arguments = [['sudo', 'rm', '-f', f'/etc/openvpn/client/client_{client_name}.ovpn'],
+                                       ['sudo', 'rm', '-f', f'/etc/openvpn/client/static_{client_name}.key'],
+                                       ['sudo', 'rm', '-f', f'/etc/openvpn/client/client_{client_name}.up'],
+                                       ['sudo', 'rm', '-f', f'/etc/openvpn/client/client_{client_name}.pas'],
                                        ]
-    execute_list_commands_without_arguments(ssh_connect=ssh, commands_list=commands_list_without_arguments)
-
-
-def update_client_openvpn(client_name, client_conf, tls_auth):
-    """Function to update an openvpn client"""
-    ssh, current_dir = connect_ssh()
-    
-    create_tls_file(ssh, tls_auth, f'/etc/openvpn/client/static_{client_name}.key')
-
-    commands_list_without_arguments = [f'rm -f /etc/openvpn/client/client_{client_name}.ovpn',
-                                       f'''echo '{client_conf.strip()}' >>/etc/openvpn/client/client_{client_name}.ovpn''']
-    execute_list_commands_without_arguments(ssh_connect=ssh, commands_list=commands_list_without_arguments)
+    execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
 # server_name = 'azizserver'

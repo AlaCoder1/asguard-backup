@@ -1,72 +1,86 @@
-from openvpn.functions import connect_ssh, execute_command_with_arguments, execute_list_commands_without_arguments, execute_list_of_commands
+from openvpn.functions import execute_command_with_arguments, execute_command_without_arguments, execute_list_commands_without_arguments, execute_list_commands_with_arguments
 
 
-def read_certificate_value(ssh, certificate_path, decode=True):
-    """This function take a certificate path and return the certificate value rfom system file"""
-    std = ssh.exec_command(f'cat {certificate_path}')
-    if decode:
-        return std[1].read().decode()
-    return std[1].read()
+def read_certificate_value(certificate_path, decode=True):
+    """This function take a certificate path and return the certificate value from system file"""
+    command = ['cat', f'{certificate_path}']
+    process = execute_command_without_arguments(command, decode)
+    return process.stdout
 
 
-def change_vars(ssh, current_dir, updated_field:dict):
-    vars_content = ssh.exec_command(f"cat {current_dir}/pki/vars")
-    vars_content = vars_content[1].read().decode('utf-8')
+def change_vars(current_dir, updated_field:dict):
+    """This function takes some configurations of certificates and change vars file of the easyrsa"""
+
+    # Get the vars file content
+    with open(f'{current_dir}/pki/vars', 'r') as file:
+        vars_content = file.read()
+
     for field in updated_field.items():
+        # Find the input in vars file
         if vars_content.find(f'set_var EASYRSA_{field[0]}\t') > -1:
+            # Get the input value before changing it
             old_value = vars_content[vars_content.find(f'set_var EASYRSA_{field[0]}\t'):vars_content.find('\n', vars_content.find(f'set_var EASYRSA_{field[0]}\t'))]
+            # Take in consideration the # because all the config in vars file are commented by default
             if vars_content[vars_content.find(f'set_var EASYRSA_{field[0]}')-1] == '#':
                 old_value = '#' + old_value
+            # Updating the vars file with the new input
             vars_content = vars_content.replace(old_value, f'set_var EASYRSA_{field[0]}\t{field[1]}')
-            new_value = vars_content[vars_content.find(f'set_var EASYRSA_{field[0]}\t'):vars_content.find('\n', vars_content.find(f'set_var EASYRSA_{field[0]}\t'))]
         else:
+            # Append the input in vars file
             vars_content += f'\nset_var EASYRSA_{field[0]}\t{field[1]}'
-    ssh.exec_command(f'''echo '{vars_content.strip()}' | sudo tee {current_dir}/pki/vars''')
+
+    with open(f'{current_dir}/pki/vars', 'w') as file:
+        file.write(vars_content)
 
     return vars_content
 
 
-def initialize_ca(ssh, current_dir, ca_name='test'):
+def initialize_ca(current_dir, ca_name='test'):
     """This function initialize the openvpn and easyrsa in system"""
 
-    # Creating a CA
-    list_of_commands_with_arguments = [{'command': 'sudo easyrsa init-pki', 'arguments': ['yes', 'yes']},
-                                       {'command': 'sudo easyrsa build-ca nopass', 'arguments': [f'{ca_name}']}]
-    execute_list_of_commands(ssh, list_of_commands_with_arguments)
+    # Initialize a fresh PKI and creating a CA
+    list_of_commands_with_arguments = [{'command': ['sudo', 'easyrsa', 'init-pki'], 'arguments': 'yes\nyes\n'},
+                                       {'command': ['sudo', 'easyrsa', 'build-ca', 'nopass'], 'arguments': f'{ca_name}\n'}]
+    execute_list_commands_with_arguments(list_of_commands_with_arguments)
 
     #Importing an existing CA to the standard easyrsa path
-    commands_list_without_arguments = [f'cp /etc/certificates_{ca_name}/ca.crt "{current_dir}/pki/ca.crt"',
-                                       f'cp /etc/certificates_{ca_name}/ca.key "{current_dir}/pki/private/ca.key"',
-                                       f'cp /etc/certificates_{ca_name}/vars "{current_dir}/pki/vars"',
-                                       f'cp /etc/certificates_{ca_name}/crl.pem "{current_dir}/pki/crl.pem"',
+    commands_list_without_arguments = [['cp', f'/etc/certificates_{ca_name}/ca.crt', f'{current_dir}/pki/ca.crt'],
+                                       ['cp', f'/etc/certificates_{ca_name}/ca.key', f'{current_dir}/pki/private/ca.key'],
+                                       ['cp', f'/etc/certificates_{ca_name}/vars', f'{current_dir}/pki/vars'],
+                                       ['cp', f'/etc/certificates_{ca_name}/crl.pem', f'{current_dir}/pki/crl.pem'],
                                        ]
-    execute_list_commands_without_arguments(ssh_connect=ssh, commands_list=commands_list_without_arguments)
+    execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
-def get_certifcate_serial_number(ssh, cert_path):
+def get_certifcate_serial_number(cert_path):
     """Get the serial number of certificate"""
-    stdin, stdout, stderr = ssh.exec_command(f'openssl x509 -in {cert_path} -noout -serial')
-    serial = stdout.read().decode('utf-8')
+    command = ['openssl', 'x509', '-in', f'{cert_path}', '-noout', '-serial']
+    process = execute_command_with_arguments(command)
+    serial = process.stdout
     serial = serial.replace('serial=', '')
     return serial
 
 
-def revoke_list_certs(ssh, current_dir, ca_name, list_revoked_cert):
+def revoke_list_certs(current_dir, ca_name, list_revoked_cert):
     """Revoking a list of certificates and generate the crl file"""
 
     for revoked_cert in list_revoked_cert:
         if revoked_cert.certificate_type == 'server':
-            ssh.exec_command(f'cp /etc/openvpn/certificates_{revoked_cert.name}/server.crt "{current_dir}/pki/issued/server.crt"')
-            execute_command_with_arguments(ssh, 'sudo easyrsa revoke server', ['yes'])
+            command =['cp', f'/etc/openvpn/certificates_{revoked_cert.name}/server.crt', 
+                      f'{current_dir}/pki/issued/server.crt']
+            execute_command_with_arguments(command)
+            execute_command_with_arguments(['sudo', 'easyrsa', 'revoke', 'server'], 'yes\n')
         elif revoked_cert.certificate_type == 'client':
-            ssh.exec_command(f'cp /etc/openvpn/client/certificates_{revoked_cert.name}/{revoked_cert.name}.crt "{current_dir}/pki/issued/{revoked_cert.name}.crt"')
-            execute_command_with_arguments(ssh, f'sudo easyrsa revoke {revoked_cert.name}', ['yes'])
+            command = ['cp', f'/etc/openvpn/client/certificates_{revoked_cert.name}/{revoked_cert.name}.crt',
+                       f'{current_dir}/pki/issued/{revoked_cert.name}.crt']
+            execute_command_with_arguments(command)
+            execute_command_with_arguments(['sudo', 'easyrsa', 'revoke', f'{revoked_cert.name}'], 'yes\n')
 
     # Generate crl file containing all the revoked certificates
-    commands_list_without_arguments = ['sudo easyrsa gen-crl',
-                                       f'cp {current_dir}/pki/crl.pem "/etc/certificates_{ca_name}/crl.pem"',
+    commands_list_without_arguments = [['sudo', 'easyrsa', 'gen-crl'],
+                                       ['cp', f'{current_dir}/pki/crl.pem', f'/etc/certificates_{ca_name}/crl.pem'],
                                        ]
-    execute_list_commands_without_arguments(ssh_connect=ssh, commands_list=commands_list_without_arguments)
+    execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
 def download_certificate(download_cert_path, cert_value, mode_open='w+'):

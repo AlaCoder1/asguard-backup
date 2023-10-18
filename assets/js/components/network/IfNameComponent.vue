@@ -554,6 +554,10 @@
                     style="width: 20%;" border="top" v-if="showAlert" :style="alertStyle">
                     Configuration saved successfully
                 </v-alert>
+                <v-alert type="success" variant="outlined" elevation="2" class="ml-3" icon="mdi-check-circle-outline"
+                        style="width: 20%;" border="top" v-if="showAlertGateway" :style="alertStyle">
+                        Gateway saved successfully
+                    </v-alert>
                 <br /><br /><br /><br />
                 <v-dialog style="
                         position: fixed;
@@ -598,9 +602,15 @@
                             <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancelGateway">
                                 Cancel
                             </v-btn>
-                            <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" :disabled="isFormInvalid()">
+                            <!-- <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit"
+                            :disabled="isFormInvalidGateway()"
+                                @click="addGateway">
                                 Save
-                            </v-btn>
+                            </v-btn> -->
+                            <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit"
+                                    @click="addGateway">
+                                    Save
+                                </v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
@@ -729,6 +739,7 @@ export default {
 
             dynamicGatewayPolicy: false,
             showAlert: false,
+            showAlertGateway: false,
             showModal: false,
             gateway: {
                 gwname: "",
@@ -986,6 +997,10 @@ export default {
                             far_aux: false,
                             multiwan_aux: false,
                         }
+                        this.showAlertGateway = true;
+                        setTimeout(() => {
+                            this.showAlertGateway = false;
+                        }, 3000);
                     } else {
                         this.showModal = true;
                     }

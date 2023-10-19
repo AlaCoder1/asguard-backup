@@ -106,7 +106,7 @@
               justify="center"
               v-if="invalid"
             >
-              {{ message }}
+              {{ messageStore }}
             </div>
           </v-form>
         </div>
@@ -118,7 +118,7 @@
 
 <script>
 import Footer from "@/components/layout/footer.vue";
-import { mapActions } from "vuex";
+import { mapActions, mapState } from "vuex";
 import store from "@/store/index.js";
 
 export default {
@@ -139,24 +139,21 @@ export default {
   beforeMount: async function () {
     this.users = this.$root.$data.tab;
   },
+  computed: {
+    ...mapState("auth", ["messageStore"]),
+  },
   methods: {
     ...mapActions("auth", ["login"]),
+
     connect() {
       const user = {
         username: this.username,
         password: this.password,
       };
 
-      store
-        .dispatch("auth/login", user)
-        .then((response) => {
-          if (!response) {
-            this.message = "Invalid credentiels";
-            this.invalid = true;
-          } else {
-            this.message = "";
-          }
-        })
+      store.dispatch("auth/login", user).then((response) => {
+        this.invalid = true;
+      });
     },
   },
 };

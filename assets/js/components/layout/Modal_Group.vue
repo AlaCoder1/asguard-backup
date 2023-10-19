@@ -15,15 +15,25 @@
                 <v-col cols="12">
                   <v-text-field
                     label="Group name*"
-                    v-model="formData.groupname"
+                    v-model="state.formData.groupname"
                   ></v-text-field>
+                  <span
+                    class="error-feedback"
+                    v-if="v$.formData.groupname.$error"
+                    >{{ v$.formData.groupname.$errors[0].$message }}</span
+                  >
                 </v-col>
 
                 <v-col cols="12">
                   <v-text-field
-                    label="Description"
-                    v-model="formData.description"
+                    label="Description*"
+                    v-model="state.formData.description"
                   ></v-text-field>
+                  <span
+                    class="error-feedback"
+                    v-if="v$.formData.description.$error"
+                    >{{ v$.formData.description.$errors[0].$message }}</span
+                  >
                 </v-col>
 
                 <!-- <v-col cols="12">
@@ -38,6 +48,9 @@
           </v-card-text>
           <v-card-actions>
             <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
+            <span style="color: rgb(245, 8, 8); margin-top: 10px">{{
+              textAlertDanger
+            }}</span>
             <v-spacer></v-spacer>
             <v-btn color="blue-darken-1" variant="text" type="submit">
               Save
@@ -54,6 +67,10 @@
 
 <script>
 import axios from "axios";
+
+import useValidate from "@vuelidate/core";
+import { required, helpers } from "@vuelidate/validators";
+import { reactive, computed } from "vue";
 export default {
   name: "Modal_Group",
   props: {
@@ -74,15 +91,52 @@ export default {
       required: true,
     },
   },
-  data() {
-    return {
+  setup() {
+  
+    const state = reactive({
       formData: {
         groupname: "",
-        description: "",
-        sudoers: "",
+        description:""
       },
+    });
+    const rules = computed(() => {
+      return {
+        formData: {
+          groupname: {
+            required: helpers.withMessage(
+              "This field must be indicated",
+              required
+            ),
+            isValidName: helpers.withMessage(
+              `name can include letters, digits, underscores, and hyphens. It must start with a letter and can be up to 32 characters.`,
+
+              helpers.regex(
+                /^[a-zA-Z][a-zA-Z0-9_\-]{0,31}$/
+              )
+            ),
+          },
+          description: {
+            required: helpers.withMessage(
+              "This field must be indicated",
+              required
+            )
+          },
+        },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
+    return {
+      state,
+      v$,
+    };
+  },
+  data() {
+    return {
+      groupNameCheck:'',
       groupId: null,
       textAlert: "",
+      textAlertDanger: "",
     };
   },
   watch: {
@@ -98,27 +152,25 @@ export default {
   methods: {
     populate(data) {
       if (this.mode == "update") {
-        (this.formData.groupname = data.groupname), (this.groupId = data.id);
-        this.formData.description = data.description;
+        this.groupNameCheck = data.groupname;
+        this.state.formData.groupname = data.groupname;
+        this.groupId = data.id;
+        this.state.formData.description = data.description;
       }
     },
 
     closeModal() {
-      // this.resetForm();
       this.$emit("closeModal");
     },
     resetForm() {
-      this.formData = {
+      this.state.formData = {
         firstname: "",
-        // Reset other form fields as needed
       };
       this.$refs.myForm.reset();
     },
     submitForm() {
-      // Perform form submission actions here
-
-      // Emit an event to send form data to the parent component
-      // this.$emit('updateModalData', this.formData);
+      this.v$.$validate();
+      if (!this.v$.$error) {
       function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== "") {
@@ -144,8 +196,8 @@ export default {
       // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
 
       const params = {
-        groupname: this.formData.groupname,
-        description: this.formData.description,
+        groupname: this.state.formData.groupname,
+        description: this.state.formData.description,
         // sudoers: this.formData.sudoers
       };
 
@@ -154,12 +206,21 @@ export default {
 
         axios.post("/groups/createGroup", params).then(
           (response) => {
-            this.textAlert = "Group Created Successfully";
-            setTimeout(() => {
-              this.closeModal();
-              location.reload();
-            }, 2000);
-            console.log(response);
+            console.log("res", response);
+            if (response.data.msg.includes("exists")) {
+              this.textAlertDanger = `Group ${this.state.formData.groupname} already exists`;
+              setTimeout(() => {
+                this.textAlertDanger = "";
+              }, 2000);
+            } else {
+              this.textAlert = "Group Created Successfully";
+              setTimeout(() => {
+                this.closeModal();
+                this.textAlert = "";
+                location.reload();
+              }, 2000);
+              console.log(response);
+            }
           },
           (err) => {
             if (err.response && err.response.status === 401) {
@@ -176,18 +237,40 @@ export default {
         );
       } else {
         const payload = {
-          Newgroupname: this.formData.groupname,
-          description: this.formData.description,
+          Newgroupname: this.state.formData.groupname,
+          description: this.state.formData.description,
           // sudoers: this.formData.sudoers
         };
         axios
           .put(`/groups/groupChangeGroupname/${this.groupId}`, payload)
           .then((response) => {
-            this.textAlert = "Group Updated Successfully";
-            setTimeout(() => {
-              this.closeModal();
-              location.reload();
-            }, 2000);
+
+            // if(this.groupNameCheck == this.formData.groupname){
+            //   console.log("response", response);
+            //   this.textAlertDanger = ''
+            //   this.textAlert = "Group Updated Successfully";
+            //   setTimeout(() => {
+            //     this.closeModal();
+            //     location.reload();
+            //     this.textAlert = "";
+            //   }, 2000);
+            // }
+            if (response.data.msg.includes("exists")) {
+              this.textAlertDanger = `Group ${this.state.formData.groupname} already exists`;
+              setTimeout(() => {
+                this.textAlertDanger = "";
+              }, 2000);
+            } 
+            else {
+              console.log("response", response);
+              this.textAlert = "Group Updated Successfully";
+              setTimeout(() => {
+                this.closeModal();
+                location.reload();
+                this.textAlert = "";
+              }, 2000);
+            }
+            
 
             // Handle the successful response
             console.log("Resource updated:", response.data);
@@ -198,11 +281,17 @@ export default {
           });
       }
 
-      console.log("submitForm :", this.formData);
-    },
+      console.log("submitForm :", this.state.formData);
+     } },
   },
   // components: {
   //   VTextField: Vue.extend(VTextField),
   // },
 };
 </script>
+<style>
+.error-feedback {
+  color: red;
+  font-size: 0.85em;
+}
+</style>

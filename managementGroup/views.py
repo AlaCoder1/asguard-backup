@@ -4,8 +4,13 @@ from .models import *
 from .serializers import *
 import json
 from rest_framework.parsers import JSONParser
+from rest_framework.authentication import SessionAuthentication
+# Version without SSh connection
 from .functions import *
-from .remoteFunctions import *
+# end Version without SSh connection
+# Version SSh connection
+# from .remoteFunctions import *
+# end Version SSh connection
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from authentification.authentication import JWTAuthentication
@@ -15,18 +20,19 @@ from django.core import serializers
 
 # API to get all groups
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getAllGroups(request):
     list_group = []
     if (request.method == 'GET'):
-        groups = Group.objects.filter(createdBySystem=0)
+        groups = Group.objects.filter(created_by_system=0)
         groupDict = serializers.serialize("json", groups)
         res = json.loads(groupDict)
         for i in range(0, len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
-            res[i]['fields'].pop('createdBySystem')
+            res[i]['fields'].pop('created_by_system')
             res[i]['fields']['id'] = id
             list_group.append(res[i]['fields'])
         # return a Json response
@@ -35,7 +41,8 @@ def getAllGroups(request):
 
 # API to get one group
 @api_view(['GET'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def getGroup(request, id):
     if (request.method == 'GET'):
         group = Group.objects.get(id=id)
@@ -47,33 +54,32 @@ def getGroup(request, id):
 
 # API to create group
 @api_view(['POST'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
 def createGroup(request):
     msg = ''
     if (request.method == 'POST'):
         # parse the incoming information
-        data = JSONParser().parse(request)
+        data = request.data
         groupname = data['groupname']
         if (validInput(groupname)):
             # Execute the command on the remote machine
-            stdin, stdout, stderr = addRemoteGroup(groupname)
-            # convert the stderr stream to a string
-            error_str = stderr.read().decode('utf-8')
-            if error_str == "":
-                msg = groupname+" added sucessfully"
-                gid = getRemoteGidGroup()
+            stdout, stderr = addGroup(groupname)
+            if stderr == "":
+                gid = getUidGroup()
                 data['gid'] = gid
                 serializer = GroupSerializer(data=data)
                 # check if the sent information is okay
                 if (serializer.is_valid()):
                     # if okay, save it on the database
                     serializer.save()
+                    msg = groupname+" added sucessfully"
                     # provide a Json Response with the data that was saved
                     return JsonResponse({"msg": msg}, status=201)
                 # provide a Json Response with the necessary error information
                 return JsonResponse(serializer.errors, status=400)
             else:
-                msg = error_str
+                msg = stderr
         else:
             msg = "groupname invalid"
             return JsonResponse({"msg": msg}, status=201)
@@ -82,21 +88,19 @@ def createGroup(request):
 
 # API to delete group
 @api_view(['DELETE'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def deleteGroup(request, id):
     msg = ''
     if (request.method == 'DELETE'):
         group = Group.objects.get(id=id)
         # Execute the command on the remote machine
-        stdin, stdout, stderr = deleteRemoteGroup(group.groupname)
-        # convert the stderr stream to a string
-        error_str = stderr.read().decode('utf-8')
-        print(stdout.read().decode('utf-8'))
-        if error_str == "":
+        stdout, stderr = delete_group(group.groupname)
+        if stderr == "":
             group.delete()
             msg = "delete succesfully"
         else:
-            msg = "delete failed"
+            msg = stderr
         # return a no content response.
         return JsonResponse({"msg": msg})
 
@@ -109,24 +113,27 @@ def updateGroup(request, id):
 
 
 @api_view(['PUT'])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def changeGroupname(request, id):
     msg = ''
     if (request.method == 'PUT'):
         group = Group.objects.get(id=id)
         groupDict = group.__dict__
         # parse the incoming information
-        data = json.loads(request.body)
+        data = request.data
         oldgroupname = groupDict['groupname']
         Newgroupname = data['Newgroupname']
+        description = data['description']
         if validInput(Newgroupname):
-            if RemoteGroupExists(Newgroupname):
+            if group_exists(Newgroupname):
                 msg = f"Username {Newgroupname} exists."
                 return JsonResponse({"msg": msg})
             else:
-                changeRemoteGroupname(oldgroupname, Newgroupname)
+                change_groupname(oldgroupname, Newgroupname)
                 msg = "updated succesfully"
                 group.groupname = Newgroupname
+                group.description = description
                 group.save()
                 return JsonResponse({"msg": msg})
         else:

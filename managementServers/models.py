@@ -7,7 +7,7 @@ class Type(models.Model):
     type_name = models.CharField(max_length=200, null=True)
 
     class Meta:
-        db_table = 'Type'
+        db_table = 'type'
 
 
 class Server(models.Model):
@@ -20,4 +20,4 @@ class Server(models.Model):
     type = models.ForeignKey(Type, on_delete=models.CASCADE)
 
     class Meta:
-        db_table = 'Server'
+        db_table = 'server'

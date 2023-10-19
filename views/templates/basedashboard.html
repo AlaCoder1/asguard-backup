@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Dashboard</title>
+    <!-- Include Chart.js from a CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <h1>Dashboard</h1>
+    <!-- Create a canvas element for the chart with smaller dimensions -->
+    <canvas id="chart" width="800" height="600"></canvas>
+
+    <script>
+        const socket = new WebSocket('ws://'+window.location.host+'/ws/data/'); // Replace with your WebSocket URL
+
+        // Initialize empty arrays to store data points
+        const timestamps = [];
+        const cpuPercentages = [];
+        const memoryPercentages = [];
+
+        // Create a chart
+        const ctx = document.getElementById('chart').getContext('2d');
+        const chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: timestamps, // X-axis labels (timestamps)
+                datasets: [
+                    {
+                        label: 'CPU Percentage (%)',
+                        data: cpuPercentages, // Y-axis data for CPU percentage
+                        borderColor: 'rgb(255, 99, 132)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'rgb(255, 99, 132)',
+                        fill: true,
+                    },
+                    {
+                        label: 'Memory Percentage (%)',
+                        data: memoryPercentages, // Y-axis data for memory percentage
+                        borderColor: 'rgb(54, 162, 235)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderWidth: 2,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'rgb(54, 162, 235)',
+                        fill: true,
+                    },
+                ],
+            },
+            options: {
+                responsive: false, // Disable responsiveness
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Timestamp',
+                            font: {
+                                size: 14,
+                            },
+                        },
+                        grid: {
+                            display: false,
+                        },
+                        ticks: {
+                            maxTicksLimit: 5, // Limit X-axis ticks
+                        },
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Percentage (%)',
+                            font: {
+                                size: 14,
+                            },
+                        },
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.1)',
+                        },
+                    },
+                },
+                plugins: {
+                    legend: {
+                        labels: {
+                            font: {
+                                size: 14,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        // Handle WebSocket events
+        socket.onopen = () => {
+            console.log('WebSocket connection opened.');
+        };
+
+        socket.onmessage = (event) => {
+            if (socket.readyState === WebSocket.OPEN) {
+                const data = JSON.parse(event.data);
+                console.log("Received data:", data);
+
+                // Add received data to the arrays
+                timestamps.push(new Date(data.timestamp * 1000).toLocaleTimeString());
+                cpuPercentages.push(data.cpu_percentage.toFixed(2));
+                memoryPercentages.push(data.memory_percentage.toFixed(2));
+
+                // Limit the number of displayed data points (e.g., to the last 5)
+                const maxDataPoints = 10;
+                if (timestamps.length > maxDataPoints) {
+                    timestamps.shift();
+                    cpuPercentages.shift();
+                    memoryPercentages.shift();
+                }
+
+                // Update the chart with new data
+                chart.update();
+            }
+            else {
+                console.log('WebSocket is not in the OPEN state. Unable to send message.');
+            }
+        };
+
+        socket.onclose = () => {
+            console.log('WebSocket connection closed.');
+        };
+    </script>
+</body>
+</html>

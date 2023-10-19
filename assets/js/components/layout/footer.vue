@@ -1,6 +1,6 @@
 <template>
-    <div class="footer-bg">
-        <span class="c-o">DMSsdwan © 2019-2023 Numeryx.</span>
+    <div class="d-flex flex-column footer-bg">
+        Asguard 1.0 © {{ new Date().getFullYear() }} Numeryx.
     </div>
 </template>
 
@@ -13,22 +13,28 @@ export default {
 };
 </script>
 
-<style lang="sass">
-    .c-o {
-        color:#FFFFFF;
-        text-align:center;
-        margin-bottom:0px;
-    }
-    .footer-bg{
-        position: relative;
-        left: 0;
-        bottom: 0;
-        margin-bottom:0%;
-        width: 100%;
-        background-color: #042439;
-        color: white;
-        text-align: center;
-        height: 3%;
-
-    }
+<style>
+.footer-bg {
+    display: flex;
+    /* Use flexbox display */
+    align-items: center;
+    /* Vertically center items */
+    justify-content: center;
+    /* Horizontally center items */
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #193286;
+    color: white;
+    text-align: center;
+    height: 47px;
+    font-family: Nunito;
+    font-size: 18px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    z-index: 1000;
+}
 </style>
+

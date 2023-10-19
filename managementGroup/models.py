@@ -3,11 +3,12 @@ from django.db import models
 # Create your models here.
 class Group(models.Model):
     groupname = models.CharField(max_length=200, null=True,unique=True)
+    description = models.CharField(max_length=200, null=True)
     gid = models.IntegerField(null=True,unique=True)
-    createdBySystem = models.BooleanField(default=False)
+    created_by_system = models.BooleanField(default=False)
     
     class Meta:
-        db_table = 'Group'
+        db_table = 'group'
     
     def __str__(self):
         return self.groupname

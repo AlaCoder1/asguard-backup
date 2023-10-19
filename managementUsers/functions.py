@@ -50,17 +50,37 @@ def username_exists(username):
 
 
 def addUser(username, password):
-    try:
-        return os.system("useradd " + username + " && echo "+username+":"+password + " | chpasswd")
-    except:
-        print(f"Failed to add user.")
-        sys.exit(1)
+#    try:
+        # Create user with home directory
+    result = subprocess.run(['sudo', 'useradd', '-m', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print(result.stdout.decode())
+    if result.stderr:
+        print(f"Error: {result.stderr.decode()}")
+
+    # Set the password for the user
+    proc = subprocess.Popen(['sudo', 'chpasswd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    stdout, stderr = proc.communicate(input=f"{username}:{password}".encode())
+
+    print(stdout.decode())
+    if stderr:
+        print(f"Error: {stderr.decode()}")
+
+    print(f"User {username} created successfully!")
+    return stdout, stderr
+    # except subprocess.CalledProcessError as e:
+    #     print(f"Failed to create user {username}.")
+    #     print(e.output)
 
 # function to delete user
 
 
 def deleteUser(username):
-    return os.system("userdel " + "-r " + username)
+    cmd = "userdel " + "-r " + username
+    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout
+    error = completed_process.stderr
+    return output,error
+    # return os.system("userdel " + "-r " + username)
 
 # functio to change username
 
@@ -104,16 +124,53 @@ def add_user_group(groupname, username):
 
 
 # function to auth
+def addMailSpool(username):
+    cmd=["touch /var/mail/"+username,"chown "+username+":mail /var/mail/"+username,"chmod 660 /var/mail/"+username]
+    for i in cmd:
+        os.system(i)
 
+def changePW_byAdmin(newPassword, username):
+    # run 'passwd' command to change password
+    cmd = f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}"
+    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout.split("\n")
+    error = completed_process.stderr
+    return output,error
 
-def authenticate(username, password):
-    service = 'login'
-    try:
-        authenticated = pam.authenticate(username, password, service)
-        return authenticated
-    except pam.exception as e:
-        print(e)
-        return False
+def changePW(currentPassword, newPassword, username):
+    # Use the subprocess module to run the passwd command
+    process = subprocess.Popen(['sudo','passwd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+    # Provide the current and new passwords
+    process.stdin.write(currentPassword + '\n')
+    process.stdin.write(newPassword + '\n')
+    process.stdin.write(newPassword + '\n')
+
+    # Close the stdin to signal the end of input
+    process.stdin.close()
+
+    # Wait for the command to complete
+    process.wait()
+    stdout, stderr = process.communicate()
+    print({"str from function":stderr})
+    print({"std from function":stdout})
+    return stdout, stderr
+
+def resetPW(username,newPassword):
+    cmd = f"echo '{username}:{newPassword}' | sudo chpasswd"
+    process = subprocess.Popen(
+            cmd,
+            shell=True,  
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True 
+        )
+    stdout, stderr = process.communicate()
+    print(process.returncode)
+    print ( stdout, stderr)
+    if process.returncode == 0:
+        return (stdout, stderr)
+    
 
     # function to get group users
 # def getGroupByUsers(groupname):

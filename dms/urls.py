@@ -15,14 +15,21 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-
+from dashboard import consumers
 from views.views import *
-
+from django.conf.urls import handler404
 
 urlpatterns = [
     # path('admin/', admin.site.urls),
-    path('dashboard/', index_page),
+
     path('', login ),
+    path('dashboard/', index_page),
+    path('userCertifMang/', user_certificate_managment_page),
+    path('interfaces/list-of-interface', interface_page),
+    path('system/user-certificat-management', user_certificate_managment_page),
+    path('firewall/rules', firewall_page),
+    path('settings/', settings_page),
+    path('openvpn/', openvpn_page),
     path('', include('tasks.urls')),
     path('auth/', include('authentification.urls')),
     path('network/', include('network.urls')),
@@ -31,5 +38,19 @@ urlpatterns = [
     path('groups/', include('managementGroup.urls')),
     path('servers/', include('managementServers.urls')),
     path('settings/', include('settings.urls')),
-    path('api/', include('rest_framework.urls'))
+    path('api/', include('rest_framework.urls')),
+    path('openvpn/', include('openvpn.urls')),
+    path('ipsec/', include('ipsec.urls')),
+    path('rules/', include('rules.urls')),
+    path('openvpn/', include('openvpn.urls')),
+    path('gateway/', include('gateway.urls')),
+    path("monitoring/",include("dashboard.urls"))
 ]
+
+# ws/wss url patterns
+websocket_urlpatterns = [
+    # consumer for a particular user
+      path('ws/data/', consumers.DashboardConsumer.as_asgi()),
+]
+
+handler404 = 'views.views.error_404_view'

@@ -1,16 +1,61 @@
 import Vue from 'vue';
 import vuetify from '@/plugins/vuetify';
 import App from '@/pages/home';
+import store from '@/store/index';
+import VueRouter from 'vue-router';
+import router from './routes/router';
+import VueCompositionAPI from '@vue/composition-api'
 
-// any CSS you import will output into a single css file (app.css in this case)
+
+
+
+
+import VueI18n from 'vue-i18n';
+import enJson from './translations/en.json'; 
+import frJson from './translations/fr.json'; 
+
+Vue.use(VueI18n);
+Vue.use(VueRouter);
+Vue.use(VueCompositionAPI)
+
+
+const i18n = new VueI18n({
+  locale: 'en',
+  messages: {
+    en: enJson, 
+    fr: frJson, 
+  },
+});
+
+Vue.use( {
+  i18n,
+  classes: true,
+  fieldsBagName: 'formFields',
+  dictionary: {
+    en: {
+      messages: enJson.messages,
+    },
+    fr: {
+      messages: frJson.messages,
+    },
+  },
+});
+
 new Vue({
+    store,
+    i18n,
     vuetify,
+    router,
     data: {
         tab: '',
+        gateways:null,
+        interfaces: null,
+        
     },
-    beforeMount: function() {
-        console.log(this);
-        this.tab= this.$el.attributes['users'] ? this.$el.attributes['users'].value : '';
+    beforeMount: function () {
+        this.tab = this.$el.attributes['informations'].value;
+        this.gateways = this.$el.attributes['gateways'].value;
+        this.interfaces = this.$el.attributes['interfaces'] ? this.$el.attributes['interfaces'].value : '';
     },
     render: (h) => h(App),
 }).$mount('#app');

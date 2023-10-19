@@ -16,7 +16,7 @@
                                 <div class="device-style">Device</div>
                             </v-row>
                             <ValidationProvider name="Device" rules="required" v-slot="{ errors }">
-                                <v-text-field :error-messages="errors" label="Enter device name" class="ml-3 mt-2"
+                                <v-text-field :error-messages="errors" class="ml-3 mt-2" disabled
                                     v-model="device"></v-text-field>
                             </ValidationProvider>
                         </div>
@@ -27,9 +27,14 @@
                                 font-size: 16px;
                                 font-style: normal;
                                 font-weight: 400;
-                                line-height: normal;">Description</div>
+                                line-height: normal;">Description
+                                    <span style="color: red;">*</span>
+                                </div>
                             </v-row>
-                            <v-text-field label="Enter Description" class="ml-3 mt-2" v-model="description"></v-text-field>
+                            <ValidationProvider name="description" rules="required" v-slot="{ errors }">
+                                <v-text-field :error-messages="errors" class="ml-3 mt-2"
+                                    v-model="description"></v-text-field>
+                            </ValidationProvider>
                         </div>
                         <v-card-title class="title-text">Generic configuration</v-card-title>
                         <v-divider class="ml-3 mb-5"></v-divider>
@@ -53,7 +58,9 @@
                                 </tr>
                                 <tr>
                                     <td>
-                                        <div class="mt-5 mt-3">IPV4 Setup Type</div>
+                                        <div class="mt-5 mt-3">IPV4 Setup Type
+                                            <span style="color: red;">*</span>
+                                        </div>
                                     </td>
                                     <td>
                                         <ValidationProvider name="IPV4 Setup Type" rules="required" v-slot="{ errors }">
@@ -128,7 +135,7 @@
                                         </select>
                                     </td>
                                 </tr>
-                                <tr>
+                                <!-- <tr>
                                     <td><span style="color: #020202;" class="mt-5 inline-input">Dynamic gateway
                                             policy</span></td>
                                     <td>
@@ -138,7 +145,7 @@
                                                 as a gateway.</label>
                                         </div>
                                     </td>
-                                </tr>
+                                </tr> -->
                             </tbody>
                         </table>
                     </v-col>
@@ -150,13 +157,14 @@
                             <table class="ml-3 mt-3">
                                 <tbody>
                                     <tr>
-                                        <td><span style="color: black;" class="inline-input">IPV4 address</span></td>
+                                        <td><span style="color: black;" class="inline-input">IPV4 address</span> <span
+                                                style="color: red;">*</span>
+                                        </td>
                                         <td></td>
                                         <td>
                                             <div style="display: flex">
-                                                <ValidationProvider name="IP address"
-                                                    :rules="{ regex: /^(?:(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/, required: true }"
-                                                    v-slot="{ errors }">
+                                                <ValidationProvider name="IP address" v-slot="{ errors }"
+                                                    :rules="{ regex: /^([0-9]{1,3}\.){3}[0-9]{1,3}$/ }">
                                                     <v-text-field label="Enter IP address" class="ml-3 mt-2 inline-input"
                                                         v-model="value_setup_Ipv4.ip_address4"
                                                         :error-messages="errors"></v-text-field>
@@ -173,7 +181,8 @@
                                         </td>
                                     </tr>
                                     <tr>
-                                        <td><span style="color: black;" class="inline-input">IPV4 gateway</span></td>
+                                        <td><span style="color: black;" class="inline-input">IPV4 gateway</span> <span
+                                                style="color: red;">*</span></td>
                                         <td><v-btn class="ml-3 mt-2 " color="primary" text @click="openModal">
                                                 <i class="fas fa-plus"></i>
                                                 <span class="ml-2">Add</span>
@@ -325,7 +334,7 @@
                             <v-card-title class="title-text">Configuring the DHCP Client</v-card-title>
                             <v-divider class="ml-3"></v-divider>
                             <v-row class="ml-3 mt-3">
-                                <v-tabs v-model="activeTabSetupMode" fixed-tabs background-color="#fff" color="#FFC300" dark>
+                                <v-tabs @change="handleTabChange" fixed-tabs background-color="#fff" color="#FFC300" dark>
                                     <span style="color: #020202; background-color: #fff;height: ;" class="mt-4">
                                         Setup mode</span>
                                     <v-tab v-for="tab in tabs" :key="tab.id" class="ml-2">
@@ -333,8 +342,10 @@
 
                                     </v-tab>
                                     <v-tab-item v-for="tab in tabs" :key="tab.id">
-                                        <BasicConfigDHCPv4 v-if="tab.id == 1" />
-                                        <AdvancedConfigDHCPv4 v-if="tab.id == 2" />
+                                        <BasicConfigDHCPv4 v-if="tab.id == 1" :ipAddress="value_setup_Ipv4.ip_address4"
+                                            :interface="interface" :activeTab="typeDHCP4" />
+                                        <AdvancedConfigDHCPv4 :activeTab="typeDHCP4" :interface="interface"
+                                            :ipAddress="value_setup_Ipv4.ip_address4" v-if="tab.id == 2" />
                                     </v-tab-item>
                                 </v-tabs>
                             </v-row>
@@ -474,7 +485,7 @@
                             </div>
                             <div class="ml-3 mt-3">
                                 <div style="color: black;" class="ml-3 inline-input">IPv6 gateway</div>
-                                <v-btn class="ml-3 mt-2 " color="primary" text @click="openModalIPv6">
+                                <v-btn class="ml-3 mt-2 " color="primary" text>
                                     <v-icon>mdi-plus</v-icon>
                                     <span class="ml-2">Add</span>
                                 </v-btn>
@@ -532,7 +543,9 @@
                 <br />
                 <div class="text-center">
                     <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancel">Cancel</v-btn>
-                    <v-btn type="submit" large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="addNetwork">
+                    <!-- if isFormInvalid is true disable button save -->
+                    <v-btn type="submit" large rounded outlined color="#ffff" class="mr-3 trac-edit"
+                        :disabled="isFormInvalid()">
                         Save
                     </v-btn>
                 </div>
@@ -541,6 +554,10 @@
                     style="width: 20%;" border="top" v-if="showAlert" :style="alertStyle">
                     Configuration saved successfully
                 </v-alert>
+                <v-alert type="success" variant="outlined" elevation="2" class="ml-3" icon="mdi-check-circle-outline"
+                        style="width: 20%;" border="top" v-if="showAlertGateway" :style="alertStyle">
+                        Gateway saved successfully
+                    </v-alert>
                 <br /><br /><br /><br />
                 <v-dialog style="
                         position: fixed;
@@ -585,9 +602,15 @@
                             <v-btn large rounded outlined color="#086eae" class="mr-3 trac-cancel" @click="cancelGateway">
                                 Cancel
                             </v-btn>
-                            <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="addGateway">
+                            <!-- <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit"
+                            :disabled="isFormInvalidGateway()"
+                                @click="addGateway">
                                 Save
-                            </v-btn>
+                            </v-btn> -->
+                            <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit"
+                                    @click="addGateway">
+                                    Save
+                                </v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
@@ -612,16 +635,24 @@ export default {
         BasicConfigDHCPv6
     },
     props: {
-            activeTab: String,
+        activeTab: String,
 
     },
     data() {
         return {
-            activeTabIPV6: 0,
+            activeTabIPV6: "",
             tabs: [
-                { id: 1, label: "Basic" },
+                { id: 1, label: "Base" },
                 { id: 2, label: "Advanced" },
             ],
+            typeDHCP4: "",
+            interface: {
+                ipv4_adress: "",
+                ipv4_netmask: "",
+                rejectLeases: "",
+                hostname: "",
+                overrideMTU: false,
+            },
             tabsIPV6: [
                 { id: 1, label: "Basic" },
                 { id: 2, label: "Advanced" },
@@ -708,6 +739,7 @@ export default {
 
             dynamicGatewayPolicy: false,
             showAlert: false,
+            showAlertGateway: false,
             showModal: false,
             gateway: {
                 gwname: "",
@@ -729,7 +761,6 @@ export default {
             IPV4Config: {},
             allStaticGateways: [],
             mssError: '',
-            activeTabSetupMode: 0,
         };
     },
     computed: {
@@ -744,55 +775,182 @@ export default {
         allStaticGatewaysAddresses() {
             return this.allStaticGateways.map((gateway) => gateway.gwaddress);
         },
+        isIpAddressValid() {
+            const regex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+            return regex.test(this.value_setup_Ipv4.ip_address4);
+        },
+        isGatewayValid() {
+            return this.allStaticGatewaysAddresses.includes(
+                this.value_setup_Ipv4.gateway4.value
+            );
+        },
+        isDeviceValid() {
+            return this.device?.length > 0;
+        },
+        isMacAddressValid() {
+            if (this.addmac?.length > 0) {
+                const regex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
+                return regex.test(this.addmac);
+            }
+            return true;
+        },
+        isMTUValid() {
+            if (this.mtuv?.length > 0) {
+                const mtuValue = parseInt(this.mtuv);
+                return mtuValue >= 1500 && mtuValue <= 9000;
+            }
+            return true;
+        },
+        isMSSValid() {
+            if (this.mssv?.length > 0 && this.mtuv?.length > 0) {
+                const mssValue = parseInt(this.mssv);
+                const mtuValue = parseInt(this.mtuv);
+
+                if (mssValue >= 0 && mssValue <= mtuValue) {
+                    return true;
+                } else {
+                    this.mssError = 'MSS must be between 0 and ' + mtuValue;
+                    return false;
+                }
+            }
+            return true;
+        },
+        isDescriptionValid() {
+            return this.description?.length > 0;
+        },
+        isSetuptypeip4() {
+            return this.setuptypeip4?.length > 0;
+        },
+        netmaskValidationRule() {
+            return this.ipAddressValid ? 'required' : '';
+        },
     },
     methods: {
+        handleTabChange(newTabValue) {
+            this.typeDHCP4 = this.tabs[newTabValue].label;
+        },
+        isFormInvalid() {
+            if (this.setuptypeip4 === 'static') {
+                return (
+                    !this.isIpAddressValid ||
+                    !this.isGatewayValid ||
+                    !this.isDeviceValid ||
+                    !this.isDescriptionValid ||
+                    !this.isMacAddressValid ||
+                    (!this.isMTUValid &&
+                        !this.isMSSValid)
+                );
+            }
+            if (this.setuptypeip4 === 'DHCP') {
+                return (
+                    !this.isDeviceValid ||
+                    !this.isDescriptionValid ||
+                    !this.isMacAddressValid ||
+                    (!this.isMTUValid &&
+                        !this.isMSSValid)
+                );
+            }
+        },
         addNetwork() {
-            const params = {
-                name_interface: this.activeTab,
-                device: this.device,
-                description: this.description,
-                private_aux: this.private_aux,
-                bogon_aux: this.bogon_aux,
-                addmac: this.addmac,
-                mtuv: this.mtuv,
-                mssv: this.mssv,
-                speed_duplex: this.speed_duplex,
-                setuptypeIP4: this.setuptypeip4,
-                value_setup_Ipv4: {
-                    ip_address4: this.value_setup_Ipv4.ip_address4,
-                    netmask4: this.value_setup_Ipv4.netmask4,
-                    gateway4: {
-                        value: this.value_setup_Ipv4.gateway4.value
+            if (this.setuptypeip4 === 'static') {
+                const params = {
+                    name_interface: this.activeTab,
+                    device: this.device,
+                    description: this.description,
+                    private_aux: this.private_aux,
+                    bogon_aux: this.bogon_aux,
+                    addmac: this.addmac,
+                    mtuv: this.mtuv,
+                    mssv: this.mssv,
+                    speed_duplex: this.speed_duplex,
+                    setuptypeIP4: this.setuptypeip4,
+                    value_setup_Ipv4: {
+                        ip_address4: this.value_setup_Ipv4.ip_address4,
+                        netmask4: this.value_setup_Ipv4.netmask4,
+                        gateway4: {
+                            value: this.value_setup_Ipv4.gateway4.value
+                        },
                     },
-                }
-            };
-            function getCookie(name) {
-                let cookieValue = null;
-                if (document.cookie && document.cookie !== '') {
-                    const cookies = document.cookie.split(';');
-                    for (let i = 0; i < cookies.length; i++) {
-                        const cookie = cookies[i].trim();
-                        // Does this cookie string begin with the name we want?
-                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                            break;
+                };
+
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
                         }
                     }
+                    return cookieValue;
                 }
-                return cookieValue;
-            }
-            const csrfToken = getCookie('csrftoken')
-            axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+                const csrfToken = getCookie('csrftoken')
+                axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
 
-            axios.put('/network/conf/' + this.activeTab, params)
-                .then((response) => {
-                    this.showAlert = true;
-                    setTimeout(() => {
-                        this.showAlert = false;
-                    }, 3000);
-                }, (error) => {
-                    console.log(error);
-                });
+                axios.put('/network/conf/' + this.activeTab, params)
+                    .then(() => {
+                        this.showAlert = true;
+                        setTimeout(() => {
+                            this.showAlert = false;
+                        }, 3000);
+                    }, (error) => {
+                        console.log(error);
+                    });
+            }
+            if (this.setuptypeip4 === 'DHCP') {
+                const params = {
+                    name_interface: this.activeTab,
+                    device: this.device,
+                    description: this.description,
+                    private_aux: this.private_aux,
+                    bogon_aux: this.bogon_aux,
+                    addmac: this.addmac,
+                    mtuv: this.mtuv,
+                    mssv: this.mssv,
+                    speed_duplex: this.speed_duplex,
+                    setuptypeIP4: this.setuptypeip4,
+                    value_setup_Ipv4: {
+                        "typeDHCP4": this.typeDHCP4,
+                        alias_add: this.interface.ipv4_adress, // Assuming you want to use ipv4_adress
+                        alias_mask: this.interface.ipv4_netmask, // Assuming you want to use ipv4_netmask
+                        reject: this.interface.rejectLeases,
+                        hostname: this.interface.hostname,
+                    },
+                };
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            // Does this cookie string begin with the name we want?
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+                const csrfToken = getCookie('csrftoken')
+                axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+                axios.put('/network/conf/' + this.activeTab, params)
+                    .then(() => {
+                        this.showAlert = true;
+                        setTimeout(() => {
+                            this.showAlert = false;
+                        }, 3000);
+                    }, (error) => {
+                        console.log(error);
+                    });
+            }
+
+
         },
         cancel() {
             this.$emit("cancel");
@@ -839,6 +997,10 @@ export default {
                             far_aux: false,
                             multiwan_aux: false,
                         }
+                        this.showAlertGateway = true;
+                        setTimeout(() => {
+                            this.showAlertGateway = false;
+                        }, 3000);
                     } else {
                         this.showModal = true;
                     }
@@ -895,14 +1057,7 @@ export default {
                 });
         },
         onSubmit() {
-            this.$refs.form.validate();
-
-            if (this.$refs.form.validate()) {
-                this.$emit("submit");
-            } else {
-                console.log("error submit!!");
-                return false;
-            }
+            this.addNetwork();
         },
         customRequiredMessage(field) {
             return `The ${field} field is required.`;
@@ -938,8 +1093,8 @@ export default {
         this.device = this.IPV4Config.interface.ifname;
         this.description = this.IPV4Config.interface.description;
 
-        this.private_aux = this.IPV4Config.interface.private;
-        this.bogon_aux = this.IPV4Config.interface.bogon;
+        this.private_aux = this.IPV4Config.interface.private_aux;
+        this.bogon_aux = this.IPV4Config.interface.bogon_aux;
 
         this.addmac = this.IPV4Config.genericConfig.addmac;
         this.mtuv = this.IPV4Config.genericConfig.mtuv;
@@ -951,8 +1106,14 @@ export default {
         this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 
         this.name_interface = this.IPV4Config.interface.name_interface;
+        this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw
 
-        this.ipv6SetupType = this.IPV4Config.IPV4Config.typedhcp;
+        this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
+        this.interface.ipv4_adress = this.IPV4Config.IPV4Config.alias_add;
+        this.interface.ipv4_netmask = this.IPV4Config.IPV4Config.alias_mask;
+        this.interface.rejectLeases = this.IPV4Config.IPV4Config.reject;
+        this.interface.hostname = this.IPV4Config.IPV4Config.hostname;
+        // this.interface.overrideMTU = this.IPV4Config.IPV4Config.overrideMTU;
     },
     validations: {
         addmac: {
@@ -988,8 +1149,11 @@ export default {
             },
         },
         ip_address4: {
-            validateIpAddress: function (value) {
-                return this.validateIpAddress(value);
+            ip: function (value) {
+                if (!value) {
+                    return this.customRequiredMessage("IP Address");
+                }
+                return true;
             },
         },
         netmask4: {
@@ -1009,6 +1173,14 @@ export default {
             },
         },
 
+    },
+    watch: {
+        'interface.ipv4_address': function (newVal) {
+            this.ipAddressValid = /^(?:(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$/.test(newVal);
+        },
+        interface(newValue) {
+            console.log('parentValue changed:', newValue);
+        }
     },
 };
 </script>

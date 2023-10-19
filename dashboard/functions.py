@@ -1,8 +1,11 @@
 
+import json
 import subprocess
 from dashboard.models import Services
 from dashboard.serializers import ServiceDataSerializer
 from dms.settings import ASGUARD_VERSION
+from django.core import serializers
+import json
 def run_command(command):
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
     output=""
@@ -62,7 +65,7 @@ def add_service_DB():
             "status_started":status_started,
             "status_install":status_install
         }
-        list_info_services.append(service)
+        list_info_services.append(json.dumps(service))
         if Services.objects.filter(service_name=s).exists():
            update_sevice_DB(s,service)
         else:
@@ -82,7 +85,20 @@ def get_system_infomations():
     cpu_type,error=run_command(cmd_cpu_type)
     cpu_type=' '.join(cpu_type.strip().strip('\n').splitlines())
     ####### data to return
-    list_info_services=add_service_DB()
+    # list_info_services=add_service_DB()
+    info_object=Services.objects.all()
+    infoeDict = serializers.serialize("json", info_object)
+    resRules = json.loads(infoeDict)
+    list_info_services=[]
+    for i in range(len(resRules)):
+        service={
+            "service_name":resRules[i]['fields']['service_name'],
+            "description":resRules[i]['fields']['description'],
+            "status_enabled":resRules[i]['fields']['status_enabled'],
+            "status_started":resRules[i]['fields']['status_started'],
+            "status_install":resRules[i]['fields']['status_install']
+        }
+        list_info_services.append(json.dumps(service))
     context={
         "version_asguard":ASGUARD_VERSION.strip().strip('\n'),
         "system_version":system_version.strip().strip('\n'),
@@ -91,4 +107,4 @@ def get_system_infomations():
         "list_info_services":list_info_services
 
         }
-    return context
+    return json.dumps(context)

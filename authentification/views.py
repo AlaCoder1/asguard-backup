@@ -49,7 +49,7 @@ def authentification(request):
                 ## end code
                 userObject = User.objects.get(username=username)
                 userDict = userObject.__dict__
-                CurrentUser = {"username":userDict['username'],"email":userDict['email']}
+                CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
                 settings.CurrentUserId = userDict['id']
                 return JsonResponse({'message': ' Success Authentification',"currentUser":CurrentUser}, status=status.HTTP_200_OK)
             else:

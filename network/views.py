@@ -1,4 +1,6 @@
 from django.http import JsonResponse
+from dms.settings import get_all_addresses
+
 from network.serializers import *
 from .models import *
 from settings.serializers import *
@@ -31,7 +33,6 @@ def device_nameInterface(name_interface):
 def add_interface(request):
     data = request.data
     serializerIP4Config = InterfaceSerializer(data=data)
-    print(serializerIP4Config.is_valid())
     if (serializerIP4Config.is_valid()):
         serializerIP4Config.save()
     return JsonResponse({"msg:": "interface added successfully!!!!!"})
@@ -144,12 +145,13 @@ def conf(request,name_interface):
                         data["reject"]=reject
                         data["hostname"]=hostname
                         #call function to convert mask format to bits
+                        alias_mask_converted=None
                         if alias_mask is not None:
-                            alias_mask=convert_to_subnet_mask(alias_mask)
+                            alias_mask_converted=convert_to_subnet_mask(alias_mask)
                         ####
                         if typeDHCP4.lower()=="base" :
                             #contenu de dhclient.conf dhcp Base
-                            configContenu=return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask)
+                            configContenu=return_config_base_IPV4(ifname,reject,hostname,alias_add,alias_mask_converted)
                             jsonIPV4={
                     "name_interface":nameInterface,"ifname":ifname,
                     "typeip4":setuptypeIP4,"typedhcp":typeDHCP4,
@@ -239,7 +241,7 @@ def conf(request,name_interface):
                 cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
 {}
 EOF""".format('\n'.join(output_service))
-                if run_all_commands(commandes_final,setuptypeIP4,5) is True:
+                if run_all_commands(commandes_final,setuptypeIP4,10) is True:
                     output, error=run_command(cmd_asguard)
                     if  (error==""):
                         if setuptypeIP4.lower()=="dhcp":
@@ -284,14 +286,15 @@ EOF""".format('\n'.join(output_service))
                         aux_gen=update_DB(id_interface,data,GenericConfig,GenericConfigSerializer)
                         #update changes in DB interface config
                         aux_inter=update_interface_table(name_interface,data,InterfaceSerializer)
-                        # print(aux_ipv4 and aux_gen and aux_inter)
                         if aux_ipv4 is True:
                             if aux_gen is True:
                                 if aux_inter is True:
                                     ## add server address to nginx file
                                     # file_path_ngnix="/etc/nginx/sites-available/asguard.conf"
                                     # modify_server_name(file_path_ngnix, ip_address4)   
-                                    ######                                 
+                                    ###### 
+                                    ##appel function to update CSRF_TRUSTED_ORIGINS
+                                    CSRF_TRUSTED_ORIGINS=get_all_addresses()  
                                     msg="Your interface {} was configured Successfully!!".format(name_interface)
                                     status=200
                                 else:
@@ -307,7 +310,7 @@ EOF""".format('\n'.join(output_service))
                         msg=error
                         status=400        
                 else:
-                    msg=run_all_commands(commandes_final,setuptypeIP4,5)
+                    msg=run_all_commands(commandes_final,setuptypeIP4,10)
                     status=400
             else:
                 msg="Failed to configure Network Service not found!!"
@@ -363,12 +366,10 @@ def GetInformationsByInterface(request,name_interface):
         interface['name_interface']=interfaceObject.name_interface
         interface['description']=interfaceObject.description
         info['interface']=interface
-        print({"interfaceObject":interfaceObject})
         genericConfigObject = GenericConfig.objects.filter(interface_id=interfaceObject.id)
         genericConfigDict = serializers.serialize("json", genericConfigObject)
         res = json.loads(genericConfigDict)
         genericConfigList = list(genericConfigDict)
-        print({"genericConfigList":res})
         if res != []:
             id = res[0]['pk']
             res[0]['fields']['id'] = id
@@ -390,5 +391,4 @@ def GetInformationsByInterface(request,name_interface):
             info['IPV4Config']=resultat[0]['fields']
         else:
             info['IPV4Config']=[]
-        # print({"resultat":resultat[0]['fields']})
     return JsonResponse(info)

@@ -2,6 +2,9 @@
     <v-app class="ml-3 mt-3 mr-3">
         <table class="ml-3 mt-3 mr-5">
             <tbody>
+                <tr style="width: 100%;">
+                    <v-text-field label="IP Adress " class="ml-3 mt-1" disabled v-model="ipAddress"></v-text-field>
+                </tr>
                 <tr>
                     <td><span style="color: black;" class="">IPv4 Adress Alias</span></td>
                     <td>
@@ -33,14 +36,17 @@
                 <tr>
                     <td><span style="color: black;" class="">Hostname</span></td>
                     <td>
-                        <ValidationProvider name="hostname" :rules="{ regex: / ^[a-zA-Z0-9-]{1,63}$'] / }"
+                        <ValidationProvider name="hostname"
+                            :rules="{ regex: /^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*$/ }"
                             v-slot="{ errors }">
                             <v-text-field label="Enter Hostname" class="ml-3 mt-1" v-model="interface.hostname"
                                 :error-messages="errors"></v-text-field>
                         </ValidationProvider>
+
                     </td>
                 </tr>
-                <tr>
+                <!-- todo not yet developped -->
+                <!-- <tr>
                     <td><span style="color: black;" class="">Override MTU</span></td>
                     <td>
                         <ValidationProvider name="overrideMTU" rules="required" v-slot="{ errors }">
@@ -48,39 +54,41 @@
                             <label>MTU</label>
                         </ValidationProvider>
                     </td>
-                </tr>
+                </tr> -->
             </tbody>
         </table>
     </v-app>
 </template>
 <script>
 export default {
+    name: "AdvancedConfigDHCPv4",
+    props: {
+        interface: {
+            type: Object,
+            required: true
+        },
+        ipAddress: {
+            type: String,
+        },
+    },
     data() {
         return {
             netmasks: [
-                " /32",
-                " /31",
-                " /30",
-                " /29",
-                " /28",
-                " /27",
-                " /26",
-                " /25",
-                " /24",
-                " /23",
-                " /22",
-                " /21",
-                " /20"
+                "32",
+                "31",
+                "30",
+                "29",
+                "28",
+                "27",
+                "26",
+                "25",
+                "24",
+                "23",
+                "22",
+                "21",
+                "20"
             ],
-            interface: {
-                ipv4_adress: "",
-                ipv4_netmask: "",
-                rejectLeases: "",
-                hostname: "",
-                overrideMTU: false,
-                mtu: ""
-            },
-            ipAddressValid: false, // Track the validity of the IP address
+            ipAddressValid: false,
         };
     },
     beforeMount() {

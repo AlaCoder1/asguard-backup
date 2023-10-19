@@ -35,7 +35,6 @@ export default {
   },
    methods: {
      handleTabChange(newTabValue) {
-       console.log("newTabValue "+ this.tabs[newTabValue].name_interface);   
        this.activeTabValue = this.tabs[newTabValue].name_interface;
     },
   },

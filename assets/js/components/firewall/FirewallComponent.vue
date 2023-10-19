@@ -4,9 +4,6 @@
             <h4>Inbound rules</h4>
             <v-divider></v-divider>
             <v-alert type="success" class="d-flex mt-3" v-if="alert">
-                <span class="justify-end">
-                    <i class="fas fa-check-circle "></i>
-                </span>
                 <span class="c-o ml-3">
                     <strong>Success!</strong> Rules saved successfully.
                 </span>
@@ -14,6 +11,18 @@
                     <i class="fas fa-times justify-end cursor" @click="handleRemove"></i>
                 </span>
             </v-alert>
+            <!-- add delete dialog to confirm delete with two buttons to delete and cancel  -->
+            <v-dialog v-model="deleteDialog" max-width="500px">
+                <v-card>
+                    <v-card-title class="headline">Delete Confirmation</v-card-title>
+                    <v-card-text>Are you sure you want to delete this rule from the Firewall?</v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                         <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
+                          <v-btn color="blue darken-1" text @click="confirmDelete">Delete</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
             <v-card class="mt-3">
                 <v-card-title>
                     <v-row>
@@ -36,6 +45,7 @@
                         :editType="editType" style="width: 100%;" @cell-value-changed="onCellValueChanged"
                         @row-value-changed="onRowValueChanged" @selection-changed="onSelectionChanged"
                         @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
+                        @firstDataRendered="onFirstDataRendered"
                         @row-drag-end="onRowDragEnd" :pagination="true" :paginationPageSize="10" :rowSelection="'multiple'">
                     </ag-grid-vue>
                 </v-card-text>
@@ -121,11 +131,13 @@
 <script>
 import { AgGridVue } from 'ag-grid-vue';
 import axios from 'axios';
+import CustomRichSelect from '../firewall/MultiSelectEditor.vue';
 
 export default {
     name: 'FirewallComponent',
     components: {
         AgGridVue,
+        CustomRichSelect,
     },
     props: {
         id: String,
@@ -145,9 +157,9 @@ export default {
                     headerCheckboxSelection: true,
                     checkboxSelection: true,
                     editable: false,
-                    width: 100,
-                    minWidth: 100,
-                    maxWidth: 100,
+                    width: 50,
+                    minWidth: 50,
+                    maxWidth: 50,
                 },
                 {
                     field: 'policy',
@@ -164,28 +176,48 @@ export default {
                     editable: params => params.node.data.isRowSelected,
                     headerName: 'Rule Description',
                 },
-                {
-                    field: 'protocol',
-                    headerName: 'Protocol',
-                    cellEditor: 'agSelectCellEditor',
-                    cellEditorParams: {
-                        values: ['tcp', 'udp', 'icmp request', 'icmp reply'],
-                    },
+             {
+                    field: "protocol",
+                    headerName: "Protocol",
                     editable: params => params.node.data.isRowSelected,
+                    // cellRenderer: (params) => params.data.protocol,
+                    // cellEditor: 'multiSelectEditor',
+                    // cellEditorParams: {
+                    //     values: availableProtocols,
+                    //     cellRenderer: (params) => params.value.toUpperCase(),
+                 // }
+                    cellEditor: 'CustomRichSelect',
+                    cellEditorParams: {
+                        values: ['tcp', 'udp', 'icmp type echo-request', 'icmp type echo-reply'],
+                        cellEditor: 'CustomRichSelect',
+                        cellHeight: 20,
+                        formatValue: value => value.toUpperCase(),
+                        cellRenderer: (params) => params.value.toUpperCase(),
+                        searchDebounceDelay: 200,
+                        // Add a custom event listener to the cell editor
+                        onProtocolsSelected: (event) => {
+                            // Update the cell value with the selected values
+                            params.setValue(event);
+                        },
+
+                    },
                 },
+
                 {
                     field: 'saddr',
                     headerName: 'Src Address',
                     editable: params => params.node.data.isRowSelected,
                     valueSetter: (params) => {
                         const value = params.newValue;
-                        if (this.isValidIPAddress(value)) {
-                            params.data.saddr = value;
-                            return true; // Value is valid, update the cell
-                        } else {
-                            // Value is invalid, display a validation message
-                            alert('Please enter a valid source IP address');
-                            return false; // Value is not updated
+                        if (value?.length > 0) {
+                            if (this.isValidIPAddress(value)) {
+                                params.data.saddr = value;
+                                return true; // Value is valid, update the cell
+                            } else {
+                                // Value is invalid, display a validation message
+                                alert('Please enter a valid source IP address');
+                                return false; // Value is not updated
+                            }
                         }
                     },
                 },
@@ -209,13 +241,15 @@ export default {
                     editable: params => params.node.data.isRowSelected,
                     valueSetter: (params) => {
                         const value = params.newValue;
-                        if (this.isValidIPAddress(value)) {
-                            params.data.daddr = value;
-                            return true; // Value is valid, update the cell
-                        } else {
-                            // Value is invalid, display a validation message without using alert
-                            alert('Please enter a valid destination IP address');
-                            return false; // Value is not updated
+                        if (value !== null) {
+                            if (this.isValidIPAddress(value)) {
+                                params.data.daddr = value;
+                                return true; // Value is valid, update the cell
+                            } else {
+                                // Value is invalid, display a validation message without using alert
+                                alert('Please enter a valid destination IP address');
+                                return false; // Value is not updated
+                            }
                         }
                     },
                 },
@@ -271,12 +305,12 @@ export default {
                     headerName: 'Rule Description',
                 },
                 {
+                    width: 100,
+                    minWidth: 100,
+                    maxWidth: 100,
                     field: 'protocol',
                     headerName: 'Protocol',
-                    cellEditor: 'agSelectCellEditor',
-                    cellEditorParams: {
-                        values: ['tcp', 'udp', 'icmp request', 'icmp reply'],
-                    },
+                    cellEditor: 'multiSelectEditor',
                     editable: params => params.node.data.isRowSelected,
                 },
                 {
@@ -285,13 +319,15 @@ export default {
                     editable: params => params.node.data.isRowSelected,
                     valueSetter: (params) => {
                         const value = params.newValue;
-                        if (this.isValidIPAddress(value)) {
-                            params.data.saddr = value;
-                            return true; // Value is valid, update the cell
-                        } else {
-                            // Value is invalid, display a validation message
-                            alert('Please enter a valid source IP address');
-                            return false; // Value is not updated
+                        if (value?.length > 0) {
+                            if (this.isValidIPAddress(value)) {
+                                params.data.saddr = value;
+                                return true; // Value is valid, update the cell
+                            } else {
+                                // Value is invalid, display a validation message
+                                alert('Please enter a valid source IP address');
+                                return false; // Value is not updated
+                            }
                         }
                     },
                 },
@@ -315,13 +351,15 @@ export default {
                     editable: params => params.node.data.isRowSelected,
                     valueSetter: (params) => {
                         const value = params.newValue;
-                        if (this.isValidIPAddress(value)) {
-                            params.data.daddr = value;
-                            return true; // Value is valid, update the cell
-                        } else {
-                            // Value is invalid, display a validation message without using alert
-                            alert('Please enter a valid destination IP address');
-                            return false; // Value is not updated
+                        if (value !== null) {
+                            if (this.isValidIPAddress(value)) {
+                                params.data.daddr = value;
+                                return true; // Value is valid, update the cell
+                            } else {
+                                // Value is invalid, display a validation message without using alert
+                                alert('Please enter a valid destination IP address');
+                                return false; // Value is not updated
+                            }
                         }
                     },
                 },
@@ -369,13 +407,18 @@ export default {
             filterTextOutbound: null,
             rowDataOutbound: [],
             isSaveDisabled: true,
-            isSaveDisabledOutbound: true,
+            isSaveDisabledOutbound: true, 
+             deleteDialog: false,
+            rowDataToDelete: null,
         };
     },
     created() {
         this.editType = 'fullRow';
     },
     methods: {
+         onFirstDataRendered(params) {
+            params.api.sizeColumnsToFit();
+        },
         onCellValueChanged(event) {
             const row = event.data;
             row.isModified = true;
@@ -397,6 +440,7 @@ export default {
             if (this.rowData && this.rowData.length > 0) {
                 this.gridApi.forEachNode(node => node.setSelected(node.rowIndex === 0));
             }
+            
         },
         onGridReadyOutbound(params) {
             this.gridApiOutbound = params.api;
@@ -434,7 +478,8 @@ export default {
                 eGui.innerHTML = `
         <button 
           class="action-button delete"
-          data-action="delete">
+          data-action="delete"
+          >
             <i class="fas fa-times" style="color: #086eae;"></i>
         </button>
         `;
@@ -501,48 +546,7 @@ export default {
         handleAction(action, rowData) {
             switch (action) {
                 case 'delete':
-                    if (rowData.id) {
-                        function getCookie(name) {
-                            let cookieValue = null;
-                            if (document.cookie && document.cookie !== '') {
-                                const cookies = document.cookie.split(';');
-                                for (let i = 0; i < cookies.length; i++) {
-                                    const cookie = cookies[i].trim();
-                                    // Does this cookie string begin with the name we want?
-                                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                                        break;
-                                    }
-                                }
-                            }
-                            return cookieValue;
-                        }
-                        const csrfToken = getCookie('csrftoken')
-                        axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-                        axios.delete('/rules/deleteRule/' + rowData.id)
-                            .then(response => {
-                                // Access response data
-                                const responseData = response.data;
-                                if (responseData.msg === "delete rule Successfully!!") {
-                                    // Delete the row from the grid
-                                    const index = this.rowData.indexOf(rowData);
-                                    if (index > -1) {
-                                        this.rowData.splice(index, 1);
-                                    }
-                                } else {
-                                    console.error('Failed to delete row');
-                                }
-                            })
-                            .catch(error => {
-                                console.error(error);
-                            });
-
-                    } else {
-                        const index = this.rowData.indexOf(rowData);
-                        if (index > -1) {
-                            this.rowData.splice(index, 1);
-                        }
-                    }
+                    this.deleteDialog = true;
                     break;
                 default:
                     break;
@@ -604,7 +608,7 @@ export default {
                 isModified: false,
                 policy: 'accept',
                 rule_description: '',
-                protocol: 'tcp',
+                protocol: [],
                 saddr: '',
                 sport: '',
                 daddr: '',
@@ -633,7 +637,7 @@ export default {
                 isModified: false,
                 policy: 'accept',
                 rule_description: '',
-                protocol: 'tcp',
+                protocol: [],
                 saddr: '',
                 sport: '',
                 daddr: '',
@@ -703,10 +707,6 @@ export default {
             const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$/;
             return ipRegex.test(value);
         },
-        // isValidPortNumber(value) {
-        //     const portRegex = /^\d{1,5}$/;
-        //     return portRegex.test(value);
-        // },
         isValidRowData(rowData) {
             const requiredColumns = ['rule_description'];
             for (const column of requiredColumns) {
@@ -725,7 +725,7 @@ export default {
                     }
                 }
             }
-            return true; // All required columns have data
+            return true; // All required columns have data 
         },
         cancel() {
             this.rowData = this.rules[this.activeTab]['inbound'].filter(row => row.id);
@@ -798,8 +798,8 @@ export default {
                     console.error('Error:', error);
                 }
             } else {
-                console.error('Data is not valid');
-                alert('Data is not valid. Please check required fields.');
+                // disable button and show toast 
+                this.isSaveDisabled = false
             }
         },
         async saveOutbound() {
@@ -856,7 +856,6 @@ export default {
                 }
             } else {
                 console.error('Data is not valid');
-                this.$toast.error('Data is not valid. Please check required fields.');
             }
         },
         handleRemove() {
@@ -865,6 +864,71 @@ export default {
         handleRemoveOutbound() {
             this.alertOutbound = false;
         },
+
+        showDeleteModal() {
+            this.deleteDialog = true;
+        },
+        handleAction(action, rowData) {
+            switch (action) {
+                case 'delete':
+                    this.rowDataToDelete = rowData;
+                    this.deleteDialog = true;
+                    break;
+                default:
+                    break;
+            }
+        },
+        cancelDelete() {
+            this.rowDataToDelete = null;
+            this.deleteDialog = false;
+        },
+        confirmDelete() {
+            if (this.rowDataToDelete) {
+                const rowData = this.rowDataToDelete;
+                if (rowData.id) {
+                                            function getCookie(name) {
+                        let cookieValue = null;
+                        if (document.cookie && document.cookie !== '') {
+                            const cookies = document.cookie.split(';');
+                            for (let i = 0; i < cookies.length; i++) {
+                                const cookie = cookies[i].trim();
+                                // Does this cookie string begin with the name we want?
+                                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                    break;
+                                }
+                            }
+                        }
+                        return cookieValue;
+                    }
+                    const csrfToken = getCookie('csrftoken')
+                    axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+                    axios
+                        .delete('/rules/deleteRule/' + rowData.id)
+                        .then((response) => {
+                            const responseData = response.data;
+                            if (responseData.msg === "delete rule Successfully!!") {
+                                const index = this.rowData.indexOf(rowData);
+                                if (index > -1) {
+                                    this.rowData.splice(index, 1);
+                                }
+                            } else {
+                                console.error('Failed to delete row');
+                            }
+                        })
+                        .catch((error) => {
+                            console.error(error);
+                        });
+                } else {
+                    const index = this.rowData.indexOf(rowData);
+                    if (index > -1) {
+                        this.rowData.splice(index, 1);
+                    }
+                }
+                this.rowDataToDelete = null;
+                this.deleteDialog = false;
+            }
+        },                
     },
     mounted() {
         this.rules = this.$root.$data.rules;
@@ -882,6 +946,7 @@ export default {
             handler: function (val, oldVal) {
                 if (val) {
                     this.rowData = this.rules[this.activeTab]['inbound'];
+                    // Assuming you have an array named 'inbound' in your data
                     this.rowDataOutbound = this.rules[this.activeTab]['outbound'];
                 } else {
                     this.rowData = [];

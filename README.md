@@ -46,5 +46,7 @@ yarn install
 
 yarn build / yarn watch
 
+//initialiser les services 
 
+python manage.py init_services
 

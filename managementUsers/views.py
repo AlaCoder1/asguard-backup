@@ -77,10 +77,10 @@ def getUser(request, id):
 def createUser(request):
     msg = ''
     if (request.method == 'POST'):
-        if has_subscription():
-            if is_valid():
-                # test index of feature by plan e.g 1,2 index of management users in our BD
-                if if_subscribed([1]):
+        # if has_subscription():
+        #     if is_valid():
+        #         # test index of feature by plan e.g 1,2 index of management users in our BD
+        #         if if_subscribed([1]):
                     # parse the incoming information
                     data = request.data
                     username = data['username']
@@ -89,12 +89,12 @@ def createUser(request):
                     print({"organisation": organisation.id})
                     data['organisation'] = organisation.id
                     if (validInput(username)):
-                        if (validInput(password)):
+                        if (validPassword(password)):
                             # Execute the command on the remote machine
                             stdout, stderr = addUser(
                                 username, password)
                             print({"stdout":stdout.decode('utf-8')})
-                            print({"stderr":stderr.decode('utf-8')})
+                            print({"stder":stderr.decode('utf-8')})
                             
                             # convert the stderr stream to a string
                             if stderr.decode('utf-8') == "":
@@ -107,6 +107,7 @@ def createUser(request):
 
                                 if ('group' in data):
                                     groups = data['group']
+                                    print({"groups":groups})
                                     for i in range(0, len(groups)):
                                         add_user_group(
                                             getGroupNameById(groups[i]), username)
@@ -160,12 +161,12 @@ def createUser(request):
                     else:
                         msg = "invalid username"
                         return JsonResponse({"msg": msg}, status=201)
-                else:
-                    return JsonResponse({"msg": "your plan dosn't satisfy your requerement"}, status=400)
-            else:
-                return JsonResponse({"msg": "your subscription has expired"}, status=400)
-        else:
-            return JsonResponse({"msg": "your havn't a subscription"}, status=400)
+        #         else:
+        #             return JsonResponse({"msg": "your plan dosn't satisfy your requerement"}, status=400)
+        #     else:
+        #         return JsonResponse({"msg": "your subscription has expired"}, status=400)
+        # else:
+        #     return JsonResponse({"msg": "your havn't a subscription"}, status=400)
 
 
 # API to delete group
@@ -282,13 +283,15 @@ def changePasswordByAdmin(request, id):
             # run 'passwd' command to change password
             stdout, stderr = changePW_byAdmin(
                 new_password, userObject.username)
+            print({"stderr":stderr})
+            print({"stdout":stdout})
             # check if password change was successful
-            if stdout.channel.recv_exit_status() == 0:
+            if stderr == "":
                 userObject.password = make_password(new_password)
                 userObject.save()
                 print("Password change successful")
             else:
-                print(f"Error changing password: {stderr.read().decode()}")
+                print(f"Error changing password: {stderr}")
         return JsonResponse(serializer.data, status=201)
 
 
@@ -298,41 +301,41 @@ def changePasswordByAdmin(request, id):
 def changePassword(request, id):
     msg = ""
     if (request.method == 'PUT'):
-        userObject = User.objects.get(id=id)
-        if userObject.is_verified == True:
-            return JsonResponse({"msg": "your account is verified"})
-        else:
+            userObject = User.objects.get(id=id)
+        # if userObject.is_verified == True:
+        #     return JsonResponse({"msg": "your account is verified"})
+        # else:
             data = request.data
-            current_password = data['current_password']
+            # current_password = data['current_password']
             new_password = data['new_password']
             confirm_password = data['confirm_password']
-            if check_password(current_password, userObject.password):
-                print('Passwords match!')
-                if new_password != confirm_password:
-                    print("Passwords do not match. Please try again.")
-                    msg = "Passwords do not match. Please try again."
-                else:
-                    # run 'passwd' command to change password
-                    stdout, stderr = changePW(
-                        current_password, new_password, userObject.username)
-                    print({"stdout":stdout})
-                    print({"stderr":stderr})
-                    # check if password change was successful
-                    if stderr == "":
-                        userObject.password = make_password(new_password)
-                        userObject.is_verified = True
-                        userObject.save()
-                        print("Password change successful")
-                        msg = "Password change successful"
-                    else:
-                        print(
-                            f"Error changing password: {stderr}")
-                        msg = f"Error changing password: {stderr}"
+            # if check_password(current_password, userObject.password):
+            #     print('Passwords match!')
+            if new_password != confirm_password:
+                print("Passwords do not match. Please try again.")
+                msg = "Passwords do not match. Please try again."
             else:
-                print('Passwords do not match')
-                msg = 'Passwords do not match'
+                stdout, stderr = resetPW (userObject.username,new_password )
+                print({"str":stderr})
+                print({"std":stdout})
+                # check if password change was successful
+                if stderr == "":
+                    userObject.password = make_password(new_password)
+                    userObject.is_verified = True
+                    userObject.save()
+                    print("Password change successful")
+                    msg = "Password change successful"
+                    status=200
 
-            return JsonResponse({"msg": msg})
+                else:
+                    msg = f"Error changing password"
+                    status=400
+
+            # else:
+            #     print('Passwords do not match')
+            #     msg = 'Passwords do not match'
+            #     status=400
+            return JsonResponse({"msg": msg},status=status)
 
 
 # API de create permission

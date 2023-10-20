@@ -18,8 +18,8 @@
                     <v-card-text>Are you sure you want to delete this rule from the Firewall?</v-card-text>
                     <v-card-actions>
                         <v-spacer></v-spacer>
-                         <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
-                          <v-btn color="blue darken-1" text @click="confirmDelete">Delete</v-btn>
+                        <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
+                        <v-btn color="blue darken-1" text @click="confirmDelete">Delete</v-btn>
                     </v-card-actions>
                 </v-card>
             </v-dialog>
@@ -45,8 +45,8 @@
                         :editType="editType" style="width: 100%;" @cell-value-changed="onCellValueChanged"
                         @row-value-changed="onRowValueChanged" @selection-changed="onSelectionChanged"
                         @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
-                        @firstDataRendered="onFirstDataRendered"
-                        @row-drag-end="onRowDragEnd" :pagination="true" :paginationPageSize="10" :rowSelection="'multiple'">
+                        @firstDataRendered="onFirstDataRendered" @row-drag-end="onRowDragEnd" :pagination="true"
+                        :paginationPageSize="10" :rowSelection="'multiple'">
                     </ag-grid-vue>
                 </v-card-text>
             </v-card>
@@ -176,16 +176,10 @@ export default {
                     editable: params => params.node.data.isRowSelected,
                     headerName: 'Rule Description',
                 },
-             {
+                {
                     field: "protocol",
                     headerName: "Protocol",
                     editable: params => params.node.data.isRowSelected,
-                    // cellRenderer: (params) => params.data.protocol,
-                    // cellEditor: 'multiSelectEditor',
-                    // cellEditorParams: {
-                    //     values: availableProtocols,
-                    //     cellRenderer: (params) => params.value.toUpperCase(),
-                 // }
                     cellEditor: 'CustomRichSelect',
                     cellEditorParams: {
                         values: ['tcp', 'udp', 'icmp type echo-request', 'icmp type echo-reply'],
@@ -199,7 +193,6 @@ export default {
                             // Update the cell value with the selected values
                             params.setValue(event);
                         },
-
                     },
                 },
 
@@ -305,13 +298,23 @@ export default {
                     headerName: 'Rule Description',
                 },
                 {
-                    width: 100,
-                    minWidth: 100,
-                    maxWidth: 100,
                     field: 'protocol',
                     headerName: 'Protocol',
-                    cellEditor: 'multiSelectEditor',
                     editable: params => params.node.data.isRowSelected,
+                    cellEditor: 'CustomRichSelect',
+                    cellEditorParams: {
+                        values: ['tcp', 'udp', 'icmp type echo-request', 'icmp type echo-reply'],
+                        cellEditor: 'CustomRichSelect',
+                        cellHeight: 20,
+                        formatValue: value => value.toUpperCase(),
+                        cellRenderer: (params) => params.value.toUpperCase(),
+                        searchDebounceDelay: 200,
+                        // Add a custom event listener to the cell editor
+                        onProtocolsSelected: (event) => {
+                            // Update the cell value with the selected values
+                            params.setValue(event);
+                        },
+                    },
                 },
                 {
                     field: 'saddr',
@@ -407,8 +410,8 @@ export default {
             filterTextOutbound: null,
             rowDataOutbound: [],
             isSaveDisabled: true,
-            isSaveDisabledOutbound: true, 
-             deleteDialog: false,
+            isSaveDisabledOutbound: true,
+            deleteDialog: false,
             rowDataToDelete: null,
         };
     },
@@ -416,7 +419,7 @@ export default {
         this.editType = 'fullRow';
     },
     methods: {
-         onFirstDataRendered(params) {
+        onFirstDataRendered(params) {
             params.api.sizeColumnsToFit();
         },
         onCellValueChanged(event) {
@@ -440,7 +443,7 @@ export default {
             if (this.rowData && this.rowData.length > 0) {
                 this.gridApi.forEachNode(node => node.setSelected(node.rowIndex === 0));
             }
-            
+
         },
         onGridReadyOutbound(params) {
             this.gridApiOutbound = params.api;
@@ -749,13 +752,19 @@ export default {
 
             const isValid = this.validateGridData(this.rowData);
             if (isValid) {
-                const modifiedRows = this.rowData.filter(row => row.isModified);
+                let modifiedRows = this.rowData.filter(row => row.isModified);
                 console.log('Modified rows:', modifiedRows);
+                modifiedRows?.map(row => {
+                    if (row.protocol.includes("icmp type echo-request") || row.protocol.includes("icmp type echo-reply")) {
+                        const newRowProtocol = row.protocol.filter(item => item !== "icmp type echo-request" && item !== "icmp type echo-reply");
+                        row.protocol = newRowProtocol;
+                    }
+                });
                 const dataToSend = modifiedRows.map(row => {
                     return {
                         policy: row.policy,
                         rule_description: row.rule_description,
-                        protocol: row.protocol === 'icmp request' ? 'icmp type echo-request' : row.protocol === 'icmp reply' ? 'icmp type echo-reply' : row.protocol,
+                        protocol: row.protocol,
                         saddr: row.saddr,
                         daddr: row.daddr,
                         sport: row.sport,
@@ -806,8 +815,14 @@ export default {
 
             const isValid = this.validateGridData(this.rowDataOutbound);
             if (isValid) {
-                const modifiedRows = this.rowDataOutbound.filter(row => row.isModified);
+                let modifiedRows = this.rowDataOutbound.filter(row => row.isModified);
                 console.log('Modified rows:', modifiedRows);
+                modifiedRows?.map(row => {
+                    if (row.protocol.includes("icmp type echo-request") || row.protocol.includes("icmp type echo-reply")) {
+                        const newRowProtocol = row.protocol.filter(item => item !== "icmp type echo-request" && item !== "icmp type echo-reply");
+                        row.protocol = newRowProtocol;
+                    }
+                });
                 const dataToSend = modifiedRows.map(row => {
                     return {
                         policy: row.policy,
@@ -886,7 +901,7 @@ export default {
             if (this.rowDataToDelete) {
                 const rowData = this.rowDataToDelete;
                 if (rowData.id) {
-                                            function getCookie(name) {
+                    function getCookie(name) {
                         let cookieValue = null;
                         if (document.cookie && document.cookie !== '') {
                             const cookies = document.cookie.split(';');
@@ -928,7 +943,7 @@ export default {
                 this.rowDataToDelete = null;
                 this.deleteDialog = false;
             }
-        },                
+        },
     },
     mounted() {
         this.rules = this.$root.$data.rules;

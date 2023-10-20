@@ -8,6 +8,17 @@
     </v-btn>
     <Modal_Group :editRow="rowEdit" :mode="modalMode" :isOpen="isModalOpen" @closeModal="closeModal" :initialData="modalData"
       @updateModalData="handleModalUpdate" />
+      <v-dialog v-model="deleteDialog" max-width="500px">
+                <v-card>
+                    <v-card-title class="headline">Delete Confirmation</v-card-title>
+                    <v-card-text>Are you sure you want to delete this group?</v-card-text>
+                    <v-card-actions>
+                        <v-spacer></v-spacer>
+                         <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
+                          <v-btn color="blue darken-1" text @click="confirmDelete">Delete</v-btn>
+                    </v-card-actions>
+                </v-card>
+            </v-dialog>
   </div>
 </template>
 <script>
@@ -29,6 +40,8 @@ export default {
   },
   data() {
     return {
+      deletedRow:null,
+      deleteDialog:false,
       rowEdit: {},
       modalMode: '',
       isModalOpen: false,
@@ -61,6 +74,30 @@ export default {
   },
 
   methods: {
+    cancelDelete() {
+            this.deleteDialog = false;
+        },
+        confirmDelete(){
+          const csrfToken = this.getCookie('csrftoken')
+      axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+
+      console.log("token :" + csrfToken)
+      console.log("group id :" + this.deletedRow.id)
+
+      axios.delete(`/groups/deleteGroup/${this.deletedRow.id}`)
+
+        .then((response) => {
+          // Handle the successful response
+          this.deleteDialog = false;
+          location.reload()
+          console.log('Resource deleted:', response.data);
+        })
+        .catch((error) => {
+          // Handle any errors that occur during the request
+          console.error('Error deleting resource:', error);
+        });
+
+        },
     openModal() {
       this.modalData = {
       };
@@ -69,6 +106,7 @@ export default {
     },
     closeModal() {
       this.isModalOpen = false;
+      location.reload()
     },
 
     handleModalUpdate(formData) {
@@ -194,14 +232,16 @@ export default {
           }
         case 'delete':
           console.log('Delete clicked for row:', rowData);
+          this.deleteDialog = true;
+          this.deletedRow = rowData
 
-          const index = this.rowData.findIndex(item => item.id === rowData.id);
+          // const index = this.rowData.findIndex(item => item.id === rowData.id);
 
-          this.delete(rowData.id, () => {
-            if (index !== -1) {
-              this.rowData.splice(index, 1);
-            }
-          })
+          // this.delete(rowData.id, () => {
+          //   if (index !== -1) {
+          //     this.rowData.splice(index, 1);
+          //   }
+          // })
 
           break;
         case 'update':

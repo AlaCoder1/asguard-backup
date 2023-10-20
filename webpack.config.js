@@ -2,7 +2,7 @@ const path = require('path');
 
 const Encore = require('@symfony/webpack-encore');
 // Vuetify-loader
-const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
+// const VuetifyLoaderPlugin = require('vuetify-loader/lib/plugin');
 
 // Manually configure the runtime environment if not already configured yet by the "encore" command.
 // It's useful when you use tools that rely on webpack.config.js file.
@@ -27,15 +27,17 @@ Encore
     .addEntry('app', './assets/js/app.js')
     .addEntry('home', './assets/js/home.js')
     .addEntry('login', './assets/js/login.js')
-    .addEntry('ifName', './assets/js/ifName.js')
-    .addEntry('firewall', './assets/js/firewall.js')
-    .addEntry('openvpn', './assets/js/openvpn.js')
-    .addEntry('settings', './assets/js/settings.js')
-    .addEntry('UserAndCertificateManagement', './assets/js/userManagment.js')
-    .addEntry('404', './assets/js/404.js')
+    // .addEntry('ifName', './assets/js/ifName.js')
+    // .addEntry('firewall', './assets/js/firewall.js')
+    // .addEntry('openvpn', './assets/js/openvpn.js')
+    // .addEntry('settings', './assets/js/settings.js')
+    // .addEntry('UserAndCertificateManagement', './assets/js/userManagment.js')
+    // .addEntry('404', './assets/js/404.js')
   
     // Enable Vue loader
-    .enableVueLoader()
+    .enableVueLoader(() => {},{
+        version : 3
+    })
 
     // This is our alias to the root vue components dir
     .addAliases({
@@ -76,7 +78,7 @@ Encore
         config.corejs = 3;
     })
 
-    .addPlugin(new VuetifyLoaderPlugin())
+    // .addPlugin(new VuetifyLoaderPlugin())
     // enables Sass/SCSS support
     .enableSassLoader();
 

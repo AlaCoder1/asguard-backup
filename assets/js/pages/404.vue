@@ -76,6 +76,11 @@ export default {
   computed: {
     ...mapState("auth", ["user"]),
   },
+  mounted(){
+    // let test = this.$el.attributes['users'] ? this.$el.attributes['users'].value : '';
+    console.log('test',document.getElementById('app'))
+    console.log('this',this)
+  },
   methods: {
     navigateUrl() {
       if (!this.user) {

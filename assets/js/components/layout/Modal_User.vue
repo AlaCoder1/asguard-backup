@@ -198,10 +198,10 @@ export default {
               requiredIf(() => state.ModalMode == "create")
             ),
             isValidPassword: helpers.withMessage(
-              `There must be at least 8 characters, including at least one uppercase, one number, and one special character.`,
+              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
 
               helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{8,}$/
+                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
               )
             ),
           },
@@ -217,10 +217,10 @@ export default {
             ),
 
             isValidPassword: helpers.withMessage(
-              `There must be at least 8 characters, including at least one uppercase, one number, and one special character.`,
+              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
 
               helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{8,}$/
+                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
               )
             ),
           },
@@ -338,11 +338,13 @@ export default {
         if (this.mode == "create") {
           axios.post("/users/createUser", payload).then(
             (response) => {
+              console.log('res',response)
               if (response.status == "201") {
                 this.textAlert = "user Created Successfully";
                 setTimeout(() => {
+
                   this.closeModal();
-                  location.reload();
+                  // location.reload();
                 }, 2000);
               } else {
                 console.log("error");
@@ -368,11 +370,12 @@ export default {
               is_active: this.state.formData.deactivateUser,
             })
             .then((response) => {
+              console.log('resUpdate',response)
               if (response.status == 200) {
                 this.textAlert = "User updated succesfully";
                 setTimeout(() => {
                   this.closeModal();
-                  location.reload();
+                  // location.reload();
                 }, 2000);
               } else {
                 console.log("error");

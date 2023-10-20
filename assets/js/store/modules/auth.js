@@ -4,6 +4,7 @@ const state = {
     user: null,
     isAuthenticated: false,
     csrfToken: null,
+    messageStore:null
 };
 
 const mutations = {
@@ -15,6 +16,10 @@ const mutations = {
     SET_LOGGED_OUT(state) {
         state.loggedIn = false;
         state.user = null;
+    },
+    SET_MESSAGE(state,data){
+        state.messageStore = data
+
     },
 
     SET_CSRF_TOKEN(state, token) {
@@ -28,10 +33,27 @@ const actions = {
             const response = await axios.post('/auth/authentification', user);
             console.log(response.data);
             commit('SET_USER', response.data);
+     
+                let message = 'You are successfully logged in'
+                commit('SET_MESSAGE',  message);
+                setTimeout(()=>{
+                    let message =null
+                    commit('SET_MESSAGE',  message);
+                },1000)
+          
             window.location.href = '/dashboard';
 
         } catch (error) {
-            console.error('Error during login:', error);
+        
+                let message = 'Invalid credentiels'
+                commit('SET_MESSAGE',  message);
+                setTimeout(()=>{
+                    let message = null
+                    commit('SET_MESSAGE',  message);
+                },1000)
+                console.error('Error during login:', error);
+            
+            
         }
     },
 

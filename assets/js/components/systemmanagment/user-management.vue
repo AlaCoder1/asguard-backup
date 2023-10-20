@@ -34,7 +34,19 @@
       @updateModalData="handleModalUpdate"
       :groups="DataList.groups"
     />
+    <v-dialog v-model="deleteDialog" max-width="500px">
+    <v-card>
+      <v-card-title class="headline">Delete Confirmation</v-card-title>
+      <v-card-text>Are you sure you want to delete this user?</v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
+        <v-btn color="blue darken-1" text @click="confirmDelete">Delete</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
   </div>
+
 </template>
 
 <script>
@@ -52,7 +64,7 @@ export default {
   components: {
     AgGridVue,
     Modal_User,
-    Modal_Password
+    Modal_Password,
   },
   props: {
     DataList: {
@@ -62,9 +74,11 @@ export default {
   },
   data() {
     return {
+      deletedRow: null,
+      deleteDialog: false,
       rowEdit: {},
       isModalOpen: false,
-      isModalPasswordOpen:false,
+      isModalPasswordOpen: false,
       selectedRowIndex: null,
       modalData: {},
       modalMode: "",
@@ -91,6 +105,24 @@ export default {
     },
   },
   methods: {
+    cancelDelete() {
+      this.deleteDialog = false;
+    },
+    confirmDelete() {
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios
+        .delete(`/users/deleteUser/${this.deletedRow.id}`)
+        .then((response) => {
+          console.log("Resource deleted:", response.data);
+          location.reload();
+        })
+        .catch((error) => {
+          // Handle any errors that occur during the request
+          console.error("Error deleting resource:", error);
+        });
+    },
     actionCellRenderer(params) {
       let eGui = document.createElement("div");
 
@@ -160,27 +192,14 @@ export default {
           break;
         }
         case "change":
-       
-          this.isModalPasswordOpen =true
+          this.isModalPasswordOpen = true;
           this.modalMode = "Reset Password";
           this.rowEdit = rowData;
           break;
         case "delete":
           console.log("Delete clicked for row:", rowData);
-
-          const csrfToken = this.getCookie("csrftoken");
-          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-          axios
-            .delete(`/users/deleteUser/${rowData.id}`)
-            .then((response) => {
-              console.log("Resource deleted:", response.data);
-              location.reload();
-            })
-            .catch((error) => {
-              // Handle any errors that occur during the request
-              console.error("Error deleting resource:", error);
-            });
+          this.deleteDialog = true;
+          this.deletedRow = rowData;
 
           // const index = this.rowData.findIndex(
           //   (item) => item.id === rowData.id
@@ -211,6 +230,7 @@ export default {
     },
     closeModal() {
       this.isModalOpen = false;
+      // location.reload()
     },
     closeModalPassword() {
       this.isModalPasswordOpen = false;

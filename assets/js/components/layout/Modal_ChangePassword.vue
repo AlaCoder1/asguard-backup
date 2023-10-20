@@ -104,10 +104,10 @@ export default {
               required
             ),
             isValidPassword: helpers.withMessage(
-              `There must be at least 8 characters, including at least one uppercase, one number, and one special character.`,
+              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
 
               helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{8,}$/
+                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
               )
             ),
           },
@@ -123,10 +123,10 @@ export default {
             ),
 
             isValidPassword: helpers.withMessage(
-              `There must be at least 8 characters, including at least one uppercase, one number, and one special character.`,
+              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
 
               helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{8,}$/
+                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
               )
             ),
           },

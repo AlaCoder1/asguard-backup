@@ -37,6 +37,7 @@ urlpatterns = [
     path('users/', include('managementUsers.urls')),
     path('groups/', include('managementGroup.urls')),
     path('servers/', include('managementServers.urls')),
+    path('certificates/', include('managementCertificates.urls')),
     path('settings/', include('settings.urls')),
     path('api/', include('rest_framework.urls')),
     path('openvpn/', include('openvpn.urls')),

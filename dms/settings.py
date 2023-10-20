@@ -28,7 +28,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'mmj@uz23n!%6u4#$b1&%f(7l*rr(9qx%am)wyk@s4ugeuam52m'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 ##function to run command 
@@ -74,6 +74,7 @@ INSTALLED_APPS = [
     'managementUsers',
     'managementGroup',
     "managementServers",
+    "managementCertificates",
     "settings",
     "authentification",
     "subscription",

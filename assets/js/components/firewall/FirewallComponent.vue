@@ -305,13 +305,23 @@ export default {
                     headerName: 'Rule Description',
                 },
                 {
-                    width: 100,
-                    minWidth: 100,
-                    maxWidth: 100,
                     field: 'protocol',
                     headerName: 'Protocol',
-                    cellEditor: 'multiSelectEditor',
                     editable: params => params.node.data.isRowSelected,
+                    cellEditor: 'CustomRichSelect',
+                    cellEditorParams: {
+                        values: ['tcp', 'udp', 'icmp type echo-request', 'icmp type echo-reply'],
+                        cellEditor: 'CustomRichSelect',
+                        cellHeight: 20,
+                        formatValue: value => value.toUpperCase(),
+                        cellRenderer: (params) => params.value.toUpperCase(),
+                        searchDebounceDelay: 200,
+                        // Add a custom event listener to the cell editor
+                        onProtocolsSelected: (event) => {
+                            // Update the cell value with the selected values
+                            params.setValue(event);
+                        },
+                    },
                 },
                 {
                     field: 'saddr',

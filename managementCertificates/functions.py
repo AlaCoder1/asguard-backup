@@ -39,7 +39,7 @@ def initialize_ca(current_dir, ca_name='test'):
     """This function initialize the openvpn and easyrsa in system"""
 
     # Initialize a fresh PKI and creating a CA
-    list_of_commands_with_arguments = [{'command': ['sudo', 'easyrsa', 'init-pki'], 'arguments': 'yes\nyes\n'},
+    list_of_commands_with_arguments = [{'command': ['sudo', 'easyrsa', 'init-pki'], 'arguments': 'yes\n'},
                                        {'command': ['sudo', 'easyrsa', 'build-ca', 'nopass'], 'arguments': f'{ca_name}\n'}]
     execute_list_commands_with_arguments(list_of_commands_with_arguments)
 
@@ -55,7 +55,7 @@ def initialize_ca(current_dir, ca_name='test'):
 def get_certifcate_serial_number(cert_path):
     """Get the serial number of certificate"""
     command = ['openssl', 'x509', '-in', f'{cert_path}', '-noout', '-serial']
-    process = execute_command_with_arguments(command)
+    process = execute_command_without_arguments(command)
     serial = process.stdout
     serial = serial.replace('serial=', '')
     return serial
@@ -68,12 +68,12 @@ def revoke_list_certs(current_dir, ca_name, list_revoked_cert):
         if revoked_cert.certificate_type == 'server':
             command =['cp', f'/etc/openvpn/certificates_{revoked_cert.name}/server.crt', 
                       f'{current_dir}/pki/issued/server.crt']
-            execute_command_with_arguments(command)
+            execute_command_without_arguments(command)
             execute_command_with_arguments(['sudo', 'easyrsa', 'revoke', 'server'], 'yes\n')
         elif revoked_cert.certificate_type == 'client':
             command = ['cp', f'/etc/openvpn/client/certificates_{revoked_cert.name}/{revoked_cert.name}.crt',
                        f'{current_dir}/pki/issued/{revoked_cert.name}.crt']
-            execute_command_with_arguments(command)
+            execute_command_without_arguments(command)
             execute_command_with_arguments(['sudo', 'easyrsa', 'revoke', f'{revoked_cert.name}'], 'yes\n')
 
     # Generate crl file containing all the revoked certificates

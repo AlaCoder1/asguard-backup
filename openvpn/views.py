@@ -188,6 +188,10 @@ def createServerOpenvpn(request):
                 return JsonResponse({"msg": "Error in server configuration"}, status=401)
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in creating openvpn server"}, status=401)
+        except Interface.DoesNotExist:
+            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+        except IP4Config.DoesNotExist:
+            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
 
 
 @api_view(['Delete'])
@@ -205,6 +209,8 @@ def deleteServerOpenvpn(request, id):
             return JsonResponse({"msg": f"delete {server.name} succesfully"})
     except ProtectedError:
         return JsonResponse({"msg": "You have to delete Clients related to this server"})
+    except ServerOpenvpn.DoesNotExist:
+        return JsonResponse({"msg": "This Server does not exist"}, status=401)
 
 
 @api_view(['PUT'])
@@ -213,86 +219,97 @@ def deleteServerOpenvpn(request, id):
 def updateServerOpenVPN(request, id):
     """Updating a server from system and database"""
     if (request.method == 'PUT'):
-        # parse the incoming information
-        data = request.data
-        server = ServerOpenvpn.objects.get(id=id)
-        server.name = data.get('name', '')
-        server.description = data.get('description', '')
-        server_mode = data.get('server_mode', '')
-        server.server_mode = server_mode.get('mode', '')
-        server.proto = data.get('protocol', '')
-        server.dev = data.get('device_mode', '')
-        server.interface = Interface.objects.get(id=data.get('interface', ''))
-        server.port = data.get('local_port', '')
-        tls_auth = data.get('tls_auth', '')
-        server.tls = f'/etc/openvpn/server/static_{server.name}.key'
-        ca_name = data.get('ca_name', '')
-        server_cert_name = data.get('server_cert', '')
-        server.ca = f'/etc/certificates_{ca_name}/ca.crt'
-        server.cert = f'/etc/openvpn/certificates_{server_cert_name}/server.crt'
-        server.key = f'/etc/openvpn/certificates_{server_cert_name}/server.key'
-        server.dh = data.get('dh_params_length', '')
-        server.cipher = data.get('encryption_algorithm', '')
-        server.auth = data.get('auth_digest_algorithm', '')
-        server.hardware_crypto = data.get('hardware_crypto', '')
-        server.ipv4_tunnel_network = data.get('ipv4_tunnel_network', '')
-        server.gateway = data.get('gateway', '')
-        bridge = data.get('bridge', '')
-        server.ipv4_local_network = data.get('ipv4_local_network', '')
-        server.ipv4_remote_network = data.get('ipv4_remote_network', '')
-        server.compression = data.get('compression', '')
-        server.type_of_service = data.get('type_of_service', '')
-        server.duplicate_connections = data.get('duplicate_connections', '')
-        server.ipv6 = data.get('ipv6', '')
-        server.inter_clients = data.get('inter_clients', '')
-        address_pool = data.get('address_pool', '')
-        server.dynamic_ip = data.get('dynamic_ip', '')
-        server.topology = data.get('topology', '')
-        dns_default_domain = data.get('dns_default_domain', '')
-        server.force_dns_cache_update = data.get('force_dns_cache_update', '')
-        dns_servers = data.get('dns_servers', '')
-        ntp_servers = data.get('ntp_servers', '')
-        server.verb = data.get('verbosity_level', '')
-        interface_address = IP4Config.objects.get(interface_id=server.interface)
-        data["interface_address"] = interface_address.ip_address
+        try:
+            # parse the incoming information
+            data = request.data
+            server = ServerOpenvpn.objects.get(id=id)
+            server.name = data.get('name', '')
+            server.description = data.get('description', '')
+            server_mode = data.get('server_mode', '')
+            server.server_mode = server_mode.get('mode', '')
+            server.proto = data.get('protocol', '')
+            server.dev = data.get('device_mode', '')
+            server.interface = Interface.objects.get(id=data.get('interface', ''))
+            server.port = data.get('local_port', '')
+            tls_auth = data.get('tls_auth', '')
+            server.tls = f'/etc/openvpn/server/static_{server.name}.key'
+            ca_name = data.get('ca_name', '')
+            server_cert_name = data.get('server_cert', '')
+            server.ca = f'/etc/certificates_{ca_name}/ca.crt'
+            server.cert = f'/etc/openvpn/certificates_{server_cert_name}/server.crt'
+            server.key = f'/etc/openvpn/certificates_{server_cert_name}/server.key'
+            dh = data.get('dh_params_length', '')
+            if server.dh == dh:
+                dh = False
+            else:
+                server.dh = dh
+            server.cipher = data.get('encryption_algorithm', '')
+            server.auth = data.get('auth_digest_algorithm', '')
+            server.hardware_crypto = data.get('hardware_crypto', '')
+            server.ipv4_tunnel_network = data.get('ipv4_tunnel_network', '')
+            server.gateway = data.get('gateway', '')
+            bridge = data.get('bridge', '')
+            server.ipv4_local_network = data.get('ipv4_local_network', '')
+            server.ipv4_remote_network = data.get('ipv4_remote_network', '')
+            server.compression = data.get('compression', '')
+            server.type_of_service = data.get('type_of_service', '')
+            server.duplicate_connections = data.get('duplicate_connections', '')
+            server.ipv6 = data.get('ipv6', '')
+            server.inter_clients = data.get('inter_clients', '')
+            address_pool = data.get('address_pool', '')
+            server.dynamic_ip = data.get('dynamic_ip', '')
+            server.topology = data.get('topology', '')
+            dns_default_domain = data.get('dns_default_domain', '')
+            server.force_dns_cache_update = data.get('force_dns_cache_update', '')
+            dns_servers = data.get('dns_servers', '')
+            ntp_servers = data.get('ntp_servers', '')
+            server.verb = data.get('verbosity_level', '')
+            interface_address = IP4Config.objects.get(interface_id=server.interface)
+            data["interface_address"] = interface_address.ip_address
 
-        if bridge.get('bridge_select', ''):
-            server.bridge_interface = bridge.get('bridge_interface', '')
-            server.bridge_start_dhcp = bridge.get('bridge_start_dhcp', '')
-            server.bridge_end_dhcp = bridge.get('bridge_end_dhcp', '')
-            bridge_interface_address = IP4Config.objects.get(interface_id=server.bridge_interface)
-            data["bridge_interface_address"] = f'{bridge_interface_address.ip_address}/{bridge_interface_address.netmask}'
+            if bridge.get('bridge_select', ''):
+                server.bridge_interface = bridge.get('bridge_interface', '')
+                server.bridge_start_dhcp = bridge.get('bridge_start_dhcp', '')
+                server.bridge_end_dhcp = bridge.get('bridge_end_dhcp', '')
+                bridge_interface_address = IP4Config.objects.get(interface_id=server.bridge_interface)
+                data["bridge_interface_address"] = f'{bridge_interface_address.ip_address}/{bridge_interface_address.netmask}'
 
-        if address_pool.get('address_pool_select'):
-            server.address_pool_start = address_pool.get('address_pool_start')
-            server.address_pool_end = address_pool.get('address_pool_end')
+            if address_pool.get('address_pool_select'):
+                server.address_pool_start = address_pool.get('address_pool_start')
+                server.address_pool_end = address_pool.get('address_pool_end')
 
-        if dns_default_domain.get('dns_default_domain_select', ''):
-            server.dns_default_domain_server = dns_default_domain.get('dns_default_domain_server', '')
+            if dns_default_domain.get('dns_default_domain_select', ''):
+                server.dns_default_domain_server = dns_default_domain.get('dns_default_domain_server', '')
 
-        if dns_servers.get('dns_servers_select', ''):
-            server.dns_server1 = data.get('dns_server1', '')
-            server.dns_server2 = data.get('dns_server2', '')
+            if dns_servers.get('dns_servers_select', ''):
+                server.dns_server1 = data.get('dns_server1', '')
+                server.dns_server2 = data.get('dns_server2', '')
 
-        if ntp_servers.get('ntp_servers_select', ''):
-            server.ntp_server1 = data.get('ntp_server1', '')
-            server.ntp_server2 = data.get('ntp_server2', '')
+            if ntp_servers.get('ntp_servers_select', ''):
+                server.ntp_server1 = data.get('ntp_server1', '')
+                server.ntp_server2 = data.get('ntp_server2', '')
 
-        data['server_mode'] = server.server_mode
-        server_serializer = ServerOpenvpnSerializer(server, data=data)
-        if server_serializer.is_valid():
+            data['server_mode'] = server.server_mode
+            server_serializer = ServerOpenvpnSerializer(server, data=data)
+            if server_serializer.is_valid():
 
-            # Update the server config
-            server_conf = json_to_str_server(data)
-        
-            #updating the server in system
-            update_server_openvpn(server_name=server.name, dh_length=server.dh, tls_auth=tls_auth, server_conf=server_conf)
+                # Update the server config
+                server_conf = json_to_str_server(data)
+            
+                #updating the server in system
+                update_server_openvpn(server_name=server.name, dh_length=dh, tls_auth=tls_auth, server_conf=server_conf)
 
-            #updating the server in database
-            server_serializer.save()
-            return JsonResponse({"msg": f"updating {server.name} succesfully"}, status=201)
-        else:
-            return JsonResponse({"msg": f"Error in updating server\n{server_serializer.errors}"}, status=401)
+                #updating the server in database
+                server_serializer.save()
+                return JsonResponse({"msg": f"updating {server.name} succesfully"}, status=201)
+            else:
+                return JsonResponse({"msg": f"Error in updating server\n{server_serializer.errors}"}, status=401)
+        except ServerOpenvpn.DoesNotExist:
+            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+        except Interface.DoesNotExist:
+            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+        except IP4Config.DoesNotExist:
+            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
 
 
 @api_view(['POST'])
@@ -325,6 +342,8 @@ def startServerOpenvpn(request, id):
         
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in starting openvpn server"}, status=401)
+        except ServerOpenvpn.DoesNotExist:
+            return JsonResponse({"msg": "This Server does not exist"}, status=401)
 
 
 @api_view(['PUT'])
@@ -347,6 +366,10 @@ def restartServerOpenvpn(request, id):
         
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in starting openvpn server"}, status=401)
+        except ServerOpenvpn.DoesNotExist:
+            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+        except Interface.DoesNotExist:
+            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
 
 
 @api_view(['DELETE'])
@@ -370,6 +393,10 @@ def stopServerOpenvpn(request, id):
         
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in stoping openvpn server"}, status=401)
+        except ServerOpenvpn.DoesNotExist:
+            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+        except Interface.DoesNotExist:
+            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
 
 
 ########################################
@@ -523,6 +550,12 @@ def createClientOpenvpn(request):
                 return JsonResponse({"msg": f"Error in client configuration\n{client_serializer.errors}"}, status=401)
         except CommandExecutionError:
             return JsonResponse({"msg": f"Error in creating client for openvpn server"}, status=401)
+        except ServerOpenvpn.DoesNotExist:
+            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+        except Interface.DoesNotExist:
+            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+        except IP4Config.DoesNotExist:
+            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
 
 
 @api_view(['Delete'])
@@ -531,14 +564,19 @@ def createClientOpenvpn(request):
 def deleteClientOpenvpn(request, id):
     """Deleting a client from system and then from database"""
     if (request.method == 'DELETE'):
-        client = ClientOpenvpn.objects.get(id=id)
+        try:
 
-        # Delete the client from system
-        delete_client_openvpn(client.name)
+            client = ClientOpenvpn.objects.get(id=id)
 
-        # Delete the client from database
-        client.delete()
-        return JsonResponse({"msg": f"delete {client.name} succesfully"})
+            # Delete the client from system
+            delete_client_openvpn(client.name)
+
+            # Delete the client from database
+            client.delete()
+            return JsonResponse({"msg": f"delete {client.name} succesfully"})
+        
+        except ClientOpenvpn.DoesNotExist:
+            return JsonResponse({"msg": "This Client does not exist"}, status=401)
 
 
 @api_view(['PUT'])
@@ -547,78 +585,89 @@ def deleteClientOpenvpn(request, id):
 def updateClientOpenvpn(request, id):
     """Updating a client from system and database"""
     if (request.method == 'PUT'):
-        client = ClientOpenvpn.objects.get(id=id)
-        data = request.data
-        server_name = data.get('server_name', '')
-        server = ServerOpenvpn.objects.get(name=server_name)
-        client.server_openvpn = server
-        server_host = IP4Config.objects.get(id=Interface.objects.get(id=server.interface).pk).ip_address
-        server_port = server.port
-        # server_host = data.get('server_host', '')
-        # server_port = data.get('server_port', '')
-        client.name = data.get('name', '')
-        client.description = data.get('description', '')
-        server_mode = data.get('server_mode', '')
-        client.server_mode = server_mode.get('mode', '')
-        client.proto = data.get('protocol', '')
-        client.dev = data.get('device_mode', '')
-        client.interface = data.get('interface', '')
-        client.resolv_retry = data.get('retry_dns', '')
-        client.port = data.get('local_port', '')
-        client.auth = data.get('auth_digest_algorithm', '')
-        client.cipher = data.get('encryption_algorithm', '')
-        client.verb = data.get('verbosity_level', '')
-        client.proxy_host = data.get('proxy_host', '')
-        client.proxy_port = data.get('proxy_port', '')
-        proxy_authentication = data.get('proxy_authentication', '')
-        client.proxy_authentication_option = proxy_authentication.get('option', '')
-        client.port = data.get('local_port', '')
-        client.username = data.get('username', '')
-        client.password = data.get('password', '')
-        client.renegotiate_time = data.get('renegotiate_time', '')
-        tls_auth = data.get('tls_auth', '')
-        ca_name = data.get('ca_name', '')
-        client_cert_name = data.get('client_cert', '')
-        client.tls = f'/etc/openvpn/client/static_{client.name}.key'
-        client.ca = f'/etc/certificates_{ca_name}/ca.crt'
-        client.cert = f'/etc/openvpn/client/certificates_{client_cert_name}/{client_cert_name}.crt'
-        client.key = f'/etc/openvpn/client/certificates_{client_cert_name}/{client_cert_name}.key'
-        client.cipher = data.get('encryption_algorithm', '')
-        client.auth = data.get('auth_digest_algorithm', '')
-        client.hardware_crypto = data.get('hardware_crypto', '')
-        client.ipv4_tunnel_network = data.get('ipv4_tunnel_network', '')
-        client.ipv4_remote_network = data.get('ipv4_remote_network', '')
-        client.limit_outgoing_bandwidth = data.get('limit_outgoing_bandwidth', '')
-        client.compression = data.get('compression', '')
-        client.type_of_service = data.get('type_of_service', '')
-        client.ipv6 = data.get('ipv6', '')
-        client.pull_routes = data.get('pull_routes', '')
-        client.add_remove_routes = data.get('add_remove_routes', '')
-        client.verb = data.get('verbosity_level', '')
-        interface_address = IP4Config.objects.get(interface_id=client.interface)
+        try:
 
-        if client.proxy_authentication_option == 'basic':
-            client.proxy_auth_username = proxy_authentication.get('username', '')
-            client.proxy_auth_password = proxy_authentication.get('password', '')
+            client = ClientOpenvpn.objects.get(id=id)
+            data = request.data
+            server_name = data.get('server_name', '')
+            server = ServerOpenvpn.objects.get(name=server_name)
+            client.server_openvpn = server
+            server_host = IP4Config.objects.get(id=Interface.objects.get(id=server.interface).pk).ip_address
+            server_port = server.port
+            # server_host = data.get('server_host', '')
+            # server_port = data.get('server_port', '')
+            client.name = data.get('name', '')
+            client.description = data.get('description', '')
+            server_mode = data.get('server_mode', '')
+            client.server_mode = server_mode.get('mode', '')
+            client.proto = data.get('protocol', '')
+            client.dev = data.get('device_mode', '')
+            client.interface = data.get('interface', '')
+            client.resolv_retry = data.get('retry_dns', '')
+            client.port = data.get('local_port', '')
+            client.auth = data.get('auth_digest_algorithm', '')
+            client.cipher = data.get('encryption_algorithm', '')
+            client.verb = data.get('verbosity_level', '')
+            client.proxy_host = data.get('proxy_host', '')
+            client.proxy_port = data.get('proxy_port', '')
+            proxy_authentication = data.get('proxy_authentication', '')
+            client.proxy_authentication_option = proxy_authentication.get('option', '')
+            client.port = data.get('local_port', '')
+            client.username = data.get('username', '')
+            client.password = data.get('password', '')
+            client.renegotiate_time = data.get('renegotiate_time', '')
+            tls_auth = data.get('tls_auth', '')
+            ca_name = data.get('ca_name', '')
+            client_cert_name = data.get('client_cert', '')
+            client.tls = f'/etc/openvpn/client/static_{client.name}.key'
+            client.ca = f'/etc/certificates_{ca_name}/ca.crt'
+            client.cert = f'/etc/openvpn/client/certificates_{client_cert_name}/{client_cert_name}.crt'
+            client.key = f'/etc/openvpn/client/certificates_{client_cert_name}/{client_cert_name}.key'
+            client.cipher = data.get('encryption_algorithm', '')
+            client.auth = data.get('auth_digest_algorithm', '')
+            client.hardware_crypto = data.get('hardware_crypto', '')
+            client.ipv4_tunnel_network = data.get('ipv4_tunnel_network', '')
+            client.ipv4_remote_network = data.get('ipv4_remote_network', '')
+            client.limit_outgoing_bandwidth = data.get('limit_outgoing_bandwidth', '')
+            client.compression = data.get('compression', '')
+            client.type_of_service = data.get('type_of_service', '')
+            client.ipv6 = data.get('ipv6', '')
+            client.pull_routes = data.get('pull_routes', '')
+            client.add_remove_routes = data.get('add_remove_routes', '')
+            client.verb = data.get('verbosity_level', '')
+            interface_address = IP4Config.objects.get(interface_id=client.interface)
+
+            if client.proxy_authentication_option == 'basic':
+                client.proxy_auth_username = proxy_authentication.get('username', '')
+                client.proxy_auth_password = proxy_authentication.get('password', '')
+                
+            data["interface_address"] = interface_address.ip_address
+            data["server_host"] = server_host
+            data["server_port"] = server_port
+            # client_conf = json_to_str_client(data)
+            data['server_openvpn'] = server.pk
+            data['server_mode'] = client.server_mode
+
+            client_serializer = ClientOpenvpnSerializer(client, data=data)
+            if client_serializer.is_valid():
+
+                # Update the client config
+                client_conf = json_to_str_client(data)
+
+                # Updating the client in system
+                install_client_openvpn(client_name=client.name, client_conf=client_conf, tls_auth=tls_auth)
+
+                # Updating the client in database
+                client_serializer.save()
+                return JsonResponse({"msg": f"updating {client.name} succesfully"}, status=201)
+            else:
+                return JsonResponse({"msg": f"{client_serializer.errors}"}, status=401)
             
-        data["interface_address"] = interface_address.ip_address
-        data["server_host"] = server_host
-        data["server_port"] = server_port
-        # client_conf = json_to_str_client(data)
-        data['server_openvpn'] = server.pk
-        data['server_mode'] = client.server_mode
-
-        client_serializer = ClientOpenvpnSerializer(client, data=data)
-        if client_serializer.is_valid():
-
-            # Update the client config
-            client_conf = json_to_str_client(data)
-
-            # Updating the client in system
-            install_client_openvpn(client_name=client.name, client_conf=client_conf, tls_auth=tls_auth)
-
-            # Updating the client in database
-            client_serializer.save()
-            return JsonResponse({"msg": f"updating {client.name} succesfully"}, status=201)
-        else:
-            return JsonResponse({"msg": f"{client_serializer.errors}"}, status=401)
+        except ClientOpenvpn.DoesNotExist:
+            return JsonResponse({"msg": "This Client does not exist"}, status=401)
+        except ServerOpenvpn.DoesNotExist:
+            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+        except Interface.DoesNotExist:
+            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+        except IP4Config.DoesNotExist:
+            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)

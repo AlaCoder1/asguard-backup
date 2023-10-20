@@ -1,10 +1,10 @@
 <template>
     <div class="custom-multi-select">
-        <div class="selected-protocols" style="max-height: 39px; overflow-y: auto; overflow-x: hidden;">
+        <div class="selected-protocols" style="max-height: 39px; overflow-y: auto; overflow-x: hidden; max-width: 186px; min-width: 186px;">
             <v-select multiple chips class="custom-select" no-border hide-details item-text="text" item-value="value"
                 v-model="selectedValues" :items="protocols" :deletable-chips="true" :close-on-select="true"
                 :return-object="true" :menu-props="{ maxHeight: '300px' }" :rules="[v => !!v || 'Item is required']"
-                @change="onSelectChange"></v-select>
+                @popup:show="isPopup" @change="onSelectChange"></v-select>
         </div>
     </div>
 </template>
@@ -18,8 +18,7 @@ export default {
             protocols: [], // You can keep the data property name as "protocols"
         }
     },
-    computed: {
-    },
+    computed: {},
     mounted() {
         this.protocols = this.params.values;
         if (this.params.data.protocol) {
@@ -55,25 +54,34 @@ export default {
             this.params.node.setDataValue("protocol", this.selectedValues);
         },
     },
-    watch: {
+   watch: {
         selectedValues(newValues) {
+            const hasEchoRequest = newValues.includes("icmp type echo-request");
+            const hasEchoReply = newValues.includes("icmp type echo-reply");
+
             if (newValues.length >= 2) {
+                // When both "icmp type echo-request" and "icmp type echo-reply" are selected, set the value to "icmp"
+                if (hasEchoRequest && hasEchoReply) {
+                    this.protocols = ["tcp", "udp", "icmp"] // You can keep the data property name as "protocols"
+                }
+                // Restore the available protocols
                 this.protocols = ["tcp", "udp", "icmp"];
-            } else if (newValues.includes("icmp type echo-request") && newValues.includes("icmp type echo-reply")) {
-                this.selectedValues = ["icmp"];
             } else {
-                this.protocols =this.params.values;
+                // Restore the available protocols
+                this.protocols = this.params.values;
             }
-        }
+
+            console.log("selectedValues", this.selectedValues);
+        },
     },
+
 };
 </script>
-
 
 <style scoped>
 .ag-grid-select {
     display: inline-block;
-    width: 180px;
+    width: 175px;
     /* Set the fixed width here */
     border: 1px solid #ccc;
     border-radius: 4px;
@@ -86,6 +94,8 @@ export default {
     overflow-y: auto;
     overflow-x: hidden;
     padding: 8px;
+    max-width: 175px;
+    min-width: 175px;
 }
 
 .custom-select {
@@ -126,4 +136,14 @@ export default {
     border: none;
     border-radius: 0;
 }
+
+.v-select__slot {
+    /* position: relative; */
+    align-items: center;
+    display: flex;
+    max-width: 90%;
+    min-width: 90%;
+    width: 90%;
+}
+
 </style>

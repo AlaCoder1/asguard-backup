@@ -330,7 +330,7 @@
                                 <v-text-field label="expire" class="ml-3 inline-input"></v-text-field>
                             </div>
                         </div>
-                        <div v-if="setuptypeip4 === 'DHCP'">
+                        <div v-if="setuptypeip4 === 'DHCP'" style="height: 100%;">
                             <v-card-title class="title-text">Configuring the DHCP Client</v-card-title>
                             <v-divider class="ml-3"></v-divider>
                             <v-row class="ml-3 mt-3">
@@ -344,67 +344,12 @@
                                     <v-tab-item v-for="tab in tabs" :key="tab.id">
                                         <BasicConfigDHCPv4 v-if="tab.id == 1" :ipAddress="value_setup_Ipv4.ip_address4"
                                             :interface="interface" :activeTab="typeDHCP4" />
-                                        <AdvancedConfigDHCPv4 :activeTab="typeDHCP4" :interface="interface"
+                                        <AdvancedConfigDHCPv4 :activeTab="typeDHCP4"
+                                            :interfaceDHCPAdvanced="interfaceDHCPAdvanced"
                                             :ipAddress="value_setup_Ipv4.ip_address4" v-if="tab.id == 2" />
                                     </v-tab-item>
                                 </v-tabs>
                             </v-row>
-                        </div>
-                        <div v-if="false">
-                            <v-card-title class="title-text">Protocol Timing</v-card-title>
-                            <v-divider class="ml-3"></v-divider>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">Timeout</div>
-                                <input type="checkbox" class="ml-5 inline-input">
-                                <div style="color: black;" class="ml-2 inline-input">information only</div>
-
-                            </div>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">Try again</div>
-                                <v-text-field label="Hostname" class="ml-3 inline-input"></v-text-field>
-                            </div>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">Select expiration</div>
-                                <v-text-field label="Select expiration" class="ml-3 inline-input"></v-text-field>
-                            </div>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">restart</div>
-                                <v-text-field label="restart" class="ml-3 inline-input"></v-text-field>
-                            </div>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">Backoff Cutoff</div>
-                                <v-text-field label="Backoff Cutoff" class="ml-3 inline-input"></v-text-field>
-                            </div>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">Initial Interval</div>
-                                <v-text-field label="Initial Interval" class="ml-3 inline-input"></v-text-field>
-                            </div>
-                            <v-card-title class="title-text">Lease Requirements</v-card-title>
-                            <v-divider class="ml-3"></v-divider>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">Send options DHCP Client</div>
-                                <v-text-field label="Send options DHCP Client" class="ml-3 inline-input"></v-text-field>
-                            </div>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">Send Options lease time</div>
-                                <v-text-field label="Send Options lease time" class="ml-3 inline-input"></v-text-field>
-                            </div>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">Request Options</div>
-                                <v-text-field label="Request Options" class="ml-3 inline-input"></v-text-field>
-                            </div>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">Required Options</div>
-                                <v-text-field label="Required Options" class="ml-3 inline-input"></v-text-field>
-                            </div>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">Supersede domaine name</div>
-                                <v-text-field label="Supersede domaine name" class="ml-3 inline-input"></v-text-field>
-                            </div>
-                            <div class="ml-3 mt-3">
-                                <div style="color: black;" class="ml-3 inline-input">Prepend domain server</div>
-                                <v-text-field label="Prepend domain server" class="ml-3 inline-input"></v-text-field>
-                            </div>
                         </div>
                         <div v-if="setuptypeip4 === 'PPP'">
                             <v-card-title class="title-text">Configuration PPP</v-card-title>
@@ -552,12 +497,16 @@
                 <br />
                 <v-alert type="success" variant="outlined" elevation="2" class="ml-3" icon="mdi-check-circle-outline"
                     style="width: 20%;" border="top" v-if="showAlert" :style="alertStyle">
-                    Configuration saved successfully
+                    {{ successConfiguration }}
+                </v-alert>
+                <v-alert type="error" variant="outlined" elevation="2" class="ml-3" icon="mdi-close-outline"
+                    style="width: 20%;" border="top" v-if="showAlertError" :style="alertStyle">
+                    {{ errorConfiguration }}
                 </v-alert>
                 <v-alert type="success" variant="outlined" elevation="2" class="ml-3" icon="mdi-check-circle-outline"
-                        style="width: 20%;" border="top" v-if="showAlertGateway" :style="alertStyle">
-                        Gateway saved successfully
-                    </v-alert>
+                    style="width: 20%;" border="top" v-if="showAlertGateway" :style="alertStyle">
+                    Gateway saved successfully
+                </v-alert>
                 <br /><br /><br /><br />
                 <v-dialog style="
                         position: fixed;
@@ -607,10 +556,9 @@
                                 @click="addGateway">
                                 Save
                             </v-btn> -->
-                            <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit"
-                                    @click="addGateway">
-                                    Save
-                                </v-btn>
+                            <v-btn large rounded outlined color="#ffff" class="mr-3 trac-edit" @click="addGateway">
+                                Save
+                            </v-btn>
                         </v-card-actions>
                     </v-card>
                 </v-dialog>
@@ -652,6 +600,24 @@ export default {
                 rejectLeases: "",
                 hostname: "",
                 overrideMTU: false,
+            },
+            interfaceDHCPAdvanced: {
+                ipv4_adress: "",
+                ipv4_netmask: "",
+                rejectLeases: "",
+                hostname: "",
+                timeout: "",
+                retry: "",
+                select_timeout: "",
+                reboot: "",
+                backoff: "",
+                initial_interval: "",
+                dhcp_client: "",
+                lease_time: "",
+                request: "",
+                require: "",
+                domain_name: "",
+                domain_server: "",
             },
             tabsIPV6: [
                 { id: 1, label: "Basic" },
@@ -740,6 +706,7 @@ export default {
             dynamicGatewayPolicy: false,
             showAlert: false,
             showAlertGateway: false,
+            showAlertError: false,
             showModal: false,
             gateway: {
                 gwname: "",
@@ -761,6 +728,8 @@ export default {
             IPV4Config: {},
             allStaticGateways: [],
             mssError: '',
+            errorConfiguration: '',
+            successConfiguration: '',
         };
     },
     computed: {
@@ -851,107 +820,114 @@ export default {
                 );
             }
         },
+        getCsrfToken() {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith('csrftoken=')) {
+                    return decodeURIComponent(cookie.substring(10));
+                }
+            }
+            return null;
+        },
+
+        sendNetworkRequest(activeTab, params) {
+            const csrfToken = this.getCsrfToken();
+            if (csrfToken) {
+                axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
+                axios
+                    .put('/network/conf/' + activeTab, params)
+                    .then((response) => {
+                        let status = response.data.status;
+                        let message = response.data.message;
+                        if (status == '400') {
+                            // show error alert
+                            this.showAlertError = true;
+                            this.errorConfiguration = message;
+                            setTimeout(() => {
+                                this.showAlertError = false;
+                            }, 3000);
+                        } else {
+                             this.successConfiguration = message;
+                            this.showAlert = true;
+                            setTimeout(() => {
+                                this.showAlert = false;
+                            }, 3000);
+                        }
+                    })
+                    .catch((error) => {
+                        console.error(error);
+                    });
+            } else {
+                console.error('CSRF token not found in cookies');
+            }
+        },
+
         addNetwork() {
+            const commonParams = {
+                name_interface: this.activeTab,
+                device: this.device,
+                description: this.description,
+                private_aux: this.private_aux,
+                bogon_aux: this.bogon_aux,
+                addmac: this.addmac,
+                mtuv: this.mtuv,
+                mssv: this.mssv,
+                speed_duplex: this.speed_duplex,
+                setuptypeIP4: this.setuptypeip4,
+            };
+
             if (this.setuptypeip4 === 'static') {
                 const params = {
-                    name_interface: this.activeTab,
-                    device: this.device,
-                    description: this.description,
-                    private_aux: this.private_aux,
-                    bogon_aux: this.bogon_aux,
-                    addmac: this.addmac,
-                    mtuv: this.mtuv,
-                    mssv: this.mssv,
-                    speed_duplex: this.speed_duplex,
-                    setuptypeIP4: this.setuptypeip4,
+                    ...commonParams,
                     value_setup_Ipv4: {
                         ip_address4: this.value_setup_Ipv4.ip_address4,
                         netmask4: this.value_setup_Ipv4.netmask4,
                         gateway4: {
-                            value: this.value_setup_Ipv4.gateway4.value
+                            value: this.value_setup_Ipv4.gateway4.value,
                         },
                     },
                 };
-
-                function getCookie(name) {
-                    let cookieValue = null;
-                    if (document.cookie && document.cookie !== '') {
-                        const cookies = document.cookie.split(';');
-                        for (let i = 0; i < cookies.length; i++) {
-                            const cookie = cookies[i].trim();
-                            // Does this cookie string begin with the name we want?
-                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                                break;
-                            }
-                        }
-                    }
-                    return cookieValue;
-                }
-                const csrfToken = getCookie('csrftoken')
-                axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-
-                axios.put('/network/conf/' + this.activeTab, params)
-                    .then(() => {
-                        this.showAlert = true;
-                        setTimeout(() => {
-                            this.showAlert = false;
-                        }, 3000);
-                    }, (error) => {
-                        console.log(error);
-                    });
-            }
-            if (this.setuptypeip4 === 'DHCP') {
+                this.sendNetworkRequest(this.activeTab, params);
+            } else if (this.setuptypeip4 === 'DHCP' && this.typeDHCP4 === 'Base') {
                 const params = {
-                    name_interface: this.activeTab,
-                    device: this.device,
-                    description: this.description,
-                    private_aux: this.private_aux,
-                    bogon_aux: this.bogon_aux,
-                    addmac: this.addmac,
-                    mtuv: this.mtuv,
-                    mssv: this.mssv,
-                    speed_duplex: this.speed_duplex,
-                    setuptypeIP4: this.setuptypeip4,
+                    ...commonParams,
                     value_setup_Ipv4: {
-                        "typeDHCP4": this.typeDHCP4,
-                        alias_add: this.interface.ipv4_adress, // Assuming you want to use ipv4_adress
-                        alias_mask: this.interface.ipv4_netmask, // Assuming you want to use ipv4_netmask
+                        typeDHCP4: this.typeDHCP4,
+                        alias_add: this.interface.ipv4_adress,
+                        alias_mask: this.interface.ipv4_netmask,
                         reject: this.interface.rejectLeases,
                         hostname: this.interface.hostname,
                     },
                 };
-                function getCookie(name) {
-                    let cookieValue = null;
-                    if (document.cookie && document.cookie !== '') {
-                        const cookies = document.cookie.split(';');
-                        for (let i = 0; i < cookies.length; i++) {
-                            const cookie = cookies[i].trim();
-                            // Does this cookie string begin with the name we want?
-                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                                break;
-                            }
-                        }
-                    }
-                    return cookieValue;
-                }
-                const csrfToken = getCookie('csrftoken')
-                axios.defaults.headers.common['X-CSRFToken'] = csrfToken;
-
-                axios.put('/network/conf/' + this.activeTab, params)
-                    .then(() => {
-                        this.showAlert = true;
-                        setTimeout(() => {
-                            this.showAlert = false;
-                        }, 3000);
-                    }, (error) => {
-                        console.log(error);
-                    });
+                this.sendNetworkRequest(this.activeTab, params);
+            } else if (this.setuptypeip4 === 'DHCP' && this.typeDHCP4 === 'Advanced') {
+                const params = {
+                    ...commonParams,
+                    value_setup_Ipv4: {
+                        typeDHCP4: this.typeDHCP4,
+                        alias_add: this.interfaceDHCPAdvanced.ipv4_adress,
+                        alias_mask: this.interfaceDHCPAdvanced.ipv4_netmask,
+                        reject: this.interfaceDHCPAdvanced.rejectLeases,
+                        hostname: this.interfaceDHCPAdvanced.hostname,
+                        timeout: this.interfaceDHCPAdvanced.timeout,
+                        retry: this.interfaceDHCPAdvanced.retry,
+                        select_timeout: this.interfaceDHCPAdvanced.select_timeout,
+                        reboot: this.interfaceDHCPAdvanced.reboot,
+                        backoff: this.interfaceDHCPAdvanced.backoff,
+                        initial_interval: this.interfaceDHCPAdvanced.initial_interval,
+                        dhcp_client: this.interfaceDHCPAdvanced.dhcp_client,
+                        lease_time: this.interfaceDHCPAdvanced.lease_time,
+                        request: this.interfaceDHCPAdvanced.request,
+                        require: this.interfaceDHCPAdvanced.require,
+                        domain_name: this.interfaceDHCPAdvanced.domain_name,
+                        domain_server: this.interfaceDHCPAdvanced.domain_server,
+                    },
+                };
+                this.sendNetworkRequest(this.activeTab, params);
             }
-
-
         },
+
         cancel() {
             this.$emit("cancel");
         },
@@ -1048,9 +1024,9 @@ export default {
 
             axios.put('/gateway/updateStaticGateway', params)
                 .then((response) => {
-                    this.showAlert = true;
+                    this.showAlertGateway = true;
                     setTimeout(() => {
-                        this.showAlert = false;
+                        this.showAlertGateway = false;
                     }, 3000);
                 }, (error) => {
                     console.log(error);
@@ -1113,7 +1089,24 @@ export default {
         this.interface.ipv4_netmask = this.IPV4Config.IPV4Config.alias_mask;
         this.interface.rejectLeases = this.IPV4Config.IPV4Config.reject;
         this.interface.hostname = this.IPV4Config.IPV4Config.hostname;
-        // this.interface.overrideMTU = this.IPV4Config.IPV4Config.overrideMTU;
+
+        this.interfaceDHCPAdvanced.ipv4_adress = this.IPV4Config.IPV4Config.alias_add;
+        this.interfaceDHCPAdvanced.ipv4_netmask = this.IPV4Config.IPV4Config.alias_mask;
+        this.interfaceDHCPAdvanced.rejectLeases = this.IPV4Config.IPV4Config.reject;
+        this.interfaceDHCPAdvanced.hostname = this.IPV4Config.IPV4Config.hostname;
+        this.interfaceDHCPAdvanced.timeout = this.IPV4Config.IPV4Config.timeout;
+        this.interfaceDHCPAdvanced.retry = this.IPV4Config.IPV4Config.retry;
+        this.interfaceDHCPAdvanced.select_timeout = this.IPV4Config.IPV4Config.select_timeout;
+        this.interfaceDHCPAdvanced.reboot = this.IPV4Config.IPV4Config.reboot;
+        this.interfaceDHCPAdvanced.backoff = this.IPV4Config.IPV4Config.backoff;
+        this.interfaceDHCPAdvanced.initial_interval = this.IPV4Config.IPV4Config.initial_interval;
+        this.interfaceDHCPAdvanced.dhcp_client = this.IPV4Config.IPV4Config.dhcp_client;
+        this.interfaceDHCPAdvanced.lease_time = this.IPV4Config.IPV4Config.lease_time;
+        this.interfaceDHCPAdvanced.request = this.IPV4Config.IPV4Config.request;
+        this.interfaceDHCPAdvanced.require = this.IPV4Config.IPV4Config.require;
+        this.interfaceDHCPAdvanced.domain_name = this.IPV4Config.IPV4Config.domain_name;
+        this.interfaceDHCPAdvanced.domain_server = this.IPV4Config.IPV4Config.domain_server;
+
     },
     validations: {
         addmac: {

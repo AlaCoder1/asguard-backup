@@ -17,7 +17,7 @@
 </template>
 
 <script>
-import { AgGridVue } from 'ag-grid-vue';
+import { AgGridVue } from 'ag-grid-vue3';
 export default {
     name: 'UserManagement',
     components: {

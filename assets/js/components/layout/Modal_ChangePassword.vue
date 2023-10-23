@@ -1,6 +1,8 @@
 <template>
   <v-row justify="center">
-    <v-dialog v-model="isOpen" persistent width="600">
+    <!-- <v-dialog v-model="isOpen" persistent width="600"> -->
+    <v-dialog persistent width="600">
+
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
@@ -56,7 +58,9 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState } from "pinia";
+import { useAuthStore } from "@/store/modules/auth.js";
+const storeAuth = useAuthStore();
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { required, sameAs, helpers } from "@vuelidate/validators";
@@ -161,7 +165,7 @@ export default {
     },
   },
   computed: {
-    ...mapState("auth", ["user"]),
+    ...mapState(storeAuth, ["user"]),
   },
   methods: {
     populate(data) {

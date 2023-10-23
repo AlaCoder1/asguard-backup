@@ -3,7 +3,9 @@
         <table class="ml-3 mt-3 mr-5">
             <tbody>
                 <tr style="width: 100%;">
-                    <v-text-field label="IP Adress " class="ml-3 mt-1" disabled v-model="ipAddress"></v-text-field>
+                    <!-- <v-text-field label="IP Adress " class="ml-3 mt-1" disabled v-model="ipAddress"></v-text-field> -->
+                    <v-text-field label="IP Adress " class="ml-3 mt-1" disabled></v-text-field>
+
                 </tr>
                 <tr>
                     <td><span style="color: black;" class="">IPv4 Adress Alias</span></td>

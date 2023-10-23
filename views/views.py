@@ -226,7 +226,10 @@ def openvpn_page(request):
 
 def login(request):
     usr=getAllUsers(request)
+    print (usr)
+
     context = {'users':usr}
+    print (context)
     return render(request, 'login.html',context)
 
 

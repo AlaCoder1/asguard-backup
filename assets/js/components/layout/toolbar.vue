@@ -3,8 +3,9 @@
         <v-main>
             <!-- header -->
             <v-toolbar
+                 color="blue-darken-3"
                 flat
-                class="dms_blue_light axe-media-print-hide axe-sticky"
+                class="axe-media-print-hide axe-sticky"
                 height="60"
             >
                 <v-toolbar-title class="axe-font-size-three white--text ml-2">

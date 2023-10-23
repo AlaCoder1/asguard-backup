@@ -66,7 +66,10 @@
 </template>
 
 <script>
-import { mapState, mapActions } from "vuex";
+import { mapState, mapActions } from "pinia";
+
+import { useAuthStore } from "@/store/modules/auth.js";
+const storeAuth = useAuthStore();
 import Footer from "@/components/layout/footer.vue";
 export default {
   name: "BaseLayout",
@@ -74,12 +77,11 @@ export default {
     Footer,
   },
   computed: {
-    ...mapState("auth", ["user"]),
+    ...mapState(storeAuth, ["user"]),
   },
   mounted(){
     // let test = this.$el.attributes['users'] ? this.$el.attributes['users'].value : '';
-    console.log('test',document.getElementById('app'))
-    console.log('this',this)
+    console.log('isd',document.getElementById('app').attributes['users'].value)
   },
   methods: {
     navigateUrl() {

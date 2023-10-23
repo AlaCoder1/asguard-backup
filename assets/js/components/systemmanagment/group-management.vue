@@ -22,7 +22,7 @@
   </div>
 </template>
 <script>
-import { AgGridVue } from 'ag-grid-vue';
+import { AgGridVue } from 'ag-grid-vue3';
 import Modal_Group from '../layout/Modal_Group.vue';
 import axios from 'axios';
 

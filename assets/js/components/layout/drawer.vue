@@ -1,13 +1,13 @@
 <template>
-  <div>
-    <v-toolbar flat class="dms_blue_dark dms-media-print-hide dms-sticky" height="70">
+  <div style="background-color:#213E9F ;">
+    <v-toolbar color="bg-purple-darken-2" flat class="bg-purple-darken-2 dms-media-print-hide dms-sticky" height="70">
       <v-toolbar-title class="dms-font-size-three white--text ml-8">
         <img src="../../../images/logoDMS.svg" height="50" />
       </v-toolbar-title>
       <v-spacer />
       <v-select v-model="lang" :items="['English', 'French']" class="select-lang" hide-details>
         <template v-slot:selection="{ item }">
-          <v-chip class="dms_blue_dark white--text" small>
+          <v-chip  color="grey darken-4" class="bg-purple-darken-2 white--text" small>
             <span>{{ item }}</span>
           </v-chip>
         </template>
@@ -17,7 +17,7 @@
       <v-menu offset-y>
         <template v-slot:activator="{ on }" style=" margin-right: 10px; margin-left: 10px;">
           <v-avatar class="ml-3 mr-3" size="30" v-on="on">
-            <v-icon size="30" class="dms_blue_dark white--text" color="white">mdi-account-circle-outline</v-icon>
+            <v-icon  size="30" class="bg-purple-darken-2 white--text" color="white">mdi-account-circle-outline</v-icon>
           </v-avatar>
         </template>
         <v-list>
@@ -49,7 +49,7 @@
         <v-icon v-if="mini">mdi-close</v-icon>
         <v-icon v-if="!mini">mdi-menu</v-icon>
       </v-app-bar>
-      <v-list dense>
+      <v-list dense class="bg-blue-darken-3">
         <template v-for="item in items">
           <a :href="item.href" class="custom-a">
             <v-list-item @click="showSubMenu(item)">
@@ -83,7 +83,10 @@
 </template>
 
 <script>
-import { mapState, mapActions } from 'vuex';
+import 'vuetify/styles'
+import { useAuthStore } from "@/store/modules/auth.js";
+const storeAuth = useAuthStore();
+import { mapState, mapActions } from 'pinia';
 import '@mdi/font/css/materialdesignicons.min.css';
 
 export default {
@@ -315,9 +318,9 @@ export default {
     };
   },
   methods: {
-    ...mapActions('auth', ['logout']),
+    ...mapActions(useAuthStore, ['logout']),
     logout() {
-      this.$store.dispatch('auth/logout');
+      storeAuth.logout();
     },
     showSubMenu(item) {
       // Close all submenus except for the clicked item
@@ -347,7 +350,7 @@ export default {
   },
 
   computed: {
-    ...mapState('auth', ['loggedIn', 'user']),
+    ...mapState(storeAuth, ['loggedIn', 'user']),
   },
 };
 </script>
@@ -499,4 +502,5 @@ a:hover .dms_teal--text,
   font-size: 16px;
   padding: 10px 20px;
 }
+
 </style>

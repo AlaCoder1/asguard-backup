@@ -31,8 +31,8 @@
 
 
 <script>
-import { AgGridVue } from 'ag-grid-vue';
-import VueApexCharts from 'vue-apexcharts';
+import { AgGridVue } from 'ag-grid-vue3';
+import VueApexCharts from "vue3-apexcharts";
 
 export default {
     name: 'MonotoringOpenvpnComponent',

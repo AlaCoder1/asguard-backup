@@ -48,14 +48,14 @@
 import BaseLayout from "@/pages/layout.vue";
 import UserManagement from "@/components/systemmanagment/user-management.vue";
 import GroupManagement from "@/components/systemmanagment/group-management.vue";
-import NetworkServerManagement from "@/components/systemmanagment/network-server-management.vue";
+// import NetworkServerManagement from "@/components/systemmanagment/network-server-management.vue";
 
 export default {
   name: "DataManagment",
   components: {
     BaseLayout,
     UserManagement,
-    NetworkServerManagement,
+    // NetworkServerManagement,
     GroupManagement,
   },
 
@@ -83,28 +83,58 @@ export default {
     },
     // ... other methods
   },
+  // beforeMount: async function () {
+  //   console.log(
+  //     // "before mount data.users :" + JSON.stringify(this.$root.$data.users)
+  //   );
+
+  //   //   parsing users data
+  //   let parsedData = this.setData(this.$root.$data.users);
+
+  //   this.users = parsedData;
+  //   //   parsing users data
+
+  //   //   parsing groups data
+  //   let parsedgroupsData = this.setData(this.$root.$data.groups);
+
+  //   this.groups = parsedgroupsData;
+  //   //   parsing groups data
+
+  //   // //   parsing servers data
+  //   let parsedserversData = this.setData(this.$root.$data.servers);
+
+  //   this.servers = parsedserversData;
+  //   // //   parsing servers data
+
+    
+  // },
   beforeMount: async function () {
-    console.log(
-      // "before mount data.users :" + JSON.stringify(this.$root.$data.users)
-    );
+    // console.log("before mount data.users :" + JSON.stringify(this.$root.$data.users));
 
     //   parsing users data
-    let parsedData = this.setData(this.$root.$data.users);
+    let userData = document.getElementById("app").attributes["users"].value;
+    let parsedData = this.setData(userData);
 
     this.users = parsedData;
     //   parsing users data
 
+
     //   parsing groups data
-    let parsedgroupsData = this.setData(this.$root.$data.groups);
+    let groupData = document.getElementById("app").attributes["groups"].value;
+    let parsedgroupsData = this.setData(groupData);
 
     this.groups = parsedgroupsData;
     //   parsing groups data
 
+
     // //   parsing servers data
-    let parsedserversData = this.setData(this.$root.$data.servers);
+    let serversData = document.getElementById("app").attributes["servers"].value;
+    let parsedserversData = this.setData(serversData);
 
     this.servers = parsedserversData;
     // //   parsing servers data
-  },
+
+
+  }
 };
 </script>

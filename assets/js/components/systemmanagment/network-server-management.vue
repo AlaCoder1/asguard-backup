@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import { AgGridVue } from 'ag-grid-vue';
+import { AgGridVue } from 'ag-grid-vue3';
 import Modal from '../layout/Modal.vue';
 import axios from 'axios';
 

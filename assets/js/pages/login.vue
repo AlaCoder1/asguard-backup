@@ -106,7 +106,7 @@
               justify="center"
               v-if="invalid"
             >
-              {{ messageStore }}
+              <!-- {{ messageStore }} -->
             </div>
           </v-form>
         </div>
@@ -117,9 +117,12 @@
 </template>
 
 <script>
+import 'vuetify/styles'
+import { useAuthStore } from "@/store/modules/auth.js";
+const storeAuth = useAuthStore();
+
 import Footer from "@/components/layout/footer.vue";
-import { mapActions, mapState } from "vuex";
-import store from "@/store/index.js";
+// import { mapState } from "pinia";
 
 export default {
   name: "HomeComponent",
@@ -137,21 +140,19 @@ export default {
     };
   },
   beforeMount: async function () {
-    this.users = this.$root.$data.tab;
+    // this.users = this.$root.$data.tab;
   },
   computed: {
-    ...mapState("auth", ["messageStore"]),
+    // ...mapState(storeAuth, ["messageStore"]),
   },
   methods: {
-    ...mapActions("auth", ["login"]),
-
     connect() {
       const user = {
         username: this.username,
         password: this.password,
       };
 
-      store.dispatch("auth/login", user).then((response) => {
+      storeAuth.login(user).then((response) => {
         this.invalid = true;
       });
     },

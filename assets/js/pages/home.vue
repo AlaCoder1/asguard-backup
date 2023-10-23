@@ -86,8 +86,8 @@
 </template>
 
 <script>
-import { AgGridVue } from "ag-grid-vue";
-import ApexCharts from "vue-apexcharts";
+import { AgGridVue } from "ag-grid-vue3";
+import VueApexCharts from "vue3-apexcharts";
 import BaseLayout from "@/pages/layout.vue";
 
 export default {
@@ -95,7 +95,7 @@ export default {
   components: {
     BaseLayout,
     AgGridVue,
-    apexchart: ApexCharts,
+    apexchart: VueApexCharts,
   },
   watch: {
     dataChart: {
@@ -107,20 +107,20 @@ export default {
     },
   },
   computed: {
-    rowDataAuthority() {
-      const currentDate = new Date();
-      const currentTime = currentDate.toLocaleTimeString();
-      let authority = [
-        {
-          nom: "Asguard",
-          system_load: this.uptime.uptime,
-          last_cong: currentTime,
-          operating: this.uptime.current_date,
-        },
-      ];
+    // rowDataAuthority() {
+    //   const currentDate = new Date();
+    //   const currentTime = currentDate.toLocaleTimeString();
+    //   let authority = [
+    //     {
+    //       nom: "Asguard",
+    //       system_load: this.uptime.uptime,
+    //       last_cong: currentTime,
+    //       operating: this.uptime.current_date,
+    //     },
+    //   ];
 
-      return authority;
-    },
+    //   return authority;
+    // },
   },
   data() {
     return {
@@ -215,9 +215,7 @@ export default {
   },
   methods: {
     initializeWebSocket() {
-      this.socket = new WebSocket(
-        "wss://" + window.location.host + "/ws/data/"
-      ); // Replace with your WebSocket URL
+      this.socket = new WebSocket("ws://" + window.location.host + "/ws/data/"); // Replace with your WebSocket URL
 
       this.socket.onopen = () => {
         console.log("WebSocket connection opened.");
@@ -300,20 +298,26 @@ export default {
 
       return eGui;
     },
-    setData() {
-      const validJsonString = this.$root.$data.tab
-        .replace(/'/g, '"')
-        .replace(/True/g, "true")
-        .replace(/False/g, "false")
-        .replace(/None/g, "null");
-      const parsedArray = JSON.parse(validJsonString);
-      this.data = parsedArray;
-    },
+    // setData() {
+    //   const validJsonString = this.$root.$data.tab
+    //     .replace(/'/g, '"')
+    //     .replace(/True/g, "true")
+    //     .replace(/False/g, "false")
+    //     .replace(/None/g, "null");
+    //   const parsedArray = JSON.parse(validJsonString);
+    //   this.data = parsedArray;
+    // },
   },
 
   beforeMount: async function () {
+    let infoData =
+      document.getElementById("app").attributes["informations"].value;
+    let gateways = document.getElementById("app").attributes["gateways"].value;
+    let interfaces =
+      document.getElementById("app").attributes["interfaces"].value;
+
     this.initializeWebSocket();
-    this.information = this.$root.$data.tab;
+    this.information = infoData;
     const info = JSON.parse(this.information);
     this.infoParser = info;
 
@@ -325,7 +329,7 @@ export default {
       };
     });
     this.rowDataServices = infoService;
-    this.gateways = this.$root.$data.gateways;
+    this.gateways = gateways;
 
     const element = JSON.parse(this.gateways);
 
@@ -338,18 +342,24 @@ export default {
     });
     this.rowDataGateways = infoGateways;
 
-    this.interfaces = this.$root.$data.interfaces;
+    this.interfaces = interfaces;
+    
+   
+      // let parsedArray = JSON.parse(this.interfaces);
 
-    let parsedArray = JSON.parse(this.interfaces);
-
-    let infoInterfaces = parsedArray.map((element) => {
-      return {
-        name: element.name_interface,
-        speed_uplex: element.speed_duplex,
-        address: element.ip_address,
-      };
-    });
-    this.rowDataInterfaces = infoInterfaces;
+      // let infoInterfaces = parsedArray.map((element) => {
+      //   return {
+      //     name: element.name_interface,
+      //     speed_uplex: element.speed_duplex,
+      //     address: element.ip_address,
+      //   };
+      // });
+      // this.rowDataInterfaces = infoInterfaces;
+    
   },
 };
 </script>
+<style lang="scss">
+@import "~ag-grid-community/dist/styles/ag-grid.css";
+@import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
+</style>

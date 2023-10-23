@@ -50,7 +50,7 @@
 </template>
 
 <script>
-import { AgGridVue } from "ag-grid-vue";
+import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
 import Modal_User from "../layout/Modal_User.vue";
 import Modal_Password from "../layout/Modal_ChangePassword.vue";

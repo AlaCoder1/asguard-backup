@@ -1,26 +1,7 @@
-import Vue from 'vue';
-import Vuex from 'vuex';
-import auth from './modules/auth';
-import createPersistedState from 'vuex-persistedstate';
+import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
+import { setActivePinia, createPinia } from 'pinia'
+setActivePinia(createPinia())
+const store = createPinia()
+store.use(piniaPluginPersistedstate)
 
-Vue.use(Vuex);
-Vue.config.devtools = true
-
-// Create the store
-const store = new Vuex.Store({
-  modules: {
-    auth: {
-      namespaced: true,
-      state: auth.state,
-      mutations: auth.mutations,
-      actions: auth.actions,
-      getters: auth.getters,
-    }
-  },
-  plugins: [
-    // Create persisted state
-    createPersistedState(),
-  ],
-});
-
-export default store;
+export default store

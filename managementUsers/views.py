@@ -29,13 +29,14 @@ from django.views.decorators.csrf import csrf_exempt
 # API to get all users
 
 
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
+@csrf_exempt
+#@authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getAllUsers(request):
     list_users = []
     if (request.method == 'GET'):
         users = User.objects.all()
+        print(users)
         userDict = serializers.serialize("json", users)
         res = json.loads(userDict)
         for i in range(0, len(res)):
@@ -45,8 +46,8 @@ def getAllUsers(request):
             res[i]['fields'].pop('password')
             res[i]['fields']['id'] = id
             list_users.append(res[i]['fields'])
-        # return list_users
-        return JsonResponse(list_users, safe=False)
+        return list_users
+        #return JsonResponse(list_users, safe=False)
 
 
 # API to get one user

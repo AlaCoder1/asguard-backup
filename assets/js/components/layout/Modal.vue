@@ -1,6 +1,8 @@
 <template>
   <v-row justify="center">
-    <v-dialog v-model="isOpen" persistent width="600">
+    <!-- <v-dialog v-model="isOpen" persistent width="600"> -->
+    <v-dialog  persistent width="600">
+
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>

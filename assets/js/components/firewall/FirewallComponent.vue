@@ -129,7 +129,7 @@
 
 
 <script>
-import { AgGridVue } from 'ag-grid-vue';
+import { AgGridVue } from 'ag-grid-vue3';
 import axios from 'axios';
 import CustomRichSelect from '../firewall/MultiSelectEditor.vue';
 
@@ -1035,6 +1035,7 @@ export default {
 <style lang="scss">
 @import "~ag-grid-community/dist/styles/ag-grid.css";
 @import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
+
 
 .action-button:hover {
     color: #086eae;

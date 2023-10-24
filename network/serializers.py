@@ -16,7 +16,7 @@ class IP4ConfigSerializer(serializers.ModelSerializer):
             fields = ['typeip4','typedhcp', 'ip_address','netmask','addrgw',
                       'reject','hostname','alias_add','alias_mask',
                       'timeout','retry','reboot','backoff','select_timeout','initial_interval',
-                      'dhcp_client','domaine_name','domain_server','lease_time','request','require',
+                      'dhcp_client','domain_name','domain_server','lease_time','request','require',
                       'interface',
                       ]
 # #serializer for ip6 config   

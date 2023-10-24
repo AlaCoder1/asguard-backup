@@ -128,7 +128,7 @@
                         <ValidationProvider name="sendOptionsDHCPClient"
                             :rules="{ regex: /^[a-zA-Z0-9]+(?:,[a-zA-Z0-9]+)*$/ }" v-slot="{ errors }">
                             <v-text-field class="ml-3 mt-1" label="Enter Send options DHCP Client"
-                                v-model="interfaceDHCPAdvanced.send_options_dhcp_client"
+                                v-model="interfaceDHCPAdvanced.dhcp_client"
                                 :error-messages="errors"></v-text-field>
                         </ValidationProvider>
                     </td>
@@ -138,7 +138,7 @@
                     <td style="width: 70%;">
                         <ValidationProvider name="sendOptionsLeaseTime" rules="numeric" v-slot="{ errors }">
                             <v-text-field class="ml-3 mt-1" label="Enter Send Options lease time"
-                                v-model="interfaceDHCPAdvanced.send_options_lease_time"
+                                v-model="interfaceDHCPAdvanced.lease_time"
                                 :error-messages="errors"></v-text-field>
                         </ValidationProvider>
                     </td>
@@ -168,7 +168,7 @@
                             :rules="{ regex: /^(?!-)[A-Za-z0-9-]{1,63}(?<!-)(\.[A-Za-z0-9-]{1,63})*$/ }"
                             v-slot="{ errors }">
                             <v-text-field class="ml-3 mt-1" label="Enter Supersede domaine name"
-                                v-model="interfaceDHCPAdvanced.supersede_domaine_name"
+                                v-model="interfaceDHCPAdvanced.domain_name"
                                 :error-messages="errors"></v-text-field>
                         </ValidationProvider>
                     </td>
@@ -179,7 +179,7 @@
                         <ValidationProvider name="prependDomainServer"
                             :rules="{ regex: /^(http|https):\/\/[a-zA-Z0-9]+(?:,[a-zA-Z0-9]+)*$/ }" v-slot="{ errors }">
                             <v-text-field class="ml-3 mt-1" label="Enter Prepend domain server"
-                                v-model="interfaceDHCPAdvanced.prepend_domain_server"
+                                v-model="interfaceDHCPAdvanced.domain_server"
                                 :error-messages="errors"></v-text-field>
                         </ValidationProvider>
                     </td>

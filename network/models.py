@@ -85,7 +85,7 @@ class IP4Config(models.Model):
     initial_interval=models.IntegerField(null=True, default=None)
     #other
     dhcp_client=models.CharField(max_length=200,null=True,default=None)
-    domaine_name=models.CharField(max_length=200,null=True,default=None)
+    domain_name=models.CharField(max_length=200,null=True,default=None)
     domain_server=models.CharField(max_length=200,null=True,default=None)
     lease_time=models.CharField(max_length=200, null=True,default=None)
     request=models.CharField(max_length=200, null=True,default=None)

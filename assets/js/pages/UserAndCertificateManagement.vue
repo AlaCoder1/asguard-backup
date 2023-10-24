@@ -2,58 +2,59 @@
   <v-app id="inspire">
     <base-layout title="User and certificate management">
       <template #content>
-        <v-tabs background-color="#fff" color="#FFC300" dark v-model="selectedTab">
+        <v-tabs
+          v-model="selectedTab"
+          background-color="#fff"
+          color="#FFC300"
+          dark
+        >
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.value">
-            <span style="color: #020202;">{{ tab.value }}</span>
+            <span style="color: #020202">{{ tab.value }}</span>
           </v-tab>
-
-          <v-tab-item v-for="tab in tabs" :key="tab.id">
-            <!-- UserManagement -->
-            <v-card v-if="tab.id === 1">
-              <v-card-text>
-                <!-- <user-and-certificate-management /> -->
-                <data-managment />
-              </v-card-text>
-            </v-card>
-            <!-- CertificatsManagement -->
-            <v-card v-if="tab.id === 2">
-              <v-card-text>
-                <!-- <certificats-management /> -->
-              </v-card-text>
-            </v-card>
-          </v-tab-item>
         </v-tabs>
+
+        <v-window v-model="selectedTab">
+          <v-window-item v-for="tab in tabs" :key="tab.id" value="User Management">
+            <v-card>
+              <v-card-text><data-managment /></v-card-text>
+            </v-card>
+          </v-window-item>
+          <v-window-item v-for="tab in tabs" :key="tab.id"  value="Certificate Management">
+            <v-card>
+              <v-card-text><certificats-management /></v-card-text>
+            </v-card>
+          </v-window-item>
+        </v-window>
       </template>
     </base-layout>
   </v-app>
 </template>
 
 <script>
-import BaseLayout from '@/pages/layout.vue';
+import BaseLayout from "@/pages/layout.vue";
 
-import DataManagment from '@/pages/user_certificate_managment.vue';
-// 
+import DataManagment from "@/pages/user_certificate_managment.vue";
+//
 // import UserAndCertificateManagement from './UserAndCertificateManagement.vue';
 
-// import CertificatsManagement from '@/pages/certificats-management.vue';
+import CertificatsManagement from "@/pages/certificats-management.vue";
 
 export default {
-  name: 'UserAndCertificateManagement',
+  name: "UserAndCertificateManagement",
   components: {
     BaseLayout,
-    // CertificatsManagement,
-    DataManagment
+    CertificatsManagement,
+    DataManagment,
     // UserAndCertificateManagement
   },
 
   data() {
     return {
-
       tabs: [
-        { id: 1, value: 'User Management' },
-        { id: 2, value: 'Certificate Management' },
+        { id: 1, value: "User Management" },
+        { id: 2, value: "Certificate Management" },
       ],
-      selectedTab: 'User Management',
+      selectedTab: "User Management",
 
       tab: null,
       users: [],
@@ -63,11 +64,10 @@ export default {
   },
   methods: {
     setData(Array_String) {
-      const validJsonString = Array_String
-        .replace(/'/g, '"')
-        .replace(/True/g, 'true')
-        .replace(/False/g, 'false')
-        .replace(/None/g, 'null');
+      const validJsonString = Array_String.replace(/'/g, '"')
+        .replace(/True/g, "true")
+        .replace(/False/g, "false")
+        .replace(/None/g, "null");
 
       const parsedArray = JSON.parse(validJsonString);
 
@@ -88,7 +88,6 @@ export default {
     this.users = parsedData;
     //   parsing users data
 
-
     //   parsing groups data
     let groupData = document.getElementById("app").attributes["groups"].value;
     let parsedgroupsData = this.setData(groupData);
@@ -96,15 +95,13 @@ export default {
     this.groups = parsedgroupsData;
     //   parsing groups data
 
-
     // //   parsing servers data
-    let serversData = document.getElementById("app").attributes["servers"].value;
+    let serversData =
+      document.getElementById("app").attributes["servers"].value;
     let parsedserversData = this.setData(serversData);
 
     this.servers = parsedserversData;
     // //   parsing servers data
-
-
-  }
+  },
 };
 </script>

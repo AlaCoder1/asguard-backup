@@ -345,16 +345,16 @@ export default {
     this.interfaces = interfaces;
     
    
-      // let parsedArray = JSON.parse(this.interfaces);
+       let parsedArray = JSON.parse(this.interfaces);
 
-      // let infoInterfaces = parsedArray.map((element) => {
-      //   return {
-      //     name: element.name_interface,
-      //     speed_uplex: element.speed_duplex,
-      //     address: element.ip_address,
-      //   };
-      // });
-      // this.rowDataInterfaces = infoInterfaces;
+       let infoInterfaces = parsedArray.map((element) => {
+        return {
+          name: element.name_interface,
+       speed_uplex: element.speed_duplex,
+          address: element.ip_address,
+        };
+      });
+      this.rowDataInterfaces = infoInterfaces;
     
   },
 };

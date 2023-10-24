@@ -2,7 +2,7 @@
   <v-app id="inspire">
     <base-layout title="List of interface">
       <template #content>
-        <v-tabs 
+        <!-- <v-tabs 
          background-color="#fff" color="#FFC300" dark @change="handleTabChange">
           <v-tab v-for="tab in tabs" :key="tab.id">
              <span style="color: #020202;">{{ tab.name_interface }}</span>
@@ -10,7 +10,25 @@
           <v-tab-item v-for="tab in tabs" :key="tab.name_interface">
             <IfNameComponent :id="tab.name_interface" :activeTab="activeTabValue" />
           </v-tab-item>
+        </v-tabs> -->
+
+
+        <v-tabs
+        v-model="selectedTab"
+        background-color="#fff" color="#FFC300" dark @change="handleTabChange"
+        >
+          <v-tab v-for="tab in tabs" :key="tab.id">
+            <span style="color: #020202">{{ tab.name_interface }}</span>
+          </v-tab>
         </v-tabs>
+
+        <v-window v-model="selectedTab">
+          <v-window-item v-for="tab in tabs" :key="tab.name_interface" value="LAN">
+            <v-card>
+              <v-card-text> <IfNameComponent :id="tab.name_interface" :activeTab="activeTabValue" /></v-card-text>
+            </v-card>
+          </v-window-item>
+        </v-window>
       </template>
     </base-layout>  
   </v-app>
@@ -27,6 +45,7 @@ export default {
   },
   data() {
     return {
+      selectedTab:'LAN',
       activeTabValue: "",
       interfaces: [],
       IPV4Config: {},
@@ -49,7 +68,10 @@ export default {
     },
   },
   mounted() {
-    this.interfaces = this.$root.$data.interfaces;
+ 
+      
+
+    this.interfaces = document.getElementById("app").attributes["interfaces"].value;
     let validJsonString = this.interfaces
       .replace(/'/g, '"')
       .replace(/True/g, 'true')
@@ -58,7 +80,7 @@ export default {
     let parsedArray = JSON.parse(validJsonString);
     this.interfaces = parsedArray;
 
-    this.IPV4Config = this.$root.$data.IPV4Config;
+    this.IPV4Config = document.getElementById("app").attributes["IPV4Config"].value;
     validJsonString = this.IPV4Config
       .replace(/'/g, '"')
       .replace(/True/g, 'true')
@@ -67,7 +89,7 @@ export default {
     parsedArray = JSON.parse(validJsonString);
     this.IPV4Config = parsedArray;
 
-    this.allStaticGateways = this.$root.$data.allStaticGateways;
+    this.allStaticGateways = document.getElementById("app").attributes["allStaticGateways"].value;
     validJsonString = this.allStaticGateways
       .replace(/'/g, '"')
       .replace(/True/g, 'true')

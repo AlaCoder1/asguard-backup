@@ -164,26 +164,26 @@ def conf(request,name_interface):
                             reboot =  None if data['value_setup_Ipv4'].get('reboot', None) == "" else  data['value_setup_Ipv4'].get('reboot', None)
                             backoff =  None if data['value_setup_Ipv4'].get('backoff', None) == "" else  data['value_setup_Ipv4'].get('backoff', None)
                             initial_interval =  None if data['value_setup_Ipv4'].get('initial_interval', None) == "" else  data['value_setup_Ipv4'].get('initial_interval', None)
-                            send_options_dhcp_client =  None if data['value_setup_Ipv4'].get('send_options_dhcp_client', None) == "" else  data['value_setup_Ipv4'].get('send_options_dhcp_client', None)
-                            send_options_lease_time  =  None if data['value_setup_Ipv4'].get('send_options_lease_time ', None) == "" else  data['value_setup_Ipv4'].get('send_options_lease_time', None)
+                            dhcp_client =  None if data['value_setup_Ipv4'].get('dhcp_client', None) == "" else  data['value_setup_Ipv4'].get('dhcp_client', None)
+                            lease_time  =  None if data['value_setup_Ipv4'].get('lease_time ', None) == "" else  data['value_setup_Ipv4'].get('lease_time', None)
                             request =  None if data['value_setup_Ipv4'].get('request', None) == "" else  data['value_setup_Ipv4'].get('request', None)
                             require =  None if data['value_setup_Ipv4'].get('require', None) == "" else  data['value_setup_Ipv4'].get('require', None)
-                            supersede_domaine_name =  None if data['value_setup_Ipv4'].get('supersede_domaine_name', None) == "" else  data['value_setup_Ipv4'].get('supersede_domaine_name', None)
-                            prepend_domain_server =  None if data['value_setup_Ipv4'].get('prepend_domain_server', None) == "" else  data['value_setup_Ipv4'].get('prepend_domain_server', None)
+                            domain_name =  None if data['value_setup_Ipv4'].get('domain_name', None) == "" else  data['value_setup_Ipv4'].get('domain_name', None)
+                            domain_server =  None if data['value_setup_Ipv4'].get('domain_server', None) == "" else  data['value_setup_Ipv4'].get('domain_server', None)
                             data["timeout"]=timeout
                             data["retry"]=retry
                             data["select_timeout"]=select_timeout
                             data["reboot"]=reboot
                             data["backoff"]=backoff
                             data["initial_interval"]=initial_interval
-                            data["send_options_dhcp_client"]=send_options_dhcp_client
-                            data["send_options_lease_time"]=send_options_lease_time
+                            data["dhcp_client"]=dhcp_client
+                            data["lease_time"]=lease_time
                             data["request"]=request
                             data["require"]=require
-                            data["supersede_domaine_name"]=supersede_domaine_name
-                            data["prepend_domain_server"]=prepend_domain_server
+                            data["domain_name"]=domain_name
+                            data["domain_server"]=domain_server
                         #contenu de dhclient.conf dhcp advanced
-                            configContenu=return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,send_options_dhcp_client,supersede_domaine_name,prepend_domain_server,send_options_lease_time,request,require)
+                            configContenu=return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,timeout,retry,reboot,backoff,select_timeout,initial_interval,dhcp_client,domain_name,domain_server,lease_time,request,require)
                             jsonIPV4={
                     "nameInterface":nameInterface,"ifname":ifname,
                     "typeip4":setuptypeIP4,"typedhcp":typeDHCP4,
@@ -192,11 +192,11 @@ def conf(request,name_interface):
                     "timeout":timeout,"retry":retry,
                     "select_timeout":select_timeout,"reboot":reboot,
                     "backoff":backoff,"initial_interval":initial_interval,
-                    "dhcp_client":send_options_dhcp_client,
-                    "lease_time":send_options_lease_time,
+                    "dhcp_client":dhcp_client,
+                    "lease_time":lease_time,
                     "request":request,"require":require,
-                    "domaine_name":supersede_domaine_name,
-                    "domain_server":prepend_domain_server
+                    "domain_name":domain_name,
+                    "domain_server":domain_server
                     }
                         #add commands of create file dhclient to list of commandes to execute    
                         commandes_final+=create_file_IPV4(ifname,configContenu)
@@ -315,7 +315,7 @@ EOF""".format('\n'.join(output_service))
             else:
                 msg="Failed to configure Network Service not found!!"
                 status=400
-    return JsonResponse({"Message:": msg},status=status)
+    return JsonResponse({"message":msg},status=status)
 
 ##API to delete config 
 ###########################

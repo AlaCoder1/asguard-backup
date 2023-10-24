@@ -7,8 +7,8 @@ def create_ca_in_system(ca_name, updated_fields_vars):
     """Function to create in system an authority certificate"""
     current_dir = get_current_directory()
 
-    execute_command_with_arguments(['sudo', 'easyrsa', 'init-pki'], 'yes\nyes\n')
-    command = ['cp', '/etc/easy-rsa/pki/vars', f'{current_dir}/pki/vars']
+    execute_command_with_arguments(['sudo', 'easyrsa', 'init-pki'], 'yes\n')
+    command = ['cp', '/etc/easy-rsa/vars', f'{current_dir}/pki/vars']
     execute_command_without_arguments(command)
     change_vars(current_dir, updated_fields_vars)
     time_sleep = 1.5

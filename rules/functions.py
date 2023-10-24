@@ -94,21 +94,43 @@ def add_rule_remote(rule,ifname,type_rule):
             return error
       return True
 ###function to get handle rule   
+# def get_handle_rule(ifname,type_rule,rule):
+#    # if not(rule.find('sport')==-1 and rule.find('dport')==-1):
+#    if 'sport' not in rule and 'dport' not in rule:
+#       rule=rule.replace("icmp","1")
+#       rule=rule.replace("echo-request","8")
+#       rule=rule.replace("echo-reply","0")
+#       rule=rule.replace("tcp","6")
+#       rule=rule.replace("udp","17")
+      
+
+#    ##cmd pour obtenir handle number pour supprimer rule 
+#    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
+#    ##executer cette commande
+#    output,error=run_command(cmd)
+#    output = output.split('#')
+#    if len(output)<2:
+#       return None
+#    else:
+#       return output[1].strip().split("\n")[0]
+###function to get handle rule   
 def get_handle_rule(ifname,type_rule,rule):
    # if not(rule.find('sport')==-1 and rule.find('dport')==-1):
    if 'sport' not in rule and 'dport' not in rule:
-      rule=rule.replace("icmp","1")
+      if rule.find('ip protocol')!=-1 and rule.find("type")==-1 :
+         rule=rule.replace("icmp","1")
       rule=rule.replace("echo-request","8")
       rule=rule.replace("echo-reply","0")
       rule=rule.replace("tcp","6")
       rule=rule.replace("udp","17")
-      
+         
 
    ##cmd pour obtenir handle number pour supprimer rule 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
    output,error=run_command(cmd)
    output = output.split('#')
+   print(cmd,output)
    if len(output)<2:
       return None
    else:

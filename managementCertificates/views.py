@@ -122,9 +122,14 @@ def createCertAuth(request):
                         # Add the server to the database
                         serializer_ca.save()
                         return JsonResponse({"msg": f"CA {name} is created"}, status=201)
-
-                print(serializer_ca.errors)
-                return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                    
+                    else:
+                        print(serializer_ca.errors)
+                        return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                    
+                else:
+                    print(serializer_ca.errors)
+                    return JsonResponse({"msg": "Error in CA configuration"}, status=401)
             
             elif method.get("name_method", "") == 'import':
 
@@ -162,7 +167,9 @@ def deleteCertAuth(request, id):
             ca.delete()
             return JsonResponse({"msg": f"delete {ca.name} succesfully"})
     except ProtectedError:
-        return JsonResponse({"msg": "You have to delete Certificates authoried by this CA"})
+        return JsonResponse({"msg": "You have to delete Certificates authoried by this CA"}, status=401)
+    except CertificateAuthority.DoesNotExist:
+        return JsonResponse({"msg": "This CA does not exist"}, status=401)
 
 
 @api_view(['POST'])
@@ -184,6 +191,8 @@ def exportCertAuth(request, id):
 
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in exporting CA"}, status=401)
+        except CertificateAuthority.DoesNotExist:
+            return JsonResponse({"msg": "This CA does not exist"}, status=401)
 
 
 @api_view(['POST'])
@@ -201,6 +210,8 @@ def exportCertAuthListRev(request, id):
 
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in exporting list of revocation"}, status=401)
+        except CertificateAuthority.DoesNotExist:
+            return JsonResponse({"msg": "This CA does not exist"}, status=401)
 
 
 ##################################################
@@ -349,6 +360,8 @@ def createCertificate(request):
 
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in creating Certificate"}, status=401)
+        except CertificateAuthority.DoesNotExist:
+            return JsonResponse({"msg": "CA does not ewxist"}, status=401)
 
 
 @api_view(['Delete'])
@@ -357,12 +370,15 @@ def createCertificate(request):
 def deleteCertificate(request, id):
     """Deleting a Certificates from system and then from database"""
     if (request.method == 'DELETE'):
-        cert = Certificate.objects.get(id=id)
-        # delete from system
-        delete_certificate_in_system(cert.name, cert.certificate_type)
-        # delete from database
-        cert.delete()
-        return JsonResponse({"msg": f"delete {cert.name} succesfully"})
+        try:
+            cert = Certificate.objects.get(id=id)
+            # delete from system
+            delete_certificate_in_system(cert.name, cert.certificate_type)
+            # delete from database
+            cert.delete()
+            return JsonResponse({"msg": f"delete {cert.name} succesfully"}, status=401)
+        except Certificate.DoesNotExist:
+            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
 
 
 @api_view(['PUT'])
@@ -370,19 +386,22 @@ def deleteCertificate(request, id):
 @permission_classes([IsAuthenticated])
 def revokeCertificate(request, id):
     if request.method == 'PUT':
-        cert = Certificate.objects.get(id=id)
-        ca = cert.certificate_authority
+        try:
+            cert = Certificate.objects.get(id=id)
+            ca = cert.certificate_authority
 
-        # Importing all the CA previous revoked certificates and add the new certificate
-        list_revoked = Certificate.objects.filter(Q(certificate_authority=ca, activation=False) | Q(id=id))
-        # all_revoked = [revoked_cert for revoked_cert in list_revoked]
-        # all_revoked.append(cert)
-        
-        # Revoking all the certificates in system and generate a crl file
-        revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
-        cert.activation = False
-        cert.save()
-        return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+            # Importing all the CA previous revoked certificates and add the new certificate
+            list_revoked = Certificate.objects.filter(Q(certificate_authority=ca, activation=False) | Q(id=id))
+            # all_revoked = [revoked_cert for revoked_cert in list_revoked]
+            # all_revoked.append(cert)
+            
+            # Revoking all the certificates in system and generate a crl file
+            revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
+            cert.activation = False
+            cert.save()
+            return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+        except Certificate.DoesNotExist:
+            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
 
 
 @api_view(['PUT'])
@@ -390,17 +409,20 @@ def revokeCertificate(request, id):
 @permission_classes([IsAuthenticated])
 def unrevokeCertificate(request, id):
     if request.method == 'PUT':
-        cert = Certificate.objects.get(id=id)
-        ca = cert.certificate_authority
+        try:
+            cert = Certificate.objects.get(id=id)
+            ca = cert.certificate_authority
 
-        # Importing all the CA previous revoked certificates and add the new certificate
-        list_revoked = Certificate.objects.filter(~Q(id=cert.id), certificate_authority=ca, activation=False)
-        
-        # Revoking all the certificates in system and generate a crl file
-        unrevoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
-        cert.activation = True
-        cert.save()
-        return JsonResponse({"msg": f"Certificate {cert.name} is unrevoked and removed from the crl file of the ca {ca.name}"})
+            # Importing all the CA previous revoked certificates and add the new certificate
+            list_revoked = Certificate.objects.filter(~Q(id=cert.id), certificate_authority=ca, activation=False)
+            
+            # Revoking all the certificates in system and generate a crl file
+            unrevoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
+            cert.activation = True
+            cert.save()
+            return JsonResponse({"msg": f"Certificate {cert.name} is unrevoked and removed from the crl file of the ca {ca.name}"})
+        except Certificate.DoesNotExist:
+            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
 
 
 @api_view(['POST'])
@@ -428,3 +450,5 @@ def exportCert(request, id):
 
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in exporting CA"}, status=401)
+        except Certificate.DoesNotExist:
+            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)

@@ -32,6 +32,9 @@ yarn-error.log
 /openvpn/__pycache__/
 /openvpn/migrations/__pycache__/
 
+/managementCertificates/__pycache__/
+/managementCertificates/migrations/__pycache__/
+
 /rules/__pycache__/
 /rules/migrations/__pycache__/
 

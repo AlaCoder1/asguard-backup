@@ -54,5 +54,6 @@ def update_server_openvpn(server_name, dh_length, tls_auth, server_conf):
     with open(f'/etc/openvpn/server/server_{server_name}.conf', 'w') as server_file:
         server_file.write(server_conf)
 
-    commands_list_without_arguments = [['sudo', 'easyrsa', 'gen-dh', f'{dh_length}']]
-    execute_list_commands_without_arguments(commands_list_without_arguments)
+    if dh_length:
+        commands_list_without_arguments = [['sudo', 'easyrsa', 'gen-dh', f'{dh_length}']]
+        execute_list_commands_without_arguments(commands_list_without_arguments)

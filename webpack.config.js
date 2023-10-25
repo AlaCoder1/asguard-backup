@@ -25,8 +25,7 @@ Encore.setOutputPath("static/")
   })
 
   .addAliases({
-    "@": path.resolve(__dirname, "./src/assets", "middleware"),
-    styles: path.resolve(__dirname, "./src", "scss"),
+    "@": path.resolve(__dirname, "./src"),
   })
 
   .splitEntryChunks()

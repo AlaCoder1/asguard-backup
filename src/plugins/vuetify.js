@@ -1,61 +1,26 @@
-// import Vue from 'vue';
-// import Vuetify from 'vuetify'
-// import 'vuetify/dist/vuetify.min.css'
+import "@mdi/font/css/materialdesignicons.css";
+import "vuetify/styles";
 
-// Vue.use(Vuetify);
+import { createVuetify } from "vuetify";
 
+const customLightTheme = {
+  colors: {
+    asguard_background: "#FFFFFF",
+    asguard_primary_light: "#193286",
+    asguard_primary_dark: "#15202b",
+    asguard_secondary: "#FFC300",
+    asguard_light_grey: "#F8F8F8",
+    asguard_error: "#B00020",
+    asguard_success: "#4CAF50",
+    asguard_warning: "#fb8c00",
+  },
+};
 
-// export default new Vuetify({
-//     theme: {
-//         themes: {
-//             light: {
-//                 dms_white: '#FFFFFF',
-//                 dms_grey: '#F8F8F8',
-//                 dms_grey2: '#ECEFF1',
-//                 dms_teal: '#6e8692',
-//                 dms_blue: '#43aaf5',
-//                 dms_blue_light: '#039BE5',
-//                 dms_blue_dark: '#213E9F',
-//             },
-//             dark: {
-//                 dms_grey: '#F8F8F8',
-//                 dms_grey2: '#ECEFF1',
-//                 dms_teal: '#6e8692',
-//                 dms_blue: '#43aaf5',
-//                 dms_blue_light: '#039BE5',
-//             },
-//         },
-//     },
-// });
-import { createApp } from 'vue';
-import Vuetify from 'vuetify';
-import 'vuetify/dist/vuetify.min.css';
-
-const app = createApp();
-
-app.use(Vuetify);
-
-export default new Vuetify({
+export default createVuetify({
   theme: {
+    defaultTheme: "customLightTheme",
     themes: {
-      light: {
-        dms_white: '#FFFFFF',
-        dms_grey: '#F8F8F8',
-        dms_grey2: '#ECEFF1',
-        dms_teal: '#6e8692',
-        dms_blue: '#43aaf5',
-        dms_blue_light: '#039BE5',
-        dms_blue_dark: '#213E9F',
-      },
-      dark: {
-        dms_grey: '#F8F8F8',
-        dms_grey2: '#ECEFF1',
-        dms_teal: '#6e8692',
-        dms_blue: '#43aaf5',
-        dms_blue_light: '#039BE5',
-      },
+      customLightTheme,
     },
   },
 });
-
-app.mount('#app');

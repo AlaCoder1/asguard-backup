@@ -1,9 +1,10 @@
 <template>
   <div
-    class="bg-color"
-    style="width: 1920, height: 1080, background: '#213E9F'"
+    class="bg-asguard_primary_light"
+    style="width: 1920, height: 1080, secondary: '#213E9F'"
     justify="center"
   >
+  
     <v-row align="center" justify="center" style="justify-content: center">
       <v-col cols="16" sm="7" md="5" class="text-center pos" justify="center">
         <img
@@ -117,7 +118,7 @@
 </template>
 
 <script>
-import 'vuetify/styles'
+import "vuetify/styles";
 import { useAuthStore } from "../../store/modules/auth";
 const storeAuth = useAuthStore();
 

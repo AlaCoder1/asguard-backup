@@ -1,7 +1,7 @@
 <template>
 
     <v-app id="inspire">
-        <Drawer />
+        <!-- <Drawer /> -->
         <v-main>
             <!-- header -->
             <v-toolbar
@@ -36,14 +36,14 @@
 </template>
 
 <script>
-import Drawer from './TheSidebar.vue';
+// import Drawer from './TheSidebar.vue';
 import Footer from './TheFooter.vue';
 
 
 export default {
     name: 'BaseLayout',
     components: {
-        Drawer,
+        // Drawer,
         Footer,
     },
     props: {

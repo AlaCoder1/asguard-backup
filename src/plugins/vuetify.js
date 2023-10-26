@@ -17,6 +17,16 @@ const customLightTheme = {
       asguard_warning: "#fb8c00",
     },
   },
+  colors: {
+    asguard_background: "#FFFFFF",
+    asguard_primary_light: "#213E9F",
+    asguard_primary_dark: "#193286",
+    asguard_secondary: "#FFC300",
+    asguard_light_grey: "#F8F8F8",
+    asguard_error: "#B00020",
+    asguard_success: "#4CAF50",
+    asguard_warning: "#fb8c00",
+  },
   typography: {
     fontFamily: "Roboto",
     fontSize: 14,

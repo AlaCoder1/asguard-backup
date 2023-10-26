@@ -85,6 +85,7 @@ INSTALLED_APPS = [
     "backend.gateway",
     "backend.dashboard",
     'channels',
+    'drf_yasg'
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {
@@ -210,6 +211,16 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
     ],
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'session_auth': {
+            'type': 'apiKey',
+            'in': 'header',
+            'name': 'X-CSRFToken',
+        },
+    }
 }
 
 # jwt_auth/settings.py

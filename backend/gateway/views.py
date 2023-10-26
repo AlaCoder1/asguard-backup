@@ -12,6 +12,8 @@ from django.core import serializers
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.authentication import SessionAuthentication
 from django.db.models import Q
+from drf_yasg.utils import swagger_auto_schema
+
 # API to get all gateways
 @api_view(['GET'])
 @permission_classes([])
@@ -64,6 +66,14 @@ def getGatewayById(request, id):
         except Gateway.DoesNotExist:
             return JsonResponse({"error": "Gateway not found"}, status=404)     
 # API to add  static gateway
+
+@swagger_auto_schema(
+    method='POST',
+    request_body=GatewaySerializer,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO ADD GATEWAY",
+    operation_description="This API add gateway with their caracteristique in database",
+)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def addStaticGateway(request):
@@ -80,7 +90,14 @@ def addStaticGateway(request):
             else:
                 msg=add_gateway_DB(data)
            
-        return JsonResponse({"msg:": msg})    
+        return JsonResponse({"msg:": msg})   
+     
+@swagger_auto_schema(
+    method='DELETE',
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API DELETE GATEWAY",
+    operation_description="This API delete gateway by id ",
+)
 @api_view(['DELETE'])
 @permission_classes([])
 ###API to delete gateway
@@ -94,6 +111,13 @@ def deleteGateway(request,id):
             msg="Delete gateway successfully!!"
     return JsonResponse({"msg:": msg})      
 
+@swagger_auto_schema(
+    method='PUT',
+    request_body=GatewaySerializer,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO UPDATE GATEWAY",
+    operation_description="This API help us to update parametres in gateway added ",
+)
 @api_view(['PUT'])
 @permission_classes([])
 ###API to delete gateway

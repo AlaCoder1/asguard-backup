@@ -11,6 +11,7 @@ import json
 from django.http import JsonResponse
 import paramiko
 from .models import *
+from drf_yasg.utils import swagger_auto_schema
 # Create your views here.
 
 
@@ -18,6 +19,15 @@ User = get_user_model()
 ssh = paramiko.SSHClient()
 from django.shortcuts import redirect
 from django.conf import settings
+
+@swagger_auto_schema(
+    method='POST',
+    request_body=ObtainTokenSerializer,
+    responses={201: 'Created', 400: 'Bad Request'},
+    security=[{"session_auth": []}],  # Specify the security requirement
+    operation_summary="Summary of your API endpoint",
+    operation_description="Description of your API endpoint",
+)
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def authentification(request):
@@ -57,7 +67,13 @@ def authentification(request):
         else:
             return JsonResponse({'message': 'Invalid username or password'})
 
-
+@swagger_auto_schema(
+    method='GET',
+    responses={201: 'Created', 400: 'Bad Request'},
+    security=[{"session_auth": []}],  # Specify the security requirement
+    operation_summary="Summary of your API endpoint",
+    operation_description="Description of your API endpoint",
+)
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def logout_view(request):

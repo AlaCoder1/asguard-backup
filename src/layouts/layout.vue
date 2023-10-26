@@ -1,70 +1,70 @@
 <template>
-
-    <v-app id="inspire">
-        <!-- <Drawer /> -->
-        <v-main>
-            <!-- header -->
-            <v-toolbar
-                flat
-                class="dms_grey axe-media-print-hide axe-sticky"
-                height="60"
-            >
-                <v-toolbar-title class="axe-font-size-three text-color ml-2">
-                    {{ title }}
-                </v-toolbar-title>
-                <v-spacer />
-                <div v-if="back">
-                    <v-btn
-                        text
-                        x-small
-                        class="white--text axe-btn-bg text-caption"
-                        :href="urlback"
-                    >
-                        <span class="icon-arrow-left  icon-size-one mr-2" />
-                        <p class="text-capitalize mt-3">
-                            {{ titleback }}
-                        </p>
-                    </v-btn>
-                </div>
-            </v-toolbar>
-            <v-divider class="axe-media-print-hide" />
-            <!-- content -->
-            <slot name="content" />
-        </v-main>
-        <Footer />  
-    </v-app>
+  <v-app id="inspire">
+    <TheSidebarVue />
+    <TheHeadingVue />
+    <v-main>
+      <v-toolbar dark fixed app class="asguard_toolbar">
+        <v-toolbar-title>
+          {{ title }}
+        </v-toolbar-title>
+        <v-spacer />
+        <div v-if="back">
+          <v-btn>
+            {{ titleback }}
+          </v-btn>
+        </div>
+      </v-toolbar>
+      <slot name="content"></slot>
+    </v-main>
+    <TheFooter />
+  </v-app>
 </template>
 
 <script>
-// import Drawer from './TheSidebar.vue';
-import Footer from './TheFooter.vue';
-
+import TheSidebarVue from "./TheSidebar.vue";
+import TheHeadingVue from "./TheHeading.vue";
+import TheFooter from "./TheFooter.vue";
 
 export default {
-    name: 'BaseLayout',
-    components: {
-        // Drawer,
-        Footer,
+  name: "BaseLayout",
+  components: {
+    TheHeadingVue,
+    TheSidebarVue,
+    TheFooter,
+  },
+  props: {
+    title: {
+      type: String,
+      default: "Asguard",
     },
-    props: {
-        title: {
-            type: String,
-            required: true,
-        },
-        back: {
-            type: Boolean,
-            required: false,
-        },
-        urlback: {
-            type: String,
-            default: null,
-            required: false,
-        },
-        titleback: {
-            type: String,
-            default: null,
-            required: false,
-        },
+    back: {
+      type: Boolean,
+      default: false,
     },
+    urlback: {
+      type: String,
+      default: "/",
+    },
+    titleback: {
+      type: String,
+      default: "Back",
+    },
+  },
 };
 </script>
+
+<style scoped>
+.v-main {
+  padding-top: 0px;
+}
+
+.asguard_toolbar {
+  background-color: #f8f8f8;
+  color: #020202;
+  font-family: OpenSans;
+  font-size: 30px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+}
+</style>

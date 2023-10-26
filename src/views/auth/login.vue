@@ -1,120 +1,63 @@
 <template>
-  <div
-    class="bg-asguard_primary_light"
-    style="width: 1920, height: 1080, secondary: '#213E9F'"
-    justify="center"
-  >
-  
-    <v-row align="center" justify="center" style="justify-content: center">
-      <v-col cols="16" sm="7" md="5" class="text-center pos" justify="center">
-        <img
-          src="../../assets/images/logo.svg"
-          height="100"
-          width="100"
-          class="img-center"
-        />
-        <div class="mt-5">
-          <v-form @submit.prevent="connect">
-            <div
-              style="
-                color: white;
-                font-size: 16px;
-                font-family: 'Nunito';
-                font-weight: 400;
-                word-wrap: break-word;
-                margin-top: 51px;
-                margin-left: 10%;
-              "
-            >
-              User name
-            </div>
-            <v-text-field
-              rounded
-              v-model="username"
-              label="Enter user name"
-              required
-              class="input-w"
-              style="margin-bottom: 11.5px"
-            ></v-text-field>
-            <div
-              style="
-                color: white;
-                font-size: 16px;
-                font-family: 'Nunito';
-                font-weight: 400;
-                word-wrap: break-word;
-                margin-top: 51px;
-                margin-left: 10%;
-              "
-            >
-              Password
-            </div>
-            <v-text-field
-              rounded
-              v-model="password"
-              label="Enter password"
-              required
-              type="password"
-              style="margin-bottom: 11.5px"
-              class="input-w"
-            ></v-text-field>
-            <div
-              rounded
-              style="
-                width: 188px;
-                height: 43px;
-                background: #213e9f;
-                margin-top: 74px;
-                margin-left: 39%;
-                justify-content: center;
-              "
-            >
-              <v-btn
-                rounded
-                type="submit"
-                style="
-                  justify-content: center;
+  <v-sheet class="bg-asguard_primary_light pa-12 h-screen" rounded>
+    <v-card
+      :elevation="0"
+      class="bg-asguard_primary_light mx-auto px-6 py-8"
+      max-width="500px"
+    >
+      <img src="../../assets/images/logo.svg" class="img-center mb-8 mt-15" />
+      <v-form v-model="form" @submit.prevent="connect">
+        <label for="" class="field-auth ml-9">User name</label>
+        <v-text-field
+          rounded
+          v-model="username"
+          label="Enter user name"
+          variant="solo"
+          required
+          prepend-inner-icon="mdi-account-outline"
+          density="compact"
+          single-line
+          hide-details
+          class="mb-6 mt-3"
+        ></v-text-field>
+        <label for="" class="field-auth ml-9">Password</label>
+        <v-text-field
+          rounded
+          v-model="password"
+          :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+          prepend-inner-icon="mdi-lock-outline"
+          :type="show1 ? 'text' : 'password'"
+          label="Enter password"
+          density="compact"
+          variant="solo"
+          required
+          single-line
+          hide-details
+          type="password"
+          @click:append-inner="show1 = !show1"
+          class="field-placeholder mb-6 mt-3"
+        ></v-text-field>
 
-                  width: 100%;
-                  height: 100%;
-                  background: #193286;
-                  color: white;
-                "
-              >
-                <span
-                  style="
-                    font-size: 16px;
-                    font-family: 'Nunito';
-                    font-weight: 400;
-                    word-wrap: break-word;
-                  "
-                  >Login</span
-                >
-              </v-btn>
-            </div>
-            <div
-              style="
-                color: #ffc300;
-                font-size: 20px;
-                font-family: 'Nunito';
-                font-weight: 400;
-                word-wrap: break-word;
-                justify-content: center;
-                margin-top: 5%;
-                margin-left: 11px;
-              "
-              align="center"
-              justify="center"
-              v-if="invalid"
-            >
-              <!-- {{ messageStore }} -->
-            </div>
-          </v-form>
+        <br />
+
+        <v-btn
+          rounded
+          :disabled="!form"
+          color="asguard_primary_dark"
+          class="d-flex mx-auto w-50"
+          size="large"
+          type="submit"
+          variant="elevated"
+        >
+          <span class="field-login"> Login </span>
+        </v-btn>
+        <div class="text-center mt-6 text-asguard_secondary">
+          Test User Login
         </div>
-      </v-col>
-    </v-row>
+      </v-form>
+    </v-card>
     <Footer />
-  </div>
+  </v-sheet>
 </template>
 
 <script>
@@ -132,6 +75,7 @@ export default {
   data() {
     return {
       users: "",
+      show1: false,
       test: [],
       username: "",
       password: "",
@@ -159,25 +103,3 @@ export default {
   },
 };
 </script>
-<style scoped>
-.main-content {
-  margin-top: 80px;
-  margin-bottom: 80px;
-}
-
-.dms-login-container {
-  margin-top: 357px;
-}
-
-.img-center {
-  display: block;
-  margin-left: auto;
-  margin-right: auto;
-  width: 33%;
-  height: 33%;
-}
-
-.input-w {
-  background-color: white;
-}
-</style>

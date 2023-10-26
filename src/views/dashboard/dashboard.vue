@@ -20,12 +20,12 @@
             />
           </div>
           <div id="chart" class="mt-3 mr-2">
-            <apexchart
+            <!-- <apexchart
               ref="apexChart"
               height="350"
               :options="chartOptions"
               :series="chartOptions.series"
-            ></apexchart>
+            ></apexchart> -->
           </div>
 
           <div>
@@ -87,7 +87,7 @@
 
 <script>
 import { AgGridVue } from "ag-grid-vue3";
-import VueApexCharts from "vue3-apexcharts";
+// import VueApexCharts from "vue3-apexcharts";
 import BaseLayout from "../../layouts/layout.vue";
 
 export default {
@@ -95,7 +95,7 @@ export default {
   components: {
     BaseLayout,
     AgGridVue,
-    apexchart: VueApexCharts,
+    // apexchart: VueApexCharts,
   },
   watch: {
     dataChart: {
@@ -214,47 +214,47 @@ export default {
     };
   },
   methods: {
-    initializeWebSocket() {
-      this.socket = new WebSocket("ws://" + window.location.host + "/ws/data/"); // Replace with your WebSocket URL
+    // initializeWebSocket() {
+    //   this.socket = new WebSocket("ws://" + window.location.host + "/ws/data/"); // Replace with your WebSocket URL
 
-      this.socket.onopen = () => {
-        console.log("WebSocket connection opened.");
-      };
+    //   this.socket.onopen = () => {
+    //     console.log("WebSocket connection opened.");
+    //   };
 
-      this.socket.onmessage = (event) => {
-        if (this.socket.readyState === WebSocket.OPEN) {
-          const data = JSON.parse(event.data);
-          this.dataChart = data;
+    //   this.socket.onmessage = (event) => {
+    //     if (this.socket.readyState === WebSocket.OPEN) {
+    //       const data = JSON.parse(event.data);
+    //       this.dataChart = data;
 
-          const timestamp = new Date(data.timestamp * 1000).getTime();
+    //       const timestamp = new Date(data.timestamp * 1000).getTime();
 
-          this.chartOptions.series[0].data.push([
-            timestamp,
-            data.cpu_percentage.toFixed(2),
-          ]);
-          this.chartOptions.series[1].data.push([
-            timestamp,
-            data.memory_percentage.toFixed(2),
-          ]);
+    //       this.chartOptions.series[0].data.push([
+    //         timestamp,
+    //         data.cpu_percentage.toFixed(2),
+    //       ]);
+    //       this.chartOptions.series[1].data.push([
+    //         timestamp,
+    //         data.memory_percentage.toFixed(2),
+    //       ]);
 
-          const maxDataPoints = 10;
-          if (this.chartOptions.series[0].data.length > maxDataPoints) {
-            this.chartOptions.series[0].data.shift();
-            this.chartOptions.series[1].data.shift();
-          }
+    //       const maxDataPoints = 10;
+    //       if (this.chartOptions.series[0].data.length > maxDataPoints) {
+    //         this.chartOptions.series[0].data.shift();
+    //         this.chartOptions.series[1].data.shift();
+    //       }
 
-          this.$refs.apexChart.updateOptions({});
-        } else {
-          console.log(
-            "WebSocket is not in the OPEN state. Unable to send a message."
-          );
-        }
-      };
+    //       this.$refs.apexChart.updateOptions({});
+    //     } else {
+    //       console.log(
+    //         "WebSocket is not in the OPEN state. Unable to send a message."
+    //       );
+    //     }
+    //   };
 
-      this.socket.onclose = () => {
-        console.log("WebSocket connection closed.");
-      };
-    },
+    //   this.socket.onclose = () => {
+    //     console.log("WebSocket connection closed.");
+    //   };
+    // },
     actionCellRenderer() {
       let eGui = document.createElement("div");
 
@@ -316,7 +316,7 @@ export default {
     let interfaces =
       document.getElementById("app").attributes["interfaces"].value;
 
-    this.initializeWebSocket();
+    // this.initializeWebSocket();
     this.information = infoData;
     const info = JSON.parse(this.information);
     this.infoParser = info;

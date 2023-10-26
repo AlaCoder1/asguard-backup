@@ -118,7 +118,6 @@
 </template>
 
 <script>
-import "vuetify/styles";
 import { useAuthStore } from "../../store/modules/auth";
 const storeAuth = useAuthStore();
 

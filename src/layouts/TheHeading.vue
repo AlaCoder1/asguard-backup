@@ -1,63 +1,52 @@
 <template>
-    <v-app>
-        <v-main>
-            <!-- header -->
-            <v-toolbar
-                 color="blue-darken-3"
-                flat
-                class="axe-media-print-hide axe-sticky"
-                height="60"
-            >
-                <v-toolbar-title class="axe-font-size-three white--text ml-2">
-                </v-toolbar-title>
-                <v-spacer />
-                <div v-if="back">
-                    <v-btn
-                        text
-                        x-small
-                        class="white--text axe-btn-bg text-caption"
-                        href="/"
-                    >
-                        <span class="icon-arrow-left  icon-size-one mr-2" />
-                        <p class="text-capitalize mt-3">
-                           titleback
-                        </p>
-                    </v-btn>
-                </div>
-            </v-toolbar>
-            <v-divider class="axe-media-print-hide" />
-            <!-- content -->
-            <slot name="content" />
-        </v-main>
-    </v-app>
+  <v-toolbar>
+    <v-toolbar-title class="ml-8">
+      <img src="../assets/images/logo.svg" alt="logo" height="50" />
+    </v-toolbar-title>
+    <v-spacer />
+    <v-menu offset-y>
+      <template v-slot:activator="{ on }">
+        <v-avatar class="ml-3 mr-3" size="30" v-on="on">
+          <v-icon size="30">mdi-account-circle-outline</v-icon>
+        </v-avatar>
+      </template>
+      <v-list>
+        <v-list-item>
+          <v-btn text>Profile</v-btn>
+        </v-list-item>
+        <v-list-item>
+          <v-btn text>Settings</v-btn>
+        </v-list-item>
+        <v-list-item>
+          <v-list-item-title>
+            <v-btn @click="logout" text>Logout</v-btn>
+          </v-list-item-title>
+        </v-list-item>
+      </v-list>
+    </v-menu>
+    <div>
+      <!-- <span style="color: white;">{{ user.currentUser.username }}</span>
+        <span style="color: white;">{{ user.currentUser.email }}</span> -->
+    </div>
+    <br />
+  </v-toolbar>
 </template>
 
 <script>
 export default {
-    name: 'ToolbarComponent',
-    data: () => ({
-        active: true,
-    }),
+  name: "ToolbarComponent",
 };
 </script>
 
-<style lang="sass">
-    .axe-tabs{
-        .v-tabs-bar{
-            height: auto ;
-        }
-    }
-    .axe-tabs {
-        .v-tab{
-            max-width: none;
-            font-size: 1rem;
-            font-weight: 600;
-            padding: 1.5rem;
-        }
-    }
-    .axe-tabs{
-        .v-tabs-slider-wrapper{
-            height: 4px;
-        }
-    }
+<style scoped>
+.v-toolbar {
+  background-color: #193286;
+  color: #fff;
+  font-family: Opens;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  height: 70px;
+}
 </style>

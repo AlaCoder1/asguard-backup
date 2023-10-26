@@ -1,12 +1,12 @@
 from django.shortcuts import render
-from managementUsers.views import *
-from managementUsers.models import User
+from backend.managementUsers.views import *
+from backend.managementUsers.models import User
 from django.contrib.auth.decorators import login_required
-from managementServers.models import * 
-from network.models import *
-from rules.models import *
-from gateway.models import *
-from dashboard.functions import get_system_infomations
+from backend.managementServers.models import * 
+from backend.network.models import *
+from backend.rules.models import *
+from backend.gateway.models import *
+from backend.dashboard.functions import get_system_infomations
 
 def getUsers(request):
     list_users = []

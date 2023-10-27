@@ -1,8 +1,8 @@
 <template>
-  <v-app id="inspire">
-    <TheSidebarVue />
+  <!-- <v-app id="inspire">
+    <TheSidebarVue style="width: auto;"/>
     <TheHeadingVue />
-    <v-main>
+    <v-main >
       <v-toolbar dark fixed app class="asguard_toolbar">
         <v-toolbar-title>
           {{ title }}
@@ -17,7 +17,30 @@
       <slot name="content"></slot>
     </v-main>
     <TheFooter />
-  </v-app>
+  </v-app> -->
+
+  <v-layout>
+    <TheHeadingVue />
+
+    <TheSidebarVue />
+
+    <v-main class="ml-20">
+      <v-toolbar dark fixed app class="asguard_toolbar">
+        <v-toolbar-title>
+          {{ title }}
+        </v-toolbar-title>
+        <v-spacer />
+        <div v-if="back">
+          <v-btn>
+            {{ titleback }}
+          </v-btn>
+        </div>
+      </v-toolbar>
+      <slot name="content"></slot>
+    </v-main>
+
+    <TheFooter />
+  </v-layout>
 </template>
 
 <script>
@@ -54,9 +77,12 @@ export default {
 </script>
 
 <style scoped>
-.v-main {
+/* .v-main {
   padding-top: 0px;
-}
+  left: 0;
+  right: 0;
+  
+} */
 
 .asguard_toolbar {
   background-color: #f8f8f8;
@@ -66,5 +92,8 @@ export default {
   font-style: normal;
   font-weight: 400;
   line-height: normal;
+  left: 0;
+  right: 0;
+  display: flex;
 }
 </style>

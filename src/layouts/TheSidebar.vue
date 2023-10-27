@@ -1,51 +1,94 @@
 <template>
   <v-navigation-drawer
-    :mini-variant.sync="mini"
+    v-model="drawer"
+    :rail="rail"
+    hover
+    foating
+    :rail-width="80"
     class="global-drawer"
-    permanent
-    app
+    :class="{ 'w-auto': rail, 'w-20': !rail }"
   >
-    <v-app-bar dense flat class="row-pointer" @click.stop="closeSidebar">
-      <v-toolbar-title>
-        <span>Asguard</span>
-      </v-toolbar-title>
-      <v-spacer></v-spacer>
-    </v-app-bar>
-    <v-icon v-if="mini">mdi-close</v-icon>
-    <v-icon v-if="!mini">mdi-menu</v-icon>
-    <v-list dense class="text-center mt-">
-      <template v-for="item in items">
-        <a :href="item.href" class="custom-a">
-          <v-list-item @click="showSubMenu(item)">
-            <v-list-item-icon>
-              <v-icon>{{ item.icon }}</v-icon>
-            </v-list-item-icon>
-            <v-list-item-content>
-              <v-list-item-title>{{ item.title }}</v-list-item-title>
-            </v-list-item-content>
-            <v-list-item-action v-if="item.subItems.length > 0">
-              <v-icon v-if="item.subMenuVisible">mdi-chevron-up</v-icon>
-              <v-icon v-else>mdi-chevron-down</v-icon>
-            </v-list-item-action>
-          </v-list-item>
-        </a>
-        <v-list-item
-          v-if="item.subMenuVisible"
-          v-for="subItem in item.subItems"
-          :key="subItem.title"
-          :class="{ 'sub-menu-visible': item.subMenuVisible }"
-          class="sub-menu-item"
-        >
-          <a :href="subItem.href" class="custom-sub-a">
-            <v-list-item-content>
-              <v-list-item-title class="text-white-space">{{
-                subItem.title
-              }}</v-list-item-title>
-            </v-list-item-content>
+    <div v-if="!rail">
+      <div
+        dense
+        flat
+        class="row-pointer asguard_primary_dark"
+        @click.stop="closeSidebar"
+      >
+        <div class="d-flex">
+          <v-toolbar-title class="ml-5 mt-5">
+            <span>Asguard</span>
+          </v-toolbar-title>
+
+          <div class="ml-5 mt-5 mr-5">
+            <v-icon v-if="!rail"><i class="fa fa-bars"></i></v-icon>
+          </div>
+        </div>
+      </div>
+
+      <v-list>
+        <template v-for="item in items">
+          <a :href="item.href" class="custom-a">
+            <v-list-item @click="showSubMenu(item)">
+              <div v-if="!rail">
+                <v-list-item-title class="float-left">
+                  <span class="ml-5"><i :class="item.icon"></i> &nbsp;</span>
+                  <span class="ml-7">{{ item.title }}</span></v-list-item-title
+                >
+
+                <v-list-item-title
+                  class="float-right justify-end mr-5"
+                  v-if="item.subItems.length > 0"
+                >
+                  <v-icon v-if="item.subMenuVisible"
+                    ><i class="fa fa-chevron-up" aria-hidden="true"></i
+                  ></v-icon>
+                  <v-icon v-else
+                    ><i class="fa fa-chevron-down" aria-hidden="true"></i
+                  ></v-icon>
+                </v-list-item-title>
+              </div>
+            </v-list-item>
           </a>
-        </v-list-item>
-      </template>
-    </v-list>
+          <v-list-item
+            v-if="item.subMenuVisible"
+            v-for="subItem in item.subItems"
+            :key="subItem.title"
+            :class="{ 'sub-menu-visible': item.subMenuVisible }"
+            class="sub-menu-item"
+          >
+            <a :href="subItem.href" class="custom-sub-a">
+              <v-list-item-content>
+                <v-list-item-title class="text-white-space">{{
+                  subItem.title
+                }}</v-list-item-title>
+              </v-list-item-content>
+            </a>
+          </v-list-item>
+        </template>
+      </v-list>
+    </div>
+    <div v-else>
+      <div
+        class="ml-5 mt-5 mr-5 row-pointer asguard_primary_dark"
+        @click="closeSidebar"
+      >
+        <v-icon v-if="rail"><i class="fa fa-close"></i></v-icon>
+        <v-icon v-if="!rail"><i class="fa fa-bars"></i></v-icon>
+      </div>
+
+      <v-list>
+        <template v-for="item in items">
+          <a :href="item.href">
+            <v-list-item @click="showSubMenu(item)">
+              <div>
+                <span class="ml-5"><i :class="item.icon"></i> &nbsp;</span>
+              </div>
+            </v-list-item>
+          </a>
+        </template>
+      </v-list>
+    </div>
   </v-navigation-drawer>
 </template>
 
@@ -59,11 +102,12 @@ export default {
   data() {
     return {
       drawer: true,
+      rail: false,
       mini: false,
       items: [
         {
           title: "Dashboard",
-          icon: "mdi-view-dashboard",
+          icon: "fa fa-home",
           href: "/dashboard",
           active: "dashboard",
           subItems: [],
@@ -72,7 +116,7 @@ export default {
         },
         {
           title: "System",
-          icon: "mdi-laptop",
+          icon: "fa fa-laptop",
           active: "system",
           subItems: [
             {
@@ -112,7 +156,7 @@ export default {
         },
         {
           title: "Interfaces",
-          icon: "mdi-network",
+          icon: "fa fa-building",
           active: "interfaces",
           subItems: [
             {
@@ -157,7 +201,7 @@ export default {
         },
         {
           title: "Firewall",
-          icon: "mdi-wall-fire",
+          icon: "fa fa-fire",
           active: "Firewall",
           subItems: [
             {
@@ -183,7 +227,7 @@ export default {
         },
         {
           title: "Services",
-          icon: "mdi-cog",
+          icon: "fa fa-cog",
           active: "Firewall",
           subItems: [
             {
@@ -240,7 +284,7 @@ export default {
         },
         {
           title: "Reports",
-          icon: "mdi-chart-bar",
+          icon: "fa fa-bar-chart",
           active: "Firewall",
           subItems: [
             {
@@ -272,7 +316,7 @@ export default {
         },
         {
           title: "Subscription",
-          icon: "mdi-cash-sync",
+          icon: "fa fa-credit-card",
           href: "/subscription",
           active: "Firewall",
           subItems: [],
@@ -286,6 +330,8 @@ export default {
       storeAuth.logout();
     },
     showSubMenu(item) {
+      if (this.rail == true) this.rail = false;
+
       this.items.forEach((menuItem) => {
         if (menuItem !== item) {
           menuItem.subMenuVisible = false;
@@ -297,10 +343,12 @@ export default {
       }
     },
     closeSidebar() {
-      this.mini = !this.mini;
-      this.items.forEach((menuItem) => {
-        menuItem.subMenuVisible = false;
-      });
+      this.rail = !this.rail;
+
+      // this.mini = !this.mini;
+      // this.items.forEach((menuItem) => {
+      //   menuItem.subMenuVisible = false;
+      // });
     },
   },
   computed: {
@@ -310,3 +358,14 @@ export default {
   },
 };
 </script>
+<style lang="scss">
+@import "font-awesome/css/font-awesome.css";
+
+.flex-width {
+  flex: 0 0 auto;
+}
+
+.margin-auto {
+  margin-left: auto;
+}
+</style>

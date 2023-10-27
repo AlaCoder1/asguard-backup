@@ -1,4 +1,5 @@
 <template>
+  <v-app-bar>
   <v-toolbar>
     <v-toolbar-title class="ml-8">
       <img src="../assets/images/logo.svg" alt="logo" height="50" />
@@ -30,6 +31,7 @@
     </div>
     <br />
   </v-toolbar>
+</v-app-bar>
 </template>
 
 <script>
@@ -41,12 +43,12 @@ export default {
 <style scoped>
 .v-toolbar {
   background-color: #193286;
-  color: #fff;
+  /* color: #fff;
   font-family: Opens;
   font-size: 18px;
   font-style: normal;
   font-weight: 400;
   line-height: normal;
-  height: 70px;
+  height: 70px; */
 }
 </style>

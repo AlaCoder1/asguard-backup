@@ -11,10 +11,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from backend.authentification.views import *
 # Version without SSh connection
 from .functions import *
-# end Version without SSh connection
-# Version SSh connection
-# from .remoteFunctions import *
-# end Version SSh connection
+
 from django.views.decorators.csrf import csrf_exempt
 from backend.gateway.models import *
 from backend.gateway.functions import *
@@ -24,24 +21,17 @@ def device_nameInterface(name_interface):
     data = Interface.objects.get(name_interface=name_interface)
     return data
 
-###########################
 
-#################################
-@api_view(['POST'])
-@authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
-def add_interface(request):
-    data = request.data
-    serializerIP4Config = InterfaceSerializer(data=data)
-    if (serializerIP4Config.is_valid()):
-        serializerIP4Config.save()
-    return JsonResponse({"msg:": "interface added successfully!!!!!"})
+
 
 ###########################
-# @api_view(['PUT'])
-# @authentication_classes([AllowAny])
-# @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@swagger_auto_schema(
+    method='PUT',
+    request_body=GatewaySerializer,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO CONFIG NETWORK INTERFACES",
+    operation_description="This API help to configure advanced parametres in network and configure interfaces networrk to get addresses IPV4 and IPV6 in system then in database",
+)
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def conf(request,name_interface):

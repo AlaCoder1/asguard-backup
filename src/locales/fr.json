@@ -1,4 +1,20 @@
 {
+  "form":{
+  
+    "username":"User name",
+    "password":"Mot de passe"
+  },
+  "buttons":{
+    "login":"se connecter"
+  },
+  "placeholder":{
+    "enterPassword":"Saisir le mot de passe",
+    "enterUserName":"Saisir le nom de l'utilisateur"
+  
+  },
+
+   
+   
     "PageGeneral": {
       "NetworksServers": "Serveurs de réseau",
       "AddServer": "Ajouter un serveur",
@@ -79,7 +95,6 @@
       "RejectLeasesFrom": "Rejeter les baux de",
       "Hostname": "Nom d'hôte",
       "OverrideMTU": "Remplacer MTU",
-      "MTU": "MTU",
       "ProtocolTiming": "Chronométrage du protocole",
       "Timeout": "Délai d'expiration",
       "TryAgain": "Réessayer",

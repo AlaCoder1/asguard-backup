@@ -1,4 +1,11 @@
 <template>
+  <!--   
+  <v-select
+    v-model="lang"
+      label="Select"
+      :items="['en', 'fr']"
+    ></v-select> -->
+
   <v-sheet class="bg-asguard_primary_light pa-12 h-screen" rounded>
     <v-card
       :elevation="0"
@@ -6,12 +13,16 @@
       max-width="500px"
     >
       <img src="../../assets/images/logo.svg" class="img-center mb-8 mt-15" />
-      <v-form v-model="form" @submit.prevent="connect">
-        <label for="" class="field-auth ml-9">User name</label>
+
+      <v-btn @click="changeLang('en')" class="ml-9"> english </v-btn>
+      <v-btn @click="changeLang('fr')" class="ml-5"> frensh </v-btn>
+
+      <v-form v-model="form" class="mt-5" @submit.prevent="connect">
+        <label for="" class="field-auth ml-9">{{ $t("form.username") }}</label>
         <v-text-field
           rounded
           v-model="username"
-          label="Enter user name"
+          :placeholder="$t('placeholder.enterUserName')"
           variant="solo"
           required
           prepend-inner-icon="mdi-account-outline"
@@ -20,14 +31,14 @@
           hide-details
           class="mb-6 mt-3"
         ></v-text-field>
-        <label for="" class="field-auth ml-9">Password</label>
+        <label for="" class="field-auth ml-9">{{ $t("form.password") }}</label>
         <v-text-field
           rounded
           v-model="password"
           :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
           prepend-inner-icon="mdi-lock-outline"
           :type="show1 ? 'text' : 'password'"
-          label="Enter password"
+          :placeholder="$t('placeholder.enterPassword')"
           density="compact"
           variant="solo"
           required
@@ -41,6 +52,7 @@
         <br />
 
         <v-btn
+          @click.prevent="connect"
           rounded
           :disabled="!form"
           color="asguard_primary_dark"
@@ -49,7 +61,7 @@
           type="submit"
           variant="elevated"
         >
-          <span class="field-login"> Login </span>
+          <span class="field-login"> {{ $t("buttons.login") }} </span>
         </v-btn>
         <div class="text-center mt-6 text-asguard_secondary">
           Test User Login
@@ -61,11 +73,11 @@
 </template>
 
 <script>
+import "vuetify/styles";
 import { useAuthStore } from "../../store/modules/auth";
 const storeAuth = useAuthStore();
 
 import Footer from "../../layouts/TheFooter.vue";
-// import { mapState } from "pinia";
 
 export default {
   name: "HomeComponent",
@@ -74,22 +86,19 @@ export default {
   },
   data() {
     return {
+      lang: "en",
       users: "",
       show1: false,
-      test: [],
       username: "",
       password: "",
       invalid: false,
       message: "",
     };
   },
-  beforeMount: async function () {
-    // this.users = this.$root.$data.tab;
-  },
-  computed: {
-    // ...mapState(storeAuth, ["messageStore"]),
-  },
   methods: {
+    changeLang(item) {
+      this.$i18n.locale = item;
+    },
     connect() {
       const user = {
         username: this.username,

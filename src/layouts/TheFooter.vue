@@ -12,15 +12,25 @@ export default {
 
 <style scoped>
 .footer {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
   background-color: #193286;
-  color: #fff;
+  color: white;
+  text-align: center;
+  height: 47px;
   font-family: Nunito;
   font-size: 18px;
   font-style: normal;
   font-weight: 400;
   line-height: normal;
-  position: fixed;
-  bottom: 0;
-  width: 100%;
+  z-index: 1000;
 }
 </style>

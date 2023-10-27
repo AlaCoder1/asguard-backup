@@ -1,11 +1,12 @@
 from django.shortcuts import render
-from managementUsers.views import *
-from managementUsers.models import User
+from backend.managementUsers.views import *
+from backend.managementUsers.models import User
 from django.contrib.auth.decorators import login_required
-from managementServers.models import * 
-from network.models import *
-from rules.models import *
-from gateway.models import *
+from backend.managementServers.models import * 
+from backend.network.models import *
+from backend.rules.models import *
+from backend.gateway.models import *
+from backend.dashboard.functions import get_system_infomations
 
 def getUsers(request):
     list_users = []
@@ -53,13 +54,11 @@ def getServers(request):
         servers = Server.objects.all()
         serverDict = serializers.serialize("json", servers)
         res = json.loads(serverDict)
-        print(res)
         for i in range(0, len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
             type = Type.objects.get(id=res[i]['fields']['type'])
-            print(type.type_name)
             res[i]['fields']['id'] = id
             res[i]['fields']['type_name'] = type.type_name
             list_servers.append(res[i]['fields'])
@@ -87,14 +86,20 @@ def GetAllRules(request):
             res = json.loads(ruleDict)
             list_rules=[]
             for i in range(0, len(res)):
-              interfaceDict=[]
-              res[i].pop('model')
-              id = res[i]['pk']
-              res[i].pop('pk')
-              res[i]['fields']['id'] = id
-              res[i]['fields'].pop("interface")
-              res[i]['fields'].pop("rule")
-              list_rules.append(res[i]['fields'])
+                interfaceDict=[]
+                res[i].pop('model')
+                id = res[i]['pk']
+                res[i].pop('pk')
+                res[i]['fields']['id'] = id
+                res[i]['fields'].pop("interface")
+                res[i]['fields'].pop("rule")
+                list_protocols=[]
+                if res[i]['fields']['protocol'].find("{")!=-1:
+                        list_protocols=res[i]['fields']['protocol'].strip('{').strip('}').split(',')
+                else:
+                        list_protocols.append(res[i]['fields']['protocol'])
+                res[i]['fields']['protocol']=list_protocols
+                list_rules.append(res[i]['fields'])
              ########## 
             rules_type[elem]=list_rules
           all_rules[resInterface[x]['fields']['name_interface']]=rules_type
@@ -110,7 +115,10 @@ def getAllGateways(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
-            list_gateways.append(res[i]['fields'])
+            list_gateways.append({
+                "gwname":res[i]['fields']['gwname'],
+                "gwaddress":res[i]['fields']['gwaddress'],
+                })
     return list_gateways
 def getAllStaticGateways(request):
     if (request.method == 'GET'):
@@ -165,7 +173,6 @@ def GetInformationsByInterface(request,name_interface):
             info['genericConfig']=res[0]['fields']
         else:
             info['genericConfig']=[]
-        # print({"res":res[0]['fields']})
         IPV4ConfigObject = IP4Config.objects.filter(interface_id=interfaceObject.id)
         IPV4ConfigObjectDict = serializers.serialize("json", IPV4ConfigObject)
         resultat = json.loads(IPV4ConfigObjectDict)
@@ -180,14 +187,7 @@ def GetInformationsByInterface(request,name_interface):
             info['IPV4Config']=[]
     return info
 
-@login_required(login_url='/')
-def index_page(request):
-    usr=getUsers(request)
-    grp=getGroups(request)
-    srv=getServers(request)
-    context = {'users':usr,"groups":grp,"servers":srv}
-    print(context)
-    return render(request, 'index_page.html',context)
+
 
 @login_required(login_url='/')
 def user_certificate_managment_page(request):
@@ -195,7 +195,6 @@ def user_certificate_managment_page(request):
     grp=getGroups(request)
     srv=getServers(request)
     context = {'users':usr,"groups":grp,"servers":srv}
-    print(context)
     return render(request, 'user_certificate_managment.html',context)
 
 @login_required(login_url='/')
@@ -207,7 +206,6 @@ def interface_page(request):
         config[interfaces[i]['name_interface']]=IPV4Config
     # IPV4Config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
     allStaticGateways=getAllStaticGateways(request)
-    print("config",config)
     context = {'interfaces':interfaces,'IPV4Config':config,'allStaticGateways':allStaticGateways}
     return render(request, 'interface_page.html',context)
 
@@ -230,3 +228,30 @@ def login(request):
     usr=getAllUsers(request)
     context = {'users':usr}
     return render(request, 'login.html',context)
+
+
+@login_required(login_url='/')
+def index_page(request):
+    info=get_system_infomations()
+    gateways=getAllGateways(request)
+    interfaces=AllInterfaces(request)
+    config=[]
+    for i in range(len(interfaces)):
+        info_interface={}
+        IPV4Config=GetInformationsByInterface(request, interfaces[i]['name_interface'])
+        speed_duplex=""
+        ip_address=""
+        if "speed_duplex" in IPV4Config['genericConfig'] :
+            speed_duplex=IPV4Config['genericConfig']['speed_duplex']
+        if "ip_address" in IPV4Config['IPV4Config'] :
+            ip_address=IPV4Config['IPV4Config']['ip_address']
+        info_interface={
+            "name_interface":interfaces[i]['name_interface'],
+            "speed_duplex":speed_duplex,
+            "ip_address":ip_address}
+        config.append(info_interface)
+    context = {"informations":info,"gateways":json.dumps(gateways),"interfaces":json.dumps(config)}
+    return render(request, 'index_page.html',context)
+
+def error_404_view(request, exception):
+    return render(request,'404.html',status=404)

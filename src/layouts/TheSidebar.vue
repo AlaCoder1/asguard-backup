@@ -4,7 +4,7 @@
     :rail="rail"
     hover
     foating
-    :rail-width="80"
+    :rail-width="67"
     class="global-drawer"
     :class="{ 'w-auto': rail, 'w-20': !rail }"
   >
@@ -21,7 +21,7 @@
           </v-toolbar-title>
 
           <div class="ml-5 mt-5 mr-5">
-            <v-icon v-if="!rail"><i class="fa fa-bars"></i></v-icon>
+            <v-icon v-if="!rail"><i class="mdi mdi-menu icon-custom"></i></v-icon>
           </div>
         </div>
       </div>
@@ -31,20 +31,22 @@
           <a :href="item.href" class="custom-a">
             <v-list-item @click="showSubMenu(item)">
               <div v-if="!rail">
-                <v-list-item-title class="float-left">
-                  <span class="ml-5"><i :class="item.icon"></i> &nbsp;</span>
-                  <span class="ml-7">{{ item.title }}</span></v-list-item-title
-                >
+                <v-list-item class="float-left">
+                  
+                  <span class="ml-5 icon-custom"><i :class="item.icon"></i> &nbsp;</span>
+                  <span class="ml-7">{{ item.title }}</span></v-list-item>
+                
 
                 <v-list-item-title
                   class="float-right justify-end mr-5"
                   v-if="item.subItems.length > 0"
                 >
                   <v-icon v-if="item.subMenuVisible"
-                    ><i class="fa fa-chevron-up" aria-hidden="true"></i
-                  ></v-icon>
+                    ><i class="mdi mdi-chevron-up" aria-hidden="true"></i
+                  >
+                </v-icon>
                   <v-icon v-else
-                    ><i class="fa fa-chevron-down" aria-hidden="true"></i
+                    ><i class="mdi mdi-chevron-down" aria-hidden="true"></i
                   ></v-icon>
                 </v-list-item-title>
               </div>
@@ -73,16 +75,15 @@
         class="ml-5 mt-5 mr-5 row-pointer asguard_primary_dark"
         @click="closeSidebar"
       >
-        <v-icon v-if="rail"><i class="fa fa-close"></i></v-icon>
-        <v-icon v-if="!rail"><i class="fa fa-bars"></i></v-icon>
+        <v-icon v-if="rail"><i class="mdi mdi-close icon-custom"></i></v-icon>
       </div>
 
       <v-list>
         <template v-for="item in items">
-          <a :href="item.href">
+          <a :href="item.href" style="text-decoration: none; color: black;">
             <v-list-item @click="showSubMenu(item)">
               <div>
-                <span class="ml-5"><i :class="item.icon"></i> &nbsp;</span>
+                <span class="ml-5"><i :class="item.icon" class="icon-custom"></i> &nbsp;</span>
               </div>
             </v-list-item>
           </a>
@@ -107,7 +108,7 @@ export default {
       items: [
         {
           title: "Dashboard",
-          icon: "fa fa-home",
+          icon: "mdi mdi-view-dashboard",
           href: "/dashboard",
           active: "dashboard",
           subItems: [],
@@ -116,7 +117,7 @@ export default {
         },
         {
           title: "System",
-          icon: "fa fa-laptop",
+          icon: "mdi mdi-laptop",
           active: "system",
           subItems: [
             {
@@ -156,7 +157,7 @@ export default {
         },
         {
           title: "Interfaces",
-          icon: "fa fa-building",
+          icon: "mdi mdi-network",
           active: "interfaces",
           subItems: [
             {
@@ -201,7 +202,7 @@ export default {
         },
         {
           title: "Firewall",
-          icon: "fa fa-fire",
+          icon: "mdi mdi-wall-fire",
           active: "Firewall",
           subItems: [
             {
@@ -227,7 +228,7 @@ export default {
         },
         {
           title: "Services",
-          icon: "fa fa-cog",
+          icon: "mdi mdi-cog",
           active: "Firewall",
           subItems: [
             {
@@ -284,7 +285,7 @@ export default {
         },
         {
           title: "Reports",
-          icon: "fa fa-bar-chart",
+          icon: "mdi mdi-chart-bar",
           active: "Firewall",
           subItems: [
             {
@@ -316,7 +317,7 @@ export default {
         },
         {
           title: "Subscription",
-          icon: "fa fa-credit-card",
+          icon: "mdi mdi-cash-sync",
           href: "/subscription",
           active: "Firewall",
           subItems: [],
@@ -360,6 +361,8 @@ export default {
 </script>
 <style lang="scss">
 @import "font-awesome/css/font-awesome.css";
+@import '~@mdi/font/css/materialdesignicons.min.css';
+
 
 .flex-width {
   flex: 0 0 auto;
@@ -367,5 +370,9 @@ export default {
 
 .margin-auto {
   margin-left: auto;
+}
+.icon-custom {
+  color: rgb(104, 100, 100);
+  font-size: 24px;
 }
 </style>

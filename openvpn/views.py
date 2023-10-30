@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.http import JsonResponse
 from django.core import serializers
 from django.db.models.deletion import ProtectedError
@@ -11,9 +12,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from network.models import IP4Config, Interface
 from network.serializers import IP4ConfigSerializer, InterfaceSerializer
 from openvpn.manage_errors import CommandExecutionError
-from .service_openvpn import *
-from .models import *
-from .serializers import *
+from .models import ServerOpenvpn, ClientOpenvpn
+from .serializers import ServerOpenvpnSerializer, ClientOpenvpnSerializer
 from .functions import change_status_server_openvpn, delete_openvpn_interface, json_to_str_client, json_to_str_server, openvpn_interfaces
 from .server_openvpn import install_server_openvpn, delete_server_openvpn, update_server_openvpn
 from .client_openvpn import delete_client_openvpn, install_client_openvpn
@@ -73,7 +73,7 @@ def createServerOpenvpn(request):
             server_mode = server_mode.get('mode', '')
             proto = data.get('protocol', '')
             dev = data.get('device_mode', '')
-            interface = data.get('interface', '')
+            interface_name = data.get('interface', '')
             port = data.get('local_port', '')
             tls_auth = data.get('tls_auth', '')
             ca_name = data.get('ca_name', '')
@@ -101,6 +101,8 @@ def createServerOpenvpn(request):
             force_dns_cache_update = data.get('force_dns_cache_update', '')
             ntp_servers = data.get('ntp_servers', '')
             verb = data.get('verbosity_level', '')
+            interface = Interface.objects.get(name_interface=interface_name)
+            interface = interface.pk
             interface_address = IP4Config.objects.get(interface_id=interface)
             data["interface_address"] = interface_address.ip_address
         
@@ -229,7 +231,7 @@ def updateServerOpenVPN(request, id):
             server.server_mode = server_mode.get('mode', '')
             server.proto = data.get('protocol', '')
             server.dev = data.get('device_mode', '')
-            server.interface = Interface.objects.get(id=data.get('interface', ''))
+            server.interface = Interface.objects.get(name_interface=data.get('interface', ''))
             server.port = data.get('local_port', '')
             tls_auth = data.get('tls_auth', '')
             server.tls = f'/etc/openvpn/server/static_{server.name}.key'

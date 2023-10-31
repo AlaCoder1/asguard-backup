@@ -1,0 +1,82 @@
+from django.contrib.auth import get_user_model
+from rest_framework import status
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.contrib.auth import authenticate, login, logout
+from datetime import datetime, timedelta
+from django.conf import settings
+from .serializers import *
+import json
+from django.http import JsonResponse
+import paramiko
+from .models import *
+from drf_yasg.utils import swagger_auto_schema
+# Create your views here.
+
+
+User = get_user_model()
+ssh = paramiko.SSHClient()
+from django.shortcuts import redirect
+from django.conf import settings
+
+@swagger_auto_schema(
+    method='POST',
+    request_body=ObtainTokenSerializer,
+    responses={201: 'Created', 400: 'Bad Request'},
+    security=[{"session_auth": []}],  # Specify the security requirement
+    operation_summary="Summary of your API endpoint",
+    operation_description="Description of your API endpoint",
+)
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def authentification(request):
+    if (request.method == "POST"):
+        User = get_user_model()
+        data = json.loads(request.body)
+        username = data['username']
+        password = data['password']
+        serializer = ObtainTokenSerializer(data=data)
+        if (serializer.is_valid()):
+            user = authenticate(request, username=username, password=password)
+            if (user is not None):
+                login(request, user)
+                # Version SSH connection 
+                # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                # ssh.connect(settings.SSH_HOST, username=username,
+                #             password=password, port=settings.SSH_PORT)
+                # end Version SSH connection
+                settings.USERNAME = username
+                settings.PASSWORD = password
+                ## add this code so that logout work with jwt and timeleft
+                
+                # jwt_token = str(JWTAuthentication.create_jwt(user))
+                # userObject = User.objects.get(username=username)
+                # userObject.token_last_expired = datetime.now(
+                # )+timedelta(hours=settings.JWT_CONF['TOKEN_LIFETIME_HOURS'])
+                # userObject.save()
+                
+                ## end code
+                userObject = User.objects.get(username=username)
+                userDict = userObject.__dict__
+                CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
+                settings.CurrentUserId = userDict['id']
+                return JsonResponse({'message': ' Success Authentification',"currentUser":CurrentUser}, status=status.HTTP_200_OK)
+            else:
+                return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
+        else:
+            return JsonResponse({'message': 'Invalid username or password'})
+
+@swagger_auto_schema(
+    method='GET',
+    responses={201: 'Created', 400: 'Bad Request'},
+    security=[{"session_auth": []}],  # Specify the security requirement
+    operation_summary="Summary of your API endpoint",
+    operation_description="Description of your API endpoint",
+)
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def logout_view(request):
+    logout(request)
+    return JsonResponse({"msg": 'User Logged out successfully'})
+

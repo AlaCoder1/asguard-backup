@@ -7,7 +7,6 @@
         <v-col cols="12">
           <div>
             <v-row
-              no-gutters
               align="center"
               class="pr-4 axe-media-print-hide axe-sticky-three"
             >
@@ -25,7 +24,6 @@
             </v-row>
 
             <v-row
-              no-gutters
               align="center"
               style="overflow: hidden"
               class="pr-4 axe-media-print-hide axe-sticky-three mt-10"
@@ -106,7 +104,6 @@ export default {
   //   this.servers = parsedserversData;
   //   // //   parsing servers data
 
-    
   // },
   beforeMount: async function () {
     // console.log("before mount data.users :" + JSON.stringify(this.$root.$data.users));
@@ -118,7 +115,6 @@ export default {
     this.users = parsedData;
     //   parsing users data
 
-
     //   parsing groups data
     let groupData = document.getElementById("app").attributes["groups"].value;
     let parsedgroupsData = this.setData(groupData);
@@ -126,15 +122,13 @@ export default {
     this.groups = parsedgroupsData;
     //   parsing groups data
 
-
     // //   parsing servers data
-    let serversData = document.getElementById("app").attributes["servers"].value;
+    let serversData =
+      document.getElementById("app").attributes["servers"].value;
     let parsedserversData = this.setData(serversData);
 
     this.servers = parsedserversData;
     // //   parsing servers data
-
-
-  }
+  },
 };
 </script>

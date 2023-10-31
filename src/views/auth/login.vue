@@ -64,7 +64,7 @@
           <span class="field-login"> {{ $t("buttons.login") }} </span>
         </v-btn>
         <div class="text-center mt-6 text-asguard_secondary">
-          Test User Login
+          {{piniaStore.messageStore}}
         </div>
       </v-form>
     </v-card>
@@ -86,6 +86,7 @@ export default {
   },
   data() {
     return {
+      piniaStore:useAuthStore(),
       lang: "en",
       users: "",
       show1: false,

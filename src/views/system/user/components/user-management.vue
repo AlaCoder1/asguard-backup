@@ -1,25 +1,38 @@
 <template>
   <div>
     <h4>Networks admins</h4>
-    <ag-grid-vue
-      domLayout="autoHeight"
-      class="ag-theme-alpine mt-3 m-w-80"
-      :columnDefs="columnDefs"
-      :rowData="rowData"
-      :gridOptions="gridOptions"
-    />
-    <v-btn
-      color="dms_blue_dark"
-      :rounded="true"
-      class="mt-3 add-btn-user"
-      @click="openModal"
-    >
-      <span class="text-white">Add user</span>
-    </v-btn>
+
+    <div style="height: 100%">
+      <div style="display: flex; flex-direction: row; height: 100%">
+        <div style="overflow: hidden; flex-grow: 1">
+          <ag-grid-vue
+            domLayout="autoHeight"
+            class="ag-theme-alpine mt-3 m-w-80"
+            :columnDefs="columnDefs"
+            :rowData="rowData"
+            :gridOptions="gridOptions"
+            @grid-ready="onGridReady"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex justify-end">
+      <v-btn
+        color="asguard_primary_light"
+        :rounded="true"
+        class="mt-3 btn-add"
+        @click="openModalAdd"
+      >
+        <span class="text-white">Add user</span>
+      </v-btn>
+    </div>
+
     <Modal_User
-      :editRow="rowEdit"
-      :mode="modalMode"
       :isOpen="isModalOpen"
+      :editRow="rowEdit"
+      v-model="isModalOpen"
+      :mode="modalMode"
       @closeModal="closeModal"
       :initialData="modalData"
       @updateModalData="handleModalUpdate"
@@ -35,25 +48,26 @@
       :groups="DataList.groups"
     />
     <v-dialog v-model="deleteDialog" max-width="500px">
-    <v-card>
-      <v-card-title class="headline">Delete Confirmation</v-card-title>
-      <v-card-text>Are you sure you want to delete this user?</v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
-        <v-btn color="blue darken-1" text @click="confirmDelete">Delete</v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
+      <v-card>
+        <v-card-title class="headline">Delete Confirmation</v-card-title>
+        <v-card-text>Are you sure you want to delete this user?</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete"
+            >Delete</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </div>
-
 </template>
 
 <script>
 import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
-// import Modal_User from "../layout/Modal_User.vue";
-// import Modal_Password from "../layout/Modal_ChangePassword.vue";
+import Modal_User from "@/components/modals/ModalUser.vue";
+import Modal_Password from "@/components/modals/ModalChangePassword.vue";
 
 // import {
 //   createUser
@@ -63,8 +77,8 @@ export default {
   name: "UserManagement",
   components: {
     AgGridVue,
-    // Modal_User,
-    // Modal_Password,
+    Modal_User,
+    Modal_Password,
   },
   props: {
     DataList: {
@@ -105,6 +119,19 @@ export default {
     },
   },
   methods: {
+    onGridReady(params) {
+      this.gridApi = params.api;
+      this.gridColumnApi = params.columnApi;
+
+      // params.api.sizeColumnsToFit();
+      // window.addEventListener("resize", function () {
+      //   setTimeout(function () {
+      //     params.api.sizeColumnsToFit();
+      //   });
+      // });
+
+      // params.api.sizeColumnsToFit();
+    },
     cancelDelete() {
       this.deleteDialog = false;
     },
@@ -223,7 +250,14 @@ export default {
       }
     },
 
+    openModalAdd() {
+      console.log("ok");
+      this.modalData = {};
+      this.modalMode = "create"; // Assuming you want to open the modal in create mode
+      this.isModalOpen = true;
+    },
     openModal() {
+      console.log("ok");
       this.modalData = {};
       this.modalMode = "create"; // Assuming you want to open the modal in create mode
       this.isModalOpen = true;
@@ -401,4 +435,8 @@ export default {
 <style lang="scss">
 @import "~ag-grid-community/dist/styles/ag-grid.css";
 @import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
+
+.btn-add {
+  background: #213e9f;
+}
 </style>

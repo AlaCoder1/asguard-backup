@@ -1,17 +1,17 @@
 import { defineStore } from "pinia";
-import axios from 'axios';
+import axios from "axios";
 export const useAuthStore = defineStore("auth", {
-  id: 'useAuthStore',
+  id: "useAuthStore",
   state: () => ({
     user: null,
     isAuthenticated: false,
     csrfToken: null,
     messageStore: null,
   }),
-  
+
   getters: {
-    isAuthenticated: (state) => !!state.user,
-    csrfToken: (state) => state.csrfToken,
+    // isAuthenticated: (state) => !!state.user,
+    // csrfToken: (state) => state.csrfToken,
   },
 
   actions: {
@@ -21,6 +21,12 @@ export const useAuthStore = defineStore("auth", {
         console.log(response.data);
 
         this.user = response.data;
+        let userInfo = {
+          username: response.data.currentUser.username,
+          email: response.data.currentUser.email,
+        };
+
+        localStorage.setItem("userInfo", JSON.stringify(userInfo));
         // this.isAuthenticated = true;
 
         let message = "You are successfully logged in";
@@ -33,7 +39,7 @@ export const useAuthStore = defineStore("auth", {
         }, 1000);
 
         window.location.href = "/dashboard";
-        console.log('dashboard')
+        console.log("dashboard");
       } catch (error) {
         let message = "Invalid credentiels";
 
@@ -89,5 +95,4 @@ export const useAuthStore = defineStore("auth", {
       }
     },
   },
-
 });

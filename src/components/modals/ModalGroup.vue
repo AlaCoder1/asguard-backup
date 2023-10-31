@@ -1,7 +1,6 @@
 <template>
   <v-row justify="center">
-    <!-- <v-dialog v-model="isOpen" persistent width="600"> -->
-    <v-dialog  persistent width="600">
+    <v-dialog v-model="openModal"  persistent width="600">
 
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
@@ -12,21 +11,21 @@
           </v-card-title>
           <v-card-text>
             <v-container>
-              <v-row>
-                <!-- Group Modal -->
-                <v-col cols="12">
+              <v-row class="mb-5">
+        
+                <v-col cols="12" class="mb-n5">
                   <v-text-field
                     label="Group name*"
                     v-model="state.formData.groupname"
                   ></v-text-field>
                   <span
-                    class="error-feedback"
+                    class="error-feedback mb-1"
                     v-if="v$.formData.groupname.$error"
                     >{{ v$.formData.groupname.$errors[0].$message }}</span
                   >
                 </v-col>
 
-                <v-col cols="12">
+                <v-col cols="12" class="mb-n5">
                   <v-text-field
                     label="Description*"
                     v-model="state.formData.description"
@@ -46,7 +45,7 @@
               </v-row>
             </v-container>
 
-            <small>*indicates required field</small>
+            <small class="mt-10">*indicates required field</small>
           </v-card-text>
           <v-card-actions>
             <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
@@ -54,12 +53,16 @@
               textAlertDanger
             }}</span>
             <v-spacer></v-spacer>
-            <v-btn color="blue-darken-1" variant="text" type="submit">
-              Save
+            <v-btn :rounded="true" class="mt-3 btn-add" color="blue-darken-1" variant="text" type="submit">
+              <span class="text-white">Save</span>
             </v-btn>
-            <v-btn color="blue-darken-1" variant="text" @click="closeModal">
-              Close
+            <v-btn :rounded="true" class="mt-3 btn-add" color="blue-darken-1" variant="text" @click="closeModal">
+              <span class="text-white">Close</span>
             </v-btn>
+
+            
+
+
           </v-card-actions>
         </v-card>
       </form>
@@ -135,6 +138,7 @@ export default {
   },
   data() {
     return {
+      openModal:false,
       groupNameCheck:'',
       groupId: null,
       textAlert: "",
@@ -142,6 +146,9 @@ export default {
     };
   },
   watch: {
+    isOpen(val) {
+      this.openModal = val;
+    },
     initialData(newValue) {
       // React to prop changes
       this.formData = newValue;

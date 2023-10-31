@@ -10,8 +10,8 @@ export const useAuthStore = defineStore("auth", {
   }),
 
   getters: {
-    isAuthenticated: (state) => !!state.user,
-    csrfToken: (state) => state.csrfToken,
+    // isAuthenticated: (state) => !!state.user,
+    // csrfToken: (state) => state.csrfToken,
   },
 
   actions: {

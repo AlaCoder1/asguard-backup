@@ -9,23 +9,31 @@
           >
             <h4>System information</h4>
             <v-divider></v-divider>
-            <ag-grid-vue
-              id="grid-wrapper"
-              class="ag-theme-alpine mt-3"
-              :columnDefs="columnAuthority"
-              :rowData="rowDataAuthority"
-              :enableColResize="false"
-              style="width: 100%; height: 155px"
-              :gridOptions="gridOptions"
-            />
+
+            <div style="height: 100%">
+              <div style="display: flex; flex-direction: row; height: 100%">
+                <div style="overflow: hidden; flex-grow: 1">
+                  <ag-grid-vue
+                    id="grid-wrapper"
+                    class="ag-theme-alpine mt-3"
+                    :columnDefs="columnAuthority"
+                    :rowData="rowDataAuthority"
+                    :enableColResize="false"
+                    style="width: 100%; height: 155px"
+                    :gridOptions="gridOptions"
+                    @grid-ready="onGridReady"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
           <div id="chart" class="mt-3 mr-2">
-            <!-- <apexchart
+            <apexchart
               ref="apexChart"
               height="350"
               :options="chartOptions"
               :series="chartOptions.series"
-            ></apexchart> -->
+            ></apexchart>
           </div>
 
           <div>
@@ -33,49 +41,73 @@
               <v-col cols="12">
                 Services
                 <v-divider></v-divider>
-                <ag-grid-vue
-                  id="grid-wrapper"
-                  domLayout="autoHeight"
-                  class="ag-theme-alpine mt-3"
-                  :columnDefs="columnServices"
-                  :alwaysShowHorizontalScroll="false"
-                  :alwaysShowVerticalScroll="false"
-                  :rowData="rowDataServices"
-                  style="width: 100%; height: 100%"
-                  :gridOptions="gridOptionsService"
-                />
+
+                <div style="height: 100%">
+                  <div style="display: flex; flex-direction: row; height: 100%">
+                    <div style="overflow: hidden; flex-grow: 1">
+                      <ag-grid-vue
+                        id="grid-wrapper"
+                        domLayout="autoHeight"
+                        class="ag-theme-alpine mt-3"
+                        :columnDefs="columnServices"
+                        :alwaysShowHorizontalScroll="false"
+                        :alwaysShowVerticalScroll="false"
+                        :rowData="rowDataServices"
+                        style="width: 100%; height: 100%"
+                        :gridOptions="gridOptionsService"
+                        @grid-ready="onGridReady"
+                      />
+                    </div>
+                  </div>
+                </div>
               </v-col>
             </v-row>
             <v-row class="mt-6 ml-2">
               <v-col cols="6">
                 Interfaces
                 <v-divider></v-divider>
-                <ag-grid-vue
-                  id="grid-wrapper"
-                  domLayout="autoHeight"
-                  class="ag-theme-alpine mt-3"
-                  :columnDefs="columnInterfaces"
-                  :rowData="rowDataInterfaces"
-                  :alwaysShowHorizontalScroll="false"
-                  :alwaysShowVerticalScroll="false"
-                  style="width: 100%; height: 100%"
-                  :gridOptions="gridOptionsService"
-                />
+
+                <div style="height: 100%">
+                  <div style="display: flex; flex-direction: row; height: 100%">
+                    <div style="overflow: hidden; flex-grow: 1">
+                      <ag-grid-vue
+                        id="grid-wrapper"
+                        domLayout="autoHeight"
+                        class="ag-theme-alpine mt-3"
+                        :columnDefs="columnInterfaces"
+                        :rowData="rowDataInterfaces"
+                        :alwaysShowHorizontalScroll="false"
+                        :alwaysShowVerticalScroll="false"
+                        style="width: 100%; height: 100%"
+                        :gridOptions="gridOptionsService"
+                        @grid-ready="onGridReady"
+                      />
+                    </div>
+                  </div>
+                </div>
               </v-col>
               <v-col cols="6">
                 Gateways
                 <v-divider></v-divider>
-                <ag-grid-vue
-                  id="grid-wrapper"
-                  domLayout="autoHeight"
-                  class="ag-theme-alpine mt-3"
-                  :columnDefs="columnGateways"
-                  :rowData="rowDataGateways"
-                  :alwaysShowHorizontalScroll="false"
-                  :alwaysShowVerticalScroll="false"
-                  style="width: 100%; height: 100%"
-                  :gridOptions="gridOptionsService"
-                />
+
+                <div style="height: 100%">
+                  <div style="display: flex; flex-direction: row; height: 100%">
+                    <div style="overflow: hidden; flex-grow: 1">
+                      <ag-grid-vue
+                        id="grid-wrapper"
+                        domLayout="autoHeight"
+                        class="ag-theme-alpine mt-3"
+                        :columnDefs="columnGateways"
+                        :rowData="rowDataGateways"
+                        :alwaysShowHorizontalScroll="false"
+                        :alwaysShowVerticalScroll="false"
+                        style="width: 100%; height: 100%"
+                        :gridOptions="gridOptionsService"
+                        @grid-ready="onGridReady"
+                      />
+                    </div>
+                  </div>
+                </div>
               </v-col>
             </v-row>
           </div>
@@ -87,7 +119,7 @@
 
 <script>
 import { AgGridVue } from "ag-grid-vue3";
-// import VueApexCharts from "vue3-apexcharts";
+import VueApexCharts from "vue3-apexcharts";
 import BaseLayout from "../../layouts/layout.vue";
 
 export default {
@@ -95,35 +127,37 @@ export default {
   components: {
     BaseLayout,
     AgGridVue,
-    // apexchart: VueApexCharts,
+    apexchart: VueApexCharts,
   },
   watch: {
     dataChart: {
       handler(newData) {
         this.uptime = newData;
+        this.uptimeUpdate = this.uptime.uptime;
       },
       immediate: true,
       deep: true,
     },
   },
   computed: {
-    // rowDataAuthority() {
-    //   const currentDate = new Date();
-    //   const currentTime = currentDate.toLocaleTimeString();
-    //   let authority = [
-    //     {
-    //       nom: "Asguard",
-    //       system_load: this.uptime.uptime,
-    //       last_cong: currentTime,
-    //       operating: this.uptime.current_date,
-    //     },
-    //   ];
+    rowDataAuthority() {
+      const currentDate = new Date();
+      const currentTime = currentDate.toLocaleTimeString();
+      let authority = [
+        {
+          nom: "Asguard",
+          // system_load: this.uptimeUpdate,
+          last_cong: currentTime,
+          // operating: this.uptime.current_date,
+        },
+      ];
 
-    //   return authority;
-    // },
+      return authority;
+    },
   },
   data() {
     return {
+      uptimeUpdate: null,
       socket: null,
       chartOptions: {
         chart: {
@@ -178,10 +212,12 @@ export default {
         },
       ],
       columnServices: [
-        { headerName: "Service", field: "service", minWidth: 500 },
-        { headerName: "Description", field: "description", minWidth: 500 },
+        { headerName: "Service", field: "service" },
+        { headerName: "Description", field: "description" },
         {
           headerName: "Actions",
+          lockPosition: "right",
+          cellClass: "locked-col",
           cellRenderer: this.actionCellRendererService,
         },
       ],
@@ -214,47 +250,61 @@ export default {
     };
   },
   methods: {
-    // initializeWebSocket() {
-    //   this.socket = new WebSocket("ws://" + window.location.host + "/ws/data/"); // Replace with your WebSocket URL
+    onGridReady(params) {
+      this.gridApi = params.api;
+      this.gridColumnApi = params.columnApi;
 
-    //   this.socket.onopen = () => {
-    //     console.log("WebSocket connection opened.");
-    //   };
+      params.api.sizeColumnsToFit();
+      window.addEventListener("resize", function () {
+        setTimeout(function () {
+          params.api.sizeColumnsToFit();
+        });
+      });
 
-    //   this.socket.onmessage = (event) => {
-    //     if (this.socket.readyState === WebSocket.OPEN) {
-    //       const data = JSON.parse(event.data);
-    //       this.dataChart = data;
+      params.api.sizeColumnsToFit();
+    },
+    initializeWebSocket() {
+      this.socket = new WebSocket("ws://" + window.location.host + "/ws/data/"); // Replace with your WebSocket URL
 
-    //       const timestamp = new Date(data.timestamp * 1000).getTime();
+      this.socket.onopen = () => {
+        console.log("WebSocket connection opened.");
+      };
 
-    //       this.chartOptions.series[0].data.push([
-    //         timestamp,
-    //         data.cpu_percentage.toFixed(2),
-    //       ]);
-    //       this.chartOptions.series[1].data.push([
-    //         timestamp,
-    //         data.memory_percentage.toFixed(2),
-    //       ]);
+      this.socket.onmessage = (event) => {
+        if (this.socket.readyState === WebSocket.OPEN) {
+          const data = JSON.parse(event.data);
+          this.dataChart = data;
+          // console.log('chartData :',this.dataChart)
 
-    //       const maxDataPoints = 10;
-    //       if (this.chartOptions.series[0].data.length > maxDataPoints) {
-    //         this.chartOptions.series[0].data.shift();
-    //         this.chartOptions.series[1].data.shift();
-    //       }
+          const timestamp = new Date(data.timestamp * 1000).getTime();
 
-    //       this.$refs.apexChart.updateOptions({});
-    //     } else {
-    //       console.log(
-    //         "WebSocket is not in the OPEN state. Unable to send a message."
-    //       );
-    //     }
-    //   };
+          this.chartOptions.series[0].data.push([
+            timestamp,
+            data.cpu_percentage.toFixed(2),
+          ]);
+          this.chartOptions.series[1].data.push([
+            timestamp,
+            data.memory_percentage.toFixed(2),
+          ]);
 
-    //   this.socket.onclose = () => {
-    //     console.log("WebSocket connection closed.");
-    //   };
-    // },
+          const maxDataPoints = 10;
+          if (this.chartOptions.series[0].data.length > maxDataPoints) {
+            this.chartOptions.series[0].data.shift();
+            this.chartOptions.series[1].data.shift();
+          }
+
+          this.$refs.apexChart.updateOptions({});
+        } else {
+          console.log(
+            "WebSocket is not in the OPEN state. Unable to send a message."
+          );
+        }
+      };
+
+      this.socket.onclose = () => {
+        console.log("WebSocket connection closed.");
+      };
+    },
     actionCellRenderer() {
       let eGui = document.createElement("div");
 
@@ -316,7 +366,7 @@ export default {
     let interfaces =
       document.getElementById("app").attributes["interfaces"].value;
 
-    // this.initializeWebSocket();
+    this.initializeWebSocket();
     this.information = infoData;
     const info = JSON.parse(this.information);
     this.infoParser = info;
@@ -343,19 +393,17 @@ export default {
     this.rowDataGateways = infoGateways;
 
     this.interfaces = interfaces;
-    
-   
-       let parsedArray = JSON.parse(this.interfaces);
 
-       let infoInterfaces = parsedArray.map((element) => {
-        return {
-          name: element.name_interface,
-       speed_uplex: element.speed_duplex,
-          address: element.ip_address,
-        };
-      });
-      this.rowDataInterfaces = infoInterfaces;
-    
+    let parsedArray = JSON.parse(this.interfaces);
+
+    let infoInterfaces = parsedArray.map((element) => {
+      return {
+        name: element.name_interface,
+        speed_uplex: element.speed_duplex,
+        address: element.ip_address,
+      };
+    });
+    this.rowDataInterfaces = infoInterfaces;
   },
 };
 </script>

@@ -2,8 +2,7 @@
   <v-row justify="center">
     <!-- <v-dialog v-model="isOpen" persistent width="600">
        -->
-    <v-dialog persistent width="600">
-
+    <v-dialog v-model="openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
@@ -16,7 +15,7 @@
               <v-row>
                 <!-- User Modal -->
 
-                <v-col cols="12">
+                <v-col cols="12" class="mb-n5">
                   <v-text-field
                     label="Username "
                     v-model="state.formData.username"
@@ -28,7 +27,7 @@
                   >
                 </v-col>
 
-                <v-col cols="6" v-if="mode == 'create'">
+                <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
                   <v-text-field
                     label="Password"
                     type="password"
@@ -41,7 +40,7 @@
                   >
                 </v-col>
 
-                <v-col cols="6" v-if="mode == 'create'">
+                <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
                   <v-text-field
                     label="Confirm password"
                     type="password"
@@ -56,7 +55,7 @@
                   >
                 </v-col>
 
-                <v-col cols="12">
+                <v-col cols="12" class="mb-n5">
                   <v-text-field
                     label="Fullname "
                     v-model="state.formData.fullname"
@@ -68,7 +67,7 @@
                   >
                 </v-col>
 
-                <v-col cols="12">
+                <v-col cols="12" class="mb-n5">
                   <v-text-field
                     label="Email for Ldap auth "
                     v-model="state.formData.email"
@@ -80,7 +79,7 @@
                   >
                 </v-col>
 
-                <v-col cols="12">
+                <v-col cols="12" class="mb-n5">
                   <v-autocomplete
                     :items="['root', 'admin', 'user']"
                     label="Role user"
@@ -91,26 +90,23 @@
                   }}</span>
                 </v-col>
 
-                <v-col cols="12">
+                <v-col cols="12" class="mb-n5">
                   <v-autocomplete
                     :items="groups"
                     label="Assign to Group"
                     multiple
-                    item-text="groupname"
+                    item-title="groupname"
                     item-value="id"
                     v-model="state.formData.groups"
                     @change="handleGroupChange"
                     return-object
                   ></v-autocomplete>
-                  <span
-                    class="error-feedback"
-                    v-if="v$.formData.groups.$error"
-                    >{{ v$.formData.groups.$errors[0].$message }}</span
-                  >
                 </v-col>
 
-                <v-col cols="12">
-                  <label for="Deactivate User">Desactivate User</label>
+                <v-col cols="12" class="mt-5">
+                  <label for="Deactivate User" class="mr-1"
+                    >Desactivate User</label
+                  >
                   <input
                     type="checkbox"
                     id="Deactivate User"
@@ -125,11 +121,22 @@
           <v-card-actions>
             <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
             <v-spacer></v-spacer>
-            <v-btn color="blue-darken-1" variant="text" type="submit">
-              Save
+            <v-btn
+              type="submit"
+              color="asguard_primary_light"
+              :rounded="true"
+              class="mt-3 btn-add"
+            >
+              <span class="text-white">Save</span>
             </v-btn>
-            <v-btn color="blue-darken-1" variant="text" @click="closeModal">
-              Close
+
+            <v-btn
+              color="asguard_primary_light"
+              :rounded="true"
+              @click="closeModal"
+              class="mt-3 btn-add"
+            >
+              <span class="text-white">Close</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -215,7 +222,7 @@ export default {
               "Your password does not match",
 
               sameAs(state.formData.password)
-            ), 
+            ),
             requiredIf: helpers.withMessage(
               "This field must be indicated",
               requiredIf(() => state.ModalMode == "create")
@@ -233,7 +240,6 @@ export default {
           email: { required, email },
           fullname: { required },
           role: { required },
-          groups: { required },
         },
       };
     });
@@ -246,15 +252,19 @@ export default {
   },
   data() {
     return {
+      openModal: false,
       textAlert: "",
       userId: null,
     };
   },
   mounted() {
-    this.state.userRole = this.user.currentUser.role;
+    // this.state.userRole = this.user.currentUser.role;
   },
 
   watch: {
+    isOpen(val) {
+      this.openModal = val;
+    },
     editRow(newValue) {
       this.populate(newValue);
     },
@@ -266,7 +276,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(storeAuth, ["user"]),
+    // ...mapState(storeAuth, ["user"]),
   },
   methods: {
     populate(data) {
@@ -275,7 +285,14 @@ export default {
         this.state.formData.fullname = data.fullname;
         this.state.formData.email = data.email;
         this.state.formData.role = data.role;
-        this.state.formData.groups = data.group;
+        let groupsIds = data.group.map((i) => {
+          return {
+            id:i.id,
+            groupname:i.name
+          }
+        });
+        this.state.formData.groups =groupsIds;
+
         this.state.formData.deactivateUser = data.is_active;
         this.userId = data.id;
         this.state.userId = data.id;
@@ -304,23 +321,27 @@ export default {
     submitForm() {
       this.v$.$validate();
       if (!this.v$.$error) {
-        let groupsIds = this.state.formData.groups.map((i) => {
+        let groupsIds = this.state.formData?.groups?.map((i) => {
           return i.id;
         });
-        console.log(groupsIds)
-        console.log({"groupsIds":groupsIds})
-
+        console.log({"this.state.formData":this.state.formData});
         const payload = {
           username: this.state.formData.username,
           password: this.state.formData.password,
           fullname: this.state.formData.fullname,
           email: this.state.formData.email,
           role: this.state.formData.role,
-          group: groupsIds,
+          group: groupsIds ?? [],
           is_active: this.state.formData.deactivateUser,
+          // username: "testtest1525dzada4",
+          // password: "azerty",
+          // fullname: "sousqdqshail",
+          // email: "souhail@gmail.com",
+          // role: "admin",
+          // group: [67],
+          // is_active: true
         };
         console.log({payload});
-        console.log("payload");
         function getCookie(name) {
           let cookieValue = null;
           if (document.cookie && document.cookie !== "") {
@@ -343,11 +364,10 @@ export default {
         if (this.mode == "create") {
           axios.post("/users/createUser", payload).then(
             (response) => {
-              console.log('res',response)
+              console.log("res", response);
               if (response.status == "201") {
                 this.textAlert = "user Created Successfully";
                 setTimeout(() => {
-
                   this.closeModal();
                   // location.reload();
                 }, 2000);
@@ -360,7 +380,7 @@ export default {
             }
           );
         } else {
-          let groupsIds = this.state.formData.groups.map((i) => {
+          let groupsIds = this.state.formData?.groups?.map((i) => {
             return i.id;
           });
 
@@ -371,11 +391,11 @@ export default {
               fullname: this.state.formData.fullname,
               email: this.state.formData.email,
               role: this.state.formData.role,
-              group: groupsIds,
+              group: groupsIds ?? [],
               is_active: this.state.formData.deactivateUser,
             })
             .then((response) => {
-              console.log('resUpdate',response)
+              console.log("resUpdate", response);
               if (response.status == 200) {
                 this.textAlert = "User updated succesfully";
                 setTimeout(() => {
@@ -390,7 +410,7 @@ export default {
               console.error("Error updating resource:", error);
             });
         }
-      } 
+      }
     },
   },
 };
@@ -399,5 +419,6 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
+  display: flex;
 }
 </style>

@@ -3,9 +3,14 @@
     <h4>Networks servers</h4>
     <ag-grid-vue domLayout="autoHeight" class="ag-theme-alpine mt-3 " :columnDefs="columnDefs" :rowData="rowData"
       :gridOptions="gridOptions" />
-    <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-server" @click="openModal">
+      
+      <div class="d-flex justify-end">
+      <v-btn
+        color="asguard_primary_light"
+         :rounded="true" class="mt-3 add-btn-server" @click="openModal">
       <span>Add Server </span>
     </v-btn>
+    </div>
 
     <Modal :mode="modalMode" :isOpen="isModalOpen" @closeModal="closeModal" :initialData="modalData"
       @updateModalData="handleModalUpdate" />
@@ -350,4 +355,9 @@ export default {
 <style lang="scss">
 @import "~ag-grid-community/dist/styles/ag-grid.css";
 @import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
+
+.add-btn-server {
+  background: #213e9f;
+
+}
 </style>

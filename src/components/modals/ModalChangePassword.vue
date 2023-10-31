@@ -1,8 +1,7 @@
 <template>
   <v-row justify="center">
     <!-- <v-dialog v-model="isOpen" persistent width="600"> -->
-    <v-dialog persistent width="600">
-
+    <v-dialog v-model="openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
@@ -44,11 +43,23 @@
           <v-card-actions>
             <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
             <v-spacer></v-spacer>
-            <v-btn color="blue-darken-1" variant="text" type="submit">
-              Save
+            <v-btn
+              :rounded="true"
+              class="mt-3 btn-add text-white"
+              color="blue-darken-1"
+              variant="text"
+              type="submit"
+            >
+              <span class="text-white">Save</span>
             </v-btn>
-            <v-btn color="blue-darken-1" variant="text" @click="closeModal">
-              Close
+            <v-btn
+              :rounded="true"
+              class="mt-3 btn-add text-white"
+              color="blue-darken-1"
+              variant="text"
+              @click="closeModal"
+            >
+              <span class="text-white">Close</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -148,13 +159,17 @@ export default {
     return {
       userId: null,
       textAlert: null,
+      openModal: false,
     };
   },
   mounted() {
-    this.state.userRole = this.user.currentUser.role;
+    // this.state.userRole = this.user.currentUser.role;
   },
 
   watch: {
+    isOpen(val) {
+      this.openModal = val;
+    },
     editRow(newValue) {
       this.populate(newValue);
     },
@@ -165,7 +180,7 @@ export default {
     },
   },
   computed: {
-    ...mapState(storeAuth, ["user"]),
+    // ...mapState(storeAuth, ["user"]),
   },
   methods: {
     populate(data) {
@@ -213,7 +228,7 @@ export default {
 
         axios.put(`/users/userChangePW/${this.userId}`, params).then(
           (response) => {
-            console.log('response :',response)
+            console.log("response :", response);
             if (response.status == 200) {
               this.textAlert = "Password change successfully";
               setTimeout(() => {

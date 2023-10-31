@@ -43,6 +43,8 @@ yarn-error.log
 
 /asguard/__pycache__/
 
+/pki/
+
 /views/__pycache__/
 
 /backend/gateway/__pycache__/

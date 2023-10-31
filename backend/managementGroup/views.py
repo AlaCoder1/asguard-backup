@@ -126,7 +126,7 @@ def changeGroupname(request, id):
         description = data['description']
         if validInput(Newgroupname):
             if group_exists(Newgroupname):
-                msg = f"Username {Newgroupname} exists."
+                msg = f"Group {Newgroupname} exists."
                 return JsonResponse({"msg": msg})
             else:
                 change_groupname(oldgroupname, Newgroupname)

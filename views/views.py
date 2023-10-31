@@ -226,7 +226,10 @@ def openvpn_page(request):
 
 def login(request):
     usr=getAllUsers(request)
+    print (usr)
+
     context = {'users':usr}
+    print (context)
     return render(request, 'login.html',context)
 
 
@@ -251,6 +254,7 @@ def index_page(request):
             "ip_address":ip_address}
         config.append(info_interface)
     context = {"informations":info,"gateways":json.dumps(gateways),"interfaces":json.dumps(config)}
+    print(context)
     return render(request, 'index_page.html',context)
 
 def error_404_view(request, exception):

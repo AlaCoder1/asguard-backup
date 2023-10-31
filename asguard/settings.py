@@ -201,7 +201,7 @@ ENCORE_ENTRYPOINTS_FILE = os.path.join(
 
 ENCRYPT_KEY = "57-xmiMq0yop7uD7Aq3j4PNUOgZhradICh2BKBnIdB0="
 # custom user model
-# AUTH_USER_MODEL = "managementUsers.User"
+AUTH_USER_MODEL = "managementUsers.User"
 # REST FRAMEWORK
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (

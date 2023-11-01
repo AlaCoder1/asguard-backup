@@ -385,19 +385,24 @@ def deleteCertificate(request, id):
 def revokeCertificate(request, id):
     if request.method == 'PUT':
         try:
+            data = request.data
             cert = Certificate.objects.get(id=id)
+            cert.reason_revocation = data.get("reason", "")
+            cert.activation = False
             ca = cert.certificate_authority
 
             # Importing all the CA previous revoked certificates and add the new certificate
             list_revoked = Certificate.objects.filter(Q(certificate_authority=ca, activation=False) | Q(id=id))
-            # all_revoked = [revoked_cert for revoked_cert in list_revoked]
-            # all_revoked.append(cert)
             
-            # Revoking all the certificates in system and generate a crl file
-            revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
-            cert.activation = False
-            cert.save()
-            return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+            cert_serializer = CertificateSerializer(cert, data=data)
+            if cert_serializer.is_valid():
+                # Revoking all the certificates in system and generate a crl file
+                revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
+                cert_serializer.save()
+                return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+            else:
+                print(cert_serializer.errors)
+                return JsonResponse({"msg": "Error in Revocation certificate"}, status=401)
         except Certificate.DoesNotExist:
             return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
 

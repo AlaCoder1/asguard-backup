@@ -45,6 +45,7 @@ class Certificate(models.Model):
     email = models.CharField(max_length=100, default=None, blank=True, null=True)
     common_name = models.CharField(max_length=100, default=None, blank=True, null=True, unique=True)
     serial = models.CharField(max_length=100, default=None, blank=True, null=True)
+    reason_revocation = models.CharField(max_length=100, default=None, blank=True, null=True)
 
     class Meta:
         db_table = 'certificate'

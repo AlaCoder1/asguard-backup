@@ -20,13 +20,12 @@ class ServerIPsec(models.Model):
 
     # Proposal (Authentication)
     authentication_method = models.CharField(max_length=100, default='Mutual PSK', blank=True, null=True)
+    negotiation_mode = models.CharField(max_length=100, default=None, blank=True, null=True)
     my_identifier = models.CharField(max_length=100, default='My IP address', blank=True, null=True)
     peer_identifier = models.CharField(max_length=100, default='Peer IP address', blank=True, null=True)
     pre_shared_key = models.CharField(max_length=100, default=None, blank=True, null=True)
     cert = models.CharField(max_length=300, default=None, null=True, blank=True)
-    remote_country_code = models.CharField(max_length=100, default=None, blank=True, null=True)
-    remote_organization = models.CharField(max_length=100, default=None, blank=True, null=True)
-    remote_common_name = models.CharField(max_length=100, default=None, blank=True, null=True)
+    remote_distingushed_name = models.CharField(max_length=1000, default=None, blank=True, null=True)
     local_key_pair = models.CharField(max_length=100, default=None, blank=True, null=True)
     peer_key_pair = models.CharField(max_length=100, default=None, blank=True, null=True)
 
@@ -83,14 +82,3 @@ class ServerIPsec(models.Model):
 
     class Meta:
         db_table = 'server_ipsec'
-
-
-class IPsecSecrets(models.Model):
-    server_ipsec = models.ForeignKey(ServerIPsec, on_delete=models.CASCADE)
-    peer_address = models.CharField(max_length=100)
-    local_address = models.CharField(max_length=100)
-    authentication_method = models.CharField(max_length=100)
-    shared_secret = models.CharField(max_length=100)
-
-    class Meta:
-        db_table = 'server_ipsec_secrets'

@@ -1,22 +1,3 @@
-from itertools import islice
-
-
-def get_conn_start_end_indexes(server_conf_content:str, conn_name):
-    """Get the start-end indexes of the connection"""
-    conn_start_index = 0
-    conn_end_index = 0
-    for line_index, line in enumerate(server_conf_content.splitlines()):
-        if line.startswith(f'conn {conn_name}'):
-            conn_start_index = line_index
-            conn_end_index = len(server_conf_content.splitlines())
-            for line_end_index, line_end in enumerate(islice(server_conf_content.splitlines(), line_index + 1, None), start=line_index + 1):
-                if line_end.startswith(f'conn '):
-                    conn_end_index = line_end_index
-                    break
-            break
-    return conn_start_index, conn_end_index
-
-
 def json_to_str_server_ipsec(json_object):
     """Function to convert a json object to an input of ipsec server config file"""
     
@@ -36,6 +17,7 @@ conn {json_object["conn_name"]}
     ike=ike
     esp=esp
     keyexchange=ike
+    #aggressive=no
     #ikelifetime=1h
     #lifetime=8h
     #dpddelay=60s
@@ -55,9 +37,12 @@ conn {json_object["conn_name"]}
     elif json_object["connection_method"] == "Start immediate":
         config_input = config_input.replace("auto=route", "auto=start")
 
-    if json_object["key_exchange_version"] == "V1":
+    if json_object["key_exchange"]["key_exchange_version"] == "V1":
         config_input = config_input.replace("keyexchange=ike", "keyexchange=ikev1")
-    elif json_object["key_exchange_version"] == "V2":
+        config_input = config_input.replace("#aggressive=no", "aggressive=no")
+        if json_object["key_exchange"]["negotiation_mode"] == "Aggressive":
+            config_input = config_input.replace("#aggressive=no", "aggressive=yes")
+    elif json_object["key_exchange"]["key_exchange_version"] == "V2":
         config_input = config_input.replace("keyexchange=ike", "keyexchange=ikev2")
     
     if json_object["interface_name"] != "Any":
@@ -71,7 +56,7 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("#leftcert=path_cert", 
                                             f"""leftcert={json_object["authentication"]["cert"]}Cert.pem""")
         config_input = config_input.replace("#rightid=distingushed_name", 
-                                            f"""rightid="C={json_object["authentication"]["remote_country_code"]},O={json_object["authentication"]["remote_organization"]},CN={json_object["authentication"]["remote_common_name"]}" """)
+                                            f"""rightid="C={json_object["authentication"]["remote_distingushed_name"]}" """)
     
     ike = ""
     list_hash_algorithm = list(json_object["hash_algorithm_ph1"].split(","))

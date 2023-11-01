@@ -61,7 +61,8 @@ def createServerIPsec(request):
 
             conn_name = data.get("conn_name", "")
             connection_method = data.get("connection_method", "")
-            key_exchange_version = data.get("key_exchange_version", "")
+            key_exchange = data.get("key_exchange", "")
+            key_exchange_version = key_exchange.get("key_exchange_version", "")
             internet_protocol = data.get("internet_protocol", "")
             interface_name = data.get("interface_name", "")
             remote_gateway = data.get("remote_gateway", "")
@@ -161,6 +162,10 @@ def createServerIPsec(request):
                            # manual_spd_entries": manual_spd_entries,
                            }
             
+            if key_exchange_version == "V1":
+                negotiation_mode = key_exchange.get("negotiation_mode", "")
+                server_data["negotiation_mode"] = negotiation_mode
+
             ca = ''
             if authentication_method == "Mutual PSK":
                 pre_shared_key = authentication.get("pre_shared_key", "")
@@ -173,14 +178,10 @@ def createServerIPsec(request):
             else:
                 cert = authentication.get("cert")
                 certificate = Certificate.objects.get(name=cert)
-                ca = CertificateAuthority.objects.get(id=certificate.pk).name
-                remote_country_code = authentication.get("remote_country_code", "")
-                remote_organization = authentication.get("remote_organization", "")
-                remote_common_name = authentication.get("remote_common_name", "")
+                ca = CertificateAuthority.objects.get(id=certificate.certificate_authority.pk).name
+                remote_distingushed_name = authentication.get("remote_distingushed_name", "")
                 server_data["cert"] = cert
-                server_data["remote_country_code"] = remote_country_code
-                server_data["remote_organization"] = remote_organization
-                server_data["remote_common_name"] = remote_common_name
+                server_data["remote_distingushed_name"] = remote_distingushed_name
                 
             if deed_peer_detection:
                 deed_peer_delay = deed_peer.get("deed_peer_delay", "")
@@ -291,7 +292,8 @@ def updateServerIPsec(request, id):
             
             server.conn_name = data.get("conn_name", "")
             server.connection_method = data.get("connection_method", "")
-            server.key_exchange_version = data.get("key_exchange_version", "")
+            key_exchange = data.get("key_exchange", "")
+            server.key_exchange_version = key_exchange.get("key_exchange_version", "")
             server.internet_protocol = data.get("internet_protocol", "")
             interface_name = data.get("interface_name", "")
             server.remote_gateway = data.get("remote_gateway", "")
@@ -346,6 +348,9 @@ def updateServerIPsec(request, id):
             interface_address = IP4Config.objects.get(interface_id=interface)
             data["interface_address"] = interface_address.ip_address
 
+            if server.key_exchange_version == "V1":
+                server.negotiation_mode = key_exchange.get("negotiation_mode", "")
+
             ca = ''
             if server.authentication_method == "Mutual PSK":
                 server.pre_shared_key = authentication.get("pre_shared_key", "")
@@ -356,9 +361,7 @@ def updateServerIPsec(request, id):
                 server.cert = authentication.get("cert")
                 certificate = Certificate.objects.get(name=server.cert)
                 ca = CertificateAuthority.objects.get(id=certificate.pk).name
-                server.remote_country_code = authentication.get("remote_country_code", "")
-                server.remote_organization = authentication.get("remote_organization", "")
-                server.remote_common_name = authentication.get("remote_common_name", "")
+                server.remote_distingushed_name = authentication.get("remote_distingushed_name", "")
                 
             if server.deed_peer_detection:
                 server.deed_peer_delay = deed_peer.get("deed_peer_delay", "")

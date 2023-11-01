@@ -2,6 +2,8 @@ from .models import *
 from .serializers import *
 # this import to run this on local machine
 from backend.network.functions import *
+from django.db.models import Q
+
 # this import to run this on macine distant
 # from network.Remotefunctions import *
 ########### 
@@ -21,17 +23,18 @@ def update_gateway_DB(data,id):
     return Gatewayerializer.errors
 ##########
 ###function to add gateway to interface in DB
-def addGatewayInterfaceDB(GatewayObject,name_interface,metric):
+def addGatewayInterfaceDB(GatewayObject,name_interface,metric,ipv4_gw_interface):
     id_interface = Interface.objects.get(name_interface=name_interface).id
-    if GatewayInterface.objects.filter(interface=id_interface).exists():
-        id_GatewayInterface = GatewayInterface.objects.get(interface=id_interface).id
+    if GatewayInterface.objects.filter(Q(interface=id_interface)& Q(ipv4_gw_interface=ipv4_gw_interface)).exists():
+        id_GatewayInterface = GatewayInterface.objects.get(Q(interface=id_interface)& Q(ipv4_gw_interface=ipv4_gw_interface)).id
         gatewayInterface = GatewayInterface.objects.get(id=id_GatewayInterface)
         gatewayInterface.gateway = Gateway.objects.get(id=GatewayObject.id)  
     else:
         gatewayInterface = GatewayInterface()
         gatewayInterface.gateway=Gateway.objects.get(id=GatewayObject.id)
         gatewayInterface.interface=Interface.objects.get(name_interface=name_interface)
-    gatewayInterface.metric=metric    
+    gatewayInterface.metric=metric  
+    gatewayInterface.ipv4_gw_interface=ipv4_gw_interface  
     gatewayInterface.save()
 ### get different metric
 def differentMetric(exclude_list):
@@ -47,7 +50,7 @@ def differentMetric(exclude_list):
     return max(exclude_list)+1
 #######
 ### function to return gateway wwith choices
-def return_Gateway_system(uuid,addrgw,far_aux,multiWan_aux,metric,IP4ConfigObject):
+def return_gateway_system(uuid,addrgw,far_aux,multiWan_aux,metric):
     cmd=""
     if addrgw is not None :
         cmd= "sudo nmcli connection modify {} ipv4.gateway {} ".format(uuid,addrgw)
@@ -55,6 +58,16 @@ def return_Gateway_system(uuid,addrgw,far_aux,multiWan_aux,metric,IP4ConfigObjec
         if multiWan_aux:
             cmd+=" ipv4.route-metric {}".format(metric)
     return cmd
+### function to return gateway6 wwith choices
+def return_gateway6_system(uuid,addrgw,far_aux,multiWan_aux,metric):
+    cmd=""
+    if addrgw is not None :
+        cmd= "sudo nmcli connection modify {} ipv6.gateway {} ".format(uuid,addrgw)
+        ##test multiwan is true
+        if multiWan_aux:
+            cmd+=" ipv6.route-metric {}".format(metric)
+    return cmd
+
 ###########DHCP
 def get_gateway_dhcp(ifname):
     command="ip route show default | grep {} | grep 'proto'| cut -d ' ' -f 3-".format(ifname)

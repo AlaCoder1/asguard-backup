@@ -24,7 +24,7 @@ class IP6ConfigSerializer(serializers.ModelSerializer):
     interface = serializers.PrimaryKeyRelatedField(queryset=Interface.objects.all())
     class Meta:
             model = IP6Config
-            fields = ['typeip6','typedhcp6', 'ip6_address','netmask6',
+            fields = ['typeip6','typedhcp6', 'ip_address6','netmask6',
                       'request_only','prefix_delegation','prefix_hint',
                       'ipv4_connectivity','vlan_priority','information_only',
                       'send_options','request_options','script',
@@ -34,6 +34,7 @@ class IP6ConfigSerializer(serializers.ModelSerializer):
                       'rdm','keyname','royaume','keyid','secret','expire',
                       'interface',
                       ]
+
                       
 
             

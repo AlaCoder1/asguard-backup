@@ -5,48 +5,50 @@
 npm-debug.log
 yarn-error.log
 .env
-/managementGroup/migrations/__pycache__/
-/managementGroup/__pycache__/
+/backend/managementGroup/migrations/__pycache__/
+/backend/managementGroup/__pycache__/
 
-/managementUsers/__pycache__/
-/managementUsers/migrations/__pycache__/
+/backend/managementUsers/__pycache__/
+/backend/managementUsers/migrations/__pycache__/
 
-/managementServers/__pycache__/
-/managementServers/migrations/__pycache__/
+/backend/managementServers/__pycache__/
+/backend/managementServers/migrations/__pycache__/
 
-/subscription/__pycache__/
-/subscription/migrations/__pycache__/
+/backend/subscription/__pycache__/
+/backend/subscription/migrations/__pycache__/
 
-/settings/__pycache__/
-/settings/migrations/__pycache__/
+/backend/settings/__pycache__/
+/backend/settings/migrations/__pycache__/
 
-/authentification/__pycache__/
-/authentification/migrations/__pycache__/
+/backend/authentification/__pycache__/
+/backend/authentification/migrations/__pycache__/
 
-/ipsec/__pycache__/
-/ipsec/migrations/__pycache__/
+/backend/ipsec/__pycache__/
+/backend/ipsec/migrations/__pycache__/
 
-/network/__pycache__/
-/network/migrations/__pycache__/
+/backend/network/__pycache__/
+/backend/network/migrations/__pycache__/
 
-/openvpn/__pycache__/
-/openvpn/migrations/__pycache__/
+/backend/openvpn/__pycache__/
+/backend/openvpn/migrations/__pycache__/
 
-/managementCertificates/__pycache__/
-/managementCertificates/migrations/__pycache__/
+/backend/managementCertificates/__pycache__/
+/backend/managementCertificates/migrations/__pycache__/
 
-/rules/__pycache__/
-/rules/migrations/__pycache__/
+/backend/rules/__pycache__/
+/backend/rules/migrations/__pycache__/
 
-/tasks/migrations/__pycache__/
-/tasks/__pycache__/
+/backend/tasks/migrations/__pycache__/
+/backend/tasks/__pycache__/
 
-/dms/__pycache__/
+/asguard/__pycache__/
+
+/pki/
 
 /views/__pycache__/
 
-/gateway/__pycache__/
-/gateway/migrations/__pycache__/
+/backend/gateway/__pycache__/
+/backend/gateway/migrations/__pycache__/
 
-/dashboard/__pycache__/
-/dashboard/migrations/__pycache__/
+/backend/dashboard/__pycache__/
+/backend/dashboard/migrations/__pycache__/

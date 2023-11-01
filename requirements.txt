@@ -80,3 +80,6 @@ urllib3==1.26.14
 virtualenv==20.17.1
 whitenoise==6.3.0
 zope.interface==6.1
+drf-yasg==1.21.7
+
+

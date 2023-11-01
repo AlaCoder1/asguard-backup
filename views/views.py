@@ -1,12 +1,12 @@
 from django.shortcuts import render
-from managementUsers.views import *
-from managementUsers.models import User
+from backend.managementUsers.views import *
+from backend.managementUsers.models import User
 from django.contrib.auth.decorators import login_required
-from managementServers.models import * 
-from network.models import *
-from rules.models import *
-from gateway.models import *
-from dashboard.functions import get_system_infomations
+from backend.managementServers.models import * 
+from backend.network.models import *
+from backend.rules.models import *
+from backend.gateway.models import *
+from backend.dashboard.functions import get_system_infomations
 
 def getUsers(request):
     list_users = []
@@ -226,7 +226,10 @@ def openvpn_page(request):
 
 def login(request):
     usr=getAllUsers(request)
+    print (usr)
+
     context = {'users':usr}
+    print (context)
     return render(request, 'login.html',context)
 
 
@@ -251,6 +254,7 @@ def index_page(request):
             "ip_address":ip_address}
         config.append(info_interface)
     context = {"informations":info,"gateways":json.dumps(gateways),"interfaces":json.dumps(config)}
+    print(context)
     return render(request, 'index_page.html',context)
 
 def error_404_view(request, exception):

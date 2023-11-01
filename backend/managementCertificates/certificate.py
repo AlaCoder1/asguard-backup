@@ -3,7 +3,7 @@ from backend.openvpn.functions import execute_command_with_arguments, execute_co
 
 
 ################ Authority ####################
-def create_ca_in_system(ca_name, updated_fields_vars):
+def create_ca_in_system(ca_name, common_name, updated_fields_vars):
     """Function to create in system an authority certificate"""
     current_dir = get_current_directory()
 
@@ -16,7 +16,7 @@ def create_ca_in_system(ca_name, updated_fields_vars):
         time_sleep += 12
     elif updated_fields_vars["KEY_SIZE"] > 2048:
         time_sleep += 2
-    execute_command_with_arguments(['sudo', 'easyrsa', 'build-ca', 'nopass'], f'{ca_name}\n', time_sleep)
+    execute_command_with_arguments(['sudo', 'easyrsa', 'build-ca', 'nopass'], f'{common_name}\n', time_sleep)
     commands_list_without_arguments = [['mkdir', '-p', f'/etc/certificates_{ca_name}/'],
                                        ['cp', f'{current_dir}/pki/vars', f'/etc/certificates_{ca_name}/vars'],
                                        ['cp', f'{current_dir}/pki/ca.crt', f'/etc/certificates_{ca_name}/ca.crt'],
@@ -79,7 +79,7 @@ def export_ca_list_rev_in_system(ca_name, download_cert_path):
 
 
 ################ Certificate ####################
-def create_certificate_in_system(cert_name, ca_name, type_cert, updated_fields_vars):
+def create_certificate_in_system(cert_name, common_name, ca_name, type_cert, updated_fields_vars):
     """Function to create in system an authority certificate"""
     current_dir = get_current_directory()
     
@@ -95,15 +95,15 @@ def create_certificate_in_system(cert_name, ca_name, type_cert, updated_fields_v
     # Creating Certificates (server or client)
     if type_cert == 'server':
         # Create certificate without password
-        execute_command_with_arguments(['sudo', 'easyrsa', 'build-server-full', 'server', 'nopass'], 'yes\n', time_sleep)
+        execute_command_with_arguments(['sudo', 'easyrsa', 'build-server-full', common_name, 'nopass'], 'yes\n', time_sleep)
 
         # Create certificate with password
-        # execute_command_with_arguments(['sudo', 'easyrsa', 'build-server-full', 'server', 'nopass'], 'akrampass\nakrampass\nyes', time_sleep)
+        # execute_command_with_arguments(['sudo', 'easyrsa', 'build-server-full', 'common_name'], 'akrampass\nakrampass\nyes', time_sleep)
 
         commands_list_without_arguments = [['mkdir', '-p', f'/etc/openvpn/certificates_{cert_name}/'],
                                            ['cp', f'{current_dir}/pki/vars', f'/etc/openvpn/certificates_{cert_name}/vars'],
-                                           ['cp', f'{current_dir}/pki/issued/server.crt', f'/etc/openvpn/certificates_{cert_name}/server.crt'],
-                                           ['cp', f'{current_dir}/pki/private/server.key', f'/etc/openvpn/certificates_{cert_name}/server.key'],
+                                           ['cp', f'{current_dir}/pki/issued/{common_name}.crt', f'/etc/openvpn/certificates_{cert_name}/server.crt'],
+                                           ['cp', f'{current_dir}/pki/private/{common_name}.key', f'/etc/openvpn/certificates_{cert_name}/server.key'],
                                            ]
         execute_list_commands_without_arguments(commands_list_without_arguments)
 

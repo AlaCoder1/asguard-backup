@@ -19,7 +19,12 @@ def change_vars(current_dir, updated_field:dict):
         # Find the input in vars file
         if vars_content.find(f'set_var EASYRSA_{field[0]}\t') > -1:
             # Get the input value before changing it
-            old_value = vars_content[vars_content.find(f'set_var EASYRSA_{field[0]}\t'):vars_content.find('\n', vars_content.find(f'set_var EASYRSA_{field[0]}\t'))]
+            start_index_old_value = vars_content.find(f'set_var EASYRSA_{field[0]}\t')
+            end_index_old_value = vars_content.find('\n', start_index_old_value)
+            if end_index_old_value > -1:
+                old_value = vars_content[start_index_old_value:end_index_old_value]
+            else:
+                old_value = vars_content[start_index_old_value:]
             # Take in consideration the # because all the config in vars file are commented by default
             if vars_content[vars_content.find(f'set_var EASYRSA_{field[0]}')-1] == '#':
                 old_value = '#' + old_value

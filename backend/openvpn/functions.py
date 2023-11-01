@@ -323,7 +323,7 @@ tls-client
 tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
 '''
 
-    if json_object["interface"] != "any":
+    if json_object["interface"] != "Any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
         config_input = config_input.replace("nobind", "#nobind")
     

@@ -5,12 +5,12 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.core import serializers
 
-from ipsec.functions import json_to_str_server_ipsec
-from ipsec.serializers import ServerIPsecSerializer
-from ipsec.server_ipsec import delete_server_ipsec, install_server_ipsec, update_server_ipsec
-from managementCertificates.models import Certificate, CertificateAuthority
-from network.models import IP4Config, Interface
-from openvpn.manage_errors import CommandExecutionError
+from backend.ipsec.functions import json_to_str_server_ipsec
+from backend.ipsec.serializers import ServerIPsecSerializer
+from backend.ipsec.server_ipsec import delete_server_ipsec, install_server_ipsec, update_server_ipsec
+from backend.managementCertificates.models import Certificate, CertificateAuthority
+from backend.network.models import IP4Config, Interface
+from backend.openvpn.manage_errors import CommandExecutionError
 
 from .models import ServerIPsec
 

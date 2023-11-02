@@ -7,7 +7,7 @@
             class="certificats-management mt-6 ml-5"
             style="display: flex; flex-direction: column"
           >
-            <h4>System information</h4>
+            <h4>System informations</h4>
             <v-divider></v-divider>
 
             <div style="height: 100%">
@@ -17,7 +17,7 @@
                     id="grid-wrapper"
                     class="ag-theme-alpine mt-3"
                     :columnDefs="columnAuthority"
-                    :rowData="rowDataAuthority"
+                    
                     :enableColResize="false"
                     style="width: 100%; height: 155px"
                     :gridOptions="gridOptions"
@@ -28,6 +28,9 @@
             </div>
           </div>
           <div id="chart" class="mt-3 mr-2">
+            <!-- <pre> System Load{{ test.system_load }}</pre>
+            <pre> Operating{{ test.operating }}</pre> -->
+           
             <apexchart
               ref="apexChart"
               height="350"
@@ -55,7 +58,7 @@
                         :rowData="rowDataServices"
                         style="width: 100%; height: 100%"
                         :gridOptions="gridOptionsService"
-                        @grid-ready="onGridReady"
+                        @grid-ready="onGridReadyaaa"
                       />
                     </div>
                   </div>
@@ -134,26 +137,46 @@ export default {
       handler(newData) {
         this.uptime = newData;
         this.uptimeUpdate = this.uptime.uptime;
+        console.log('eee',newData)
+
+        // rowDataAuthority
+
+        // setTimeout(() => {
+        //   const currentDate = new Date();
+        //   const currentTime = currentDate.toLocaleTimeString();
+        //   let authority =
+        //     {
+        //       nom: "Asguard",
+        //       system_load: this.uptimeUpdate ??'',
+        //       last_cong: currentTime,
+        //       operating: this.uptime.current_date ?? '',
+        //     }
+          
+          
+        //   this.test.push(authority);
+        // }, 7000);
+        // this.gridApi.setRowData(this.test);
+
+        // this.gridApi.setRowData(this.test);
       },
       immediate: true,
       deep: true,
     },
   },
   computed: {
-    rowDataAuthority() {
-      const currentDate = new Date();
-      const currentTime = currentDate.toLocaleTimeString();
-      let authority = [
-        {
-          nom: "Asguard",
-          // system_load: this.uptimeUpdate,
-          last_cong: currentTime,
-          // operating: this.uptime.current_date,
-        },
-      ];
-
-      return authority;
-    },
+    // rowDataAuthority() {
+    //   const currentDate = new Date();
+    //   const currentTime = currentDate.toLocaleTimeString();
+    //   let authority = [
+    //     {
+    //       nom: "Asguard",
+    //       system_load: this.uptimeUpdate,
+    //       last_cong: currentTime,
+    //       operating: this.uptime.current_date,
+    //     },
+    //   ];
+    //   return authority;
+    // },
   },
   data() {
     return {
@@ -237,6 +260,7 @@ export default {
       rowDataGateways: [],
       gridOptions: {
         rowHeight: 90,
+        rowSelection: "single",
       },
       gridOptionsService: {
         pagination: true,
@@ -250,9 +274,24 @@ export default {
     };
   },
   methods: {
+    onGridReadyaaa(params) {
+      this.gridApi = params.api;
+      this.gridColumnApi = params.columnApi;
+      // this.gridApi.setRowData(this.test);
+
+      params.api.sizeColumnsToFit();
+      window.addEventListener("resize", function () {
+        setTimeout(function () {
+          params.api.sizeColumnsToFit();
+        });
+      });
+
+      params.api.sizeColumnsToFit();
+    },
     onGridReady(params) {
       this.gridApi = params.api;
       this.gridColumnApi = params.columnApi;
+      // this.gridApi.setRowData(this.rowDataAuthority);
 
       params.api.sizeColumnsToFit();
       window.addEventListener("resize", function () {
@@ -274,6 +313,8 @@ export default {
         if (this.socket.readyState === WebSocket.OPEN) {
           const data = JSON.parse(event.data);
           this.dataChart = data;
+          // console.log('this.',this.dataChart)
+          
           // console.log('chartData :',this.dataChart)
 
           const timestamp = new Date(data.timestamp * 1000).getTime();

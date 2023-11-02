@@ -1,8 +1,8 @@
 <template>
   <div class="ml-3">
   
- <authorites />
- <certificats/>
+ <authorites :authoritesData = "authoritesData"/>
+ <certificats :certifData="certifData"  :authoritesData = "authoritesData"/>
  <revocation/>
  
 </div>
@@ -27,6 +27,8 @@ export default {
   },
   data() {
     return {
+      authoritesData:null,
+      certifData:null
    
      
     
@@ -54,6 +56,7 @@ export default {
   beforeMount: async function () {
   
     this.getCertif()
+    this.getAllCertif()
   },
   methods: {
     getCookie(name) {
@@ -71,13 +74,28 @@ export default {
       }
       return cookieValue;
     },
-    getCertif(){
+    getAllCertif(){
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
         
     axios.get("/certificates/getAllCertAuth").then(
         (response) => {
-        console.log('res',response)
+        console.log('res',response.data)
+        this.authoritesData = response.data
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    },
+    getCertif(){
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        
+    axios.get("/certificates/getAllCertificates").then(
+        (response) => {
+        console.log('res',response.data)
+        this.certifData = response.data
         },
         (error) => {
           console.log(error);

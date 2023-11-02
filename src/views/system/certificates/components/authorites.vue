@@ -10,12 +10,11 @@
       domLayout="autoHeight"
       class="ag-theme-alpine mt-3"
       :columnDefs="columnAuthority"
-      :rowData="rowDataAuthority"
       :gridOptions="gridOptions"
       style="width: 100%; height: 100%"
-      @grid-size-changed="onGridSizeChanged"
+      @grid-ready="onGridReady"
     />
-    <div style="display: flex; justify-content: flex-end ; margin-bottom: 10px;">
+    <div style="display: flex; justify-content: flex-end; margin-bottom: 10px">
       <v-btn
         type="submit"
         color="asguard_primary_light"
@@ -23,7 +22,7 @@
         class="mt-3 btn-add"
         @click="openModalAdd"
       >
-        <span class="text-white " style="text-transform: lowercase"
+        <span class="text-white" style="text-transform: lowercase"
           >Ajouter Authorités</span
         >
       </v-btn>
@@ -35,30 +34,35 @@
       :mode="modalMode"
       @closeModal="closeModal"
       :initialData="modalData"
-    
     />
   </div>
 </template>
 
 <script>
-
+import axios from "axios";
 import ModalAddAuth from "@/components/modals/ModalAddAuth.vue";
 import { AgGridVue } from "ag-grid-vue3";
 export default {
+  props: {
+    authoritesData: {
+      type: Array,
+      required: true,
+    },
+  },
   components: {
     AgGridVue,
-    ModalAddAuth
+    ModalAddAuth,
   },
   data() {
     return {
+      getRowId: null,
+      dataAuth: null,
       modalData: {},
       modalMode: "",
-      rowEdit:{},
+      rowEdit: {},
       isModalOpen: false,
       columnAuthority: [
         { headerName: "nom", field: "nom", minWidth: 150 },
-        { headerName: "interne", field: "interne", minWidth: 150 },
-        { headerName: "emetteur", field: "emetteur", minWidth: 150 },
         { headerName: "certificats", field: "certificats", minWidth: 150 },
         { headerName: "nom unique", field: "nom_unique", minWidth: 150 },
         {
@@ -70,76 +74,69 @@ export default {
           filter: false,
         },
       ],
-      rowDataAuthority: [
-        {
-          id: 1,
-          nom: "root",
-          interne: "oui",
-          emetteur: "oui",
-          certificats: "oui",
-          nom_unique: "oui",
-        },
-        {
-          id: 2,
-          nom: "admin",
-          interne: "oui",
-          emetteur: "oui",
-          certificats: "oui",
-          nom_unique: "oui",
-        },
-        {
-          id: 3,
-          nom: "user",
-          interne: "oui",
-          emetteur: "oui",
-          certificats: "oui",
-          nom_unique: "oui",
-        },
-        {
-          id: 4,
-          nom: "client",
-          interne: "oui",
-          emetteur: "oui",
-          certificats: "oui",
-          nom_unique: "oui",
-        },
-        {
-          id: 5,
-          nom: "none",
-          interne: "oui",
-          emetteur: "oui",
-          certificats: "oui",
-          nom_unique: "oui",
-        },
-        {
-          id: 6,
-          nom: "test",
-          interne: "oui",
-          emetteur: "oui",
-          certificats: "oui",
-          nom_unique: "oui",
-        },
-      ],
+      rowDataAuthority: null,
 
       gridOptions: {
         pagination: true,
         paginationPageSize: 5,
         rowSelection: "single",
-        onRowEditingStarted: (params) => {
-          params.api.refreshCells({
-            columns: ["action"],
-            rowNodes: [params.node],
-            force: true,
-          });
-        },
       },
     };
   },
+
+  watch: {
+    authoritesData(newValue) {
+      this.dataAuth = newValue;
+      if (newValue) {
+        let infoAuth = newValue.map((element) => {
+          console.log("eeleme,t", element);
+          return {
+            nom: element.name ?? "",
+            certificats: element.certificates,
+            nom_unique: element.common_name ?? "",
+            id: element.id,
+          };
+        });
+        this.rowDataAuthority = infoAuth;
+        setTimeout(() => {
+          this.gridApi.setRowData(this.rowDataAuthority);
+        }, 2000);
+      }
+    },
+  },
   methods: {
+    // async forceFileDownload(response) {
+    //   try {
+    //     const blob = new Blob([response]);
+    //     const url = window.URL.createObjectURL(blob);
+    //     const link = document.createElement('a');
+    //     link.href = url;
+    //     link.setAttribute('download', 'file.crt'); // or any other extension
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     window.URL.revokeObjectURL(url); // Clean up the URL after download
+    //   } catch (error) {
+    //     console.error('Error during file download:', error);
+    //   }
+    // },
+
+    onGridReady(params) {
+      this.gridApi = params.api;
+      this.gridColumnApi = params.columnApi;
+      // this.gridApi.setRowData(this.rowDataAuthority);
+
+      params.api.sizeColumnsToFit();
+      window.addEventListener("resize", function () {
+        setTimeout(function () {
+          params.api.sizeColumnsToFit();
+        });
+      });
+
+      params.api.sizeColumnsToFit();
+    },
     openModalAdd() {
-      console.log("ok");
       this.modalData = {};
-      this.modalMode = "create"; // Assuming you want to open the modal in create mode
+      this.modalMode = "create";
       this.isModalOpen = true;
     },
     closeModal() {
@@ -167,20 +164,21 @@ export default {
         `;
       } else {
         eGui.innerHTML = `
-        <button 
-          class="action-button edit"  
-          data-action="edit">
-             <i class="far fa-edit" style="color: #086eae;"></i> 
-          </button>
+        
         <button 
           class="action-button download"
           data-action="export">
-             <i class="fas fa-download" style="color: #086eae;"></i> 
+             <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
+          </button>
+          <button 
+          class="action-button download"
+          data-action="exportKey">
+             <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
           </button>
         <button 
           class="action-button delete"
           data-action="delete">
-            <i class="fas fa-times" style="color: #086eae;"></i>
+            <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
         </button>
         `;
       }
@@ -193,30 +191,98 @@ export default {
 
       return eGui;
     },
-        handleAction(action, rowData) {
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
+
+    download(id,type,fileExtention) {
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let payload = {
+        type: type,
+      };
+      axios.post(`/certificates/exportCertAuth/${id}`, payload).then(
+        (response) => {
+          console.log("res", response.data.cert);
+
+          const text = response.data.cert;
+          const blob = new Blob([text], {
+            type: "application/x-x509-ca-cert",
+          });
+
+      
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = fileExtention;
+
+          document.body.appendChild(a);
+          a.click();
+
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+          if (response.status == "201") {
+            console.log("success");
+          } else {
+            console.log("error");
+          }
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    },
+    handleAction(action, rowData) {
       switch (action) {
-        case 'edit':
+        case "edit":
+
           this.rowEdit = rowData;
           this.openModalAdd();
           this.modalMode = "update";
-          console.log('Edit clicked for row:', rowData);
+          console.log("Edit clicked for row:", rowData);
           break;
-        case 'export':
-          console.log('Download clicked for row:', rowData);
-         
+        case "export":
+          console.log("Download clicked for row:", rowData);
+          console.log("rowData.name", rowData.id);
+          let id = rowData.id
+          let type ='certificate'
+         let fileExtention = "certificate.crt"
+          this.download(id,type,fileExtention);
+
           break;
-        case 'delete':
-          console.log('Delete clicked for row:', rowData);
-          const index = this.rowData.findIndex(item => item.id === rowData.id);
+        case "delete":
+          console.log("Delete clicked for row:", rowData);
+          const index = this.rowData.findIndex(
+            (item) => item.id === rowData.id
+          );
           if (index !== -1) {
             this.rowData.splice(index, 1);
           }
           break;
-        case 'update':
-          console.log('Update clicked for row:', rowData);
+        case "exportKey":
+          console.log("Update clicked for row:", rowData);
+          let rowId = rowData.id
+          let typeName ='private_key'
+          let fileExt = "private_Key.key"
+          this.download(rowId,typeName,fileExt);
+          
           break;
-        case 'cancel':
-          console.log('Cancel clicked for row:', rowData);
+        case "cancel":
+          console.log("Cancel clicked for row:", rowData);
           break;
         default:
           break;

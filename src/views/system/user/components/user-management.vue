@@ -113,6 +113,7 @@ export default {
   watch: {
     DataList: {
       handler(newData) {
+        console.log('row',newData)
         this.rowData = newData.users; // Update rowData with the new prop value
       },
       immediate: true, // This will trigger the watcher when the component is created to initialize rowData

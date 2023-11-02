@@ -14,8 +14,8 @@
     >
       <img src="../../assets/images/logo.svg" class="img-center mb-8 mt-15" />
 
-      <v-btn @click="changeLang('en')" class="ml-9"> english </v-btn>
-      <v-btn @click="changeLang('fr')" class="ml-5"> frensh </v-btn>
+      <!-- <v-btn @click="changeLang('en')" class="ml-9"> english </v-btn>
+      <v-btn @click="changeLang('fr')" class="ml-5"> frensh </v-btn> -->
 
       <v-form v-model="form" class="mt-5" @submit.prevent="connect">
         <label for="" class="field-auth ml-9">{{ $t("form.username") }}</label>

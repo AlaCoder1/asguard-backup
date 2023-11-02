@@ -1,417 +1,478 @@
 <template>
-    <v-row justify="center">
-      <!-- <v-dialog v-model="isOpen" persistent width="600">
-         -->
-      <v-dialog v-model="openModal" persistent width="600">
-        <form ref="myForm" @submit.prevent="submitForm">
-          <v-card>
-            <v-card-title>
-              <span class="text-h5"
-                >{{ mode === "create" ? "Create" : "Update" }} Authorités</span
-              >
-            </v-card-title>
-            <v-card-text>
-              <v-container>
-                <v-row>
-                  <!-- User Modal -->
-  
-                  <v-col cols="12" class="mb-n5">
-                    <v-text-field
-                      label="Username "
-                      v-model="state.formData.username"
-                    ></v-text-field>
-                    <span
-                      class="error-feedback"
-                      v-if="v$.formData.username.$error"
-                      >{{ v$.formData.username.$errors[0].$message }}</span
-                    >
-                  </v-col>
-  
-                  <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
-                    <v-text-field
-                      label="Password"
-                      type="password"
-                      v-model="state.formData.password"
-                    ></v-text-field>
-                    <span
-                      class="error-feedback"
-                      v-if="v$.formData.password.$error"
-                      >{{ v$.formData.password.$errors[0].$message }}</span
-                    >
-                  </v-col>
-  
-                  <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
-                    <v-text-field
-                      label="Confirm password"
-                      type="password"
-                      v-model="state.formData.confirm_password"
-                    ></v-text-field>
-                    <span
-                      class="error-feedback"
-                      v-if="v$.formData.confirm_password.$error"
-                      >{{
-                        v$.formData.confirm_password.$errors[0].$message
-                      }}</span
-                    >
-                  </v-col>
-  
-                  <v-col cols="12" class="mb-n5">
-                    <v-text-field
-                      label="Fullname "
-                      v-model="state.formData.fullname"
-                    ></v-text-field>
-                    <span
-                      class="error-feedback"
-                      v-if="v$.formData.fullname.$error"
-                      >{{ v$.formData.fullname.$errors[0].$message }}</span
-                    >
-                  </v-col>
-  
-                  <v-col cols="12" class="mb-n5">
-                    <v-text-field
-                      label="Email for Ldap auth "
-                      v-model="state.formData.email"
-                    ></v-text-field>
-                    <span
-                      class="error-feedback"
-                      v-if="v$.formData.email.$error"
-                      >{{ v$.formData.email.$errors[0].$message }}</span
-                    >
-                  </v-col>
-  
-                  <v-col cols="12" class="mb-n5">
-                    <v-autocomplete
-                      :items="['root', 'admin', 'user']"
-                      label="Role user"
-                      v-model="state.formData.role"
-                    ></v-autocomplete>
-                    <span class="error-feedback" v-if="v$.formData.role.$error">{{
-                      v$.formData.role.$errors[0].$message
-                    }}</span>
-                  </v-col>
-  
-                  <v-col cols="12" class="mb-n5">
-                    <v-autocomplete
-                      :items="groups"
-                      label="Assign to Group"
-                      multiple
-                      item-title="groupname"
-                      item-value="id"
-                      v-model="state.formData.groups"
-                      @change="handleGroupChange"
-                      return-object
-                    ></v-autocomplete>
-                  </v-col>
-  
-                  <v-col cols="12" class="mt-5">
-                    <label for="Deactivate User" class="mr-1"
-                      >Desactivate User</label
-                    >
-                    <input
-                      type="checkbox"
-                      id="Deactivate User"
-                      v-model="state.formData.deactivateUser"
-                    />
-                  </v-col>
-                  <!-- User Modal -->
-                </v-row>
-              </v-container>
-              <!-- <small>*indicates required field</small> -->
-            </v-card-text>
-            <v-card-actions>
-              <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
-              <v-spacer></v-spacer>
-              <v-btn
-                type="submit"
-                color="asguard_primary_light"
-                :rounded="true"
-                class="mt-3 btn-add"
-              >
-                <span class="text-white">Save</span>
-              </v-btn>
-  
-              <v-btn
-                color="asguard_primary_light"
-                :rounded="true"
-                @click="closeModal"
-                class="mt-3 btn-add"
-              >
-                <span class="text-white">Close</span>
-              </v-btn>
-            </v-card-actions>
-          </v-card>
-        </form>
-      </v-dialog>
-    </v-row>
-  </template>
-  
-  <script>
-  import axios from "axios";
-  import useValidate from "@vuelidate/core";
-  import {
-    required,
-    email,
-    sameAs,
-    helpers,
-    requiredIf,
-  } from "@vuelidate/validators";
-  import { reactive, computed } from "vue";
-  export default {
-    name: "Modal_User",
-    props: {
-      isOpen: {
-        type: Boolean,
-        required: true,
-      },
-      initialData: {
-        type: Object,
-        required: true,
-      },
-      editRow: {
-        type: Object,
-        required: true,
-      },
-      mode: {
-        type: String,
-        required: true,
-      },
-  
+  <v-row justify="center">
+    <v-dialog v-model="openModal" persistent width="600">
+      <form ref="myForm" @submit.prevent="submitForm" class="scroller">
+        <v-card>
+          <v-card-title>
+            <span class="text-h5"
+              >{{
+                mode === "create" ? "Create new Authority" : "Update Authority"
+              }}
+              Certificat</span
+            >
+          </v-card-title>
+          <v-card-text>
+            <v-container>
+              <v-row>
+                <v-col cols="12" class="mb-n6">
+                  <v-text-field
+                    label="Certificat Name "
+                    v-model="state.formData.certifName"
+                  ></v-text-field>
+                  <span
+                    class="error-feedback"
+                    v-if="v$.formData.certifName.$error"
+                    >{{ v$.formData.certifName.$errors[0].$message }}</span
+                  >
+                </v-col>
+
+                <v-col cols="12" class="mb-n6">
+                  <v-select
+                    v-model="state.formData.method"
+                    label="Select"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :items="[
+                      {
+                        name: 'Import an existing Certificate Authority',
+                        slug: 'import',
+                        id: '1',
+                      },
+                      { name: 'Create Certificate', slug: 'create', id: '2' },
+                    ]"
+                  ></v-select>
+                  <span
+                    class="error-feedback"
+                    v-if="v$.formData.method.$error"
+                    >{{ v$.formData.method.$errors[0].$message }}</span
+                  >
+                </v-col>
+
+                <v-col cols="12" v-if="isImportCetif" class="mb-n6">
+                  <label for=""> Certificate Existant</label>
+                  <v-divider></v-divider>
+                  <v-text-field
+                    class="mt-2"
+                    label="Certificat data"
+                    v-model="state.formData.certificatData"
+                  ></v-text-field>
+                  <span
+                    class="error-feedback"
+                    v-if="v$.formData.certificatData.$error"
+                    >{{ v$.formData.certificatData.$errors[0].$message }}</span
+                  >
+
+                  <v-text-field
+                    label="Private key certificate (facultatif)"
+                    v-model="state.formData.privateKey"
+                  ></v-text-field>
+
+                  <v-text-field
+                    label="Serial number certificate"
+                    v-model="state.formData.serialNumber"
+                  ></v-text-field>
+                </v-col>
+
+                <v-col v-if="isCreateCetif" cols="12" class="mb-n6">
+                  <label for=""> Certification autority</label>
+                  <v-divider></v-divider>
+                  <!--  -->
+                  <v-select
+                    v-model="state.formData.keyType"
+                    label="Key type"
+                    item-title="name"
+                    item-value="id"
+                    @change="handleGroupChange"
+                    return-object
+                    :items="[{ name: 'RSA', id: '1', slug: 'rsa' }]"
+                  ></v-select>
+                  <span
+                    class="error-feedback"
+                    v-if="v$.formData.keyType.$error"
+                    >{{ v$.formData.keyType.$errors[0].$message }}</span
+                  >
+
+                  <v-select
+                    v-model="state.formData.keyLength"
+                    label="Key length"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :items="[
+                      {
+                        name: '2048',
+                        slug: '2048',
+                        id: '1',
+                      },
+                      {
+                        name: '3072',
+                        slug: '3072',
+                        id: '2',
+                      },
+                      {
+                        name: '4096',
+                        slug: '4096',
+                        id: '3',
+                      },
+                      {
+                        name: '8192',
+                        slug: '8192',
+                        id: '4',
+                      },
+                    ]"
+                  ></v-select>
+                  <span
+                    class="error-feedback"
+                    v-if="v$.formData.keyLength.$error"
+                    >{{ v$.formData.keyLength.$errors[0].$message }}</span
+                  >
+                  <v-select
+                    v-model="state.formData.hashAlgo"
+                    label="Hash algo"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :items="[
+                      {
+                        name: 'SHA256',
+                        slug: 'sha256',
+                        id: '1',
+                      },
+                      {
+                        name: 'SHA384',
+                        slug: 'sha384',
+                        id: '2',
+                      },
+                      {
+                        name: 'SHA512',
+                        slug: 'sha512',
+                        id: '3',
+                      },
+                    ]"
+                  ></v-select>
+                  <span
+                    class="error-feedback"
+                    v-if="v$.formData.hashAlgo.$error"
+                    >{{ v$.formData.hashAlgo.$errors[0].$message }}</span
+                  >
+              
+                  <v-text-field
+                    label="Lifetime"
+                    v-model="state.formData.lifeTime"
+                  ></v-text-field>
+                  <span
+                    class="error-feedback"
+                    v-if="v$.formData.lifeTime.$error"
+                    >{{ v$.formData.lifeTime.$errors[0].$message }}</span
+                  >
+                  <v-row>
+                    <v-col cols="6" class="mb-n6">
+                      <v-select
+                        v-model="state.formData.country"
+                        label="Country"
+                        item-title="name"
+                        item-value="id"
+                        return-object
+                        :items="[
+                          {
+                            name: 'California',
+                            code: 'CA',
+                            id: '1',
+                          },
+                          {
+                            name: 'Colorado',
+                            code: 'CO',
+                            id: '2',
+                          },
+                        ]"
+                      ></v-select>
+                      <span
+                        class="error-feedback"
+                        v-if="v$.formData.country.$error"
+                        >{{ v$.formData.country.$errors[0].$message }}</span
+                      >
+                    </v-col>
+                    <v-col cols="6" class="mb-n6">
+                      <v-text-field
+                        label="State province"
+                        v-model="state.formData.state"
+                      ></v-text-field>
+                      <span
+                        class="error-feedback"
+                        v-if="v$.formData.state.$error"
+                        >{{ v$.formData.state.$errors[0].$message }}</span
+                      >
+                    </v-col>
+                    <v-col cols="6" class="mb-n6">
+                      <v-text-field
+                        label="place"
+                        v-model="state.formData.place"
+                      ></v-text-field>
+                      <span
+                        class="error-feedback"
+                        v-if="v$.formData.place.$error"
+                        >{{ v$.formData.place.$errors[0].$message }}</span
+                      >
+                    </v-col>
+                    <v-col cols="6" class="mb-n6">
+                      <v-text-field
+                        label="Organisation"
+                        v-model="state.formData.organisation"
+                      ></v-text-field>
+                      <span
+                        class="error-feedback"
+                        v-if="v$.formData.organisation.$error"
+                        >{{
+                          v$.formData.organisation.$errors[0].$message
+                        }}</span
+                      >
+                    </v-col>
+                    <v-col cols="6" class="mb-n6">
+                      <v-text-field
+                        label="Mail"
+                        v-model="state.formData.mail"
+                      ></v-text-field>
+                      <span
+                        class="error-feedback"
+                        v-if="v$.formData.mail.$error"
+                        >{{ v$.formData.mail.$errors[0].$message }}</span
+                      >
+                    </v-col>
+                    <v-col cols="6" class="mb-n6">
+                      <v-text-field
+                        label="Commun name"
+                        v-model="state.formData.communName"
+                      ></v-text-field>
+                      <span
+                        class="error-feedback"
+                        v-if="v$.formData.communName.$error"
+                        >{{ v$.formData.communName.$errors[0].$message }}</span
+                      >
+                    </v-col>
+                  </v-row>
+                </v-col>
+              </v-row>
+            </v-container>
+            <!-- <small>*indicates required field</small> -->
+          </v-card-text>
+          <v-card-actions class="mt-10 actionBtn">
+            <span style="color: green; margin-bottom: 10px">{{
+              textAlert
+            }}</span>
+
+            <v-btn
+              color="asguard_primary_light"
+              :rounded="true"
+              @click="closeModal"
+              class="mt-3 btn-add"
+            >
+              <span class="text-white pr-3 pl-3">Close</span>
+            </v-btn>
+            <v-btn
+              type="submit"
+              color="asguard_primary_light"
+              :rounded="true"
+              class="mt-3 btn-add"
+            >
+              <span class="text-white pr-3 pl-3">Save</span>
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </form>
+    </v-dialog>
+  </v-row>
+</template>
+
+<script>
+import axios from "axios";
+import useValidate from "@vuelidate/core";
+import { required, requiredIf, email } from "@vuelidate/validators";
+import { reactive, computed, watch } from "vue";
+export default {
+  name: "Modal_User",
+  props: {
+    isOpen: {
+      type: Boolean,
+      required: true,
     },
-    setup() {
-      const state = reactive({
+    editRow: {
+      type: Object,
+      required: true,
+    },
+    mode: {
+      type: String,
+      required: true,
+    },
+  },
+  setup() {
+    const state = reactive({
+      formData: {
+        certifName: "",
+        method: "",
+        certificatData: "",
+        privateKey: "",
+        serialNumber: "",
+        keyType: "",
+        keyLength: "",
+        hashAlgo: "",
+        lifeTime: "",
+        country: "",
+        state: "",
+        place: "",
+        organisation: "",
+        communName: "",
+        mail: "",
+      },
+      ModalMode: null,
+    });
+
+    const rules = computed(() => {
+      return {
         formData: {
-          username: "",
-          password: "",
-          confirm_password: "",
-          fullname: "",
-          email: "",
-          role: null,
-          groups: null,
-          deactivateUser: false,
+          certifName: { required },
+          method: { required },
+          certificatData: { required },
+          keyLength: { required },
+          hashAlgo: { required },
+          keyType: { required },
+          lifeTime: { required },
+          country: { required },
+          state: { required },
+          place: { required },
+          organisation: { required },
+          mail: { required, email },
+          communName: { required },
         },
-        userRole: null,
-        userId: null,
-        ModalMode: null,
-      });
-  
-      const rules = computed(() => {
-        return {
-          formData: {
-            username: { required },
-            password: {
-              requiredIfFuction: helpers.withMessage(
-                "This field must be indicated",
-                requiredIf(() => state.ModalMode == "create")
-              ),
-              isValidPassword: helpers.withMessage(
-                `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
-  
-                helpers.regex(
-                  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-                )
-              ),
-            },
-            confirm_password: {
-              sameAsPassword: helpers.withMessage(
-                "Your password does not match",
-  
-                sameAs(state.formData.password)
-              ),
-              requiredIf: helpers.withMessage(
-                "This field must be indicated",
-                requiredIf(() => state.ModalMode == "create")
-              ),
-  
-              isValidPassword: helpers.withMessage(
-                `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
-  
-                helpers.regex(
-                  /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-                )
-              ),
-            },
-  
-            email: { required, email },
-            fullname: { required },
-            role: { required },
-          },
-        };
-      });
-  
-      const v$ = useValidate(rules, state);
-      return {
-        state,
-        v$,
       };
+    });
+    watch(
+      () => state.formData,
+      (newValue, oldValue) => {
+        console.log("newValue", newValue);
+        console.log("oldValue", oldValue);
+      },
+      { deep: true }
+    );
+
+    const v$ = useValidate(rules, state);
+    return {
+      state,
+      v$,
+    };
+  },
+  data() {
+    return {
+      openModal: false,
+      textAlert: "",
+    };
+  },
+  computed: {
+    isImportCetif() {
+      return (
+        this.state.formData.method.name ===
+        "Import an existing Certificate Authority"
+      );
     },
-    data() {
-      return {
-        openModal: false,
-        textAlert: "",
-        userId: null,
+    isCreateCetif() {
+      return this.state.formData.method.name === "Create Certificate";
+    },
+  },
+
+  watch: {
+    isOpen(val) {
+      this.openModal = val;
+    },
+    editRow(newValue) {
+      this.populate(newValue);
+    },
+    mode(val) {
+      if (val == "create") {
+        this.resetForm();
+        this.state.ModalMode = "create";
+      }
+    },
+  },
+
+  methods: {
+    populate(data) {},
+    handleGroupChange(selectedItems) {},
+
+    closeModal() {
+      this.$emit("closeModal");
+    },
+    resetForm() {},
+    submitForm() {
+      // this.v$.$validate();
+      // if (!this.v$.$error) {
+
+      //   }
+
+      const payload = {
+        name: this.state.formData?.certifName,
+        method: {
+          name_method: this.state.formData?.method?.slug,
+          key_type: this.state.formData?.keyType?.slug,
+          key_length: +this.state.formData?.keyLength?.slug,
+          digest_algorithm: this.state.formData?.hashAlgo?.slug,
+          lifetime: +this.state.formData?.lifeTime,
+          country_code: this.state.formData?.country?.code,
+          state: this.state.formData?.state,
+          city: this.state.formData?.place,
+          organization: this.state.formData?.organisation,
+          email: this.state.formData?.mail,
+          common_name: this.state.formData?.communName,
+        },
+ 
       };
-    },
-    mounted() {
-      // this.state.userRole = this.user.currentUser.role;
-    },
-  
-    watch: {
-      isOpen(val) {
-        this.openModal = val;
-      },
-      editRow(newValue) {
-        this.populate(newValue);
-      },
-      mode(val) {
-        if (val == "create") {
-          this.resetForm();
-          this.state.ModalMode = "create";
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+          const cookies = document.cookie.split(";");
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === name + "=") {
+              cookieValue = decodeURIComponent(
+                cookie.substring(name.length + 1)
+              );
+              break;
+            }
+          }
         }
-      },
+        return cookieValue;
+      }
+
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.post("/certificates/createCertAuth", payload).then(
+        (response) => {
+          console.log("res", response);
+          if (response.status == "201") {
+            console.log("success");
+          } else {
+            console.log("error");
+          }
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+
+      console.log("formData", payload);
     },
-    
-    methods: {
-      populate(data) {
-        // if (this.mode == "update") {
-        //   this.state.formData.username = data.username;
-        //   this.state.formData.fullname = data.fullname;
-        //   this.state.formData.email = data.email;
-        //   this.state.formData.role = data.role;
-        //   let groupsIds = data.group.map((i) => {
-        //     return {
-        //       id:i.id,
-        //       groupname:i.name
-        //     }
-        //   });
-        //   this.state.formData.groups =groupsIds;
-  
-        //   this.state.formData.deactivateUser = data.is_active;
-        //   this.userId = data.id;
-        //   this.state.userId = data.id;
-        // }
-      },
-      handleGroupChange(selectedItems) {
-        console.log("Selected Groups:", JSON.stringify(selectedItems));
-        console.log(
-          "formData Groups:",
-          JSON.stringify(this.state.formData.groups)
-        );
-      },
-  
-      closeModal() {
-        this.$emit("closeModal");
-      },
-      resetForm() {
-        (this.state.formData.username = ""),
-          (this.state.formData.password = ""),
-          (this.state.formData.fullname = ""),
-          (this.state.formData.email = ""),
-          (this.state.formData.role = null),
-          (this.state.formData.groups = null),
-          (this.state.formData.deactivateUser = false);
-      },
-    //   submitForm() {
-    //     this.v$.$validate();
-    //     if (!this.v$.$error) {
-    //       let groupsIds = this.state.formData?.groups?.map((i) => {
-    //         return i.id;
-    //       });
-    //       console.log({"this.state.formData":this.state.formData});
-    //       const payload = {
-    //         username: this.state.formData.username,
-    //         password: this.state.formData.password,
-    //         fullname: this.state.formData.fullname,
-    //         email: this.state.formData.email,
-    //         role: this.state.formData.role,
-    //         group: groupsIds ?? [],
-    //         is_active: this.state.formData.deactivateUser,
-    //         // username: "testtest1525dzada4",
-    //         // password: "azerty",
-    //         // fullname: "sousqdqshail",
-    //         // email: "souhail@gmail.com",
-    //         // role: "admin",
-    //         // group: [67],
-    //         // is_active: true
-    //       };
-    //       console.log({payload});
-    //       function getCookie(name) {
-    //         let cookieValue = null;
-    //         if (document.cookie && document.cookie !== "") {
-    //           const cookies = document.cookie.split(";");
-    //           for (let i = 0; i < cookies.length; i++) {
-    //             const cookie = cookies[i].trim();
-    //             if (cookie.substring(0, name.length + 1) === name + "=") {
-    //               cookieValue = decodeURIComponent(
-    //                 cookie.substring(name.length + 1)
-    //               );
-    //               break;
-    //             }
-    //           }
-    //         }
-    //         return cookieValue;
-    //       }
-  
-    //       const csrfToken = getCookie("csrftoken");
-    //       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-    //       if (this.mode == "create") {
-    //         axios.post("/users/createUser", payload).then(
-    //           (response) => {
-    //             console.log("res", response);
-    //             if (response.status == "201") {
-    //               this.textAlert = "user Created Successfully";
-    //               setTimeout(() => {
-    //                 this.closeModal();
-    //                 // location.reload();
-    //               }, 2000);
-    //             } else {
-    //               console.log("error");
-    //             }
-    //           },
-    //           (error) => {
-    //             console.log(error);
-    //           }
-    //         );
-    //       } else {
-    //         let groupsIds = this.state.formData?.groups?.map((i) => {
-    //           return i.id;
-    //         });
-  
-    //         axios
-    //           .put(`/users/modifyUser/${this.userId}`, {
-    //             username: this.state.formData.username,
-    //             password: this.state.formData.password,
-    //             fullname: this.state.formData.fullname,
-    //             email: this.state.formData.email,
-    //             role: this.state.formData.role,
-    //             group: groupsIds ?? [],
-    //             is_active: this.state.formData.deactivateUser,
-    //           })
-    //           .then((response) => {
-    //             console.log("resUpdate", response);
-    //             if (response.status == 200) {
-    //               this.textAlert = "User updated succesfully";
-    //               setTimeout(() => {
-    //                 this.closeModal();
-    //                 // location.reload();
-    //               }, 2000);
-    //             } else {
-    //               console.log("error");
-    //             }
-    //           })
-    //           .catch((error) => {
-    //             console.error("Error updating resource:", error);
-    //           });
-    //       }
-    //     }
-    //   },
-    },
-  };
-  </script>
-  <style>
-  .error-feedback {
-    color: red;
-    font-size: 0.85em;
-    display: flex;
-  }
-  </style>
-  
+  },
+};
+</script>
+<style>
+.error-feedback {
+  color: red;
+  font-size: 0.85em;
+}
+.scroller {
+  overflow-y: scroll;
+}
+.actionBtn {
+  justify-content: center;
+}
+</style>

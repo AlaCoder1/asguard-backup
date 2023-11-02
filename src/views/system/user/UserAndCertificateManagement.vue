@@ -54,7 +54,7 @@ export default {
         { id: 1, value: "User Management" },
         { id: 2, value: "Certificate Management" },
       ],
-      selectedTab: "User Management",
+      selectedTab: "Certificate Management",
 
       tab: null,
       users: [],

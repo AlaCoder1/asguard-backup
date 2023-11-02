@@ -1,4 +1,4 @@
-from backend.gateway.models import *
+from .models import *
 from rest_framework import serializers
 from backend.network.models import *
 # #serializer for ip4 config   
@@ -8,5 +8,5 @@ class GatewaySerializer(serializers.ModelSerializer):
     class Meta:
             model = Gateway
             fields = ['gwname','gwaddress','staticgw','description', 'default_aux','far_aux',
-                      'multiwan_aux'
+                      'multiwan_aux','ipv4_gw'
                       ]

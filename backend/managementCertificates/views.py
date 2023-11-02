@@ -110,15 +110,14 @@ def createCertAuth(request):
                                            "REQ_ORG": organization,
                                            "REQ_EMAIL": email,
                                            "DIGEST": digest_algorithm,
-                                        #    "REQ_CN": common_name
+                                        #    "DN": "\"org\"",
                                            }
                     # Install the server in system
-                    serial = create_ca_in_system(ca_name=data["name"], updated_fields_vars=updated_fields_vars)
+                    serial = create_ca_in_system(ca_name=name, common_name=common_name, updated_fields_vars=updated_fields_vars)
                     ca_data['serial'] = serial
                     ca_data["certificate_path"] = f'/etc/certificates_{name}/ca.crt\n/etc/certificates_{name}/ca.key'
                     serializer_ca = CertificateAuthoritySerializer(data=ca_data)
                     if serializer_ca.is_valid():
-
                         # Add the server to the database
                         serializer_ca.save()
                         return JsonResponse({"msg": f"CA {name} is created"}, status=201)
@@ -256,7 +255,7 @@ def getCertificate(request, id):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def createCertificate(request):
-    """Creating a new Certificates Authority in system and adding it to the database"""
+    """Creating a new Certificates in system and adding it to the database"""
     if request.method == 'POST':
         try:
             # parse the incoming information
@@ -315,12 +314,11 @@ def createCertificate(request):
                                                "REQ_ORG": organization,
                                                "REQ_EMAIL": email,
                                                "DIGEST": digest_algorithm,
-                                            #    "REQ_CN": common_name
+                                               "DN": "\"org\"",
                                                }
-                        serial = create_certificate_in_system(cert_name=name, ca_name=ca.name, type_cert=certificate_type, 
-                                                              updated_fields_vars=updated_fields_vars)
+                        serial = create_certificate_in_system(cert_name=name, common_name=common_name, ca_name=ca.name, 
+                                                              type_cert=certificate_type, updated_fields_vars=updated_fields_vars)
                         cert_data["serial"] = serial
-
                         # Add the certificate to the database
                         if certificate_type == 'server':
                             cert_data["certificate_path"] = f'''/etc/openvpn/certificates_{name}/server.crt\n/etc/openvpn/certificates_{name}/server.key\n/etc/openvpn/certificates_{name}/dh.pem'''
@@ -387,19 +385,24 @@ def deleteCertificate(request, id):
 def revokeCertificate(request, id):
     if request.method == 'PUT':
         try:
+            data = request.data
             cert = Certificate.objects.get(id=id)
+            cert.reason_revocation = data.get("reason", "")
+            cert.activation = False
             ca = cert.certificate_authority
 
             # Importing all the CA previous revoked certificates and add the new certificate
             list_revoked = Certificate.objects.filter(Q(certificate_authority=ca, activation=False) | Q(id=id))
-            # all_revoked = [revoked_cert for revoked_cert in list_revoked]
-            # all_revoked.append(cert)
             
-            # Revoking all the certificates in system and generate a crl file
-            revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
-            cert.activation = False
-            cert.save()
-            return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+            cert_serializer = CertificateSerializer(cert, data=data)
+            if cert_serializer.is_valid():
+                # Revoking all the certificates in system and generate a crl file
+                revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
+                cert_serializer.save()
+                return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+            else:
+                print(cert_serializer.errors)
+                return JsonResponse({"msg": "Error in Revocation certificate"}, status=401)
         except Certificate.DoesNotExist:
             return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
 

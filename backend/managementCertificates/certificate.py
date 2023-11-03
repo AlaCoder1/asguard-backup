@@ -1,4 +1,4 @@
-from backend.managementCertificates.functions import change_vars, download_certificate, get_certifcate_serial_number, initialize_ca, read_certificate_value, revoke_list_certs
+from backend.managementCertificates.functions import change_vars, download_certificate, extract_certificate_distingushed_name, get_certifcate_dates, get_certifcate_serial_number, initialize_ca, read_certificate_value, revoke_list_certs
 from backend.openvpn.functions import execute_command_with_arguments, execute_command_without_arguments, execute_list_commands_without_arguments, get_current_directory
 
 
@@ -32,25 +32,34 @@ def create_ca_in_system(ca_name, common_name, updated_fields_vars):
     return serial
 
 
-def import_ca_in_system(ca_name, input_fields):
+def import_ca_in_system(ca_name, input_fields:dict):
     current_dir = get_current_directory()
-    initialize_ca(current_dir, ca_name)
-    ca_data = '-----BEGIN CERTIFICATE-----\n' + input_fields["certificate_data"] + '\n-----END CERTIFICATE-----'
-    ca_private_key = '-----BEGIN PRIVATE KEY-----\n' + input_fields["certificate_private_key"] + '\n-----END PRIVATE KEY-----'
-    commands_list_without_arguments = [['mkdir', f'-p /etc/certificates_{ca_name}/'],
-                                       ['echo', f'"{ca_data.strip()}"', '|', f'sudo tee /etc/certificates_{ca_name}/ca.crt'],
-                                       ['echo', f'"{ca_private_key.strip()}"', '|', f'sudo tee /etc/certificates_{ca_name}/ca.key'],
-                                       ['cp', f'/etc/certificates_{ca_name}/ca.crt', f'{current_dir}/pki/ca.crt'],
+    execute_command_with_arguments(['sudo', 'easyrsa', 'init-pki'], 'yes\n')
+    execute_command_with_arguments(['sudo', 'easyrsa', 'build-ca', 'nopass'], f'{ca_name}\n')
+    commands_list_without_arguments = [['cp', '/etc/easy-rsa/vars', f'{current_dir}/pki/vars'],
+                                       ['mkdir', '-p', f'/etc/certificates_{ca_name}/'],]
+    execute_list_commands_without_arguments(commands_list_without_arguments)
+    with open(f"/etc/certificates_{ca_name}/ca.crt", "w+") as ca_file:
+        ca_file.write(input_fields["certificate_data"])
+    with open(f"/etc/certificates_{ca_name}/ca.key", "w+") as ca_file:
+        ca_file.write(input_fields["certificate_private_key"])
+    
+    serial = get_certifcate_serial_number(f"/etc/certificates_{ca_name}/ca.crt")
+    serial = serial[:len(serial)-1]
+    if serial != input_fields['serial']:
+        raise ValueError("Serial number input are not correct")
+    start_date, end_date, lifetime = get_certifcate_dates(f"/etc/certificates_{ca_name}/ca.crt")
+    distingushed_name = extract_certificate_distingushed_name(f"/etc/certificates_{ca_name}/ca.crt")
+    
+    commands_list_without_arguments = [['cp', f'/etc/certificates_{ca_name}/ca.crt', f'{current_dir}/pki/ca.crt'],
                                        ['cp', f'/etc/certificates_{ca_name}/ca.key', f'{current_dir}/pki/private/ca.key'],
-                                       ['cp', f'{current_dir}/pki/vars', f'/etc/certificates_{ca_name}/vars/'],
-                                       ['sudo', 'easyrsa gen-crl'],
+                                       ['cp', f'{current_dir}/pki/vars', f'/etc/certificates_{ca_name}/vars'],
+                                       ['sudo', 'easyrsa', 'gen-crl'],
                                        ['cp', f'{current_dir}/pki/crl.pem', f'/etc/certificates_{ca_name}/crl.pem'],
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
-    serial = get_certifcate_serial_number(f"/etc/certificates_{ca_name}/ca.crt")
-
-    return serial
+    return serial, start_date, end_date, lifetime, distingushed_name
 
 
 def delete_ca_in_system(ca_name):
@@ -62,20 +71,20 @@ def delete_ca_in_system(ca_name):
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
-def export_ca_in_system(ca_path, download_ca_path):
+def export_ca_in_system(ca_path):
     """Export a CA certificate from system"""
     ca_value = read_certificate_value(ca_path)
-    download_certificate(download_ca_path, ca_value)
+    return ca_value
 
 
-def export_ca_list_rev_in_system(ca_name, download_cert_path):
+def export_ca_list_rev_in_system(ca_name):
     """Export a list of revocation of a CA certificate from system"""
     commands_list_without_arguments = [['cp', f'/etc/certificates_{ca_name}/crl.pem', f'/etc/certificates_{ca_name}/crl_copy.pem'],
                                        ['mv', f'/etc/certificates_{ca_name}/crl_copy.pem', f'/etc/certificates_{ca_name}/crl.crl'],
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
     ca_value = read_certificate_value(f'/etc/certificates_{ca_name}/crl.crl')
-    download_certificate(download_cert_path, ca_value)
+    return ca_value
 
 
 ################ Certificate ####################
@@ -133,26 +142,31 @@ def create_certificate_in_system(cert_name, common_name, ca_name, type_cert, upd
 
 def import_certificate_in_system(cert_name, cert_type, input_fields):
     """Function to import in system an authority certificate"""
-    cert_data = '-----BEGIN CERTIFICATE-----\n' + input_fields["certificate_data"] + '\n-----END CERTIFICATE-----'
-    cert_private_key = '-----BEGIN ENCRYPTED PRIVATE KEY-----\n' + input_fields["certificate_private_key"] + '\n-----END ENCRYPTED PRIVATE KEY-----'
-    if cert_type == 'server':
-        commands_list_without_arguments = [['mkdir', '-p', f'/etc/openvpn/certificates_{cert_name}/'],
-                                           ['echo', cert_data.strip(), '|', 'sudo', 'tee', f'/etc/openvpn/certificates_{cert_name}/server.crt'],
-                                           ['echo', cert_private_key.strip(), '|', 'sudo', 'tee', f'/etc/openvpn/certificates_{cert_name}/server.key'],
-                                           ]
-        execute_list_commands_without_arguments(commands_list_without_arguments)
+    current_dir = get_current_directory()
+    execute_command_without_arguments(['cp', '/etc/easy-rsa/vars', f'{current_dir}/pki/vars'])
 
-        serial = get_certifcate_serial_number(f"/etc/openvpn/certificates_{cert_name}/server.crt")
-    elif cert_type == 'client':
-        commands_list_without_arguments = [['mkdir', '-p', f'/etc/openvpn/client/certificates_{cert_name}/'],
-                                           ['echo', cert_data.strip(), '|', 'sudo', 'tee', f'/etc/openvpn/client/certificates_{cert_name}/{cert_name}.crt'],
-                                           ['echo', cert_private_key.strip(), '|', 'sudo', 'tee', f'/etc/openvpn/client/certificates_{cert_name}/{cert_name}.key'],
-                                        ]
-        execute_list_commands_without_arguments(commands_list_without_arguments)
+    cert_directory = f"/etc/openvpn/certificates_{cert_name}/"
+    cert_path = f"{cert_directory}server.crt"
+    if cert_type == 'client':
+        cert_directory = f"/etc/openvpn/client/certificates_{cert_name}/"
+        cert_path = f"{cert_directory}{cert_name}.crt"
 
-        serial = get_certifcate_serial_number(f"/etc/openvpn/certificates_{cert_name}/server.crt")
-    
-    return serial
+    execute_command_without_arguments(['mkdir', '-p', cert_directory])
+    with open(cert_path, "w+") as cert_file:
+        cert_file.write(input_fields["certificate_data"])
+    with open(cert_path.replace(".crt", ".key"), "w+") as cert_file:
+        cert_file.write(input_fields["certificate_private_key"])
+
+    serial = get_certifcate_serial_number(cert_path)
+    serial = serial[:len(serial)-1]
+
+    start_date, end_date, lifetime = get_certifcate_dates(cert_path)
+    distingushed_name = extract_certificate_distingushed_name(cert_path)
+        
+    if serial != input_fields['serial']:
+        raise ValueError("Serial number input are not correct")
+
+    return serial, start_date, end_date, lifetime, distingushed_name
 
 
 def delete_certificate_in_system(cert_name, type_cert):
@@ -202,7 +216,7 @@ def unrevoke_certificates_in_system(ca_name, cert, list_revoked_cert):
     execute_command_without_arguments(command)
 
 
-def export_certificate_in_system(cert_name, cert_type, download_cert_path, download_type, password='', confirm_password=''):
+def export_certificate_in_system(cert_name, cert_type, download_type, password=''):
     """Export a certificate from system"""
     # configure certificate path: Server or Client
     if cert_type == 'server':
@@ -212,13 +226,13 @@ def export_certificate_in_system(cert_name, cert_type, download_cert_path, downl
     
     if download_type == 'certificate':
         cert_value = read_certificate_value(cert_path)
-        download_certificate(download_cert_path, cert_value)
     elif download_type == 'private_key':
-        cert_value = read_certificate_value(cert_path.replace('.crt', '.key'))
-        download_certificate(download_cert_path, cert_value)
+        cert_value = read_certificate_value(cert_path.replace(".crt", ".key"))
     else:  # .p12 file
-        process = execute_command_without_arguments(["openssl", "pkcs12", "-export", "-out", f"{cert_path.replace('.crt', '.p12')}",
-                                                     "-inkey", f"{cert_path.replace('.crt', '.key')}", "-in", f"{cert_path}",
-                                                     "-passout", f'pass:{password}'])
-        cert_value = read_certificate_value(cert_path.replace('.crt', '.p12'), decode=False)
-        download_certificate(download_cert_path, cert_value, 'wb')
+        cert_path_p12 = f'/asguard/newdms/src/downloads/{cert_name}.p12'
+        execute_command_without_arguments(["openssl", "pkcs12", "-export", "-out", cert_path_p12,
+                                           "-inkey", f"{cert_path.replace('.crt', '.key')}", "-in", f"{cert_path}",
+                                           "-passout", f'pass:{password}'])
+        cert_value = "Certificate p12"
+        # download_certificate(f'/asguard/newdms/src/downloads/{cert_name}.p12', cert_value)
+    return cert_value

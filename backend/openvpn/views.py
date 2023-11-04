@@ -774,13 +774,13 @@ def updateClientOpenvpn(request, id):
 
             client = ClientOpenvpn.objects.get(id=id)
             data = request.data
-            server_name = data.get('server_name', '')
-            server = ServerOpenvpn.objects.get(name=server_name)
-            client.server_openvpn = server
-            server_host = IP4Config.objects.get(id=Interface.objects.get(id=server.interface).pk).ip_address
-            server_port = server.port
-            # server_host = data.get('server_host', '')
-            # server_port = data.get('server_port', '')
+            # server_name = data.get('server_name', '')
+            # server = ServerOpenvpn.objects.get(name=server_name)
+            # client.server_openvpn = server
+            # server_host = IP4Config.objects.get(id=Interface.objects.get(id=server.interface).pk).ip_address
+            # server_port = server.port
+            server_host = data.get('server_host', '')
+            server_port = data.get('server_port', '')
             client.name = data.get('name', '')
             client.description = data.get('description', '')
             server_mode = data.get('server_mode', '')
@@ -830,7 +830,7 @@ def updateClientOpenvpn(request, id):
             data["server_host"] = server_host
             data["server_port"] = server_port
             # client_conf = json_to_str_client(data)
-            data['server_openvpn'] = server.pk
+            # data['server_openvpn'] = server.pk
             data['server_mode'] = client.server_mode
 
             client_serializer = ClientOpenvpnSerializer(client, data=data)

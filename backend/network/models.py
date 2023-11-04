@@ -116,12 +116,13 @@ class IP6Config(models.Model):
     typeip6=models.CharField(max_length=200, null=True,default=None)
     typedhcp6=models.CharField(max_length=200, null=True,default=None)
     ##static
-    ip6_address=models.CharField(max_length=200, null=True,default=None)
+    ip_address6=models.CharField(max_length=200, null=True,default=None)
     netmask6=models.IntegerField(null=True,default=None)
     ##dhcp base 
     request_only= models.BooleanField(default=False)
     prefix_delegation=models.IntegerField(null=True,default=None)
     prefix_hint= models.BooleanField(default=False)
+    ###base and advanced
     ipv4_connectivity= models.BooleanField(default=False)
     vlan_priority=models.CharField(max_length=200, null=True,default=None)
     ##dhcp advanced
@@ -172,6 +173,7 @@ class IP6Config(models.Model):
         super(IP6Config, self).save(*args, **kwargs)
     class Meta:
         db_table = 'ip6config'
+
 
 
 

@@ -13,6 +13,7 @@ class Gateway(models.Model):
     default_aux= models.BooleanField(default=True)
     far_aux= models.BooleanField(default=False)
     multiwan_aux= models.BooleanField(default=False)
+    ipv4_gw=models.BooleanField(default=True)
     # Created and updated timestamps
     created_at = models.DateTimeField(default=timezone.now, editable=False,null=True)
     updated_at = models.DateTimeField(default=timezone.now,editable=False,null=True)
@@ -31,5 +32,6 @@ class GatewayInterface(models.Model):
     interface = models.ForeignKey(Interface, on_delete=models.CASCADE)
     gateway = models.ForeignKey(Gateway, on_delete=models.CASCADE)
     metric=models.IntegerField(null=True,default=0)
+    ipv4_gw_interface=models.BooleanField(default=True)
     class Meta:
-        db_table = 'gatewayinterface'    
+        db_table = 'gateway_interface'    

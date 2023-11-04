@@ -33,7 +33,7 @@ class Certificate(models.Model):
     activation = models.BooleanField(default=True)  # Activated or Revoked
     valid_from = models.DateTimeField(default=None, blank=True, null=True)
     valid_until = models.DateTimeField(default=None, blank=True, null=True)
-    key_type = models.CharField(max_length=100, default='RSA', blank=True, null=True)
+    key_type = models.CharField(max_length=100, default='rsa', blank=True, null=True)
     key_length = models.IntegerField(default=2048, blank=True, null=True)
     digest_algorithm = models.CharField(max_length=100, default='sha256', blank=True, null=True)
     lifetime = models.IntegerField(default=None, blank=True, null=True)
@@ -43,8 +43,9 @@ class Certificate(models.Model):
     city = models.CharField(max_length=100, default=None, blank=True, null=True)
     organization = models.CharField(max_length=100, default=None, blank=True, null=True)
     email = models.CharField(max_length=100, default=None, blank=True, null=True)
-    common_name = models.CharField(max_length=100, default=None, blank=True, null=True)
+    common_name = models.CharField(max_length=100, default=None, blank=True, null=True, unique=True)
     serial = models.CharField(max_length=100, default=None, blank=True, null=True)
+    reason_revocation = models.CharField(max_length=100, default=None, blank=True, null=True)
 
     class Meta:
         db_table = 'certificate'

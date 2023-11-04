@@ -1,0 +1,454 @@
+<template>
+  <v-app id="inspire">
+    <base-layout title="Dashboard" active-menu="home">
+      <template #content>
+        <div class="mr-3">
+          <div
+            class="certificats-management mt-6 ml-5"
+            style="display: flex; flex-direction: column"
+          >
+            <h4>System informations</h4>
+            <v-divider></v-divider>
+
+            <div style="height: 100%">
+              <div style="display: flex; flex-direction: row; height: 100%">
+                <div style="overflow: hidden; flex-grow: 1">
+                  <ag-grid-vue
+                    id="grid-wrapper"
+                    class="ag-theme-alpine mt-3"
+                    :columnDefs="columnAuthority"
+                    
+                    :enableColResize="false"
+                    style="width: 100%; height: 155px"
+                    :gridOptions="gridOptions"
+                    @grid-ready="onGridReady"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div id="chart" class="mt-3 mr-2">
+            <!-- <pre> System Load{{ test.system_load }}</pre>
+            <pre> Operating{{ test.operating }}</pre> -->
+           
+            <apexchart
+              ref="apexChart"
+              height="350"
+              :options="chartOptions"
+              :series="chartOptions.series"
+            ></apexchart>
+          </div>
+
+          <div>
+            <v-row class="mt-6 ml-2">
+              <v-col cols="12">
+                Services
+                <v-divider></v-divider>
+
+                <div style="height: 100%">
+                  <div style="display: flex; flex-direction: row; height: 100%">
+                    <div style="overflow: hidden; flex-grow: 1">
+                      <ag-grid-vue
+                        id="grid-wrapper"
+                        domLayout="autoHeight"
+                        class="ag-theme-alpine mt-3"
+                        :columnDefs="columnServices"
+                        :alwaysShowHorizontalScroll="false"
+                        :alwaysShowVerticalScroll="false"
+                        :rowData="rowDataServices"
+                        style="width: 100%; height: 100%"
+                        :gridOptions="gridOptionsService"
+                        @grid-ready="onGridReadyaaa"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </v-col>
+            </v-row>
+            <v-row class="mt-6 ml-2">
+              <v-col cols="6">
+                Interfaces
+                <v-divider></v-divider>
+
+                <div style="height: 100%">
+                  <div style="display: flex; flex-direction: row; height: 100%">
+                    <div style="overflow: hidden; flex-grow: 1">
+                      <ag-grid-vue
+                        id="grid-wrapper"
+                        domLayout="autoHeight"
+                        class="ag-theme-alpine mt-3"
+                        :columnDefs="columnInterfaces"
+                        :rowData="rowDataInterfaces"
+                        :alwaysShowHorizontalScroll="false"
+                        :alwaysShowVerticalScroll="false"
+                        style="width: 100%; height: 100%"
+                        :gridOptions="gridOptionsService"
+                        @grid-ready="onGridReady"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </v-col>
+              <v-col cols="6">
+                Gateways
+                <v-divider></v-divider>
+
+                <div style="height: 100%">
+                  <div style="display: flex; flex-direction: row; height: 100%">
+                    <div style="overflow: hidden; flex-grow: 1">
+                      <ag-grid-vue
+                        id="grid-wrapper"
+                        domLayout="autoHeight"
+                        class="ag-theme-alpine mt-3"
+                        :columnDefs="columnGateways"
+                        :rowData="rowDataGateways"
+                        :alwaysShowHorizontalScroll="false"
+                        :alwaysShowVerticalScroll="false"
+                        style="width: 100%; height: 100%"
+                        :gridOptions="gridOptionsService"
+                        @grid-ready="onGridReady"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </v-col>
+            </v-row>
+          </div>
+        </div>
+      </template>
+    </base-layout>
+  </v-app>
+</template>
+
+<script>
+import { AgGridVue } from "ag-grid-vue3";
+import VueApexCharts from "vue3-apexcharts";
+import BaseLayout from "../../layouts/layout.vue";
+
+export default {
+  name: "HomeComponent",
+  components: {
+    BaseLayout,
+    AgGridVue,
+    apexchart: VueApexCharts,
+  },
+  watch: {
+    dataChart: {
+      handler(newData) {
+        this.uptime = newData;
+        this.uptimeUpdate = this.uptime.uptime;
+        console.log('eee',newData)
+
+        // rowDataAuthority
+
+        // setTimeout(() => {
+        //   const currentDate = new Date();
+        //   const currentTime = currentDate.toLocaleTimeString();
+        //   let authority =
+        //     {
+        //       nom: "Asguard",
+        //       system_load: this.uptimeUpdate ??'',
+        //       last_cong: currentTime,
+        //       operating: this.uptime.current_date ?? '',
+        //     }
+          
+          
+        //   this.test.push(authority);
+        // }, 7000);
+        // this.gridApi.setRowData(this.test);
+
+        // this.gridApi.setRowData(this.test);
+      },
+      immediate: true,
+      deep: true,
+    },
+  },
+  computed: {
+    // rowDataAuthority() {
+    //   const currentDate = new Date();
+    //   const currentTime = currentDate.toLocaleTimeString();
+    //   let authority = [
+    //     {
+    //       nom: "Asguard",
+    //       system_load: this.uptimeUpdate,
+    //       last_cong: currentTime,
+    //       operating: this.uptime.current_date,
+    //     },
+    //   ];
+    //   return authority;
+    // },
+  },
+  data() {
+    return {
+      uptimeUpdate: null,
+      socket: null,
+      chartOptions: {
+        chart: {
+          type: "area",
+          zoom: {
+            enabled: false,
+          },
+        },
+        xaxis: {
+          type: "datetime",
+        },
+
+        series: [
+          {
+            name: "CPU Percentage (%)",
+            data: [],
+          },
+          {
+            name: "Memory Percentage (%)",
+            data: [],
+          },
+        ],
+      },
+      information: "",
+      infoParser: "",
+      data: [],
+      columnAuthority: [
+        { headerName: "Name", field: "nom", maxWidth: 100 },
+        {
+          headerName: "Version",
+          cellRenderer: this.actionCellRenderer,
+          minWidth: 50,
+        },
+        {
+          headerName: "CPU type",
+          cellRenderer: this.actionCpuType,
+          minWidth: 100,
+        },
+        { headerName: "System load", field: "system_load", minWidth: 50 },
+        {
+          headerName: "Last configuration change",
+          field: "last_cong",
+          maxWidth: 200,
+        },
+        {
+          headerName: "Operating time",
+          field: "operating",
+          minWidth: 230,
+          editable: false,
+          sortable: false,
+          filter: false,
+        },
+      ],
+      columnServices: [
+        { headerName: "Service", field: "service" },
+        { headerName: "Description", field: "description" },
+        {
+          headerName: "Actions",
+          lockPosition: "right",
+          cellClass: "locked-col",
+          cellRenderer: this.actionCellRendererService,
+        },
+      ],
+      rowDataServices: null,
+
+      columnInterfaces: [
+        { headerName: "Name", field: "name", minWidth: 150 },
+        { headerName: "Speed and uplex", field: "speed_uplex", minWidth: 50 },
+        { headerName: "Address", field: "address", minWidth: 150 },
+      ],
+      rowDataInterfaces: [],
+      columnGateways: [
+        { headerName: "Name", field: "name", minWidth: 150 },
+        { headerName: "Address", field: "address", minWidth: 50 },
+        { headerName: "Status", field: "status", minWidth: 150 },
+      ],
+      rowDataGateways: [],
+      gridOptions: {
+        rowHeight: 90,
+        rowSelection: "single",
+      },
+      gridOptionsService: {
+        pagination: true,
+        paginationPageSize: 5,
+        rowSelection: "single",
+      },
+      dataChart: "",
+      uptime: "",
+      gateways: null,
+      interfaces: [],
+    };
+  },
+  methods: {
+    onGridReadyaaa(params) {
+      this.gridApi = params.api;
+      this.gridColumnApi = params.columnApi;
+      // this.gridApi.setRowData(this.test);
+
+      params.api.sizeColumnsToFit();
+      window.addEventListener("resize", function () {
+        setTimeout(function () {
+          params.api.sizeColumnsToFit();
+        });
+      });
+
+      params.api.sizeColumnsToFit();
+    },
+    onGridReady(params) {
+      this.gridApi = params.api;
+      this.gridColumnApi = params.columnApi;
+      // this.gridApi.setRowData(this.rowDataAuthority);
+
+      params.api.sizeColumnsToFit();
+      window.addEventListener("resize", function () {
+        setTimeout(function () {
+          params.api.sizeColumnsToFit();
+        });
+      });
+
+      params.api.sizeColumnsToFit();
+    },
+    initializeWebSocket() {
+      this.socket = new WebSocket("ws://" + window.location.host + "/ws/data/"); // Replace with your WebSocket URL
+
+      this.socket.onopen = () => {
+        console.log("WebSocket connection opened.");
+      };
+
+      this.socket.onmessage = (event) => {
+        if (this.socket.readyState === WebSocket.OPEN) {
+          const data = JSON.parse(event.data);
+          this.dataChart = data;
+          // console.log('this.',this.dataChart)
+          
+          // console.log('chartData :',this.dataChart)
+
+          const timestamp = new Date(data.timestamp * 1000).getTime();
+
+          this.chartOptions.series[0].data.push([
+            timestamp,
+            data.cpu_percentage.toFixed(2),
+          ]);
+          this.chartOptions.series[1].data.push([
+            timestamp,
+            data.memory_percentage.toFixed(2),
+          ]);
+
+          const maxDataPoints = 10;
+          if (this.chartOptions.series[0].data.length > maxDataPoints) {
+            this.chartOptions.series[0].data.shift();
+            this.chartOptions.series[1].data.shift();
+          }
+
+          this.$refs.apexChart.updateOptions({});
+        } else {
+          console.log(
+            "WebSocket is not in the OPEN state. Unable to send a message."
+          );
+        }
+      };
+
+      this.socket.onclose = () => {
+        console.log("WebSocket connection closed.");
+      };
+    },
+    actionCellRenderer() {
+      let eGui = document.createElement("div");
+
+      eGui.innerHTML = `Asguard V${this.infoParser.version_asguard}<br/> System V${this.infoParser.system_version}
+        <br/>${this.infoParser.version_openssl}
+        `;
+      eGui.style.lineHeight = "2";
+
+      return eGui;
+    },
+    actionCpuType() {
+      const longString = this.infoParser.cpu_type;
+      const chunks = longString.match(/.{1,20}/g);
+
+      const resultWithBr = chunks.map((chunk) => chunk + "<br>").join("");
+
+      let eGui = document.createElement("div");
+
+      eGui.innerHTML = `${resultWithBr}
+      `;
+      eGui.style.lineHeight = "2";
+      return eGui;
+    },
+
+    actionCellRendererService() {
+      let eGui = document.createElement("div");
+
+      {
+        eGui.innerHTML = `
+              <button class="action-button edit" data-action="edit">
+                <span class="mdi mdi-play-circle fa-2x" style="color: green"></span>
+              </button>
+              <button class="action-button delete" data-action="delete">
+                <span class="mdi mdi-reload fa-2x"></span>
+              </button>
+              <button class="action-button delete" data-action="delete">
+                <span class="mdi mdi-stop-circle fa-2x" style="color: red"></span>
+              </button>
+            `;
+      }
+
+      return eGui;
+    },
+    // setData() {
+    //   const validJsonString = this.$root.$data.tab
+    //     .replace(/'/g, '"')
+    //     .replace(/True/g, "true")
+    //     .replace(/False/g, "false")
+    //     .replace(/None/g, "null");
+    //   const parsedArray = JSON.parse(validJsonString);
+    //   this.data = parsedArray;
+    // },
+  },
+
+  beforeMount: async function () {
+    let infoData =
+      document.getElementById("app").attributes["informations"].value;
+    let gateways = document.getElementById("app").attributes["gateways"].value;
+    let interfaces =
+      document.getElementById("app").attributes["interfaces"].value;
+
+    this.initializeWebSocket();
+    this.information = infoData;
+    const info = JSON.parse(this.information);
+    this.infoParser = info;
+
+    let infoService = info.list_info_services.map((i) => {
+      const element = JSON.parse(i);
+      return {
+        service: element.service_name,
+        description: element.description,
+      };
+    });
+    this.rowDataServices = infoService;
+    this.gateways = gateways;
+
+    const element = JSON.parse(this.gateways);
+
+    let infoGateways = element.map((i) => {
+      return {
+        name: i?.gwname,
+        address: i?.gwaddress,
+        status: i?.gwstatus ?? "Online",
+      };
+    });
+    this.rowDataGateways = infoGateways;
+
+    this.interfaces = interfaces;
+
+    let parsedArray = JSON.parse(this.interfaces);
+
+    let infoInterfaces = parsedArray.map((element) => {
+      return {
+        name: element.name_interface,
+        speed_uplex: element.speed_duplex,
+        address: element.ip_address,
+      };
+    });
+    this.rowDataInterfaces = infoInterfaces;
+  },
+};
+</script>
+<style lang="scss">
+@import "~ag-grid-community/dist/styles/ag-grid.css";
+@import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
+</style>

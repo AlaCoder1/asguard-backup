@@ -1,8 +1,8 @@
 from rest_framework import serializers
-from .models import IPsecServer, IPsecSecrets
+from .models import ServerIPsec
 
 
-class IPsecServerSerializer(serializers.ModelSerializer):
+class ServerIPsecSerializer(serializers.ModelSerializer):
     class Meta:
-        model = IPsecServer
+        model = ServerIPsec
         fields = '__all__'

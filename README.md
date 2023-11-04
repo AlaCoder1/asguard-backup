@@ -50,3 +50,6 @@ yarn build / yarn watch
 
 python manage.py init_services
 
+//to collect static data of swagger UI in production
+
+python manage.py collectstatic //avec debug=False 

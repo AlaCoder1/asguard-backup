@@ -7,7 +7,7 @@ from backend.network.models import *
 from backend.rules.models import *
 from backend.gateway.models import *
 from backend.dashboard.functions import get_system_infomations
-
+from django.db.models import Q
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -120,9 +120,9 @@ def getAllGateways(request):
                 "gwaddress":res[i]['fields']['gwaddress'],
                 })
     return list_gateways
-def getAllStaticGateways(request):
+def getAllStaticGateways(request,ipv4_gw):
     if (request.method == 'GET'):
-        gateways= Gateway.objects.filter(staticgw=True)
+        gateways= Gateway.objects.filter(Q(staticgw=True)&Q(ipv4_gw=ipv4_gw))
         gatewaysDict = serializers.serialize("json", gateways)
         res = json.loads(gatewaysDict)
         list_gateways=[]
@@ -133,6 +133,7 @@ def getAllStaticGateways(request):
             res[i]['fields']['id'] = id
             list_gateways.append(res[i]['fields'])
     return  list_gateways
+
 def AllInterfaces(request):
     list_interface = []
     if (request.method == 'GET'):
@@ -147,6 +148,8 @@ def AllInterfaces(request):
             res[i]['fields']['id'] = id
             list_interface.append(res[i]['fields'])
         return list_interface
+    
+    
 def GetInformationsByInterface(request,name_interface):
     info={}
     interface={}
@@ -174,18 +177,54 @@ def GetInformationsByInterface(request,name_interface):
         else:
             info['genericConfig']=[]
         IPV4ConfigObject = IP4Config.objects.filter(interface_id=interfaceObject.id)
+        ###
         IPV4ConfigObjectDict = serializers.serialize("json", IPV4ConfigObject)
         resultat = json.loads(IPV4ConfigObjectDict)
+       
         if resultat != []:
             id = resultat[0]['pk']
             resultat[0]['fields']['id'] = id
             resultat[0].pop('model')
             resultat[0].pop('pk')
             resultat[0]['fields'].pop('interface')
-            info['IPV4Config']=resultat[0]['fields']
+            resultat[0]['fields']['addrgw']=""
+            ### get gateway4 from table intermediaire
+            if GatewayInterface.objects.filter(Q(interface=interfaceObject.id)& Q(ipv4_gw_interface=True)).exists():
+                GatewayInterfaceObject=GatewayInterface.objects.get(Q(interface=interfaceObject.id)& Q(ipv4_gw_interface=True))
+                gateway_id=GatewayInterfaceObject.gateway_id
+                addrgw4=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=True)).gwaddress
+                resultat[0]['fields']['addrgw']=addrgw4
+                info['IPV4Config']=resultat[0]['fields']
         else:
             info['IPV4Config']=[]
+        
+        ##############ipv6    
+        IPV6ConfigObject = IP6Config.objects.filter(interface_id=interfaceObject.id)
+        ###
+        IPV6ConfigObjectDict = serializers.serialize("json", IPV6ConfigObject)
+        resultat6 = json.loads(IPV6ConfigObjectDict)
+       
+        if resultat6 != []:
+            id = resultat6[0]['pk']
+            resultat6[0]['fields']['id'] = id
+            resultat6[0].pop('model')
+            resultat6[0].pop('pk')
+            resultat6[0]['fields'].pop('interface')
+            resultat6[0]['fields']['addrgw6']=""
+            ### get gateway4 from table intermediaire
+            if GatewayInterface.objects.filter(Q(interface=interfaceObject.id)& Q(ipv4_gw_interface=False)).exists():
+                GatewayInterfaceObject=GatewayInterface.objects.get(Q(interface=interfaceObject.id)& Q(ipv4_gw_interface=False))
+                gateway_id=GatewayInterfaceObject.gateway_id
+                print(gateway_id)
+                if Gateway.objects.filter(Q(id=gateway_id) & Q(ipv4_gw=False)).exists():
+                    addrgw6=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=False)).gwaddress
+                    resultat6[0]['fields']['addrgw6']=addrgw6
+                info['IPV6Config']=resultat6[0]['fields']
+        else:
+            info['IPV6Config']=[]
+        print({"info":info})
     return info
+
 
 
 
@@ -201,13 +240,21 @@ def user_certificate_managment_page(request):
 def interface_page(request):
     interfaces=AllInterfaces(request)
     config={}
+    allStaticGateways={}
     for i in range(len(interfaces)):
         IPV4Config=GetInformationsByInterface(request, interfaces[i]['name_interface'])
         config[interfaces[i]['name_interface']]=IPV4Config
     # IPV4Config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
-    allStaticGateways=getAllStaticGateways(request)
+    allStaticGatewaysIPV4=getAllStaticGateways(request,ipv4_gw=True)
+    allStaticGatewaysIPV6=getAllStaticGateways(request,ipv4_gw=False)
+    allStaticGateways['ipv4_gw']=allStaticGatewaysIPV4
+    allStaticGateways['ipv6_gw']=allStaticGatewaysIPV6
+    ##pour le moment on ajoute ce ligne
+    allStaticGateways=allStaticGatewaysIPV4
+    ###
     context = {'interfaces':interfaces,'IPV4Config':config,'allStaticGateways':allStaticGateways}
     return render(request, 'interface_page.html',context)
+
 
 @login_required(login_url='/')
 def firewall_page(request):
@@ -226,7 +273,10 @@ def openvpn_page(request):
 
 def login(request):
     usr=getAllUsers(request)
+    print (usr)
+
     context = {'users':usr}
+    print (context)
     return render(request, 'login.html',context)
 
 
@@ -251,6 +301,7 @@ def index_page(request):
             "ip_address":ip_address}
         config.append(info_interface)
     context = {"informations":info,"gateways":json.dumps(gateways),"interfaces":json.dumps(config)}
+    print(context)
     return render(request, 'index_page.html',context)
 
 def error_404_view(request, exception):

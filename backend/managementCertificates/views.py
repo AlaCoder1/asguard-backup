@@ -13,6 +13,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from backend.managementCertificates.certificate import create_ca_in_system, create_certificate_in_system, delete_ca_in_system, delete_certificate_in_system, export_ca_in_system, export_ca_list_rev_in_system, export_certificate_in_system, import_ca_in_system, import_certificate_in_system, revoke_certificates_in_system, unrevoke_certificates_in_system
+from backend.managementCertificates.list_certificates import get_all_cert_auth, get_all_certificates, get_cert_auth, get_certificate
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementCertificates.serializers import CertificateAuthoritySerializer, CertificateSerializer
 from backend.openvpn.manage_errors import CommandExecutionError
@@ -30,26 +31,8 @@ from backend.openvpn.manage_errors import CommandExecutionError
 @permission_classes([IsAuthenticated])
 def getAllCertAuth(request):
     """Getting all Certificates Authority from database"""
-    list_ca = []
     if (request.method == 'GET'):
-        ca = CertificateAuthority.objects.all()
-        caDict = serializers.serialize("json",ca)
-        res = json.loads(caDict)
-        for i in range(len(res)):
-            list_certs_auth_by_ca = len(Certificate.objects.filter(certificate_authority=ca[i].pk))
-            list_revoke_ca = Certificate.objects.filter(certificate_authority=ca[i].pk, activation=False)
-            list_revokation = []
-            for revoke in list_revoke_ca:
-                list_revokation.append({"id": revoke.id,
-                                        "name": revoke.name,
-                                        "reason": revoke.reason_revocation})
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            res[i]['fields']['certificates'] = list_certs_auth_by_ca
-            res[i]['fields']['list_revokation'] = list_revokation
-            list_ca.append(res[i]['fields'])
+        list_ca = get_all_cert_auth()
         return JsonResponse(list_ca, safe=False)
 
 
@@ -61,14 +44,8 @@ def getAllCertAuth(request):
 def getCertAuth(request, id):
     """Getting a Certificates Authority by id from database"""
     if (request.method == 'GET'):
-        ca = CertificateAuthority.objects.filter(pk=id)
-        caDict = serializers.serialize("json", ca)
-        res = json.loads(caDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields']['id'] = id
-        return JsonResponse(res[0]['fields'], safe=False)
+        cert = get_cert_auth(id)
+        return JsonResponse(cert, safe=False)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE CERTIFICATE AUTHORITY",
@@ -89,7 +66,7 @@ def getCertAuth(request, id):
                                                                              'common_name': openapi.Schema(type=openapi.TYPE_STRING),
                                                                              'certificate_data': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
                                                                              'certificate_key': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
-                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
+                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="Optional, when name_method is import"),
                                                                              }),
                                                                              }
                                                                              ))
@@ -159,12 +136,10 @@ def createCertAuth(request):
                         return JsonResponse({"msg": f"CA {name} is created"}, status=201)
                     
                     else:
-                        print(serializer_ca.errors)
-                        return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                        return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
                     
                 else:
-                    print(serializer_ca.errors)
-                    return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                    return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
             
             elif method.get("name_method", "") == 'import':
 
@@ -193,17 +168,15 @@ def createCertAuth(request):
                         serializer_ca.save()
                         return JsonResponse({"msg": f"CA {name} is created"}, status=201)
                     else:
-                        print(serializer_ca.errors)
-                        return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                        return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
                 else:
-                    print(serializer_ca.errors)
-                    return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                    return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
 
 
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in creating CA"}, status=401)
+            return JsonResponse({"error": "Error in creating CA"}, status=400)
         except ValueError as error:
-            return JsonResponse({"msg": error.__str__()}, status=401)
+            return JsonResponse({"error": error.__str__()}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -222,9 +195,9 @@ def deleteCertAuth(request, id):
             ca.delete()
             return JsonResponse({"msg": f"delete {ca.name} succesfully"})
     except ProtectedError:
-        return JsonResponse({"msg": "You have to delete Certificates authoried by this CA"}, status=401)
+        return JsonResponse({"error": "You have to delete Certificates authoried by this CA"}, status=400)
     except CertificateAuthority.DoesNotExist:
-        return JsonResponse({"msg": "This CA does not exist"}, status=401)
+        return JsonResponse({"error": "This CA does not exist"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD CERTIFICATE AUTHORITY",
@@ -247,9 +220,9 @@ def exportCertAuth(request, id):
             return JsonResponse({"cert": ca_value}, status=201)
 
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in exporting CA"}, status=401)
+            return JsonResponse({"error": "Error in exporting CA"}, status=400)
         except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"msg": "This CA does not exist"}, status=401)
+            return JsonResponse({"error": "This CA does not exist"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -266,9 +239,9 @@ def exportCertAuthListRev(request, id):
             return JsonResponse({"list_revocation": list_revocation}, status=201)
 
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in exporting list of revocation"}, status=401)
+            return JsonResponse({"error": "Error in exporting list of revocation"}, status=400)
         except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"msg": "This CA does not exist"}, status=401)
+            return JsonResponse({"error": "This CA does not exist"}, status=400)
 
 
 ##################################################
@@ -282,17 +255,8 @@ def exportCertAuthListRev(request, id):
 @permission_classes([IsAuthenticated])
 def getAllCertificates(request):
     """Getting all Certificates from database"""
-    list_cert = []
     if (request.method == 'GET'):
-        cert = Certificate.objects.all()
-        certDict = serializers.serialize("json",cert)
-        res = json.loads(certDict)
-        for i in range(len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            list_cert.append(res[i]['fields'])
+        list_cert = get_all_certificates()
         return JsonResponse(list_cert, safe=False)
 
 
@@ -304,14 +268,8 @@ def getAllCertificates(request):
 def getCertificate(request, id):
     """Getting a Certificate by id from database"""
     if (request.method == 'GET'):
-        cert = CertificateAuthority.objects.filter(pk=id)
-        certDict = serializers.serialize("json", cert)
-        res = json.loads(certDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields']['id'] = id
-        return JsonResponse(res[0]['fields'], safe=False)
+        cert = get_certificate(id)
+        return JsonResponse(cert, safe=False)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO GET LIST OF ALL CERTIFICATES",
@@ -336,7 +294,7 @@ def getCertificate(request, id):
                                                                              'common_name': openapi.Schema(type=openapi.TYPE_STRING),
                                                                              'certificate_data': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
                                                                              'certificate_key': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
-                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
+                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="Optional, when name_method is import"),
                                                                              }),
                                                                              }
                                                                              ))
@@ -419,7 +377,7 @@ def createCertificate(request):
                             serializer_cert.save()
                             return JsonResponse({"msg": f"Certificate {name} is created"}, status=201)
                 else:
-                    return JsonResponse({"msg": f"Error in Certificate configuration\n{serializer_cert.errors}"}, status=401)
+                    return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
             elif method.get("method_name", "") == 'import':
                 certificate_data = method.get("certificate_data", "")
                 certificate_key = method.get("certificate_key", "")
@@ -436,8 +394,8 @@ def createCertificate(request):
                                   "serial": serial
                                   }
                     serial, start_date, end_date, lifetime, distingushed_name, certificate_type = import_certificate_in_system(name, input_cert)
-                    if serial != cert_data["serial"]:
-                        return JsonResponse({"msg": "Serial number input are not correct"}, status=401)
+                    # if serial != cert_data["serial"]:
+                    #     return JsonResponse({"error": "Serial number input are not correct"}, status=400)
                     if certificate_type == 'server':
                         cert_data["certificate_path"] = f'''/etc/openvpn/certificates_{name}/server.crt\n/etc/openvpn/certificates_{name}/server.key'''
                     elif certificate_type == 'client':
@@ -453,16 +411,14 @@ def createCertificate(request):
                         serializer_cert.save()
                         return JsonResponse({"msg": "Certificate Configuration is done"}, status=201)
                     else:
-                        print('error in creating cert= ', serializer_cert.errors)
-                        return JsonResponse({"msg": "Error in Certificate configuration"}, status=401)
+                        return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
                 else:
-                    print('error in creating cert= ', serializer_cert.errors)
-                    return JsonResponse({"msg": "Error in Certificate configuration"}, status=401)
+                    return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
 
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in creating Certificate"}, status=401)
+            return JsonResponse({"error": "Error in creating Certificate"}, status=400)
         except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"msg": "CA does not ewxist"}, status=401)
+            return JsonResponse({"error": "CA does not ewxist"}, status=400)
 
 
 @swagger_auto_schema('DELETE', request_body=CertificateSerializer, responses={200: 'Created', 400: 'Bad Request'}, 
@@ -481,7 +437,7 @@ def deleteCertificate(request, id):
             cert.delete()
             return JsonResponse({"msg": f"delete {cert.name} succesfully"}, status=201)
         except Certificate.DoesNotExist:
-            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
+            return JsonResponse({"error": "This Certificate does not exist"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO REVOKE A CERTIFICATE",
@@ -510,12 +466,11 @@ def revokeCertificate(request, id):
                     cert_serializer.save()
                     return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
                 else:
-                    print(cert_serializer.errors)
-                    return JsonResponse({"msg": "Error in Revocation certificate"}, status=401)
+                    return JsonResponse({"error": list(cert_serializer.errors.values())[0][0]}, status=400)
             else:
-                return JsonResponse({"msg": "You can't revoke this imported certificate"}, status=401)
+                return JsonResponse({"error": "You can't revoke this imported certificate"}, status=400)
         except Certificate.DoesNotExist:
-            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
+            return JsonResponse({"error": "This Certificate does not exist"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -538,7 +493,7 @@ def unrevokeCertificate(request, id):
             cert.save()
             return JsonResponse({"msg": f"Certificate {cert.name} is unrevoked and removed from the crl file of the ca {ca.name}"})
         except Certificate.DoesNotExist:
-            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
+            return JsonResponse({"error": "This Certificate does not exist"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD A CERTIFICATE",
@@ -565,6 +520,6 @@ def exportCert(request, id):
             return JsonResponse({"cert": cert_value}, status=201)
 
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in exporting CA"}, status=401)
+            return JsonResponse({"error": "Error in exporting CA"}, status=400)
         except Certificate.DoesNotExist:
-            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
+            return JsonResponse({"error": "This Certificate does not exist"}, status=400)

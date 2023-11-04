@@ -19,17 +19,18 @@
                     label="Certificat Name "
                     v-model="state.formData.certifName"
                   ></v-text-field>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.certifName.$error"
-                    >{{ v$.formData.certifName.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.certifName.$errors[0].$message }}
+                  </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.formData.method"
-                    label="Select"
+                    label="Method"
                     item-title="name"
                     item-value="id"
                     return-object
@@ -39,14 +40,15 @@
                         slug: 'import',
                         id: '1',
                       },
-                      { name: 'Create Certificate', slug: 'create', id: '2' },
+                      { name: 'Create Certificate Authority', slug: 'create', id: '2' },
                     ]"
                   ></v-select>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.method.$error"
-                    >{{ v$.formData.method.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.method.$errors[0].$message }}
+                  </p>
                 </v-col>
 
                 <v-col cols="12" v-if="isImportCetif" class="mb-n6">
@@ -60,11 +62,12 @@
                     variant="outlined"
                   ></v-textarea>
 
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.certificatData.$error"
-                    >{{ v$.formData.certificatData.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.certificatData.$errors[0].$message }}
+                  </p>
 
                   <v-textarea
                     class="mt-3"
@@ -72,21 +75,17 @@
                     label="Private key certificate (facultatif)"
                     variant="outlined"
                   ></v-textarea>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.privateKey.$error"
-                    >{{ v$.formData.privateKey.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.privateKey.$errors[0].$message }}
+                  </p>
 
                   <v-text-field
                     label="Serial number certificate"
                     v-model="state.formData.serialNumber"
                   ></v-text-field>
-                  <span
-                    class="error-feedback"
-                    v-if="v$.formData.serialNumber.$error"
-                    >{{ v$.formData.serialNumber.$errors[0].$message }}</span
-                  >
                 </v-col>
 
                 <v-col v-if="isCreateCetif" cols="12" class="mb-n6">
@@ -98,15 +97,15 @@
                     label="Key type"
                     item-title="name"
                     item-value="id"
-                    @change="handleGroupChange"
                     return-object
                     :items="[{ name: 'RSA', id: '1', slug: 'rsa' }]"
                   ></v-select>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.keyType.$error"
-                    >{{ v$.formData.keyType.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.keyType.$errors[0].$message }}
+                  </p>
 
                   <v-select
                     v-model="state.formData.keyLength"
@@ -137,11 +136,12 @@
                       },
                     ]"
                   ></v-select>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.keyLength.$error"
-                    >{{ v$.formData.keyLength.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.keyLength.$errors[0].$message }}
+                  </p>
                   <v-select
                     v-model="state.formData.hashAlgo"
                     label="Hash algo"
@@ -166,21 +166,23 @@
                       },
                     ]"
                   ></v-select>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.hashAlgo.$error"
-                    >{{ v$.formData.hashAlgo.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.hashAlgo.$errors[0].$message }}
+                  </p>
 
                   <v-text-field
                     label="Lifetime"
                     v-model="state.formData.lifeTime"
                   ></v-text-field>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.lifeTime.$error"
-                    >{{ v$.formData.lifeTime.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.lifeTime.$errors[0].$message }}
+                  </p>
                   <v-row>
                     <v-col cols="6" class="mb-n6">
                       <v-autocomplete
@@ -191,68 +193,72 @@
                         return-object
                         :items="countriesList"
                       ></v-autocomplete>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.country.$error"
-                        >{{ v$.formData.country.$errors[0].$message }}</span
                       >
+                        {{ v$.formData.country.$errors[0].$message }}
+                      </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
                         label="State province"
                         v-model="state.formData.state"
                       ></v-text-field>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.state.$error"
-                        >{{ v$.formData.state.$errors[0].$message }}</span
                       >
+                        {{ v$.formData.state.$errors[0].$message }}
+                      </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
                         label="place"
                         v-model="state.formData.place"
                       ></v-text-field>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.place.$error"
-                        >{{ v$.formData.place.$errors[0].$message }}</span
                       >
+                        {{ v$.formData.place.$errors[0].$message }}
+                      </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
                         label="Organisation"
                         v-model="state.formData.organisation"
                       ></v-text-field>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.organisation.$error"
-                        >{{
-                          v$.formData.organisation.$errors[0].$message
-                        }}</span
                       >
+                        {{ v$.formData.organisation.$errors[0].$message }}
+                      </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
                         label="Mail"
                         v-model="state.formData.mail"
                       ></v-text-field>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.mail.$error"
-                        >{{ v$.formData.mail.$errors[0].$message }}</span
                       >
+                        {{ v$.formData.mail.$errors[0].$message }}
+                      </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
                         label="Commun name"
                         v-model="state.formData.communName"
                       ></v-text-field>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.communName.$error"
-                        >{{ v$.formData.communName.$errors[0].$message }}</span
                       >
+                        {{ v$.formData.communName.$errors[0].$message }}
+                      </p>
                     </v-col>
                   </v-row>
                 </v-col>
@@ -260,11 +266,7 @@
             </v-container>
             <!-- <small>*indicates required field</small> -->
           </v-card-text>
-          <v-snackbar v-model="snackbar" location="bottom right" :color="color">
-            {{ textAlert }}
 
-            <template v-slot:actions> </template>
-          </v-snackbar>
           <v-card-actions class="mt-10 actionBtn">
             <v-btn
               color="asguard_primary_light"
@@ -286,6 +288,14 @@
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+    </v-snackbar>
   </v-row>
 </template>
 
@@ -335,7 +345,14 @@ export default {
     const rules = computed(() => {
       return {
         formData: {
-          certifName: { required },
+          certifName: {
+            required,
+            isValidCertifName: helpers.withMessage(
+              `champs can include only letters & Numbers & underscores & hyphens without space.`,
+
+              helpers.regex(/^[A-Za-z0-9_\-]+$/)
+            ),
+          },
           method: { required },
           certificatData: {
             requiredIfFuction: helpers.withMessage(
@@ -357,26 +374,12 @@ export default {
               )
             ),
           },
-          serialNumber: {
-            requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                  "Import an existing Certificate Authority"
-              )
-            ),
-            isValidSerial: helpers.withMessage(
-              `champs can include only numbers and uppercase letter.`,
 
-              helpers.regex(/^[0-9A-Z]+$/)
-            ),
-          },
           keyLength: {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -384,7 +387,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -392,7 +395,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -400,7 +403,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidlifeTime: helpers.withMessage(
@@ -413,7 +416,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -421,7 +424,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidState: helpers.withMessage(
@@ -434,7 +437,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidPlace: helpers.withMessage(
@@ -447,7 +450,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -455,7 +458,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
             email,
@@ -464,7 +467,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidCommne: helpers.withMessage(
@@ -502,7 +505,7 @@ export default {
       );
     },
     isCreateCetif() {
-      return this.state.formData.method.name === "Create Certificate";
+      return this.state.formData.method.name === "Create Certificate Authority";
     },
   },
 
@@ -545,7 +548,6 @@ export default {
         }
       );
     },
-    handleGroupChange(selectedItems) {},
 
     closeModal() {
       this.v$.$reset();
@@ -573,7 +575,7 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         let payload = {};
-        if (this.state.formData.method.name == "Create Certificate") {
+        if (this.state.formData.method.name == "Create Certificate Authority") {
           payload = {
             name: this.state.formData?.certifName,
             method: {
@@ -597,31 +599,31 @@ export default {
               name_method: this.state.formData?.method?.slug,
               certificate_data: this.state.formData?.certificatData,
               certificate_key: this.state.formData?.privateKey,
-              serial: this.state.formData?.serialNumber, // number alpha maj
+              serial: this.state.formData?.serialNumber,
             },
           };
         }
 
-        axios.post("/certificates/createCertAuth", payload).then(
-          (response) => {
+        axios
+          .post("/certificates/createCertAuth", payload)
+          .then((response) => {
             if (response.status == "201") {
+              this.closeModal();
+
               this.snackbar = true;
               this.color = "success";
               this.textAlert = response.data.msg;
+
               setTimeout(() => {
-                this.closeModal();
                 location.reload();
-              }, 2000);
-            } else {
-              console.log("error");
+              }, 1000);
             }
-          },
-          (error) => {
+          })
+          .catch((i) => {
             this.snackbar = true;
             this.color = "red";
-            this.textAlert = "error";
-          }
-        );
+            this.textAlert = i.response.data.error;
+          });
       }
     },
   },

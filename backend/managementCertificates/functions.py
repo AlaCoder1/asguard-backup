@@ -111,6 +111,11 @@ def extract_certificate_distingushed_name(cert_path):
     return dn_dict
 
 
+def extract_type_certificate(cert_path):
+    cert_value = read_certificate_value(cert_path)
+    
+
+
 def revoke_list_certs(current_dir, ca_name, list_revoked_cert):
     """Revoking a list of certificates and generate the crl file"""
 

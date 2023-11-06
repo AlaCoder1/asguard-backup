@@ -181,7 +181,7 @@ def createCertAuth(request):
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in creating CA"}, status=401)
         except ValueError as error:
-            return JsonResponse({"msg": error.__str__()})
+            return JsonResponse({"msg": error.__str__()}, status=401)
 
 
 @api_view(['Delete'])
@@ -364,6 +364,7 @@ def createCertificate(request):
                 certificate_data = method.get("certificate_data", "")
                 certificate_key = method.get("certificate_key", "")
                 serial = method.get("serial", "")
+                certificate_type = 'server'
                 cert_data = {"name": name,
                              "activation": activation,
                              "serial": serial

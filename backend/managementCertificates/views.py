@@ -291,9 +291,9 @@ def createCertificate(request):
             data = request.data
             name = data.get('name', '')
             method = data.get('method', '')
-            certificate_type = data.get('certificate_type', 'True')
             activation = data.get('activation', '')
             if method.get("method_name", "") == 'create':
+                certificate_type = method.get('certificate_type', 'True')
                 lifetime = method.get('lifetime', '')
                 valid_from = datetime.now()
                 valid_until = valid_from + timedelta(days=lifetime)
@@ -366,22 +366,22 @@ def createCertificate(request):
                 serial = method.get("serial", "")
                 certificate_type = 'server'
                 cert_data = {"name": name,
-                             "certificate_type": certificate_type,
                              "activation": activation,
                              "serial": serial
                              }
-                if certificate_type == 'server':
-                    cert_data["certificate_path"] = f'''/etc/openvpn/certificates_{name}/server.crt\n/etc/openvpn/certificates_{name}/server.key'''
-                elif certificate_type == 'client':
-                    cert_data["certificate_path"] = f'''/etc/openvpn/client/certificates_{name}/{name}.crt\n/etc/openvpn/client/certificates_{name}/{name}.key'''
                 serializer_cert = CertificateSerializer(data=cert_data)
                 if serializer_cert.is_valid():
                     input_cert = {"certificate_data": certificate_data,
                                   "certificate_private_key": certificate_key,
                                   "serial": serial
                                   }
+                    certificate_type = 'server'
                     serial, start_date, end_date, lifetime, distingushed_name = import_certificate_in_system(name, certificate_type, input_cert)
-                
+                    
+                    if certificate_type == 'server':
+                        cert_data["certificate_path"] = f'''/etc/openvpn/certificates_{name}/server.crt\n/etc/openvpn/certificates_{name}/server.key'''
+                    elif certificate_type == 'client':
+                        cert_data["certificate_path"] = f'''/etc/openvpn/client/certificates_{name}/{name}.crt\n/etc/openvpn/client/certificates_{name}/{name}.key'''
                     cert_data["valid_from"] = start_date
                     cert_data["valid_until"] = end_date
                     cert_data["lifetime"] = lifetime
@@ -403,8 +403,7 @@ def createCertificate(request):
         except CertificateAuthority.DoesNotExist:
             return JsonResponse({"msg": "CA does not ewxist"}, status=401)
         except ValueError as error:
-            print(error.__str__())
-            return JsonResponse({"msg": error.__str__()}, status=401)
+            return JsonResponse({"msg": error}, status=401)
 
 
 @api_view(['Delete'])

@@ -23,6 +23,8 @@ from backend.openvpn.manage_errors import CommandExecutionError
 ############# Certificates Authority #############
 ##################################################
 
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL CERTIFICATES AUTHORITY",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -51,6 +53,8 @@ def getAllCertAuth(request):
         return JsonResponse(list_ca, safe=False)
 
 
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET A CERTIFICATE AUTHORITY",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -67,9 +71,28 @@ def getCertAuth(request, id):
         return JsonResponse(res[0]['fields'], safe=False)
 
 
-# @swagger_auto_schema('POST', request_body=CertificateAuthoritySerializer, responses={200: 'Created', 400: 'Bad Request'}, 
-#                      manual_parameters=[openapi.Parameter('method', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING, description='Description'),
-#         ])
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE CERTIFICATE AUTHORITY",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'method'],
+                                                 properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'method': openapi.Schema(
+                                                                 type=openapi.TYPE_OBJECT, required=['name_method'],
+                                                                 properties={'name_method': openapi.Schema(type=openapi.TYPE_STRING, enum=["create", "import"]),
+                                                                             'key_type': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'key_length': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                                                             'digest_algorithm': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\bsha\d+', description="start with sha like sha123"),
+                                                                             'lifetime': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                                                             'country_code': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'state': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'city': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'organization': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'email': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'common_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'certificate_data': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
+                                                                             'certificate_key': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
+                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
+                                                                             }),
+                                                                             }
+                                                                             ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -183,6 +206,8 @@ def createCertAuth(request):
             return JsonResponse({"msg": error.__str__()}, status=401)
 
 
+@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE CERTIFICATE AUTHORITY",)
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -202,6 +227,9 @@ def deleteCertAuth(request, id):
         return JsonResponse({"msg": "This CA does not exist"}, status=401)
 
 
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD CERTIFICATE AUTHORITY",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['type'],
+                                                 properties={"type": openapi.Schema(type=openapi.TYPE_STRING, enum=['certificate', 'private_key'])}))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -224,6 +252,8 @@ def exportCertAuth(request, id):
             return JsonResponse({"msg": "This CA does not exist"}, status=401)
 
 
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DOWNLOAD REVOKACTION LIST OF A CERTIFICATE AUTHORITY",)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -244,6 +274,9 @@ def exportCertAuthListRev(request, id):
 ##################################################
 ################## Certificates ##################
 ##################################################
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL CERTIFICATES",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -263,6 +296,8 @@ def getAllCertificates(request):
         return JsonResponse(list_cert, safe=False)
 
 
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET A CERTIFICATE",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -279,6 +314,32 @@ def getCertificate(request, id):
         return JsonResponse(res[0]['fields'], safe=False)
 
 
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO GET LIST OF ALL CERTIFICATES",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'activation', 'method'],
+                                                 properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'activation': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
+                                                             'method': openapi.Schema(
+                                                                 type=openapi.TYPE_OBJECT, required=['name_method'],
+                                                                 properties={'method_name': openapi.Schema(type=openapi.TYPE_STRING, enum=["create", "import"]),
+                                                                             'certificate_type': openapi.Schema(type=openapi.TYPE_STRING, enum=["server", "client"]),
+                                                                             'ca': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of a certificate authority"),
+                                                                             'key_type': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'key_length': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                                                             'digest_algorithm': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\bsha\d+', description="start with sha like sha123"),
+                                                                             'lifetime': openapi.Schema(type=openapi.TYPE_INTEGER),
+                                                                             'private_key_location': openapi.Schema(type=openapi.TYPE_STRING, default="Save on this firewall"),
+                                                                             'country_code': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'state': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'city': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'organization': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'email': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'common_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                                             'certificate_data': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
+                                                                             'certificate_key': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
+                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
+                                                                             }),
+                                                                             }
+                                                                             ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -404,6 +465,8 @@ def createCertificate(request):
             return JsonResponse({"msg": "CA does not ewxist"}, status=401)
 
 
+@swagger_auto_schema('DELETE', request_body=CertificateSerializer, responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE A CERTIFICATE AUTHORITY",)
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -421,6 +484,9 @@ def deleteCertificate(request, id):
             return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
 
 
+@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO REVOKE A CERTIFICATE",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['reason'],
+                                                 properties={"reason": openapi.Schema(type=openapi.TYPE_STRING, enum=["No Status", "Unspecified", "key compromise", "CA compromise", "affiliation changed ", "Supersed", "Cessation of Operation", "Certificate Hold ", "End of Validity Period ", "Technical Issues"])}))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -452,6 +518,8 @@ def revokeCertificate(request, id):
             return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
 
 
+@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO UNREVOKE A CERTIFICATE",)
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -473,6 +541,10 @@ def unrevokeCertificate(request, id):
             return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
 
 
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD A CERTIFICATE",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['download_type'],
+                                                 properties={"download_type": openapi.Schema(type=openapi.TYPE_STRING, enum=["certificate", "private_key", "p12"]),
+                                                             "password": openapi.Schema(type=openapi.TYPE_STRING, description="Required when download_type is p12")}))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

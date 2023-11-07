@@ -135,8 +135,8 @@ def update_conn_dhcp_IPV4(config,ifname,uuid):
     
     return commandes,config,cmd_final
 ### get address4 dhcp from system
-def get_address4_dhcp(ifname):
-    cmd = "ip -4 -o addr show dev {} | awk '{{split($4, a); print a[1]}}'".format(ifname)
+def get_address_dhcp(ifname,aux_ip):
+    cmd = "sudo ip -{} -o addr show dev {} | awk '{{split($4, a); print a[1]}}'".format(aux_ip,ifname)
     output, error = run_command(cmd)
     if error!="" or len(output)==0:
         return None,None

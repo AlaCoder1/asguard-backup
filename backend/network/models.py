@@ -120,7 +120,7 @@ class IP6Config(models.Model):
     netmask6=models.IntegerField(null=True,default=None)
     ##dhcp base 
     request_only= models.BooleanField(default=False)
-    prefix_delegation=models.IntegerField(null=True,default=None)
+    prefix_delegation_size=models.IntegerField(null=True,default=None)
     prefix_hint= models.BooleanField(default=False)
     ###base and advanced
     ipv4_connectivity= models.BooleanField(default=False)
@@ -139,7 +139,7 @@ class IP6Config(models.Model):
     nvalid_time=models.CharField(max_length=200, null=True,default=None)
     ####
     
-    prefix_delegation=models.CharField(max_length=200, null=True,default=None)
+    prefix_delegation=models.BooleanField(default=False)
     ####if prefix_delegation is true
     id_assoc_pd=models.CharField(max_length=200, null=True,default=None)
     ipv6_prefix=models.CharField(max_length=200, null=True,default=None)

@@ -162,7 +162,6 @@ def update_conn_dhcp_ipv6(config,ifname,uuid):
     cmd_final=[
     "sudo nmcli connection modify {} ipv6.method auto ipv6.addresses '' ipv6.gateway '' ipv6.route-metric '' ".format(uuid),
     "sudo systemctl enable --quiet dhcp6c@{} && sudo systemctl restart --quiet dhcp6c@{}".format(ifname,ifname),
-    "sudo rm -rf /var/lib/dhcpv6/dhcp6c_duid"
     # "(sudo dhcp6c -c /etc/Dhcp6Config/{}/dhcp6c.conf  -fp /var/run/dhcp6c.pid {}; kill -s SIGTERM $(cat /var/run/dhcp6c.pid)) &".format(ifname,ifname),
     ]
     

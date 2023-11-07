@@ -13,7 +13,6 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from backend.managementCertificates.certificate import create_ca_in_system, create_certificate_in_system, delete_ca_in_system, delete_certificate_in_system, export_ca_in_system, export_ca_list_rev_in_system, export_certificate_in_system, import_ca_in_system, import_certificate_in_system, revoke_certificates_in_system, unrevoke_certificates_in_system
-from backend.managementCertificates.functions import extract_certificate_distingushed_name
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementCertificates.serializers import CertificateAuthoritySerializer, CertificateSerializer
 from backend.openvpn.manage_errors import CommandExecutionError
@@ -293,7 +292,7 @@ def createCertificate(request):
             method = data.get('method', '')
             activation = data.get('activation', '')
             if method.get("method_name", "") == 'create':
-                certificate_type = method.get('certificate_type', 'True')
+                certificate_type = method.get('certificate_type', '')
                 lifetime = method.get('lifetime', '')
                 valid_from = datetime.now()
                 valid_until = valid_from + timedelta(days=lifetime)
@@ -375,9 +374,9 @@ def createCertificate(request):
                                   "certificate_private_key": certificate_key,
                                   "serial": serial
                                   }
-                    certificate_type = 'server'
-                    serial, start_date, end_date, lifetime, distingushed_name = import_certificate_in_system(name, certificate_type, input_cert)
-                    
+                    serial, start_date, end_date, lifetime, distingushed_name, certificate_type = import_certificate_in_system(name, input_cert)
+                    if serial != cert_data["serial"]:
+                        return JsonResponse({"msg": "Serial number input are not correct"}, status=401)
                     if certificate_type == 'server':
                         cert_data["certificate_path"] = f'''/etc/openvpn/certificates_{name}/server.crt\n/etc/openvpn/certificates_{name}/server.key'''
                     elif certificate_type == 'client':
@@ -385,6 +384,7 @@ def createCertificate(request):
                     cert_data["valid_from"] = start_date
                     cert_data["valid_until"] = end_date
                     cert_data["lifetime"] = lifetime
+                    cert_data["certificate_type"] = certificate_type
                     for dn_item, dn_data in distingushed_name.items():
                         cert_data[dn_item] = dn_data
                     serializer_cert = CertificateSerializer(data=cert_data)
@@ -402,8 +402,6 @@ def createCertificate(request):
             return JsonResponse({"msg": "Error in creating Certificate"}, status=401)
         except CertificateAuthority.DoesNotExist:
             return JsonResponse({"msg": "CA does not ewxist"}, status=401)
-        except ValueError as error:
-            return JsonResponse({"msg": error}, status=401)
 
 
 @api_view(['Delete'])
@@ -435,18 +433,21 @@ def revokeCertificate(request, id):
             cert.activation = False
             ca = cert.certificate_authority
 
-            # Importing all the CA previous revoked certificates and add the new certificate
-            list_revoked = Certificate.objects.filter(Q(certificate_authority=ca, activation=False) | Q(id=id))
-            
-            cert_serializer = CertificateSerializer(cert, data=data)
-            if cert_serializer.is_valid():
-                # Revoking all the certificates in system and generate a crl file
-                revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
-                cert_serializer.save()
-                return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+            if ca:
+                # Importing all the CA previous revoked certificates and add the new certificate
+                list_revoked = Certificate.objects.filter(Q(certificate_authority=ca, activation=False) | Q(id=id))
+                
+                cert_serializer = CertificateSerializer(cert, data=data)
+                if cert_serializer.is_valid():
+                    # Revoking all the certificates in system and generate a crl file
+                    revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
+                    cert_serializer.save()
+                    return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+                else:
+                    print(cert_serializer.errors)
+                    return JsonResponse({"msg": "Error in Revocation certificate"}, status=401)
             else:
-                print(cert_serializer.errors)
-                return JsonResponse({"msg": "Error in Revocation certificate"}, status=401)
+                return JsonResponse({"msg": "You can't revoke this imported certificate"}, status=401)
         except Certificate.DoesNotExist:
             return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
 

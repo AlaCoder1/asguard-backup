@@ -1,4 +1,4 @@
-from subscription.models import *
+from backend.subscription.models import *
 from django.core.management.base import BaseCommand
 
 
@@ -170,7 +170,7 @@ class Command(BaseCommand):
         
 def initBD_organization():
     organization_instance = organization()
-    organization_instance.groupName = "numeryx"
+    organization_instance.groupname = "numeryx"
     organization_instance.save()
     
 def initBD_plan(slug,price):
@@ -183,5 +183,5 @@ def initBD_plan(slug,price):
 def initBD_plansFeatures(description,planId):
     plansFeatures_instance = plansFeatures()
     plansFeatures_instance.description = description
-    plansFeatures_instance.planId = plan.objects.get(id=planId)
+    plansFeatures_instance.plan = plan.objects.get(id=planId)
     plansFeatures_instance.save()

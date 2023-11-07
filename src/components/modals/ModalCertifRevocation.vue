@@ -4,7 +4,7 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5">Test</span>
+            <span class="text-h5">{{ nameCertif }}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -15,23 +15,22 @@
                     domLayout="autoHeight"
                     class="ag-theme-alpine mt-3"
                     :columnDefs="columnCertificats"
-                    :rowData="rowDataCertificats"
                     :alwaysShowHorizontalScroll="false"
                     :alwaysShowVarticalScroll="false"
                     :gridOptions="gridOptions"
                     style="width: 100%; height: 100%"
-                    @grid-size-changed="onGridSizeChanged"
+                    @grid-ready="onGridReady"
                   />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
-          <v-card-actions class="actionBtn">
-            <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
-            <span style="color: rgb(245, 8, 8); margin-top: 10px">{{
-              textAlertDanger
-            }}</span>
+          <v-snackbar v-model="snackbar" location="bottom right" :color="color">
+            {{ textAlert }}
 
+            <template v-slot:actions> </template>
+          </v-snackbar>
+          <v-card-actions class="actionBtn">
             <v-btn
               :rounded="true"
               class="mt-3 btn-add"
@@ -49,6 +48,7 @@
 </template>
 
 <script>
+import axios from "axios";
 import { AgGridVue } from "ag-grid-vue3";
 export default {
   props: {
@@ -74,6 +74,10 @@ export default {
   },
   data() {
     return {
+      textAlert: "",
+      color: "",
+      snackbar: false,
+      nameCertif: null,
       modalMode: "",
       rowEdit: {},
       isModalOpenRevoce: false,
@@ -81,7 +85,7 @@ export default {
       isModalOpen: false,
       columnCertificats: [
         { headerName: "certificat", field: "certif", minWidth: 150 },
-        { headerName: "raison", field: "raison", minWidth: 150 },
+        { headerName: "raison", field: "raison", minWidth: 250 },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,
@@ -91,20 +95,48 @@ export default {
           filter: false,
         },
       ],
-      rowDataCertificats: [{ id: 1, certif: "certif", raison: "raison" }],
+      rowDataCertificats: null,
     };
   },
   watch: {
     isOpen(val) {
       this.openModal = val;
     },
+    editRow(val) {
+      this.nameCertif = val.nom;
+      if (val) {
+        let infoList = val.list_revokation.map((element) => {
+          return {
+            id: element.id,
+            certif: element.name,
+            raison: element.reason,
+          };
+        });
+        this.rowDataCertificats = infoList;
+        setTimeout(() => {
+          this.gridApi.setRowData(this.rowDataCertificats);
+        }, 5);
+      }
+    },
   },
   methods: {
+    onGridReady(params) {
+      this.gridApi = params.api;
+      this.gridColumnApi = params.columnApi;
+
+      params.api.sizeColumnsToFit();
+      window.addEventListener("resize", function () {
+        setTimeout(function () {
+          params.api.sizeColumnsToFit();
+        });
+      });
+
+      params.api.sizeColumnsToFit();
+    },
     closeModal() {
       this.$emit("closeModal");
     },
     openModalRevoce() {
-      console.log("ok");
       this.modalData = {};
       this.modalMode = "revoce"; // Assuming you want to open the modal in create mode
       this.isModalOpenRevoce = true;
@@ -155,13 +187,47 @@ export default {
 
       return eGui;
     },
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
     handleAction(action, rowData) {
       switch (action) {
         case "lock":
           console.log("revoce row:", rowData);
-          break;
-        case "cancel":
-          console.log("Cancel clicked for row:", rowData);
+
+          console.log("lock:", rowData);
+
+          const csrfToken = this.getCookie("csrftoken");
+          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+          axios
+            .put(`/certificates/unrevokeCertificate/${rowData.id}`)
+            .then((response) => {
+              this.snackbar = true;
+              this.color = "success";
+              this.textAlert = response.data.msg;
+              setTimeout(() => {
+                this.closeModal();
+                location.reload();
+              }, 2000);
+            })
+            .catch((error) => {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = "error";
+            });
+
           break;
         default:
           break;

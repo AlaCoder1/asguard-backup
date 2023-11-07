@@ -69,8 +69,8 @@ def return_gateway6_system(uuid,addrgw,far_aux,multiWan_aux,metric):
     return cmd
 
 ###########DHCP
-def get_gateway_dhcp(ifname):
-    command="ip route show default | grep {} | grep 'proto'| cut -d ' ' -f 3-".format(ifname)
+def get_gateway_dhcp(ifname,aux_ip):
+    command="sudo ip -{} route show default | grep {} | grep 'proto'| cut -d ' ' -f 3-".format(aux_ip,ifname)
     output, error = run_command(command)
     if  not output.strip():
         return None, 0, False, False, False  # Return None and metric 0 in case of failure
@@ -88,4 +88,34 @@ def get_gateway_dhcp(ifname):
     if output.find('onlink')!=-1:
            far_aux = True
     return gwaddr,metric,default_aux,far_aux,multi_aux
-     
+   
+####
+def save_gateways_database(gwaddr,name_interface,default_aux,far_aux,multiwan_aux,metric,ipv4_gw_interface,ipv4_gw):
+    if gwaddr is not None:
+        dataGw={
+        "gwname":"DHCP_GW_{}".format(gwaddr),
+        "gwaddress":"{}".format(gwaddr),
+        "description":"DHCP gateway generated automatically ",
+        "default_aux":default_aux,
+        "far_aux":far_aux,
+        "multiwan_aux":multiwan_aux,
+        "ipv4_gw":ipv4_gw
+            }
+        aux_exist=Gateway.objects.filter(Q(gwaddress=gwaddr) & Q(staticgw=False)).exists()
+        if not aux_exist:
+            aux_GW=add_gateway_DB(dataGw)
+        else:
+            GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr) & Q(staticgw=False) )
+            idGW=GatewayObject.id
+            aux_GW=update_gateway_DB(dataGw,idGW)
+        if aux_GW is True:
+            GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr) & Q(staticgw=False) )
+            addGatewayInterfaceDB(GatewayObject,name_interface,metric,ipv4_gw_interface)  
+            return True
+        else:
+            msg=aux_GW
+           
+    else:
+            msg="Gateway DHCP not found!"
+             
+    return msg

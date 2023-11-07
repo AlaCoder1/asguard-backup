@@ -25,7 +25,7 @@ class IP6ConfigSerializer(serializers.ModelSerializer):
     class Meta:
             model = IP6Config
             fields = ['typeip6','typedhcp6', 'ip_address6','netmask6',
-                      'request_only','prefix_delegation','prefix_hint',
+                      'request_only','prefix_delegation_size','prefix_hint',
                       'ipv4_connectivity','vlan_priority','information_only',
                       'send_options','request_options','script',
                       'non_temporary','id_assoc','address','nlifetime','nvalid_time',

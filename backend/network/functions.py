@@ -14,7 +14,7 @@ def update_DB(id,data,model,IP4serializer):
         objectConfig=model.objects.get(interface_id=id)
         # Set all attributes to None
         for field in objectConfig._meta.fields:
-            if field.attname not in ["id", "interface_id",'ifname','created_at','updated_at','created_by','updated_by','request_only','prefix_hint','information_only','non_temporary','ipv4_connectivity']: 
+            if field.attname not in ["id", "interface_id",'ifname','created_at','updated_at','created_by','updated_by','request_only','prefix_hint','information_only','non_temporary','ipv4_connectivity','prefix_delegation']: 
                 setattr(objectConfig, field.attname, None)
         setattr(objectConfig, 'updated_by', settings.CurrentUserId)
         serializerIP4Config = IP4serializer(objectConfig,data=data)
@@ -175,5 +175,8 @@ EOF""".format('\n'.join(output))
             msg=error,"    :"+cmd
             return False
     return True
+
+
+
 
 #################################################### end system functions  ############################################################### 

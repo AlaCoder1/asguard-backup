@@ -215,9 +215,9 @@ def conf(request,name_interface):
                                 #call function to convert address to static
                                 commandes,output_service,cmd_final_ipv6=update_conn_static_IPV6(output_service,ifname,uuid,ip_address6,netmask6,cmdgw6)
                                 jsonIPV6={
-                            "name_interface":name_interface,"ifname":ifname,
-                            "ip_address6":ip_address6,"netmask6":netmask6,
-                            "typeip6":setuptypeIP6}
+                                "name_interface":name_interface,"ifname":ifname,
+                                "ip_address6":ip_address6,"netmask6":netmask6,
+                                "typeip6":setuptypeIP6}
                             case "dhcp":
                                 typeDHCP6 = data.get('value_setup_Ipv6')['typeDHCP6']
                                 #Base and Advanced
@@ -226,10 +226,16 @@ def conf(request,name_interface):
                                 if typeDHCP6.lower()=="base" :
                                     ###Base
                                     request_only =  None if data['value_setup_Ipv6'].get('request_only', None) == "" else  data['value_setup_Ipv6'].get('request_only', None)
-                                    prefix_delegation =  None if data['value_setup_Ipv6'].get('prefix_delegation', None) == "" else  data['value_setup_Ipv6'].get('prefix_delegation', None)
+                                    prefix_delegation_size =  None if data['value_setup_Ipv6'].get('prefix_delegation_size', None) == "" else  data['value_setup_Ipv6'].get('prefix_delegation_size', None)
                                     prefix_hint =  None if data['value_setup_Ipv6'].get('prefix_hint', None) == "" else  data['value_setup_Ipv6'].get('prefix_hint', None)
                                 #contenu de dhclient.conf dhcp Base
-                                    config_contenu_ipv6=return_config_base_ipv6(ifname,id_interface,request_only,prefix_delegation,prefix_hint,ipv4_connectivity,vlan_priority)
+                                    config_contenu_ipv6=return_config_base_ipv6(ifname,id_interface,request_only,prefix_delegation_size,prefix_hint,ipv4_connectivity,vlan_priority)
+                                    jsonIPV6={
+                                        "typeip6":setuptypeIP6,"typedhcp6":typeDHCP6,
+                                        "request_only":request_only,"prefix_delegation_size":prefix_delegation_size,
+                                        "prefix_hint":prefix_hint,"ipv4_connectivity":ipv4_connectivity,
+                                        "vlan_priority":vlan_priority
+                                        }
                                 if typeDHCP6.lower()=="advanced":
                                     ###Advanced
                                     #interface status
@@ -248,7 +254,7 @@ def conf(request,name_interface):
                                     prefix_delegation =  None if data['value_setup_Ipv6'].get('prefix_delegation', None) == "" else  data['value_setup_Ipv6'].get('prefix_delegation', None)
                                     #### if prefix_delegation is true
                                     id_assoc_pd =  None if data['value_setup_Ipv6'].get('id_assoc_pd', None) == "" else  data['value_setup_Ipv6'].get('id_assoc_pd', None)
-                                    ipv6_Prefix =  None if data['value_setup_Ipv6'].get('ipv6_Prefix', None) == "" else  data['value_setup_Ipv6'].get('ipv6_Prefix', None)
+                                    ipv6_prefix =  None if data['value_setup_Ipv6'].get('ipv6_prefix', None) == "" else  data['value_setup_Ipv6'].get('ipv6_prefix', None)
                                     plifetime =  None if data['value_setup_Ipv6'].get('plifetime', None) == "" else  data['value_setup_Ipv6'].get('plifetime', None)
                                     pvalid_time =  None if data['value_setup_Ipv6'].get('pvalid_time', None) == "" else  data['value_setup_Ipv6'].get('pvalid_time', None)
                                     ##auth
@@ -263,15 +269,29 @@ def conf(request,name_interface):
                                     secret =  None if data['value_setup_Ipv6'].get('secret', None) == "" else  data['value_setup_Ipv6'].get('secret', None)
                                     expire =  None if data['value_setup_Ipv6'].get('expire', None) == "" else  data['value_setup_Ipv6'].get('expire', None)
                                     ##
-                                # #contenu de dhclient.conf dhcp advanced
-                                #     configContenu=return_config_advanced_ipv6(ifname,id,Request_only,Prefix_delegation,prefix_hint,IPv4_connectivity,VLAN_priority)
+                                    ##contenu de dhcp6c.conf dhcp advanced
+                                    config_contenu_ipv6=return_config_advanced_ipv6(ifname,
+                                    id_interface,ipv4_connectivity,vlan_priority,information_only,
+                                    send_options,request_options,script,non_temporary,id_assoc,address,nlifetime,nvalid_time,
+                                    prefix_delegation,id_assoc_pd,ipv6_prefix,plifetime,pvalid_time,
+                                    authname,protocol,algorithm,rdm,keyname,royaume,keyid,secret,expire)
+                                    jsonIPV6={
+                                    "typeip6":setuptypeIP6,"typedhcp6":typeDHCP6,
+                                    "information_only":information_only,"send_options":send_options,
+                                    "request_options":request_options,"script":script,
+                                    "non_temporary":non_temporary,"id_assoc":id_assoc,
+                                    "address":address,"nlifetime":nlifetime,"nvalid_time":nvalid_time,
+                                    "prefix_delegation":prefix_delegation,
+                                    "id_assoc_pd":id_assoc_pd,"ipv6_prefix":ipv6_prefix,"plifetime":plifetime,
+                                    "pvalid_time":pvalid_time,"authname":authname,"protocol":protocol,
+                                    "algorithm":algorithm,"rdm":rdm,"keyname":keyname,"royaume":royaume,
+                                    "keyid":keyid,"secret":secret,"expire":expire,
+                                    "ipv4_connectivity":ipv4_connectivity,"vlan_priority":vlan_priority
+                                        }
                                 #add commands of create file dhclient to list of commandes to execute    
                                 commandes_final+=create_file_ipv6(ifname,config_contenu_ipv6)
                                 #call function to convert address to dhcp advanced /Base  in service
                                 commandes_ipv6,output_service,cmd_final_ipv6=update_conn_dhcp_ipv6(output_service,ifname,uuid)
-                                      
-                        
-                        
                     ##for generic config 
                     cmds=[]       
                     cmds,output_service,cmd_final_Gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObject)
@@ -299,37 +319,22 @@ EOF""".format('\n'.join(output_service))
                         if  (error==""):
                             if setuptypeIP4.lower()=="dhcp":
                                 #function to get dhcp address and mask
-                                ip_address4,netmask4=get_address4_dhcp(ifname)
+                                ip_address4,netmask4=get_address_dhcp(ifname,"4")
                                 jsonIPV4["ip_address"]=ip_address4
                                 jsonIPV4["netmask"]=netmask4
                                 ###
                                 ##function to get gateway if typeIPV4 est DHCP Base or Advanced
-                                gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname)
-                                if gwaddr4 is not None:
-                                    dataGw={
-                                    "gwname":"DHCP_GW_{}".format(gwaddr4),
-                                    "gwaddress":"{}".format(gwaddr4),
-                                    "description":"DHCP gateway generated automatically ",
-                                    "default_aux":default_aux,
-                                    "far_aux":far_aux,
-                                    "multiwan_aux":multiwan_aux
-                                        }
-                                    aux_exist=Gateway.objects.filter(Q(gwaddress=gwaddr4) & Q(staticgw=False)).exists()
-                                    if not aux_exist:
-                                        aux_GW=add_gateway_DB(dataGw)
-                                    else:
-                                        GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
-                                        idGW=GatewayObject.id
-                                        aux_GW=update_gateway_DB(dataGw,idGW)
-                                    if aux_GW is True:
-                                        GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr4) & Q(staticgw=False) )
-                                        addGatewayInterfaceDB(GatewayObject,name_interface,metric,ipv4_gw_interface)  
-                                    else:
-                                        msg=aux_GW
-                                        status=400
-                                else:
-                                    msg="Gateway DHCP not found!"
-                                    status=400        
+                                gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname,"4")
+                                aux_gw_dhcp=save_gateways_database(gwaddr4,name_interface,default_aux,far_aux,multiwan_aux,metric,True,True)
+                            if setuptypeIP6.lower()=="dhcp":
+                                #function to get dhcp address6 and mask6
+                                ip_address6,netmask6=get_address_dhcp(ifname,"6")
+                                jsonIPV6["ip_address6"]=ip_address6
+                                jsonIPV6["netmask6"]=netmask6
+                                ###
+                                ##function to get gateway if typeIPV6 est DHCP Base or Advanced
+                                gwaddr6,metric6,default_aux6,far_aux6,multiwan_aux6=get_gateway_dhcp(ifname,"6")
+                                aux_gw6_dhcp=save_gateways_database(gwaddr6,name_interface,default_aux6,far_aux6,multiwan_aux6,metric6,False,False)
                             #update changes in DB ip4
                             aux_ipv4=update_DB(id_interface,jsonIPV4,IP4Config,IP4ConfigSerializer)
                             #update changes in DB ip6
@@ -342,11 +347,19 @@ EOF""".format('\n'.join(output_service))
                                 if aux_ipv6 is True:
                                     if aux_gen is True:
                                         if aux_inter is True:  
-                                            ###### 
-                                            ##appel function to update CSRF_TRUSTED_ORIGINS
-                                            CSRF_TRUSTED_ORIGINS=get_all_addresses()  
-                                            msg="Your interface {} was configured Successfully!!".format(name_interface)
-                                            status=200
+                                            if aux_gw_dhcp is True:
+                                                if aux_gw6_dhcp is True:
+                                                    ###### 
+                                                    ##appel function to update CSRF_TRUSTED_ORIGINS
+                                                    CSRF_TRUSTED_ORIGINS=get_all_addresses()  
+                                                    msg="Your interface {} was configured Successfully!!".format(name_interface)
+                                                    status=200
+                                                else:
+                                                    msg=aux_gw6_dhcp
+                                                    status=400
+                                            else:
+                                                msg=aux_gw_dhcp
+                                                status=400
                                         else:
                                             msg=aux_inter
                                             status=400

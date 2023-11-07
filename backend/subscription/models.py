@@ -5,7 +5,7 @@ from django.db import models
 
 # Create your models here.
 class organization(models.Model):
-    groupname = models.CharField(max_length=200, null=True)
+    groupName = models.CharField(max_length=200, null=True)
     class Meta:
         db_table = 'organization'
     def __str__(self):
@@ -22,12 +22,12 @@ class plan(models.Model):
     
 class paymentTransaction(models.Model):
     uuid = models.CharField(max_length=200, null=True)
-    payment_link = models.CharField(max_length=200, null=True)
+    paymentLink = models.CharField(max_length=200, null=True)
     amount = models.FloatField(null=True)
     status = models.CharField(max_length=200,null=True)
-    subscription_type = models.CharField(max_length=200,null=True)
-    organization = models.ForeignKey(organization, on_delete=models.CASCADE)
-    plan = models.ForeignKey(plan, on_delete=models.CASCADE, null=True)
+    subscriptionType = models.CharField(max_length=200,null=True)
+    organizationId = models.ForeignKey(organization, on_delete=models.CASCADE)
+    planId = models.ForeignKey(plan, on_delete=models.CASCADE)
     class Meta:
         db_table = 'payment_transaction'
     def __str__(self):
@@ -36,14 +36,14 @@ class paymentTransaction(models.Model):
 class plansSubscription(models.Model):
     start_at = models.DateTimeField()
     end_at = models.DateTimeField()
-    plan = models.ForeignKey(plan, on_delete=models.CASCADE)
+    planId = models.ForeignKey(plan, on_delete=models.CASCADE)
     class Meta:
         db_table = 'plans_subscription'
 
     
 class plansFeatures(models.Model):
     description = models.CharField(max_length=200,null=True )
-    plan = models.ForeignKey(plan, on_delete=models.CASCADE)
+    planId = models.ForeignKey(plan, on_delete=models.CASCADE)
     class Meta:
         db_table = 'plans_features'
 

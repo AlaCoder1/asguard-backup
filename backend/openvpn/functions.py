@@ -1,6 +1,6 @@
 import subprocess
 import time
-from backend.openvpn.manage_errors import create_error
+from backend.openvpn.manage_errors import create_error_command
 from backend.openvpn.models import ServerOpenvpn
 from backend.openvpn.serializers import ServerOpenvpnSerializer
 
@@ -9,7 +9,7 @@ def execute_command_without_arguments(command, decode=True, shell=False):
     """Function that execute a command line without arguments"""
     print(f'command {command}')
     process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=decode, shell=shell)
-    create_error(process, command)
+    create_error_command(process, command)
     return process
 
 
@@ -27,7 +27,7 @@ def execute_command_with_arguments(command, arguments, time_sleep=0.5):
             time.sleep(time_sleep)
             process.communicate(input=arguments)
 
-            create_error(process, command)
+            create_error_command(process, command)
     except subprocess.CalledProcessError as e:
         print(f'Command failed with error: {e}')
     except Exception as e:

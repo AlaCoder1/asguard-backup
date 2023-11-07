@@ -12,12 +12,10 @@ class CommandExecutionError(Exception):
         return f"{self.message}: {self.command}"
 
 
-def create_error(process:subprocess.CompletedProcess, command):
+def create_error_command(process:subprocess.CompletedProcess, command):
     """Raise an error if the command line doesn't works"""
     if process.returncode == 0:
         print('Output:', process.stdout)
     else:
         print('Error:', process.stderr)
         raise CommandExecutionError(command=command, message=process.stderr)
-
-

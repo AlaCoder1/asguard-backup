@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css?family=Nunito');
 .global-drawer {
     .logo {
         display: block;
@@ -148,7 +149,7 @@ a:hover .asguard_teal--text,
     outline: none;
     border: none;
     background: none;
-    font-family: inherit;
+    font-family:'Nunito';
 }
 
 .custom-sub-a {
@@ -163,7 +164,7 @@ a:hover .asguard_teal--text,
     outline: none;
     border: none;
     background: none;
-    font-family: inherit;
+    font-family:'Nunito';
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
@@ -172,7 +173,7 @@ a:hover .asguard_teal--text,
 .v-list-item {
     padding: 0px !important;
     color: #020202;
-    font-family: OpenSans;
+    font-family:'Nunito';
     font-size: 20px;
     font-style: normal;
     font-weight: 400;
@@ -184,7 +185,7 @@ a:hover .asguard_teal--text,
 .sub-menu-item {
     padding: 0px !important;
     color: #020202;
-    font-family: OpenSans;
+    font-family:'Nunito';
     font-size: 20px;
     font-style: normal;
     font-weight: 400;

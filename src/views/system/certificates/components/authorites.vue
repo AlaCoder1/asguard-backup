@@ -35,6 +35,24 @@
       @closeModal="closeModal"
       :initialData="modalData"
     />
+    <v-dialog v-model="deleteDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="headline">Delete Confirmation</v-card-title>
+        <v-card-text>Are you sure you want to delete this certif ?</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete"
+            >Delete</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+    <v-snackbar v-model="snackbar" location="bottom right" :color="color">
+      {{ textAlert }}
+
+      <template v-slot:actions> </template>
+    </v-snackbar>
   </div>
 </template>
 
@@ -55,6 +73,11 @@ export default {
   },
   data() {
     return {
+      textAlert: "",
+      color: "",
+      snackbar: false,
+      deletedRow: null,
+      deleteDialog: false,
       getRowId: null,
       dataAuth: null,
       modalData: {},
@@ -64,7 +87,11 @@ export default {
       columnAuthority: [
         { headerName: "nom", field: "nom", minWidth: 150 },
         { headerName: "certificats", field: "certificats", minWidth: 150 },
-        { headerName: "nom unique", field: "nom_unique", minWidth: 150 },
+        {
+          headerName: "distingushed name",
+          cellRenderer: this.formatedDn,
+          minWidth: 100,
+        },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,
@@ -77,6 +104,7 @@ export default {
       rowDataAuthority: null,
 
       gridOptions: {
+        rowHeight: 120,
         pagination: true,
         paginationPageSize: 5,
         rowSelection: "single",
@@ -89,43 +117,47 @@ export default {
       this.dataAuth = newValue;
       if (newValue) {
         let infoAuth = newValue.map((element) => {
-          console.log("eeleme,t", element);
           return {
-            nom: element.name ?? "",
-            certificats: element.certificates,
-            nom_unique: element.common_name ?? "",
             id: element.id,
+            nom: element.name,
+            certificats: element.certificates,
+            nom_unique: element.common_name,
+            country_code: element.country_code,
+            state: element.state,
+            city: element.city,
+            organization: element.organization,
+            email: element.email,
+            valid_from: element.valid_from,
+            valid_until: element.valid_until,
           };
         });
         this.rowDataAuthority = infoAuth;
         setTimeout(() => {
           this.gridApi.setRowData(this.rowDataAuthority);
-        }, 2000);
+        }, 5);
       }
     },
   },
+  computed: {},
   methods: {
-    // async forceFileDownload(response) {
-    //   try {
-    //     const blob = new Blob([response]);
-    //     const url = window.URL.createObjectURL(blob);
-    //     const link = document.createElement('a');
-    //     link.href = url;
-    //     link.setAttribute('download', 'file.crt'); // or any other extension
-    //     document.body.appendChild(link);
-    //     link.click();
-    //     window.URL.revokeObjectURL(url); // Clean up the URL after download
-    //   } catch (error) {
-    //     console.error('Error during file download:', error);
-    //   }
-    // },
+    formatedDn(data) {
+      let eGui = document.createElement("div");
+
+      eGui.innerHTML = `
+      emailAddress= ${data.data.email},ST=${data.data.state}, O=${data.data.organization}, <br/>
+        L=${data.data.city},CN=${data.data.nom_unique},CN=${data.data.country_code}<br/>
+        Valide à partir du :${data.data.valid_from}<br/>
+        Valide jusqu'au :${data.data.valid_until}
+        `;
+      eGui.style.lineHeight = "2";
+
+      return eGui;
+    },
 
     onGridReady(params) {
       this.gridApi = params.api;
       this.gridColumnApi = params.columnApi;
-      // this.gridApi.setRowData(this.rowDataAuthority);
 
-      params.api.sizeColumnsToFit();
       window.addEventListener("resize", function () {
         setTimeout(function () {
           params.api.sizeColumnsToFit();
@@ -167,12 +199,12 @@ export default {
         
         <button 
           class="action-button download"
-          data-action="export">
+          data-action="export" title="download CRT">
              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
           </button>
           <button 
           class="action-button download"
-          data-action="exportKey">
+          data-action="exportKey" title="download Private Key">
              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
           </button>
         <button 
@@ -206,23 +238,20 @@ export default {
       return cookieValue;
     },
 
-    download(id,type,fileExtention) {
+    download(id, type, fileExtention) {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       let payload = {
-        type: type,
+        typdownload_type: type,
       };
       axios.post(`/certificates/exportCertAuth/${id}`, payload).then(
         (response) => {
-          console.log("res", response.data.cert);
-
           const text = response.data.cert;
           const blob = new Blob([text], {
             type: "application/x-x509-ca-cert",
           });
 
-      
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.style.display = "none";
@@ -246,43 +275,58 @@ export default {
         }
       );
     },
+    cancelDelete() {
+      this.deleteDialog = false;
+    },
+    confirmDelete() {
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios
+        .delete(`/certificates/deleteCertAuth/${this.deletedRow.id}`)
+        .then((response) => {
+          this.snackbar = true;
+          this.color = "success";
+          this.textAlert = response.data.msg;
+          setTimeout(() => {
+            this.closeModal();
+            location.reload();
+          }, 5);
+        })
+        .catch((error) => {
+          this.snackbar = true;
+          this.color = "red";
+          this.textAlert = "error";
+        });
+    },
     handleAction(action, rowData) {
       switch (action) {
         case "edit":
-
           this.rowEdit = rowData;
           this.openModalAdd();
           this.modalMode = "update";
-          console.log("Edit clicked for row:", rowData);
           break;
         case "export":
-          console.log("Download clicked for row:", rowData);
-          console.log("rowData.name", rowData.id);
-          let id = rowData.id
-          let type ='certificate'
-         let fileExtention = "certificate.crt"
-          this.download(id,type,fileExtention);
+          let id = rowData.id;
+          let type = "certificate";
+          let fileExtention = `${rowData.nom}.crt`;
+
+          this.download(id, type, fileExtention);
 
           break;
         case "delete":
-          console.log("Delete clicked for row:", rowData);
-          const index = this.rowData.findIndex(
-            (item) => item.id === rowData.id
-          );
-          if (index !== -1) {
-            this.rowData.splice(index, 1);
-          }
+          this.deleteDialog = true;
+          this.deletedRow = rowData;
+
           break;
         case "exportKey":
-          console.log("Update clicked for row:", rowData);
-          let rowId = rowData.id
-          let typeName ='private_key'
-          let fileExt = "private_Key.key"
-          this.download(rowId,typeName,fileExt);
-          
+          let rowId = rowData.id;
+          let typeName = "private_key";
+          let fileExt = `${rowData.nom}.key`;
+          this.download(rowId, typeName, fileExt);
+
           break;
         case "cancel":
-          console.log("Cancel clicked for row:", rowData);
           break;
         default:
           break;

@@ -30,12 +30,13 @@
               </v-row>
             </v-container>
           </v-card-text>
-          <v-card-actions class="actionBtn">
-            <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
-            <span style="color: rgb(245, 8, 8); margin-top: 10px">{{
-              textAlertDanger
-            }}</span>
+          <v-snackbar v-model="snackbar" location="bottom right" :color="color">
+            {{ textAlert }}
 
+            <template v-slot:actions> </template>
+          </v-snackbar>
+          <v-card-actions class="actionBtn">
+          
             <v-btn
               :rounded="true"
               class="mt-3 btn-add"
@@ -102,16 +103,22 @@ export default {
   },
   data() {
     return {
+      editRevocRow: null,
       openModal: false,
       groupNameCheck: "",
       groupId: null,
       textAlert: "",
+      color: "",
+      snackbar: false,
       textAlertDanger: "",
     };
   },
   watch: {
     isOpen(val) {
       this.openModal = val;
+    },
+    editRow(newVal) {
+      this.editRevocRow = newVal;
     },
   },
   methods: {
@@ -133,119 +140,52 @@ export default {
       };
       this.$refs.myForm.reset();
     },
-    // submitForm() {
-    //   this.v$.$validate();
-    //   if (!this.v$.$error) {
-    //     function getCookie(name) {
-    //       let cookieValue = null;
-    //       if (document.cookie && document.cookie !== "") {
-    //         const cookies = document.cookie.split(";");
-    //         for (let i = 0; i < cookies.length; i++) {
-    //           const cookie = cookies[i].trim();
-    //           if (cookie.substring(0, name.length + 1) === name + "=") {
-    //             cookieValue = decodeURIComponent(
-    //               cookie.substring(name.length + 1)
-    //             );
-    //             break;
-    //           }
-    //         }
-    //       }
-    //       return cookieValue;
-    //     }
-    //     const csrfToken = getCookie("csrftoken");
-    //     axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
+    submitForm() {
+      // this.v$.$validate();
+      // if (!this.v$.$error) {
 
-    //     console.log("token :" + csrfToken);
-    //     console.log("DataList :" + JSON.stringify(this.DataList));
+      // }
 
-    //     // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
+      let id = this.editRevocRow.id;
+      let payload = {
+        reason: this.state.formData.reason,
+      };
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-    //     const params = {
-    //       groupname: this.state.formData.groupname,
-    //       description: this.state.formData.description,
-    //       // sudoers: this.formData.sudoers
-    //     };
-
-    //     if (this.mode == "create") {
-    //       console.log("params are : " + JSON.stringify(params));
-
-    //       axios.post("/groups/createGroup", params).then(
-    //         (response) => {
-    //           console.log("res", response);
-    //           if (response.data.msg.includes("exists")) {
-    //             this.textAlertDanger = `Group ${this.state.formData.groupname} already exists`;
-    //             setTimeout(() => {
-    //               this.textAlertDanger = "";
-    //             }, 2000);
-    //           } else {
-    //             this.textAlert = "Group Created Successfully";
-    //             setTimeout(() => {
-    //               this.closeModal();
-    //               this.textAlert = "";
-    //               location.reload();
-    //             }, 2000);
-    //             console.log(response);
-    //           }
-    //         },
-    //         (err) => {
-    //           if (err.response && err.response.status === 401) {
-    //             const responseData = err.response.data; // Access the response data
-    //             console.log("401 Error Response:", responseData);
-    //             // this.invalid = true ;
-    //             this.message = responseData.message;
-    //             // Handle the 401 error here
-    //           } else {
-    //             console.error("Error occurred:", err);
-    //             // Handle other errors
-    //           }
-    //         }
-    //       );
-    //     } else {
-    //       const payload = {
-    //         Newgroupname: this.state.formData.groupname,
-    //         description: this.state.formData.description,
-    //         // sudoers: this.formData.sudoers
-    //       };
-    //       axios
-    //         .put(`/groups/groupChangeGroupname/${this.groupId}`, payload)
-    //         .then((response) => {
-    //           // if(this.groupNameCheck == this.formData.groupname){
-    //           //   console.log("response", response);
-    //           //   this.textAlertDanger = ''
-    //           //   this.textAlert = "Group Updated Successfully";
-    //           //   setTimeout(() => {
-    //           //     this.closeModal();
-    //           //     location.reload();
-    //           //     this.textAlert = "";
-    //           //   }, 2000);
-    //           // }
-    //           if (response.data.msg.includes("exists")) {
-    //             this.textAlertDanger = `Group ${this.state.formData.groupname} already exists`;
-    //             setTimeout(() => {
-    //               this.textAlertDanger = "";
-    //             }, 2000);
-    //           } else {
-    //             console.log("response", response);
-    //             this.textAlert = "Group Updated Successfully";
-    //             setTimeout(() => {
-    //               this.closeModal();
-    //               location.reload();
-    //               this.textAlert = "";
-    //             }, 2000);
-    //           }
-
-    //           // Handle the successful response
-    //           console.log("Resource updated:", response.data);
-    //         })
-    //         .catch((error) => {
-    //           // Handle any errors that occur during the request
-    //           console.error("Error updating resource:", error);
-    //         });
-    //     }
-
-    //     console.log("submitForm :", this.state.formData);
-    //   }
-    // },
+      axios
+        .put(`/certificates/revokeCertificate/${id}`, payload)
+        .then((response) => {
+          console.log("res", response);
+          this.snackbar = true;
+            this.color = "success";
+            this.textAlert = response.data.msg;
+            setTimeout(() => {
+              this.closeModal();
+              location.reload();
+            }, 2000);
+        })
+        .catch((error) => {
+          console.error("Error :", error);
+          this.snackbar = true;
+          this.color = "red";
+          this.textAlert = "error";
+        });
+    },
   },
 };
 </script>

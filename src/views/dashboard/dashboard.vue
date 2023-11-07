@@ -17,7 +17,6 @@
                     id="grid-wrapper"
                     class="ag-theme-alpine mt-3"
                     :columnDefs="columnAuthority"
-                    
                     :enableColResize="false"
                     style="width: 100%; height: 155px"
                     :gridOptions="gridOptions"
@@ -30,7 +29,7 @@
           <div id="chart" class="mt-3 mr-2">
             <!-- <pre> System Load{{ test.system_load }}</pre>
             <pre> Operating{{ test.operating }}</pre> -->
-           
+
             <apexchart
               ref="apexChart"
               height="350"
@@ -83,7 +82,6 @@
                         :alwaysShowVerticalScroll="false"
                         style="width: 100%; height: 100%"
                         :gridOptions="gridOptionsService"
-                        @grid-ready="onGridReady"
                       />
                     </div>
                   </div>
@@ -106,7 +104,6 @@
                         :alwaysShowVerticalScroll="false"
                         style="width: 100%; height: 100%"
                         :gridOptions="gridOptionsService"
-                        @grid-ready="onGridReady"
                       />
                     </div>
                   </div>
@@ -131,52 +128,6 @@ export default {
     BaseLayout,
     AgGridVue,
     apexchart: VueApexCharts,
-  },
-  watch: {
-    dataChart: {
-      handler(newData) {
-        this.uptime = newData;
-        this.uptimeUpdate = this.uptime.uptime;
-        console.log('eee',newData)
-
-        // rowDataAuthority
-
-        // setTimeout(() => {
-        //   const currentDate = new Date();
-        //   const currentTime = currentDate.toLocaleTimeString();
-        //   let authority =
-        //     {
-        //       nom: "Asguard",
-        //       system_load: this.uptimeUpdate ??'',
-        //       last_cong: currentTime,
-        //       operating: this.uptime.current_date ?? '',
-        //     }
-          
-          
-        //   this.test.push(authority);
-        // }, 7000);
-        // this.gridApi.setRowData(this.test);
-
-        // this.gridApi.setRowData(this.test);
-      },
-      immediate: true,
-      deep: true,
-    },
-  },
-  computed: {
-    // rowDataAuthority() {
-    //   const currentDate = new Date();
-    //   const currentTime = currentDate.toLocaleTimeString();
-    //   let authority = [
-    //     {
-    //       nom: "Asguard",
-    //       system_load: this.uptimeUpdate,
-    //       last_cong: currentTime,
-    //       operating: this.uptime.current_date,
-    //     },
-    //   ];
-    //   return authority;
-    // },
   },
   data() {
     return {
@@ -245,6 +196,7 @@ export default {
         },
       ],
       rowDataServices: null,
+      rowDataAuthority: null,
 
       columnInterfaces: [
         { headerName: "Name", field: "name", minWidth: 150 },
@@ -272,6 +224,81 @@ export default {
       gateways: null,
       interfaces: [],
     };
+  },
+  watch: {
+    dataChart: {
+      handler(newData) {
+        this.uptime = newData;
+        this.uptimeUpdate = this.uptime.uptime;
+        // console.log("aaa5", newData);
+
+        // const currentDate = new Date();
+        // const currentTime = currentDate.toLocaleTimeString();
+        if (newData) {
+          // let authority = [
+          //   {
+          //     nom: "Asguard",
+          //     // system_load: newData.uptime,
+          //     // last_cong: currentTime,
+          //     // operating: newData.current_date,
+          //   },
+          // ];
+          // this.rowDataAuthority = authority;
+          // setTimeout(() => {
+          //   this.gridApi.setRowData(authority);
+          // }, 1000);
+        }
+
+        // setTimeout(() => {
+        //   const currentDate = new Date();
+        //   const currentTime = currentDate.toLocaleTimeString();
+        //   let authority =
+        //     {
+        //       nom: "Asguard",
+        //       system_load: this.uptimeUpdate ??'',
+        //       last_cong: currentTime,
+        //       operating: this.uptime.current_date ?? '',
+        //     }
+
+        //   this.test.push(authority);
+        // }, 7000);
+        // this.gridApi.setRowData(this.test);
+
+        // this.gridApi.setRowData(this.test);
+      },
+      immediate: true,
+      deep: true,
+    },
+  },
+  computed: {
+    // rowDataAuthority() {
+    //   const currentDate = new Date();
+    //   const currentTime = currentDate.toLocaleTimeString();
+    //   let authority = [
+    //     {
+    //       nom: "Asguard",
+    //       system_load: this.uptimeUpdate,
+    //       last_cong: currentTime,
+    //       operating: this.uptime.current_date,
+    //     },
+    //   ];
+    //   return authority;
+    // },
+  },
+  mounted() {
+    let authority = [
+      {
+        nom: "Asguard",
+        // system_load: newData.uptime,
+        // last_cong: currentTime,
+        // operating: newData.current_date,
+      },
+    ];
+
+    this.rowDataAuthority = authority;
+    setTimeout(() => {
+      this.gridApi.setRowData(authority);
+    }, 1000);
   },
   methods: {
     onGridReadyaaa(params) {
@@ -314,7 +341,7 @@ export default {
           const data = JSON.parse(event.data);
           this.dataChart = data;
           // console.log('this.',this.dataChart)
-          
+
           // console.log('chartData :',this.dataChart)
 
           const timestamp = new Date(data.timestamp * 1000).getTime();

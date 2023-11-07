@@ -14,12 +14,20 @@
         </v-tabs>
 
         <v-window v-model="selectedTab">
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="User Management">
+          <v-window-item
+            v-for="tab in tabs"
+            :key="tab.id"
+            value="User Management"
+          >
             <v-card>
               <v-card-text><data-managment /></v-card-text>
             </v-card>
           </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id"  value="Certificate Management">
+          <v-window-item
+            v-for="tab in tabs"
+            :key="tab.id"
+            value="Certificate Management"
+          >
             <v-card>
               <v-card-text><certificats-management /></v-card-text>
             </v-card>
@@ -54,13 +62,18 @@ export default {
         { id: 1, value: "User Management" },
         { id: 2, value: "Certificate Management" },
       ],
-      selectedTab: "Certificate Management",
+      selectedTab: "User Management",
 
       tab: null,
       users: [],
       groups: [],
       servers: [],
     };
+  },
+  watch: {
+    selectedTab(val) {
+      localStorage.setItem("user-tab", val);
+    },
   },
   methods: {
     setData(Array_String) {
@@ -77,6 +90,10 @@ export default {
       return parsedArray;
     },
     // ... other methods
+  },
+  mounted() {
+    let tab = localStorage.getItem("user-tab") || "User Management";
+    this.selectedTab = tab;
   },
   beforeMount: async function () {
     // console.log("before mount data.users :" + JSON.stringify(this.$root.$data.users));

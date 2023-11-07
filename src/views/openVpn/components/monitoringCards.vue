@@ -1,0 +1,96 @@
+<template>
+  <v-col cols="4">
+    <v-card class="mx-auto" max-width="344">
+      <v-card-item>
+        <div>
+          <div class="title-card mb-2">Capacity</div>
+          <div class="float-right mb-3">
+            <span class="mb-1 numberTitle">2.23 GB</span>
+          </div>
+          <div>
+            <span class="mb-1 soutitle">Transferred</span>
+            <h6 class="daysTitle">Today</h6>
+          </div>
+          <div class="float-right mt-5">
+            <span class="mb-1 numberTitle">2.23 GB</span>
+          </div>
+          <div class="mt-2">
+            <span class="mb-1 soutitle">Recieved</span>
+            <h6 class="daysTitle">Today</h6>
+          </div>
+        </div>
+      </v-card-item>
+    </v-card>
+  </v-col>
+  <v-col cols="4">
+    <v-card class="mx-auto" max-width="344">
+      <v-card-item>
+        <div class="title-card mb-6">Users</div>
+        <v-row>
+          <v-col cols="6">
+            <div class="text-h6 mb-1">
+              <v-row>
+                <v-col cols="2">
+                  <v-progress-circular
+                    :rotate="-180"
+                    :size="40"
+                    :width="2"
+                    :model-value="50"
+                    color="#086EAE"
+                  >
+                    50
+                  </v-progress-circular>
+                </v-col>
+                <v-col class="mt-n5 ml-5">
+                  <span class="subTitle"> of 100</span>
+                </v-col>
+              </v-row>
+            </div>
+            <div class="text-caption">Active Users</div>
+          </v-col>
+          <v-col cols="6">
+            <div class="text-h6 mb-1">
+              <v-row>
+                <v-col cols="2">
+                  <v-progress-circular
+                    :rotate="-180"
+                    :size="40"
+                    :width="2"
+                    :model-value="25"
+                    color="#086EAE"
+                  >
+                    25
+                  </v-progress-circular>
+                </v-col>
+                <v-col class="mt-n5 ml-5">
+                  <span class="subTitle"> of 100</span>
+                </v-col>
+              </v-row>
+            </div>
+            <div class="text-caption">Active Devices</div>
+          </v-col>
+        </v-row>
+      </v-card-item>
+    </v-card>
+  </v-col>
+  <v-col cols="4">
+    <v-card class="mx-auto" max-width="344">
+      <v-card-item>
+        <div >
+          <div class="mb-3 title-card">Traffic distribution</div>
+          <div class="text-caption">client1</div>
+          <div class="text-caption">client2</div>
+          <div class="text-caption">client3</div>
+          <div class="text-caption">client4</div>
+        </div>
+      </v-card-item>
+    </v-card>
+  </v-col>
+</template>
+<script>
+export default {
+  data() {
+    return {};
+  },
+};
+</script>

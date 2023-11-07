@@ -52,26 +52,41 @@
                 <v-col cols="12" v-if="isImportCetif" class="mb-n6">
                   <label for=""> Certificate Existant</label>
                   <v-divider></v-divider>
-                  <v-text-field
-                    class="mt-2"
-                    label="Certificat data"
+
+                  <v-textarea
+                    class="mt-3"
                     v-model="state.formData.certificatData"
-                  ></v-text-field>
+                    label="Certificat data"
+                    variant="outlined"
+                  ></v-textarea>
+
                   <span
                     class="error-feedback"
                     v-if="v$.formData.certificatData.$error"
                     >{{ v$.formData.certificatData.$errors[0].$message }}</span
                   >
 
-                  <v-text-field
-                    label="Private key certificate (facultatif)"
+                  <v-textarea
+                    class="mt-3"
                     v-model="state.formData.privateKey"
-                  ></v-text-field>
+                    label="Private key certificate (facultatif)"
+                    variant="outlined"
+                  ></v-textarea>
+                  <span
+                    class="error-feedback"
+                    v-if="v$.formData.privateKey.$error"
+                    >{{ v$.formData.privateKey.$errors[0].$message }}</span
+                  >
 
                   <v-text-field
                     label="Serial number certificate"
                     v-model="state.formData.serialNumber"
                   ></v-text-field>
+                  <span
+                    class="error-feedback"
+                    v-if="v$.formData.serialNumber.$error"
+                    >{{ v$.formData.serialNumber.$errors[0].$message }}</span
+                  >
                 </v-col>
 
                 <v-col v-if="isCreateCetif" cols="12" class="mb-n6">
@@ -156,7 +171,7 @@
                     v-if="v$.formData.hashAlgo.$error"
                     >{{ v$.formData.hashAlgo.$errors[0].$message }}</span
                   >
-              
+
                   <v-text-field
                     label="Lifetime"
                     v-model="state.formData.lifeTime"
@@ -168,25 +183,14 @@
                   >
                   <v-row>
                     <v-col cols="6" class="mb-n6">
-                      <v-select
+                      <v-autocomplete
                         v-model="state.formData.country"
                         label="Country"
-                        item-title="name"
-                        item-value="id"
+                        item-title="countryName"
+                        item-value="countryID"
                         return-object
-                        :items="[
-                          {
-                            name: 'California',
-                            code: 'CA',
-                            id: '1',
-                          },
-                          {
-                            name: 'Colorado',
-                            code: 'CO',
-                            id: '2',
-                          },
-                        ]"
-                      ></v-select>
+                        :items="countriesList"
+                      ></v-autocomplete>
                       <span
                         class="error-feedback"
                         v-if="v$.formData.country.$error"
@@ -256,11 +260,12 @@
             </v-container>
             <!-- <small>*indicates required field</small> -->
           </v-card-text>
-          <v-card-actions class="mt-10 actionBtn">
-            <span style="color: green; margin-bottom: 10px">{{
-              textAlert
-            }}</span>
+          <v-snackbar v-model="snackbar" location="bottom right" :color="color">
+            {{ textAlert }}
 
+            <template v-slot:actions> </template>
+          </v-snackbar>
+          <v-card-actions class="mt-10 actionBtn">
             <v-btn
               color="asguard_primary_light"
               :rounded="true"
@@ -287,7 +292,7 @@
 <script>
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { required, requiredIf, email } from "@vuelidate/validators";
+import { required, requiredIf, helpers, email } from "@vuelidate/validators";
 import { reactive, computed, watch } from "vue";
 export default {
   name: "Modal_User",
@@ -332,29 +337,145 @@ export default {
         formData: {
           certifName: { required },
           method: { required },
-          certificatData: { required },
-          keyLength: { required },
-          hashAlgo: { required },
-          keyType: { required },
-          lifeTime: { required },
-          country: { required },
-          state: { required },
-          place: { required },
-          organisation: { required },
-          mail: { required, email },
-          communName: { required },
+          certificatData: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () =>
+                  state.formData.method.name ===
+                  "Import an existing Certificate Authority"
+              )
+            ),
+          },
+          privateKey: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () =>
+                  state.formData.method.name ===
+                  "Import an existing Certificate Authority"
+              )
+            ),
+          },
+          serialNumber: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () =>
+                  state.formData.method.name ===
+                  "Import an existing Certificate Authority"
+              )
+            ),
+            isValidSerial: helpers.withMessage(
+              `champs can include only numbers and uppercase letter.`,
+
+              helpers.regex(/^[0-9A-Z]+$/)
+            ),
+          },
+          keyLength: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () => state.formData.method.name === "Create Certificate"
+              )
+            ),
+          },
+          hashAlgo: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () => state.formData.method.name === "Create Certificate"
+              )
+            ),
+          },
+          keyType: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () => state.formData.method.name === "Create Certificate"
+              )
+            ),
+          },
+          lifeTime: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () => state.formData.method.name === "Create Certificate"
+              )
+            ),
+            isValidlifeTime: helpers.withMessage(
+              `champs lifeTime can include only Numbers.`,
+
+              helpers.regex(/^[0-9]+$/)
+            ),
+          },
+          country: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () => state.formData.method.name === "Create Certificate"
+              )
+            ),
+          },
+          state: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () => state.formData.method.name === "Create Certificate"
+              )
+            ),
+            isValidState: helpers.withMessage(
+              `champs state can include only letters.`,
+
+              helpers.regex(/^[a-zA-Z]+$/)
+            ),
+          },
+          place: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () => state.formData.method.name === "Create Certificate"
+              )
+            ),
+            isValidPlace: helpers.withMessage(
+              `champs place can include only letters.`,
+
+              helpers.regex(/^[a-zA-Z]+$/)
+            ),
+          },
+          organisation: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () => state.formData.method.name === "Create Certificate"
+              )
+            ),
+          },
+          mail: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () => state.formData.method.name === "Create Certificate"
+              )
+            ),
+            email,
+          },
+          communName: {
+            requiredIfFuction: helpers.withMessage(
+              "This field must be indicated",
+              requiredIf(
+                () => state.formData.method.name === "Create Certificate"
+              )
+            ),
+            isValidCommne: helpers.withMessage(
+              `champs can include only letters & Numbers & underscores & hyphens without space.`,
+
+              helpers.regex(/^[A-Za-z0-9_\-]+$/)
+            ),
+          },
         },
       };
     });
-    watch(
-      () => state.formData,
-      (newValue, oldValue) => {
-        console.log("newValue", newValue);
-        console.log("oldValue", oldValue);
-      },
-      { deep: true }
-    );
-
     const v$ = useValidate(rules, state);
     return {
       state,
@@ -363,9 +484,15 @@ export default {
   },
   data() {
     return {
+      countriesList: null,
+      color: "",
+      snackbar: false,
       openModal: false,
       textAlert: "",
     };
+  },
+  mounted() {
+    this.getAllcountry();
   },
   computed: {
     isImportCetif() {
@@ -380,6 +507,12 @@ export default {
   },
 
   watch: {
+    isImportCetif() {
+      this.v$.$reset();
+    },
+    isCreateCetif(test) {
+      this.v$.$reset();
+    },
     isOpen(val) {
       this.openModal = val;
     },
@@ -395,71 +528,101 @@ export default {
   },
 
   methods: {
-    populate(data) {},
-    handleGroupChange(selectedItems) {},
-
-    closeModal() {
-      this.$emit("closeModal");
-    },
-    resetForm() {},
-    submitForm() {
-      // this.v$.$validate();
-      // if (!this.v$.$error) {
-
-      //   }
-
-      const payload = {
-        name: this.state.formData?.certifName,
-        method: {
-          name_method: this.state.formData?.method?.slug,
-          key_type: this.state.formData?.keyType?.slug,
-          key_length: +this.state.formData?.keyLength?.slug,
-          digest_algorithm: this.state.formData?.hashAlgo?.slug,
-          lifetime: +this.state.formData?.lifeTime,
-          country_code: this.state.formData?.country?.code,
-          state: this.state.formData?.state,
-          city: this.state.formData?.place,
-          organization: this.state.formData?.organisation,
-          email: this.state.formData?.mail,
-          common_name: this.state.formData?.communName,
-        },
- 
-      };
-      function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-          const cookies = document.cookie.split(";");
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === name + "=") {
-              cookieValue = decodeURIComponent(
-                cookie.substring(name.length + 1)
-              );
-              break;
-            }
-          }
-        }
-        return cookieValue;
-      }
-
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-      axios.post("/certificates/createCertAuth", payload).then(
+    getAllcountry() {
+      axios.get("https://restcountries.com/v3.1/all").then(
         (response) => {
-          console.log("res", response);
-          if (response.status == "201") {
-            console.log("success");
-          } else {
-            console.log("error");
-          }
+          let countryList = response.data.map((element) => {
+            return {
+              countryName: element.name.common,
+              countryCode: element.cca2,
+              countryID: element.ccn3,
+            };
+          });
+          this.countriesList = countryList;
         },
         (error) => {
           console.log(error);
         }
       );
+    },
+    handleGroupChange(selectedItems) {},
 
-      console.log("formData", payload);
+    closeModal() {
+      this.v$.$reset();
+      this.$emit("closeModal");
+    },
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
+    resetForm() {},
+    submitForm() {
+      this.v$.$validate();
+      if (!this.v$.$error) {
+        const csrfToken = this.getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+        let payload = {};
+        if (this.state.formData.method.name == "Create Certificate") {
+          payload = {
+            name: this.state.formData?.certifName,
+            method: {
+              name_method: this.state.formData?.method?.slug,
+              key_type: this.state.formData?.keyType?.slug,
+              key_length: +this.state.formData?.keyLength?.slug,
+              digest_algorithm: this.state.formData?.hashAlgo?.slug,
+              lifetime: +this.state.formData?.lifeTime,
+              country_code: this.state.formData?.country?.countryCode,
+              state: this.state.formData?.state,
+              city: this.state.formData?.place,
+              organization: this.state.formData?.organisation,
+              email: this.state.formData?.mail,
+              common_name: this.state.formData?.communName,
+            },
+          };
+        } else {
+          payload = {
+            name: this.state.formData?.certifName,
+            method: {
+              name_method: this.state.formData?.method?.slug,
+              certificate_data: this.state.formData?.certificatData,
+              certificate_key: this.state.formData?.privateKey,
+              serial: this.state.formData?.serialNumber, // number alpha maj
+            },
+          };
+        }
+
+        axios.post("/certificates/createCertAuth", payload).then(
+          (response) => {
+            if (response.status == "201") {
+              this.snackbar = true;
+              this.color = "success";
+              this.textAlert = response.data.msg;
+              setTimeout(() => {
+                this.closeModal();
+                location.reload();
+              }, 2000);
+            } else {
+              console.log("error");
+            }
+          },
+          (error) => {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = "error";
+          }
+        );
+      }
     },
   },
 };

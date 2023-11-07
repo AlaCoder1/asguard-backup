@@ -14,10 +14,9 @@
             domLayout="autoHeight"
             class="ag-theme-alpine mt-3"
             :columnDefs="columnRevocation"
-            :rowData="rowDataRevocation"
-            :gridOptions="gridOptions"
+           
             style="width: 100%; height: 100%"
-            @grid-size-changed="onGridSizeChanged"
+          
             @grid-ready="onGridReady"
           />
         </div>
@@ -45,6 +44,12 @@
 import { AgGridVue } from "ag-grid-vue3";
 import ModalCertifRevocation from "@/components/modals/ModalCertifRevocation.vue";
 export default {
+  props: {
+    authoritesData: {
+      type: Array,
+      required: true,
+    },
+  },
   components: {
     AgGridVue,
     ModalCertifRevocation,
@@ -52,6 +57,7 @@ export default {
 
   data() {
     return {
+      listAuthRevoc: null,
       modalMode: "",
       rowEdit: {},
       modalData: {},
@@ -59,7 +65,10 @@ export default {
 
       columnRevocation: [
         { headerName: "nom", field: "nom" },
-        { headerName: "list of authority certificate", field: "listAuth" },
+        {
+          headerName: "list of authority certificate",
+          field: "list_revoc",
+        },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,
@@ -68,10 +77,31 @@ export default {
           filter: false,
         },
       ],
-      rowDataRevocation: [{ id: 1, nom: "root", listAuth: "test" }],
+      rowDataRevocation: null,
     };
   },
+  watch: {
+    authoritesData(newValue) {
+      this.listAuthRevoc = newValue;
 
+      if (newValue) {
+        let infoRevocCertif = newValue.map((element) => {
+          return {
+            id: element.id,
+            nom: element.name,
+            list_revokation: element.list_revokation,
+            list_revoc: element.list_revokation.map((i) => {
+              return i.name;
+            }),
+          };
+        });
+        this.rowDataRevocation = infoRevocCertif;
+        setTimeout(() => {
+          this.gridApi.setRowData(this.rowDataRevocation);
+        }, 5);
+      }
+    },
+  },
   methods: {
     openModal() {
       console.log("ok");

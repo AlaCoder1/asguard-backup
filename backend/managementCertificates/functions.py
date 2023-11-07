@@ -1,11 +1,5 @@
+from backend.managementCertificates.get_data_from_certificate import get_certificates_details
 from backend.openvpn.functions import execute_command_with_arguments, execute_command_without_arguments, execute_list_commands_without_arguments, execute_list_commands_with_arguments
-
-
-def read_certificate_value(certificate_path, decode=True):
-    """This function take a certificate path and return the certificate value from system file"""
-    command = ['cat', f'{certificate_path}']
-    process = execute_command_without_arguments(command, decode)
-    return process.stdout
 
 
 def change_vars(current_dir, updated_field:dict):
@@ -57,13 +51,10 @@ def initialize_ca(current_dir, ca_name='test'):
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
-def get_certifcate_serial_number(cert_path):
-    """Get the serial number of certificate"""
-    command = ['openssl', 'x509', '-in', f'{cert_path}', '-noout', '-serial']
-    process = execute_command_without_arguments(command)
-    serial = process.stdout
-    serial = serial.replace('serial=', '')
-    return serial
+def save_certificate_in_text_format(cert_path):
+    cert_text = get_certificates_details(cert_path)
+    with open(cert_path, "w+") as cert_file:
+        cert_file.write(cert_text)
 
 
 def revoke_list_certs(current_dir, ca_name, list_revoked_cert):

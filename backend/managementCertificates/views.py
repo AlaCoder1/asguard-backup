@@ -1,17 +1,18 @@
 from datetime import datetime, timedelta
 from django.conf import settings
-from django.http import FileResponse, JsonResponse
+from django.http import JsonResponse
 from django.db.models import Q
 from django.db.models.deletion import ProtectedError
 import json
 from rest_framework.authentication import SessionAuthentication
 from django.core import serializers
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from backend.managementCertificates.certificate import create_ca_in_system, create_certificate_in_system, delete_ca_in_system, delete_certificate_in_system, export_ca_in_system, export_ca_list_rev_in_system, export_certificate_in_system, import_ca_in_system, import_certificate_in_system, revoke_certificates_in_system, unrevoke_certificates_in_system
 
+from backend.managementCertificates.certificate import create_ca_in_system, create_certificate_in_system, delete_ca_in_system, delete_certificate_in_system, export_ca_in_system, export_ca_list_rev_in_system, export_certificate_in_system, import_ca_in_system, import_certificate_in_system, revoke_certificates_in_system, unrevoke_certificates_in_system
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementCertificates.serializers import CertificateAuthoritySerializer, CertificateSerializer
 from backend.openvpn.manage_errors import CommandExecutionError
@@ -33,10 +34,19 @@ def getAllCertAuth(request):
         caDict = serializers.serialize("json",ca)
         res = json.loads(caDict)
         for i in range(len(res)):
+            list_certs_auth_by_ca = len(Certificate.objects.filter(certificate_authority=ca[i].pk))
+            list_revoke_ca = Certificate.objects.filter(certificate_authority=ca[i].pk, activation=False)
+            list_revokation = []
+            for revoke in list_revoke_ca:
+                list_revokation.append({"id": revoke.id,
+                                        "name": revoke.name,
+                                        "reason": revoke.reason_revocation})
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
+            res[i]['fields']['certificates'] = list_certs_auth_by_ca
+            res[i]['fields']['list_revokation'] = list_revokation
             list_ca.append(res[i]['fields'])
         return JsonResponse(list_ca, safe=False)
 
@@ -57,6 +67,9 @@ def getCertAuth(request, id):
         return JsonResponse(res[0]['fields'], safe=False)
 
 
+# @swagger_auto_schema('POST', request_body=CertificateAuthoritySerializer, responses={200: 'Created', 400: 'Bad Request'}, 
+#                      manual_parameters=[openapi.Parameter('method', in_=openapi.IN_QUERY, type=openapi.TYPE_STRING, description='Description'),
+#         ])
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -135,21 +148,39 @@ def createCertAuth(request):
                 # Importing an existing CA
                 certificate_data = method.get("certificate_data", "")
                 certificate_private_key = method.get("certificate_key", "")
-                # serial = method.get("serial", "")
-                input_ca = {"certificate_data": certificate_data,
-                            "certificate_private_key": certificate_private_key,
-                            }
-                serial = import_ca_in_system(name, input_ca)
-                ca_data['serial'] = serial
+                serial = method.get("serial", "")
                 ca_data = {"name": name,
-                           "certificate_path": f'/etc/certificates_{name}/ca.crt\n/etc/certificates_{name}/ca.key'}
+                           "certificate_path": f'/etc/certificates_{name}/ca.crt\n/etc/certificates_{name}/ca.key',
+                           "serial": serial}
                 serializer_ca = CertificateAuthoritySerializer(data=ca_data)
                 if serializer_ca.is_valid():
-                    serializer_ca.save()
-                    return JsonResponse({"msg": f"CA {name} is created"}, status=201)
+                    input_ca = {"certificate_data": certificate_data,
+                                "certificate_private_key": certificate_private_key,
+                                "serial": serial
+                                }
+                    serial, start_date, end_date, lifetime, distingushed_name = import_ca_in_system(name, input_ca)
+                    ca_data["valid_from"] = start_date
+                    ca_data["valid_until"] = end_date
+                    ca_data["lifetime"] = lifetime
+                    for dn_item, dn_data in distingushed_name.items():
+                        ca_data[dn_item] = dn_data
+                    serializer_ca = CertificateAuthoritySerializer(data=ca_data)
+                    if serializer_ca.is_valid():
+                        
+                        serializer_ca.save()
+                        return JsonResponse({"msg": f"CA {name} is created"}, status=201)
+                    else:
+                        print(serializer_ca.errors)
+                        return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                else:
+                    print(serializer_ca.errors)
+                    return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+
 
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in creating CA"}, status=401)
+        except ValueError as error:
+            return JsonResponse({"msg": error.__str__()}, status=401)
 
 
 @api_view(['Delete'])
@@ -180,13 +211,12 @@ def exportCertAuth(request, id):
         try:
             ca = CertificateAuthority.objects.get(id=id)
             data = request.data
-            download_cert_path = data.get('path', '')
             download_type = data.get('type', '')
             if download_type == 'certificate':
-                export_ca_in_system(f'/etc/certificates_{ca.name}/ca.crt', f'{download_cert_path}')
+                ca_value = export_ca_in_system(f'/etc/certificates_{ca.name}/ca.crt')
             else:
-                export_ca_in_system(f'/etc/certificates_{ca.name}/ca.key', f'{download_cert_path}')
-            return JsonResponse({"msg": f"Export CA {ca.name} {download_type}"}, status=201)
+                ca_value = export_ca_in_system(f'/etc/certificates_{ca.name}/ca.key')
+            return JsonResponse({"cert": ca_value}, status=201)
 
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in exporting CA"}, status=401)
@@ -202,10 +232,8 @@ def exportCertAuthListRev(request, id):
     if request.method == 'POST':
         try:
             ca = CertificateAuthority.objects.get(id=id)
-            data = request.data
-            download_cert_path = data.get('path', '')
-            export_ca_list_rev_in_system(ca.name, f'{download_cert_path}')
-            return JsonResponse({"msg": f"Export list of revocation of CA {ca.name} "}, status=201)
+            list_revocation = export_ca_list_rev_in_system(ca.name)
+            return JsonResponse({"list_revocation": list_revocation}, status=201)
 
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in exporting list of revocation"}, status=401)
@@ -262,9 +290,9 @@ def createCertificate(request):
             data = request.data
             name = data.get('name', '')
             method = data.get('method', '')
-            certificate_type = data.get('certificate_type', 'True')
             activation = data.get('activation', '')
             if method.get("method_name", "") == 'create':
+                certificate_type = method.get('certificate_type', '')
                 lifetime = method.get('lifetime', '')
                 valid_from = datetime.now()
                 valid_until = valid_from + timedelta(days=lifetime)
@@ -334,24 +362,38 @@ def createCertificate(request):
             elif method.get("method_name", "") == 'import':
                 certificate_data = method.get("certificate_data", "")
                 certificate_key = method.get("certificate_key", "")
-                input_cert = {"certificate_data": certificate_data,
-                              "certificate_private_key": certificate_key,
-                              }
-
-                serial = import_certificate_in_system(name, certificate_type, input_cert)
+                serial = method.get("serial", "")
+                certificate_type = 'server'
                 cert_data = {"name": name,
-                             "certificate_type": certificate_type,
                              "activation": activation,
                              "serial": serial
                              }
-                if certificate_type == 'server':
-                    cert_data["certificate_path"] = f'''/etc/openvpn/certificates_{name}/server.crt\n/etc/openvpn/certificates_{name}/server.key'''
-                elif certificate_type == 'client':
-                    cert_data["certificate_path"] = f'''/etc/openvpn/client/certificates_{name}/{name}.crt\n/etc/openvpn/client/certificates_{name}/{name}.key'''
                 serializer_cert = CertificateSerializer(data=cert_data)
                 if serializer_cert.is_valid():
-                    serializer_cert.save()
-                    return JsonResponse({"msg": "Certificate Configuration is done"}, status=201)
+                    input_cert = {"certificate_data": certificate_data,
+                                  "certificate_private_key": certificate_key,
+                                  "serial": serial
+                                  }
+                    serial, start_date, end_date, lifetime, distingushed_name, certificate_type = import_certificate_in_system(name, input_cert)
+                    if serial != cert_data["serial"]:
+                        return JsonResponse({"msg": "Serial number input are not correct"}, status=401)
+                    if certificate_type == 'server':
+                        cert_data["certificate_path"] = f'''/etc/openvpn/certificates_{name}/server.crt\n/etc/openvpn/certificates_{name}/server.key'''
+                    elif certificate_type == 'client':
+                        cert_data["certificate_path"] = f'''/etc/openvpn/client/certificates_{name}/{name}.crt\n/etc/openvpn/client/certificates_{name}/{name}.key'''
+                    cert_data["valid_from"] = start_date
+                    cert_data["valid_until"] = end_date
+                    cert_data["lifetime"] = lifetime
+                    cert_data["certificate_type"] = certificate_type
+                    for dn_item, dn_data in distingushed_name.items():
+                        cert_data[dn_item] = dn_data
+                    serializer_cert = CertificateSerializer(data=cert_data)
+                    if serializer_cert.is_valid():
+                        serializer_cert.save()
+                        return JsonResponse({"msg": "Certificate Configuration is done"}, status=201)
+                    else:
+                        print('error in creating cert= ', serializer_cert.errors)
+                        return JsonResponse({"msg": "Error in Certificate configuration"}, status=401)
                 else:
                     print('error in creating cert= ', serializer_cert.errors)
                     return JsonResponse({"msg": "Error in Certificate configuration"}, status=401)
@@ -374,7 +416,7 @@ def deleteCertificate(request, id):
             delete_certificate_in_system(cert.name, cert.certificate_type)
             # delete from database
             cert.delete()
-            return JsonResponse({"msg": f"delete {cert.name} succesfully"}, status=401)
+            return JsonResponse({"msg": f"delete {cert.name} succesfully"}, status=201)
         except Certificate.DoesNotExist:
             return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
 
@@ -391,18 +433,21 @@ def revokeCertificate(request, id):
             cert.activation = False
             ca = cert.certificate_authority
 
-            # Importing all the CA previous revoked certificates and add the new certificate
-            list_revoked = Certificate.objects.filter(Q(certificate_authority=ca, activation=False) | Q(id=id))
-            
-            cert_serializer = CertificateSerializer(cert, data=data)
-            if cert_serializer.is_valid():
-                # Revoking all the certificates in system and generate a crl file
-                revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
-                cert_serializer.save()
-                return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+            if ca:
+                # Importing all the CA previous revoked certificates and add the new certificate
+                list_revoked = Certificate.objects.filter(Q(certificate_authority=ca, activation=False) | Q(id=id))
+                
+                cert_serializer = CertificateSerializer(cert, data=data)
+                if cert_serializer.is_valid():
+                    # Revoking all the certificates in system and generate a crl file
+                    revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
+                    cert_serializer.save()
+                    return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+                else:
+                    print(cert_serializer.errors)
+                    return JsonResponse({"msg": "Error in Revocation certificate"}, status=401)
             else:
-                print(cert_serializer.errors)
-                return JsonResponse({"msg": "Error in Revocation certificate"}, status=401)
+                return JsonResponse({"msg": "You can't revoke this imported certificate"}, status=401)
         except Certificate.DoesNotExist:
             return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
 
@@ -437,19 +482,15 @@ def exportCert(request, id):
         try:
             cert = Certificate.objects.get(id=id)
             data = request.data
-            download_cert_path = data.get('path', '')
             download_type = data.get('download_type', '')  # Certificate, private key or .p12
-            cert_type = cert.certificate_type  # server or client
             if download_type == 'p12':
                 password = data.get('password', '')
-                confirm_password = data.get('confirm_password', '')
-                export_certificate_in_system(cert_name=cert.name, cert_type=cert.certificate_type, download_cert_path=download_cert_path,
-                                             download_type=download_type, password=password, confirm_password=confirm_password)
+                cert_value = export_certificate_in_system(cert_name=cert.name, cert_type=cert.certificate_type, 
+                                                          download_type=download_type, password=password)
             else:
-                export_certificate_in_system(cert_name=cert.name, cert_type=cert.certificate_type, download_cert_path=download_cert_path,
-                                             download_type=download_type)
-            
-            return JsonResponse({"msg": f"Export {cert_type} Certificate {cert.name} {download_type}"}, status=201)
+                cert_value = export_certificate_in_system(cert_name=cert.name, cert_type=cert.certificate_type,
+                                                          download_type=download_type)
+            return JsonResponse({"cert": cert_value}, status=201)
 
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in exporting CA"}, status=401)

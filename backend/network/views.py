@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from asguard.settings import get_all_addresses
 from backend.network.serializers import *
 from .models import *
 from backend.settings.serializers import *
@@ -317,24 +316,7 @@ EOF""".format('\n'.join(output_service))
                     if aux_run is True:
                         output, error=run_command(cmd_asguard)
                         if  (error==""):
-                            if setuptypeIP4.lower()=="dhcp":
-                                #function to get dhcp address and mask
-                                ip_address4,netmask4=get_address_dhcp(ifname,"4")
-                                jsonIPV4["ip_address"]=ip_address4
-                                jsonIPV4["netmask"]=netmask4
-                                ###
-                                ##function to get gateway if typeIPV4 est DHCP Base or Advanced
-                                gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname,"4")
-                                aux_gw_dhcp=save_gateways_database(gwaddr4,name_interface,default_aux,far_aux,multiwan_aux,metric,True,True)
-                            if setuptypeIP6.lower()=="dhcp":
-                                #function to get dhcp address6 and mask6
-                                ip_address6,netmask6=get_address_dhcp(ifname,"6")
-                                jsonIPV6["ip_address6"]=ip_address6
-                                jsonIPV6["netmask6"]=netmask6
-                                ###
-                                ##function to get gateway if typeIPV6 est DHCP Base or Advanced
-                                gwaddr6,metric6,default_aux6,far_aux6,multiwan_aux6=get_gateway_dhcp(ifname,"6")
-                                aux_gw6_dhcp=save_gateways_database(gwaddr6,name_interface,default_aux6,far_aux6,multiwan_aux6,metric6,False,False)
+                           
                             #update changes in DB ip4
                             aux_ipv4=update_DB(id_interface,jsonIPV4,IP4Config,IP4ConfigSerializer)
                             #update changes in DB ip6
@@ -347,11 +329,31 @@ EOF""".format('\n'.join(output_service))
                                 if aux_ipv6 is True:
                                     if aux_gen is True:
                                         if aux_inter is True:  
+                                            if setuptypeIP4 is None or setuptypeIP4.lower()=="static" :
+                                                 aux_gw_dhcp=True
+                                            if setuptypeIP4.lower()=="dhcp":
+                                                #function to get dhcp address and mask
+                                                ip_address4,netmask4=get_address_dhcp(ifname,"4")
+                                                jsonIPV4["ip_address"]=ip_address4
+                                                jsonIPV4["netmask"]=netmask4
+                                                ###
+                                                ##function to get gateway if typeIPV4 est DHCP Base or Advanced
+                                                gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname,"4")
+                                                aux_gw_dhcp=save_gateways_database(gwaddr4,name_interface,default_aux,far_aux,multiwan_aux,metric,True,True)
+                                            if setuptypeIP4 is None or setuptypeIP4.lower()=="static" :
+                                                 aux_gw6_dhcp=True
+                                            if setuptypeIP6 is not None and setuptypeIP6.lower()=="dhcp":
+                                                #function to get dhcp address6 and mask6
+                                                ip_address6,netmask6=get_address_dhcp(ifname,"6")
+                                                jsonIPV6["ip_address6"]=ip_address6
+                                                jsonIPV6["netmask6"]=netmask6
+                                                ###
+                                                ##function to get gateway if typeIPV6 est DHCP Base or Advanced
+                                                gwaddr6,metric6,default_aux6,far_aux6,multiwan_aux6=get_gateway_dhcp(ifname,"6")
+                                                aux_gw6_dhcp=save_gateways_database(gwaddr6,name_interface,default_aux6,far_aux6,multiwan_aux6,metric6,False,False)
                                             if aux_gw_dhcp is True:
                                                 if aux_gw6_dhcp is True:
                                                     ###### 
-                                                    ##appel function to update CSRF_TRUSTED_ORIGINS
-                                                    CSRF_TRUSTED_ORIGINS=get_all_addresses()  
                                                     msg="Your interface {} was configured Successfully!!".format(name_interface)
                                                     status=200
                                                 else:

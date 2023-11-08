@@ -3,6 +3,8 @@ from django.http import JsonResponse
 from django.core import serializers
 from django.db.models.deletion import ProtectedError
 import json
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.parsers import JSONParser
@@ -23,6 +25,9 @@ from .client_openvpn import delete_client_openvpn, install_client_openvpn
 ########################################
 ################ Server ################
 ########################################
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL OPENVPN SERVERS",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -42,6 +47,8 @@ def getAllServerOpenvpn(request):
         return JsonResponse(list_openvpn, safe=False)
     
 
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET AN OPENVPN SERVER",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -58,6 +65,61 @@ def getServerOpenvpn(request, id):
         return JsonResponse(res[0]['fields'], safe=False)
 
 
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN OPENVPN SERVER",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'method'],
+                                                 properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'description': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
+                                                             'protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
+                                                             'device_mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["tun", "tap"]),
+                                                             'interface': openapi.Schema(type=openapi.TYPE_STRING, description="Interface name like LAN or WAN or any"),
+                                                             'local_port': openapi.Schema(type=openapi.TYPE_STRING, description="port number with 4 digits"),
+                                                             'tls_auth': openapi.Schema(type=openapi.TYPE_OBJECT, description="importing tls key or generating it", 
+                                                                                        required=['generate'], properties={'generate': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                           'tls_key': openapi.Schema(type=openapi.TYPE_STRING, description="tls_key only when generate is false")}),
+                                                             'ca_name': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate authority name"),
+                                                             'server_cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name"),
+                                                             'dh_params_length': openapi.Schema(type=openapi.TYPE_STRING, enum=["2048", "4096"]),
+                                                             'encryption_algorithm': openapi.Schema(type=openapi.TYPE_STRING, description="example: AES-256-GCM"),
+                                                             'auth_digest_algorithm': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\bSHA\d+', description="start with SHA like SHA256"),
+                                                             'hardware_crypto': openapi.Schema(type=openapi.TYPE_STRING, enum=["No Hardware Crypto"]),
+                                                             'ipv4_tunnel_network': openapi.Schema(type=openapi.TYPE_STRING, description="Tunnel IPv4 address in format address/mask like 10.8.1.0/24"),
+                                                             'gateway': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                                                             'bridge': openapi.Schema(type=openapi.TYPE_OBJECT, description="Bridge block only appears if the device mode is TAP",
+                                                                                      required=['bridge_select'], properties={'bridge_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                              'bridge_interface': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the interface bridge, required when selecting bridge"),
+                                                                                                                              'bridge_start_dhcp': openapi.Schema(type=openapi.TYPE_STRING, description="Address start of the interface bridge like 192.168.10.254, required when selecting bridge"),
+                                                                                                                              'bridge_end_dhcp': openapi.Schema(type=openapi.TYPE_STRING, description="Address end of the interface bridge like 192.168.1.3, required when selecting bridge"),}),
+                                                             'ipv4_local_network': openapi.Schema(type=openapi.TYPE_STRING, description="IPv4 local network address in format address/mask like 192.168.10.0/24"),
+                                                             'ipv4_remote_network': openapi.Schema(type=openapi.TYPE_STRING, description="IPv4 remote network address in format address/mask like 192.168.10.0/24"),
+                                                             'concurrent_connections': openapi.Schema(type=openapi.TYPE_STRING, description="Number of concurrent connections"),
+                                                             'compression': openapi.Schema(type=openapi.TYPE_STRING, enum=["no_preference", "disabled", "enabled", "adaptive"]),
+                                                             'type_of_service': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'duplicate_connections': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'ipv6': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'inter_clients': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'address_pool': openapi.Schema(type=openapi.TYPE_OBJECT, description="Address pool block",
+                                                                                            required=['address_pool_select'], properties={'address_pool_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                                          'address_pool_start': openapi.Schema(type=openapi.TYPE_STRING, description="Address pool start like 10.8.0.2, required when selecting address pool"),
+                                                                                                                                          'address_pool_end': openapi.Schema(type=openapi.TYPE_STRING, description="Address pool end like 10.8.0.250, required when selecting address pool"),}),
+                                                             'dynamic_ip': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'topology': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
+                                                             'dns_default_domain': openapi.Schema(type=openapi.TYPE_OBJECT, description="DNS default domain block",
+                                                                                                  required=['dns_default_domain_select'], properties={'dns_default_domain_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                                                      'dns_default_domain_server': openapi.Schema(type=openapi.TYPE_STRING, description="Address default domain server like 8.8.8.8, required when selecting DNS default domain")}),
+                                                             'dns_servers': openapi.Schema(type=openapi.TYPE_OBJECT, description="DNS servers block",
+                                                                                      required=['dns_servers_select'], properties={'dns_servers_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                                   'dns_server1': openapi.Schema(type=openapi.TYPE_STRING, description="Address of DNS server1 like 8.8.8.8, required when selecting DNS servers"),
+                                                                                                                                   'dns_server2': openapi.Schema(type=openapi.TYPE_STRING, description="Address of DNS server2 like 8.8.4.4, Optionally you can set the second DNS server afer setting the first DNS server"),}),
+                                                             'force_dns': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'ntp_servers': openapi.Schema(type=openapi.TYPE_OBJECT, description="NTP servers block",
+                                                                                      required=['ntp_servers_select'], properties={'ntp_servers_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                                   'ntp_server1': openapi.Schema(type=openapi.TYPE_STRING, description="Address of NTP server1 like 8.8.8.8, required when selecting NTP servers"),
+                                                                                                                                   'ntp_server2': openapi.Schema(type=openapi.TYPE_STRING, description="Address of NTP server2 like 8.8.4.4, Optionally you can set the second NTP server afer setting the first NTP server"),}),
+                                                             'verbosity_level': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
+                                                             
+                                                                 }
+                                                                 ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -196,6 +258,8 @@ def createServerOpenvpn(request):
             return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
 
 
+@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE AN OPENVPN SERVER",)
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -215,6 +279,61 @@ def deleteServerOpenvpn(request, id):
         return JsonResponse({"msg": "This Server does not exist"}, status=401)
 
 
+@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN OPENVPN SERVER (same as creation API)",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'method'],
+                                                 properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'description': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
+                                                             'protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
+                                                             'device_mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["tun", "tap"]),
+                                                             'interface': openapi.Schema(type=openapi.TYPE_STRING, description="Interface name like LAN or WAN or any"),
+                                                             'local_port': openapi.Schema(type=openapi.TYPE_STRING, description="port number with 4 digits"),
+                                                             'tls_auth': openapi.Schema(type=openapi.TYPE_OBJECT, description="importing tls key or generating it", 
+                                                                                        required=['generate'], properties={'generate': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                           'tls_key': openapi.Schema(type=openapi.TYPE_STRING, description="tls_key only when generate is false")}),
+                                                             'ca_name': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate authority name"),
+                                                             'server_cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name"),
+                                                             'dh_params_length': openapi.Schema(type=openapi.TYPE_STRING, enum=["2048", "4096"]),
+                                                             'encryption_algorithm': openapi.Schema(type=openapi.TYPE_STRING, description="example: AES-256-GCM"),
+                                                             'auth_digest_algorithm': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\bSHA\d+', description="start with SHA like SHA256"),
+                                                             'hardware_crypto': openapi.Schema(type=openapi.TYPE_STRING, enum=["No Hardware Crypto"]),
+                                                             'ipv4_tunnel_network': openapi.Schema(type=openapi.TYPE_STRING, description="Tunnel IPv4 address in format address/mask like 10.8.1.0/24"),
+                                                             'gateway': openapi.Schema(type=openapi.TYPE_BOOLEAN),
+                                                             'bridge': openapi.Schema(type=openapi.TYPE_OBJECT, description="Bridge block only appears if the device mode is TAP",
+                                                                                      required=['bridge_select'], properties={'bridge_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                              'bridge_interface': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of the interface bridge, required when selecting bridge"),
+                                                                                                                              'bridge_start_dhcp': openapi.Schema(type=openapi.TYPE_STRING, description="Address start of the interface bridge like 192.168.10.254, required when selecting bridge"),
+                                                                                                                              'bridge_end_dhcp': openapi.Schema(type=openapi.TYPE_STRING, description="Address end of the interface bridge like 192.168.1.3, required when selecting bridge"),}),
+                                                             'ipv4_local_network': openapi.Schema(type=openapi.TYPE_STRING, description="IPv4 local network address in format address/mask like 192.168.10.0/24"),
+                                                             'ipv4_remote_network': openapi.Schema(type=openapi.TYPE_STRING, description="IPv4 remote network address in format address/mask like 192.168.10.0/24"),
+                                                             'concurrent_connections': openapi.Schema(type=openapi.TYPE_STRING, description="Number of concurrent connections"),
+                                                             'compression': openapi.Schema(type=openapi.TYPE_STRING, enum=["no_preference", "disabled", "enabled", "adaptive"]),
+                                                             'type_of_service': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'duplicate_connections': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'ipv6': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'inter_clients': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'address_pool': openapi.Schema(type=openapi.TYPE_OBJECT, description="Address pool block",
+                                                                                            required=['address_pool_select'], properties={'address_pool_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                                          'address_pool_start': openapi.Schema(type=openapi.TYPE_STRING, description="Address pool start like 10.8.0.2, required when selecting address pool"),
+                                                                                                                                          'address_pool_end': openapi.Schema(type=openapi.TYPE_STRING, description="Address pool end like 10.8.0.250, required when selecting address pool"),}),
+                                                             'dynamic_ip': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'topology': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
+                                                             'dns_default_domain': openapi.Schema(type=openapi.TYPE_OBJECT, description="DNS default domain block",
+                                                                                                  required=['dns_default_domain_select'], properties={'dns_default_domain_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                                                      'dns_default_domain_server': openapi.Schema(type=openapi.TYPE_STRING, description="Address default domain server like 8.8.8.8, required when selecting DNS default domain")}),
+                                                             'dns_servers': openapi.Schema(type=openapi.TYPE_OBJECT, description="DNS servers block",
+                                                                                      required=['dns_servers_select'], properties={'dns_servers_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                                   'dns_server1': openapi.Schema(type=openapi.TYPE_STRING, description="Address of DNS server1 like 8.8.8.8, required when selecting DNS servers"),
+                                                                                                                                   'dns_server2': openapi.Schema(type=openapi.TYPE_STRING, description="Address of DNS server2 like 8.8.4.4, Optionally you can set the second DNS server afer setting the first DNS server"),}),
+                                                             'force_dns': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'ntp_servers': openapi.Schema(type=openapi.TYPE_OBJECT, description="NTP servers block",
+                                                                                      required=['ntp_servers_select'], properties={'ntp_servers_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                                   'ntp_server1': openapi.Schema(type=openapi.TYPE_STRING, description="Address of NTP server1 like 8.8.8.8, required when selecting NTP servers"),
+                                                                                                                                   'ntp_server2': openapi.Schema(type=openapi.TYPE_STRING, description="Address of NTP server2 like 8.8.4.4, Optionally you can set the second NTP server afer setting the first NTP server"),}),
+                                                             'verbosity_level': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
+                                                             
+                                                                 }
+                                                                 ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -314,6 +433,8 @@ def updateServerOpenVPN(request, id):
             return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
 
 
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO Start AN OPENVPN SERVER",)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -348,6 +469,8 @@ def startServerOpenvpn(request, id):
             return JsonResponse({"msg": "This Server does not exist"}, status=401)
 
 
+@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO Restart AN OPENVPN SERVER",)
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -374,6 +497,8 @@ def restartServerOpenvpn(request, id):
             return JsonResponse({"msg": "This Interface does not exist"}, status=401)
 
 
+@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO STOP AN OPENVPN SERVER",)
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

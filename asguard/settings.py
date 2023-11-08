@@ -56,8 +56,10 @@ def get_all_addresses():
     return all_addresses
 
 ##appel function to update CSRF_TRUSTED_ORIGINS
-CSRF_TRUSTED_ORIGINS=get_all_addresses()
-CORS_ALLOWED_ORIGINS = get_all_addresses()
+# CSRF_TRUSTED_ORIGINS=['*']
+CORS_ALLOWED_ORIGINS = ['https://*']
+# Application definition
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Application definition
 
 INSTALLED_APPS = [

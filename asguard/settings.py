@@ -10,12 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-import subprocess
 from dotenv import load_dotenv
 from pathlib import Path
 import os
 import mimetypes
-import socket
 mimetypes.add_type("text/css", ".css", True)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -31,32 +29,8 @@ SECRET_KEY = 'mmj@uz23n!%6u4#$b1&%f(7l*rr(9qx%am)wyk@s4ugeuam52m'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-##function to run command 
-def run_command(command):
-    completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
-    output = completed_process.stdout
-    error = completed_process.stderr
-    return output, error
-##function to get all addresses to be CSRF_TRUSTED_ORIGINS
-def get_all_addresses():
-    all_addresses=[]
-    cmd="sudo cat /etc/ConfigInterfaces"
-    output,error=run_command(cmd)  
-    if error=="" and len(output)!=0:
-        output=output.strip().split('\n')
-        for a in output:
-            ifname=a.split(":")[0]
-            cmd_address="sudo ip a show dev {} | grep 'inet ' | cut -d ' ' -f 6".format(ifname)
-            output_list,error=run_command(cmd_address)
-            list_addr=[]
-            if len(output_list)!=0:
-                list_addr=output_list.strip().split("\n")
-                for output_addr in list_addr:
-                    all_addresses.append("https://"+output_addr.strip('\n').strip().split("/")[0])
-    return all_addresses
 
 ##appel function to update CSRF_TRUSTED_ORIGINS
-# CSRF_TRUSTED_ORIGINS=['*']
 CORS_ALLOWED_ORIGINS = ['https://*']
 # Application definition
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')

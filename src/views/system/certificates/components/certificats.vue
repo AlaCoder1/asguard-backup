@@ -371,13 +371,13 @@ export default {
       params.api.sizeColumnsToFit();
     },
     openModalAdd() {
-      console.log("ok");
+      
       this.modalData = {};
       this.modalMode = "create"; // Assuming you want to open the modal in create mode
       this.isModalOpen = true;
     },
     openModalRevoce() {
-      console.log("ok");
+      
       this.modalData = {};
       this.modalMode = "revoce"; // Assuming you want to open the modal in create mode
       this.isModalOpenRevoce = true;

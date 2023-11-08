@@ -53,7 +53,7 @@ export default {
   },
   data() {
     return {
-      activeTab: 'MONOTORING',
+      activeTab: 'SERVERS',
       tabs: [
         { id: 1, label: "SERVERS" },
         { id: 2, label: "CLIENTS" },

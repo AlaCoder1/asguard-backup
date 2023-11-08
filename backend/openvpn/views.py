@@ -529,6 +529,9 @@ def stopServerOpenvpn(request, id):
 ########################################
 ################ Client ################
 ########################################
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL OPENVPN CLIENTS",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -548,6 +551,8 @@ def getAllClientOpenvpn(request):
         return JsonResponse(list_openvpn, safe=False)
 
 
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET AN OPENVPN CLIENT",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -564,6 +569,46 @@ def getClientOpenvpn(request, id):
         return JsonResponse(res[0]['fields'], safe=False)
 
 
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN OPENVPN Client",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['server_name', 'name', 'server_mode', 'protocol', 'device_mode', 'interface', 'resolv_retry', 'local_port', 'tls_auth', 'ca_name', 'client_cert', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'compression', 'type_of_service', 'ipv6', 'pull_routes', 'add_remove_routes', 'verbosity_level'],
+                                                 properties={'server_name': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the selected server"),
+                                                             'name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'description': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["peer_to_peer"])}),
+                                                             'protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
+                                                             'device_mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["tun", "tap"]),
+                                                             'interface': openapi.Schema(type=openapi.TYPE_INTEGER, description="Interface ID"),
+                                                             'resolv_retry': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'proxy_host': openapi.Schema(type=openapi.TYPE_STRING, description="address of poxy like 10.1.12.249"),
+                                                             'proxy_port': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"\d\d\d\d", default="1194", desciption="port number of 4 digits"),
+                                                             'proxy_authentication': openapi.Schema(type=openapi.TYPE_OBJECT, description="Additional options for proxy authentication", 
+                                                                                        required=['option'], properties={'option': openapi.Schema(type=openapi.TYPE_STRING, default="none", enum=["none", "basic", "ntlm"]),
+                                                                                                                         'username': openapi.Schema(type=openapi.TYPE_STRING, description="required when choosing basic in authentication method option"),
+                                                                                                                         'password': openapi.Schema(type=openapi.TYPE_STRING, description="required when choosing basic in authentication method option"),}),
+                                                             'local_port': openapi.Schema(type=openapi.TYPE_STRING, description="local port number with 4 digits"),
+                                                             'username': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'password': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'renegotiate_time': openapi.Schema(type=openapi.TYPE_STRING, description="Number of seconds to renogotiate"),
+                                                             'tls_auth': openapi.Schema(type=openapi.TYPE_OBJECT, description="importing tls key or generating it", 
+                                                                                        required=['generate'], properties={'generate': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                           'tls_key': openapi.Schema(type=openapi.TYPE_STRING, description="tls_key only when generate is false")}),
+                                                             'ca_name': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate authority name"),
+                                                             'client_cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from Certificates list with type client"),
+                                                             'dh_params_length': openapi.Schema(type=openapi.TYPE_STRING, enum=["2048", "4096"]),
+                                                             'encryption_algorithm': openapi.Schema(type=openapi.TYPE_STRING, description="example: AES-256-GCM"),
+                                                             'auth_digest_algorithm': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\bSHA\d+', description="start with SHA like SHA256"),
+                                                             'hardware_crypto': openapi.Schema(type=openapi.TYPE_STRING, enum=["No Hardware Crypto"]),
+                                                             'ipv4_tunnel_network': openapi.Schema(type=openapi.TYPE_STRING, description="Tunnel IPv4 address in format address/mask like 10.8.1.0/24"),
+                                                             'ipv4_remote_network': openapi.Schema(type=openapi.TYPE_STRING, description="IPv4 remote network address in format address/mask like 192.168.10.0/24"),
+                                                             'limit_outgoing_bandwidth': openapi.Schema(type=openapi.TYPE_STRING, description="Number of limit outgoing bandwith"),
+                                                             'compression': openapi.Schema(type=openapi.TYPE_STRING, enum=["no_preference", "disabled", "enabled", "adaptive"]),
+                                                             'type_of_service': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'ipv6': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'pull_routes': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'add_remove_routes': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'verbosity_level': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
+                                                                 }
+                                                                 ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -685,6 +730,8 @@ def createClientOpenvpn(request):
             return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
 
 
+@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE AN OPENVPN CLIENT",)
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -706,6 +753,46 @@ def deleteClientOpenvpn(request, id):
             return JsonResponse({"msg": "This Client does not exist"}, status=401)
 
 
+@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN OPENVPN Client (same as create)",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['server_name', 'name', 'server_mode', 'protocol', 'device_mode', 'interface', 'resolv_retry', 'local_port', 'tls_auth', 'ca_name', 'client_cert', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'compression', 'type_of_service', 'ipv6', 'pull_routes', 'add_remove_routes', 'verbosity_level'],
+                                                 properties={'server_name': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the selected server"),
+                                                             'name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'description': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["peer_to_peer"])}),
+                                                             'protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
+                                                             'device_mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["tun", "tap"]),
+                                                             'interface': openapi.Schema(type=openapi.TYPE_INTEGER, description="Interface ID"),
+                                                             'resolv_retry': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'proxy_host': openapi.Schema(type=openapi.TYPE_STRING, description="address of poxy like 10.1.12.249"),
+                                                             'proxy_port': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"\d\d\d\d", default="1194", desciption="port number of 4 digits"),
+                                                             'proxy_authentication': openapi.Schema(type=openapi.TYPE_OBJECT, description="Additional options for proxy authentication", 
+                                                                                        required=['option'], properties={'option': openapi.Schema(type=openapi.TYPE_STRING, default="none", enum=["none", "basic", "ntlm"]),
+                                                                                                                         'username': openapi.Schema(type=openapi.TYPE_STRING, description="required when choosing basic in authentication method option"),
+                                                                                                                         'password': openapi.Schema(type=openapi.TYPE_STRING, description="required when choosing basic in authentication method option"),}),
+                                                             'local_port': openapi.Schema(type=openapi.TYPE_STRING, description="local port number with 4 digits"),
+                                                             'username': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'password': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'renegotiate_time': openapi.Schema(type=openapi.TYPE_STRING, description="Number of seconds to renogotiate"),
+                                                             'tls_auth': openapi.Schema(type=openapi.TYPE_OBJECT, description="importing tls key or generating it", 
+                                                                                        required=['generate'], properties={'generate': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                                           'tls_key': openapi.Schema(type=openapi.TYPE_STRING, description="tls_key only when generate is false")}),
+                                                             'ca_name': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate authority name"),
+                                                             'client_cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from Certificates list with type client"),
+                                                             'dh_params_length': openapi.Schema(type=openapi.TYPE_STRING, enum=["2048", "4096"]),
+                                                             'encryption_algorithm': openapi.Schema(type=openapi.TYPE_STRING, description="example: AES-256-GCM"),
+                                                             'auth_digest_algorithm': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\bSHA\d+', description="start with SHA like SHA256"),
+                                                             'hardware_crypto': openapi.Schema(type=openapi.TYPE_STRING, enum=["No Hardware Crypto"]),
+                                                             'ipv4_tunnel_network': openapi.Schema(type=openapi.TYPE_STRING, description="Tunnel IPv4 address in format address/mask like 10.8.1.0/24"),
+                                                             'ipv4_remote_network': openapi.Schema(type=openapi.TYPE_STRING, description="IPv4 remote network address in format address/mask like 192.168.10.0/24"),
+                                                             'limit_outgoing_bandwidth': openapi.Schema(type=openapi.TYPE_STRING, description="Number of limit outgoing bandwith"),
+                                                             'compression': openapi.Schema(type=openapi.TYPE_STRING, enum=["no_preference", "disabled", "enabled", "adaptive"]),
+                                                             'type_of_service': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'ipv6': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'pull_routes': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'add_remove_routes': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'verbosity_level': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
+                                                                 }
+                                                                 ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

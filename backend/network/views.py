@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from asguard.settings import get_all_addresses
 from backend.network.serializers import *
 from .models import *
 from backend.settings.serializers import *
@@ -355,8 +354,6 @@ EOF""".format('\n'.join(output_service))
                                             if aux_gw_dhcp is True:
                                                 if aux_gw6_dhcp is True:
                                                     ###### 
-                                                    ##appel function to update CSRF_TRUSTED_ORIGINS
-                                                    # CSRF_TRUSTED_ORIGINS=get_all_addresses()  
                                                     msg="Your interface {} was configured Successfully!!".format(name_interface)
                                                     status=200
                                                 else:

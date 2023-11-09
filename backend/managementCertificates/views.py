@@ -89,7 +89,7 @@ def getCertAuth(request, id):
                                                                              'common_name': openapi.Schema(type=openapi.TYPE_STRING),
                                                                              'certificate_data': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
                                                                              'certificate_key': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
-                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
+                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="Optional, when name_method is import"),
                                                                              }),
                                                                              }
                                                                              ))
@@ -336,7 +336,7 @@ def getCertificate(request, id):
                                                                              'common_name': openapi.Schema(type=openapi.TYPE_STRING),
                                                                              'certificate_data': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
                                                                              'certificate_key': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
-                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
+                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="Optional, when name_method is import"),
                                                                              }),
                                                                              }
                                                                              ))
@@ -436,8 +436,8 @@ def createCertificate(request):
                                   "serial": serial
                                   }
                     serial, start_date, end_date, lifetime, distingushed_name, certificate_type = import_certificate_in_system(name, input_cert)
-                    if serial != cert_data["serial"]:
-                        return JsonResponse({"msg": "Serial number input are not correct"}, status=401)
+                    # if serial != cert_data["serial"]:
+                    #     return JsonResponse({"msg": "Serial number input are not correct"}, status=401)
                     if certificate_type == 'server':
                         cert_data["certificate_path"] = f'''/etc/openvpn/certificates_{name}/server.crt\n/etc/openvpn/certificates_{name}/server.key'''
                     elif certificate_type == 'client':

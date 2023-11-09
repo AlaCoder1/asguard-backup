@@ -66,7 +66,7 @@ def getServerOpenvpn(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN OPENVPN SERVER",
-                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'method'],
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'server_mode', 'protocol', 'device_mode', 'interface', 'local_port', 'tls_auth', 'ca_name', 'server_cert', 'dh_params_length', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'ipv4_tunnel_network', 'gateway', 'bridge', 'compression', 'type_of_service', 'duplicate_connections', 'ipv6', 'inter_clients', 'address_pool', 'dynamic_ip', 'topology', 'dns_default_domain', 'dns_servers', 'force_dns', 'ntp_servers', 'verbosity_level'],
                                                  properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'description': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
@@ -280,7 +280,7 @@ def deleteServerOpenvpn(request, id):
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN OPENVPN SERVER (same as creation API)",
-                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'method'],
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT,  required=['name', 'server_mode', 'protocol', 'device_mode', 'interface', 'local_port', 'tls_auth', 'ca_name', 'server_cert', 'dh_params_length', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'ipv4_tunnel_network', 'gateway', 'bridge', 'compression', 'type_of_service', 'duplicate_connections', 'ipv6', 'inter_clients', 'address_pool', 'dynamic_ip', 'topology', 'dns_default_domain', 'dns_servers', 'force_dns', 'ntp_servers', 'verbosity_level'],
                                                  properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'description': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),

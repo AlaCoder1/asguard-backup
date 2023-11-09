@@ -54,6 +54,7 @@ urlpatterns = [
     path('subscription/', include('backend.subscription.urls')),
     path('users/', include('backend.managementUsers.urls')),
     path('groups/', include('backend.managementGroup.urls')),
+    path('key_pairs/', include('backend.managementKeypairs.urls')),
     path('servers/', include('backend.managementServers.urls')),
     path('certificates/', include('backend.managementCertificates.urls')),
     path('settings/', include('backend.settings.urls')),

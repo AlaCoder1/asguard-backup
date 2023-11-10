@@ -287,7 +287,7 @@ export default {
 
       eGui.innerHTML = `
       emailAddress= ${data.data.email},ST=${data.data.state}, O=${data.data.organization}, <br/>
-        L=${data.data.city},CN=${data.data.nom_unique},CN=${data.data.country_code}<br/>
+        L=${data.data.city},CN=${data.data.nom_unique},C=${data.data.country_code}<br/>
         Valide à partir du :${data.data.valid_from}<br/>
         Valide jusqu'au :${data.data.valid_until}
         `;

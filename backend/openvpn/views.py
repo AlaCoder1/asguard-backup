@@ -620,7 +620,7 @@ def createClientOpenvpn(request):
 
             server_name = data.get('server_name', '')
             server = ServerOpenvpn.objects.get(name=server_name)
-            server_host = IP4Config.objects.get(id=Interface.objects.get(id=server.interface).pk).ip_address
+            server_host = IP4Config.objects.get(interface_id=server.interface).ip_address
             server_port = server.port
             # server_host = data.get('server_host', '')
             # server_port = data.get('server_port', '')

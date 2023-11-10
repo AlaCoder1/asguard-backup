@@ -48,10 +48,13 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar v-model="snackbar" location="bottom right" :color="color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
       {{ textAlert }}
-
-      <template v-slot:actions> </template>
     </v-snackbar>
   </div>
 </template>
@@ -173,6 +176,7 @@ export default {
     },
     closeModal() {
       this.isModalOpen = false;
+      this.deleteDialog = false;
       // location.reload()
     },
     actionCellRenderer(params) {
@@ -243,10 +247,12 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       let payload = {
-        typdownload_type: type,
+        type: type,
       };
-      axios.post(`/certificates/exportCertAuth/${id}`, payload).then(
-        (response) => {
+      axios
+        .post(`/certificates/exportCertAuth/${id}`, payload)
+        .then((response) => {
+          console.log("response", response.data.cert);
           const text = response.data.cert;
           const blob = new Blob([text], {
             type: "application/x-x509-ca-cert",
@@ -269,11 +275,13 @@ export default {
           } else {
             console.log("error");
           }
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
+        })
+        .catch((i) => {
+          console.log("i", i.response.data.error);
+          this.snackbar = true;
+          this.color = "red";
+          this.textAlert = i.response.data.error;
+        });
     },
     cancelDelete() {
       this.deleteDialog = false;
@@ -285,18 +293,23 @@ export default {
       axios
         .delete(`/certificates/deleteCertAuth/${this.deletedRow.id}`)
         .then((response) => {
-          this.snackbar = true;
-          this.color = "success";
-          this.textAlert = response.data.msg;
-          setTimeout(() => {
+          if (response.status == "200") {
             this.closeModal();
-            location.reload();
-          }, 5);
+
+            this.snackbar = true;
+            this.color = "success";
+            this.textAlert = response.data.msg;
+
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          }
         })
-        .catch((error) => {
+        .catch((i) => {
+          console.log("i", i.response);
           this.snackbar = true;
           this.color = "red";
-          this.textAlert = "error";
+          this.textAlert = i.response.data.error;
         });
     },
     handleAction(action, rowData) {

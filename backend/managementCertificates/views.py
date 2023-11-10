@@ -159,12 +159,10 @@ def createCertAuth(request):
                         return JsonResponse({"msg": f"CA {name} is created"}, status=201)
                     
                     else:
-                        print(serializer_ca.errors)
-                        return JsonResponse({"error": serializer_ca.errors}, status=400)
+                        return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
                     
                 else:
-                    print(serializer_ca.errors)
-                    return JsonResponse({"error": serializer_ca.errors}, status=400)
+                    return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
             
             elif method.get("name_method", "") == 'import':
 
@@ -193,11 +191,9 @@ def createCertAuth(request):
                         serializer_ca.save()
                         return JsonResponse({"msg": f"CA {name} is created"}, status=201)
                     else:
-                        print(serializer_ca.errors)
-                        return JsonResponse({"error": serializer_ca.errors}, status=400)
+                        return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
                 else:
-                    print(serializer_ca.errors)
-                    return JsonResponse({"error": serializer_ca.errors}, status=400)
+                    return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
 
 
         except CommandExecutionError:
@@ -419,7 +415,7 @@ def createCertificate(request):
                             serializer_cert.save()
                             return JsonResponse({"msg": f"Certificate {name} is created"}, status=201)
                 else:
-                    return JsonResponse({"error": f"Error in Certificate configuration\n{serializer_cert.errors}"}, status=400)
+                    return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
             elif method.get("method_name", "") == 'import':
                 certificate_data = method.get("certificate_data", "")
                 certificate_key = method.get("certificate_key", "")
@@ -453,11 +449,9 @@ def createCertificate(request):
                         serializer_cert.save()
                         return JsonResponse({"msg": "Certificate Configuration is done"}, status=201)
                     else:
-                        print('error in creating cert= ', serializer_cert.errors)
-                        return JsonResponse({"error": serializer_cert.errors}, status=400)
+                        return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
                 else:
-                    print('error in creating cert= ', serializer_cert.errors)
-                    return JsonResponse({"error": serializer_cert.errors}, status=400)
+                    return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
 
         except CommandExecutionError:
             return JsonResponse({"error": "Error in creating Certificate"}, status=400)
@@ -510,8 +504,7 @@ def revokeCertificate(request, id):
                     cert_serializer.save()
                     return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
                 else:
-                    print(cert_serializer.errors)
-                    return JsonResponse({"error": cert_serializer.errors}, status=400)
+                    return JsonResponse({"error": list(cert_serializer.errors.values())[0][0]}, status=400)
             else:
                 return JsonResponse({"error": "You can't revoke this imported certificate"}, status=400)
         except Certificate.DoesNotExist:

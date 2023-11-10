@@ -13,6 +13,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from backend.managementCertificates.certificate import create_ca_in_system, create_certificate_in_system, delete_ca_in_system, delete_certificate_in_system, export_ca_in_system, export_ca_list_rev_in_system, export_certificate_in_system, import_ca_in_system, import_certificate_in_system, revoke_certificates_in_system, unrevoke_certificates_in_system
+from backend.managementCertificates.list_certificates import get_all_cert_auth, get_all_certificates, get_cert_auth, get_certificate
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementCertificates.serializers import CertificateAuthoritySerializer, CertificateSerializer
 from backend.openvpn.manage_errors import CommandExecutionError
@@ -30,26 +31,8 @@ from backend.openvpn.manage_errors import CommandExecutionError
 @permission_classes([IsAuthenticated])
 def getAllCertAuth(request):
     """Getting all Certificates Authority from database"""
-    list_ca = []
     if (request.method == 'GET'):
-        ca = CertificateAuthority.objects.all()
-        caDict = serializers.serialize("json",ca)
-        res = json.loads(caDict)
-        for i in range(len(res)):
-            list_certs_auth_by_ca = len(Certificate.objects.filter(certificate_authority=ca[i].pk))
-            list_revoke_ca = Certificate.objects.filter(certificate_authority=ca[i].pk, activation=False)
-            list_revokation = []
-            for revoke in list_revoke_ca:
-                list_revokation.append({"id": revoke.id,
-                                        "name": revoke.name,
-                                        "reason": revoke.reason_revocation})
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            res[i]['fields']['certificates'] = list_certs_auth_by_ca
-            res[i]['fields']['list_revokation'] = list_revokation
-            list_ca.append(res[i]['fields'])
+        list_ca = get_all_cert_auth()
         return JsonResponse(list_ca, safe=False)
 
 
@@ -61,14 +44,8 @@ def getAllCertAuth(request):
 def getCertAuth(request, id):
     """Getting a Certificates Authority by id from database"""
     if (request.method == 'GET'):
-        ca = CertificateAuthority.objects.filter(pk=id)
-        caDict = serializers.serialize("json", ca)
-        res = json.loads(caDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields']['id'] = id
-        return JsonResponse(res[0]['fields'], safe=False)
+        cert = get_cert_auth(id)
+        return JsonResponse(cert, safe=False)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE CERTIFICATE AUTHORITY",
@@ -278,17 +255,8 @@ def exportCertAuthListRev(request, id):
 @permission_classes([IsAuthenticated])
 def getAllCertificates(request):
     """Getting all Certificates from database"""
-    list_cert = []
     if (request.method == 'GET'):
-        cert = Certificate.objects.all()
-        certDict = serializers.serialize("json",cert)
-        res = json.loads(certDict)
-        for i in range(len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            list_cert.append(res[i]['fields'])
+        list_cert = get_all_certificates()
         return JsonResponse(list_cert, safe=False)
 
 
@@ -300,14 +268,8 @@ def getAllCertificates(request):
 def getCertificate(request, id):
     """Getting a Certificate by id from database"""
     if (request.method == 'GET'):
-        cert = CertificateAuthority.objects.filter(pk=id)
-        certDict = serializers.serialize("json", cert)
-        res = json.loads(certDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields']['id'] = id
-        return JsonResponse(res[0]['fields'], safe=False)
+        cert = get_certificate(id)
+        return JsonResponse(cert, safe=False)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO GET LIST OF ALL CERTIFICATES",

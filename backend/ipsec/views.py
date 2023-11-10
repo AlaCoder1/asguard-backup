@@ -8,6 +8,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from backend.ipsec.functions import json_to_str_server_ipsec
+from backend.ipsec.list_ipsec import get_all_server_ipsec, get_server_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
 from backend.ipsec.server_ipsec import delete_server_ipsec, install_server_ipsec, update_server_ipsec
 from backend.managementCertificates.models import Certificate, CertificateAuthority
@@ -23,18 +24,8 @@ from .models import ServerIPsec
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def getAllServerIPsec(request):
-    list_ipsec = []
     if (request.method == 'GET'):
-        ipsec = ServerIPsec.objects.all()
-        ipsecDict = serializers.serialize("json", ipsec)
-        res = json.loads(ipsecDict)
-        for i in range(len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            list_ipsec.append(res[i]['fields'])
-        # return list_ipsec
+        list_ipsec = get_all_server_ipsec()
         return JsonResponse(list_ipsec, safe=False)
     
 
@@ -46,14 +37,8 @@ def getAllServerIPsec(request):
 def getServerIPsec(request, id):
     """Getting server by id from database"""
     if (request.method == 'GET'):
-        server_ipsec = ServerIPsec.objects.filter(pk=id)
-        server_ipsecDict = serializers.serialize("json", server_ipsec)
-        res = json.loads(server_ipsecDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields']['id'] = id
-        return JsonResponse(res[0]['fields'], safe=False)
+        server_ipsec = get_server_ipsec(id)
+        return JsonResponse(server_ipsec, safe=False)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN IPSEC",

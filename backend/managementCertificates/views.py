@@ -419,7 +419,7 @@ def createCertificate(request):
                             serializer_cert.save()
                             return JsonResponse({"msg": f"Certificate {name} is created"}, status=201)
                 else:
-                    return JsonResponse({"error": f"Error in Certificate configuration\n{serializer_cert.errors}"}, status=400)
+                    return JsonResponse({"error": serializer_cert.errors}, status=400)
             elif method.get("method_name", "") == 'import':
                 certificate_data = method.get("certificate_data", "")
                 certificate_key = method.get("certificate_key", "")

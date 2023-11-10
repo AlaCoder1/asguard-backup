@@ -297,8 +297,7 @@ def createServerIPsec(request):
                 serializer_server.save()
                 return JsonResponse({"msg": f"Connection {conn_name} Configuration is done"}, status=201)
             else:
-                print(serializer_server.errors)
-                return JsonResponse({"msg": "Error in server configuration"}, status=400)
+                return JsonResponse({"msg": list(serializer_server.errors.values())[0][0]}, status=400)
         except CommandExecutionError:
             return JsonResponse({"msg": "Error in creating ipsec server"}, status=400)
         except Interface.DoesNotExist:
@@ -534,8 +533,7 @@ def updateServerIPsec(request, id):
                 serializer_server.save()
                 return JsonResponse({"msg": f"Connection {server.conn_name} Configuration is updated"}, status=201)
             else:
-                print(serializer_server.errors)
-                return JsonResponse({"msg": "Error in server configuration"}, status=400)
+                return JsonResponse({"msg": list(serializer_server.errors.values())[0][0]}, status=400)
 
         except ServerIPsec.DoesNotExist:
             return JsonResponse({"msg": "This Server does not exist"}, status=400)

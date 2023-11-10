@@ -19,11 +19,12 @@
                     label="Certificat Name "
                     v-model="state.formData.certifName"
                   ></v-text-field>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.certifName.$error"
-                    >{{ v$.formData.certifName.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.certifName.$errors[0].$message }}
+                  </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
@@ -42,11 +43,12 @@
                       { name: 'Create Certificate', slug: 'create', id: '2' },
                     ]"
                   ></v-select>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.method.$error"
-                    >{{ v$.formData.method.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.method.$errors[0].$message }}
+                  </p>
                 </v-col>
 
                 <v-col cols="12" v-if="isImportCetif" class="mb-n6">
@@ -59,11 +61,12 @@
                     label="Certificat data"
                     variant="outlined"
                   ></v-textarea>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.certificatData.$error"
-                    >{{ v$.formData.certificatData.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.certificatData.$errors[0].$message }}
+                  </p>
 
                   <v-textarea
                     class="mt-3"
@@ -71,21 +74,17 @@
                     label="Private key certificate (facultatif)"
                     variant="outlined"
                   ></v-textarea>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.privateKey.$error"
-                    >{{ v$.formData.privateKey.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.privateKey.$errors[0].$message }}
+                  </p>
 
                   <v-text-field
                     label="Serial number certificate"
                     v-model="state.formData.serialNumber"
                   ></v-text-field>
-                  <span
-                    class="error-feedback"
-                    v-if="v$.formData.serialNumber.$error"
-                    >{{ v$.formData.serialNumber.$errors[0].$message }}</span
-                  >
                 </v-col>
 
                 <v-col v-if="isCreateCetif" cols="12" class="mb-n6">
@@ -101,11 +100,12 @@
                     item-value="id"
                     return-object
                   ></v-select>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.autorityCertif.$error"
-                    >{{ v$.formData.autorityCertif.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.autorityCertif.$errors[0].$message }}
+                  </p>
 
                   <v-select
                     v-model="state.formData.type"
@@ -118,9 +118,9 @@
                       { name: 'Server', id: '2', slug: 'server' },
                     ]"
                   ></v-select>
-                  <span class="error-feedback" v-if="v$.formData.type.$error">{{
-                    v$.formData.type.$errors[0].$message
-                  }}</span>
+                  <p class="error-feedback mb-5" v-if="v$.formData.type.$error">
+                    {{ v$.formData.type.$errors[0].$message }}
+                  </p>
                   <v-select
                     v-model="state.formData.keyType"
                     label="Key type"
@@ -129,11 +129,12 @@
                     return-object
                     :items="[{ name: 'RSA', id: '1', slug: 'rsa' }]"
                   ></v-select>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.keyType.$error"
-                    >{{ v$.formData.keyType.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.keyType.$errors[0].$message }}
+                  </p>
 
                   <v-select
                     v-model="state.formData.keyLength"
@@ -164,11 +165,12 @@
                       },
                     ]"
                   ></v-select>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.keyLength.$error"
-                    >{{ v$.formData.keyLength.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.keyLength.$errors[0].$message }}
+                  </p>
                   <v-select
                     v-model="state.formData.hashAlgo"
                     label="Hash algo"
@@ -193,21 +195,23 @@
                       },
                     ]"
                   ></v-select>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.hashAlgo.$error"
-                    >{{ v$.formData.hashAlgo.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.hashAlgo.$errors[0].$message }}
+                  </p>
 
                   <v-text-field
                     label="Lifetime"
                     v-model="state.formData.lifeTime"
                   ></v-text-field>
-                  <span
-                    class="error-feedback"
+                  <p
+                    class="error-feedback mb-5"
                     v-if="v$.formData.lifeTime.$error"
-                    >{{ v$.formData.lifeTime.$errors[0].$message }}</span
                   >
+                    {{ v$.formData.lifeTime.$errors[0].$message }}
+                  </p>
 
                   <v-row>
                     <v-col cols="6" class="mb-n6">
@@ -219,68 +223,72 @@
                         return-object
                         :items="countriesList"
                       ></v-autocomplete>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.country.$error"
-                        >{{ v$.formData.country.$errors[0].$message }}</span
                       >
+                        {{ v$.formData.country.$errors[0].$message }}
+                      </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
                         label="State province"
                         v-model="state.formData.state"
                       ></v-text-field>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.state.$error"
-                        >{{ v$.formData.state.$errors[0].$message }}</span
                       >
+                        {{ v$.formData.state.$errors[0].$message }}
+                      </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
                         label="place"
                         v-model="state.formData.place"
                       ></v-text-field>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.place.$error"
-                        >{{ v$.formData.place.$errors[0].$message }}</span
                       >
+                        {{ v$.formData.place.$errors[0].$message }}
+                      </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
                         label="Organisation"
                         v-model="state.formData.organisation"
                       ></v-text-field>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.organisation.$error"
-                        >{{
-                          v$.formData.organisation.$errors[0].$message
-                        }}</span
                       >
+                        {{ v$.formData.organisation.$errors[0].$message }}
+                      </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
                         label="Mail"
                         v-model="state.formData.mail"
                       ></v-text-field>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.mail.$error"
-                        >{{ v$.formData.mail.$errors[0].$message }}</span
                       >
+                        {{ v$.formData.mail.$errors[0].$message }}
+                      </p>
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
                         label="Commun name"
                         v-model="state.formData.communName"
                       ></v-text-field>
-                      <span
-                        class="error-feedback"
+                      <p
+                        class="error-feedback mb-5"
                         v-if="v$.formData.communName.$error"
-                        >{{ v$.formData.communName.$errors[0].$message }}</span
                       >
+                        {{ v$.formData.communName.$errors[0].$message }}
+                      </p>
                     </v-col>
                   </v-row>
                 </v-col>
@@ -288,11 +296,6 @@
             </v-container>
             <!-- <small>*indicates required field</small> -->
           </v-card-text>
-          <v-snackbar v-model="snackbar" location="bottom right" :color="color">
-            {{ textAlert }}
-
-            <template v-slot:actions> </template>
-          </v-snackbar>
           <v-card-actions class="mt-10 actionBtn">
             <v-btn
               color="asguard_primary_light"
@@ -317,6 +320,16 @@
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+
+      <template v-slot:actions> </template>
+    </v-snackbar>
   </v-row>
 </template>
 
@@ -379,7 +392,14 @@ export default {
     const rules = computed(() => {
       return {
         formData: {
-          certifName: { required },
+          certifName: {
+            required,
+            isValidCertifName: helpers.withMessage(
+              `champs can include only letters & Numbers & underscores & hyphens without space.`,
+
+              helpers.regex(/^[A-Za-z0-9_\-]+$/)
+            ),
+          },
           method: { required },
 
           certificatData: {
@@ -402,21 +422,7 @@ export default {
               )
             ),
           },
-          serialNumber: {
-            requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                  "Import an existing Certificate Authority"
-              )
-            ),
-            isValidSerial: helpers.withMessage(
-              `champs can include only numbers and uppercase letter.`,
 
-              helpers.regex(/^[0-9A-Z]+$/)
-            ),
-          },
           autorityCertif: {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
@@ -532,7 +538,7 @@ export default {
             isValidCommne: helpers.withMessage(
               `champs can include only letters & Numbers & underscores & hyphens without space.`,
 
-              helpers.regex(/^[A-Za-z0-9_\-]+$/ )
+              helpers.regex(/^[A-Za-z0-9_\-]+$/)
             ),
           },
         },
@@ -592,8 +598,9 @@ export default {
 
   methods: {
     getAllcountry() {
-      axios.get("https://restcountries.com/v3.1/all").then(
-        (response) => {
+      axios
+        .get("https://restcountries.com/v3.1/all")
+        .then((response) => {
           let countryList = response.data.map((element) => {
             return {
               countryName: element.name.common,
@@ -602,11 +609,10 @@ export default {
             };
           });
           this.countriesList = countryList;
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
+        })
+        .catch(() => {
+          console.log("error");
+        });
     },
     closeModal() {
       this.v$.$reset();
@@ -670,26 +676,27 @@ export default {
           };
         }
 
-        axios.post("/certificates/createCertificate", payload).then(
-          (response) => {
+        axios
+          .post("/certificates/createCertificate", payload)
+          .then((response) => {
             if (response.status == "201") {
+              this.closeModal();
+
               this.snackbar = true;
               this.color = "success";
               this.textAlert = response.data.msg;
+
               setTimeout(() => {
-                this.closeModal();
                 location.reload();
-              }, 2000);
-            } else {
-              console.log("error");
+              }, 1000);
             }
-          },
-          (error) => {
+          })
+          .catch((i) => {
+            console.log("i", i.response.data);
             this.snackbar = true;
             this.color = "red";
-            this.textAlert = "error";
-          }
-        );
+            this.textAlert = i.response.data.error;
+          });
       } else {
         console.log("rr", this.v$);
       }

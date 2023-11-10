@@ -160,11 +160,11 @@ def createCertAuth(request):
                     
                     else:
                         print(serializer_ca.errors)
-                        return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                        return JsonResponse({"error": serializer_ca.errors}, status=401)
                     
                 else:
                     print(serializer_ca.errors)
-                    return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                    return JsonResponse({"error": serializer_ca.errors}, status=401)
             
             elif method.get("name_method", "") == 'import':
 
@@ -194,16 +194,16 @@ def createCertAuth(request):
                         return JsonResponse({"msg": f"CA {name} is created"}, status=201)
                     else:
                         print(serializer_ca.errors)
-                        return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                        return JsonResponse({"error": serializer_ca.errors}, status=401)
                 else:
                     print(serializer_ca.errors)
-                    return JsonResponse({"msg": "Error in CA configuration"}, status=401)
+                    return JsonResponse({"error": serializer_ca.errors}, status=401)
 
 
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in creating CA"}, status=401)
+            return JsonResponse({"error": "Error in creating CA"}, status=401)
         except ValueError as error:
-            return JsonResponse({"msg": error.__str__()}, status=401)
+            return JsonResponse({"error": error.__str__()}, status=401)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -222,9 +222,9 @@ def deleteCertAuth(request, id):
             ca.delete()
             return JsonResponse({"msg": f"delete {ca.name} succesfully"})
     except ProtectedError:
-        return JsonResponse({"msg": "You have to delete Certificates authoried by this CA"}, status=401)
+        return JsonResponse({"error": "You have to delete Certificates authoried by this CA"}, status=401)
     except CertificateAuthority.DoesNotExist:
-        return JsonResponse({"msg": "This CA does not exist"}, status=401)
+        return JsonResponse({"error": "This CA does not exist"}, status=401)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD CERTIFICATE AUTHORITY",
@@ -247,9 +247,9 @@ def exportCertAuth(request, id):
             return JsonResponse({"cert": ca_value}, status=201)
 
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in exporting CA"}, status=401)
+            return JsonResponse({"error": "Error in exporting CA"}, status=401)
         except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"msg": "This CA does not exist"}, status=401)
+            return JsonResponse({"error": "This CA does not exist"}, status=401)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -266,9 +266,9 @@ def exportCertAuthListRev(request, id):
             return JsonResponse({"list_revocation": list_revocation}, status=201)
 
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in exporting list of revocation"}, status=401)
+            return JsonResponse({"error": "Error in exporting list of revocation"}, status=401)
         except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"msg": "This CA does not exist"}, status=401)
+            return JsonResponse({"error": "This CA does not exist"}, status=401)
 
 
 ##################################################
@@ -419,7 +419,7 @@ def createCertificate(request):
                             serializer_cert.save()
                             return JsonResponse({"msg": f"Certificate {name} is created"}, status=201)
                 else:
-                    return JsonResponse({"msg": f"Error in Certificate configuration\n{serializer_cert.errors}"}, status=401)
+                    return JsonResponse({"error": f"Error in Certificate configuration\n{serializer_cert.errors}"}, status=401)
             elif method.get("method_name", "") == 'import':
                 certificate_data = method.get("certificate_data", "")
                 certificate_key = method.get("certificate_key", "")
@@ -454,15 +454,15 @@ def createCertificate(request):
                         return JsonResponse({"msg": "Certificate Configuration is done"}, status=201)
                     else:
                         print('error in creating cert= ', serializer_cert.errors)
-                        return JsonResponse({"msg": "Error in Certificate configuration"}, status=401)
+                        return JsonResponse({"error": serializer_cert.errors}, status=401)
                 else:
                     print('error in creating cert= ', serializer_cert.errors)
-                    return JsonResponse({"msg": "Error in Certificate configuration"}, status=401)
+                    return JsonResponse({"error": serializer_cert.errors}, status=401)
 
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in creating Certificate"}, status=401)
+            return JsonResponse({"error": "Error in creating Certificate"}, status=401)
         except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"msg": "CA does not ewxist"}, status=401)
+            return JsonResponse({"error": "CA does not ewxist"}, status=401)
 
 
 @swagger_auto_schema('DELETE', request_body=CertificateSerializer, responses={200: 'Created', 400: 'Bad Request'}, 
@@ -481,7 +481,7 @@ def deleteCertificate(request, id):
             cert.delete()
             return JsonResponse({"msg": f"delete {cert.name} succesfully"}, status=201)
         except Certificate.DoesNotExist:
-            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
+            return JsonResponse({"error": "This Certificate does not exist"}, status=401)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO REVOKE A CERTIFICATE",
@@ -511,11 +511,11 @@ def revokeCertificate(request, id):
                     return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
                 else:
                     print(cert_serializer.errors)
-                    return JsonResponse({"msg": "Error in Revocation certificate"}, status=401)
+                    return JsonResponse({"error": cert_serializer.errors}, status=401)
             else:
-                return JsonResponse({"msg": "You can't revoke this imported certificate"}, status=401)
+                return JsonResponse({"error": "You can't revoke this imported certificate"}, status=401)
         except Certificate.DoesNotExist:
-            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
+            return JsonResponse({"error": "This Certificate does not exist"}, status=401)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -538,7 +538,7 @@ def unrevokeCertificate(request, id):
             cert.save()
             return JsonResponse({"msg": f"Certificate {cert.name} is unrevoked and removed from the crl file of the ca {ca.name}"})
         except Certificate.DoesNotExist:
-            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
+            return JsonResponse({"error": "This Certificate does not exist"}, status=401)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD A CERTIFICATE",
@@ -565,6 +565,6 @@ def exportCert(request, id):
             return JsonResponse({"cert": cert_value}, status=201)
 
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in exporting CA"}, status=401)
+            return JsonResponse({"error": "Error in exporting CA"}, status=401)
         except Certificate.DoesNotExist:
-            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
+            return JsonResponse({"error": "This Certificate does not exist"}, status=401)

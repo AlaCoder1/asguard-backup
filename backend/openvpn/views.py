@@ -66,7 +66,7 @@ def getServerOpenvpn(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN OPENVPN SERVER",
-                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'method'],
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'server_mode', 'protocol', 'device_mode', 'interface', 'local_port', 'tls_auth', 'ca_name', 'server_cert', 'dh_params_length', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'ipv4_tunnel_network', 'gateway', 'bridge', 'compression', 'type_of_service', 'duplicate_connections', 'ipv6', 'inter_clients', 'address_pool', 'dynamic_ip', 'topology', 'dns_default_domain', 'dns_servers', 'force_dns', 'ntp_servers', 'verbosity_level'],
                                                  properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'description': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
@@ -248,14 +248,13 @@ def createServerOpenvpn(request):
                 serializer_server.save()
                 return JsonResponse({"msg": f"Server {name} Configuration is done"}, status=201)
             else:
-                print(serializer_server.errors)
-                return JsonResponse({"msg": "Error in server configuration"}, status=401)
+                return JsonResponse({"msg": list(serializer_server.errors.values())[0][0]}, status=400)
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in creating openvpn server"}, status=401)
+            return JsonResponse({"msg": "Error in creating openvpn server"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+            return JsonResponse({"msg": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
+            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -276,11 +275,11 @@ def deleteServerOpenvpn(request, id):
     except ProtectedError:
         return JsonResponse({"msg": "You have to delete Clients related to this server"})
     except ServerOpenvpn.DoesNotExist:
-        return JsonResponse({"msg": "This Server does not exist"}, status=401)
+        return JsonResponse({"msg": "This Server does not exist"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN OPENVPN SERVER (same as creation API)",
-                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'method'],
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT,  required=['name', 'server_mode', 'protocol', 'device_mode', 'interface', 'local_port', 'tls_auth', 'ca_name', 'server_cert', 'dh_params_length', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'ipv4_tunnel_network', 'gateway', 'bridge', 'compression', 'type_of_service', 'duplicate_connections', 'ipv6', 'inter_clients', 'address_pool', 'dynamic_ip', 'topology', 'dns_default_domain', 'dns_servers', 'force_dns', 'ntp_servers', 'verbosity_level'],
                                                  properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'description': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
@@ -411,8 +410,8 @@ def updateServerOpenVPN(request, id):
                 server.ntp_server2 = data.get('ntp_server2', '')
 
             data['server_mode'] = server.server_mode
-            server_serializer = ServerOpenvpnSerializer(server, data=data)
-            if server_serializer.is_valid():
+            serializer_server = ServerOpenvpnSerializer(server, data=data)
+            if serializer_server.is_valid():
 
                 # Update the server config
                 server_conf = json_to_str_server(data)
@@ -421,16 +420,16 @@ def updateServerOpenVPN(request, id):
                 update_server_openvpn(server_name=server.name, dh_length=dh, tls_auth=tls_auth, server_conf=server_conf)
 
                 #updating the server in database
-                server_serializer.save()
+                serializer_server.save()
                 return JsonResponse({"msg": f"updating {server.name} succesfully"}, status=201)
             else:
-                return JsonResponse({"msg": f"Error in updating server\n{server_serializer.errors}"}, status=401)
+                return JsonResponse({"msg": list(serializer_server.errors.values())[0][0]}, status=400)
         except ServerOpenvpn.DoesNotExist:
-            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+            return JsonResponse({"msg": "This Server does not exist"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+            return JsonResponse({"msg": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
+            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -459,14 +458,14 @@ def startServerOpenvpn(request, id):
                         ipv4_serializer.save()
                         return JsonResponse({"msg": f"Server {server.name} is started"}, status=201)
                     else:
-                        return JsonResponse({"msg": ipv4_serializer.errors}, status=401)
+                        return JsonResponse({"msg": list(ipv4_serializer.errors.values())[0][0]}, status=400)
                 else:
-                    return JsonResponse({"msg": "Server was opened"}, status=401)
+                    return JsonResponse({"msg": "Server was opened"}, status=400)
         
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in starting openvpn server"}, status=401)
+            return JsonResponse({"msg": "Error in starting openvpn server"}, status=400)
         except ServerOpenvpn.DoesNotExist:
-            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+            return JsonResponse({"msg": "This Server does not exist"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -490,11 +489,11 @@ def restartServerOpenvpn(request, id):
             return JsonResponse({"msg": f"Server {server.name} is restarted"}, status=201)
         
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in starting openvpn server"}, status=401)
+            return JsonResponse({"msg": "Error in starting openvpn server"}, status=400)
         except ServerOpenvpn.DoesNotExist:
-            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+            return JsonResponse({"msg": "This Server does not exist"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+            return JsonResponse({"msg": "This Interface does not exist"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -519,11 +518,11 @@ def stopServerOpenvpn(request, id):
                 return JsonResponse({"msg": "Interface dosen't exist"}, status=404)
         
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in stoping openvpn server"}, status=401)
+            return JsonResponse({"msg": "Error in stoping openvpn server"}, status=400)
         except ServerOpenvpn.DoesNotExist:
-            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+            return JsonResponse({"msg": "This Server does not exist"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+            return JsonResponse({"msg": "This Interface does not exist"}, status=400)
 
 
 ########################################
@@ -621,7 +620,7 @@ def createClientOpenvpn(request):
 
             server_name = data.get('server_name', '')
             server = ServerOpenvpn.objects.get(name=server_name)
-            server_host = IP4Config.objects.get(id=Interface.objects.get(id=server.interface).pk).ip_address
+            server_host = IP4Config.objects.get(interface_id=server.interface).ip_address
             server_port = server.port
             # server_host = data.get('server_host', '')
             # server_port = data.get('server_port', '')
@@ -719,15 +718,15 @@ def createClientOpenvpn(request):
                 client_serializer.save()
                 return JsonResponse({"msg": f"Client {data['name']} Configuration is done"}, status=201)
             else:
-                return JsonResponse({"msg": f"Error in client configuration\n{client_serializer.errors}"}, status=401)
+                return JsonResponse({"msg": list(client_serializer.errors.values())[0][0]}, status=400)
         except CommandExecutionError:
-            return JsonResponse({"msg": f"Error in creating client for openvpn server"}, status=401)
+            return JsonResponse({"msg": f"Error in creating client for openvpn server"}, status=400)
         except ServerOpenvpn.DoesNotExist:
-            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+            return JsonResponse({"msg": "This Server does not exist"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+            return JsonResponse({"msg": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
+            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -750,7 +749,7 @@ def deleteClientOpenvpn(request, id):
             return JsonResponse({"msg": f"delete {client.name} succesfully"})
         
         except ClientOpenvpn.DoesNotExist:
-            return JsonResponse({"msg": "This Client does not exist"}, status=401)
+            return JsonResponse({"msg": "This Client does not exist"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN OPENVPN Client (same as create)",
@@ -875,13 +874,13 @@ def updateClientOpenvpn(request, id):
                 client_serializer.save()
                 return JsonResponse({"msg": f"updating {client.name} succesfully"}, status=201)
             else:
-                return JsonResponse({"msg": f"{client_serializer.errors}"}, status=401)
+                return JsonResponse({"msg": list(client_serializer.errors.values())[0][0]}, status=400)
             
         except ClientOpenvpn.DoesNotExist:
-            return JsonResponse({"msg": "This Client does not exist"}, status=401)
+            return JsonResponse({"msg": "This Client does not exist"}, status=400)
         except ServerOpenvpn.DoesNotExist:
-            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+            return JsonResponse({"msg": "This Server does not exist"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+            return JsonResponse({"msg": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
+            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=400)

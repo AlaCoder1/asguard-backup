@@ -1,7 +1,7 @@
 <template>
   <h4>Cryptographic Settings</h4>
   <v-divider class="mt-3"></v-divider>
-  <v-col cols="4">
+  <v-col cols="4" align-self="center">
     <label>TLS Authentification</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
@@ -14,11 +14,16 @@
       v-if="!isEnableAuth"
       class="mt-3"
       v-model="tlsGenerate"
-      label="Text"
+      label="shared TLS"
     ></v-text-field>
+    <p
+      class="error-feedback mb-5"
+      v-if="props.errors.tlsGenerate.$errors.length"
+      >{{ props.errors.tlsGenerate.$errors?.[0].$message }}</p
+    >
   </v-col>
 
-  <v-col cols="4">
+  <v-col cols="4" align-self="center">
     <label>Peer Certificate Authority</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
@@ -30,8 +35,13 @@
       :items="state.mapedCertifAuth"
       return-object
     ></v-select>
+    <p
+      class="error-feedback mb-5"
+      v-if="props.errors.peerCertif.$errors.length"
+      >{{ props.errors.peerCertif.$errors?.[0].$message }}</p
+    >
   </v-col>
-  <v-col cols="4">
+  <v-col cols="4" align-self="center">
     <label>Serveur Certificate</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
@@ -43,8 +53,13 @@
       :items="state.mapedCertifServer"
       return-object
     ></v-select>
+    <p
+      class="error-feedback mb-5"
+      v-if="props.errors.serverCertif.$errors.length"
+      >{{ props.errors.serverCertif.$errors?.[0].$message }}</p
+    >
   </v-col>
-  <v-col cols="4">
+  <v-col cols="4" align-self="center">
     <label>DH Parameters Length algorithm</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
@@ -53,20 +68,51 @@
       v-model="dhParameters"
       :items="['2048', '4096']"
     ></v-select>
+    <p
+      class="error-feedback mb-5"
+      v-if="props.errors.dhParameters.$errors.length"
+      >{{ props.errors.dhParameters.$errors?.[0].$message }}</p
+    >
   </v-col>
-  <v-col cols="4">
+  <v-col cols="4" align-self="center">
     <label>Encryption algorithm</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
-    <v-select label="Algorithm" v-model="encryptAlgo"></v-select>
+    <v-select
+      label="Algorithm"
+      v-model="encryptAlgo"
+      :items="[
+        'AES-256-GCM',
+        '192-AES-GCM',
+        'AES-128-GCM',
+        'CHACHA20-POLY1305',
+      ]"
+    ></v-select>
+    <p
+      class="error-feedback mb-5"
+      v-if="props.errors.encryptAlgo.$errors.length"
+      >{{ props.errors.encryptAlgo.$errors?.[0].$message }}</p
+    >
   </v-col>
-  <v-col cols="4">
+  <v-col cols="4" align-self="center">
     <label>Auth Digest Algorithm</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
-    <v-select label="Auth Digest Algorithm" v-model="authDigest"></v-select>
+    <v-select
+      label="Auth Digest Algorithm"
+      v-model="authDigest"
+      item-title="name"
+      item-value="id"
+      return-object
+      :items="authDigestList"
+    ></v-select>
+    <p
+      class="error-feedback mb-5"
+      v-if="props.errors.authDigest.$errors.length"
+      >{{ props.errors.authDigest.$errors?.[0].$message }}</p
+    >
   </v-col>
-  <v-col cols="4">
+  <v-col cols="4" align-self="center">
     <label>Hardware Crypto</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
@@ -78,8 +124,13 @@
         { name: 'No hardware Crypto acceleration', slug: 'No Hardware Crypto' },
         { name: 'Intel RDRAND engine -RAND', slug: 'Intel RDRAND engine' },
       ]"
-       return-object
+      return-object
     ></v-select>
+    <p
+      class="error-feedback mb-5"
+      v-if="props.errors.hardwareCrypto.$errors.length"
+      >{{ props.errors.hardwareCrypto.$errors?.[0].$message }}</p
+    >
   </v-col>
 </template>
 
@@ -89,6 +140,7 @@ import { onBeforeMount, reactive, ref } from "vue";
 import { useVModels } from "@vueuse/core";
 
 const props = defineProps([
+  "errors",
   "tlsGenerate",
   "isEnableAuth",
   "peerCertif",
@@ -130,7 +182,70 @@ const state = reactive({
   mapedCertifAuth: [],
   mapedCertifServer: [],
 });
-const mapList = ref(null);
+const authDigestList = ref([
+  {
+    name: "BLAKE2b512",
+    slug: "blake2b512",
+    id: "1",
+  },
+  {
+    name: "BLAKE2b256",
+    slug: "blake2b256",
+    id: "2",
+  },
+  {
+    name: "SHA224",
+    slug: "sha224",
+    id: "3",
+  },
+  {
+    name: "SHA256",
+    slug: "sha256",
+    id: "4",
+  },
+  {
+    name: "SHA3-224",
+    slug: "sha3-224",
+    id: "5",
+  },
+  {
+    name: "SHA3-256",
+    slug: "sha3-256",
+    id: "6",
+  },
+  {
+    name: "SHA3-384",
+    slug: "sha3-384",
+    id: "7",
+  },
+  {
+    name: "SHA3-512",
+    slug: "sha3-512",
+    id: "8",
+  },
+
+  {
+    name: "SHA384",
+    slug: "sha384",
+    id: "9",
+  },
+
+  {
+    name: "SHA512",
+    slug: "sha512",
+    id: "10",
+  },
+  {
+    name: "SHA512-224",
+    slug: "sha512-224",
+    id: "11",
+  },
+  {
+    name: "SHA512-256",
+    slug: "sha512-256",
+    id: "12",
+  },
+]);
 
 const getCookie = (name) => {
   let cookieValue = null;

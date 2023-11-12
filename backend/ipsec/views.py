@@ -282,17 +282,17 @@ def createServerIPsec(request):
                 serializer_server.save()
                 return JsonResponse({"msg": f"Connection {conn_name} Configuration is done"}, status=201)
             else:
-                return JsonResponse({"msg": list(serializer_server.errors.values())[0][0]}, status=400)
+                return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in creating ipsec server"}, status=400)
+            return JsonResponse({"error": "Error in creating ipsec server"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=400)
+            return JsonResponse({"error": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=400)
+            return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
         except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"msg": "This CA does not exist"}, status=400)
+            return JsonResponse({"error": "This CA does not exist"}, status=400)
         except Certificate.DoesNotExist:
-            return JsonResponse({"msg": "This Certificate does not exist"}, status=400)
+            return JsonResponse({"error": "This Certificate does not exist"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -319,9 +319,9 @@ def deleteServerIPsec(request, id):
             server.delete()
             return JsonResponse({"msg": f"delete {server.conn_name} succesfully"})
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"msg": "This Server does not exist"}, status=400)
+        return JsonResponse({"error": "This Server does not exist"}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"msg": "This IPv4 config does not exist"}, status=400)
+        return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN IPSEC (same as create)",
@@ -507,8 +507,6 @@ def updateServerIPsec(request, id):
             
                 # Update the server config
                 server_conf = json_to_str_server_ipsec(data)
-                print("server_conf= ")
-                print(server_conf)
 
                 # Install the server in system
                 update_server_ipsec(server.conn_name, updated_line_in_secrets_file, server_conf, 
@@ -518,11 +516,11 @@ def updateServerIPsec(request, id):
                 serializer_server.save()
                 return JsonResponse({"msg": f"Connection {server.conn_name} Configuration is updated"}, status=201)
             else:
-                return JsonResponse({"msg": list(serializer_server.errors.values())[0][0]}, status=400)
+                return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 
         except ServerIPsec.DoesNotExist:
-            return JsonResponse({"msg": "This Server does not exist"}, status=400)
+            return JsonResponse({"error": "This Server does not exist"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=400)
+            return JsonResponse({"error": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=400)
+            return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)

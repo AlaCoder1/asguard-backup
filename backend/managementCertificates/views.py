@@ -395,7 +395,7 @@ def createCertificate(request):
                                   }
                     serial, start_date, end_date, lifetime, distingushed_name, certificate_type = import_certificate_in_system(name, input_cert)
                     # if serial != cert_data["serial"]:
-                    #     return JsonResponse({"msg": "Serial number input are not correct"}, status=400)
+                    #     return JsonResponse({"error": "Serial number input are not correct"}, status=400)
                     if certificate_type == 'server':
                         cert_data["certificate_path"] = f'''/etc/openvpn/certificates_{name}/server.crt\n/etc/openvpn/certificates_{name}/server.key'''
                     elif certificate_type == 'client':

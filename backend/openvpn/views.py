@@ -590,12 +590,8 @@ def createClientOpenvpn(request):
             # parse the incoming information
             data = request.data
 
-            server_name = data.get('server_name', '')
-            server = ServerOpenvpn.objects.get(name=server_name)
-            server_host = IP4Config.objects.get(interface_id=server.interface).ip_address
-            server_port = server.port
-            # server_host = data.get('server_host', '')
-            # server_port = data.get('server_port', '')
+            server_host = data.get('server_host', '')
+            server_port = data.get('server_port', '')
             name = data.get('name', '')
             description = data.get('description', '')
             server_mode = data.get('server_mode', '')
@@ -638,8 +634,7 @@ def createClientOpenvpn(request):
 
             # client_conf = json_to_str_client(data)
 
-            client_data = {"server_openvpn": server.pk,
-                           "name": name,
+            client_data = {"name": name,
                            "description": description,
                            "server_mode": server_mode,
                            "proto": proto,
@@ -726,8 +721,7 @@ def deleteClientOpenvpn(request, id):
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN OPENVPN Client (same as create)",
                      request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['server_name', 'name', 'server_mode', 'protocol', 'device_mode', 'interface', 'resolv_retry', 'local_port', 'tls_auth', 'ca_name', 'client_cert', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'compression', 'type_of_service', 'ipv6', 'pull_routes', 'add_remove_routes', 'verbosity_level'],
-                                                 properties={'server_name': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the selected server"),
-                                                             'name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                 properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'description': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["peer_to_peer"])}),
                                                              'protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
@@ -740,7 +734,7 @@ def deleteClientOpenvpn(request, id):
                                                                                         required=['option'], properties={'option': openapi.Schema(type=openapi.TYPE_STRING, default="none", enum=["none", "basic", "ntlm"]),
                                                                                                                          'username': openapi.Schema(type=openapi.TYPE_STRING, description="required when choosing basic in authentication method option"),
                                                                                                                          'password': openapi.Schema(type=openapi.TYPE_STRING, description="required when choosing basic in authentication method option"),}),
-                                                             'local_port': openapi.Schema(type=openapi.TYPE_STRING, description="local port number with 4 digits"),
+                                                             'local_port': openapi.Schema(type=openapi.TYPE_STRING, description="local port number with maximum of 5 digits"),
                                                              'username': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'password': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'renegotiate_time': openapi.Schema(type=openapi.TYPE_STRING, description="Number of seconds to renogotiate"),
@@ -762,6 +756,8 @@ def deleteClientOpenvpn(request, id):
                                                              'pull_routes': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'add_remove_routes': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'verbosity_level': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
+                                                             'server_host': openapi.Schema(type=openapi.TYPE_STRING, description="Set the server host"),
+                                                             'server_port': openapi.Schema(type=openapi.TYPE_STRING, description="Server port number with maximum of 5 digits"),
                                                                  }
                                                                  ))
 @api_view(['PUT'])
@@ -774,13 +770,6 @@ def updateClientOpenvpn(request, id):
 
             client = ClientOpenvpn.objects.get(id=id)
             data = request.data
-            # server_name = data.get('server_name', '')
-            # server = ServerOpenvpn.objects.get(name=server_name)
-            # client.server_openvpn = server
-            # server_host = IP4Config.objects.get(id=Interface.objects.get(id=server.interface).pk).ip_address
-            # server_port = server.port
-            server_host = data.get('server_host', '')
-            server_port = data.get('server_port', '')
             client.name = data.get('name', '')
             client.description = data.get('description', '')
             server_mode = data.get('server_mode', '')
@@ -820,6 +809,8 @@ def updateClientOpenvpn(request, id):
             client.pull_routes = data.get('pull_routes', '')
             client.add_remove_routes = data.get('add_remove_routes', '')
             client.verb = data.get('verbosity_level', '')
+            client.server_host = data.get('server_host', '')
+            client.server_port = data.get('server_port', '')
             interface_address = IP4Config.objects.get(interface_id=client.interface)
 
             if client.proxy_authentication_option == 'basic':
@@ -827,10 +818,6 @@ def updateClientOpenvpn(request, id):
                 client.proxy_auth_password = proxy_authentication.get('password', '')
                 
             data["interface_address"] = interface_address.ip_address
-            data["server_host"] = server_host
-            data["server_port"] = server_port
-            # client_conf = json_to_str_client(data)
-            # data['server_openvpn'] = server.pk
             data['server_mode'] = client.server_mode
 
             client_serializer = ClientOpenvpnSerializer(client, data=data)

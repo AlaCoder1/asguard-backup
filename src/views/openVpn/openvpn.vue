@@ -60,8 +60,38 @@ export default {
         { id: 3, label: "MONOTORING" },
         { id: 4, label: "LISTING" },
       ],
+      rowDataServers: [],
+      rowDataClients: [],
     };
   },
   methods: {},
+
+  mounted: async function () {
+    console.log("mounted");
+    console.log(this.rowDataServers);
+    console.log(
+      "document.getElementById('app')",
+      document.getElementById("app").attributes["servers"].value
+    );
+
+    this.rowDataServers =
+      document.getElementById("app").attributes["servers"].value;
+    let validJsonString = this.rowDataServers
+      .replace(/'/g, '"')
+      .replace(/True/g, "true")
+      .replace(/False/g, "false")
+      .replace(/None/g, "null");
+    let parsedArray = JSON.parse(validJsonString);
+    this.rowDataServers = parsedArray;
+    this.rowDataClients =
+      document.getElementById("app").attributes["clients"].value;
+    let validJsonString2 = this.rowDataClients
+      .replace(/'/g, '"')
+      .replace(/True/g, "true")
+      .replace(/False/g, "false")
+      .replace(/None/g, "null");
+    let parsedArray2 = JSON.parse(validJsonString2);
+    this.rowDataClients = parsedArray2;
+  },
 };
 </script>

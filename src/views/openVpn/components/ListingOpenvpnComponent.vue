@@ -62,17 +62,7 @@ export default {
                 { headerName: 'Published', field: 'published', sortable: true, filter: true },
                 { headerName: 'Action', cellRenderer: this.actionCellRenderer, minWidth: 150, field: 'action', sortable: true, filter: true }
             ],
-            rowDataServers: [
-                {
-                    id: 1,
-                    serverNname: 'Server 1',
-                    protocolPort: 'UDP/1194',
-                    networkTunnel: '256 bit AES-GCM with 128 bit ICV',
-                    description: 'Server 1',
-                    published: 'Yes',
-                    action: 'Edit'
-                }
-            ],
+            rowDataServers: [],
             columnClients: [
                 { headerName: 'Client Name', field: 'clientName', sortable: true, filter: true, checkboxSelection: true },
                 { headerName: 'Protocole / Port', field: 'protocolPort', sortable: true, filter: true },
@@ -81,17 +71,7 @@ export default {
                 { headerName: 'Published', field: 'published', sortable: true, filter: true },
                 { headerName: 'Action', cellRenderer: this.actionCellRenderer, minWidth: 150, field: 'action', sortable: true, filter: true }
             ],
-            rowDataClients: [
-                {
-                    id: 1,
-                    clientName: 'Client 1',
-                    protocolPort: 'UDP/1194',
-                    server: 'Server 1',
-                    description: 'Client 1',
-                    published: 'Yes',
-                    action: 'Edit'
-                }
-            ],
+            rowDataClients: [],
             gridOptions: {
                 rowSelection: 'multiple',
                 rowMultiSelectWithClick: true,
@@ -206,7 +186,9 @@ export default {
             console.log('addClient');
         }
     },
-
+    beforeUnmount: function () {
+        this.gridOptions.api.destroy();
+    },
 }
 </script>
 

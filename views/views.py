@@ -269,6 +269,9 @@ def settings_page(request):
 
 @login_required(login_url='/')
 def openvpn_page(request):
+    # servers=getServers(request)
+    # clients=getClients(request)
+    # context = {'servers':servers,'clients':clients}
     return render(request, 'openvpn_page.html')
 
 def login(request):

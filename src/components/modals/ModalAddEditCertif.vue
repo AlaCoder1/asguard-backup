@@ -30,13 +30,13 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.formData.method"
-                    label="Select"
+                    label="Method"
                     item-title="name"
                     item-value="id"
                     return-object
                     :items="[
                       {
-                        name: 'Import an existing Certificate Authority',
+                        name: 'Import an existing Certificat',
                         slug: 'import',
                         id: '1',
                       },
@@ -408,7 +408,7 @@ export default {
               requiredIf(
                 () =>
                   state.formData.method.name ===
-                  "Import an existing Certificate Authority"
+                  "Import an existing Certificate"
               )
             ),
           },
@@ -418,7 +418,7 @@ export default {
               requiredIf(
                 () =>
                   state.formData.method.name ===
-                  "Import an existing Certificate Authority"
+                  "Import an existing Certificate"
               )
             ),
           },
@@ -564,7 +564,7 @@ export default {
     isImportCetif() {
       return (
         this.state.formData.method.name ===
-        "Import an existing Certificate Authority"
+        "Import an existing Certificate"
       );
     },
     isCreateCetif() {

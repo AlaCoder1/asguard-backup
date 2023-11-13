@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from backend.network.models import IP4Config, Interface
 from backend.network.serializers import IP4ConfigSerializer, InterfaceSerializer
+from backend.openvpn.list_servers_clients import get_all_client_openvpn, get_all_server_openvpn, get_client_openvpn, get_server_openvpn
 from backend.openvpn.manage_errors import CommandExecutionError
 from .models import ServerOpenvpn, ClientOpenvpn
 from .serializers import ServerOpenvpnSerializer, ClientOpenvpnSerializer
@@ -33,18 +34,10 @@ from .client_openvpn import delete_client_openvpn, install_client_openvpn
 @permission_classes([IsAuthenticated])
 def getAllServerOpenvpn(request):
     """Getting all servers from database"""
-    list_openvpn = []
+    list_server_openvpn = []
     if (request.method == 'GET'):
-        openvpn = ServerOpenvpn.objects.all()
-        openvpnDict = serializers.serialize("json",openvpn)
-        res = json.loads(openvpnDict)
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            list_openvpn.append(res[i]['fields'])
-        return JsonResponse(list_openvpn, safe=False)
+        list_server_openvpn = get_all_server_openvpn()
+        return list_server_openvpn
     
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -55,14 +48,8 @@ def getAllServerOpenvpn(request):
 def getServerOpenvpn(request, id):
     """Getting server by id from database"""
     if (request.method == 'GET'):
-        server_openvpn = ServerOpenvpn.objects.filter(pk=id)
-        server_openvpnDict = serializers.serialize("json", server_openvpn)
-        res = json.loads(server_openvpnDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields']['id'] = id
-        return JsonResponse(res[0]['fields'], safe=False)
+        server = get_server_openvpn(id)
+        return JsonResponse(server, safe=False)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN OPENVPN SERVER",
@@ -536,18 +523,9 @@ def stopServerOpenvpn(request, id):
 @permission_classes([IsAuthenticated])
 def getAllClientOpenvpn(request):
     """Getting all clients from database"""
-    list_openvpn = []
     if (request.method == 'GET'):
-        openvpn = ClientOpenvpn.objects.all()
-        openvpnDict = serializers.serialize("json",openvpn)
-        res = json.loads(openvpnDict)
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            list_openvpn.append(res[i]['fields'])
-        return JsonResponse(list_openvpn, safe=False)
+        list_client_openvpn = get_all_client_openvpn()
+        return JsonResponse(list_client_openvpn, safe=False)
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -558,14 +536,8 @@ def getAllClientOpenvpn(request):
 def getClientOpenvpn(request, id):
     """Getting client by id from database"""
     if (request.method == 'GET'):
-        client_openvpn = ClientOpenvpn.objects.filter(pk=id)
-        client_openvpn = serializers.serialize("json", client_openvpn)
-        res = json.loads(client_openvpn)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields']['id'] = id
-        return JsonResponse(res[0]['fields'], safe=False)
+        client = get_client_openvpn(id)
+        return JsonResponse(client, safe=False)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN OPENVPN Client",

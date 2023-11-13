@@ -30,7 +30,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.formData.method"
-                    label="Select"
+                    label="Method"
                     item-title="name"
                     item-value="id"
                     return-object
@@ -40,7 +40,7 @@
                         slug: 'import',
                         id: '1',
                       },
-                      { name: 'Create Certificate', slug: 'create', id: '2' },
+                      { name: 'Create Certificate Authority', slug: 'create', id: '2' },
                     ]"
                   ></v-select>
                   <p
@@ -379,7 +379,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -387,7 +387,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -395,7 +395,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -403,7 +403,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidlifeTime: helpers.withMessage(
@@ -416,7 +416,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -424,7 +424,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidState: helpers.withMessage(
@@ -437,7 +437,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidPlace: helpers.withMessage(
@@ -450,7 +450,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -458,7 +458,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
             email,
@@ -467,7 +467,7 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "This field must be indicated",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate"
+                () => state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidCommne: helpers.withMessage(
@@ -505,7 +505,7 @@ export default {
       );
     },
     isCreateCetif() {
-      return this.state.formData.method.name === "Create Certificate";
+      return this.state.formData.method.name === "Create Certificate Authority";
     },
   },
 
@@ -575,7 +575,7 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         let payload = {};
-        if (this.state.formData.method.name == "Create Certificate") {
+        if (this.state.formData.method.name == "Create Certificate Authority") {
           payload = {
             name: this.state.formData?.certifName,
             method: {

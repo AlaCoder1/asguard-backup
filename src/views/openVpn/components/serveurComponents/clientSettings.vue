@@ -25,8 +25,9 @@
         <p
           class="error-feedback mb-5 mt-3"
           v-if="props.errors.startAddressPool.$errors.length"
-          >{{ props.errors.startAddressPool.$errors?.[0].$message }}</p
         >
+          {{ props.errors.startAddressPool.$errors?.[0].$message }}
+        </p>
         <v-text-field
           class="mt-3"
           label="End"
@@ -36,8 +37,9 @@
         <p
           class="error-feedback mb-5"
           v-if="props.errors.endAddressPool.$errors.length"
-          >{{ props.errors.endAddressPool.$errors?.[0].$message }}</p
         >
+          {{ props.errors.endAddressPool.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" align-self="center">
         <label>Topology</label>
@@ -61,8 +63,9 @@
         <p
           class="error-feedback mb-5"
           v-if="props.errors.activeDnsDefault.$errors.length"
-          >{{ props.errors.activeDnsDefault.$errors?.[0].$message }}</p
         >
+          {{ props.errors.activeDnsDefault.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" align-self="center">
         <label>DNS Servers</label>
@@ -79,8 +82,9 @@
         <p
           class="error-feedback mb-5 mt-3"
           v-if="props.errors.activeDnsServer1.$errors.length"
-          >{{ props.errors.activeDnsServer1.$errors?.[0].$message }}</p
         >
+          {{ props.errors.activeDnsServer1.$errors?.[0].$message }}
+        </p>
         <v-text-field
           class="mt-3"
           label="DNS Servers 2"
@@ -110,8 +114,9 @@
         <p
           class="error-feedback mb-5 mt-3"
           v-if="props.errors.activeNtpServer1.$errors.length"
-          >{{ props.errors.activeNtpServer1.$errors?.[0].$message }}</p
         >
+          {{ props.errors.activeNtpServer1.$errors?.[0].$message }}
+        </p>
         <v-text-field
           class="mt-3"
           label="NTP Servers 2"
@@ -130,21 +135,28 @@
         <label>Verbosity Level</label>
       </v-col>
       <v-col cols="8">
-        <v-text-field
+        <v-select
           label="Verbosity Level"
           v-model="verbLevel"
-        ></v-text-field>
+          :items="verbosityLevelList"
+          item-title="name"
+          item-value="slug"
+          return-object
+        ></v-select>
+
         <p
           class="error-feedback mb-5"
           v-if="props.errors.verbLevel.$errors.length"
-          >{{ props.errors.verbLevel.$errors?.[0].$message }}</p
         >
+          {{ props.errors.verbLevel.$errors?.[0].$message }}
+        </p>
       </v-col>
     </v-row>
   </div>
 </template>
 
 <script setup>
+import { ref } from "vue";
 import { useVModels } from "@vueuse/core";
 
 const props = defineProps([
@@ -202,4 +214,54 @@ const {
   activeDnsDefault,
   startAddressPool,
 } = useVModels(props, emit);
+const verbosityLevelList = ref([
+  {
+    name: "0 (none)",
+    slug: "0",
+  },
+  {
+    name: "1 (default)",
+    slug: "1",
+  },
+  {
+    name: "2",
+    slug: "2",
+  },
+  {
+    name: "3",
+    slug: "3",
+  },
+  {
+    name: "4",
+    slug: "4",
+  },
+  {
+    name: "5",
+    slug: "5",
+  },
+  {
+    name: "6",
+    slug: "6",
+  },
+  {
+    name: "7",
+    slug: "7",
+  },
+  {
+    name: "8",
+    slug: "8",
+  },
+  {
+    name: "9",
+    slug: "9",
+  },
+  {
+    name: "10",
+    slug: "10",
+  },
+  {
+    name: "11",
+    slug: "11",
+  },
+]);
 </script>

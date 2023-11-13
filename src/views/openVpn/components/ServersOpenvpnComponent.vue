@@ -1,5 +1,25 @@
 <template>
   <div class="mt-3">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            Please Wait...
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
+
     <v-row>
       <v-col cols="6">
         <div class="ml-3 mr-3">
@@ -219,12 +239,26 @@
       <v-col cols="4"> </v-col>
       <v-col>
         <div class="mr-3 flex center">
-          <v-btn class="mr-5" large rounded color="#213E9F">
-            <span class="text-white c-o">Cancel</span>
-          </v-btn>
-          <v-btn @click="submitForm" large rounded color="#213E9F">
-            <span class="text-white c-o">Save</span>
-          </v-btn>
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            label="cancel"
+            :isLarge="true"
+            @click="cancel"
+          />
+          <VButton
+            rounded
+            outlined
+            color="#213E9F"
+            label-color="#ffffff"
+            label="save"
+            :isLarge="true"
+            type="submit"
+            class="ml-2"
+            @click="submitForm"
+          />
         </div>
       </v-col>
     </v-row>
@@ -242,6 +276,7 @@
 </template>
 
 <script>
+import VButton from "@/components/VButton.vue";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { required, requiredIf, helpers } from "@vuelidate/validators";
@@ -258,9 +293,13 @@ export default {
     tunnelSettings,
     clientSettings,
     cryptoSettings,
+    VButton,
   },
   setup() {
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
+
       snackbar: false,
       color: "",
       textAlert: "",
@@ -524,15 +563,20 @@ export default {
           dns_servers: electedDnsServers,
           force_dns: state.forceDNS,
           ntp_servers: electedNtpServers,
-          verbosity_level: state.verbLevel,
+          verbosity_level: state.verbLevel?.slug,
         };
 
         console.log("payload", payload);
+        state.loading = true;
+        state.isLoadingDialogue = true;
 
         axios
           .post("/openvpn/createServerOpenvpn", payload)
           .then((response) => {
             if (response.status == "201") {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+
               console.log("response", response);
               state.snackbar = true;
               state.color = "success";
@@ -544,6 +588,9 @@ export default {
             }
           })
           .catch((i) => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+
             console.log("i", i.response);
             // this.snackbar = true;
             // this.color = "red";

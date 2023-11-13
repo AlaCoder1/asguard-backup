@@ -3,10 +3,10 @@
     <h4 class="mt-6">Advanced Configuration</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
-      <v-col cols="4">
+      <v-col align-self="center" cols="4">
         <label>Verbosity level</label>
       </v-col>
-      <v-col cols="8" class="mb-n6">
+      <v-col align-self="center" cols="8" class="mb-n6">
         <v-select
           label="Verbosity level"
           v-model="verbosityLevel"
@@ -15,6 +15,12 @@
           item-value="slug"
           return-object
         ></v-select>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.verbosityLevel.$errors.length"
+        >
+          {{ props.errors.verbosityLevel.$errors?.[0].$message }}
+        </p>
       </v-col>
     </v-row>
   </div>
@@ -22,18 +28,39 @@
     <h4 class="mt-6">Remote server</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
-      <v-col cols="4">
-        <label>Server</label>
+      <v-col align-self="center" cols="4">
+        <label>Host or address</label>
       </v-col>
-      <v-col cols="8" class="mb-n6">
-        <v-select
+      <v-col align-self="center" cols="8" class="mb-n6">
+        <!-- <v-select
           label="Server"
           v-model="remoteServer"
           :items="serverList"
           item-title="name"
           item-value="id"
           return-object
-        ></v-select>
+        ></v-select> -->
+        <v-text-field
+          label="Host or address"
+          v-model="hostAddress"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.hostAddress.$errors.length"
+        >
+          {{ props.errors.hostAddress.$errors?.[0].$message }}
+        </p>
+      </v-col>
+    </v-row>
+    <v-row class="mt-2">
+      <v-col align-self="center" cols="4">
+        <label>Port</label>
+      </v-col>
+      <v-col align-self="center" cols="8" class="mb-n6">
+        <v-text-field label="Port" v-model="port"></v-text-field>
+        <p class="error-feedback mb-5" v-if="props.errors.port.$errors.length">
+          {{ props.errors.port.$errors?.[0].$message }}
+        </p>
       </v-col>
     </v-row>
   </div>
@@ -41,16 +68,20 @@
 
 <script setup>
 import { useVModels } from "@vueuse/core";
-import axios from "axios";
-import { onBeforeMount, ref } from "vue";
+// import axios from "axios";
+import {  ref } from "vue";
 
-const props = defineProps(["verbosityLevel", "remoteServer"]);
+const props = defineProps(["errors", "verbosityLevel", "hostAddress", "port"]);
 
-const emit = defineEmits(["update:verbosityLevel", "update:remoteServer"]);
+const emit = defineEmits([
+  "update:verbosityLevel",
+  "update:hostAddress",
+  "update:port",
+]);
 
-const { verbosityLevel, remoteServer } = useVModels(props, emit);
+const { verbosityLevel, hostAddress, port } = useVModels(props, emit);
 
-const serverList = ref([]);
+// const serverList = ref([]);
 const verbosityLevelList = ref([
   {
     name: "0 (none)",
@@ -102,41 +133,41 @@ const verbosityLevelList = ref([
   },
 ]);
 
-const getCookie = (name) => {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === name + "=") {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-};
+// const getCookie = (name) => {
+//   let cookieValue = null;
+//   if (document.cookie && document.cookie !== "") {
+//     const cookies = document.cookie.split(";");
+//     for (let i = 0; i < cookies.length; i++) {
+//       const cookie = cookies[i].trim();
+//       if (cookie.substring(0, name.length + 1) === name + "=") {
+//         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+//         break;
+//       }
+//     }
+//   }
+//   return cookieValue;
+// };
 
-const getServer = () => {
-  const csrfToken = getCookie("csrftoken");
-  axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+// const getServer = () => {
+//   const csrfToken = getCookie("csrftoken");
+//   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-  axios.get("/openvpn/getAllServerOpenvpn").then(
-    (response) => {
-      serverList.value = response.data.map((i) => {
-        return {
-          id: i.id,
-          name: i.name,
-        };
-      });
-    },
-    (error) => {
-      console.log(error);
-    }
-  );
-};
+//   axios.get("/openvpn/getAllServerOpenvpn").then(
+//     (response) => {
+//       serverList.value = response.data.map((i) => {
+//         return {
+//           id: i.id,
+//           name: i.name,
+//         };
+//       });
+//     },
+//     (error) => {
+//       console.log(error);
+//     }
+//   );
+// };
 
-onBeforeMount(() => {
-  getServer();
-});
+// onBeforeMount(() => {
+//   getServer();
+// });
 </script>

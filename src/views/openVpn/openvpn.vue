@@ -26,7 +26,7 @@
           </v-window-item>
           <v-window-item v-for="tab in tabs" :key="tab.id" value="LISTING">
             <v-card>
-              <v-card-text> <ListingOpenvpnComponent /></v-card-text>
+              <v-card-text> <ListingOpenvpnComponent :serverInfo="serverInfo" /></v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -53,7 +53,7 @@ export default {
   },
   data() {
     return {
-      activeTab: 'SERVERS',
+      activeTab: "SERVERS",
       tabs: [
         { id: 1, label: "SERVERS" },
         { id: 2, label: "CLIENTS" },
@@ -62,20 +62,26 @@ export default {
       ],
       rowDataServers: [],
       rowDataClients: [],
+      serverInfo:null
+
     };
   },
   methods: {},
+  
 
   mounted: async function () {
-    console.log("mounted");
-    console.log(this.rowDataServers);
-    console.log(
-      "document.getElementById('app')",
-      document.getElementById("app").attributes["servers"].value
-    );
+    
+    this.serverInfo = document.getElementById("app").attributes["servers"].value;
+    this.emitter.on("add-server", () => {
+      this.activeTab ="SERVERS"
+    });
+    this.emitter.on("add-client", () => {
+      this.activeTab ="CLIENTS"
+    });
 
     this.rowDataServers =
       document.getElementById("app").attributes["servers"].value;
+      
     let validJsonString = this.rowDataServers
       .replace(/'/g, '"')
       .replace(/True/g, "true")

@@ -14,8 +14,9 @@
         <p
           class="error-feedback mb-5"
           v-if="props.errors.ip4Tunnel.$errors.length"
-          >{{ props.errors.ip4Tunnel.$errors?.[0].$message }}</p
         >
+          {{ props.errors.ip4Tunnel.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" align-self="center">
         <label>IPv6 Tunnel Network</label>
@@ -85,8 +86,9 @@
         <p
           class="error-feedback mb-5"
           v-if="props.errors.iPv4Local.$errors.length"
-          >{{ props.errors.iPv4Local.$errors?.[0].$message }}</p
         >
+          {{ props.errors.iPv4Local.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" align-self="center">
         <label>IPv6 Local Network</label>

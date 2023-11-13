@@ -196,7 +196,7 @@ def GetInformationsByInterface(request,name_interface):
                 gateway_id=GatewayInterfaceObject.gateway_id
                 addrgw4=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=True)).gwaddress
                 resultat[0]['fields']['addrgw']=addrgw4
-                info['IPV4Config']=resultat[0]['fields']
+            info['IPV4Config']=resultat[0]['fields']
         else:
             info['IPV4Config']=[]
         

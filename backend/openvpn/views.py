@@ -542,8 +542,7 @@ def getClientOpenvpn(request, id):
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN OPENVPN Client",
                      request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['server_name', 'name', 'server_mode', 'protocol', 'device_mode', 'interface', 'resolv_retry', 'local_port', 'tls_auth', 'ca_name', 'client_cert', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'compression', 'type_of_service', 'ipv6', 'pull_routes', 'add_remove_routes', 'verbosity_level'],
-                                                 properties={'server_name': openapi.Schema(type=openapi.TYPE_STRING, description="Name of the selected server"),
-                                                             'name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                 properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'description': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["peer_to_peer"])}),
                                                              'protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
@@ -578,8 +577,10 @@ def getClientOpenvpn(request, id):
                                                              'pull_routes': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'add_remove_routes': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'verbosity_level': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
-                                                                 }
-                                                                 ))
+                                                             'server_host': openapi.Schema(type=openapi.TYPE_STRING, description="Set the server host"),
+                                                             'server_port': openapi.Schema(type=openapi.TYPE_STRING, description="Server port number with maximum of 5 digits"),
+                                                             }
+                                                             ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -629,8 +630,6 @@ def createClientOpenvpn(request):
             tls = f'/etc/openvpn/client/static_{name}.key'
             interface_address = IP4Config.objects.get(interface_id=interface)
             data["interface_address"] = interface_address.ip_address
-            data["server_host"] = server_host
-            data["server_port"] = server_port
 
             # client_conf = json_to_str_client(data)
 
@@ -664,6 +663,8 @@ def createClientOpenvpn(request):
                            "pull_routes": pull_routes,
                            "add_remove_routes": add_remove_routes,
                            "verb": verb,
+                           "server_host": server_host,
+                           "server_port": server_port,
                            }
             
             if proxy_authentication_option == 'basic':
@@ -758,8 +759,8 @@ def deleteClientOpenvpn(request, id):
                                                              'verbosity_level': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
                                                              'server_host': openapi.Schema(type=openapi.TYPE_STRING, description="Set the server host"),
                                                              'server_port': openapi.Schema(type=openapi.TYPE_STRING, description="Server port number with maximum of 5 digits"),
-                                                                 }
-                                                                 ))
+                                                             }
+                                                             ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])

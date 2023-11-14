@@ -4,9 +4,14 @@ import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import mitt from 'mitt'
 import openvpn from '../views/openVpn/openvpn';
 
+const emitter = mitt()
+
 const app = createApp(openvpn);
+
+app.config.globalProperties.emitter = emitter
 const vuetify = createVuetify({
     components,
     directives

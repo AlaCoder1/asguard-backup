@@ -1,118 +1,139 @@
 <template>
   <div class="mt-3">
     <v-row>
-      <v-col cols="6">
+      <v-col align-self="center" cols="6">
         <div class="ml-3 mr-3">
           <h4>General information</h4>
           <v-divider class="mt-2"></v-divider>
           <v-row class="mt-2">
-            <v-col cols="4">
+            <v-col align-self="center" cols="4">
               <label>Client name</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
                 label="Client name"
-                v-model="genericInformation.clientName"
+                v-model="state.clientName"
               ></v-text-field>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.clientName.$errors.length"
+              >
+                {{ v$.clientName.$errors?.[0].$message }}
+              </p>
             </v-col>
-            <v-col cols="4">
+            <v-col align-self="center" cols="4">
               <label>Description</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
                 label="Description"
-                v-model="genericInformation.description"
+                v-model="state.description"
               ></v-text-field>
             </v-col>
-            <v-col cols="4">
+            <v-col align-self="center" cols="4">
               <label>Server mode</label>
             </v-col>
-            <v-col cols="8" class="mb-n6">
+            <v-col align-self="center" cols="8" class="mb-n6">
               <v-select
                 label="Server mode"
-                v-model="genericInformation.server_mode"
+                v-model="state.server_mode"
                 :items="serverMode"
                 item-title="name"
                 item-value="slug"
                 return-object
               ></v-select>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.server_mode.$errors.length"
+              >
+                {{ v$.server_mode.$errors?.[0].$message }}
+              </p>
             </v-col>
-            <v-col cols="4">
+            <v-col align-self="center" cols="4">
               <label>Protocol</label>
             </v-col>
-            <v-col cols="8" class="mb-n6">
+            <v-col align-self="center" cols="8" class="mb-n6">
               <v-select
                 label="Protocol"
-                v-model="genericInformation.protocol"
+                v-model="state.protocol"
                 :items="protocols"
                 item-title="name"
                 item-value="slug"
                 return-object
               ></v-select>
+              <p class="error-feedback mb-5" v-if="v$.protocol.$errors.length">
+                {{ v$.protocol.$errors?.[0].$message }}
+              </p>
             </v-col>
-            <v-col cols="4">
+            <v-col align-self="center" cols="4">
               <label>Device Mode</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
                 label="Device Mode"
-                v-model="genericInformation.device_mode"
+                v-model="state.device_mode"
                 :items="deviceMode"
                 item-title="name"
                 item-value="slug"
                 return-object
               ></v-select>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.device_mode.$errors.length"
+              >
+                {{ v$.device_mode.$errors?.[0].$message }}
+              </p>
             </v-col>
-            <v-col cols="4">
+            <v-col align-self="center" cols="4">
               <label>Interface</label>
             </v-col>
-            <v-col cols="8" class="mb-n6">
+            <v-col align-self="center" cols="8" class="mb-n6">
               <v-select
                 label="Interface"
-                v-model="genericInformation.interface"
-                :items="genericInformation.mapedInterface"
+                v-model="state.interface"
+                :items="state.mapedInterface"
                 item-title="name"
                 item-value="id"
                 return-object
               ></v-select>
+              <p class="error-feedback mb-5" v-if="v$.interface.$errors.length">
+                {{ v$.interface.$errors?.[0].$message }}
+              </p>
             </v-col>
-            <v-col cols="4">
+            <v-col align-self="center" cols="4">
               <label>Retry DNS resolution</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
-              <input
-                type="checkbox"
-                v-model="genericInformation.resolv_retry"
-              />
+              <input type="checkbox" v-model="state.resolv_retry" />
               <label class="ml-2">Infinitely resolve remote server</label>
             </v-col>
-            <template v-if="!genericInformation.resolv_retry" class="ml-1 mt-3">
-              <v-col cols="4">
-                <label>Proxy host or address</label>
-              </v-col>
-              <v-col cols="8" class="mb-n6">
-                <v-text-field
-                  label="Proxy host or address"
-                  v-model="genericInformation.proxy_host"
-                ></v-text-field>
-              </v-col>
-              <v-col cols="4">
-                <label>Proxy port</label>
-              </v-col>
-              <v-col cols="8" class="mb-n6">
-                <v-text-field
-                  label="Proxy port"
-                  v-model="genericInformation.proxy_port"
-                ></v-text-field>
-              </v-col>
-            </template>
-            <v-col cols="4" class="mt-1">
+
+            <v-col align-self="center" cols="4">
+              <label>Proxy host or address</label>
+            </v-col>
+            <v-col align-self="center" cols="8" class="mb-n6">
+              <v-text-field
+                label="Proxy host or address"
+                v-model="state.proxy_host"
+              ></v-text-field>
+            </v-col>
+            <v-col align-self="center" cols="4">
+              <label>Proxy port</label>
+            </v-col>
+            <v-col align-self="center" cols="8" class="mb-n6">
+              <v-text-field
+                label="Proxy port"
+                v-model="state.proxy_port"
+              ></v-text-field>
+            </v-col>
+
+            <v-col align-self="center" cols="4" class="mt-1">
               <label>Proxy authentication extra options</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
                 label="Proxy authentication extra options"
-                v-model="genericInformation.proxyAuthenticationExtraOptions"
+                v-model="state.proxyAuthenticationExtraOptions"
                 :items="proxyAuthenticationExtraOptionsList"
                 item-title="name"
                 item-value="slug"
@@ -120,60 +141,68 @@
               ></v-select>
             </v-col>
             <template
-              v-if="
-                genericInformation.proxyAuthenticationExtraOptions.slug !=
-                'none'
-              "
+              v-if="state.proxyAuthenticationExtraOptions.slug != 'none'"
               class="ml-1 mt-3"
             >
-              <v-col cols="4"> <label> </label></v-col>
-              <v-col cols="8">
+              <v-col align-self="center" cols="4"> <label> </label></v-col>
+              <v-col align-self="center" cols="8">
                 <v-text-field
                   label="Username"
-                  v-model="genericInformation.username"
+                  v-model="state.username"
                 ></v-text-field>
+                <p
+                  class="error-feedback mb-5"
+                  v-if="v$.username.$errors.length"
+                >
+                  {{ v$.username.$errors?.[0].$message }}
+                </p>
               </v-col>
 
-              <v-col cols="4"><label> </label> </v-col>
-              <v-col cols="8">
+              <v-col align-self="center" cols="4"><label> </label> </v-col>
+              <v-col align-self="center" cols="8">
                 <v-text-field
                   label="Password"
-                  v-model="genericInformation.password"
+                  v-model="state.password"
                 ></v-text-field>
-              </v-col>
-              <v-col cols="4">
-                <label>Local port</label>
-              </v-col>
-              <v-col cols="8" class="mb-n6">
-                <v-text-field
-                  label="Local port"
-                  v-model="genericInformation.local_port"
-                ></v-text-field>
+                <p
+                  class="error-feedback mb-5"
+                  v-if="v$.password.$errors.length"
+                >
+                  {{ v$.password.$errors?.[0].$message }}
+                </p>
               </v-col>
             </template>
+          </v-row>
+          <v-row>
+            <v-col align-self="center" cols="4">
+              <label>Local port</label>
+            </v-col>
+            <v-col cols="8" class="mb-n6">
+              <v-text-field
+                label="Local port"
+                v-model="state.local_port"
+              ></v-text-field>
+            </v-col>
           </v-row>
           <v-row class="mt-2">
             <div class="ml-3 mr-3">
               <v-row class="mt-2">
                 <userAuthSettings
-                  v-model:username="userAuthSettings.username"
-                  v-model:password="userAuthSettings.password"
-                  v-model:renegotiate_time="userAuthSettings.renegotiate_time"
+                  v-model:username="state.usernameUser"
+                  v-model:password="state.passwordUser"
+                  v-model:renegotiate_time="state.renegotiate_time"
                 />
                 <cryptoSettings
-                  v-model:tlsGenerate="cryptoSettings.tlsGenerate"
-                  v-model:sharedKey="cryptoSettings.sharedKey"
+                  v-model:tlsGenerate="state.tlsGenerate"
+                  v-model:sharedKey="state.sharedKey"
                   v-model:peerCertificateAuthority="
-                    cryptoSettings.peerCertificateAuthority
+                    state.peerCertificateAuthority
                   "
-                  v-model:clientCertificate="cryptoSettings.clientCertificate"
-                  v-model:encryptionAlgorithm="
-                    cryptoSettings.encryptionAlgorithm
-                  "
-                  v-model:authDigestAlgorithm="
-                    cryptoSettings.authDigestAlgorithm
-                  "
-                  v-model:hardwareCrypto="cryptoSettings.hardwareCrypto"
+                  v-model:clientCertificate="state.clientCertificate"
+                  v-model:encryptionAlgorithm="state.encryptionAlgorithm"
+                  v-model:authDigestAlgorithm="state.authDigestAlgorithm"
+                  v-model:hardwareCrypto="state.hardwareCrypto"
+                  :errors="v$"
                 />
               </v-row>
             </div>
@@ -185,23 +214,24 @@
         <div class="ml-3 mr-3">
           <v-row class="mt-0">
             <tunnelSettings
-              v-model:ipv4TunnelNetwork="tunnelSettings.ipv4TunnelNetwork"
-              v-model:ipv6TunnelNetwork="tunnelSettings.ipv6TunnelNetwork"
-              v-model:ipv4RemoteNetwork="tunnelSettings.ipv4RemoteNetwork"
-              v-model:ipv6RemoteNetwork="tunnelSettings.ipv6RemoteNetwork"
-              v-model:limitOutgoingBandwidth="
-                tunnelSettings.limitOutgoingBandwidth
-              "
-              v-model:compression="tunnelSettings.compression"
-              v-model:typeOfService="tunnelSettings.typeOfService"
-              v-model:ipv6="tunnelSettings.ipv6"
-              v-model:pullRoutes="tunnelSettings.pullRoutes"
-              v-model:addRemoveRoutes="tunnelSettings.addRemoveRoutes"
+              v-model:ipv4TunnelNetwork="state.ipv4TunnelNetwork"
+              v-model:ipv6TunnelNetwork="state.ipv6TunnelNetwork"
+              v-model:ipv4RemoteNetwork="state.ipv4RemoteNetwork"
+              v-model:ipv6RemoteNetwork="state.ipv6RemoteNetwork"
+              v-model:limitOutgoingBandwidth="state.limitOutgoingBandwidth"
+              v-model:compression="state.compression"
+              v-model:typeOfService="state.typeOfService"
+              v-model:ipv6="state.ipv6"
+              v-model:pullRoutes="state.pullRoutes"
+              v-model:addRemoveRoutes="state.addRemoveRoutes"
+              :errors="v$"
             />
           </v-row>
           <advancedConfig
-            v-model:verbosityLevel="advancedConfig.verbosityLevel"
-            v-model:remoteServer="advancedConfig.remoteServer"
+            v-model:verbosityLevel="state.verbosityLevel"
+            v-model:hostAddress="state.hostAddress"
+            v-model:port="state.port"
+            :errors="v$"
           />
         </div>
       </v-col>
@@ -239,12 +269,14 @@
 </template>
 
 <script>
+import useValidate from "@vuelidate/core";
+import { required, requiredIf, helpers } from "@vuelidate/validators";
 import tunnelSettings from "./clientComponents/tunnelSettings.vue";
 import advancedConfig from "./clientComponents/advancedConfig.vue";
 import userAuthSettings from "./clientComponents/userAuthSettings.vue";
 import cryptoSettings from "./clientComponents/cryptoSettings.vue";
 import VButton from "@/components/VButton.vue";
-import { reactive, onMounted, ref } from "vue";
+import { reactive, onMounted, ref, computed, watch } from "vue";
 import axios from "axios";
 import protocols from "@/constants/protocols.js";
 
@@ -304,56 +336,111 @@ export default {
       },
     ]);
 
-    const genericInformation = reactive({
+    const state = reactive({
+      //general information
       clientName: "",
       description: "",
       server_mode: "",
       protocol: "",
       device_mode: "",
       interface: "",
-      resolv_retry: "",
+      resolv_retry: false,
       proxy_host: "",
       proxy_port: "",
-      proxyAuthenticationExtraOptions: "",
+      proxyAuthenticationExtraOptions: {
+        name: "None",
+        slug: "none",
+      },
+      usernameUser: "",
+      passwordUser: "",
+
       username: "",
       password: "",
       local_port: "",
       mapedInterface: [],
-    });
-
-    const userAuthSettings = reactive({
+      //User Auth
       username: "",
       password: "",
       renegotiate_time: "",
-    });
-
-    const cryptoSettings = reactive({
-      tlsGenerate: "",
+      //cryp
+      tlsGenerate: true,
       sharedKey: "",
       peerCertificateAuthority: "",
       clientCertificate: "",
       encryptionAlgorithm: "",
       authDigestAlgorithm: "",
       hardwareCrypto: "",
-    });
-
-    const tunnelSettings = reactive({
+      //tunnelSettings
       ipv4TunnelNetwork: "",
       ipv6TunnelNetwork: "",
       ipv4RemoteNetwork: "",
       ipv6RemoteNetwork: "",
       limitOutgoingBandwidth: "",
-      compression: "",
+      compression: { name: "No preference", slug: "no_preference" },
       typeOfService: "",
       ipv6: "",
       pullRoutes: "",
       addRemoveRoutes: "",
-    });
-
-    const advancedConfig = reactive({
+      //advancedConfig
       verbosityLevel: "",
       remoteServer: "",
+      hostAddress: "",
+      port: "",
     });
+
+    const rules = computed(() => {
+      return {
+        clientName: { required },
+        server_mode: { required },
+        protocol: { required },
+        device_mode: { required },
+        interface: { required },
+
+        sharedKey: {
+          requiredIfFuction: requiredIf(() => !state.tlsGenerate),
+        },
+        username: {
+          requiredIfFuction: requiredIf(
+            () => state.proxyAuthenticationExtraOptions.slug === "basic"
+          ),
+        },
+        password: {
+          requiredIfFuction: requiredIf(
+            () => state.proxyAuthenticationExtraOptions.slug === "basic"
+          ),
+        },
+        peerCertificateAuthority: { required },
+        clientCertificate: { required },
+        authDigestAlgorithm: { required },
+        hardwareCrypto: { required },
+        encryptionAlgorithm: { required },
+
+        ipv4TunnelNetwork: { required },
+        ipv4RemoteNetwork: { required },
+        verbosityLevel: { required },
+        hostAddress: { required },
+
+        port: {
+          required,
+          isValidlifeTime: helpers.withMessage(
+            `champs local Port can include only Numbers.`,
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
+    watch(
+      state,
+      () => {
+        if (state.proxyAuthenticationExtraOptions) {
+          v$.value.username.$reset();
+          v$.value.password.$reset();
+        }
+      },
+      { immediate: true }
+    );
 
     const getCookie = (name) => {
       let cookieValue = null;
@@ -382,7 +469,7 @@ export default {
               name: i.name_interface,
             };
           });
-          genericInformation.mapedInterface = interfaces;
+          state.mapedInterface = interfaces;
         },
         (error) => {
           console.log(error);
@@ -390,68 +477,83 @@ export default {
       );
     };
 
-    const cancel = () => {
-      genericInformation = { ...genericInformation };
-      userAuthSettings = { ...userAuthSettings };
-      cryptoSettings = { ...cryptoSettings };
-      tunnelSettings = { ...tunnelSettings };
-      advancedConfig = { ...advancedConfig };
-    };
-
-    const save = () => {
+    const save = async () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      const params = {
-        name: genericInformation.clientName,
-        description: genericInformation.description,
-        server_mode: {
-          mode: genericInformation.server_mode.slug,
-        },
-        protocol: genericInformation.protocol.slug,
-        device_mode: genericInformation.device_mode.slug,
-        interface: genericInformation.interface.id,
-        resolv_retry: genericInformation.resolv_retry,
-        proxy_host: genericInformation.proxy_host,
-        proxy_port: genericInformation.proxy_port,
-        proxy_authentication: {
-          option: genericInformation.proxyAuthenticationExtraOptions.slug,
-          username: genericInformation.username,
-          password: genericInformation.password,
-        },
-        local_port: genericInformation.local_port,
-        username: userAuthSettings.username,
-        password: userAuthSettings.password,
-        renegotiate_time: userAuthSettings.renegotiate_time,
-        tls_auth: {
-          generate: cryptoSettings.tlsGenerate,
-          tls_key: cryptoSettings.sharedKey,
-        },
-        ca_name: cryptoSettings.peerCertificateAuthority.name,
-        client_cert: cryptoSettings.clientCertificate.name,
-        encryption_algorithm: cryptoSettings.encryptionAlgorithm.slug,
-        auth_digest_algorithm: cryptoSettings.authDigestAlgorithm.slug,
-        hardware_crypto: cryptoSettings.hardwareCrypto.slug,
-        ipv4_tunnel_network: tunnelSettings.ipv4TunnelNetwork,
-        ipv4_remote_network: tunnelSettings.ipv4RemoteNetwork,
-        limit_outgoing_bandwidth: tunnelSettings.limitOutgoingBandwidth,
-        compression: tunnelSettings.compression.slug,
-        type_of_service: tunnelSettings.typeOfService,
-        ipv6: tunnelSettings.ipv6,
-        pull_routes: tunnelSettings.pullRoutes,
-        add_remove_routes: tunnelSettings.addRemoveRoutes,
-        verbosity_level: advancedConfig.verbosityLevel.slug,
-        server_name: advancedConfig.remoteServer.name,
-      };
+      const result = await v$.value.$validate();
 
-      axios.post("/openvpn/createClientOpenvpn", params).then(
-        (response) => {
-          console.log(response);
-        },
-        (error) => {
-          console.log(error);
+      if (result) {
+        let proxy_authentication = null;
+        if (state.proxyAuthenticationExtraOptions.slug === "none") {
+          proxy_authentication = {
+            option: "none",
+          };
+        } else {
+          proxy_authentication = {
+            option: state.proxyAuthenticationExtraOptions.slug,
+            username: state.username,
+            password: state.password,
+          };
         }
-      );
+        let tls_auth = null;
+        if (state.tlsGenerate) {
+          tls_auth = {
+            generate: state.tlsGenerate,
+          };
+        } else {
+          tls_auth = {
+            generate: state.tlsGenerate,
+            tls_key: state.sharedKey,
+          };
+        }
+        let payload = {
+          name: state.clientName,
+          description: state.description,
+          server_mode: {
+            mode: state.server_mode.slug,
+          },
+          protocol: state.protocol.slug,
+          device_mode: state.device_mode.slug,
+          interface: state.interface.id,
+          resolv_retry: state.resolv_retry,
+          proxy_host: state.proxy_host ?? "",
+          proxy_port: state.proxy_port ?? "",
+          proxy_authentication: proxy_authentication,
+          local_port: state.local_port,
+          username: state.username,
+          password: state.password,
+          renegotiate_time: state.renegotiate_time,
+          tls_auth: tls_auth,
+          auth_digest_algorithm: state.authDigestAlgorithm.slug,
+          ca_name: state.peerCertificateAuthority.name,
+          client_cert: state.clientCertificate.name,
+          encryption_algorithm: state.encryptionAlgorithm.slug,
+          hardware_crypto: state.hardwareCrypto.slug,
+          ipv4_tunnel_network: state.ipv4TunnelNetwork,
+          ipv4_remote_network: state.ipv4RemoteNetwork,
+          limit_outgoing_bandwidth: state.limitOutgoingBandwidth,
+          compression: state.compression.slug,
+          type_of_service: state.typeOfService,
+          ipv6: state.ipv6,
+          pull_routes: state.pullRoutes,
+          add_remove_routes: state.addRemoveRoutes,
+          verbosity_level: state.verbosityLevel.slug,
+          server_host: state.hostAddress,
+          server_port: state.port,
+        };
+
+        axios.post("/openvpn/createClientOpenvpn", payload).then(
+          (response) => {
+            console.log(response);
+          },
+          (error) => {
+            console.log(error);
+          }
+        );
+      } else {
+        console.log("v$.value", v$.value);
+      }
     };
 
     onMounted(() => {
@@ -460,7 +562,7 @@ export default {
     });
 
     return {
-      genericInformation,
+      state,
       userAuthSettings,
       cryptoSettings,
       tunnelSettings,
@@ -471,11 +573,16 @@ export default {
       serverMode,
       getCookie,
       getInterface,
-      cancel,
+      v$,
       save,
     };
   },
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.error-feedback {
+  color: red;
+  font-size: 0.85em;
+}
+</style>

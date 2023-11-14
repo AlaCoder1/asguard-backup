@@ -16,24 +16,29 @@
             :rowGroupPanelShow="rowGroupPanelShow"
           />
           <div class="d-flex justify-end mt-3">
-            <v-btn
-              large
+            <!-- <VButton
               rounded
               outlined
-              color="primary"
-              class="mr-3"
+              color="#213E9F"
+              label-color="#ffffff"
+              label="Publish Server"
+              :isLarge="true"
+              type="submit"
+              class="ml-2"
               @click="publishServer"
-              >Publish Server</v-btn
-            >
-            <v-btn
-              large
+            /> -->
+
+            <VButton
               rounded
               outlined
-              color="primary"
-              class="mr-3"
+              color="#213E9F"
+              label-color="#ffffff"
+              label="Add Server"
+              :isLarge="true"
+              type="submit"
+              class="ml-2"
               @click="addServer"
-              >Add Server</v-btn
-            >
+            />
           </div>
         </div>
       </v-col>
@@ -52,24 +57,29 @@
             style="width: 100%"
           />
           <div class="d-flex justify-end mt-3">
-            <v-btn
-              large
+            <VButton
               rounded
               outlined
-              color="primary"
-              class="mr-3"
-              @click="publishClient"
-              >Publish Client</v-btn
-            >
-            <v-btn
-              large
-              rounded
-              outlined
-              color="primary"
-              class="mr-3"
+              color="#213E9F"
+              label-color="#ffffff"
+              label="Add Client"
+              :isLarge="true"
+              type="submit"
+              class="ml-2"
               @click="addClient"
-              >Add Client</v-btn
-            >
+            />
+
+            <!-- <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              label="save"
+              :isLarge="true"
+              type="submit"
+              class="ml-2"
+              @click="save"
+            /> -->
           </div>
           <br />
         </div>
@@ -79,12 +89,16 @@
 </template>
 
 <script>
+import mitt from 'mitt';
+
+import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
 
 export default {
   name: "ListingOpenvpnComponent",
   components: {
     AgGridVue,
+    VButton,
   },
   props: {},
   data() {
@@ -188,13 +202,14 @@ export default {
       console.log("publishServer");
     },
     addServer() {
-      console.log("addServer");
+      this.emitter.emit('add-server');
     },
     publishClient() {
       console.log("publishClient");
     },
     addClient() {
       console.log("addClient");
+      this.emitter.emit('add-client');
     },
   },
   mounted: async function () {

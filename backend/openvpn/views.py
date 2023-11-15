@@ -37,7 +37,7 @@ def getAllServerOpenvpn(request):
     list_server_openvpn = []
     if (request.method == 'GET'):
         list_server_openvpn = get_all_server_openvpn()
-        return list_server_openvpn
+        return JsonResponse(list_server_openvpn, safe=False)
     
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 

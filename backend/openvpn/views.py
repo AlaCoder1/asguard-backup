@@ -95,7 +95,7 @@ def getServerOpenvpn(request, id):
                                                                                       required=['dns_servers_select'], properties={'dns_servers_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                                                                                                    'dns_server1': openapi.Schema(type=openapi.TYPE_STRING, description="Address of DNS server1 like 8.8.8.8, required when selecting DNS servers"),
                                                                                                                                    'dns_server2': openapi.Schema(type=openapi.TYPE_STRING, description="Address of DNS server2 like 8.8.4.4, Optionally you can set the second DNS server afer setting the first DNS server"),}),
-                                                             'force_dns': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'force_dns_cache_update': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'ntp_servers': openapi.Schema(type=openapi.TYPE_OBJECT, description="NTP servers block",
                                                                                       required=['ntp_servers_select'], properties={'ntp_servers_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                                                                                                    'ntp_server1': openapi.Schema(type=openapi.TYPE_STRING, description="Address of NTP server1 like 8.8.8.8, required when selecting NTP servers"),
@@ -308,7 +308,7 @@ def deleteServerOpenvpn(request, id):
                                                                                       required=['dns_servers_select'], properties={'dns_servers_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                                                                                                    'dns_server1': openapi.Schema(type=openapi.TYPE_STRING, description="Address of DNS server1 like 8.8.8.8, required when selecting DNS servers"),
                                                                                                                                    'dns_server2': openapi.Schema(type=openapi.TYPE_STRING, description="Address of DNS server2 like 8.8.4.4, Optionally you can set the second DNS server afer setting the first DNS server"),}),
-                                                             'force_dns': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'force_dns_cache_update': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'ntp_servers': openapi.Schema(type=openapi.TYPE_OBJECT, description="NTP servers block",
                                                                                       required=['ntp_servers_select'], properties={'ntp_servers_select': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                                                                                                    'ntp_server1': openapi.Schema(type=openapi.TYPE_STRING, description="Address of NTP server1 like 8.8.8.8, required when selecting NTP servers"),
@@ -632,9 +632,6 @@ def createClientOpenvpn(request):
             server_remote = ''
             for server in servers_list:
                 server_remote += f'{server["host"]}:{server["port"]},'
-            data["server_remote"] = server_remote
-
-            # client_conf = json_to_str_client(data)
 
             client_data = {"name": name,
                            "description": description,
@@ -666,6 +663,7 @@ def createClientOpenvpn(request):
                            "pull_routes": pull_routes,
                            "add_remove_routes": add_remove_routes,
                            "verb": verb,
+                           "server_remote": server_remote,
                            }
             
             if proxy_authentication_option == 'basic':

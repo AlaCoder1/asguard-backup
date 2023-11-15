@@ -4,7 +4,7 @@
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" align-self="center">
-        <label>IPv4 Tunnel Network</label>
+        <label>IPv4 Tunnel Network*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
@@ -76,7 +76,7 @@
         ></v-text-field>
       </v-col>
       <v-col cols="4" align-self="center">
-        <label>IPv4 Local Network</label>
+        <label>IPv4 Local Network*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field

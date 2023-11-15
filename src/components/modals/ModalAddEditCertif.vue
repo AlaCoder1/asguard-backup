@@ -563,8 +563,7 @@ export default {
   computed: {
     isImportCetif() {
       return (
-        this.state.formData.method.name ===
-        "Import an existing Certificate"
+        this.state.formData.method.name === "Import an existing Certificate"
       );
     },
     isCreateCetif() {
@@ -662,8 +661,6 @@ export default {
             },
           };
         } else {
-          console.log("ok");
-
           payload = {
             name: this.state.formData?.certifName,
             activation: "True",
@@ -692,7 +689,6 @@ export default {
             }
           })
           .catch((i) => {
-            console.log("i", i.response.data);
             this.snackbar = true;
             this.color = "red";
             this.textAlert = i.response.data.error;

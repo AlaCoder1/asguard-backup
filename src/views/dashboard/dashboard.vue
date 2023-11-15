@@ -406,7 +406,9 @@ export default {
       params.api.sizeColumnsToFit();
     },
     initializeWebSocket() {
-      this.socket = new WebSocket("wss://" + window.location.host + "/ws/data/"); // Replace with your WebSocket URL
+      this.socket = new WebSocket(
+        "wss://" + window.location.host + "/ws/data/"
+      ); // Replace with your WebSocket URL
 
       this.socket.onopen = () => {
         console.log("WebSocket connection opened.");
@@ -416,9 +418,6 @@ export default {
         if (this.socket.readyState === WebSocket.OPEN) {
           const data = JSON.parse(event.data);
           this.dataChart = data;
-          // console.log('this.',this.dataChart)
-
-          // console.log('chartData :',this.dataChart)
 
           const timestamp = new Date(data.timestamp * 1000).getTime();
 

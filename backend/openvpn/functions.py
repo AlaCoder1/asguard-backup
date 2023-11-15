@@ -147,8 +147,8 @@ tls-auth /etc/openvpn/server/static_{json_object["name"]}.key
 #server-bridge server_interface server_start server_end
 
 push "redirect-gateway def1"
-push "route 192.168.0.0 255.255.255.0"
-#push "route remote"
+#push route local
+#push route remote
 #push "dhcp-option DOMAIN server"
 #push "dhcp-option DNS server1"
 #push "dhcp-option DNS server1"
@@ -190,17 +190,17 @@ log-append /var/log/openvpn/openvpn.log
     if json_object["hardware_crypto"] != "No Hardware Crypto":
         config_input = config_input.replace("#engine rdrand", "engine rdrand")
     
-    if json_object["bridge"]["bridge_select"]:
+    if json_object["bridge"]["bridge_select"]:  # When activating Bridge
         bridge_interface_address = json_object["bridge_interface_address"]
         prefix = int(bridge_interface_address[bridge_interface_address.find("/")+1:])
         mask = prefix_to_masque(prefix)
         config_input = config_input.replace('#server-bridge server_interface server_start server_end', 
-                                            f"""server-bridge {bridge_interface_address[:bridge_interface_address.find('/')]} {mask} {json_object["bridge"]["bridge_start_dhcp"]} {json_object["bridge"]["bridge_start_dhcp"]}""")
-    elif json_object["address_pool"]["address_pool_select"]:
+                                            f"""server-bridge {bridge_interface_address[:bridge_interface_address.find('/')]} {mask} {json_object["bridge"]["bridge_start_dhcp"]} {json_object["bridge"]["bridge_end_dhcp"]}""")
+    elif json_object["address_pool"]["address_pool_select"]:  # When activating Address Pool
         config_input = config_input.replace('#ifconfig-pool start_ip_address end_ip_address',
                                             f'ifconfig-pool {json_object["address_pool"]["address_pool_start"]} {json_object["address_pool"]["address_pool_end"]}')
         config_input = config_input.replace('#mode server','mode server')
-    else:
+    else:  # When Bridge and Address Pool are deactivated
         tunnel_address = json_object["ipv4_tunnel_network"]
         prefix = int(tunnel_address[tunnel_address.find("/")+1:])
         mask = prefix_to_masque(prefix)
@@ -210,14 +210,14 @@ log-append /var/log/openvpn/openvpn.log
         local_address = json_object["ipv4_local_network"]
         prefix = int(local_address[local_address.find("/")+1:])
         mask = prefix_to_masque(prefix)
-        config_input = config_input.replace("push \"route 192.168.0.0 255.255.255.0\"", 
+        config_input = config_input.replace("#push route local", 
                                             f"push \"route {local_address[:local_address.find('/')]} {mask}\"")
         
     if json_object["ipv4_remote_network"] != '':
         remote_address = json_object["ipv4_remote_network"]
         prefix = int(remote_address[remote_address.find("/")+1:])
         mask = prefix_to_masque(prefix)
-        config_input = config_input.replace("#push \"route remote\"", 
+        config_input = config_input.replace("#push route remote", 
                                             f"push \"route {remote_address[:remote_address.find('/')]} {mask}\"")
     
     if json_object["concurrent_connections"] != '':

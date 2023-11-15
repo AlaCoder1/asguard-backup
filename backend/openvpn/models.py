@@ -80,8 +80,7 @@ class ClientOpenvpn(models.Model):
     pull_routes = models.BooleanField(default=False, null=True, blank=True)
     add_remove_routes = models.BooleanField(default=False, null=True, blank=True)
     verb = models.CharField(max_length=100, default=None, null=True, blank=True)
-    server_host = models.CharField(max_length=300, default=None, null=True, blank=True)
-    server_port = models.CharField(max_length=10, default=None, null=True, blank=True)
+    server_remote = models.CharField(max_length=1000, default=None, null=True, blank=True)
 
     class Meta:
         db_table = 'client_openvpn'

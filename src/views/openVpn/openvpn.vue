@@ -51,6 +51,7 @@ export default {
     MonotoringOpenvpnComponent,
     ListingOpenvpnComponent,
   },
+  inject: ['emitter'],
   data() {
     return {
       activeTab: "SERVERS",
@@ -70,7 +71,7 @@ export default {
   
 
   mounted: async function () {
-    
+
     this.serverInfo = document.getElementById("app").attributes["servers"].value;
     this.emitter.on("add-server", () => {
       this.activeTab ="SERVERS"

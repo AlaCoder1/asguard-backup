@@ -173,6 +173,8 @@
 import { AgGridVue } from "ag-grid-vue3";
 import VueApexCharts from "vue3-apexcharts";
 import BaseLayout from "../../layouts/layout.vue";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 
 export default {
   name: "HomeComponent",
@@ -550,7 +552,3 @@ export default {
   },
 };
 </script>
-<style lang="scss">
-@import "~ag-grid-community/dist/styles/ag-grid.css";
-@import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
-</style>

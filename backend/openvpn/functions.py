@@ -7,7 +7,7 @@ from backend.openvpn.serializers import ServerOpenvpnSerializer
 
 def execute_command_without_arguments(command, decode=True, shell=False):
     """Function that execute a command line without arguments"""
-    print(f'command {command}')
+    print(f'command: {" ".join(command)}')
     process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=decode, shell=shell)
     create_error_command(process, command)
     return process
@@ -23,7 +23,9 @@ def execute_command_with_arguments(command, arguments, time_sleep=0.5):
     """Function that execute a command line with arguments"""
     try:
         with subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
-            print("Command: ", command)
+            print("Command: ", " ".join(command))
+            for arg in range(arguments):
+                print(f"argument {arg}: {arguments[arg]}")
             time.sleep(time_sleep)
             process.communicate(input=arguments)
 
@@ -55,9 +57,8 @@ def create_tls_file(tls_auth, path_tls):
         command = ['openvpn', '--genkey', 'secret', f'{path_tls}']
         execute_command_without_arguments(command)
     else:
-        tls_key = f'-----BEGIN OpenVPN Static key V1-----\n{tls_auth["tls_key"]}\n-----END OpenVPN Static key V1-----'
         with open(path_tls, 'w') as tls_file:
-            tls_file.write(tls_key)
+            tls_file.write(tls_auth["tls_key"])
 
 
 def change_status_server_openvpn(server_name, server_status):
@@ -134,7 +135,7 @@ topology subnet
 ca /etc/certificates_{json_object["ca_name"]}/ca.crt
 cert /etc/openvpn/certificates_{json_object["server_cert"]}/server.crt
 key /etc/openvpn/certificates_{json_object["server_cert"]}/server.key
-dh /etc/openvpn/server/dh_{json_object['name']}.pem
+dh /asguard/newdms/DH_files/dh_{json_object['dh_params_length']}.pem
 crl-verify /etc/certificates_{json_object["ca_name"]}/crl.pem
 
 tls-server
@@ -163,6 +164,7 @@ duplicate-cn
 #tun-ipv6
 
 cipher {json_object["encryption_algorithm"]}
+auth {json_object["auth_digest_algorithm"]}
 
 keepalive 20 60
 #comp-lzo
@@ -180,7 +182,7 @@ daemon
 log-append /var/log/openvpn/openvpn.log
 
 #Log Level
-verb {json_object["verbosity_level"]}'''
+#verb verbosity_level'''
 
     if json_object["interface"] != "any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
@@ -260,13 +262,16 @@ verb {json_object["verbosity_level"]}'''
         if json_object["dns_servers"]["dns_server2"] != '':
             config_input = config_input.replace("#push \"dhcp-option DNS server2\"", f"push \"dhcp-option DNS {json_object['dns_servers']['dns_server2']}\"")
 
-    if json_object["force_dns"]:
+    if json_object["force_dns_cache_update"]:
         config_input = config_input.replace("#push \"register-dns\"", "push \"register-dns\"")
 
     if json_object["ntp_servers"]["ntp_servers_select"]:
         config_input = config_input.replace("#push \"dhcp-option NTP server1\"", f"push \"dhcp-option NTP {json_object['ntp_servers']['ntp_server1']}\"")
         if json_object["ntp_servers"]["ntp_server2"] != '':
             config_input = config_input.replace("#push \"dhcp-option NTP server2\"", f"push \"dhcp-option NTP {json_object['ntp_servers']['ntp_server2']}\"")
+
+    if json_object["verbosity_level"] != '':
+        config_input = config_input.replace("#verb verbosity_level", f"verb {json_object['verbosity_level']}")
 
     return config_input
 
@@ -275,7 +280,7 @@ def json_to_str_client(json_object):
     """Function to convert a json object to input of client config file"""
 
     config_input = f'''client
-remote {json_object["server_host"]} {json_object["server_port"]}
+#remote server_host server_port
 proto {json_object["protocol"]}
 dev {json_object["device_mode"]}
 multihome
@@ -295,7 +300,7 @@ script-security 2
 persist-key
 persist-tun
 auth {json_object["auth_digest_algorithm"]}
-verb {json_object["verbosity_level"]}
+#verb verbosity_level
 #lport
 
 #ifconfig
@@ -322,6 +327,9 @@ crl-verify /etc/certificates_{json_object["ca_name"]}/crl.pem
 tls-client
 tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
 '''
+    
+    for server in json_object["server_remote"]:
+        config_input = config_input.replace("#remote server_host server_port", f"#remote server_host server_port\n remote {server['host']} {server['port']}")
 
     if json_object["interface"] != "Any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
@@ -398,6 +406,9 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
 
     if json_object["add_remove_routes"]:
         config_input = config_input.replace("#route-noexec", "route-noexec")
+    
+    if json_object["verbosity_level"] != '':
+        config_input = config_input.replace("#verb verbosity_level", f"verb {json_object['verbosity_level']}")
 
     return config_input
 

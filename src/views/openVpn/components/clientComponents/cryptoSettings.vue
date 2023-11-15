@@ -1,7 +1,7 @@
 <template>
   <h4>Cryptographic Settings</h4>
   <v-divider class="mt-2"></v-divider>
-  <v-col  cols="4">
+  <v-col cols="4">
     <label>TLS Authentication</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
@@ -13,20 +13,22 @@
   <template v-if="!tlsGenerate">
     <v-col align-self="center" cols="4"> </v-col>
     <v-col align-self="center" cols="8" class="mb-n6">
-      <v-text-field
+      <v-textarea
         class="mt-3"
-        label="TLS key"
         v-model="sharedKey"
-      ></v-text-field>
+        label="TLS key"
+        variant="outlined"
+      ></v-textarea>
       <p
-      class="error-feedback mb-5"
-      v-if="props.errors.sharedKey.$errors.length"
-      >{{ props.errors.sharedKey.$errors?.[0].$message }}</p
-    >
+        class="error-feedback mb-5"
+        v-if="props.errors.sharedKey.$errors.length"
+      >
+        {{ props.errors.sharedKey.$errors?.[0].$message }}
+      </p>
     </v-col>
   </template>
   <v-col align-self="center" cols="4">
-    <label>Peer Certificate Authority</label>
+    <label>Peer Certificate Authority*</label>
   </v-col>
   <v-col align-self="center" cols="8" class="mb-n6">
     <v-select
@@ -40,11 +42,12 @@
     <p
       class="error-feedback mb-5"
       v-if="props.errors.peerCertificateAuthority.$errors.length"
-      >{{ props.errors.peerCertificateAuthority.$errors?.[0].$message }}</p
     >
+      {{ props.errors.peerCertificateAuthority.$errors?.[0].$message }}
+    </p>
   </v-col>
-  <v-col  align-self="center" cols="4">
-    <label>Client Certificate</label>
+  <v-col align-self="center" cols="4">
+    <label>Client Certificate*</label>
   </v-col>
   <v-col align-self="center" cols="8" class="mb-n6">
     <v-select
@@ -58,11 +61,12 @@
     <p
       class="error-feedback mb-5"
       v-if="props.errors.clientCertificate.$errors.length"
-      >{{ props.errors.clientCertificate.$errors?.[0].$message }}</p
     >
+      {{ props.errors.clientCertificate.$errors?.[0].$message }}
+    </p>
   </v-col>
-  <v-col  align-self="center" cols="4">
-    <label>Encryption algorithm</label>
+  <v-col align-self="center" cols="4">
+    <label>Encryption algorithm*</label>
   </v-col>
   <v-col align-self="center" cols="8" class="mb-n6">
     <v-select
@@ -76,11 +80,12 @@
     <p
       class="error-feedback mb-5"
       v-if="props.errors.encryptionAlgorithm.$errors.length"
-      >{{ props.errors.encryptionAlgorithm.$errors?.[0].$message }}</p
     >
+      {{ props.errors.encryptionAlgorithm.$errors?.[0].$message }}
+    </p>
   </v-col>
   <v-col align-self="center" cols="4">
-    <label>Auth Digest Algorithm</label>
+    <label>Auth Digest Algorithm*</label>
   </v-col>
   <v-col align-self="center" cols="8" class="mb-n6">
     <v-select
@@ -94,11 +99,12 @@
     <p
       class="error-feedback mb-5"
       v-if="props.errors.authDigestAlgorithm.$errors.length"
-      >{{ props.errors.authDigestAlgorithm.$errors?.[0].$message }}</p
     >
+      {{ props.errors.authDigestAlgorithm.$errors?.[0].$message }}
+    </p>
   </v-col>
   <v-col align-self="center" cols="4">
-    <label>Hardware Crypto</label>
+    <label>Hardware Crypto*</label>
   </v-col>
   <v-col align-self="center" cols="8" class="mb-n6">
     <v-select
@@ -112,8 +118,9 @@
     <p
       class="error-feedback mb-5"
       v-if="props.errors.hardwareCrypto.$errors.length"
-      >{{ props.errors.hardwareCrypto.$errors?.[0].$message }}</p
     >
+      {{ props.errors.hardwareCrypto.$errors?.[0].$message }}
+    </p>
   </v-col>
 </template>
 

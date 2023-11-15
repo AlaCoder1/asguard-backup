@@ -1,14 +1,11 @@
 from datetime import datetime, timedelta
-from django.conf import settings
 from django.http import JsonResponse
 from django.db.models import Q
 from django.db.models.deletion import ProtectedError
 import json
 from rest_framework.authentication import SessionAuthentication
-from django.core import serializers
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 

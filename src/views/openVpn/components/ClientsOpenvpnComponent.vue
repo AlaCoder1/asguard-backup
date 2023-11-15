@@ -7,7 +7,7 @@
           <v-divider class="mt-2"></v-divider>
           <v-row class="mt-2">
             <v-col align-self="center" cols="4">
-              <label>Client name</label>
+              <label>Client name*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
@@ -31,7 +31,7 @@
               ></v-text-field>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>Server mode</label>
+              <label>Server mode*</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-select
@@ -50,7 +50,7 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>Protocol</label>
+              <label>Protocol*</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-select
@@ -66,7 +66,7 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>Device Mode</label>
+              <label>Device Mode*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
@@ -85,7 +85,7 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>Interface</label>
+              <label>Interface*</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-select
@@ -161,6 +161,7 @@
               <v-col align-self="center" cols="4"><label> </label> </v-col>
               <v-col align-self="center" cols="8">
                 <v-text-field
+                  type="password"
                   label="Password"
                   v-model="state.password"
                 ></v-text-field>
@@ -227,12 +228,68 @@
               :errors="v$"
             />
           </v-row>
-          <advancedConfig
-            v-model:verbosityLevel="state.verbosityLevel"
-            v-model:hostAddress="state.hostAddress"
-            v-model:port="state.port"
-            :errors="v$"
-          />
+          <div class="mt-3">
+            <h4 class="mt-6">Advanced Configuration</h4>
+            <v-divider class="mt-2"></v-divider>
+            <v-row class="mt-2">
+              <v-col align-self="center" cols="4">
+                <label>Verbosity level</label>
+              </v-col>
+              <v-col align-self="center" cols="8" class="mb-n6">
+                <v-select
+                  label="Verbosity level"
+                  v-model="state.verbosityLevel"
+                  :items="verbosityLevelList"
+                  item-title="name"
+                  item-value="slug"
+                  return-object
+                ></v-select>
+              </v-col>
+            </v-row>
+          </div>
+          <div class="mt-2">
+            <h4 class="mt-6">Remote server</h4>
+            <v-divider class="mt-2"></v-divider>
+            <v-row class="mt-2">
+              <v-row class="mb-5 ml-1">
+                <v-col cols="12" class="mb-n5">
+                  <div
+                    style="
+                      display: flex;
+                      justify-content: flex-end;
+                      margin-bottom: 10px;
+                    "
+                  >
+                    <v-btn
+                      type="submit"
+                      color="asguard_primary_light"
+                      :rounded="true"
+                      class="mt-3 btn-add"
+                      @click="addNewRow"
+                    >
+                      <span class="text-white">Add</span>
+                    </v-btn>
+                  </div>
+
+                  <ag-grid-vue
+                    id="grid-wrapper"
+                    domLayout="autoHeight"
+                    class="ag-theme-alpine mt-3"
+                    :columnDefs="columnCertificats"
+                    :alwaysShowHorizontalScroll="false"
+                    :alwaysShowVarticalScroll="false"
+                    :gridOptions="gridOptions"
+                    :defaultColDef="defaultColDef"
+                    :rowData="rowDataCertificats.value"
+                    style="width: 100%; height: 100%"
+                    @grid-ready="onGridReady"
+                    @cell-value-changed="onCellValueChanged"
+                    @row-value-changed="onRowValueChanged"
+                  />
+                </v-col>
+              </v-row>
+            </v-row>
+          </div>
         </div>
       </v-col>
     </v-row>
@@ -256,7 +313,6 @@
             label-color="#ffffff"
             label="save"
             :isLarge="true"
-            type="submit"
             class="ml-2"
             @click="save"
           />
@@ -265,14 +321,22 @@
     </v-row>
     <br />
     <v-spacer></v-spacer>
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
+      {{ state.textAlert }}
+    </v-snackbar>
   </div>
 </template>
 
 <script>
+import { AgGridVue } from "ag-grid-vue3";
 import useValidate from "@vuelidate/core";
 import { required, requiredIf, helpers } from "@vuelidate/validators";
 import tunnelSettings from "./clientComponents/tunnelSettings.vue";
-import advancedConfig from "./clientComponents/advancedConfig.vue";
 import userAuthSettings from "./clientComponents/userAuthSettings.vue";
 import cryptoSettings from "./clientComponents/cryptoSettings.vue";
 import VButton from "@/components/VButton.vue";
@@ -284,12 +348,15 @@ export default {
   name: "ClientsOpenvpnComponent",
   components: {
     tunnelSettings,
-    advancedConfig,
     userAuthSettings,
     cryptoSettings,
     VButton,
+    AgGridVue,
   },
   setup() {
+    const color = ref(null);
+    const snackbar = ref(false);
+    const textAlert = ref(false);
     const protocolsList = ref([]);
     const deviceMode = ref([
       {
@@ -301,6 +368,9 @@ export default {
         slug: "tap",
       },
     ]);
+
+    const gridApi = ref(null);
+    const gridColumnApi = ref(null);
 
     const proxyAuthenticationExtraOptionsList = ref([
       {
@@ -382,7 +452,10 @@ export default {
       pullRoutes: "",
       addRemoveRoutes: "",
       //advancedConfig
-      verbosityLevel: "",
+      verbosityLevel: {
+        name: "1 (default)",
+        slug: "1",
+      },
       remoteServer: "",
       hostAddress: "",
       port: "",
@@ -416,17 +489,6 @@ export default {
         encryptionAlgorithm: { required },
 
         ipv4TunnelNetwork: { required },
-        ipv4RemoteNetwork: { required },
-        verbosityLevel: { required },
-        hostAddress: { required },
-
-        port: {
-          required,
-          isValidlifeTime: helpers.withMessage(
-            `champs local Port can include only Numbers.`,
-            helpers.regex(/^[0-9]+$/)
-          ),
-        },
       };
     });
 
@@ -457,6 +519,169 @@ export default {
       return cookieValue;
     };
 
+    const onCellValueChanged = (event) => {
+      console.log("even", event);
+      console.log("row", rowDataCertificats.value);
+    };
+    const defaultColDef = ref({
+      flex: 1,
+      editable: true,
+      cellDataType: false,
+    });
+
+    const actionCellRenderer = (params) => {
+      let eGui = document.createElement("div");
+
+      {
+        eGui.innerHTML = `
+          <button
+          class="action-button delete"
+          data-action="delete">
+            <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
+        </button>
+
+            `;
+      }
+      eGui.querySelectorAll(".action-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.getAttribute("data-action");
+          handleAction(action, params.node.data, params.node.rowIndex);
+        });
+      });
+
+      return eGui;
+    };
+    const handleAction = (action, rowData, index) => {
+      switch (action) {
+        case "edit":
+          console.log("edit", rowData);
+          console.log("index", index);
+          gridApi.value.setFocusedCell(index);
+          gridApi.value.startEditingCell({
+            rowIndex: index,
+            colKey: "host",
+          });
+          break;
+        case "delete":
+          console.log("rowData", rowData);
+          const index = rowDataCertificats.value.findIndex(
+            (item) => item.host === rowData.host
+          );
+          console.log("index", index);
+          if (index !== -1) {
+            rowDataCertificats.value.splice(index, 1);
+            console.log("rowData", rowDataCertificats.value);
+            if (gridApi.value) {
+              gridApi.value.setRowData(rowDataCertificats.value);
+            } else {
+              console.error("Grid API.");
+            }
+          }
+          break;
+        default:
+          break;
+      }
+    };
+    const onRowValueChanged = (event) => {
+      console.log("event:", event);
+      console.log("daa:", rowDataCertificats.value);
+    };
+
+    const columnCertificats = ref([
+      {
+        headerName: "Host or address",
+        field: "host",
+        minWidth: 150,
+        editable: true,
+      },
+      {
+        headerName: "Protocole / Port",
+        field: "port",
+        minWidth: 250,
+        editable: true,
+      },
+      {
+        headerName: "Actions",
+        cellRenderer: actionCellRenderer,
+        minWidth: 150,
+        editable: false,
+        sortable: false,
+        filter: false,
+        resizable: true,
+      },
+    ]);
+
+    const rowDataCertificats = ref([]);
+
+    const addNewRow = () => {
+      const newRow = { host: "", port: "" };
+      rowDataCertificats.value.push(newRow);
+      if (gridApi.value) {
+        gridApi.value.setRowData(rowDataCertificats.value);
+      } else {
+        console.error("Grid API.");
+      }
+    };
+    const onGridReady = (params) => {
+      gridApi.value = params.api;
+      gridColumnApi.value = params.columnApi;
+      if (gridApi.value) {
+        gridApi.value.setRowData(rowDataCertificats.value);
+      } else {
+        console.error("Grid API.");
+      }
+    };
+
+    const verbosityLevelList = ref([
+      {
+        name: "0 (none)",
+        slug: "0",
+      },
+      {
+        name: "1 (default)",
+        slug: "1",
+      },
+      {
+        name: "2",
+        slug: "2",
+      },
+      {
+        name: "3",
+        slug: "3",
+      },
+      {
+        name: "4",
+        slug: "4",
+      },
+      {
+        name: "5",
+        slug: "5",
+      },
+      {
+        name: "6",
+        slug: "6",
+      },
+      {
+        name: "7",
+        slug: "7",
+      },
+      {
+        name: "8",
+        slug: "8",
+      },
+      {
+        name: "9",
+        slug: "9",
+      },
+      {
+        name: "10",
+        slug: "10",
+      },
+      {
+        name: "11",
+        slug: "11",
+      },
+    ]);
     const getInterface = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -476,10 +701,37 @@ export default {
         }
       );
     };
+    const hasEmptyProperty = (obj) => {
+      var invalidHostChars = /[^0-9.]/.test(obj.host);
+      var invalidPortChars = /[^0-9]/.test(obj.port);
+
+      return (
+        obj.host === "" ||
+        obj.port === "" ||
+        invalidHostChars ||
+        invalidPortChars
+      );
+    };
 
     const save = async () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      var isArrayEmpty = rowDataCertificats.value.length === 0;
+      if (isArrayEmpty) {
+        snackbar.value = true;
+        color.value = "red";
+        textAlert.value = "The array is empty. Please add at least one object.";
+      } else {
+        var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
+
+        if (hasEmptyElement) {
+          snackbar.value = true;
+          color.value = "red";
+          textAlert.value =
+            "At least one element has an empty host or port, or contains invalid characters.";
+        }
+      }
 
       const result = await v$.value.$validate();
 
@@ -521,8 +773,8 @@ export default {
           proxy_port: state.proxy_port ?? "",
           proxy_authentication: proxy_authentication,
           local_port: state.local_port,
-          username: state.username,
-          password: state.password,
+          username: state.usernameUser,
+          password: state.passwordUser,
           renegotiate_time: state.renegotiate_time,
           tls_auth: tls_auth,
           auth_digest_algorithm: state.authDigestAlgorithm.slug,
@@ -538,19 +790,31 @@ export default {
           ipv6: state.ipv6,
           pull_routes: state.pullRoutes,
           add_remove_routes: state.addRemoveRoutes,
-          verbosity_level: state.verbosityLevel.slug,
-          server_host: state.hostAddress,
-          server_port: state.port,
+          verbosity_level: state.verbosityLevel.slug ?? "",
+          server_remote: rowDataCertificats.value,
         };
+        console.log("pay", payload);
 
-        axios.post("/openvpn/createClientOpenvpn", payload).then(
-          (response) => {
-            console.log(response);
-          },
-          (error) => {
-            console.log(error);
-          }
-        );
+        axios
+          .post("/openvpn/createClientOpenvpn", payload)
+          .then((response) => {
+            if (response.status == "201") {
+              console.log("response", response);
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+
+              setTimeout(() => {
+                location.reload();
+              }, 2000);
+            }
+          })
+          .catch((i) => {
+            console.log("i", i.response);
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          });
       } else {
         console.log("v$.value", v$.value);
       }
@@ -566,13 +830,24 @@ export default {
       userAuthSettings,
       cryptoSettings,
       tunnelSettings,
-      advancedConfig,
+      onGridReady,
+      rowDataCertificats,
+      addNewRow,
+      snackbar,
+      textAlert,
+      columnCertificats,
       protocols: protocolsList,
       deviceMode,
       proxyAuthenticationExtraOptionsList,
       serverMode,
+      verbosityLevelList,
       getCookie,
+      color,
       getInterface,
+      onRowValueChanged,
+      onCellValueChanged,
+      defaultColDef,
+      gridApi,
       v$,
       save,
     };
@@ -584,5 +859,8 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
+}
+.btn-add {
+  background: #213e9f;
 }
 </style>

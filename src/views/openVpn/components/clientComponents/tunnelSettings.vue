@@ -4,7 +4,7 @@
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col align-self="center" cols="4">
-        <label>IPv4 Tunnel Network</label>
+        <label>IPv4 Tunnel Network*</label>
       </v-col>
       <v-col align-self="center" cols="8" class="mb-n6">
         <v-text-field
@@ -35,12 +35,6 @@
           label="IPv4 Remote Network"
           v-model="ipv4RemoteNetwork"
         ></v-text-field>
-        <p
-          class="error-feedback mb-5"
-          v-if="props.errors.ipv4RemoteNetwork.$errors.length"
-        >
-          {{ props.errors.ipv4RemoteNetwork.$errors?.[0].$message }}
-        </p>
       </v-col>
       <v-col align-self="center"  cols="4">
         <label>IPv6 Remote Network</label>

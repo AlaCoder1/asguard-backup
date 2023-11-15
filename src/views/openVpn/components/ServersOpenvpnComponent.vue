@@ -27,7 +27,7 @@
           <v-divider class="mt-2"></v-divider>
           <v-row class="mt-2">
             <v-col cols="4" align-self="center">
-              <label>Server name</label>
+              <label>Server name*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
@@ -52,7 +52,7 @@
               ></v-text-field>
             </v-col>
             <v-col cols="4" align-self="center">
-              <label>Server mode</label>
+              <label>Server mode*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
@@ -84,7 +84,7 @@
             </v-col>
 
             <v-col cols="4" align-self="center">
-              <label>Protocol</label>
+              <label>Protocol*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
@@ -112,7 +112,7 @@
             </v-col>
 
             <v-col cols="4" align-self="center">
-              <label>Device Mode</label>
+              <label>Device Mode*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
@@ -139,7 +139,7 @@
             </v-col>
 
             <v-col cols="4" align-self="center">
-              <label>Interface</label>
+              <label>Interface*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
@@ -156,7 +156,7 @@
             </v-col>
 
             <v-col cols="4" align-self="center">
-              <label>Local port</label>
+              <label>Local port*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
@@ -255,7 +255,6 @@
             label-color="#ffffff"
             label="save"
             :isLarge="true"
-            type="submit"
             class="ml-2"
             @click="submitForm"
           />
@@ -355,7 +354,10 @@ export default {
       activeDnsServer2: "",
       activeNtpServer1: "",
       activeNtpServer2: "",
-      verbLevel: "",
+      verbLevel: {
+        name: "1 (default)",
+        slug: "1",
+      },
     });
 
     const rules = computed(() => {
@@ -390,7 +392,6 @@ export default {
         iPv4Local: { required },
 
         //Client Settings
-        verbLevel: { required },
         startAddressPool: {
           requiredIfFuction: requiredIf(() => state.adressPool),
         },
@@ -561,9 +562,9 @@ export default {
           topology: state.topology,
           dns_default_domain: electedDefaultDns,
           dns_servers: electedDnsServers,
-          force_dns: state.forceDNS,
+          force_dns_cache_update: state.forceDNS,
           ntp_servers: electedNtpServers,
-          verbosity_level: state.verbLevel?.slug,
+          verbosity_level: state.verbLevel?.slug ?? "",
         };
 
         console.log("payload", payload);
@@ -590,11 +591,10 @@ export default {
           .catch((i) => {
             state.loading = false;
             state.isLoadingDialogue = false;
-
             console.log("i", i.response);
-            // this.snackbar = true;
-            // this.color = "red";
-            // this.textAlert = i.response.data.error;
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
           });
       } else {
         console.log("res", v$.value);

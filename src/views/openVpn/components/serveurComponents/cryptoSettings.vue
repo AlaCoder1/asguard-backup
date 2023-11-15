@@ -146,6 +146,8 @@
 import axios from "axios";
 import { onBeforeMount, reactive, ref } from "vue";
 import { useVModels } from "@vueuse/core";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 
 const props = defineProps([
   "errors",
@@ -297,7 +299,6 @@ const getAllCertAuth = () => {
 
   axios.get("/certificates/getAllCertAuth").then(
     (response) => {
-      console.log("allcetAuth", response);
       let mapedList = response.data.map((i) => {
         return {
           id: i.id,

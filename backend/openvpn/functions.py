@@ -164,6 +164,7 @@ duplicate-cn
 #tun-ipv6
 
 cipher {json_object["encryption_algorithm"]}
+auth {json_object["auth_digest_algorithm"]}
 
 keepalive 20 60
 #comp-lzo

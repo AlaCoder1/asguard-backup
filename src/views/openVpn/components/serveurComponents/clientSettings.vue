@@ -10,7 +10,7 @@
         <input type="checkbox" v-model="dynamicIP" />
         <label class="ml-2">Active Dynamic IP</label>
       </v-col>
-      <v-col cols="4" align-self="center">
+      <v-col cols="4" >
         <label>Adress Pool</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
@@ -48,7 +48,7 @@
         <input type="checkbox" v-model="topology" />
         <label class="ml-2">Active toplogy</label>
       </v-col>
-      <v-col cols="4" align-self="center">
+      <v-col cols="4">
         <label>DNS Default Domain</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
@@ -67,7 +67,7 @@
           {{ props.errors.activeDnsDefault.$errors?.[0].$message }}
         </p>
       </v-col>
-      <v-col cols="4" align-self="center">
+      <v-col cols="4">
         <label>DNS Servers</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
@@ -99,7 +99,7 @@
         <input type="checkbox" v-model="forceDNS" />
         <label class="ml-2">Active Force DNS cahce update </label>
       </v-col>
-      <v-col cols="4" align-self="center">
+      <v-col cols="4">
         <label>NTP Servers</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
@@ -143,13 +143,6 @@
           item-value="slug"
           return-object
         ></v-select>
-
-        <p
-          class="error-feedback mb-5"
-          v-if="props.errors.verbLevel.$errors.length"
-        >
-          {{ props.errors.verbLevel.$errors?.[0].$message }}
-        </p>
       </v-col>
     </v-row>
   </div>

@@ -261,7 +261,7 @@ log-append /var/log/openvpn/openvpn.log
         if json_object["dns_servers"]["dns_server2"] != '':
             config_input = config_input.replace("#push \"dhcp-option DNS server2\"", f"push \"dhcp-option DNS {json_object['dns_servers']['dns_server2']}\"")
 
-    if json_object["force_dns"]:
+    if json_object["force_dns_cache_update"]:
         config_input = config_input.replace("#push \"register-dns\"", "push \"register-dns\"")
 
     if json_object["ntp_servers"]["ntp_servers_select"]:

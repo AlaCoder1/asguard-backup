@@ -14,9 +14,7 @@
             domLayout="autoHeight"
             class="ag-theme-alpine mt-3"
             :columnDefs="columnRevocation"
-           
             style="width: 100%; height: 100%"
-          
             @grid-ready="onGridReady"
           />
         </div>
@@ -39,8 +37,19 @@
       :initialData="modalData"
     />
   </div>
+  <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+
+      <template v-slot:actions> </template>
+    </v-snackbar>
 </template>
 <script>
+import axios from "axios";
 import { AgGridVue } from "ag-grid-vue3";
 import ModalCertifRevocation from "@/components/modals/ModalCertifRevocation.vue";
 export default {
@@ -57,6 +66,9 @@ export default {
 
   data() {
     return {
+      snackbar:false,
+      color:'',
+      textAlert:'',
       listAuthRevoc: null,
       modalMode: "",
       rowEdit: {},
@@ -151,6 +163,11 @@ export default {
           data-action="show">
           <span class="mdi mdi-eye  fa-lg" style="color: #086eae;font-size: 24px;"></span>
           </button>
+          <button
+           class="action-button download"
+           data-action="export" title="download CRL">
+              <span class="mdi mdi-download-circle fa-lg" style="color: #086eae;  font-size: 22px;"></span>
+           </button>
         `;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
@@ -162,6 +179,20 @@ export default {
 
       return eGui;
     },
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
     handleAction(action, rowData) {
       switch (action) {
         case "show":
@@ -169,6 +200,50 @@ export default {
           this.openModal();
           this.modalMode = "update";
           console.log("Edit clicked for row:", rowData);
+          break;
+        case "export":
+          console.log("Edit clicked for row:", rowData);
+          let id = rowData.id;
+          let fileExtention = `${rowData.nom}_crl.pem`;
+
+          const csrfToken = this.getCookie("csrftoken");
+          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+          axios
+            .post(`/certificates/exportCertAuthListRev/${id}`)
+            .then((response) => {
+              console.log("res", response);
+
+              const text = response.data.list_revocation;
+              const blob = new Blob([text], {
+                type: "application/x-x509-ca-cert",
+              });
+
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.style.display = "none";
+              a.href = url;
+              a.download = fileExtention;
+
+              document.body.appendChild(a);
+              a.click();
+
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+
+              if (response.status == "201") {
+                console.log("success");
+              } else {
+                console.log("error");
+              }
+            })
+            .catch((i) => {
+              console.log("i", i.response);
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+            });
+
           break;
         default:
           break;

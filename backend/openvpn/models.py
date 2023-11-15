@@ -48,7 +48,6 @@ class ServerOpenvpn(models.Model):
 
 
 class ClientOpenvpn(models.Model):
-    server_openvpn = models.ForeignKey(ServerOpenvpn, on_delete=models.PROTECT, default=None, null=True, blank=True)
     name = models.CharField(max_length=255, default=None, null=True, blank=True, unique=True)
     description = models.CharField(max_length=300, default=None, null=True, blank=True)
     server_mode = models.CharField(max_length=100, default="peer-to-peer", null=True, blank=True)
@@ -81,6 +80,7 @@ class ClientOpenvpn(models.Model):
     pull_routes = models.BooleanField(default=False, null=True, blank=True)
     add_remove_routes = models.BooleanField(default=False, null=True, blank=True)
     verb = models.CharField(max_length=100, default=None, null=True, blank=True)
+    server_remote = models.CharField(max_length=1000, default=None, null=True, blank=True)
 
     class Meta:
         db_table = 'client_openvpn'

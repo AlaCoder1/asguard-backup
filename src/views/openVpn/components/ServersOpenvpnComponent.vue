@@ -365,7 +365,15 @@ export default {
 
     const rules = computed(() => {
       return {
-        clientName: { required },
+        clientName: {
+          required,
+          isValidlifeTime: helpers.withMessage(
+            `champs can include only letters & Numbers & underscores & hyphens without space.`,
+
+            helpers.regex(/^[A-Za-z0-9_\-]+$/)
+          ),
+        },
+
         serverMode: { required },
         protocol: { required },
         deviceMode: { required },
@@ -393,10 +401,14 @@ export default {
         //Tunnel Settings
 
         ip4Tunnel: {
-          requiredIfFuction: requiredIf(() => !state.isBridge && !state.adressPool),
+          requiredIfFuction: requiredIf(
+            () => !state.isBridge && !state.adressPool
+          ),
         },
         iPv4Local: {
-          requiredIfFuction: requiredIf(() => !state.isBridge && !state.adressPool),
+          requiredIfFuction: requiredIf(
+            () => !state.isBridge && !state.adressPool
+          ),
         },
         interfaceBridge: {
           requiredIfFuction: requiredIf(() => state.isBridge),

@@ -463,7 +463,14 @@ export default {
 
     const rules = computed(() => {
       return {
-        clientName: { required },
+        clientName: {
+          required,
+          isValidClientName: helpers.withMessage(
+            `champs can include only letters & Numbers & underscores & hyphens without space.`,
+
+            helpers.regex(/^[A-Za-z0-9_\-]+$/)
+          ),
+        },
         server_mode: { required },
         protocol: { required },
         device_mode: { required },

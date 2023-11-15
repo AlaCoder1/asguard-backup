@@ -367,7 +367,7 @@ export default {
       return {
         clientName: {
           required,
-          isValidlifeTime: helpers.withMessage(
+          isValidClientName: helpers.withMessage(
             `champs can include only letters & Numbers & underscores & hyphens without space.`,
 
             helpers.regex(/^[A-Za-z0-9_\-]+$/)

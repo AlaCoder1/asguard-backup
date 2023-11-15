@@ -3,10 +3,14 @@
     <h4>Tunnel Settings</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
-      <v-col cols="4" align-self="center">
+      <v-col
+        v-if="!props.addressPool && !isBridge"
+        cols="4"
+        align-self="center"
+      >
         <label>IPv4 Tunnel Network*</label>
       </v-col>
-      <v-col cols="8" class="mb-n6">
+      <v-col v-if="!props.addressPool && !isBridge" cols="8" class="mb-n6">
         <v-text-field
           label="IPv4 Tunnel Network"
           v-model="ip4Tunnel"
@@ -44,7 +48,7 @@
       </v-col>
 
       <v-col cols="4" v-if="isBridge" align-self="center">
-        <label>Interface bridge</label>
+        <label>Interface bridge*</label>
       </v-col>
       <v-col cols="8" class="mb-n6" v-if="isBridge">
         <v-select
@@ -55,6 +59,12 @@
           return-object
           :items="mapedInterface"
         ></v-select>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.interfaceBridge.$errors.length"
+        >
+          {{ props.errors.interfaceBridge.$errors?.[0].$message }}
+        </p>
       </v-col>
 
       <v-col cols="4" v-if="isBridge" align-self="center">
@@ -65,6 +75,12 @@
           label="Start DHCP bridge"
           v-model="startDHCPBridge"
         ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.startDHCPBridge.$errors.length"
+        >
+          {{ props.errors.startDHCPBridge.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" v-if="isBridge" align-self="center">
         <label>End DHCP bridge</label>
@@ -74,9 +90,21 @@
           label="End DHCP bridge"
           v-model="endDHCPBridge"
         ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.endDHCPBridge.$errors.length"
+        >
+          {{ props.errors.endDHCPBridge.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" align-self="center">
-        <label>IPv4 Local Network*</label>
+        <label>
+          {{
+            isBridge || props.addressPool
+              ? "IPv4 Local Network"
+              : "IPv4 Local Network*"
+          }}
+        </label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
@@ -185,6 +213,7 @@ onMounted(() => {
 
 const props = defineProps([
   "errors",
+  "addressPool",
   "deviceMode",
   "ip4Tunnel",
   "ip6Tunnel",

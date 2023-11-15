@@ -104,7 +104,7 @@ export default {
         filter: true,
       },
       {
-        headerName: "Published",
+        headerName: "Certificat status",
         field: "published",
         sortable: true,
         filter: true,
@@ -146,7 +146,7 @@ export default {
         filter: true,
       },
       {
-        headerName: "Published",
+        headerName: "Certificat status",
         field: "published",
         sortable: true,
         filter: true,

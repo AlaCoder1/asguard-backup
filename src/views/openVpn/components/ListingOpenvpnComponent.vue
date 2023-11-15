@@ -34,7 +34,7 @@
         </div>
       </v-col>
     </v-row>
-      <v-row>
+    <v-row>
       <v-col cols="12">
         <h4>List Clients</h4>
         <v-divider></v-divider>
@@ -74,7 +74,7 @@
 import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { onMounted, reactive, ref } from "vue";
-import { inject } from 'vue'
+import { inject } from "vue";
 
 import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
 import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSS
@@ -86,7 +86,7 @@ export default {
     VButton,
   },
   setup() {
-    const emitter = inject('emitter')
+    const emitter = inject("emitter");
     const columnServers = [
       {
         headerName: "Server Name",
@@ -112,10 +112,9 @@ export default {
         field: "description",
         sortable: true,
         filter: true,
-       
       },
       {
-        headerName: "Published",
+        headerName: "Certificat status",
         field: "published",
         sortable: true,
         filter: true,
@@ -156,14 +155,14 @@ export default {
         filter: true,
       },
       {
-        headerName: "Published",
+        headerName: "Certificat status",
         field: "published",
         sortable: true,
         filter: true,
       },
       {
         headerName: "Action",
-        cellRenderer: actionCellRenderer,
+        cellRenderer: actionCellRendererClient,
         minWidth: 150,
         field: "action",
         sortable: true,
@@ -187,7 +186,7 @@ export default {
       flex: 1,
     };
 
-     const autoGroupColumnDef = {
+    const autoGroupColumnDef = {
       headerName: "Server Name",
       field: "serverNname",
       minWidth: 300,
@@ -252,6 +251,55 @@ export default {
       return eGui;
     }
 
+    function actionCellRendererClient(params) {
+      let eGui = document.createElement("div");
+      let editingCells = params.api.getEditingCells();
+      let isCurrentRowEditing = editingCells.some((cell) => {
+        return cell.rowIndex === params.node.rowIndex;
+      });
+      if (isCurrentRowEditing) {
+        eGui.innerHTML = `
+        <button  
+          class="action-button update"
+          data-action="update">
+               update  
+        </button>
+        <button  
+          class="action-button cancel"
+          data-action="cancel">
+               cancel
+        </button>
+        `;
+      } else {
+        eGui.innerHTML = `
+    
+          <button
+          class="action-button download"
+          data-action="download" title="download">
+             <i class="mdi mdi-download-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          <button
+          class="action-button edit"
+          data-action="edit" title="Edit Server">
+             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          <button
+          class="action-button delete"
+          data-action="delete" title="Delete Server">
+             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+
+        `;
+      }
+      eGui.querySelectorAll(".action-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.getAttribute("data-action");
+          this.handleAction(action, params.node.data);
+        });
+      });
+      return eGui;
+    }
+
     const publishServer = () => {
       console.log("publishServer");
     };
@@ -270,7 +318,6 @@ export default {
 
     onMounted(async () => {
       try {
-
         const serversAttribute =
           document.getElementById("app").attributes["servers"].value;
         const validJsonString = serversAttribute
@@ -322,6 +369,7 @@ export default {
       autoGroupColumnDef,
       rowGroupPanelShow,
       emitter,
+      actionCellRendererClient,
       cellWasClicked: (event) => {
         // Example of consuming Grid Event
         console.log("cell was clicked", event);

@@ -74,6 +74,7 @@
 import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { onMounted, reactive, ref } from "vue";
+import { inject } from 'vue'
 
 import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
 import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSS
@@ -85,6 +86,7 @@ export default {
     VButton,
   },
   setup() {
+    const emitter = inject('emitter')
     const columnServers = [
       {
         headerName: "Server Name",
@@ -254,9 +256,16 @@ export default {
       console.log("publishServer");
     };
 
-    const addServer = (emitter) => {
-      // emitter.emit("add-server");
-      window.location.href = "/openvpn";
+    const addServer = () => {
+      emitter.emit("add-server");
+    };
+
+    const publishClient = () => {
+      console.log("publishClient");
+    };
+
+    const addClient = () => {
+      emitter.emit("add-client");
     };
 
     onMounted(async () => {
@@ -312,6 +321,7 @@ export default {
       defaultColDef,
       autoGroupColumnDef,
       rowGroupPanelShow,
+      emitter,
       cellWasClicked: (event) => {
         // Example of consuming Grid Event
         console.log("cell was clicked", event);
@@ -323,6 +333,8 @@ export default {
       onGridReady,
       publishServer,
       addServer,
+      publishClient,
+      addClient,
     };
   },
 };

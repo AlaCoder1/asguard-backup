@@ -11,7 +11,8 @@ const emitter = mitt()
 
 const app = createApp(openvpn);
 
-app.config.globalProperties.emitter = emitter
+app.provide('emitter', emitter)
+
 const vuetify = createVuetify({
     components,
     directives

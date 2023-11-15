@@ -12,8 +12,9 @@
             style="width: 100%"
             :columnDefs="columnServers"
             :rowData="rowDataServers.value"
-            rowSelection="multiple"
-            animateRows="true"
+            :defaultColDef="defaultColDef"
+            :autoGroupColumnDef="autoGroupColumnDef"
+            :rowGroupPanelShow="rowGroupPanelShow"
             @cell-clicked="cellWasClicked"
             @grid-ready="onGridReady"
           />
@@ -30,6 +31,39 @@
               @click="addServer"
             />
           </div>
+        </div>
+      </v-col>
+    </v-row>
+      <v-row>
+      <v-col cols="12">
+        <h4>List Clients</h4>
+        <v-divider></v-divider>
+        <div style="display: flex; flex-direction: column">
+          <ag-grid-vue
+            id="grid-wrapper"
+            domLayout="autoHeight"
+            class="ag-theme-alpine mt-3"
+            style="width: 100%"
+            :columnDefs="columnClients"
+            :rowData="rowDataClients.value"
+            :defaultColDef="defaultColDef"
+            :autoGroupColumnDef="autoGroupColumnDef"
+            :rowGroupPanelShow="rowGroupPanelShow"
+          />
+          <div class="d-flex justify-end mt-3">
+            <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              label="Add Client"
+              :isLarge="true"
+              type="submit"
+              class="ml-2"
+              @click="addClient"
+            />
+          </div>
+          <br />
         </div>
       </v-col>
     </v-row>
@@ -76,6 +110,48 @@ export default {
         field: "description",
         sortable: true,
         filter: true,
+       
+      },
+      {
+        headerName: "Published",
+        field: "published",
+        sortable: true,
+        filter: true,
+      },
+      {
+        headerName: "Action",
+        cellRenderer: actionCellRenderer,
+        minWidth: 150,
+        field: "action",
+        sortable: true,
+        filter: true,
+      },
+    ];
+    const columnClients = [
+      {
+        headerName: "Client Name",
+        field: "clientName",
+        sortable: true,
+        filter: true,
+        checkboxSelection: true,
+      },
+      {
+        headerName: "Protocole / Port",
+        field: "protocolPort",
+        sortable: true,
+        filter: true,
+      },
+      {
+        headerName: "Server",
+        field: "server",
+        sortable: true,
+        filter: true,
+      },
+      {
+        headerName: "Description",
+        field: "description",
+        sortable: true,
+        filter: true,
       },
       {
         headerName: "Published",
@@ -93,6 +169,7 @@ export default {
       },
     ];
     const rowDataServers = reactive({});
+    const rowDataClients = reactive({});
 
     const gridApi = ref(null); // Optional - for accessing Grid's API
 
@@ -108,25 +185,83 @@ export default {
       flex: 1,
     };
 
-    // actionCellRenderer
+     const autoGroupColumnDef = {
+      headerName: "Server Name",
+      field: "serverNname",
+      minWidth: 300,
+      cellRenderer: "agGroupCellRenderer",
+      cellRendererParams: {
+        checkbox: true,
+      },
+    };
+    const rowGroupPanelShow = ref("always");
+
     function actionCellRenderer(params) {
-      const eDiv = document.createElement("div");
-      eDiv.innerHTML = `
-        <v-icon color="#213E9F" class="mr-2">mdi-pencil</v-icon>
-        <v-icon color="#213E9F">mdi-delete</v-icon>
-      `;
-      return eDiv;
+      let eGui = document.createElement("div");
+      let editingCells = params.api.getEditingCells();
+      let isCurrentRowEditing = editingCells.some((cell) => {
+        return cell.rowIndex === params.node.rowIndex;
+      });
+      if (isCurrentRowEditing) {
+        eGui.innerHTML = `
+        <button  
+          class="action-button update"
+          data-action="update">
+               update  
+        </button>
+        <button  
+          class="action-button cancel"
+          data-action="cancel">
+               cancel
+        </button>
+        `;
+      } else {
+        eGui.innerHTML = `
+        
+        <button 
+          class="action-button play"
+          data-action="play" title="Start Server">
+             <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
+          </button>
+          <button
+          class="action-button stop"
+          data-action="stop" title="Stop Server">
+             <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
+          </button>
+          <button
+          class="action-button edit"
+          data-action="edit" title="Edit Server">
+             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          <button
+          class="action-button delete"
+          data-action="delete" title="Delete Server">
+             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+
+        `;
+      }
+      eGui.querySelectorAll(".action-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.getAttribute("data-action");
+          this.handleAction(action, params.node.data);
+        });
+      });
+      return eGui;
     }
+
     const publishServer = () => {
       console.log("publishServer");
     };
 
     const addServer = (emitter) => {
-      emitter.emit("add-server");
+      // emitter.emit("add-server");
+      window.location.href = "/openvpn";
     };
 
     onMounted(async () => {
       try {
+
         const serversAttribute =
           document.getElementById("app").attributes["servers"].value;
         const validJsonString = serversAttribute
@@ -141,10 +276,29 @@ export default {
           proto: server.proto,
           ipv4_tunnel_network: server.ipv4_tunnel_network,
           description: server.description,
-          published: server.published,
+          published: server.type_of_service,
         }));
 
         rowDataServers.value = processedData;
+
+        const clientsAttribute =
+          document.getElementById("app").attributes["clients"].value;
+        const validJsonStringClients = clientsAttribute
+          .replace(/'/g, '"')
+          .replace(/True/g, "true")
+          .replace(/False/g, "false")
+          .replace(/None/g, "null");
+        const parsedArrayClients = JSON.parse(validJsonStringClients);
+
+        const processedDataClients = parsedArrayClients.map((client) => ({
+          clientName: client.name,
+          protocolPort: client.proto,
+          server: client.server_remote,
+          description: client.description,
+          published: client.type_of_service,
+        }));
+
+        rowDataClients.value = processedDataClients;
       } catch (error) {
         console.error("Error setting rowDataServers:", error);
       }
@@ -152,8 +306,12 @@ export default {
 
     return {
       columnServers,
+      columnClients,
       rowDataServers,
+      rowDataClients,
       defaultColDef,
+      autoGroupColumnDef,
+      rowGroupPanelShow,
       cellWasClicked: (event) => {
         // Example of consuming Grid Event
         console.log("cell was clicked", event);

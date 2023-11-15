@@ -10,10 +10,10 @@
         <input type="checkbox" v-model="dynamicIP" />
         <label class="ml-2">Active Dynamic IP</label>
       </v-col>
-      <v-col cols="4" >
-        <label>Adress Pool</label>
+      <v-col v-if="props.deviceMode === 'tun'" cols="4" >
+        <label>Adress Pool </label>
       </v-col>
-      <v-col cols="8" class="mb-n6">
+      <v-col v-if="props.deviceMode === 'tun'" cols="8" class="mb-n6">
         <input type="checkbox" v-model="adressPool" />
         <label class="ml-2">Active Adress pool</label>
         <v-text-field
@@ -97,7 +97,7 @@
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="forceDNS" />
-        <label class="ml-2">Active Force DNS cahce update </label>
+        <label class="ml-2">Active Force DNS cache update </label>
       </v-col>
       <v-col cols="4">
         <label>NTP Servers</label>
@@ -154,6 +154,8 @@ import { useVModels } from "@vueuse/core";
 
 const props = defineProps([
   "errors",
+  "deviceMode",
+  "isBridge",
   "dynamicIP",
   "adressPool",
   "topology",

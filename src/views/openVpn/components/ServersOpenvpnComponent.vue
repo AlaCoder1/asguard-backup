@@ -210,6 +210,7 @@
               v-model:IPv6="state.IPv6"
               v-model:interClients="state.interClients"
               :deviceMode="state.deviceMode.slug"
+              :addressPool="state.adressPool"
               :errors="v$"
             />
           </v-row>
@@ -230,6 +231,8 @@
             v-model:activeNtpServer1="state.activeNtpServer1"
             v-model:activeNtpServer2="state.activeNtpServer2"
             v-model:verbLevel="state.verbLevel"
+            :isBridge="state.isBridge"
+            :deviceMode="state.deviceMode.slug"
             :errors="v$"
           />
         </div>
@@ -275,9 +278,9 @@
 </template>
 
 <script>
-import VButton from "@/components/VButton.vue";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
+import VButton from "@/components/VButton.vue";
 import { required, requiredIf, helpers } from "@vuelidate/validators";
 import UsersList from "../../system/user/components/UsersList.vue";
 import tunnelSettings from "./serveurComponents/tunnelSettings.vue";
@@ -362,7 +365,15 @@ export default {
 
     const rules = computed(() => {
       return {
-        clientName: { required },
+        clientName: {
+          required,
+          isValidClientName: helpers.withMessage(
+            `champs can include only letters & Numbers & underscores & hyphens without space.`,
+
+            helpers.regex(/^[A-Za-z0-9_\-]+$/)
+          ),
+        },
+
         serverMode: { required },
         protocol: { required },
         deviceMode: { required },
@@ -388,8 +399,20 @@ export default {
         hardwareCrypto: { required },
 
         //Tunnel Settings
-        ip4Tunnel: { required },
-        iPv4Local: { required },
+
+        ip4Tunnel: {
+          requiredIfFuction: requiredIf(
+            () => !state.isBridge && !state.adressPool
+          ),
+        },
+        iPv4Local: {
+          requiredIfFuction: requiredIf(
+            () => !state.isBridge && !state.adressPool
+          ),
+        },
+        interfaceBridge: {
+          requiredIfFuction: requiredIf(() => state.isBridge),
+        },
 
         //Client Settings
         startAddressPool: {
@@ -397,6 +420,12 @@ export default {
         },
         endAddressPool: {
           requiredIfFuction: requiredIf(() => state.adressPool),
+        },
+        startDHCPBridge: {
+          requiredIfFuction: requiredIf(() => state.isBridge),
+        },
+        endDHCPBridge: {
+          requiredIfFuction: requiredIf(() => state.isBridge),
         },
         activeDnsDefault: {
           requiredIfFuction: requiredIf(() => state.dnsDefaultDomain),
@@ -566,8 +595,6 @@ export default {
           ntp_servers: electedNtpServers,
           verbosity_level: state.verbLevel?.slug ?? "",
         };
-
-        console.log("payload", payload);
         state.loading = true;
         state.isLoadingDialogue = true;
 
@@ -577,8 +604,6 @@ export default {
             if (response.status == "201") {
               state.loading = false;
               state.isLoadingDialogue = false;
-
-              console.log("response", response);
               state.snackbar = true;
               state.color = "success";
               state.textAlert = response.data.msg;
@@ -591,7 +616,6 @@ export default {
           .catch((i) => {
             state.loading = false;
             state.isLoadingDialogue = false;
-            console.log("i", i.response);
             state.snackbar = true;
             state.color = "red";
             state.textAlert = i.response.data.error;

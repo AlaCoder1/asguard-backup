@@ -5,18 +5,16 @@
         <h4>List Servers</h4>
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column">
+          {{ rowDataServers }}
           <ag-grid-vue
             id="grid-wrapper"
             domLayout="autoHeight"
             class="ag-theme-alpine mt-3"
-            style="width: 100%"
             :columnDefs="columnServers"
-            :rowData="rowDataServers.value"
-            :defaultColDef="defaultColDef"
+            :rowData="rowDataServers"
+            style="width: 100%"
             :autoGroupColumnDef="autoGroupColumnDef"
             :rowGroupPanelShow="rowGroupPanelShow"
-            @cell-clicked="cellWasClicked"
-            @grid-ready="onGridReady"
           />
           <div class="d-flex justify-end mt-3">
             <VButton
@@ -43,12 +41,9 @@
             id="grid-wrapper"
             domLayout="autoHeight"
             class="ag-theme-alpine mt-3"
-            style="width: 100%"
             :columnDefs="columnClients"
-            :rowData="rowDataClients.value"
-            :defaultColDef="defaultColDef"
-            :autoGroupColumnDef="autoGroupColumnDef"
-            :rowGroupPanelShow="rowGroupPanelShow"
+            :rowData="rowDataClients"
+            style="width: 100%"
           />
           <div class="d-flex justify-end mt-3">
             <VButton
@@ -73,11 +68,7 @@
 <script>
 import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
-import { onMounted, reactive, ref } from "vue";
-import { inject } from "vue";
-
-import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
-import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSS
+import { onMounted, ref } from "vue";
 
 export default {
   name: "ListingOpenvpnComponent",
@@ -86,7 +77,6 @@ export default {
     VButton,
   },
   setup() {
-    const emitter = inject("emitter");
     const columnServers = [
       {
         headerName: "Server Name",
@@ -128,6 +118,7 @@ export default {
         filter: true,
       },
     ];
+
     const columnClients = [
       {
         headerName: "Client Name",
@@ -162,29 +153,17 @@ export default {
       },
       {
         headerName: "Action",
-        cellRenderer: actionCellRendererClient,
+        cellRenderer: actionCellRenderer,
         minWidth: 150,
         field: "action",
         sortable: true,
         filter: true,
       },
     ];
-    const rowDataServers = reactive({});
-    const rowDataClients = reactive({});
 
-    const gridApi = ref(null); // Optional - for accessing Grid's API
-
-    // Obtain API from grid's onGridReady event
-    const onGridReady = (params) => {
-      gridApi.value = params.api;
-    };
-
-    // DefaultColDef sets props common to all Columns
-    const defaultColDef = {
-      sortable: true,
-      filter: true,
-      flex: 1,
-    };
+    const rowDataServers = ref([ { "name": "server1", "proto": "udp", "ipv4_tunnel_network": "10.8.1.0/24", "description": "server openvpn" } ]
+);
+    const rowDataClients = ref([]);
 
     const autoGroupColumnDef = {
       headerName: "Server Name",
@@ -197,114 +176,15 @@ export default {
     };
     const rowGroupPanelShow = ref("always");
 
-    function actionCellRenderer(params) {
-      let eGui = document.createElement("div");
-      let editingCells = params.api.getEditingCells();
-      let isCurrentRowEditing = editingCells.some((cell) => {
-        return cell.rowIndex === params.node.rowIndex;
-      });
-      if (isCurrentRowEditing) {
-        eGui.innerHTML = `
-        <button  
-          class="action-button update"
-          data-action="update">
-               update  
-        </button>
-        <button  
-          class="action-button cancel"
-          data-action="cancel">
-               cancel
-        </button>
-        `;
-      } else {
-        eGui.innerHTML = `
-        
-        <button 
-          class="action-button play"
-          data-action="play" title="Start Server">
-             <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
-          </button>
-          <button
-          class="action-button stop"
-          data-action="stop" title="Stop Server">
-             <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
-          </button>
-          <button
-          class="action-button edit"
-          data-action="edit" title="Edit Server">
-             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
-          </button>
-          <button
-          class="action-button delete"
-          data-action="delete" title="Delete Server">
-             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
-          </button>
-
-        `;
-      }
-      eGui.querySelectorAll(".action-button").forEach((button) => {
-        button.addEventListener("click", () => {
-          const action = button.getAttribute("data-action");
-          this.handleAction(action, params.node.data);
-        });
-      });
-      return eGui;
-    }
-
-    function actionCellRendererClient(params) {
-      let eGui = document.createElement("div");
-      let editingCells = params.api.getEditingCells();
-      let isCurrentRowEditing = editingCells.some((cell) => {
-        return cell.rowIndex === params.node.rowIndex;
-      });
-      if (isCurrentRowEditing) {
-        eGui.innerHTML = `
-        <button  
-          class="action-button update"
-          data-action="update">
-               update  
-        </button>
-        <button  
-          class="action-button cancel"
-          data-action="cancel">
-               cancel
-        </button>
-        `;
-      } else {
-        eGui.innerHTML = `
-    
-          <button
-          class="action-button download"
-          data-action="download" title="download">
-             <i class="mdi mdi-download-circle" style="color: #086EAE; font-size: 20px;"></i>
-          </button>
-          <button
-          class="action-button edit"
-          data-action="edit" title="Edit Server">
-             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
-          </button>
-          <button
-          class="action-button delete"
-          data-action="delete" title="Delete Server">
-             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
-          </button>
-
-        `;
-      }
-      eGui.querySelectorAll(".action-button").forEach((button) => {
-        button.addEventListener("click", () => {
-          const action = button.getAttribute("data-action");
-          this.handleAction(action, params.node.data);
-        });
-      });
-      return eGui;
-    }
+    const actionCellRenderer = (params) => {
+      return `<div><button @click="yourFunction(${params.data.id})">Action</button></div>`;
+    };
 
     const publishServer = () => {
       console.log("publishServer");
     };
 
-    const addServer = () => {
+    const addServer = (emitter) => {
       emitter.emit("add-server");
     };
 
@@ -312,12 +192,14 @@ export default {
       console.log("publishClient");
     };
 
-    const addClient = () => {
+    const addClient = (emitter) => {
+      console.log("addClient");
       emitter.emit("add-client");
     };
 
     onMounted(async () => {
       try {
+
         const serversAttribute =
           document.getElementById("app").attributes["servers"].value;
         const validJsonString = serversAttribute
@@ -332,7 +214,7 @@ export default {
           proto: server.proto,
           ipv4_tunnel_network: server.ipv4_tunnel_network,
           description: server.description,
-          published: server.type_of_service,
+          published: server.published,
         }));
 
         rowDataServers.value = processedData;
@@ -348,10 +230,10 @@ export default {
 
         const processedDataClients = parsedArrayClients.map((client) => ({
           clientName: client.name,
-          protocolPort: client.proto,
-          server: client.server_remote,
+          protocolPort: client.protocolPort,
+          server: client.server,
           description: client.description,
-          published: client.type_of_service,
+          published: client.published,
         }));
 
         rowDataClients.value = processedDataClients;
@@ -365,20 +247,8 @@ export default {
       columnClients,
       rowDataServers,
       rowDataClients,
-      defaultColDef,
       autoGroupColumnDef,
       rowGroupPanelShow,
-      emitter,
-      actionCellRendererClient,
-      cellWasClicked: (event) => {
-        // Example of consuming Grid Event
-        console.log("cell was clicked", event);
-      },
-      deselectRows: () => {
-        gridApi.value.deselectAll();
-      },
-      actionCellRenderer,
-      onGridReady,
       publishServer,
       addServer,
       publishClient,
@@ -388,4 +258,6 @@ export default {
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+
+</style>

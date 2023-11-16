@@ -228,7 +228,8 @@ def createServerOpenvpn(request):
                 server_conf = json_to_str_server(data)
 
                 # Install the server in system
-                install_server_openvpn(server_name=data["name"], ca_name=ca_name, tls_auth=tls_auth, server_conf=server_conf)
+                install_server_openvpn(server_name=data["name"], ca_name=ca_name, tls_auth=tls_auth, dh_length=dh, 
+                                       server_conf=server_conf)
 
                 # Add the server to the database
                 serializer_server.save()

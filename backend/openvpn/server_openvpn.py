@@ -16,7 +16,7 @@ def install_server_openvpn(server_name, ca_name, tls_auth, server_conf:str):
 
     commands_list_without_arguments = [['sudo', 'mkdir', '-p', '/var/log/openvpn/'],
                                        ['sudo', 'touch', '/var/log/openvpn/status.log'],
-                                       ['sudo', 'sudo', 'chown', '777', '/var/log/openvpn/status.log'],
+                                       ['sudo', 'chown', '777', '/var/log/openvpn/status.log'],
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 

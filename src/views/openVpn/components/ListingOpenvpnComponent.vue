@@ -222,7 +222,9 @@ export default {
         </button>
         `;
       } else {
-        if (rowDataServers.value.server_status) {
+        if (
+          rowDataServers.value[params.node.rowIndex].server_status === false
+        ) {
           eGui.innerHTML = `
         
         <button
@@ -354,6 +356,7 @@ export default {
           ipv4_tunnel_network: server.ipv4_tunnel_network,
           description: server.description,
           cert_status: server.cert_status,
+          server_status: server.server_status,
         }));
 
         rowDataServers.value = processedData;

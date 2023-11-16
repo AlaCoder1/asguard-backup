@@ -214,7 +214,6 @@ export default {
               title: "OPEN VPN",
               icon: "",
               href: "/openvpn",
-              href: "/openvpn",
               active: "OPEN VPN",
             },
             {

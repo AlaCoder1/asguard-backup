@@ -13,7 +13,6 @@
             :columnDefs="columnServers"
             :rowData="rowDataServers.value"
             :defaultColDef="defaultColDef"
-            :autoGroupColumnDef="autoGroupColumnDef"
             :rowGroupPanelShow="rowGroupPanelShow"
             @cell-clicked="cellWasClicked"
             @grid-ready="onGridReady"
@@ -47,7 +46,6 @@
             :columnDefs="columnClients"
             :rowData="rowDataClients.value"
             :defaultColDef="defaultColDef"
-            :autoGroupColumnDef="autoGroupColumnDef"
             :rowGroupPanelShow="rowGroupPanelShow"
           />
           <div class="d-flex justify-end mt-3">
@@ -75,6 +73,7 @@ import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { onMounted, reactive, ref } from "vue";
 import { inject } from "vue";
+import CertStatusRenderVue from "./agGridCustomRender/CertStatusRenderVue.vue";
 
 import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
 import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSS
@@ -84,6 +83,7 @@ export default {
   components: {
     AgGridVue,
     VButton,
+    CertStatusRenderVue,
   },
   setup() {
     const emitter = inject("emitter");
@@ -115,9 +115,16 @@ export default {
       },
       {
         headerName: "Certificat status",
-        field: "published",
+        field: "cert_status",
         sortable: true,
         filter: true,
+        cellRendererSelector: function (params) {
+          const cert_status = {
+            component: "CertStatusRenderVue",
+            params: params.data.cert_status,
+          };
+          return cert_status;
+        },
       },
       {
         headerName: "Action",
@@ -156,9 +163,16 @@ export default {
       },
       {
         headerName: "Certificat status",
-        field: "published",
+        field: "cert_status",
         sortable: true,
         filter: true,
+        cellRendererSelector: function (params) {
+          const cert_status = {
+            component: "CertStatusRenderVue",
+            params: params.data.cert_status,
+          };
+          return cert_status;
+        },
       },
       {
         headerName: "Action",
@@ -186,15 +200,6 @@ export default {
       flex: 1,
     };
 
-    const autoGroupColumnDef = {
-      headerName: "Server Name",
-      field: "serverNname",
-      minWidth: 300,
-      cellRenderer: "agGroupCellRenderer",
-      cellRendererParams: {
-        checkbox: true,
-      },
-    };
     const rowGroupPanelShow = ref("always");
 
     function actionCellRenderer(params) {
@@ -217,18 +222,16 @@ export default {
         </button>
         `;
       } else {
-        eGui.innerHTML = `
+        if (rowDataServers.value.server_status) {
+          eGui.innerHTML = `
         
-        <button 
+        <button
+        id="play"
           class="action-button play"
           data-action="play" title="Start Server">
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
-          <button
-          class="action-button stop"
-          data-action="stop" title="Stop Server">
-             <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
-          </button>
+
           <button
           class="action-button edit"
           data-action="edit" title="Edit Server">
@@ -241,6 +244,28 @@ export default {
           </button>
 
         `;
+        } else {
+          eGui.innerHTML = `
+        
+       <button
+          id="stop"
+          class="action-button stop"
+          data-action="stop" title="Stop Server">
+             <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
+          </button>
+
+          <button
+          class="action-button edit"
+          data-action="edit" title="Edit Server">
+             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          <button
+          class="action-button delete"
+          data-action="delete" title="Delete Server">
+             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+       `;
+        }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -300,17 +325,13 @@ export default {
       return eGui;
     }
 
-    const publishServer = () => {
-      console.log("publishServer");
-    };
+    const publishServer = () => {};
 
     const addServer = () => {
       emitter.emit("add-server");
     };
 
-    const publishClient = () => {
-      console.log("publishClient");
-    };
+    const publishClient = () => {};
 
     const addClient = () => {
       emitter.emit("add-client");
@@ -332,7 +353,7 @@ export default {
           proto: server.proto,
           ipv4_tunnel_network: server.ipv4_tunnel_network,
           description: server.description,
-          published: server.type_of_service,
+          cert_status: server.cert_status,
         }));
 
         rowDataServers.value = processedData;
@@ -351,7 +372,7 @@ export default {
           protocolPort: client.proto,
           server: client.server_remote,
           description: client.description,
-          published: client.type_of_service,
+          cert_status: client.cert_status,
         }));
 
         rowDataClients.value = processedDataClients;
@@ -366,7 +387,6 @@ export default {
       rowDataServers,
       rowDataClients,
       defaultColDef,
-      autoGroupColumnDef,
       rowGroupPanelShow,
       emitter,
       actionCellRendererClient,

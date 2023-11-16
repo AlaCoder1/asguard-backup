@@ -164,7 +164,9 @@ def createServerOpenvpn(request):
                            "interface": interface,
                            "port": port,
                            "tls": tls,
+                           "ca_name": ca_name,
                            "ca": ca,
+                           "cert_name": server_cert_name,
                            "cert": cert,
                            "key": key,
                            "dh": dh,
@@ -337,11 +339,11 @@ def updateServerOpenVPN(request, id):
             server.port = data.get('local_port', '')
             tls_auth = data.get('tls_auth', '')
             server.tls = f'/etc/openvpn/server/static_{server.name}.key'
-            ca_name = data.get('ca_name', '')
-            server_cert_name = data.get('server_cert', '')
-            server.ca = f'/etc/certificates_{ca_name}/ca.crt'
-            server.cert = f'/etc/openvpn/certificates_{server_cert_name}/server.crt'
-            server.key = f'/etc/openvpn/certificates_{server_cert_name}/server.key'
+            server.ca_name = data.get('ca_name', '')
+            server.cert_name = data.get('server_cert', '')
+            server.ca = f'/etc/certificates_{server.ca_name}/ca.crt'
+            server.cert = f'/etc/openvpn/certificates_{server.cert_name}/server.crt'
+            server.key = f'/etc/openvpn/certificates_{server.cert_name}/server.key'
             dh = data.get('dh_params_length', '')
             if server.dh == dh:
                 dh = False
@@ -609,7 +611,7 @@ def createClientOpenvpn(request):
             renegotiate_time = data.get('renegotiate_time', '')
             tls_auth = data.get('tls_auth', '')
             ca_name = data.get('ca_name', '')
-            client_cert_name = data.get('client_cert', '')
+            cert_name = data.get('client_cert', '')
             cipher = data.get('encryption_algorithm', '')
             auth = data.get('auth_digest_algorithm', '')
             hardware_crypto = data.get('hardware_crypto', '')
@@ -624,8 +626,8 @@ def createClientOpenvpn(request):
             verb = data.get('verbosity_level', '')
             servers_list = data.get('server_remote', '')
             ca = f'/etc/certificates_{ca_name}/ca.crt'
-            cert = f'/etc/openvpn/client/certificates_{client_cert_name}/{client_cert_name}.crt'
-            key = f'/etc/openvpn/client/certificates_{client_cert_name}/{client_cert_name}.key'
+            cert = f'/etc/openvpn/client/certificates_{cert_name}/{cert_name}.crt'
+            key = f'/etc/openvpn/client/certificates_{cert_name}/{cert_name}.key'
             tls = f'/etc/openvpn/client/static_{name}.key'
             interface_address = IP4Config.objects.get(interface_id=interface)
             data["interface_address"] = interface_address.ip_address
@@ -648,7 +650,9 @@ def createClientOpenvpn(request):
                            "password": password,
                            "renegotiate_time": renegotiate_time,
                            "tls": tls,
+                           "ca_name": ca_name,
                            "ca": ca,
+                           "cert_name": cert_name,
                            "cert": cert,
                            "key": key,
                            "cipher": cipher,
@@ -794,12 +798,12 @@ def updateClientOpenvpn(request, id):
             client.password = data.get('password', '')
             client.renegotiate_time = data.get('renegotiate_time', '')
             tls_auth = data.get('tls_auth', '')
-            ca_name = data.get('ca_name', '')
-            client_cert_name = data.get('client_cert', '')
+            client.ca_name = data.get('ca_name', '')
+            client.cert_name = data.get('client_cert', '')
             client.tls = f'/etc/openvpn/client/static_{client.name}.key'
-            client.ca = f'/etc/certificates_{ca_name}/ca.crt'
-            client.cert = f'/etc/openvpn/client/certificates_{client_cert_name}/{client_cert_name}.crt'
-            client.key = f'/etc/openvpn/client/certificates_{client_cert_name}/{client_cert_name}.key'
+            client.ca = f'/etc/certificates_{client.ca_name}/ca.crt'
+            client.cert = f'/etc/openvpn/client/certificates_{client.cert_name}/{client.cert_name}.crt'
+            client.key = f'/etc/openvpn/client/certificates_{client.cert_name}/{client.cert_name}.key'
             client.cipher = data.get('encryption_algorithm', '')
             client.auth = data.get('auth_digest_algorithm', '')
             client.hardware_crypto = data.get('hardware_crypto', '')

@@ -43,10 +43,13 @@ def get_all_client_openvpn():
     clientDict = serializers.serialize("json",client)
     res = json.loads(clientDict)
     for cli in res:
+        certificate = Certificate.objects.get(name=cli['fields']['cert_name'])
         cli.pop('model')
         id = cli['pk']
         cli.pop('pk')
         cli['fields']['id'] = id
+        list_client.append(cli['fields'])
+        cli['fields']['cert_status'] = certificate.activation
         list_client.append(cli['fields'])
     return list_client
 

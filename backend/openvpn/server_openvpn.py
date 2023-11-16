@@ -3,7 +3,7 @@ from backend.managementCertificates.functions import initialize_ca
 from backend.openvpn.functions import create_tls_file, execute_list_commands_without_arguments, get_current_directory
 
 
-def install_server_openvpn(server_name, ca_name, tls_auth, server_conf:str):
+def install_server_openvpn(server_name, ca_name, tls_auth, dh_length, server_conf:str):
     """Function to install an openvpn server in system using easyrsa package to generate keys and certificates"""
     current_dir = get_current_directory()
     
@@ -24,7 +24,8 @@ def install_server_openvpn(server_name, ca_name, tls_auth, server_conf:str):
     shutil.chown('/etc/openvpn/', user='openvpn', group='network')
     shutil.chown(f'/etc/certificates_{ca_name}/', user='openvpn', group='openvpn')
     commands_list_without_arguments = [['sudo', 'chown', '-R', 'openvpn:network', '/etc/openvpn/'],
-                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', f'/etc/certificates_{ca_name}/']
+                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', f'/etc/certificates_{ca_name}/'],
+                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', f'/asguard/newdms/DH_files/{dh_length}.pem']
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 

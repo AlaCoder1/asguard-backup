@@ -19,7 +19,7 @@
               <v-card-text> <ClientsOpenvpnComponent /></v-card-text>
             </v-card>
           </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="MONOTORING">
+          <v-window-item v-for="tab in tabs" :key="tab.id" value="MONITORING">
             <v-card>
               <v-card-text> <MonotoringOpenvpnComponent /></v-card-text>
             </v-card>
@@ -58,7 +58,7 @@ export default {
       tabs: [
         { id: 1, label: "SERVERS" },
         { id: 2, label: "CLIENTS" },
-        { id: 3, label: "MONOTORING" },
+        { id: 3, label: "MONITORING" },
         { id: 4, label: "LISTING" },
       ],
       rowDataServers: [],

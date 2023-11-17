@@ -26,7 +26,7 @@
           </v-window-item>
           <v-window-item v-for="tab in tabs" :key="tab.id" value="LISTING">
             <v-card>
-              <v-card-text> <ListingOpenvpnComponent /></v-card-text>
+              <v-card-text> <ListingOpenvpnComponent :serverInfo="serverInfo" /></v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -51,17 +51,54 @@ export default {
     MonotoringOpenvpnComponent,
     ListingOpenvpnComponent,
   },
+  inject: ['emitter'],
   data() {
     return {
-      activeTab: 'SERVERS',
+      activeTab: "SERVERS",
       tabs: [
         { id: 1, label: "SERVERS" },
         { id: 2, label: "CLIENTS" },
         { id: 3, label: "MONOTORING" },
         { id: 4, label: "LISTING" },
       ],
+      rowDataServers: [],
+      rowDataClients: [],
+      serverInfo:null
+
     };
   },
   methods: {},
+  
+
+  mounted: async function () {
+
+    this.serverInfo = document.getElementById("app").attributes["servers"].value;
+    this.emitter.on("add-server", () => {
+      this.activeTab ="SERVERS"
+    });
+    this.emitter.on("add-client", () => {
+      this.activeTab ="CLIENTS"
+    });
+
+    this.rowDataServers =
+      document.getElementById("app").attributes["servers"].value;
+      
+    let validJsonString = this.rowDataServers
+      .replace(/'/g, '"')
+      .replace(/True/g, "true")
+      .replace(/False/g, "false")
+      .replace(/None/g, "null");
+    let parsedArray = JSON.parse(validJsonString);
+    this.rowDataServers = parsedArray;
+    this.rowDataClients =
+      document.getElementById("app").attributes["clients"].value;
+    let validJsonString2 = this.rowDataClients
+      .replace(/'/g, '"')
+      .replace(/True/g, "true")
+      .replace(/False/g, "false")
+      .replace(/None/g, "null");
+    let parsedArray2 = JSON.parse(validJsonString2);
+    this.rowDataClients = parsedArray2;
+  },
 };
 </script>

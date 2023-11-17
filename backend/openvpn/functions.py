@@ -136,7 +136,7 @@ topology subnet
 ca /etc/certificates_{json_object["ca_name"]}/ca.crt
 cert /etc/openvpn/certificates_{json_object["server_cert"]}/server.crt
 key /etc/openvpn/certificates_{json_object["server_cert"]}/server.key
-dh /asguard/newdms/DH_files/dh_{json_object['dh_params_length']}.pem
+dh /etc/openvpn/server/dh_{json_object["name"]}.pem
 crl-verify /etc/certificates_{json_object["ca_name"]}/crl.pem
 
 tls-server

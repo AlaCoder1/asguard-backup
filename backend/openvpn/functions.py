@@ -83,19 +83,20 @@ def openvpn_interfaces():
     for interface in interfaces:
         if interface.startswith('tun'):
             list_vpn_interfaces.append({"ifname": interface[:interface.find(':')],
-                                        "name_interface": "tun",
                                         "ip_address": interface[interface.find(':')+2:interface.find('/')],
                                         "netmask": interface[interface.find('/')+1:]})
 
     return list_vpn_interfaces
 
 
-def delete_openvpn_interface(interfaces_before, interfaces):
-    """Find the name of the deleted openvpn interface in system"""
-    list_name_interfaces = [interface["ifname"] for interface in interfaces]
-    for interface in interfaces_before:
-        if interface["ifname"] not in list_name_interfaces:
-            return interface["ifname"]
+def get_changed_row_in_openvpn_interfaces(interfaces_smallest, interfaces_largest):
+    """Find the name of the changed openvpn interface in system"""
+    list_interfaces_smallest = [interface["ifname"] for interface in interfaces_smallest]
+    list_interfaces_largest = [interface["ifname"] for interface in interfaces_largest]
+    difference = set(list_interfaces_largest) - set(list_interfaces_smallest)
+    if difference:
+        return list(difference)[0]
+    return False
 
 
 def prefix_to_masque(prefix):

@@ -1,22 +1,25 @@
 import json
 from django.core import serializers
+from backend.managementCertificates.models import Certificate
 
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 
 
 def get_all_server_openvpn():
     """Getting all servers from database"""
-    list_openvpn = []
-    openvpn = ServerOpenvpn.objects.all()
-    openvpnDict = serializers.serialize("json",openvpn)
-    res = json.loads(openvpnDict)
-    for i in range(0, len(res)):
-        res[i].pop('model')
-        id = res[i]['pk']
-        res[i].pop('pk')
-        res[i]['fields']['id'] = id
-        list_openvpn.append(res[i]['fields'])
-    return list_openvpn
+    list_server = []
+    server = ServerOpenvpn.objects.all()
+    serverDict = serializers.serialize("json",server)
+    res = json.loads(serverDict)
+    for serv in res:
+        certificate = Certificate.objects.get(name=serv['fields']['cert_name'])
+        serv.pop('model')
+        id = serv['pk']
+        serv.pop('pk')
+        serv['fields']['id'] = id
+        serv['fields']['cert_status'] = certificate.activation
+        list_server.append(serv['fields'])
+    return list_server
     
 
 def get_server_openvpn(id):
@@ -28,22 +31,26 @@ def get_server_openvpn(id):
     id = res[0]['pk']
     res[0].pop('pk')
     res[0]['fields']['id'] = id
+    certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
+    res[0]['fields']['cert_status'] = certificate.activation
     return res[0]['fields']
 
 
 def get_all_client_openvpn():
     """Getting all clients from database"""
-    list_openvpn = []
-    openvpn = ClientOpenvpn.objects.all()
-    openvpnDict = serializers.serialize("json",openvpn)
-    res = json.loads(openvpnDict)
-    for i in range(0, len(res)):
-        res[i].pop('model')
-        id = res[i]['pk']
-        res[i].pop('pk')
-        res[i]['fields']['id'] = id
-        list_openvpn.append(res[i]['fields'])
-    return list_openvpn
+    list_client = []
+    client = ClientOpenvpn.objects.all()
+    clientDict = serializers.serialize("json",client)
+    res = json.loads(clientDict)
+    for cli in res:
+        certificate = Certificate.objects.get(name=cli['fields']['cert_name'])
+        cli.pop('model')
+        id = cli['pk']
+        cli.pop('pk')
+        cli['fields']['id'] = id
+        cli['fields']['cert_status'] = certificate.activation
+        list_client.append(cli['fields'])
+    return list_client
 
 
 def get_client_openvpn(id):
@@ -55,4 +62,6 @@ def get_client_openvpn(id):
     id = res[0]['pk']
     res[0].pop('pk')
     res[0]['fields']['id'] = id
+    certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
+    res[0]['fields']['cert_status'] = certificate.activation
     return res[0]['fields']

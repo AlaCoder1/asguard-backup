@@ -271,6 +271,10 @@ def openvpn_page(request):
     clients=get_all_client_openvpn()
     context = {'servers':servers,'clients':clients}
     return render(request, 'openvpn_page.html', context)
+@login_required(login_url='/')
+def ipsec_page(request):
+    return render(request, 'ipsec_page.html')
+
 
 def login(request):
     usr=getAllUsers(request)

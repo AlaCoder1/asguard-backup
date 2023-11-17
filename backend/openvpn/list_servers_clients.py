@@ -33,6 +33,8 @@ def get_server_openvpn(id):
     res[0]['fields']['id'] = id
     certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
     res[0]['fields']['cert_status'] = certificate.activation
+    with open(res[0]["fields"]["tls"]) as tls_file:
+        res[0]['fields']['tls_key'] = tls_file.read()
     return res[0]['fields']
 
 
@@ -64,4 +66,6 @@ def get_client_openvpn(id):
     res[0]['fields']['id'] = id
     certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
     res[0]['fields']['cert_status'] = certificate.activation
+    with open(res[0]["fields"]["tls"]) as tls_file:
+        res[0]['fields']['tls_key'] = tls_file.read()
     return res[0]['fields']

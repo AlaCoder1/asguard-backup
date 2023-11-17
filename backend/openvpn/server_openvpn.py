@@ -17,6 +17,7 @@ def install_server_openvpn(server_name, ca_name, tls_auth, dh_length, server_con
     commands_list_without_arguments = [['sudo', 'mkdir', '-p', '/var/log/openvpn/'],
                                        ['sudo', 'touch', '/var/log/openvpn/status.log'],
                                        ['sudo', 'chown', '777', '/var/log/openvpn/status.log'],
+                                       ['cp', f'/asguard/newdms/DH_files/dh_{dh_length}.pem', f'/etc/openvpn/server/dh_{server_name}.pem']
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
@@ -25,7 +26,6 @@ def install_server_openvpn(server_name, ca_name, tls_auth, dh_length, server_con
     shutil.chown(f'/etc/certificates_{ca_name}/', user='openvpn', group='openvpn')
     commands_list_without_arguments = [['sudo', 'chown', '-R', 'openvpn:network', '/etc/openvpn/'],
                                        ['sudo', 'chown', '-R', 'openvpn:openvpn', f'/etc/certificates_{ca_name}/'],
-                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', f'/asguard/newdms/DH_files/dh_{dh_length}.pem']
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
@@ -34,6 +34,7 @@ def delete_server_openvpn(server_name):
     """Function to delete an openvpn server in system and his keys and certificates"""
     commands_list_without_arguments = [['sudo', 'systemctl', 'stop', f'openvpn-server@server_{server_name}'],
                                        ['sudo', 'rm', '-f', f'/etc/openvpn/server/server_{server_name}.conf'],
+                                       ['sudo', 'rm', '-f', f'/etc/openvpn/server/dh_{server_name}.pem'],
                                        ['sudo', 'rm', '-f', f'/etc/openvpn/server/static_{server_name}.key'],
                                        ['sudo', 'rm', '-f', f'/var/log/openvpn/status-server_{server_name}.log'],
                                        ]
@@ -48,4 +49,4 @@ def update_server_openvpn(server_name, tls_auth, dh_length, server_conf):
     with open(f'/etc/openvpn/server/server_{server_name}.conf', 'w') as server_file:
         server_file.write(server_conf)
     
-    execute_command_without_arguments(['sudo', 'chown', '-R', 'openvpn:openvpn', f'/asguard/newdms/DH_files/dh_{dh_length}.pem'])
+    execute_command_without_arguments(['cp', f'/asguard/newdms/DH_files/dh_{dh_length}.pem', f'/etc/openvpn/server/dh_{server_name}.pem'])

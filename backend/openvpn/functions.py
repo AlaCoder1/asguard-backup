@@ -184,6 +184,9 @@ log-append /var/log/openvpn/openvpn.log
 
 #Log Level
 #verb verbosity_level'''
+    
+    if json_object["protocol"].startswith("TCP"):
+        config_input = config_input.replace(f'proto {json_object["protocol"]}', f'proto {json_object["protocol"]}-server')
 
     if json_object["interface"] != "any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
@@ -328,6 +331,9 @@ crl-verify /etc/certificates_{json_object["ca_name"]}/crl.pem
 tls-client
 tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
 '''
+    
+    if json_object["protocol"].startswith("TCP"):
+        config_input = config_input.replace(f'proto {json_object["protocol"]}', f'proto {json_object["protocol"]}-client')
     
     for server in json_object["server_remote"]:
         config_input = config_input.replace("#remote server_host server_port", f"#remote server_host server_port\n remote {server['host']} {server['port']}")

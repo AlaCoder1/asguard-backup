@@ -185,7 +185,7 @@ log-append /var/log/openvpn/openvpn.log
 #Log Level
 #verb verbosity_level'''
     
-    if json_object["protocol"].startswith("TCP"):
+    if json_object["protocol"].startswith("tcp"):
         config_input = config_input.replace(f'proto {json_object["protocol"]}', f'proto {json_object["protocol"]}-server')
 
     if json_object["interface"] != "any":
@@ -332,7 +332,7 @@ tls-client
 tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
 '''
     
-    if json_object["protocol"].startswith("TCP"):
+    if json_object["protocol"].startswith("tcp"):
         config_input = config_input.replace(f'proto {json_object["protocol"]}', f'proto {json_object["protocol"]}-client')
     
     for server in json_object["server_remote"]:

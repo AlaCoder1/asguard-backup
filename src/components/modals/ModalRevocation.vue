@@ -30,13 +30,8 @@
               </v-row>
             </v-container>
           </v-card-text>
-          <v-snackbar v-model="snackbar" location="bottom right" :color="color">
-            {{ textAlert }}
 
-            <template v-slot:actions> </template>
-          </v-snackbar>
           <v-card-actions class="actionBtn">
-          
             <v-btn
               :rounded="true"
               class="mt-3 btn-add"
@@ -60,15 +55,22 @@
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+
+      <template v-slot:actions> </template>
+    </v-snackbar>
   </v-row>
 </template>
 
 <script>
 import axios from "axios";
-
-import useValidate from "@vuelidate/core";
-import { required, helpers } from "@vuelidate/validators";
-import { reactive, computed } from "vue";
+import { reactive } from "vue";
 export default {
   name: "Modal_Group",
   props: {
@@ -93,7 +95,7 @@ export default {
   setup() {
     const state = reactive({
       formData: {
-        reason: "",
+        reason: "Unspecified",
       },
     });
 
@@ -171,20 +173,23 @@ export default {
         .put(`/certificates/revokeCertificate/${id}`, payload)
         .then((response) => {
           console.log("res", response);
+
+          this.closeModal();
+
           this.snackbar = true;
-            this.color = "success";
-            this.textAlert = response.data.msg;
-            setTimeout(() => {
-              this.closeModal();
-              location.reload();
-            }, 2000);
+          this.color = "success";
+          this.textAlert = response.data.msg;
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
         })
-        .catch((error) => {
-          console.error("Error :", error);
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = "error";
-        });
+        .catch((i) => {
+            console.log("i", i.response.data.error);
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          });
     },
   },
 };

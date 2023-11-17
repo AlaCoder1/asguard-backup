@@ -404,7 +404,7 @@ def updateServerOpenVPN(request, id):
                 server_conf = json_to_str_server(data)
             
                 #updating the server in system
-                update_server_openvpn(server_name=server.name, tls_auth=tls_auth, server_conf=server_conf)
+                update_server_openvpn(server_name=server.name, tls_auth=tls_auth, dh_length=server.dh, server_conf=server_conf)
 
                 #updating the server in database
                 serializer_server.save()

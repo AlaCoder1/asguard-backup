@@ -1,6 +1,6 @@
 import shutil
 from backend.managementCertificates.functions import initialize_ca
-from backend.openvpn.functions import create_tls_file, execute_list_commands_without_arguments, get_current_directory
+from backend.openvpn.functions import create_tls_file, execute_command_without_arguments, execute_list_commands_without_arguments, get_current_directory
 
 
 def install_server_openvpn(server_name, ca_name, tls_auth, dh_length, server_conf:str):
@@ -25,7 +25,7 @@ def install_server_openvpn(server_name, ca_name, tls_auth, dh_length, server_con
     shutil.chown(f'/etc/certificates_{ca_name}/', user='openvpn', group='openvpn')
     commands_list_without_arguments = [['sudo', 'chown', '-R', 'openvpn:network', '/etc/openvpn/'],
                                        ['sudo', 'chown', '-R', 'openvpn:openvpn', f'/etc/certificates_{ca_name}/'],
-                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', f'/asguard/newdms/DH_files/{dh_length}.pem']
+                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', f'/asguard/newdms/DH_files/dh_{dh_length}.pem']
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
@@ -40,10 +40,12 @@ def delete_server_openvpn(server_name):
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
-def update_server_openvpn(server_name, tls_auth, server_conf):
+def update_server_openvpn(server_name, tls_auth, dh_length, server_conf):
     """Function to update an openvpn server in system"""
 
     create_tls_file(tls_auth, f'/etc/openvpn/server/static_{server_name}.key')
     
     with open(f'/etc/openvpn/server/server_{server_name}.conf', 'w') as server_file:
         server_file.write(server_conf)
+    
+    execute_command_without_arguments(['sudo', 'chown', '-R', 'openvpn:openvpn', f'/asguard/newdms/DH_files/dh_{dh_length}.pem'])

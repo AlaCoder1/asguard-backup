@@ -18,6 +18,8 @@ def get_all_server_openvpn():
         serv.pop('pk')
         serv['fields']['id'] = id
         serv['fields']['cert_status'] = certificate.activation
+        with open(serv["fields"]["tls"]) as tls_file:
+            serv['fields']['tls_key'] = tls_file.read()
         list_server.append(serv['fields'])
     return list_server
     
@@ -51,6 +53,8 @@ def get_all_client_openvpn():
         cli.pop('pk')
         cli['fields']['id'] = id
         cli['fields']['cert_status'] = certificate.activation
+        with open(cli["fields"]["tls"]) as tls_file:
+            cli['fields']['tls_key'] = tls_file.read()
         list_client.append(cli['fields'])
     return list_client
 

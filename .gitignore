@@ -8,6 +8,9 @@ yarn-error.log
 /backend/managementGroup/migrations/__pycache__/
 /backend/managementGroup/__pycache__/
 
+/backend/managementKeypairs/migrations/__pycache__/
+/backend/managementKeypairs/__pycache__/
+
 /backend/managementUsers/__pycache__/
 /backend/managementUsers/migrations/__pycache__/
 

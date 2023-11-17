@@ -8,6 +8,8 @@ from backend.rules.models import *
 from backend.gateway.models import *
 from backend.dashboard.functions import get_system_infomations
 from django.db.models import Q
+from backend.openvpn.list_servers_clients import get_all_client_openvpn,  get_all_server_openvpn
+
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -194,7 +196,7 @@ def GetInformationsByInterface(request,name_interface):
                 gateway_id=GatewayInterfaceObject.gateway_id
                 addrgw4=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=True)).gwaddress
                 resultat[0]['fields']['addrgw']=addrgw4
-                info['IPV4Config']=resultat[0]['fields']
+            info['IPV4Config']=resultat[0]['fields']
         else:
             info['IPV4Config']=[]
         
@@ -225,9 +227,6 @@ def GetInformationsByInterface(request,name_interface):
         print({"info":info})
     return info
 
-
-
-
 @login_required(login_url='/')
 def user_certificate_managment_page(request):
     usr=getUsers(request)
@@ -255,7 +254,6 @@ def interface_page(request):
     context = {'interfaces':interfaces,'IPV4Config':config,'allStaticGateways':allStaticGateways}
     return render(request, 'interface_page.html',context)
 
-
 @login_required(login_url='/')
 def firewall_page(request):
     rules=GetAllRules(request)
@@ -269,7 +267,14 @@ def settings_page(request):
 
 @login_required(login_url='/')
 def openvpn_page(request):
-    return render(request, 'openvpn_page.html')
+    servers=get_all_server_openvpn()
+    clients=get_all_client_openvpn()
+    context = {'servers':servers,'clients':clients}
+    return render(request, 'openvpn_page.html', context)
+@login_required(login_url='/')
+def ipsec_page(request):
+    return render(request, 'ipsec_page.html')
+
 
 def login(request):
     usr=getAllUsers(request)

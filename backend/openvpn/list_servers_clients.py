@@ -55,6 +55,11 @@ def get_all_client_openvpn():
         cli['fields']['cert_status'] = certificate.activation
         with open(cli["fields"]["tls"]) as tls_file:
             cli['fields']['tls_key'] = tls_file.read()
+        list_server_remote = list(cli['fields']['server_remote'].split(','))
+        cli['fields']['server_remote'] = []
+        for server in list_server_remote:
+            cli['fields']['server_remote'].append({'host': server[:server.find(':')],
+                                                   'port': server[server.find(':')+1:]})
         list_client.append(cli['fields'])
     return list_client
 
@@ -72,4 +77,9 @@ def get_client_openvpn(id):
     res[0]['fields']['cert_status'] = certificate.activation
     with open(res[0]["fields"]["tls"]) as tls_file:
         res[0]['fields']['tls_key'] = tls_file.read()
+    list_server_remote = list(res[0]['fields']['server_remote'].split(','))
+    res[0]['fields']['server_remote'] = []
+    for server in list_server_remote:
+        res[0]['fields']['server_remote'].append({'host': server[:server.find(':')],
+                                                'port': server[server.find(':')+1:]})
     return res[0]['fields']

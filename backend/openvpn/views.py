@@ -389,12 +389,12 @@ def updateServerOpenVPN(request, id):
                 server.dns_default_domain_server = dns_default_domain.get('dns_default_domain_server', '')
 
             if dns_servers.get('dns_servers_select', ''):
-                server.dns_server1 = data.get('dns_server1', '')
-                server.dns_server2 = data.get('dns_server2', '')
+                server.dns_server1 = dns_servers.get('dns_server1', '')
+                server.dns_server2 = dns_servers.get('dns_server2', '')
 
             if ntp_servers.get('ntp_servers_select', ''):
-                server.ntp_server1 = data.get('ntp_server1', '')
-                server.ntp_server2 = data.get('ntp_server2', '')
+                server.ntp_server1 = ntp_servers.get('ntp_server1', '')
+                server.ntp_server2 = ntp_servers.get('ntp_server2', '')
 
             data['server_mode'] = server.server_mode
             serializer_server = ServerOpenvpnSerializer(server, data=data)

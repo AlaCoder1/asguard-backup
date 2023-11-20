@@ -1,4 +1,4 @@
-from backend.openvpn.functions import create_tls_file
+from backend.openvpn.functions import create_tls_file, replace_cert_with_value
 
 from backend.openvpn.functions import execute_list_commands_without_arguments
 
@@ -22,26 +22,14 @@ def delete_client_openvpn(client_name):
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
-# server_name = 'azizserver'
-# client_name = 'test3client'
-# config_client = f'''client
-# remote 10.1.12.9 1195
-# proto udp
-# dev tun
-# nobind
-# remote-cert-tls server
-# cipher AES-256-CBC
-# auth-nocache
-# script-security 2
-# persist-key
-# persist-tun
-
-# ca /etc/openvpn/certificates_{server_name}/ca.crt
-# cert /etc/openvpn/client/certificates_{client_name}/{client_name}.crt
-# key /etc/openvpn/client/certificates_{client_name}/{client_name}.key
-# dh /etc/openvpn/certificates_{server_name}/dh.pem
-# tls-version-min 1.2
-# tls-cipher TLS-DHE-RSA-WITH-AES-256-GCM-SHA384:TLS-DHE-RSA-WITH-AES-128-GCM-SHA256:TLS-DHE-RSA-WITH-AES-256-CBC-SHA256:TLS-DHE-RSA-WITH-AES-128-CBC-SHA256'''
-
-# install_client_openvpn(client_name=client_name, client_conf=config_client)
-# print('client done')
+def export_client_in_system(list_balise_client, config:str):
+    """Replace in a file the path of certificates or private key or something else with its balise and value"""
+    for balise in list_balise_client:
+        balise_line = config[config.find(f'{balise} '):config.find('\n', config.find(f'{balise} '))]
+        balise_path = balise_line.replace(f'{balise} ', '')
+        with open(balise_path) as balise_file:
+            balise_value = balise_file.read()
+            balise_value = balise_value[balise_value.find('-----BEGIN '):balise_value.find('\n', balise_value.find('-----END'))]
+        config = replace_cert_with_value(balise, balise_value, config)
+        
+    return config

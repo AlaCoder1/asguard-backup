@@ -16,7 +16,7 @@ from .models import ServerOpenvpn, ClientOpenvpn
 from .serializers import ServerOpenvpnSerializer, ClientOpenvpnSerializer
 from .functions import change_status_server_openvpn, get_changed_row_in_openvpn_interfaces, json_to_str_client, json_to_str_server, openvpn_interfaces
 from .server_openvpn import install_server_openvpn, delete_server_openvpn, update_server_openvpn
-from .client_openvpn import delete_client_openvpn, install_client_openvpn
+from .client_openvpn import delete_client_openvpn, export_client_in_system, install_client_openvpn
 
 # Create your views here.
 
@@ -901,3 +901,26 @@ def updateClientOpenvpn(request, id):
             return JsonResponse({"error": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
             return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
+
+
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DOWNLOAD A CLIENT",)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def exportClientOpenvpn(request, id):
+    """Exporting a Client openvpn"""
+    if request.method == 'POST':
+        try:
+            client = ClientOpenvpn.objects.get(id=id)
+            with open(f'/etc/openvpn/client/client_{client.name}.ovpn') as config_file:
+                config_input = config_file.read()
+            list_balise_client = ['ca', 'cert', 'key', 'crl-verify', 'tls-auth']
+            config_input = export_client_in_system(list_balise_client, config_input)
+
+            return JsonResponse({"client": config_input}, status=201)
+
+        except CommandExecutionError:
+            return JsonResponse({"error": "Error in exporting openvpn client"}, status=400)
+        except ClientOpenvpn.DoesNotExist:
+            return JsonResponse({"error": "This CA does not exist"}, status=400)

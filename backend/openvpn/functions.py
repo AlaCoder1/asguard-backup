@@ -99,6 +99,11 @@ def get_changed_row_in_openvpn_interfaces(interfaces_smallest, interfaces_larges
     return False
 
 
+def replace_cert_with_value(balise:str, cert:str, config:str):
+    balise_line = config[config.find(balise):config.find('\n', config.find(f'{balise} '))]
+    return config.replace(balise_line, f'<{balise}>\n{cert}\n</{balise}>')
+
+
 def prefix_to_masque(prefix):
     # Prefix must be between 0 and 32
     if not 0 <= prefix <= 32:
@@ -418,15 +423,3 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
         config_input = config_input.replace("#verb verbosity_level", f"verb {json_object['verbosity_level']}")
 
     return config_input
-
-
-#function to update interface tables  
-def update_openvpn_table(id,data):
-    objectConfig=ServerOpenvpn.objects.get(id=id)
-    # Set all attributes to None
-    for field in objectConfig._meta.fields:
-        if field.attname not in ["id"]: 
-            setattr(objectConfig, field.attname, None)
-    serializerServerOpenvpn= ServerOpenvpnSerializer(objectConfig,data=data)
-    if serializerServerOpenvpn.is_valid():
-            serializerServerOpenvpn.save()

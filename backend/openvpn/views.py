@@ -380,21 +380,36 @@ def updateServerOpenVPN(request, id):
                 server.bridge_end_dhcp = bridge.get('bridge_end_dhcp', '')
                 bridge_interface_address = IP4Config.objects.get(interface_id=server.bridge_interface)
                 data["bridge_interface_address"] = f'{bridge_interface_address.ip_address}/{bridge_interface_address.netmask}'
+            else:
+                server.bridge_interface = None
+                server.bridge_start_dhcp = None
+                server.bridge_end_dhcp = None
 
             if address_pool.get('address_pool_select'):
                 server.address_pool_start = address_pool.get('address_pool_start')
                 server.address_pool_end = address_pool.get('address_pool_end')
+            else:
+                server.address_pool_start = None
+                server.address_pool_end = None
 
             if dns_default_domain.get('dns_default_domain_select', ''):
                 server.dns_default_domain_server = dns_default_domain.get('dns_default_domain_server', '')
+            else:
+                server.dns_default_domain_server = None
 
             if dns_servers.get('dns_servers_select', ''):
                 server.dns_server1 = dns_servers.get('dns_server1', '')
                 server.dns_server2 = dns_servers.get('dns_server2', '')
+            else:
+                server.dns_server1 = None
+                server.dns_server2 = None
 
             if ntp_servers.get('ntp_servers_select', ''):
                 server.ntp_server1 = ntp_servers.get('ntp_server1', '')
                 server.ntp_server2 = ntp_servers.get('ntp_server2', '')
+            else:
+                server.ntp_server1 = None
+                server.ntp_server2 = None
 
             data['server_mode'] = server.server_mode
             serializer_server = ServerOpenvpnSerializer(server, data=data)

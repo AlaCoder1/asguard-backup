@@ -863,7 +863,7 @@ def updateClientOpenvpn(request, id):
             client.pull_routes = data.get('pull_routes', '')
             client.add_remove_routes = data.get('add_remove_routes', '')
             client.verb = data.get('verbosity_level', '')
-            servers_list = data.get('servers_remote', '')
+            servers_list = data.get('server_remote', '')
             client.server_remote = ''
             for server in servers_list:
                 client.server_remote += f'{server["host"]}:{server["port"]},'
@@ -876,10 +876,11 @@ def updateClientOpenvpn(request, id):
                 
             data["interface_address"] = interface_address.ip_address
             data['server_mode'] = client.server_mode
+            data['server_remote'] = client.server_remote
 
             client_serializer = ClientOpenvpnSerializer(client, data=data)
             if client_serializer.is_valid():
-
+                data['server_remote'] = servers_list
                 # Update the client config
                 client_conf = json_to_str_client(data)
 

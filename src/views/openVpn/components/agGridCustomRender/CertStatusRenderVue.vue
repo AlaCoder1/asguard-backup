@@ -3,7 +3,7 @@
     <v-chip color="green" text-color="white" v-if="params.data.cert_status"
       >Valid</v-chip
     >
-    <v-chip color="red" text-color="white" v-else-if="params.data.cert_status">
+    <v-chip color="red" text-color="white" v-else>
       Revoqued</v-chip
     >
   </div>

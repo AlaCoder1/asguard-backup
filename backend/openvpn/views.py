@@ -380,21 +380,36 @@ def updateServerOpenVPN(request, id):
                 server.bridge_end_dhcp = bridge.get('bridge_end_dhcp', '')
                 bridge_interface_address = IP4Config.objects.get(interface_id=server.bridge_interface)
                 data["bridge_interface_address"] = f'{bridge_interface_address.ip_address}/{bridge_interface_address.netmask}'
+            else:
+                server.bridge_interface = None
+                server.bridge_start_dhcp = None
+                server.bridge_end_dhcp = None
 
             if address_pool.get('address_pool_select'):
                 server.address_pool_start = address_pool.get('address_pool_start')
                 server.address_pool_end = address_pool.get('address_pool_end')
+            else:
+                server.address_pool_start = None
+                server.address_pool_end = None
 
             if dns_default_domain.get('dns_default_domain_select', ''):
                 server.dns_default_domain_server = dns_default_domain.get('dns_default_domain_server', '')
+            else:
+                server.dns_default_domain_server = None
 
             if dns_servers.get('dns_servers_select', ''):
-                server.dns_server1 = data.get('dns_server1', '')
-                server.dns_server2 = data.get('dns_server2', '')
+                server.dns_server1 = dns_servers.get('dns_server1', '')
+                server.dns_server2 = dns_servers.get('dns_server2', '')
+            else:
+                server.dns_server1 = None
+                server.dns_server2 = None
 
             if ntp_servers.get('ntp_servers_select', ''):
-                server.ntp_server1 = data.get('ntp_server1', '')
-                server.ntp_server2 = data.get('ntp_server2', '')
+                server.ntp_server1 = ntp_servers.get('ntp_server1', '')
+                server.ntp_server2 = ntp_servers.get('ntp_server2', '')
+            else:
+                server.ntp_server1 = None
+                server.ntp_server2 = None
 
             data['server_mode'] = server.server_mode
             serializer_server = ServerOpenvpnSerializer(server, data=data)
@@ -631,7 +646,7 @@ def createClientOpenvpn(request):
             proto = data.get('protocol', '')
             dev = data.get('device_mode', '')
             interface = data.get('interface', '')
-            resolv_retry = data.get('retry_dns', '')
+            resolv_retry = data.get('resolv_retry', '')
             proxy_host = data.get('proxy_host', '')
             proxy_port = data.get('proxy_port', '')
             proxy_authentication = data.get('proxy_authentication', '')
@@ -665,6 +680,7 @@ def createClientOpenvpn(request):
             server_remote = ''
             for server in servers_list:
                 server_remote += f'{server["host"]}:{server["port"]},'
+            server_remote = server_remote[:len(server_remote)-1]
 
             client_data = {"name": name,
                            "description": description,
@@ -815,7 +831,7 @@ def updateClientOpenvpn(request, id):
             client.proto = data.get('protocol', '')
             client.dev = data.get('device_mode', '')
             client.interface = data.get('interface', '')
-            client.resolv_retry = data.get('retry_dns', '')
+            client.resolv_retry = data.get('resolv_retry', '')
             client.port = data.get('local_port', '')
             client.auth = data.get('auth_digest_algorithm', '')
             client.cipher = data.get('encryption_algorithm', '')
@@ -847,10 +863,11 @@ def updateClientOpenvpn(request, id):
             client.pull_routes = data.get('pull_routes', '')
             client.add_remove_routes = data.get('add_remove_routes', '')
             client.verb = data.get('verbosity_level', '')
-            servers_list = data.get('servers_remote', '')
+            servers_list = data.get('server_remote', '')
             client.server_remote = ''
             for server in servers_list:
                 client.server_remote += f'{server["host"]}:{server["port"]},'
+            client.server_remote = client.server_remote[:len(client.server_remote)-1]
             interface_address = IP4Config.objects.get(interface_id=client.interface)
 
             if client.proxy_authentication_option == 'basic':
@@ -859,10 +876,11 @@ def updateClientOpenvpn(request, id):
                 
             data["interface_address"] = interface_address.ip_address
             data['server_mode'] = client.server_mode
+            data['server_remote'] = client.server_remote
 
             client_serializer = ClientOpenvpnSerializer(client, data=data)
             if client_serializer.is_valid():
-
+                data['server_remote'] = servers_list
                 # Update the client config
                 client_conf = json_to_str_client(data)
 

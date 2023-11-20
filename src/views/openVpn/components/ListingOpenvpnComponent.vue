@@ -13,7 +13,6 @@
             :columnDefs="columnServers"
             :rowData="rowDataServers.value"
             :defaultColDef="defaultColDef"
-            :autoGroupColumnDef="autoGroupColumnDef"
             :rowGroupPanelShow="rowGroupPanelShow"
             @cell-clicked="cellWasClicked"
             @grid-ready="onGridReady"
@@ -47,7 +46,6 @@
             :columnDefs="columnClients"
             :rowData="rowDataClients.value"
             :defaultColDef="defaultColDef"
-            :autoGroupColumnDef="autoGroupColumnDef"
             :rowGroupPanelShow="rowGroupPanelShow"
           />
           <div class="d-flex justify-end mt-3">
@@ -66,15 +64,25 @@
           <br />
         </div>
       </v-col>
+      <v-snackbar
+        :timeout="2000"
+        v-model="snackbar"
+        location="bottom right"
+        :color="color"
+      >
+        {{ textAlert }}
+      </v-snackbar>
     </v-row>
   </div>
 </template>
 
 <script>
+import axios from "axios";
 import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { onMounted, reactive, ref } from "vue";
 import { inject } from "vue";
+import CertStatusRenderVue from "./agGridCustomRender/CertStatusRenderVue.vue";
 
 import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
 import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSS
@@ -84,9 +92,13 @@ export default {
   components: {
     AgGridVue,
     VButton,
+    CertStatusRenderVue,
   },
   setup() {
     const emitter = inject("emitter");
+    const color = ref(null);
+    const snackbar = ref(false);
+    const textAlert = ref(false);
     const columnServers = [
       {
         headerName: "Server Name",
@@ -115,9 +127,16 @@ export default {
       },
       {
         headerName: "Certificat status",
-        field: "published",
+        field: "cert_status",
         sortable: true,
         filter: true,
+        cellRendererSelector: function (params) {
+          const cert_status = {
+            component: "CertStatusRenderVue",
+            params: params.data.cert_status,
+          };
+          return cert_status;
+        },
       },
       {
         headerName: "Action",
@@ -131,20 +150,20 @@ export default {
     const columnClients = [
       {
         headerName: "Client Name",
-        field: "clientName",
+        field: "name",
         sortable: true,
         filter: true,
         checkboxSelection: true,
       },
       {
         headerName: "Protocole / Port",
-        field: "protocolPort",
+        field: "proto",
         sortable: true,
         filter: true,
       },
       {
         headerName: "Server",
-        field: "server",
+        field: "server_remote",
         sortable: true,
         filter: true,
       },
@@ -156,9 +175,16 @@ export default {
       },
       {
         headerName: "Certificat status",
-        field: "published",
+        field: "cert_status",
         sortable: true,
         filter: true,
+        cellRendererSelector: function (params) {
+          const cert_status = {
+            component: "CertStatusRenderVue",
+            params: params.data.cert_status,
+          };
+          return cert_status;
+        },
       },
       {
         headerName: "Action",
@@ -172,7 +198,7 @@ export default {
     const rowDataServers = reactive({});
     const rowDataClients = reactive({});
 
-    const gridApi = ref(null); // Optional - for accessing Grid's API
+    const gridApi = ref(null);
 
     // Obtain API from grid's onGridReady event
     const onGridReady = (params) => {
@@ -186,16 +212,22 @@ export default {
       flex: 1,
     };
 
-    const autoGroupColumnDef = {
-      headerName: "Server Name",
-      field: "serverNname",
-      minWidth: 300,
-      cellRenderer: "agGroupCellRenderer",
-      cellRendererParams: {
-        checkbox: true,
-      },
-    };
     const rowGroupPanelShow = ref("always");
+
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    };
 
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
@@ -217,18 +249,18 @@ export default {
         </button>
         `;
       } else {
-        eGui.innerHTML = `
+        if (
+          rowDataServers.value[params.node.rowIndex].server_status === false
+        ) {
+          eGui.innerHTML = `
         
-        <button 
+        <button
+          id="play"
           class="action-button play"
           data-action="play" title="Start Server">
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
-          <button
-          class="action-button stop"
-          data-action="stop" title="Stop Server">
-             <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
-          </button>
+
           <button
           class="action-button edit"
           data-action="edit" title="Edit Server">
@@ -241,15 +273,138 @@ export default {
           </button>
 
         `;
+        } else {
+          eGui.innerHTML = `
+          <button
+          id="restart"
+          class="action-button restart"
+          data-action="restart" title="Restart Server">
+             <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
+          </button>
+        
+       <button
+          id="stop"
+          class="action-button stop"
+          data-action="stop" title="Stop Server">
+             <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
+          </button>
+
+          <button
+          class="action-button edit"
+          data-action="edit" title="Edit Server">
+             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          <button
+          class="action-button delete"
+          data-action="delete" title="Delete Server">
+             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+       `;
+        }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
-          this.handleAction(action, params.node.data);
+          handleActionServer(action, params.node.data);
         });
       });
       return eGui;
     }
+    const handleActionServer = (action, rowData, index) => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      switch (action) {
+        case "play":
+          console.log("play", rowData);
+          axios
+            .post(`/openvpn/startServerOpenvpn/${rowData.id}`)
+            .then((response) => {
+              snackbar.value = true;
+              color.value = "success";
+              textAlert.value = response.data.msg;
+
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              console.log("i", i.response.data.error);
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            });
+          break;
+        case "edit":
+          console.log("edit", rowData);
+          emitter.emit("add-server");
+          emitter.emit("edit-server", rowData);
+          break;
+        case "stop":
+          console.log("stop", rowData);
+          axios
+            .delete(`/openvpn/stopServerOpenvpn/${rowData.id}`)
+            .then((response) => {
+              snackbar.value = true;
+              color.value = "success";
+              textAlert.value = response.data.msg;
+
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              console.log("i", i.response.data.error);
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            });
+          break;
+        case "restart":
+          console.log("restart", rowData);
+          axios
+            .put(`/openvpn/restartServerOpenvpn/${rowData.id}`)
+            .then((response) => {
+              snackbar.value = true;
+              color.value = "success";
+              textAlert.value = response.data.msg;
+
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              console.log("i", i.response.data.error);
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            });
+
+          break;
+        case "delete":
+          console.log("delete", rowData);
+
+          axios
+            .delete(`/openvpn/deleteServerOpenvpn/${rowData.id}`)
+            .then((response) => {
+              snackbar.value = true;
+              color.value = "success";
+              textAlert.value = response.data.msg;
+
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              console.log("i", i.response.data.error);
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            });
+          break;
+        default:
+          break;
+      }
+    };
 
     function actionCellRendererClient(params) {
       let eGui = document.createElement("div");
@@ -294,23 +449,56 @@ export default {
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
-          this.handleAction(action, params.node.data);
+          handleActionClient(action, params.node.data);
         });
       });
       return eGui;
     }
+    const handleActionClient = (action, rowData, index) => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      switch (action) {
+        case "download":
+          break;
+        case "edit":
+          console.log("edit", rowData);
+          emitter.emit("add-client");
+          emitter.emit("edit-client", rowData);
+          break;
 
-    const publishServer = () => {
-      console.log("publishServer");
+        case "delete":
+          console.log("delete", rowData);
+
+          axios
+            .delete(`/openvpn/deleteClientOpenvpn/${rowData.id}`)
+            .then((response) => {
+              snackbar.value = true;
+              color.value = "success";
+              textAlert.value = response.data.msg;
+
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              console.log("i", i.response.data.error);
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            });
+          break;
+        default:
+          break;
+      }
     };
+
+    const publishServer = () => {};
 
     const addServer = () => {
       emitter.emit("add-server");
     };
 
-    const publishClient = () => {
-      console.log("publishClient");
-    };
+    const publishClient = () => {};
 
     const addClient = () => {
       emitter.emit("add-client");
@@ -326,16 +514,20 @@ export default {
           .replace(/False/g, "false")
           .replace(/None/g, "null");
         const parsedArray = JSON.parse(validJsonString);
+        console.log("parsedArray", parsedArray);
 
-        const processedData = parsedArray.map((server) => ({
-          name: server.name,
-          proto: server.proto,
-          ipv4_tunnel_network: server.ipv4_tunnel_network,
-          description: server.description,
-          published: server.type_of_service,
-        }));
+        // const processedData = parsedArray.map((server) => ({
+        //   id: server.id,
+        //   name: server.name,
+        //   proto: server.proto,
+        //   ipv4_tunnel_network: server.ipv4_tunnel_network,
+        //   description: server.description,
+        //   cert_status: server.cert_status,
+        //   server_status: server.server_status,
+        // }));
 
-        rowDataServers.value = processedData;
+        rowDataServers.value = parsedArray;
+        console.log("rowDataServers.value", rowDataServers.value);
 
         const clientsAttribute =
           document.getElementById("app").attributes["clients"].value;
@@ -345,16 +537,18 @@ export default {
           .replace(/False/g, "false")
           .replace(/None/g, "null");
         const parsedArrayClients = JSON.parse(validJsonStringClients);
+        console.log("parsedArrayClients", parsedArrayClients);
 
-        const processedDataClients = parsedArrayClients.map((client) => ({
-          clientName: client.name,
-          protocolPort: client.proto,
-          server: client.server_remote,
-          description: client.description,
-          published: client.type_of_service,
-        }));
+        // const processedDataClients = parsedArrayClients.map((client) => ({
+        //   id: client.id,
+        //   clientName: client.name,
+        //   protocolPort: client.proto,
+        //   server: client.server_remote,
+        //   description: client.description,
+        //   cert_status: client.cert_status,
+        // }));
 
-        rowDataClients.value = processedDataClients;
+        rowDataClients.value = parsedArrayClients;
       } catch (error) {
         console.error("Error setting rowDataServers:", error);
       }
@@ -366,9 +560,11 @@ export default {
       rowDataServers,
       rowDataClients,
       defaultColDef,
-      autoGroupColumnDef,
       rowGroupPanelShow,
       emitter,
+      color,
+      snackbar,
+      textAlert,
       actionCellRendererClient,
       cellWasClicked: (event) => {
         // Example of consuming Grid Event
@@ -383,6 +579,7 @@ export default {
       addServer,
       publishClient,
       addClient,
+      getCookie,
     };
   },
 };

@@ -323,16 +323,17 @@
     <v-spacer></v-spacer>
     <v-snackbar
       :timeout="2000"
-      v-model="state.snackbar"
+      v-model="snackbar"
       location="bottom right"
-      :color="state.color"
+      :color="color"
     >
-      {{ state.textAlert }}
+      {{ textAlert }}
     </v-snackbar>
   </div>
 </template>
 
 <script>
+import { inject } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import useValidate from "@vuelidate/core";
 import { required, requiredIf, helpers } from "@vuelidate/validators";
@@ -354,6 +355,7 @@ export default {
     AgGridVue,
   },
   setup() {
+    const emitter = inject("emitter");
     const color = ref(null);
     const snackbar = ref(false);
     const textAlert = ref(false);
@@ -393,20 +395,14 @@ export default {
         slug: "peer_to_peer",
       },
       {
-        name: "Peer to Peer (SSL/TLS) + User Auth",
-        slug: "peer_to_peer_user_auth",
-      },
-      {
-        name: "Server (SSL/TLS)",
-        slug: "server",
-      },
-      {
-        name: "Server (SSL/TLS) + User Auth",
-        slug: "server_user_auth",
+        name: "Remote Access (SSL/TLS)",
+        slug: "remote_access",
       },
     ]);
 
     const state = reactive({
+      id: "",
+      isEditState: "",
       //general information
       clientName: "",
       description: "",
@@ -439,7 +435,10 @@ export default {
       clientCertificate: "",
       encryptionAlgorithm: "",
       authDigestAlgorithm: "",
-      hardwareCrypto: "",
+      hardwareCrypto: {
+        name: "No hardware Crypto acceleration",
+        slug: "No hardware Crypto acceleration",
+      },
       //tunnelSettings
       ipv4TunnelNetwork: "",
       ipv6TunnelNetwork: "",
@@ -807,20 +806,21 @@ export default {
           .then((response) => {
             if (response.status == "201") {
               console.log("response", response);
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
+              snackbar.value = true;
+              color.value = "success";
+              textAlert.value = response.data.msg;
 
               setTimeout(() => {
                 location.reload();
-              }, 2000);
+              }, 1000);
+              emitter.emit("open-listing");
             }
           })
           .catch((i) => {
             console.log("i", i.response);
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            snackbar.value = true;
+            color.value = "red";
+            textAlert.value = i.response.data.error;
           });
       } else {
         console.log("v$.value", v$.value);
@@ -830,10 +830,88 @@ export default {
     onMounted(() => {
       getInterface();
       protocolsList.value = protocols;
+
+      emitter.on("edit-client", (data) => {
+        console.log("dataClient", data);
+        if (data) state.isEditState = "edit";
+        state.id = data.id;
+        state.clientName = data.name;
+        state.description = data.description;
+        state.server_mode = data.server_mode;
+
+        let filtredProtocol = protocolsList.value.filter(
+          (i) => i.slug === data.proto
+        );
+
+        state.protocol = filtredProtocol;
+
+        let filtredDevice = deviceMode.value.filter((i) => i.slug === data.dev);
+
+        state.device_mode = filtredDevice[0];
+
+        let filtredInterfaces = state.mapedInterface.filter(
+          (i) => i.id === +data.interface
+        );
+        let filtredInter = state.mapedInterface.filter(
+          (i) => i.name === data.interface
+        );
+
+        state.interface = filtredInterfaces[0] ?? filtredInter[0];
+        state.resolv_retry= data.resolv_retry,
+        state.proxy_host = data.proxy_host,
+        state.proxy_port =  data.proxy_port
+
+        let filtredAuth = proxyAuthenticationExtraOptionsList.value.filter(
+          (i) => i.slug === data.proxy_authentication_option
+        );
+
+        state.proxyAuthenticationExtraOptions= filtredAuth[0]
+        state.usernameUser= data.username,
+        state.passwordUser= data.password,
+        state.username= data.proxy_auth_username,
+        state.password= data.proxy_auth_password,
+        state.local_port = data.port
+        
+        // //User Auth
+        // username: "",
+        // password: "",
+        // renegotiate_time: "",
+        // //cryp
+        // tlsGenerate: true,
+        // sharedKey: "",
+        // peerCertificateAuthority: "",
+        // clientCertificate: "",
+        // encryptionAlgorithm: "",
+        // authDigestAlgorithm: "",
+        // hardwareCrypto: {
+        //   name: "No hardware Crypto acceleration",
+        //   slug: "No hardware Crypto acceleration",
+        // },
+        // //tunnelSettings
+        // ipv4TunnelNetwork: "",
+        // ipv6TunnelNetwork: "",
+        // ipv4RemoteNetwork: "",
+        // ipv6RemoteNetwork: "",
+        // limitOutgoingBandwidth: "",
+        // compression: { name: "No preference", slug: "no_preference" },
+        // typeOfService: "",
+        // ipv6: "",
+        // pullRoutes: "",
+        // addRemoveRoutes: "",
+        // //advancedConfig
+        // verbosityLevel: {
+        //   name: "1 (default)",
+        //   slug: "1",
+        // },
+        // remoteServer: "",
+        // hostAddress: "",
+        // port: "",
+      });
     });
 
     return {
       state,
+      emitter,
       userAuthSettings,
       cryptoSettings,
       tunnelSettings,

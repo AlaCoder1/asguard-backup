@@ -59,20 +59,14 @@
                 label="Server mode"
                 v-model="state.serverMode"
                 item-title="name"
-                item-value="id"
+                item-value="slug"
                 return-object
                 :items="[
                   {
-                    id: '1',
                     name: 'Remote Access (SSL/TLS)',
                     slug: 'remote_access',
                   },
-                  { id: '2', name: 'Peer to peer(SSL/TLS)', slug: 'peer' },
-                  {
-                    id: '3',
-                    name: 'Remote Access (Shared key)',
-                    slug: 'shared',
-                  },
+                  { name: 'Peer to peer(SSL/TLS)', slug: 'peer-to-peer' },
                 ]"
               ></v-select>
               <p
@@ -91,20 +85,9 @@
                 label="Protocol"
                 v-model="state.protocol"
                 item-title="name"
-                item-value="id"
+                item-value="slug"
                 return-object
-                :items="[
-                  {
-                    id: '1',
-                    name: 'UDP',
-                    slug: 'udp',
-                  },
-                  { id: '2', name: 'UDP4', slug: 'udp4' },
-                  { id: '3', name: 'UDP6', slug: 'udp6' },
-                  { id: '4', name: 'TCP', slug: 'tcp' },
-                  { id: '5', name: 'TCP4', slug: 'tcp4' },
-                  { id: '6', name: 'TCP6', slug: 'tcp6' },
-                ]"
+                :items="protocolList"
               ></v-select>
               <p class="error-feedback mb-5" v-if="v$.protocol.$errors.length">
                 {{ v$.protocol.$errors?.[0].$message }}
@@ -121,14 +104,7 @@
                 item-title="name"
                 item-value="id"
                 return-object
-                :items="[
-                  {
-                    id: '1',
-                    name: 'TUN',
-                    slug: 'tun',
-                  },
-                  { id: '2', name: 'TAP', slug: 'tap' },
-                ]"
+                :items="deviceModeList"
               ></v-select>
               <p
                 class="error-feedback mb-5"
@@ -278,6 +254,7 @@
 </template>
 
 <script>
+import { inject, ref } from "vue";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import VButton from "@/components/VButton.vue";
@@ -286,7 +263,7 @@ import UsersList from "../../system/user/components/UsersList.vue";
 import tunnelSettings from "./serveurComponents/tunnelSettings.vue";
 import clientSettings from "./serveurComponents/clientSettings.vue";
 import cryptoSettings from "./serveurComponents/cryptoSettings.vue";
-import { reactive, onMounted, computed } from "vue";
+import { reactive, onMounted, computed, watch } from "vue";
 
 export default {
   name: "ClientsOpenvpnComponent",
@@ -298,13 +275,18 @@ export default {
     VButton,
   },
   setup() {
+    const emitter = inject("emitter");
+
     const state = reactive({
+      id: "",
       loading: false,
       isLoadingDialogue: false,
-
+      mapedCertifAuth: [],
+      mapedCertifServer: [],
       snackbar: false,
       color: "",
       textAlert: "",
+      isEditState: "",
       //General information
       clientName: "",
       description: "",
@@ -322,7 +304,10 @@ export default {
       dhParameters: "",
       encryptAlgo: "",
       authDigest: "",
-      hardwareCrypto: "",
+      hardwareCrypto: {
+        name: "No hardware Crypto acceleration",
+        slug: "No hardware Crypto acceleration",
+      },
       //tunnelSettings
       ip4Tunnel: "",
       ip6Tunnel: "",
@@ -441,6 +426,71 @@ export default {
 
     const v$ = useValidate(rules, state);
 
+    const authDigestList = ref([
+      {
+        name: "BLAKE2b512",
+        slug: "blake2b512",
+        id: "1",
+      },
+      {
+        name: "BLAKE2b256",
+        slug: "blake2b256",
+        id: "2",
+      },
+      {
+        name: "SHA224",
+        slug: "sha224",
+        id: "3",
+      },
+      {
+        name: "SHA256",
+        slug: "sha256",
+        id: "4",
+      },
+      {
+        name: "SHA3-224",
+        slug: "sha3-224",
+        id: "5",
+      },
+      {
+        name: "SHA3-256",
+        slug: "sha3-256",
+        id: "6",
+      },
+      {
+        name: "SHA3-384",
+        slug: "sha3-384",
+        id: "7",
+      },
+      {
+        name: "SHA3-512",
+        slug: "sha3-512",
+        id: "8",
+      },
+
+      {
+        name: "SHA384",
+        slug: "sha384",
+        id: "9",
+      },
+
+      {
+        name: "SHA512",
+        slug: "sha512",
+        id: "10",
+      },
+      {
+        name: "SHA512-224",
+        slug: "sha512-224",
+        id: "11",
+      },
+      {
+        name: "SHA512-256",
+        slug: "sha512-256",
+        id: "12",
+      },
+    ]);
+
     const getCookie = (name) => {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {
@@ -476,8 +526,209 @@ export default {
       );
     };
 
+    const getCertif = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/certificates/getAllCertificates").then(
+        (response) => {
+          let mapedListCertif = response.data.filter(
+            (i) => i.certificate_type === "server"
+          );
+          state.mapedCertifServer = mapedListCertif.map((i) => {
+            return {
+              id: i.id,
+              name: i.name,
+            };
+          });
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
+    const getAllCertAuth = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/certificates/getAllCertAuth").then(
+        (response) => {
+          let mapedList = response.data.map((i) => {
+            return {
+              id: i.id,
+              name: i.name,
+            };
+          });
+          state.mapedCertifAuth = mapedList;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
+
+    const deviceModeList = ref([
+      {
+        id: "1",
+        name: "TUN",
+        slug: "tun",
+      },
+      { id: "2", name: "TAP", slug: "tap" },
+    ]);
+    const protocolList = ref([
+      { name: "UDP4", slug: "udp4" },
+      { name: "UDP6", slug: "udp6" },
+
+      { name: "TCP4", slug: "tcp4" },
+      { name: "TCP6", slug: "tcp6" },
+    ]);
+    const compressionList = ref([
+      { name: "No preference", slug: "no_preference" },
+      { name: "Disable-No Compression", slug: "disabled" },
+      { name: "Enabled with Adaptive Compression", slug: "adaptive" },
+      { name: "Enabled without Adaptive Compression", slug: "enabled" },
+    ]);
+
+    watch(
+      () => state.isEnableAuth,
+      (newValue) => {
+        if (newValue) {
+          state.tlsGenerate = "";
+        }
+      }
+    );
+    watch(
+      () => state.adressPool,
+      (newValue) => {
+        if (!newValue) {
+          state.startAddressPool = "";
+          state.endAddressPool = "";
+        }
+      }
+    );
+    watch(
+      () => state.dnsDefaultDomain,
+      (newValue) => {
+        if (!newValue) {
+          state.activeDnsDefault = "";
+        }
+      }
+    );
+    watch(
+      () => state.dnsServers,
+      (newValue) => {
+        if (!newValue) {
+          (state.activeDnsServer1 = ""), (state.activeDnsServer2 = "");
+        }
+      }
+    );
+    watch(
+      () => state.ntpServers,
+      (newValue) => {
+        if (!newValue) {
+          (state.activeNtpServer1 = ""), (state.activeNtpServer2 = "");
+        }
+      }
+    );
+
     onMounted(() => {
       getInterface();
+      getAllCertAuth();
+      getCertif();
+
+      emitter.on("edit-server", (data) => {
+        console.log("data", data);
+        if (data) state.isEditState = "edit";
+
+        state.id = data.id;
+
+        //General information
+        state.clientName = data.name;
+        state.description = data.description;
+        state.serverMode = data.server_mode;
+
+        let filtredProtocol = protocolList.value.filter(
+          (i) => i.slug === data.proto
+        );
+
+        let filtredCertifAuth = state.mapedCertifAuth.filter(
+          (i) => i.name === data.ca_name
+        );
+        let filtredCertiServer = state.mapedCertifServer.filter(
+          (i) => i.name === data.cert_name
+        );
+        state.protocol = filtredProtocol[0];
+
+        let filtredDevice = deviceModeList.value.filter(
+          (i) => i.slug === data.dev
+        );
+
+        state.deviceMode = filtredDevice[0];
+
+        let filtredInterfaces = state.mapedInterface.filter(
+          (i) => i.id === +data.interface
+        );
+        let filtredInter = state.mapedInterface.filter(
+          (i) => i.name === data.interface
+        );
+
+        state.interface = filtredInterfaces[0] ?? filtredInter[0];
+        state.localPort = data.port;
+        //Cryptographic Settings
+        state.isEnableAuth = data.tls_key ? false : true;
+        state.tlsGenerate = data.tls_key;
+        state.peerCertif = filtredCertifAuth[0];
+        state.serverCertif = filtredCertiServer[0];
+        state.dhParameters = data.dh;
+        state.encryptAlgo = data.cipher;
+
+        let filtredAuth = authDigestList.value.filter(
+          (i) => i.slug === data.auth
+        );
+
+        state.authDigest = filtredAuth[0];
+        state.hardwareCrypto = data.hardware_crypto;
+        //tunnelSettings
+        state.ip4Tunnel = data.ipv4_local_network;
+        // state.ip6Tunnel= "";
+        state.isGateway = data.gateway;
+        state.isBridge = data.bridge_interface ? true : false;
+        state.interfaceBridge = data.bridge_interface;
+        state.startDHCPBridge = data.bridge_start_dhcp;
+        state.endDHCPBridge = data.bridge_end_dhcp;
+        state.iPv4Local = data.ipv4_local_network;
+        // state.iPv6Local= "";
+        state.iPv4Remote = data.ipv4_remote_network;
+        // state.iPv6Remote= "";
+        state.concurrentConnections = data.concurrent_connections;
+
+        let filtredCompression = compressionList.value.filter(
+          (i) => i.slug === data.compression
+        );
+
+        state.compression = filtredCompression[0];
+        state.typefService = data.type_of_service;
+        state.Connections = data.duplicate_connections;
+        state.IPv6 = data.ipv6;
+        state.interClients = data.inter_clients;
+        //clientSettings
+        state.dynamicIP = data.dynamic_ip;
+        state.adressPool = data.address_pool_start ? true : false;
+        state.topology = data.topology;
+        state.dnsDefaultDomain = data.dns_default_domain_server ? true : false;
+        state.dnsServers = data.dns_server1 ? true : false;
+        state.forceDNS = data.force_dns_cache_update;
+        state.ntpServers = data.ntp_server1 ? true : false;
+        state.clientPort = false; //*
+        state.startAddressPool = data.address_pool_start;
+        state.endAddressPool = data.address_pool_end;
+        state.activeDnsDefault = data.dns_default_domain_server;
+        state.activeDnsServer1 = data.dns_server1;
+        state.activeDnsServer2 = data.dns_server2;
+        state.activeNtpServer1 = data.ntp_server1;
+        state.activeNtpServer2 = data.ntp_server2;
+        state.verbLevel = data.verb;
+      });
     });
 
     const submitForm = async () => {
@@ -561,19 +812,19 @@ export default {
           name: state.clientName,
           description: state.description,
           server_mode: {
-            mode: state.serverMode.slug,
+            mode: state.serverMode.slug ?? state.serverMode,
           },
           protocol: state.protocol.slug,
-          device_mode: state.deviceMode.slug,
-          interface: state.interface.name,
+          device_mode: state.deviceMode.slug ?? state.deviceMode,
+          interface: state.interface.name ?? state.interface,
           local_port: state.localPort,
           tls_auth: tls_auth,
-          ca_name: state.peerCertif.name,
-          server_cert: state.serverCertif.name,
+          ca_name: state.peerCertif.name ?? state.peerCertif,
+          server_cert: state.serverCertif.name ?? state.serverCertif,
           dh_params_length: state.dhParameters,
           encryption_algorithm: state.encryptAlgo,
-          auth_digest_algorithm: state.authDigest.name,
-          hardware_crypto: state.hardwareCrypto.slug,
+          auth_digest_algorithm: state.authDigest.slug ?? state.authDigest,
+          hardware_crypto: state.hardwareCrypto.slug ?? state.hardwareCrypto,
 
           ipv4_tunnel_network: state.ip4Tunnel,
           gateway: state.isGateway,
@@ -581,7 +832,7 @@ export default {
           ipv4_local_network: state.iPv4Local,
           ipv4_remote_network: state.iPv4Remote,
           concurrent_connections: state.concurrentConnections,
-          compression: state.compression.slug,
+          compression: state.compression.slug ?? state.compression,
           type_of_service: state.typefService,
           duplicate_connections: state.Connections,
           ipv6: state.IPv6,
@@ -593,33 +844,64 @@ export default {
           dns_servers: electedDnsServers,
           force_dns_cache_update: state.forceDNS,
           ntp_servers: electedNtpServers,
-          verbosity_level: state.verbLevel?.slug ?? "",
+          verbosity_level: state.verbLevel?.slug ?? state.verbLevel ?? "",
         };
         state.loading = true;
         state.isLoadingDialogue = true;
 
-        axios
-          .post("/openvpn/createServerOpenvpn", payload)
-          .then((response) => {
-            if (response.status == "201") {
+        console.log("state", state);
+
+        if (state.isEditState === "edit") {
+          console.log("payload", payload);
+          axios
+            .put(`/openvpn/updateServerOpenVPN/${state.id}`, payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                state.isEditState === "";
+
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+                emitter.emit("open-listing");
+              }
+            })
+            .catch((i) => {
               state.loading = false;
               state.isLoadingDialogue = false;
               state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          axios
+            .post("/openvpn/createServerOpenvpn", payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
-          });
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+                emitter.emit("open-listing");
+              }
+            })
+            .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        }
       } else {
         console.log("res", v$.value);
       }
@@ -627,10 +909,17 @@ export default {
 
     return {
       getCookie,
+      getCertif,
       getInterface,
+      authDigestList,
       submitForm,
+      compressionList,
+      getAllCertAuth,
+      deviceModeList,
+      protocolList,
       state,
       v$,
+      emitter,
     };
   },
 };

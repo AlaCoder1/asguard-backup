@@ -26,7 +26,9 @@
           </v-window-item>
           <v-window-item v-for="tab in tabs" :key="tab.id" value="LISTING">
             <v-card>
-              <v-card-text> <ListingOpenvpnComponent :serverInfo="serverInfo" /></v-card-text>
+              <v-card-text>
+                <ListingOpenvpnComponent :serverInfo="serverInfo"
+              /></v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -51,7 +53,7 @@ export default {
     MonotoringOpenvpnComponent,
     ListingOpenvpnComponent,
   },
-  inject: ['emitter'],
+  inject: ["emitter"],
   data() {
     return {
       activeTab: "SERVERS",
@@ -63,26 +65,36 @@ export default {
       ],
       rowDataServers: [],
       rowDataClients: [],
-      serverInfo:null
-
+      serverInfo: null,
     };
   },
   methods: {},
-  
+  watch: {
+    activeTab(val) {
+      localStorage.setItem("openvpn-tab", val);
+    },
+  },
 
   mounted: async function () {
+    let tab = localStorage.getItem("openvpn-tab") || "SERVERS";
+    this.activeTab = tab;
 
-    this.serverInfo = document.getElementById("app").attributes["servers"].value;
+    this.serverInfo =
+      document.getElementById("app").attributes["servers"].value;
     this.emitter.on("add-server", () => {
-      this.activeTab ="SERVERS"
+      this.activeTab = "SERVERS";
     });
     this.emitter.on("add-client", () => {
-      this.activeTab ="CLIENTS"
+      this.activeTab = "CLIENTS";
+    });
+
+    this.emitter.on("open-listing", () => {
+      this.activeTab = "LISTING";
     });
 
     this.rowDataServers =
       document.getElementById("app").attributes["servers"].value;
-      
+
     let validJsonString = this.rowDataServers
       .replace(/'/g, '"')
       .replace(/True/g, "true")

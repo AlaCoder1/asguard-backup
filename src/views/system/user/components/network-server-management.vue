@@ -22,7 +22,8 @@
 import { AgGridVue } from 'ag-grid-vue3';
 import Modal from '../layout/Modal.vue';
 import axios from 'axios';
-
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 export default {
   name: 'NetworkServerManagement',
   components: {
@@ -353,8 +354,6 @@ export default {
 </script>
 
 <style lang="scss">
-@import "~ag-grid-community/dist/styles/ag-grid.css";
-@import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
 
 .add-btn-server {
   background: #213e9f;

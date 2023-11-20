@@ -665,6 +665,7 @@ def createClientOpenvpn(request):
             server_remote = ''
             for server in servers_list:
                 server_remote += f'{server["host"]}:{server["port"]},'
+            server_remote = server_remote[:len(server_remote)-1]
 
             client_data = {"name": name,
                            "description": description,
@@ -851,6 +852,7 @@ def updateClientOpenvpn(request, id):
             client.server_remote = ''
             for server in servers_list:
                 client.server_remote += f'{server["host"]}:{server["port"]},'
+            client.server_remote = client.server_remote[:len(client.server_remote)-1]
             interface_address = IP4Config.objects.get(interface_id=client.interface)
 
             if client.proxy_authentication_option == 'basic':

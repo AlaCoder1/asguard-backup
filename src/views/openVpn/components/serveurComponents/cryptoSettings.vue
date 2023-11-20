@@ -127,8 +127,13 @@
       label="Hardware Crypto"
       v-model="hardwareCrypto"
       item-title="name"
+      item-value="slug"
       :items="[
-        { name: 'No hardware Crypto acceleration', slug: 'No Hardware Crypto' },
+        {
+          name: 'No hardware Crypto acceleration',
+          slug: 'No hardware Crypto acceleration',
+        },
+
         { name: 'Intel RDRAND engine -RAND', slug: 'Intel RDRAND engine' },
       ]"
       return-object

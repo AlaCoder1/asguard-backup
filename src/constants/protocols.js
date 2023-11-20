@@ -1,19 +1,11 @@
 const protocols = [
     {
-        name: 'UDP',
-        slug: 'udp',
-    },
-    {
         name: 'UDP4',
         slug: 'udp4',
     },
     {
         name: 'UDP6',
         slug: 'udp6',
-    },
-    {
-        name: 'TCP',
-        slug: 'tcp',
     },
     {
         name: 'TCP4',

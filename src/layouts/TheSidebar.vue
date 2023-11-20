@@ -207,7 +207,7 @@ export default {
             {
               title: "Site to site VPN",
               icon: "",
-              href: "/services/site-to-site-vpn",
+              href: "/ipsec",
               active: "Site to site VPN",
             },
             {

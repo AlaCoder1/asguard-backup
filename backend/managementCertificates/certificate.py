@@ -49,8 +49,8 @@ def import_ca_in_system(ca_name, input_fields:dict):
     
     serial = get_certifcate_serial_number(f"/etc/certificates_{ca_name}/ca.crt")
     serial = serial[:len(serial)-1]
-    if serial != input_fields['serial']:
-        raise ValueError("Serial number input are not correct")
+    # if serial != input_fields['serial']:
+    #     raise ValueError("Serial number input are not correct")
     start_date, end_date, lifetime = get_certifcate_dates(f"/etc/certificates_{ca_name}/ca.crt")
     distingushed_name = extract_certificate_distingushed_name(f"/etc/certificates_{ca_name}/ca.crt")
     

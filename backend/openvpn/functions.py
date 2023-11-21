@@ -5,7 +5,7 @@ from backend.openvpn.models import ServerOpenvpn
 from backend.openvpn.serializers import ServerOpenvpnSerializer
 
 
-def execute_command_without_arguments(command, decode=True, shell=False):
+def execute_command_without_arguments(command:list, decode=True, shell=False):
     """Function that execute a command line without arguments"""
     print(f'command: {" ".join(command)}')
     process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=decode, shell=shell)
@@ -19,13 +19,14 @@ def execute_list_commands_without_arguments(commands_list):
         execute_command_without_arguments(command)
 
 
-def execute_command_with_arguments(command, arguments, time_sleep=0.5):
+def execute_command_with_arguments(command:list, arguments:str, time_sleep=0.5):
     """Function that execute a command line with arguments"""
     try:
         with subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
             print("Command: ", " ".join(command))
-            for arg in range(arguments):
-                print(f"argument {arg}: {arguments[arg]}")
+            list_arg = list(arguments.split("\n"))
+            for arg in range(len(list_arg)):
+                print(f"argument {arg}: {list_arg[arg]}")
             time.sleep(time_sleep)
             process.communicate(input=arguments)
 

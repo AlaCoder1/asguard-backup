@@ -1,4 +1,4 @@
-from backend.openvpn.functions import create_tls_file, replace_cert_with_value
+from backend.openvpn.functions import create_tls_file
 
 from backend.openvpn.functions import execute_list_commands_without_arguments
 
@@ -30,6 +30,6 @@ def export_client_in_system(list_balise_client, config:str):
         with open(balise_path) as balise_file:
             balise_value = balise_file.read()
             balise_value = balise_value[balise_value.find('-----BEGIN '):balise_value.find('\n', balise_value.find('-----END'))]
-        config = replace_cert_with_value(balise, balise_value, config)
+        config = config.replace(balise_line, f'<{balise}>\n{balise_value}\n</{balise}>\n')
         
     return config

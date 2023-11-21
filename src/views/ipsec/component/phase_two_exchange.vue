@@ -1,0 +1,225 @@
+<template>
+  <div class="ml-3 mr-3 mt-5">
+    <h4>Phase 2 proposal (SA/Key Exchange)</h4>
+    <v-divider class="mt-2"></v-divider>
+    <v-row class="mt-2">
+      <v-col cols="4" class="mt-5">
+        <label>Protocol</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-select
+          label="Protocol"
+          v-model="protocol"
+          item-title="name"
+          item-value="slug"
+          return-object
+          :items="[
+            {
+              name: 'ESP',
+              slug: 'ESP',
+            },
+            { name: 'AH', slug: 'AH' },
+          ]"
+        ></v-select>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.protocol.$errors.length"
+        >
+          {{ props.errors.protocol.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="4" class="mt-5">
+        <label>Encryption algorithms</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-select
+          label="Encryption algorithms"
+          v-model="encryptAlgoExchange"
+          item-title="name"
+          item-value="slug"
+          return-object
+          :items="encryptAlgoList"
+        ></v-select>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.encryptAlgoExchange.$errors.length"
+        >
+          {{ props.errors.encryptAlgoExchange.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="4" class="mt-5">
+        <label>Hash algorithms</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-select
+          label="Hash algorithms"
+          v-model="hashAlgoExchange"
+          item-title="name"
+          item-value="slug"
+          return-object
+          :items="[
+            {
+              name: 'SHA256',
+              slug: 'SHA256',
+            },
+            { name: 'SHA384', slug: 'SHA384' },
+            {
+              name: 'SHA512',
+              slug: 'SHA512',
+            },
+          ]"
+        ></v-select>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.hashAlgoExchange.$errors.length"
+        >
+          {{ props.errors.hashAlgoExchange.$errors?.[0].$message }}
+        </p>
+      </v-col>
+
+      <v-col cols="4" class="mt-5">
+        <label>PFS key group</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-select
+          label="PFS key group"
+          v-model="pfsKey"
+          item-title="name"
+          item-value="slug"
+          return-object
+          :items="pfsList"
+        ></v-select>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.pfsKey.$errors.length"
+        >
+          {{ props.errors.pfsKey.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="4" class="mt-5">
+        <label>Lifetime</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-text-field
+          label="Lifetime"
+          v-model="lifetimeExchange"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.lifetimeExchange.$errors.length"
+        >
+          {{ props.errors.lifetimeExchange.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="12">
+        <h4>Advanced Options</h4>
+        <v-divider class="mt-2"></v-divider>
+      </v-col>
+      <v-col cols="4" class="mt-5">
+        <label>Automatically ping host</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-text-field
+          label="Automatically ping host"
+          v-model="pingHost"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.pingHost.$errors.length"
+        >
+          {{ props.errors.pingHost.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="4" class="mt-5">
+        <label>Manual SPD entries</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-text-field
+          label="Manual SPD entries"
+          v-model="spdEntries"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.spdEntries.$errors.length"
+        >
+          {{ props.errors.spdEntries.$errors?.[0].$message }}
+        </p>
+      </v-col>
+    </v-row>
+  </div>
+</template>
+<script setup>
+import { ref } from "vue";
+import { useVModels } from "@vueuse/core";
+
+const pfsList = ref([
+  {
+    name: "off",
+    slug: "off",
+  },
+  { name: "15 (3072 bits)", slug: "15 (3072 bits)" },
+  { name: "16 (4096 bits)", slug: "16 (4096 bits)" },
+  { name: "17 (6144 bits)", slug: "17 (6144 bits)" },
+  { name: "18 (8192 bits)", slug: "18 (8192 bits)" },
+  { name: "19 (NIST EC 256 bits)", slug: "19 (NIST EC 256 bits)" },
+  { name: "20 (NIST EC 384 bits)", slug: "20 (NIST EC 384 bits)" },
+  { name: "21 (NIST EC 521 bits)", slug: "21 (NIST EC 521 bits)" },
+  { name: "28 (Brainpool EC 256 bits)", slug: "28 (Brainpool EC 256 bits)" },
+  { name: "29 (Brainpool EC 384 bits)", slug: "29 (Brainpool EC 384 bits)" },
+  { name: "30 (Brainpool EC 512 bits)", slug: "30 (Brainpool EC 512 bits)" },
+  { name: "31 (Elliptic Curve 25519)", slug: "31 (Elliptic Curve 25519)" },
+]);
+
+const encryptAlgoList = ref([
+  {
+    name: "AES128",
+    slug: "AES128",
+  },
+  { name: "AES192", slug: "AES192" },
+  {
+    name: "AES256",
+    slug: "AES256",
+  },
+  {
+    name: "aes128gcm16",
+    slug: "aes128gcm16",
+  },
+  {
+    name: "aes192gcm16",
+    slug: "aes192gcm16",
+  },
+  {
+    name: "aes256gcm16",
+    slug: "aes256gcm16",
+  },
+]);
+
+const props = defineProps([
+  "errors",
+  "spdEntries",
+  "protocol",
+  "encryptAlgoExchange",
+  "hashAlgoExchange",
+  "pfsKey",
+  "pingHost",
+  "lifetimeExchange",
+]);
+const emit = defineEmits([
+  "update:protocol",
+  "update:pingHost",
+  "update:spdEntries",
+  "update:encryptAlgoExchange",
+  "update:hashAlgoExchange",
+  "update:pfsKey",
+  "update:lifetimeExchange",
+]);
+const {
+  protocol,
+  encryptAlgoExchange,
+  hashAlgoExchange,
+  pfsKey,
+  lifetimeExchange,
+  pingHost,
+  spdEntries,
+} = useVModels(props, emit);
+</script>

@@ -1,13 +1,12 @@
-import json
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.core import serializers
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 
 from backend.ipsec.functions import json_to_str_server_ipsec
+from backend.ipsec.list_ipsec import get_all_server_ipsec, get_server_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
 from backend.ipsec.server_ipsec import delete_server_ipsec, install_server_ipsec, update_server_ipsec
 from backend.managementCertificates.models import Certificate, CertificateAuthority
@@ -23,18 +22,8 @@ from .models import ServerIPsec
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def getAllServerIPsec(request):
-    list_ipsec = []
     if (request.method == 'GET'):
-        ipsec = ServerIPsec.objects.all()
-        ipsecDict = serializers.serialize("json", ipsec)
-        res = json.loads(ipsecDict)
-        for i in range(len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            list_ipsec.append(res[i]['fields'])
-        # return list_ipsec
+        list_ipsec = get_all_server_ipsec()
         return JsonResponse(list_ipsec, safe=False)
     
 
@@ -46,14 +35,8 @@ def getAllServerIPsec(request):
 def getServerIPsec(request, id):
     """Getting server by id from database"""
     if (request.method == 'GET'):
-        server_ipsec = ServerIPsec.objects.filter(pk=id)
-        server_ipsecDict = serializers.serialize("json", server_ipsec)
-        res = json.loads(server_ipsecDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields']['id'] = id
-        return JsonResponse(res[0]['fields'], safe=False)
+        server_ipsec = get_server_ipsec(id)
+        return JsonResponse(server_ipsec, safe=False)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN IPSEC",
@@ -297,18 +280,17 @@ def createServerIPsec(request):
                 serializer_server.save()
                 return JsonResponse({"msg": f"Connection {conn_name} Configuration is done"}, status=201)
             else:
-                print(serializer_server.errors)
-                return JsonResponse({"msg": "Error in server configuration"}, status=401)
+                return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in creating ipsec server"}, status=401)
+            return JsonResponse({"error": "Error in creating ipsec server"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+            return JsonResponse({"error": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
+            return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
         except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"msg": "This CA does not exist"}, status=401)
+            return JsonResponse({"error": "This CA does not exist"}, status=400)
         except Certificate.DoesNotExist:
-            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
+            return JsonResponse({"error": "This Certificate does not exist"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -335,9 +317,9 @@ def deleteServerIPsec(request, id):
             server.delete()
             return JsonResponse({"msg": f"delete {server.conn_name} succesfully"})
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"msg": "This Server does not exist"}, status=401)
+        return JsonResponse({"error": "This Server does not exist"}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
+        return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN IPSEC (same as create)",
@@ -523,8 +505,6 @@ def updateServerIPsec(request, id):
             
                 # Update the server config
                 server_conf = json_to_str_server_ipsec(data)
-                print("server_conf= ")
-                print(server_conf)
 
                 # Install the server in system
                 update_server_ipsec(server.conn_name, updated_line_in_secrets_file, server_conf, 
@@ -534,12 +514,11 @@ def updateServerIPsec(request, id):
                 serializer_server.save()
                 return JsonResponse({"msg": f"Connection {server.conn_name} Configuration is updated"}, status=201)
             else:
-                print(serializer_server.errors)
-                return JsonResponse({"msg": "Error in server configuration"}, status=401)
+                return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 
         except ServerIPsec.DoesNotExist:
-            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+            return JsonResponse({"error": "This Server does not exist"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+            return JsonResponse({"error": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
+            return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)

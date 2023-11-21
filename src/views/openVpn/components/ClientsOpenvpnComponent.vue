@@ -85,20 +85,18 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>Interface*</label>
+              <label>Interface</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-select
                 label="Interface"
+                clearable
                 v-model="state.interface"
                 :items="state.mapedInterface"
                 item-title="name"
                 item-value="id"
                 return-object
               ></v-select>
-              <p class="error-feedback mb-5" v-if="v$.interface.$errors.length">
-                {{ v$.interface.$errors?.[0].$message }}
-              </p>
             </v-col>
             <v-col align-self="center" cols="4">
               <label>Retry DNS resolution</label>
@@ -303,6 +301,7 @@
             label-color="#213E9F"
             label="cancel"
             :isLarge="true"
+            @click="cancel"
           />
           <VButton
             rounded
@@ -585,7 +584,6 @@ export default {
         server_mode: { required },
         protocol: { required },
         device_mode: { required },
-        interface: { required },
 
         sharedKey: {
           requiredIfFuction: requiredIf(() => !state.tlsGenerate),
@@ -605,8 +603,6 @@ export default {
         authDigestAlgorithm: { required },
         hardwareCrypto: { required },
         encryptionAlgorithm: { required },
-
-        ipv4TunnelNetwork: { required },
       };
     });
 
@@ -927,7 +923,7 @@ export default {
           },
           protocol: state.protocol.slug ?? state.protocol,
           device_mode: state.device_mode.slug,
-          interface: state.interface.id,
+          interface: state.interface?.id ?? "",
           resolv_retry: state.resolv_retry,
           proxy_host: state.proxy_host ?? "",
           proxy_port: state.proxy_port ?? "",
@@ -1107,8 +1103,76 @@ export default {
       },
     ]);
 
+    const cancel = () => {
+      console.log("cancel");
+      state.id = "";
+      state.isEditState = "";
+      //general information
+      state.clientName = "";
+      state.description = "";
+      state.server_mode = "";
+      state.protocol = "";
+      state.device_mode = "";
+      state.interface = "";
+      state.resolv_retry = false;
+      state.proxy_host = "";
+      state.proxy_port = "";
+      state.proxyAuthenticationExtraOptions = {
+        name: "None",
+        slug: "none",
+      };
+      state.usernameUser = "";
+      state.passwordUser = "";
+
+      state.username = "";
+      state.password = "";
+      state.local_port = "";
+      //User Auth
+      state.username = "";
+      state.password = "";
+      state.renegotiate_time = "";
+      //cryp
+      state.tlsGenerate = true;
+      state.sharedKey = "";
+      state.peerCertificateAuthority = "";
+      state.clientCertificate = "";
+      state.encryptionAlgorithm = "";
+      state.authDigestAlgorithm = "";
+      state.hardwareCrypto = {
+        name: "No hardware Crypto acceleration",
+        slug: "No hardware Crypto acceleration",
+      };
+      //tunnelSettings
+      state.ipv4TunnelNetwork = "";
+      state.ipv6TunnelNetwork = "";
+      state.ipv4RemoteNetwork = "";
+      state.ipv6RemoteNetwork = "";
+      state.limitOutgoingBandwidth = "";
+      state.compression = { name: "No preference", slug: "no_preference" };
+      state.typeOfService = false;
+      state.ipv6 = false;
+      state.pullRoutes = false;
+      state.addRemoveRoutes = false;
+      //advancedConfig
+      state.verbosityLevel = {
+        name: "1 (default)",
+        slug: "1",
+      };
+      state.remoteServer = "";
+      state.hostAddress = "";
+      state.port = "";
+      rowDataCertificats.value = [];
+      if (gridApi.value) {
+        gridApi.value.setRowData(rowDataCertificats.value);
+      } else {
+        console.error("Grid API.");
+      }
+      v$.value.$reset()
+    };
+
     return {
       state,
+      cancel,
       userAuthSettings,
       cryptoSettings,
       tunnelSettings,

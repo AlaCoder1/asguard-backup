@@ -281,7 +281,7 @@ export default {
       id: "",
       loading: false,
       isLoadingDialogue: false,
-      mapedCertifAuth: [],
+
       mapedCertifServer: [],
       snackbar: false,
       color: "",
@@ -641,9 +641,8 @@ export default {
       }
     );
 
-
     onMounted(() => {
-      console.log('ok server')
+      console.log("ok server");
       getInterface();
       getAllCertAuth();
       getCertif();
@@ -744,6 +743,7 @@ export default {
     });
 
     const submitForm = async () => {
+      console.log("state", state);
       const result = await v$.value.$validate();
 
       if (result) {
@@ -919,8 +919,73 @@ export default {
       }
     };
 
+    const cancel = () => {
+      state.id = "";
+      state.isEditState = "";
+      //General information
+      state.clientName = "";
+      state.description = "";
+      state.serverMode = "";
+      state.protocol = "";
+      state.deviceMode = "";
+      state.interface = "";
+      state.localPort = "";
+      //Cryptographic Settings
+      state.isEnableAuth = true;
+      state.tlsGenerate = "";
+      state.peerCertif = "";
+      state.serverCertif = "";
+      state.dhParameters = "";
+      state.encryptAlgo = "";
+      state.authDigest = "";
+      state.hardwareCrypto = {
+        name: "No hardware Crypto acceleration",
+        slug: "No hardware Crypto acceleration",
+      };
+      //tunnelSettings
+      state.ip4Tunnel = "";
+      state.ip6Tunnel = "";
+      state.isGateway = false;
+      state.isBridge = false;
+      state.interfaceBridge = "";
+      state.startDHCPBridge = "";
+      state.endDHCPBridge = "";
+      state.iPv4Local = "";
+      state.iPv6Local = "";
+      state.iPv4Remote = "";
+      state.iPv6Remote = "";
+      state.concurrentConnections = "";
+      state.compression = { name: "No preference", slug: "no_preference" };
+      state.typefService = false;
+      state.Connections = false;
+      state.IPv6 = false;
+      state.interClients = false;
+      //clientSettings
+      state.dynamicIP = false;
+      state.adressPool = false;
+      state.topology = false;
+      state.dnsDefaultDomain = false;
+      state.dnsServers = false;
+      state.forceDNS = false;
+      state.ntpServers = false;
+      state.clientPort = false;
+      state.startAddressPool = "";
+      state.endAddressPool = "";
+      state.activeDnsDefault = "";
+      state.activeDnsServer1 = "";
+      state.activeDnsServer2 = "";
+      state.activeNtpServer1 = "";
+      state.activeNtpServer2 = "";
+      state.verbLevel = {
+        name: "1 (default)",
+        slug: "1",
+      };
+      v$.value.$reset()
+    };
+
     return {
       getCookie,
+      cancel,
       getCertif,
       getInterface,
       authDigestList,

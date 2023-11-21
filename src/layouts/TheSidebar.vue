@@ -207,13 +207,12 @@ export default {
             {
               title: "Site to site VPN",
               icon: "",
-              href: "/services/site-to-site-vpn",
+              href: "/ipsec",
               active: "Site to site VPN",
             },
             {
               title: "OPEN VPN",
               icon: "",
-              href: "/openvpn",
               href: "/openvpn",
               active: "OPEN VPN",
             },

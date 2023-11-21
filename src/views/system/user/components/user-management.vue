@@ -69,6 +69,9 @@ import axios from "axios";
 import Modal_User from "@/components/modals/ModalUser.vue";
 import Modal_Password from "@/components/modals/ModalChangePassword.vue";
 
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
+
 // import {
 //   createUser
 // } from '../services/users';
@@ -434,8 +437,6 @@ export default {
 </script>
 
 <style lang="scss">
-@import "~ag-grid-community/dist/styles/ag-grid.css";
-@import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
 
 .btn-add {
   background: #213e9f;

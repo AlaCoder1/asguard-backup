@@ -9,27 +9,79 @@
           >
             <h4>System informations</h4>
             <v-divider></v-divider>
-
-            <div style="height: 100%">
-              <div style="display: flex; flex-direction: row; height: 100%">
-                <div style="overflow: hidden; flex-grow: 1">
-                  <ag-grid-vue
-                    id="grid-wrapper"
-                    class="ag-theme-alpine mt-3"
-                    :columnDefs="columnAuthority"
-                    :enableColResize="false"
-                    style="width: 100%; height: 155px"
-                    :gridOptions="gridOptions"
-                    @grid-ready="onGridReady"
-                  />
+            <v-row>
+              <v-col cols="6">
+                <div style="height: 100%">
+                  <div style="display: flex; flex-direction: row; height: 100%">
+                    <div style="overflow: hidden; flex-grow: 1">
+                      <ag-grid-vue
+                        id="grid-wrapper"
+                        class="ag-theme-alpine mt-3"
+                        :columnDefs="columnAuthority"
+                        :enableColResize="false"
+                        :alwaysShowHorizontalScroll="false"
+                        :alwaysShowVerticalScroll="false"
+                        style="width: 100%; height: 155px"
+                        :gridOptions="gridOptions"
+                        @grid-ready="onGridReady"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </v-col>
+
+              <v-col cols="6">
+                <v-row>
+                  <v-col cols="4">
+                    <div class="mt-3" style="height: 100%">
+                      <div
+                        style="display: flex; flex-direction: row; height: 100%"
+                      >
+                        <div style="overflow: hidden; flex-grow: 1">
+                          <v-card width="300">
+                            <template v-slot:title> System Load </template>
+
+                            <v-card-text>{{ uptimeUpdate }} </v-card-text>
+                          </v-card>
+                        </div>
+                      </div>
+                    </div>
+                  </v-col>
+                  <v-col cols="5">
+                    <div class="mt-3" style="height: 100%">
+                      <div
+                        style="display: flex; flex-direction: row; height: 100%"
+                      >
+                        <div style="overflow: hidden; flex-grow: 1">
+                          <v-card width="300">
+                            <template v-slot:title> Operating Time </template>
+
+                            <v-card-text>{{ currentDate }} </v-card-text>
+                          </v-card>
+                        </div>
+                      </div>
+                    </div>
+                  </v-col>
+                  <v-col cols="3">
+                    <div class="mt-3" style="height: 100%">
+                      <div
+                        style="display: flex; flex-direction: row; height: 100%"
+                      >
+                        <div style="overflow: hidden; flex-grow: 1">
+                          <v-card width="300">
+                            <template v-slot:title> Last Config </template>
+
+                            <v-card-text>{{ configChange }} </v-card-text>
+                          </v-card>
+                        </div>
+                      </div>
+                    </div>
+                  </v-col>
+                </v-row>
+              </v-col>
+            </v-row>
           </div>
           <div id="chart" class="mt-3 mr-2">
-            <!-- <pre> System Load{{ test.system_load }}</pre>
-            <pre> Operating{{ test.operating }}</pre> -->
-
             <apexchart
               ref="apexChart"
               height="350"
@@ -57,7 +109,7 @@
                         :rowData="rowDataServices"
                         style="width: 100%; height: 100%"
                         :gridOptions="gridOptionsService"
-                        @grid-ready="onGridReadyaaa"
+                        @grid-ready="onGridReadServices"
                       />
                     </div>
                   </div>
@@ -121,6 +173,8 @@
 import { AgGridVue } from "ag-grid-vue3";
 import VueApexCharts from "vue3-apexcharts";
 import BaseLayout from "../../layouts/layout.vue";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 
 export default {
   name: "HomeComponent",
@@ -131,6 +185,9 @@ export default {
   },
   data() {
     return {
+      configChange: null,
+      gridApi: null,
+      currentDate: null,
       uptimeUpdate: null,
       socket: null,
       chartOptions: {
@@ -159,32 +216,31 @@ export default {
       infoParser: "",
       data: [],
       columnAuthority: [
-        { headerName: "Name", field: "nom", maxWidth: 100 },
+        { headerName: "Name", field: "nom", width: 150 },
         {
           headerName: "Version",
           cellRenderer: this.actionCellRenderer,
-          minWidth: 50,
         },
         {
           headerName: "CPU type",
           cellRenderer: this.actionCpuType,
-          minWidth: 100,
         },
-        { headerName: "System load", field: "system_load", minWidth: 50 },
-        {
-          headerName: "Last configuration change",
-          field: "last_cong",
-          maxWidth: 200,
-        },
-        {
-          headerName: "Operating time",
-          field: "operating",
-          minWidth: 230,
-          editable: false,
-          sortable: false,
-          filter: false,
-        },
+        // { headerName: "System load", field: "system_load", minWidth: 50 },
+        // {
+        //   headerName: "Last configuration change",
+        //   field: "last_cong",
+        //   maxWidth: 200,
+        // },
+        // {
+        //   headerName: "Operating time",
+        //   field: "operating",
+        //   minWidth: 230,
+        //   editable: false,
+        //   sortable: false,
+        //   filter: false,
+        // },
       ],
+      rowDataCertificats: [],
       columnServices: [
         { headerName: "Service", field: "service" },
         { headerName: "Description", field: "description" },
@@ -229,8 +285,25 @@ export default {
     dataChart: {
       handler(newData) {
         this.uptime = newData;
+        this.currentDate = newData.current_date;
         this.uptimeUpdate = this.uptime.uptime;
-        // console.log("aaa5", newData);
+        const currentDate = new Date();
+        const currentTime = currentDate.toLocaleTimeString();
+        this.configChange = currentTime;
+        let authority = [
+          {
+            nom: "Asguard",
+            system_load: newData.uptime,
+            last_cong: currentTime,
+            operating: newData.current_date,
+          },
+        ];
+        this.rowDataAuthority = authority;
+        if (this.gridApi) {
+          this.gridApi.setRowData(this.rowDataAuthority);
+        } else {
+          console.error("Grid API.");
+        }
 
         // const currentDate = new Date();
         // const currentTime = currentDate.toLocaleTimeString();
@@ -301,10 +374,9 @@ export default {
     }, 1000);
   },
   methods: {
-    onGridReadyaaa(params) {
+    onGridReadServices(params) {
       this.gridApi = params.api;
       this.gridColumnApi = params.columnApi;
-      // this.gridApi.setRowData(this.test);
 
       params.api.sizeColumnsToFit();
       window.addEventListener("resize", function () {
@@ -320,6 +392,12 @@ export default {
       this.gridColumnApi = params.columnApi;
       // this.gridApi.setRowData(this.rowDataAuthority);
 
+      if (this.gridApi) {
+        this.gridApi.setRowData(this.rowDataAuthority);
+      } else {
+        console.error("Grid API.");
+      }
+
       params.api.sizeColumnsToFit();
       window.addEventListener("resize", function () {
         setTimeout(function () {
@@ -330,7 +408,9 @@ export default {
       params.api.sizeColumnsToFit();
     },
     initializeWebSocket() {
-      this.socket = new WebSocket("ws://" + window.location.host + "/ws/data/"); // Replace with your WebSocket URL
+      this.socket = new WebSocket(
+        "wss://" + window.location.host + "/ws/data/"
+      ); // Replace with your WebSocket URL
 
       this.socket.onopen = () => {
         console.log("WebSocket connection opened.");
@@ -340,9 +420,6 @@ export default {
         if (this.socket.readyState === WebSocket.OPEN) {
           const data = JSON.parse(event.data);
           this.dataChart = data;
-          // console.log('this.',this.dataChart)
-
-          // console.log('chartData :',this.dataChart)
 
           const timestamp = new Date(data.timestamp * 1000).getTime();
 
@@ -475,7 +552,3 @@ export default {
   },
 };
 </script>
-<style lang="scss">
-@import "~ag-grid-community/dist/styles/ag-grid.css";
-@import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
-</style>

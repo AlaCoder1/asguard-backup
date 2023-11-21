@@ -60,11 +60,11 @@
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
-                  <span
+                  <!-- <span
                     class="error-feedback"
                     v-if="v$.formData.password.$error"
                     >{{ v$.formData.password.$errors[0].$message }}</span
-                  >
+                  > -->
                 </v-col>
 
                 <v-col cols="6">
@@ -73,13 +73,13 @@
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
-                  <span
+                  <!-- <span
                     class="error-feedback"
                     v-if="v$.formData.confirm_password.$error"
                     >{{
                       v$.formData.confirm_password.$errors[0].$message
                     }}</span
-                  >
+                  > -->
                 </v-col>
               </v-row>
             </v-container>
@@ -111,7 +111,12 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar v-model="snackbar" location="bottom right" :color="color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
       {{ textAlert }}
 
       <template v-slot:actions> </template>
@@ -156,38 +161,34 @@ export default {
     const rules = computed(() => {
       return {
         formData: {
-          password: {
-            required: helpers.withMessage(
-              "This field must be indicated",
-              required
-            ),
-            isValidPassword: helpers.withMessage(
-              `There must be at least 12 characters, including at least one uppercase, one number, and one special character.`,
-
-              helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{12,}$/
-              )
-            ),
-          },
-          confirm_password: {
-            sameAsPassword: helpers.withMessage(
-              "Your password does not match",
-
-              sameAs(state.formData.password)
-            ), // can be a reference to a field or computed property
-            required: helpers.withMessage(
-              "This field must be indicated",
-              required
-            ),
-
-            isValidPassword: helpers.withMessage(
-              `There must be at least 12 characters, including at least one uppercase, one number, and one special character.`,
-
-              helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{12,}$/
-              )
-            ),
-          },
+          // password: {
+          //   required: helpers.withMessage(
+          //     "This field must be indicated",
+          //     required
+          //   ),
+          //   isValidPassword: helpers.withMessage(
+          //     `There must be at least 12 characters, including at least one uppercase, one number, and one special character.`,
+          //     helpers.regex(
+          //       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{12,}$/
+          //     )
+          //   ),
+          // },
+          // confirm_password: {
+          //   sameAsPassword: helpers.withMessage(
+          //     "Your password does not match",
+          //     sameAs(state.formData.password)
+          //   ), // can be a reference to a field or computed property
+          //   required: helpers.withMessage(
+          //     "This field must be indicated",
+          //     required
+          //   ),
+          //   isValidPassword: helpers.withMessage(
+          //     `There must be at least 12 characters, including at least one uppercase, one number, and one special character.`,
+          //     helpers.regex(
+          //       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{12,}$/
+          //     )
+          //   ),
+          // },
         },
       };
     });
@@ -286,7 +287,7 @@ export default {
 
       eGui.innerHTML = `
       emailAddress= ${data.data.email},ST=${data.data.state}, O=${data.data.organization}, <br/>
-        L=${data.data.city},CN=${data.data.nom_unique},CN=${data.data.country_code}<br/>
+        L=${data.data.city},CN=${data.data.nom_unique},C=${data.data.country_code}<br/>
         Valide à partir du :${data.data.valid_from}<br/>
         Valide jusqu'au :${data.data.valid_until}
         `;
@@ -309,50 +310,44 @@ export default {
       return cookieValue;
     },
     confirmDownload() {
-      this.v$.$validate();
-      if (!this.v$.$error) {
-        const csrfToken = this.getCookie("csrftoken");
-        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-        console.log("ths", this.state.formData);
-        let payload = {
-          download_type: "p12",
-          password: this.state.formData?.password,
-        };
-        axios.post(`/certificates/exportCert/${this.rowId}`, payload).then(
-          (response) => {
-            console.log("res", response.data.cert);
+      // this.v$.$validate();
+      // if (!this.v$.$error) {
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      console.log("ths", this.state.formData);
+      let payload = {
+        download_type: "p12",
+        password: this.state.formData?.password,
+      };
+      axios
+        .post(`/certificates/exportCert/${this.rowId}`, payload)
+        .then((response) => {
+          console.log("res", response.data);
 
-            // const text = response.data.cert;
-            // const blob = new Blob([text], {
-            //   type: "application/x-x509-ca-cert",
-            // });
+          const text = response.data.cert;
+          const blob = new Blob([text], {
+            type: "blob",
+          });
 
-            const url = "@/download/";
-            window.location.href = url;
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = "p12.p12";
 
-            // const url = window.URL.createObjectURL(blob);
-            // const a = document.createElement("a");
-            // a.style.display = "none";
-            // a.href = url;
-            // a.download = "p12.p12";
+          document.body.appendChild(a);
+          a.click();
 
-            // document.body.appendChild(a);
-            // a.click();
-
-            // window.URL.revokeObjectURL(url);
-            // document.body.removeChild(a);
-
-            if (response.status == "201") {
-              console.log("success");
-            } else {
-              console.log("error");
-            }
-          },
-          (error) => {
-            console.log(error);
-          }
-        );
-      }
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+        })
+        .catch((i) => {
+          console.log("i", i.response);
+          this.snackbar = true;
+          this.color = "red";
+          this.textAlert = i.response.data.error;
+        });
+      // }
     },
     cancelDeleteCertif() {
       this.deleteDialogCertif = false;
@@ -371,13 +366,11 @@ export default {
       params.api.sizeColumnsToFit();
     },
     openModalAdd() {
-      
       this.modalData = {};
       this.modalMode = "create"; // Assuming you want to open the modal in create mode
       this.isModalOpen = true;
     },
     openModalRevoce() {
-      
       this.modalData = {};
       this.modalMode = "revoce"; // Assuming you want to open the modal in create mode
       this.isModalOpenRevoce = true;
@@ -385,6 +378,7 @@ export default {
     closeModal() {
       this.isModalOpen = false;
       this.isModalOpenRevoce = false;
+      this.deleteDialogCertif = false;
       // location.reload()
     },
     actionCellRenderer(params) {
@@ -396,31 +390,31 @@ export default {
 
       if (params.data.activation && params.data.certificate_authority) {
         eGui.innerHTML = `
-       
 
-       <button 
+
+       <button
            class="action-button revoce"
            data-action="revoce">
            <i class="mdi mdi-skull-outline" style="color: #086eae;font-size: 20px;"></i>
            </button>
-     
-    
-           <button 
+
+
+           <button
            class="action-button download"
            data-action="exportP12" title="download P12 file">
-              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i> 
+              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
-           <button 
+           <button
            class="action-button download"
            data-action="export" title="download CRT">
-              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
-           <button 
+           <button
            class="action-button download"
            data-action="exportKey" title="download Private Key">
-              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
-           <button 
+           <button
           class="action-button delete"
           data-action="delete">
             <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
@@ -428,45 +422,55 @@ export default {
 
          `;
       } else if (!params.data.activation) {
-        eGui.innerHTML = `  <button 
+        eGui.innerHTML = `  <button
          class="action-button lock"
          data-action="lock">
-      
+
          <i class="fa fa-unlock-alt" aria-hidden="true" style="color: #086eae;font-size: 20px;"></i>
          </button>
-         <button 
+         <button
            class="action-button download"
-           data-action="exportP12">
-              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i> 
+           data-action="exportP12"  title="download P12 file">
+              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
-           <button 
+           <button
            class="action-button download"
-           data-action="export">
-              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
+           data-action="export" title="download CRT">
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
-           <button 
+           <button
            class="action-button download"
-           data-action="exportKey">
-              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
+           data-action="exportKey" title="download Private Key">
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
+           <button
+          class="action-button delete"
+          data-action="delete">
+            <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
+        </button>
          `;
       } else if (params.data.activation && !params.data.certificate_authority) {
         eGui.innerHTML = `
-         <button 
+         <button
            class="action-button download"
            data-action="exportP12">
-              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i> 
+              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
-           <button 
+           <button
            class="action-button download"
            data-action="export">
-              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
-           <button 
+           <button
            class="action-button download"
            data-action="exportKey">
-              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
+           <button
+          class="action-button delete"
+          data-action="delete">
+            <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
+        </button>
          `;
       }
 
@@ -486,8 +490,9 @@ export default {
       let payload = {
         download_type: type,
       };
-      axios.post(`/certificates/exportCert/${id}`, payload).then(
-        (response) => {
+      axios
+        .post(`/certificates/exportCert/${id}`, payload)
+        .then((response) => {
           console.log("res", response.data.cert);
 
           const text = response.data.cert;
@@ -512,11 +517,13 @@ export default {
           } else {
             console.log("error");
           }
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
+        })
+        .catch((i) => {
+          console.log("i", i.response.data.error);
+          this.snackbar = true;
+          this.color = "red";
+          this.textAlert = i.response.data.error;
+        });
     },
     getCookie(name) {
       let cookieValue = null;
@@ -543,20 +550,24 @@ export default {
         .delete(`/certificates/deleteCertificate/${this.deletedRow.id}`)
         .then((response) => {
           console.log("Resource deleted:", response.data);
-          this.snackbar = true;
-          this.color = "success";
-          this.textAlert = response.data.msg;
-          setTimeout(() => {
+
+          if (response.status == 201) {
             this.closeModal();
-            location.reload();
-          }, 2000);
+
+            this.snackbar = true;
+            this.color = "success";
+            this.textAlert = response.data.msg;
+
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          }
         })
-        .catch((error) => {
-          // Handle any errors that occur during the request
-          console.error("Error deleting resource:", error);
+        .catch((i) => {
+          console.log("i", i.response.data.error);
           this.snackbar = true;
           this.color = "red";
-          this.textAlert = "error";
+          this.textAlert = i.response.data.error;
         });
     },
     handleAction(action, rowData) {
@@ -590,20 +601,22 @@ export default {
             .put(`/certificates/unrevokeCertificate/${rowData.id}`)
             .then((response) => {
               console.log("res", response);
+              this.closeModal();
+
               this.snackbar = true;
               this.color = "success";
               this.textAlert = response.data.msg;
+
               setTimeout(() => {
-                this.closeModal();
                 location.reload();
-              }, 2000);
+              }, 1000);
             })
-            .catch((error) => {
-              console.error("Error :", error);
-              this.snackbar = true;
-              this.color = "red";
-              this.textAlert = "error";
-            });
+            // .catch((i) => {
+            //   console.log("i", i.response.data);
+            //   this.snackbar = true;
+            //   this.color = "red";
+            //   this.textAlert = i.response.data.error;
+            // });
 
           break;
         case "export":

@@ -675,8 +675,9 @@ def createClientOpenvpn(request):
             cert = f'/etc/openvpn/client/certificates_{cert_name}/{cert_name}.crt'
             key = f'/etc/openvpn/client/certificates_{cert_name}/{cert_name}.key'
             tls = f'/etc/openvpn/client/static_{name}.key'
-            interface_address = IP4Config.objects.get(interface_id=interface)
-            data["interface_address"] = interface_address.ip_address
+            if interface != '':
+                interface_address = IP4Config.objects.get(interface_id=interface)
+                data["interface_address"] = interface_address.ip_address
             server_remote = ''
             for server in servers_list:
                 server_remote += f'{server["host"]}:{server["port"]},'

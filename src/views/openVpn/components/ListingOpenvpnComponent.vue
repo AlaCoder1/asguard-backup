@@ -99,10 +99,13 @@ export default {
     const color = ref(null);
     const snackbar = ref(false);
     const textAlert = ref(false);
+
+  
     const columnServers = [
       {
         headerName: "Server Name",
         field: "name",
+
         sortable: true,
         filter: true,
         checkboxSelection: true,
@@ -152,6 +155,7 @@ export default {
         headerName: "Client Name",
         field: "name",
         sortable: true,
+        autoHeight: true,
         filter: true,
         checkboxSelection: true,
       },
@@ -163,7 +167,8 @@ export default {
       },
       {
         headerName: "Server",
-        field: "server_remote",
+        autoHeight: true,
+        cellRenderer: formatedServer,
         sortable: true,
         filter: true,
       },
@@ -434,8 +439,8 @@ export default {
              <i class="mdi mdi-download-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
           <button
-          class="action-button edit"
-          data-action="edit" title="Edit Server">
+          class="action-button editClient"
+          data-action="editClient" title="Edit Client">
              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
           <button
@@ -459,11 +464,57 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "download":
+          console.log("download", rowData);
+
+          let id = rowData.id;
+          let fileExtention = `${rowData.name}.ovpn`;
+
+          const csrfToken = getCookie("csrftoken");
+          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+          axios
+            .post(`/openvpn/exportClientOpenvpn/${id}`)
+            .then((response) => {
+              console.log("res", response.data.client);
+
+              const text = response.data.client;
+              const blob = new Blob([text], {
+                type: "application/x-x509-ca-cert",
+              });
+
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.style.display = "none";
+              a.href = url;
+              a.download = fileExtention;
+
+              document.body.appendChild(a);
+              a.click();
+
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+
+              if (response.status == "201") {
+                console.log("success");
+              } else {
+                console.log("error");
+              }
+            })
+            .catch((i) => {
+              console.log("i", i.response);
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            });
+
           break;
-        case "edit":
+        case "editClient":
           console.log("edit", rowData);
           emitter.emit("add-client");
-          emitter.emit("edit-client", rowData);
+          setTimeout(() => {
+            emitter.emit("edit-client", rowData);
+          }, 1000);
+
           break;
 
         case "delete":
@@ -492,6 +543,22 @@ export default {
       }
     };
 
+    function formatedServer(data) {
+      let eGui = document.createElement("div");
+      let mapedServer = data.data.server_remote
+        .map((i) => {
+          return i.host + ` : ${i.port}`;
+        })
+        .join("<br>");
+
+      eGui.innerHTML = `
+         ${mapedServer}
+        `;
+      eGui.style.lineHeight = "2";
+
+      return eGui;
+    }
+
     const publishServer = () => {};
 
     const addServer = () => {
@@ -514,7 +581,6 @@ export default {
           .replace(/False/g, "false")
           .replace(/None/g, "null");
         const parsedArray = JSON.parse(validJsonString);
-        console.log("parsedArray", parsedArray);
 
         // const processedData = parsedArray.map((server) => ({
         //   id: server.id,
@@ -527,7 +593,6 @@ export default {
         // }));
 
         rowDataServers.value = parsedArray;
-        console.log("rowDataServers.value", rowDataServers.value);
 
         const clientsAttribute =
           document.getElementById("app").attributes["clients"].value;
@@ -538,15 +603,6 @@ export default {
           .replace(/None/g, "null");
         const parsedArrayClients = JSON.parse(validJsonStringClients);
         console.log("parsedArrayClients", parsedArrayClients);
-
-        // const processedDataClients = parsedArrayClients.map((client) => ({
-        //   id: client.id,
-        //   clientName: client.name,
-        //   protocolPort: client.proto,
-        //   server: client.server_remote,
-        //   description: client.description,
-        //   cert_status: client.cert_status,
-        // }));
 
         rowDataClients.value = parsedArrayClients;
       } catch (error) {
@@ -573,6 +629,7 @@ export default {
       deselectRows: () => {
         gridApi.value.deselectAll();
       },
+      formatedServer,
       actionCellRenderer,
       onGridReady,
       publishServer,

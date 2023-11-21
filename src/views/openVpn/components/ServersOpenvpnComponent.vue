@@ -630,8 +630,20 @@ export default {
         }
       }
     );
+    watch(
+      () => state.isBridge,
+      (newValue) => {
+        if (!newValue) {
+          state.interfaceBridge = "";
+          state.startDHCPBridge = "";
+          state.endDHCPBridge = "";
+        }
+      }
+    );
+
 
     onMounted(() => {
+      console.log('ok server')
       getInterface();
       getAllCertAuth();
       getCertif();
@@ -689,7 +701,7 @@ export default {
         state.authDigest = filtredAuth[0];
         state.hardwareCrypto = data.hardware_crypto;
         //tunnelSettings
-        state.ip4Tunnel = data.ipv4_local_network;
+        state.ip4Tunnel = data.ipv4_tunnel_network;
         // state.ip6Tunnel= "";
         state.isGateway = data.gateway;
         state.isBridge = data.bridge_interface ? true : false;
@@ -862,12 +874,12 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
-                state.isEditState === "";
+                state.isEditState = "";
 
                 setTimeout(() => {
                   location.reload();
+                  emitter.emit("open-listing");
                 }, 1000);
-                emitter.emit("open-listing");
               }
             })
             .catch((i) => {

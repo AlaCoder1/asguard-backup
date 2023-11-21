@@ -6,11 +6,15 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import mitt from 'mitt'
 import openvpn from '../views/openVpn/openvpn';
+import ClientsOpenvpnComponent from '../views/openVpn/components/ClientsOpenvpnComponent.vue'
+
+
 
 const emitter = mitt()
 
 const app = createApp(openvpn);
 
+app.component('ClientsOpenvpnComponent', ClientsOpenvpnComponent)
 app.provide('emitter', emitter)
 
 const vuetify = createVuetify({

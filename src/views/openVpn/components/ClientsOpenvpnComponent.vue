@@ -278,7 +278,6 @@
                     :columnDefs="columnCertificats"
                     :alwaysShowHorizontalScroll="false"
                     :alwaysShowVarticalScroll="false"
-                    :gridOptions="gridOptions"
                     :defaultColDef="defaultColDef"
                     :rowData="rowDataCertificats.value"
                     style="width: 100%; height: 100%"
@@ -304,7 +303,6 @@
             label-color="#213E9F"
             label="cancel"
             :isLarge="true"
-            @click="cancel"
           />
           <VButton
             rounded
@@ -424,6 +422,7 @@ export default {
       password: "",
       local_port: "",
       mapedInterface: [],
+      mapedCertifAuth: [],
       //User Auth
       username: "",
       password: "",
@@ -446,10 +445,10 @@ export default {
       ipv6RemoteNetwork: "",
       limitOutgoingBandwidth: "",
       compression: { name: "No preference", slug: "no_preference" },
-      typeOfService: "",
-      ipv6: "",
-      pullRoutes: "",
-      addRemoveRoutes: "",
+      typeOfService: false,
+      ipv6: false,
+      pullRoutes: false,
+      addRemoveRoutes: false,
       //advancedConfig
       verbosityLevel: {
         name: "1 (default)",
@@ -460,13 +459,126 @@ export default {
       port: "",
     });
 
+    onMounted(() => {
+      getInterface();
+      getAllCertAuth();
+      getAllClientCertif();
+      protocolsList.value = protocols;
+
+      emitter.on("edit-client", (data) => {
+        console.log("dataClient", data);
+        if (data) state.isEditState = "edit";
+        state.id = data.id;
+        state.clientName = data.name;
+        state.description = data.description;
+
+        let filtredMode = serverMode.value.filter(
+          (i) => i.slug === data.server_mode
+        );
+
+        state.server_mode = filtredMode[0];
+
+        let filtredProtocol = Listprotocols.value.filter(
+          (i) => i.slug === data.proto
+        );
+
+        state.protocol = filtredProtocol[0];
+
+        let filtredDevice = deviceMode.value.filter((i) => i.slug === data.dev);
+
+        state.device_mode = filtredDevice[0];
+
+        let filtredInterfaces = state.mapedInterface.filter(
+          (i) => i.id === +data.interface
+        );
+        let filtredInter = state.mapedInterface.filter(
+          (i) => i.name === data.interface
+        );
+
+        state.interface = filtredInterfaces[0] ?? filtredInter[0];
+        state.resolv_retry = data.resolv_retry;
+        state.proxy_host = data.proxy_host;
+        state.proxy_port = data.proxy_port;
+
+        let filtredProxy = proxyAuthenticationExtraOptionsList.value.filter(
+          (i) => i.slug === data.proxy_authentication_option
+        );
+
+        state.proxyAuthenticationExtraOptions = filtredProxy[0];
+        state.usernameUser = data.username;
+        state.passwordUser = data.password;
+        state.username = data.proxy_auth_username;
+        state.password = data.proxy_auth_password;
+        state.local_port = data.port;
+        state.username = data.password;
+        state.password = data.username;
+        state.renegotiate_time = data.renegotiate_time;
+        state.tlsGenerate = data.tls_key ? false : true;
+        state.sharedKey = data.tls_key;
+
+        let filtredCert = state.mapedCertifAuth.filter(
+          (i) => i.name === data.ca_name
+        );
+        state.peerCertificateAuthority = filtredCert[0];
+
+        let filtredCertiClient = clientCertificateList.value.filter(
+          (i) => i.name === data.cert_name
+        );
+        state.clientCertificate = filtredCertiClient[0];
+
+        let filtredEncrypt = encryptionAlgorithmList.value.filter(
+          (i) => i.slug === data.cipher
+        );
+        state.encryptionAlgorithm = filtredEncrypt[0];
+
+        let filtredAuth = authDigestAlgorithmList.value.filter(
+          (i) => i.slug === data.auth
+        );
+
+        state.authDigestAlgorithm = filtredAuth[0];
+
+        let filtredHardware = hardwareCryptoList.value.filter(
+          (i) => i.slug === data.hardware_crypto
+        );
+        state.hardwareCrypto = filtredHardware[0];
+
+        state.ipv4TunnelNetwork = data.ipv4_tunnel_network;
+        // state.ipv6TunnelNetwork= data.,
+        state.ipv4RemoteNetwork = data.ipv4_remote_network;
+        // state.ipv6RemoteNetwork= data.,
+        state.limitOutgoingBandwidth = data.limit_outgoing_bandwidth;
+
+        let filtredCompression = compression.value.filter(
+          (i) => i.slug === data.compression
+        );
+
+        state.compression = filtredCompression[0];
+        state.typeOfService = data.type_of_service;
+        state.ipv6 = data.ipv6;
+        state.pullRoutes = data.pull_routes;
+        state.addRemoveRoutes = data.add_remove_routes;
+
+        let filtredVerb = verbosityLevelList.value.filter(
+          (i) => i.slug === data.verb
+        );
+
+        state.verbosityLevel = filtredVerb[0];
+
+        rowDataCertificats.value = data.server_remote;
+        if (gridApi.value) {
+          gridApi.value.setRowData(rowDataCertificats.value);
+        } else {
+          console.error("Grid API.");
+        }
+      });
+    });
+
     const rules = computed(() => {
       return {
         clientName: {
           required,
           isValidClientName: helpers.withMessage(
             `champs can include only letters & Numbers & underscores & hyphens without space.`,
-
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },
@@ -718,8 +830,50 @@ export default {
         invalidPortChars
       );
     };
+    const getAllCertAuth = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
+      axios.get("/certificates/getAllCertAuth").then(
+        (response) => {
+          let mapedList = response.data.map((i) => {
+            return {
+              id: i.id,
+              name: i.name,
+            };
+          });
+          state.mapedCertifAuth = mapedList;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
+    const clientCertificateList = ref([]);
+    const getAllClientCertif = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/certificates/getAllCertificates").then(
+        (response) => {
+          let mapedListCertif = response.data.filter(
+            (i) => i.certificate_type === "client"
+          );
+
+          clientCertificateList.value = mapedListCertif.map((i) => {
+            return {
+              id: i.id,
+              name: i.name,
+            };
+          });
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
     const save = async () => {
+      console.log("state?1", state);
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -771,7 +925,7 @@ export default {
           server_mode: {
             mode: state.server_mode.slug,
           },
-          protocol: state.protocol.slug,
+          protocol: state.protocol.slug ?? state.protocol,
           device_mode: state.device_mode.slug,
           interface: state.interface.id,
           resolv_retry: state.resolv_retry,
@@ -801,122 +955,169 @@ export default {
         };
         console.log("pay", payload);
 
-        axios
-          .post("/openvpn/createClientOpenvpn", payload)
-          .then((response) => {
-            if (response.status == "201") {
-              console.log("response", response);
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
+        if (state.isEditState === "edit") {
+          console.log("payload", payload);
+          axios
+            .put(`/openvpn/updateClientOpenvpn/${state.id}`, payload)
+            .then((response) => {
+              if (response.status == "201") {
+                snackbar.value = true;
+                color.value = "success";
+                textAlert.value = response.data.msg;
+                state.isEditState = "";
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-              emitter.emit("open-listing");
-            }
-          })
-          .catch((i) => {
-            console.log("i", i.response);
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = i.response.data.error;
-          });
+                setTimeout(() => {
+                  location.reload();
+                  emitter.emit("open-listing");
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            });
+        } else {
+          axios
+            .post("/openvpn/createClientOpenvpn", payload)
+            .then((response) => {
+              if (response.status == "201") {
+                console.log("response", response);
+                snackbar.value = true;
+                color.value = "success";
+                textAlert.value = response.data.msg;
+
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+                emitter.emit("open-listing");
+              }
+            })
+            .catch((i) => {
+              console.log("i", i.response);
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            });
+        }
       } else {
         console.log("v$.value", v$.value);
       }
     };
 
-    onMounted(() => {
-      getInterface();
-      protocolsList.value = protocols;
+    const encryptionAlgorithmList = ref([
+      {
+        name: "AES-256-GCM",
+        slug: "AES-256-GCM",
+      },
+      {
+        name: "192-AES-GCM",
+        slug: "192-AES-GCM",
+      },
+      {
+        name: "AES-128-GCM",
+        slug: "AES-128-GCM",
+      },
+      {
+        name: "CHACHA20-POLY1305",
+        slug: "CHACHA20-POLY1305",
+      },
+    ]);
+    const authDigestAlgorithmList = ref([
+      {
+        name: "BLAKE2b512",
+        slug: "BLAKE2b512",
+      },
+      {
+        name: "BLAKE2b256",
+        slug: "BLAKE2b256",
+      },
+      {
+        name: "SHA256",
+        slug: "SHA256",
+      },
+      {
+        name: "SHA3-224",
+        slug: "SHA3-224",
+      },
+      {
+        name: "SHA3-256",
+        slug: "SHA3-256",
+      },
+      {
+        name: "SHA3-384",
+        slug: "SHA3-384",
+      },
+      {
+        name: "SHA3-512",
+        slug: "SHA3-512",
+      },
+      {
+        name: "SHA384",
+        slug: "SHA384",
+      },
+      {
+        name: "SHA512",
+        slug: "SHA512",
+      },
+      {
+        name: "SHA512-224",
+        slug: "SHA512-224",
+      },
+      {
+        name: "SHA512-256",
+        slug: "SHA512-256",
+      },
+    ]);
 
-      emitter.on("edit-client", (data) => {
-        console.log("dataClient", data);
-        if (data) state.isEditState = "edit";
-        state.id = data.id;
-        state.clientName = data.name;
-        state.description = data.description;
-        state.server_mode = data.server_mode;
+    const hardwareCryptoList = ref([
+      {
+        name: "No hardware Crypto acceleration",
+        slug: "No hardware Crypto acceleration",
+      },
+      {
+        name: "Intel RDRAND engine -RAND",
+        slug: "Intel RDRAND engine -RAND",
+      },
+    ]);
 
-        let filtredProtocol = protocolsList.value.filter(
-          (i) => i.slug === data.proto
-        );
+    const compression = ref([
+      { name: "No preference", slug: "no_preference" },
+      { name: "Disable-No Compression", slug: "disabled" },
+      { name: "Enabled with Adaptive Compression", slug: "adaptive" },
+      { name: "Enabled without Adaptive Compression", slug: "enabled" },
+    ]);
 
-        state.protocol = filtredProtocol;
-
-        let filtredDevice = deviceMode.value.filter((i) => i.slug === data.dev);
-
-        state.device_mode = filtredDevice[0];
-
-        let filtredInterfaces = state.mapedInterface.filter(
-          (i) => i.id === +data.interface
-        );
-        let filtredInter = state.mapedInterface.filter(
-          (i) => i.name === data.interface
-        );
-
-        state.interface = filtredInterfaces[0] ?? filtredInter[0];
-        state.resolv_retry= data.resolv_retry,
-        state.proxy_host = data.proxy_host,
-        state.proxy_port =  data.proxy_port
-
-        let filtredAuth = proxyAuthenticationExtraOptionsList.value.filter(
-          (i) => i.slug === data.proxy_authentication_option
-        );
-
-        state.proxyAuthenticationExtraOptions= filtredAuth[0]
-        state.usernameUser= data.username,
-        state.passwordUser= data.password,
-        state.username= data.proxy_auth_username,
-        state.password= data.proxy_auth_password,
-        state.local_port = data.port
-        
-        // //User Auth
-        // username: "",
-        // password: "",
-        // renegotiate_time: "",
-        // //cryp
-        // tlsGenerate: true,
-        // sharedKey: "",
-        // peerCertificateAuthority: "",
-        // clientCertificate: "",
-        // encryptionAlgorithm: "",
-        // authDigestAlgorithm: "",
-        // hardwareCrypto: {
-        //   name: "No hardware Crypto acceleration",
-        //   slug: "No hardware Crypto acceleration",
-        // },
-        // //tunnelSettings
-        // ipv4TunnelNetwork: "",
-        // ipv6TunnelNetwork: "",
-        // ipv4RemoteNetwork: "",
-        // ipv6RemoteNetwork: "",
-        // limitOutgoingBandwidth: "",
-        // compression: { name: "No preference", slug: "no_preference" },
-        // typeOfService: "",
-        // ipv6: "",
-        // pullRoutes: "",
-        // addRemoveRoutes: "",
-        // //advancedConfig
-        // verbosityLevel: {
-        //   name: "1 (default)",
-        //   slug: "1",
-        // },
-        // remoteServer: "",
-        // hostAddress: "",
-        // port: "",
-      });
-    });
+    const Listprotocols = ref([
+      {
+        name: "UDP4",
+        slug: "udp4",
+      },
+      {
+        name: "UDP6",
+        slug: "udp6",
+      },
+      {
+        name: "TCP4",
+        slug: "tcp4",
+      },
+      {
+        name: "TCP6",
+        slug: "tcp6",
+      },
+    ]);
 
     return {
       state,
-      emitter,
       userAuthSettings,
       cryptoSettings,
       tunnelSettings,
       onGridReady,
+      getAllClientCertif,
+      getAllCertAuth,
       rowDataCertificats,
+      clientCertificateList,
+      Listprotocols,
       addNewRow,
       snackbar,
       textAlert,
@@ -925,16 +1126,22 @@ export default {
       deviceMode,
       proxyAuthenticationExtraOptionsList,
       serverMode,
+      encryptionAlgorithmList,
       verbosityLevelList,
       getCookie,
       color,
+      // populate,
       getInterface,
       onRowValueChanged,
+      authDigestAlgorithmList,
       onCellValueChanged,
+      compression,
       defaultColDef,
       gridApi,
+      hardwareCryptoList,
       v$,
       save,
+      emitter,
     };
   },
 };

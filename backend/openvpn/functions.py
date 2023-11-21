@@ -5,9 +5,9 @@ from backend.openvpn.models import ServerOpenvpn
 from backend.openvpn.serializers import ServerOpenvpnSerializer
 
 
-def execute_command_without_arguments(command, decode=True, shell=False):
+def execute_command_without_arguments(command:list, decode=True, shell=False):
     """Function that execute a command line without arguments"""
-    print(f'command {command}')
+    print(f'command: {" ".join(command)}')
     process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=decode, shell=shell)
     create_error_command(process, command)
     return process
@@ -19,11 +19,14 @@ def execute_list_commands_without_arguments(commands_list):
         execute_command_without_arguments(command)
 
 
-def execute_command_with_arguments(command, arguments, time_sleep=0.5):
+def execute_command_with_arguments(command:list, arguments:str, time_sleep=0.5):
     """Function that execute a command line with arguments"""
     try:
         with subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
-            print("Command: ", command)
+            print("Command: ", " ".join(command))
+            list_arg = list(arguments.split("\n"))
+            for arg in range(len(list_arg)):
+                print(f"argument {arg}: {list_arg[arg]}")
             time.sleep(time_sleep)
             process.communicate(input=arguments)
 
@@ -55,9 +58,8 @@ def create_tls_file(tls_auth, path_tls):
         command = ['openvpn', '--genkey', 'secret', f'{path_tls}']
         execute_command_without_arguments(command)
     else:
-        tls_key = f'-----BEGIN OpenVPN Static key V1-----\n{tls_auth["tls_key"]}\n-----END OpenVPN Static key V1-----'
         with open(path_tls, 'w') as tls_file:
-            tls_file.write(tls_key)
+            tls_file.write(tls_auth["tls_key"])
 
 
 def change_status_server_openvpn(server_name, server_status):
@@ -82,19 +84,20 @@ def openvpn_interfaces():
     for interface in interfaces:
         if interface.startswith('tun'):
             list_vpn_interfaces.append({"ifname": interface[:interface.find(':')],
-                                        "name_interface": "tun",
                                         "ip_address": interface[interface.find(':')+2:interface.find('/')],
                                         "netmask": interface[interface.find('/')+1:]})
 
     return list_vpn_interfaces
 
 
-def delete_openvpn_interface(interfaces_before, interfaces):
-    """Find the name of the deleted openvpn interface in system"""
-    list_name_interfaces = [interface["ifname"] for interface in interfaces]
-    for interface in interfaces_before:
-        if interface["ifname"] not in list_name_interfaces:
-            return interface["ifname"]
+def get_changed_row_in_openvpn_interfaces(interfaces_smallest, interfaces_largest):
+    """Find the name of the changed openvpn interface in system"""
+    list_interfaces_smallest = [interface["ifname"] for interface in interfaces_smallest]
+    list_interfaces_largest = [interface["ifname"] for interface in interfaces_largest]
+    difference = set(list_interfaces_largest) - set(list_interfaces_smallest)
+    if difference:
+        return list(difference)[0]
+    return False
 
 
 def prefix_to_masque(prefix):
@@ -134,7 +137,7 @@ topology subnet
 ca /etc/certificates_{json_object["ca_name"]}/ca.crt
 cert /etc/openvpn/certificates_{json_object["server_cert"]}/server.crt
 key /etc/openvpn/certificates_{json_object["server_cert"]}/server.key
-dh /etc/openvpn/server/dh_{json_object['name']}.pem
+dh /etc/openvpn/server/dh_{json_object["name"]}.pem
 crl-verify /etc/certificates_{json_object["ca_name"]}/crl.pem
 
 tls-server
@@ -146,8 +149,8 @@ tls-auth /etc/openvpn/server/static_{json_object["name"]}.key
 #server-bridge server_interface server_start server_end
 
 push "redirect-gateway def1"
-push "route 192.168.0.0 255.255.255.0"
-#push "route remote"
+#push route local
+#push route remote
 #push "dhcp-option DOMAIN server"
 #push "dhcp-option DNS server1"
 #push "dhcp-option DNS server1"
@@ -163,6 +166,7 @@ duplicate-cn
 #tun-ipv6
 
 cipher {json_object["encryption_algorithm"]}
+auth {json_object["auth_digest_algorithm"]}
 
 keepalive 20 60
 #comp-lzo
@@ -180,7 +184,10 @@ daemon
 log-append /var/log/openvpn/openvpn.log
 
 #Log Level
-verb {json_object["verbosity_level"]}'''
+#verb verbosity_level'''
+    
+    if json_object["protocol"].startswith("tcp"):
+        config_input = config_input.replace(f'proto {json_object["protocol"]}', f'proto {json_object["protocol"]}-server')
 
     if json_object["interface"] != "any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
@@ -188,17 +195,17 @@ verb {json_object["verbosity_level"]}'''
     if json_object["hardware_crypto"] != "No Hardware Crypto":
         config_input = config_input.replace("#engine rdrand", "engine rdrand")
     
-    if json_object["bridge"]["bridge_select"]:
+    if json_object["bridge"]["bridge_select"]:  # When activating Bridge
         bridge_interface_address = json_object["bridge_interface_address"]
         prefix = int(bridge_interface_address[bridge_interface_address.find("/")+1:])
         mask = prefix_to_masque(prefix)
         config_input = config_input.replace('#server-bridge server_interface server_start server_end', 
-                                            f"""server-bridge {bridge_interface_address[:bridge_interface_address.find('/')]} {mask} {json_object["bridge"]["bridge_start_dhcp"]} {json_object["bridge"]["bridge_start_dhcp"]}""")
-    elif json_object["address_pool"]["address_pool_select"]:
+                                            f"""server-bridge {bridge_interface_address[:bridge_interface_address.find('/')]} {mask} {json_object["bridge"]["bridge_start_dhcp"]} {json_object["bridge"]["bridge_end_dhcp"]}""")
+    elif json_object["address_pool"]["address_pool_select"]:  # When activating Address Pool
         config_input = config_input.replace('#ifconfig-pool start_ip_address end_ip_address',
                                             f'ifconfig-pool {json_object["address_pool"]["address_pool_start"]} {json_object["address_pool"]["address_pool_end"]}')
         config_input = config_input.replace('#mode server','mode server')
-    else:
+    else:  # When Bridge and Address Pool are deactivated
         tunnel_address = json_object["ipv4_tunnel_network"]
         prefix = int(tunnel_address[tunnel_address.find("/")+1:])
         mask = prefix_to_masque(prefix)
@@ -208,14 +215,14 @@ verb {json_object["verbosity_level"]}'''
         local_address = json_object["ipv4_local_network"]
         prefix = int(local_address[local_address.find("/")+1:])
         mask = prefix_to_masque(prefix)
-        config_input = config_input.replace("push \"route 192.168.0.0 255.255.255.0\"", 
+        config_input = config_input.replace("#push route local", 
                                             f"push \"route {local_address[:local_address.find('/')]} {mask}\"")
         
     if json_object["ipv4_remote_network"] != '':
         remote_address = json_object["ipv4_remote_network"]
         prefix = int(remote_address[remote_address.find("/")+1:])
         mask = prefix_to_masque(prefix)
-        config_input = config_input.replace("#push \"route remote\"", 
+        config_input = config_input.replace("#push route remote", 
                                             f"push \"route {remote_address[:remote_address.find('/')]} {mask}\"")
     
     if json_object["concurrent_connections"] != '':
@@ -260,13 +267,16 @@ verb {json_object["verbosity_level"]}'''
         if json_object["dns_servers"]["dns_server2"] != '':
             config_input = config_input.replace("#push \"dhcp-option DNS server2\"", f"push \"dhcp-option DNS {json_object['dns_servers']['dns_server2']}\"")
 
-    if json_object["force_dns"]:
+    if json_object["force_dns_cache_update"]:
         config_input = config_input.replace("#push \"register-dns\"", "push \"register-dns\"")
 
     if json_object["ntp_servers"]["ntp_servers_select"]:
         config_input = config_input.replace("#push \"dhcp-option NTP server1\"", f"push \"dhcp-option NTP {json_object['ntp_servers']['ntp_server1']}\"")
         if json_object["ntp_servers"]["ntp_server2"] != '':
             config_input = config_input.replace("#push \"dhcp-option NTP server2\"", f"push \"dhcp-option NTP {json_object['ntp_servers']['ntp_server2']}\"")
+
+    if json_object["verbosity_level"] != '':
+        config_input = config_input.replace("#verb verbosity_level", f"verb {json_object['verbosity_level']}")
 
     return config_input
 
@@ -275,7 +285,7 @@ def json_to_str_client(json_object):
     """Function to convert a json object to input of client config file"""
 
     config_input = f'''client
-remote {json_object["server_host"]} {json_object["server_port"]}
+#remote server_host server_port
 proto {json_object["protocol"]}
 dev {json_object["device_mode"]}
 multihome
@@ -295,7 +305,7 @@ script-security 2
 persist-key
 persist-tun
 auth {json_object["auth_digest_algorithm"]}
-verb {json_object["verbosity_level"]}
+#verb verbosity_level
 #lport
 
 #ifconfig
@@ -322,6 +332,12 @@ crl-verify /etc/certificates_{json_object["ca_name"]}/crl.pem
 tls-client
 tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
 '''
+    
+    if json_object["protocol"].startswith("tcp"):
+        config_input = config_input.replace(f'proto {json_object["protocol"]}', f'proto {json_object["protocol"]}-client')
+    
+    for server in json_object["server_remote"]:
+        config_input = config_input.replace("#remote server_host server_port", f"#remote server_host server_port\n remote {server['host']} {server['port']}")
 
     if json_object["interface"] != "Any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
@@ -398,17 +414,8 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
 
     if json_object["add_remove_routes"]:
         config_input = config_input.replace("#route-noexec", "route-noexec")
+    
+    if json_object["verbosity_level"] != '':
+        config_input = config_input.replace("#verb verbosity_level", f"verb {json_object['verbosity_level']}")
 
     return config_input
-
-
-#function to update interface tables  
-def update_openvpn_table(id,data):
-    objectConfig=ServerOpenvpn.objects.get(id=id)
-    # Set all attributes to None
-    for field in objectConfig._meta.fields:
-        if field.attname not in ["id"]: 
-            setattr(objectConfig, field.attname, None)
-    serializerServerOpenvpn= ServerOpenvpnSerializer(objectConfig,data=data)
-    if serializerServerOpenvpn.is_valid():
-            serializerServerOpenvpn.save()

@@ -1,4 +1,4 @@
-from backend.openvpn.functions import execute_list_commands_without_arguments
+from backend.openvpn.functions import execute_command_without_arguments, execute_list_commands_without_arguments
 
 
 def install_server_ipsec(conn_config, authentication, interface_address, remote_gateway, ca):
@@ -67,3 +67,6 @@ def update_server_ipsec(conn_name_to_update, updated_line_in_secrets_file, conn_
     
     delete_server_ipsec(conn_name_to_update, updated_line_in_secrets_file)
     install_server_ipsec(conn_config, authentication, interface_address, remote_gateway, ca)
+
+    # Restart IPsec service to take the new configuration
+    execute_command_without_arguments(['sudo', 'ipsec', 'restart'])

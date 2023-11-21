@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Open VPN" active-menu="CLIENTS">
+    <base-layout title="Open VPN" :active-menu="activeTab">
       <template #content>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">
@@ -16,7 +16,9 @@
           </v-window-item>
           <v-window-item v-for="tab in tabs" :key="tab.id" value="CLIENTS">
             <v-card>
-              <v-card-text> <ClientsOpenvpnComponent /></v-card-text>
+              <v-card-text>
+                <ClientsOpenvpnComponent :dataClient="dataClient"
+              /></v-card-text>
             </v-card>
           </v-window-item>
           <v-window-item v-for="tab in tabs" :key="tab.id" value="MONITORING">
@@ -40,7 +42,6 @@
 <script>
 import BaseLayout from "@/layouts/layout.vue";
 import ServersOpenvpnComponent from "./components/ServersOpenvpnComponent.vue";
-import ClientsOpenvpnComponent from "./components/ClientsOpenvpnComponent.vue";
 import MonotoringOpenvpnComponent from "./components/MonotoringOpenvpnComponent.vue";
 import ListingOpenvpnComponent from "./components/ListingOpenvpnComponent.vue";
 
@@ -49,7 +50,6 @@ export default {
   components: {
     BaseLayout,
     ServersOpenvpnComponent,
-    ClientsOpenvpnComponent,
     MonotoringOpenvpnComponent,
     ListingOpenvpnComponent,
   },
@@ -57,6 +57,7 @@ export default {
   data() {
     return {
       activeTab: "SERVERS",
+      dataClient: null,
       tabs: [
         { id: 1, label: "SERVERS" },
         { id: 2, label: "CLIENTS" },
@@ -68,7 +69,6 @@ export default {
       serverInfo: null,
     };
   },
-  methods: {},
   watch: {
     activeTab(val) {
       localStorage.setItem("openvpn-tab", val);
@@ -87,11 +87,9 @@ export default {
     this.emitter.on("add-client", () => {
       this.activeTab = "CLIENTS";
     });
-
     this.emitter.on("open-listing", () => {
       this.activeTab = "LISTING";
     });
-
     this.rowDataServers =
       document.getElementById("app").attributes["servers"].value;
 

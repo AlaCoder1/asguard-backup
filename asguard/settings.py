@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'backend.tasks',
     'backend.managementUsers',
     'backend.managementGroup',
+    'backend.managementKeypairs',
     "backend.managementServers",
     "backend.managementCertificates",
     "backend.settings",

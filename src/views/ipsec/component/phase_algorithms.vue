@@ -1,0 +1,168 @@
+<template>
+  <div class="ml-3 mr-3 mt-5">
+    <h4>Phase 1 proposal (Algorithms)</h4>
+    <v-divider class="mt-2"></v-divider>
+    <v-row class="mt-2">
+      <v-col cols="4" class="mt-5">
+        <label>Encryption algorithm</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-select
+          label="Encryption algorithm"
+          v-model="encryptAlgo"
+          item-title="name"
+          item-value="slug"
+          return-object
+          :items="[
+            {
+              name: '128 bit AES-GCM with 128 bit ICV',
+              slug: '128 bit AES-GCM with 128 bit ICV',
+            },
+            {
+              name: '192 bit AES-GCM with 128 bit ICV',
+              slug: '192 bit AES-GCM with 128 bit ICV',
+            },
+            {
+              name: '256 bit AES-GCM with 128 bit ICV',
+              slug: '256 bit AES-GCM with 128 bit ICV',
+            },
+          ]"
+        ></v-select>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.encryptAlgo.$errors.length"
+        >
+          {{ props.errors.encryptAlgo.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="4" class="mt-5">
+        <label>Hash algorithm</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-select
+          label="Hash algorithm"
+          v-model="hashAlgo"
+          item-title="name"
+          item-value="slug"
+          return-object
+          :items="[
+            {
+              name: 'SHA256',
+              slug: 'SHA256',
+            },
+            { name: 'SHA384', slug: 'SHA384' },
+            {
+              name: 'SHA512',
+              slug: 'SHA512',
+            },
+          ]"
+        ></v-select>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.hashAlgo.$errors.length"
+        >
+          {{ props.errors.hashAlgo.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="4" class="mt-5">
+        <label>DH key group</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-select
+          label="DH key group"
+          v-model="dhKey"
+          item-title="name"
+          item-value="slug"
+          return-object
+          :items="dhKeyList"
+        ></v-select>
+        <p class="error-feedback mb-5" v-if="props.errors.dhKey.$errors.length">
+          {{ props.errors.dhKey.$errors?.[0].$message }}
+        </p>
+      </v-col>
+
+      <v-col cols="4" class="mt-5">
+        <label>Lifetime</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-text-field label="Lifetime" v-model="lifetime"></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.lifetime.$errors.length"
+        >
+          {{ props.errors.lifetime.$errors?.[0].$message }}
+        </p>
+      </v-col>
+    </v-row>
+  </div>
+</template>
+<script setup>
+import { ref } from "vue";
+import { useVModels } from "@vueuse/core";
+const dhKeyList = ref([
+  {
+    name: "15 (3072 bits)",
+    slug: "15 (3072 bits)",
+  },
+  { name: "16 (4096 bits)", slug: "16 (4096 bits)" },
+  {
+    name: "17 (6144 bits)",
+    slug: "17 (6144 bits)",
+  },
+  {
+    name: "18 (8192 bits)",
+    slug: "18 (8192 bits)",
+  },
+  {
+    name: "19 (NIST EC 256 bits)",
+    slug: "19 (NIST EC 256 bits)",
+  },
+  {
+    name: "20 (NIST EC 384 bits)",
+    slug: "20 (NIST EC 384 bits)",
+  },
+  {
+    name: "21 (NIST EC 521 bits)",
+    slug: "21 (NIST EC 521 bits)",
+  },
+  {
+    name: "28 (Brainpool EC 256 bits)",
+    slug: "28 (Brainpool EC 256 bits)",
+  },
+  {
+    name: "28 (Brainpool EC 256 bits)",
+    slug: "28 (Brainpool EC 256 bits)",
+  },
+  {
+    name: "29 (Brainpool EC 384 bits)",
+    slug: "29 (Brainpool EC 384 bits)",
+  },
+  {
+    name: "29 (Brainpool EC 384 bits)",
+    slug: "29 (Brainpool EC 384 bits)",
+  },
+  {
+    name: "30 (Brainpool EC 512 bits)",
+    slug: "30 (Brainpool EC 512 bits)",
+  },
+  {
+    name: "31 (Elliptic Curve 25519)",
+    slug: "31 (Elliptic Curve 25519)",
+  },
+]);
+
+const props = defineProps([
+  "errors",
+  "encryptAlgo",
+  "hashAlgo",
+  "dhKey",
+  "lifetime",
+]);
+const emit = defineEmits([
+  "update:encryptAlgo",
+  "update:hashAlgo",
+  "update:dhKey",
+  "update:lifetime",
+]);
+const { encryptAlgo, hashAlgo, dhKey, lifetime } = useVModels(props, emit);
+</script>

@@ -339,7 +339,9 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
     for server in json_object["server_remote"]:
         config_input = config_input.replace("#remote server_host server_port", f"#remote server_host server_port\n remote {server['host']} {server['port']}")
 
-    if json_object["interface"] != "Any":
+    if json_object["interface"] == "":
+        config_input = config_input.replace("multihome", "#multihome")
+    elif json_object["interface"] != "Any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
         config_input = config_input.replace("nobind", "#nobind")
     

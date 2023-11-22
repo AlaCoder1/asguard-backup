@@ -5,12 +5,12 @@ urlpatterns = [
     ####### Private Key ######
     path('getAllPrivateKey', views.getAllPrivateKey, name="getAllPrivateKey"),
     path('getPrivateKey/<int:id>', views.getPrivateKey, name="getPrivateKey"),
-    # path('createCertAuth', views.createCertAuth, name="createCertAuh"),
-    # path('deleteCertAuth/<int:id>', views.deleteCertAuth, name="deleteCertAuh"),
+    path('createPrivateKey', views.createPrivateKey, name="createPrivateKey"),
+    path('deletePrivateKey/<int:id>', views.deletePrivateKey, name="deletePrivateKey"),
     
     ####### Public Key ######
-    # path('getAllCertificates', views.getAllCertificates, name="getAllCertificates"),
-    # path('getCertificate/<int:id>', views.getCertificate, name="getCertificate"),
+    path('getAllPublicKey', views.getAllPublicKey, name="getAllPublicKey"),
+    path('getPublicKey/<int:id>', views.getPublicKey, name="getPublicKey"),
     # path('createCertificate', views.createCertificate, name="createCertificate"),
     # path('deleteCertificate/<int:id>', views.deleteCertificate, name="deleteCertificate"),
 ]

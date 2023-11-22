@@ -7,7 +7,9 @@ class PrivateKey(models.Model):
     private_key_path = models.CharField(max_length=1000, default=None, blank=True, null=True)
     encryption_algorithm = models.CharField(max_length=1000, default=None, blank=True, null=True)
     key_size = models.CharField(max_length=10, default=None, blank=True, null=True)
-    finger_print = models.CharField(max_length=1000, default=None, blank=True, null=True)
+
+    class Meta:
+        db_table = 'private_key'
 
 
 class PublicKey(models.Model):
@@ -17,3 +19,6 @@ class PublicKey(models.Model):
     encryption_algorithm = models.CharField(max_length=1000, default=None, blank=True, null=True)
     key_size = models.CharField(max_length=10, default=None, blank=True, null=True)
     finger_print = models.CharField(max_length=1000, default=None, blank=True, null=True)
+
+    class Meta:
+        db_table = 'public_key'

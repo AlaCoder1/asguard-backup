@@ -518,7 +518,10 @@ export default {
               name: i.name_interface,
             };
           });
-          state.mapedInterface = interfaces;
+
+          let listInter = [{ id: 0, name: "Any" }];
+          var combinedArray = [...listInter, ...interfaces];
+          state.mapedInterface = combinedArray;
         },
         (error) => {
           console.log(error);
@@ -980,7 +983,7 @@ export default {
         name: "1 (default)",
         slug: "1",
       };
-      v$.value.$reset()
+      v$.value.$reset();
     };
 
     return {

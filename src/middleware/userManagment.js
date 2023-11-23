@@ -1,65 +1,4 @@
-// import Vue from 'vue';
-// import vuetify from '@/plugins/vuetify';
-// import 'vuetify/dist/vuetify.min.css';
-
-
-// import App from '@/pages/UserAndCertificateManagement';
-
-// import VueI18n from 'vue-i18n';
-// import enJson from './translations/en.json';
-// import frJson from './translations/fr.json';
-// import store from '@/store/index';
-// import { ValidationProvider } from 'vee-validate/dist/vee-validate.full.esm';
-// import { ValidationObserver } from 'vee-validate';
-
-// Vue.use(VueI18n);
-// Vue.component('ValidationProvider', ValidationProvider);
-// Vue.component('ValidationObserver', ValidationObserver);
-
-// const i18n = new VueI18n({
-//   locale: 'en',
-//   messages: {
-//     en: enJson,
-//     fr: frJson,
-//   },
-// });
-
-// Vue.use({
-
-//   i18n,
-//   classes: true,
-//   fieldsBagName: 'formFields',
-//   dictionary: {
-//     en: {
-//       messages: enJson.messages,
-//     },
-//     fr: {
-//       messages: frJson.messages,
-//     },
-//   },
-// });
-
-// new Vue({
-//   store,
-//   vuetify,
-//   i18n,
-//   data: {
-//     users: '',
-//     groups: '',
-//     servers: '', // Pass the servers data from Django
-
-//   },
-//   beforeMount: function () {
-//     console.log('Users:', this.$el.attributes['users']);
-//     console.log('Groups:', this.$el.attributes['groups']);
-//     console.log('Servers:', this.$el.attributes['servers']);
-
-//     this.users = this.$el.attributes['users'].value;
-//     this.groups = this.$el.attributes['groups'].value;
-//     this.servers = this.$el.attributes['servers'].value;
-//   },
-//   render: (h) => h(App),
-// }).$mount('#app');
+import axios from 'axios'
 import {createApp } from 'vue';
 import store from '../store/index.js'
 import 'vuetify/styles'
@@ -73,6 +12,24 @@ const vuetify = createVuetify({
     components,
     directives
   })
+  
+  axios.interceptors.response.use(
+    (response) => {
+      
+      console.log('response000.User',response)
+      return response;
+    },
+    (error) => {
+      console.log('errorMainUser',error)
+      
+      if ((error.response.status === 401 )||(error.response.status === 403)) {
+     
+        console.log('Token expired or unauthorized. Redirecting to login.');
+        window.location.href = '/';
+      }
+      return Promise.reject(error);
+    }
+  );
 
 app
 .use(store)

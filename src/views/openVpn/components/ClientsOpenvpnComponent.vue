@@ -808,7 +808,10 @@ export default {
               name: i.name_interface,
             };
           });
-          state.mapedInterface = interfaces;
+          
+          let listInter = [{ id: 0, name: "Any" }];
+          var combinedArray = [...listInter,...interfaces ];
+          state.mapedInterface =combinedArray ;
         },
         (error) => {
           console.log(error);
@@ -1167,7 +1170,7 @@ export default {
       } else {
         console.error("Grid API.");
       }
-      v$.value.$reset()
+      v$.value.$reset();
     };
 
     return {

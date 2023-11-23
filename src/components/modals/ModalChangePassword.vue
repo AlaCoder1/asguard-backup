@@ -65,6 +65,14 @@
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+    </v-snackbar>
   </v-row>
 </template>
 
@@ -158,8 +166,10 @@ export default {
   data() {
     return {
       userId: null,
-      textAlert: null,
       openModal: false,
+      textAlert: "",
+      color: "",
+      snackbar: false,
     };
   },
   mounted() {
@@ -226,23 +236,27 @@ export default {
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-        axios.put(`/users/userChangePW/${this.userId}`, params).then(
-          (response) => {
+        axios
+          .put(`/users/userChangePW/${this.userId}`, params)
+          .then((response) => {
             console.log("response :", response);
             if (response.status == 200) {
-              this.textAlert = "Password change successfully";
+              this.closeModal();
+
+              this.snackbar = true;
+              this.color = "success";
+              this.textAlert = response.data.msg;
+
               setTimeout(() => {
-                this.closeModal();
                 location.reload();
-              }, 2000);
-            } else {
-              console.log("error");
+              }, 1000);
             }
-          },
-          (error) => {
-            console.log(error);
-          }
-        );
+          })
+          .catch((i) => {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          });
       }
     },
   },

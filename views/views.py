@@ -9,6 +9,7 @@ from backend.gateway.models import *
 from backend.dashboard.functions import get_system_infomations
 from django.db.models import Q
 from backend.openvpn.list_servers_clients import get_all_client_openvpn,  get_all_server_openvpn
+from backend.managementKeypairs.list_key_pairs import get_all_private_key, get_all_public_key
 
 def getUsers(request):
     list_users = []
@@ -274,6 +275,13 @@ def openvpn_page(request):
 @login_required(login_url='/')
 def ipsec_page(request):
     return render(request, 'ipsec_page.html')
+
+@login_required(login_url='/')
+def keyPair_page(request):
+    privateKey =get_all_private_key()
+    publicKey =get_all_public_key()
+    context = {'privateKey':privateKey,'publicKey':publicKey}
+    return render(request, 'keyPair_page.html',context)
 
 
 def login(request):

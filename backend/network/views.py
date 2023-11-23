@@ -340,6 +340,7 @@ EOF""".format('\n'.join(output_service))
                                                 ##function to get gateway if typeIPV4 est DHCP Base or Advanced
                                                 gwaddr4,metric,default_aux,far_aux,multiwan_aux=get_gateway_dhcp(ifname,"4")
                                                 aux_gw_dhcp=save_gateways_database(gwaddr4,name_interface,default_aux,far_aux,multiwan_aux,metric,True,True)
+                                            aux_gw6_dhcp=True
                                             if setuptypeIP4 is None or setuptypeIP4.lower()=="static" :
                                                  aux_gw6_dhcp=True
                                             if setuptypeIP6 is not None and setuptypeIP6.lower()=="dhcp":

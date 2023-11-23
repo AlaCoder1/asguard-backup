@@ -1,8 +1,6 @@
 import subprocess
 import time
 from backend.openvpn.manage_errors import create_error_command
-from backend.openvpn.models import ServerOpenvpn
-from backend.openvpn.serializers import ServerOpenvpnSerializer
 
 
 def execute_command_without_arguments(command:list, decode=True, shell=False):
@@ -289,7 +287,6 @@ def json_to_str_client(json_object):
 #remote server_host server_port
 proto {json_object["protocol"]}
 dev {json_object["device_mode"]}
-#multihome
 nobind
 #server server_tunnel
 
@@ -341,13 +338,6 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
     for server in json_object["server_remote"]:
         config_input = config_input.replace("#remote server_host server_port", f"#remote server_host server_port\n remote {server['host']} {server['port']}")
 
-    if json_object["interface"] == "Any":
-        config_input = config_input.replace("#multihome", "multihome")
-        config_input = config_input.replace("nobind", "#nobind")
-    elif json_object["interface"] != "" and json_object["interface"] != "Any":
-        config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
-        config_input = config_input.replace("nobind", "#nobind")
-    
     if json_object["resolv_retry"]:
         config_input = config_input.replace("#resolv-retry", "resolv-retry")
     

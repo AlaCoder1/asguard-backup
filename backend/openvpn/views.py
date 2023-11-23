@@ -256,12 +256,17 @@ def deleteServerOpenvpn(request, id):
     try:
         if (request.method == 'DELETE'):
             server = ServerOpenvpn.objects.get(id=id)
+            
+            if len(Interface.objects.filter(name_interface=server.name)):
+                interface = Interface.objects.get(name_interface=server.name)
+                if len(Interface.objects.filter(interface_id=interface.pk)):
+                    ipv4 = IP4Config.objects.get(interface_id=interface.pk)
+                    ipv4.delete()
+                    interface.delete()
+
             # delete from system
-            interface = Interface.objects.get(name_interface=server.name)
-            ipv4 = IP4Config.objects.get(interface_id=interface.pk)
-            ipv4.delete()
-            interface.delete()
             delete_server_openvpn(server.name)
+
             # delete from database
             server.delete()
             return JsonResponse({"msg": f"delete {server.name} succesfully"})
@@ -605,13 +610,12 @@ def getClientOpenvpn(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN OPENVPN Client",
-                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['server_name', 'name', 'server_mode', 'protocol', 'device_mode', 'interface', 'resolv_retry', 'local_port', 'tls_auth', 'ca_name', 'client_cert', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'compression', 'type_of_service', 'ipv6', 'pull_routes', 'add_remove_routes'],
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['server_name', 'name', 'server_mode', 'protocol', 'device_mode', 'resolv_retry', 'local_port', 'tls_auth', 'ca_name', 'client_cert', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'compression', 'type_of_service', 'ipv6', 'pull_routes', 'add_remove_routes'],
                                                  properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'description': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["peer_to_peer"])}),
                                                              'protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
                                                              'device_mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["tun", "tap"]),
-                                                             'interface': openapi.Schema(type=openapi.TYPE_INTEGER, description="Interface ID"),
                                                              'resolv_retry': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'proxy_host': openapi.Schema(type=openapi.TYPE_STRING, description="address of poxy like 10.1.12.249"),
                                                              'proxy_port': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"\d\d\d\d", default="1194", desciption="port number of 4 digits"),
@@ -664,7 +668,6 @@ def createClientOpenvpn(request):
             server_mode = server_mode.get('mode', '')
             proto = data.get('protocol', '')
             dev = data.get('device_mode', '')
-            interface = data.get('interface', '')
             resolv_retry = data.get('resolv_retry', '')
             proxy_host = data.get('proxy_host', '')
             proxy_port = data.get('proxy_port', '')
@@ -694,9 +697,6 @@ def createClientOpenvpn(request):
             cert = f'/etc/openvpn/client/certificates_{cert_name}/{cert_name}.crt'
             key = f'/etc/openvpn/client/certificates_{cert_name}/{cert_name}.key'
             tls = f'/etc/openvpn/client/static_{name}.key'
-            if interface != '':
-                interface_address = IP4Config.objects.get(interface_id=interface)
-                data["interface_address"] = interface_address.ip_address
             server_remote = ''
             for server in servers_list:
                 server_remote += f'{server["host"]}:{server["port"]},'
@@ -707,7 +707,6 @@ def createClientOpenvpn(request):
                            "server_mode": server_mode,
                            "proto": proto,
                            "dev": dev,
-                           "interface": interface,
                            "resolv_retry": resolv_retry,
                            "proxy_host": proxy_host,
                            "proxy_port": proxy_port,
@@ -761,8 +760,6 @@ def createClientOpenvpn(request):
             return JsonResponse({"error": f"Error in creating client for openvpn server"}, status=400)
         except ServerOpenvpn.DoesNotExist:
             return JsonResponse({"error": "This Server does not exist"}, status=400)
-        except Interface.DoesNotExist:
-            return JsonResponse({"error": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
             return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
 
@@ -791,13 +788,12 @@ def deleteClientOpenvpn(request, id):
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN OPENVPN Client (same as create)",
-                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['server_name', 'name', 'server_mode', 'protocol', 'device_mode', 'interface', 'resolv_retry', 'local_port', 'tls_auth', 'ca_name', 'client_cert', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'compression', 'type_of_service', 'ipv6', 'pull_routes', 'add_remove_routes',],
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['server_name', 'name', 'server_mode', 'protocol', 'device_mode', 'resolv_retry', 'local_port', 'tls_auth', 'ca_name', 'client_cert', 'encryption_algorithm', 'auth_digest_algorithm', 'hardware_crypto', 'compression', 'type_of_service', 'ipv6', 'pull_routes', 'add_remove_routes',],
                                                  properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'description': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["peer_to_peer"])}),
                                                              'protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
                                                              'device_mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["tun", "tap"]),
-                                                             'interface': openapi.Schema(type=openapi.TYPE_INTEGER, description="Interface ID"),
                                                              'resolv_retry': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'proxy_host': openapi.Schema(type=openapi.TYPE_STRING, description="address of poxy like 10.1.12.249"),
                                                              'proxy_port': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"\d\d\d\d", default="1194", desciption="port number of 4 digits"),
@@ -850,7 +846,6 @@ def updateClientOpenvpn(request, id):
             client.server_mode = server_mode.get('mode', '')
             client.proto = data.get('protocol', '')
             client.dev = data.get('device_mode', '')
-            client.interface = data.get('interface', '')
             client.resolv_retry = data.get('resolv_retry', '')
             client.port = data.get('local_port', '')
             client.auth = data.get('auth_digest_algorithm', '')
@@ -888,13 +883,11 @@ def updateClientOpenvpn(request, id):
             for server in servers_list:
                 client.server_remote += f'{server["host"]}:{server["port"]},'
             client.server_remote = client.server_remote[:len(client.server_remote)-1]
-            interface_address = IP4Config.objects.get(interface_id=client.interface)
 
             if client.proxy_authentication_option == 'basic':
                 client.proxy_auth_username = proxy_authentication.get('username', '')
                 client.proxy_auth_password = proxy_authentication.get('password', '')
                 
-            data["interface_address"] = interface_address.ip_address
             data['server_mode'] = client.server_mode
             data['server_remote'] = client.server_remote
 
@@ -917,8 +910,6 @@ def updateClientOpenvpn(request, id):
             return JsonResponse({"error": "This Client does not exist"}, status=400)
         except ServerOpenvpn.DoesNotExist:
             return JsonResponse({"error": "This Server does not exist"}, status=400)
-        except Interface.DoesNotExist:
-            return JsonResponse({"error": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
             return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
 

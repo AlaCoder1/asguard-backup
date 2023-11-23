@@ -56,7 +56,6 @@ class ClientOpenvpn(models.Model):
     server_mode = models.CharField(max_length=100, default="peer-to-peer", null=True, blank=True)
     proto = models.CharField(max_length=10, default=None, null=True, blank=True)
     dev = models.CharField(max_length=10, default=None, null=True, blank=True)
-    interface = models.CharField(max_length=100, default=None, null=True, blank=True)
     resolv_retry = models.BooleanField(default=False, null=True, blank=True)
     proxy_host = models.CharField(max_length=300, default=None, null=True, blank=True)
     proxy_port = models.CharField(max_length=300, default=None, null=True, blank=True)

@@ -461,7 +461,7 @@ def startServerOpenvpn(request, id):
 
                     interface_serializer = InterfaceOpenVPNSerializer(data=interface_data)
                     if interface_serializer.is_valid():
-                        interface_instance  = interface_serializer.save()
+                        interface_serializer.save()
                         new_interface = Interface.objects.get(name_interface=server.name)
                         ipv4_data = {"typedhcp": "static",
                                      "ip_address": server.ipv4_tunnel_network[:server.ipv4_tunnel_network.find('/')],
@@ -473,8 +473,15 @@ def startServerOpenvpn(request, id):
                             ipv4_serializer.save()
                             return JsonResponse({"msg": f"Server {server.name} is started"}, status=201)
                         else:
+                            new_interface.delete()
+                            change_status_server_openvpn(server_name=server.name, server_status='stop')
+                            server.server_status = False
+                            server.save()
                             return JsonResponse({"error": list(ipv4_serializer.errors.values())[0][0]}, status=400)
                     else:
+                        change_status_server_openvpn(server_name=server.name, server_status='stop')
+                        server.server_status = False
+                        server.save()
                         return JsonResponse({"error": list(interface_serializer.errors.values())[0][0]}, status=400)
                 else:
                     return JsonResponse({"error": f"Nothing is changed, Server {server.name} hasn't started or it was started before"}, status=400)

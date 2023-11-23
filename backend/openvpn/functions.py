@@ -189,7 +189,7 @@ log-append /var/log/openvpn/openvpn.log
     if json_object["protocol"].startswith("tcp"):
         config_input = config_input.replace(f'proto {json_object["protocol"]}', f'proto {json_object["protocol"]}-server')
 
-    if json_object["interface"] != "any":
+    if json_object["interface"] != "Any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
 
     if json_object["hardware_crypto"] != "No Hardware Crypto":
@@ -378,7 +378,6 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
         tunnel_address = json_object["ipv4_tunnel_network"]
         tunnel_address = tunnel_address[:tunnel_address.find('/')-1]
         config_input = config_input.replace("#ifconfig", f"ifconfig {tunnel_address}2 {tunnel_address}1")
-        config_input = config_input.replace("client\n", "#client\n", 1)
         
     if json_object["renegotiate_time"] != '':
         config_input = config_input.replace("#reneg-sec", f"reneg-sec {json_object['renegotiate_time']}")

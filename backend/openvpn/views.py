@@ -1,4 +1,6 @@
 from datetime import datetime
+import datetime as dt
+import time
 from django.http import JsonResponse
 from django.db.models.deletion import ProtectedError
 from drf_yasg.utils import swagger_auto_schema
@@ -447,6 +449,7 @@ def startServerOpenvpn(request, id):
             if not server.server_status:
                 interfaces_before = openvpn_interfaces()
                 change_status_server_openvpn(server_name=server.name, server_status='start')
+                time.sleep(3)
                 interfaces = openvpn_interfaces()
                 interface = get_changed_row_in_openvpn_interfaces(interfaces_before, interfaces)
                 if interface:
@@ -454,16 +457,17 @@ def startServerOpenvpn(request, id):
                     server.save()
 
                     interface_data = {"ifname": interface,
-                                    "name_interface": server.name}
+                                      "name_interface": server.name}
 
                     interface_serializer = InterfaceOpenVPNSerializer(data=interface_data)
                     if interface_serializer.is_valid():
                         interface_instance  = interface_serializer.save()
+                        new_interface = Interface.objects.get(name_interface=server.name)
                         ipv4_data = {"typedhcp": "static",
-                                    "ip_address": server.ipv4_tunnel_network[:server.ipv4_tunnel_network.find('/')],
-                                    "netmask": server.ipv4_tunnel_network[server.ipv4_tunnel_network.find('/')+1:],
-                                    "interface": interface_instance.id
-                                    }
+                                     "ip_address": server.ipv4_tunnel_network[:server.ipv4_tunnel_network.find('/')],
+                                     "netmask": server.ipv4_tunnel_network[server.ipv4_tunnel_network.find('/')+1:],
+                                     "interface": new_interface.pk
+                                     }
                         ipv4_serializer = IP4ConfigSerializer(data=ipv4_data)
                         if ipv4_serializer.is_valid():
                             ipv4_serializer.save()
@@ -494,13 +498,16 @@ def restartServerOpenvpn(request, id):
         try:
             server = ServerOpenvpn.objects.get(id=id)
             if server.server_status:
-                interfaces_before = openvpn_interfaces()
+                interfaces_before_stop = openvpn_interfaces()
                 change_status_server_openvpn(server_name=server.name, server_status='stop')
-                interfaces = openvpn_interfaces()
-                interface_deleted_name = get_changed_row_in_openvpn_interfaces(interfaces, interfaces_before)
+                time.sleep(3)
+                interfaces_after_stop = openvpn_interfaces()
+                interface_deleted_name = get_changed_row_in_openvpn_interfaces(interfaces_after_stop, interfaces_before_stop)
                 if interface_deleted_name:
                     change_status_server_openvpn(server_name=server.name, server_status='start')
-                    interface_updated_name = get_changed_row_in_openvpn_interfaces(interfaces, interfaces_before)
+                    time.sleep(3)
+                    interfaces_after_start = openvpn_interfaces()
+                    interface_updated_name = get_changed_row_in_openvpn_interfaces(interfaces_after_stop, interfaces_after_start)
                     if interface_updated_name:
                         interface = Interface.objects.get(ifname=interface_updated_name)
                         interface.updated_at = datetime.now()
@@ -534,6 +541,7 @@ def stopServerOpenvpn(request, id):
             if server.server_status:
                 interfaces_before = openvpn_interfaces()
                 interfaces = change_status_server_openvpn(server_name=server.name, server_status='stop')
+                time.sleep(3)
                 interfaces = openvpn_interfaces()
                 interface_deleted_name = get_changed_row_in_openvpn_interfaces(interfaces, interfaces_before)
                 if interface_deleted_name:

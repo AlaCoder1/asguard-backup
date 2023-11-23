@@ -100,7 +100,6 @@ export default {
     const snackbar = ref(false);
     const textAlert = ref(false);
 
-  
     const columnServers = [
       {
         headerName: "Server Name",
@@ -112,7 +111,8 @@ export default {
       },
       {
         headerName: "Protocole / Port",
-        field: "proto",
+
+        cellRenderer: formatedProtocServer,
         sortable: true,
         filter: true,
       },
@@ -161,7 +161,7 @@ export default {
       },
       {
         headerName: "Protocole / Port",
-        field: "proto",
+        cellRenderer: formatedProtocClient,
         sortable: true,
         filter: true,
       },
@@ -337,6 +337,9 @@ export default {
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
             });
           break;
         case "edit":
@@ -362,6 +365,9 @@ export default {
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
             });
           break;
         case "restart":
@@ -382,6 +388,9 @@ export default {
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
             });
 
           break;
@@ -558,6 +567,26 @@ export default {
 
       return eGui;
     }
+    function formatedProtocServer(data) {
+      let eGui = document.createElement("div");
+
+      eGui.innerHTML = `
+         ${data.data.proto} / ${data.data.port}
+        `;
+      eGui.style.lineHeight = "2";
+
+      return eGui;
+    }
+    function formatedProtocClient(data) {
+      let eGui = document.createElement("div");
+
+      eGui.innerHTML = `
+         ${data.data.proto} / ${data.data.port}
+        `;
+      eGui.style.lineHeight = "2";
+
+      return eGui;
+    }
 
     const publishServer = () => {};
 
@@ -630,6 +659,8 @@ export default {
         gridApi.value.deselectAll();
       },
       formatedServer,
+      formatedProtocServer,
+      formatedProtocClient,
       actionCellRenderer,
       onGridReady,
       publishServer,

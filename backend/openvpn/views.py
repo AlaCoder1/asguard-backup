@@ -257,6 +257,10 @@ def deleteServerOpenvpn(request, id):
         if (request.method == 'DELETE'):
             server = ServerOpenvpn.objects.get(id=id)
             # delete from system
+            interface = Interface.objects.get(name_interface=server.name)
+            ipv4 = IP4Config.objects.get(interface_id=interface.pk)
+            ipv4.delete()
+            interface.delete()
             delete_server_openvpn(server.name)
             # delete from database
             server.delete()

@@ -41,7 +41,7 @@ def getServerIPsec(request, id):
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN IPSEC",
                      request_body=openapi.Schema(type=openapi.TYPE_OBJECT, 
-                                                 required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'my_identifier', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'tunnel', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
+                                                 required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'my_identifier', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
                                                  properties={'conn_name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'connection_method': openapi.Schema(type=openapi.TYPE_STRING, enum=["default", "Respond Only", "Start on traffic", "Start immediate"]),
                                                              'key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, required=['key_exchange_version'], 
@@ -68,7 +68,6 @@ def getServerIPsec(request, id):
                                                              'policy': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
                                                              'rekey': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'reauth': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
-                                                             'tunnel': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'nat_traversal': openapi.Schema(type=openapi.TYPE_STRING, default="auto", enum=["Disable", "E,able", "Force"]),
                                                              'mobike': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'deed_peer': openapi.Schema(type=openapi.TYPE_OBJECT, description="Deed Peer block", required=['disable'], 
@@ -324,7 +323,7 @@ def deleteServerIPsec(request, id):
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN IPSEC (same as create)",
                      request_body=openapi.Schema(type=openapi.TYPE_OBJECT, 
-                                                 required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'my_identifier', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'tunnel', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
+                                                 required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'my_identifier', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
                                                  properties={'conn_name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'connection_method': openapi.Schema(type=openapi.TYPE_STRING, enum=["default", "Respond Only", "Start on traffic", "Start immediate"]),
                                                              'key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, required=['key_exchange_version'], 
@@ -351,7 +350,6 @@ def deleteServerIPsec(request, id):
                                                              'policy': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
                                                              'rekey': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'reauth': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
-                                                             'tunnel': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'nat_traversal': openapi.Schema(type=openapi.TYPE_STRING, default="auto", enum=["Disable", "E,able", "Force"]),
                                                              'mobike': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'deed_peer': openapi.Schema(type=openapi.TYPE_OBJECT, description="Deed Peer block", required=['disable'], 

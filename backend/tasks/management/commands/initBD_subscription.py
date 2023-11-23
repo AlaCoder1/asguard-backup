@@ -1,4 +1,4 @@
-from subscription.models import *
+from backend.subscription.models import *
 from django.core.management.base import BaseCommand
 
 

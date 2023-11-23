@@ -11,6 +11,6 @@ urlpatterns = [
     ####### Public Key ######
     path('getAllPublicKey', views.getAllPublicKey, name="getAllPublicKey"),
     path('getPublicKey/<int:id>', views.getPublicKey, name="getPublicKey"),
-    # path('createCertificate', views.createCertificate, name="createCertificate"),
-    # path('deleteCertificate/<int:id>', views.deleteCertificate, name="deleteCertificate"),
+    path('createPublicKey', views.createPublicKey, name="createPublicKey"),
+    path('deletePublicKey/<int:id>', views.deletePublicKey, name="deletePublicKey"),
 ]

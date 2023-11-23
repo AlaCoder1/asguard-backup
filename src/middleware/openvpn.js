@@ -7,7 +7,7 @@ import * as directives from 'vuetify/directives'
 import mitt from 'mitt'
 import openvpn from '../views/openVpn/openvpn';
 import ClientsOpenvpnComponent from '../views/openVpn/components/ClientsOpenvpnComponent.vue'
-
+import axios from 'axios'
 
 
 const emitter = mitt()
@@ -16,6 +16,25 @@ const app = createApp(openvpn);
 
 app.component('ClientsOpenvpnComponent', ClientsOpenvpnComponent)
 app.provide('emitter', emitter)
+
+
+axios.interceptors.response.use(
+  (response) => {
+    
+    console.log('response000.vpn',response)
+    return response;
+  },
+  (error) => {
+    console.log('errorMainVpn',error)
+    
+    if ((error.response.status === 401 )||(error.response.status === 403)) {
+   
+      console.log('Token expired or unauthorized. Redirecting to login.');
+      window.location.href = '/';
+    }
+    return Promise.reject(error);
+  }
+);
 
 const vuetify = createVuetify({
     components,

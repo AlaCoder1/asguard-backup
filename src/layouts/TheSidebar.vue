@@ -211,6 +211,12 @@ export default {
               active: "Site to site VPN",
             },
             {
+              title: "RSA Key Pairs",
+              icon: "",
+              href: "/key_pairs",
+              active: "RSA Key Pairs",
+            },
+            {
               title: "OPEN VPN",
               icon: "",
               href: "/openvpn",

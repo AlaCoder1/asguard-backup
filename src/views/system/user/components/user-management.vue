@@ -60,6 +60,14 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+    </v-snackbar>
   </div>
 </template>
 
@@ -91,6 +99,9 @@ export default {
   },
   data() {
     return {
+      textAlert: "",
+      color: "",
+      snackbar: false,
       deletedRow: null,
       deleteDialog: false,
       rowEdit: {},
@@ -116,7 +127,7 @@ export default {
   watch: {
     DataList: {
       handler(newData) {
-        console.log('row',newData)
+        console.log("row", newData);
         this.rowData = newData.users; // Update rowData with the new prop value
       },
       immediate: true, // This will trigger the watcher when the component is created to initialize rowData
@@ -147,12 +158,21 @@ export default {
         .delete(`/users/deleteUser/${this.deletedRow.id}`)
         .then((response) => {
           console.log("Resource deleted:", response.data);
-          location.reload();
+          this.closeModal();
+
+          this.snackbar = true;
+          this.color = "success";
+          this.textAlert = response.data.msg;
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
         })
-        .catch((error) => {
-          // Handle any errors that occur during the request
-          console.error("Error deleting resource:", error);
-        });
+        .catch((i) => {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+            });
     },
     actionCellRenderer(params) {
       let eGui = document.createElement("div");
@@ -437,7 +457,6 @@ export default {
 </script>
 
 <style lang="scss">
-
 .btn-add {
   background: #213e9f;
 }

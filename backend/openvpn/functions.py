@@ -140,6 +140,7 @@ key /etc/openvpn/certificates_{json_object["server_cert"]}/server.key
 dh /etc/openvpn/server/dh_{json_object["name"]}.pem
 crl-verify /etc/certificates_{json_object["ca_name"]}/crl.pem
 
+tls-version-min 1.2
 tls-server
 tls-auth /etc/openvpn/server/static_{json_object["name"]}.key
 
@@ -288,7 +289,8 @@ def json_to_str_client(json_object):
 #remote server_host server_port
 proto {json_object["protocol"]}
 dev {json_object["device_mode"]}
-multihome
+#multihome
+nobind
 #server server_tunnel
 
 #resolv-retry infinite
@@ -297,7 +299,6 @@ multihome
 #compress migrate
 #tun-ipv6
 #engine rdrand
-nobind
 remote-cert-tls server
 cipher {json_object["encryption_algorithm"]}
 auth-nocache
@@ -329,6 +330,7 @@ cert /etc/openvpn/client/certificates_{json_object["client_cert"]}/{json_object[
 key /etc/openvpn/client/certificates_{json_object["client_cert"]}/{json_object["client_cert"]}.key
 crl-verify /etc/certificates_{json_object["ca_name"]}/crl.pem
 
+tls-version-min 1.2
 tls-client
 tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
 '''
@@ -339,9 +341,10 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
     for server in json_object["server_remote"]:
         config_input = config_input.replace("#remote server_host server_port", f"#remote server_host server_port\n remote {server['host']} {server['port']}")
 
-    if json_object["interface"] == "":
-        config_input = config_input.replace("multihome", "#multihome")
-    elif json_object["interface"] != "Any":
+    if json_object["interface"] == "Any":
+        config_input = config_input.replace("#multihome", "multihome")
+        config_input = config_input.replace("nobind", "#nobind")
+    elif json_object["interface"] != "" and json_object["interface"] != "Any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
         config_input = config_input.replace("nobind", "#nobind")
     

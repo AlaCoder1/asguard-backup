@@ -50,8 +50,8 @@ export default {
   mounted() {
     let retriveInfo = localStorage.getItem("userInfo");
     this.user = JSON.parse(retriveInfo);
-    this.userName = this.user.username;
-    this.email = this.user.email;
+    this.userName = this.user.username ?? '';
+    this.email = this.user.email ?? '';
   },
 };
 </script>

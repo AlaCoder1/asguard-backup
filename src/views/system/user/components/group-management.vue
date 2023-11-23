@@ -48,12 +48,22 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+    </v-snackbar>
   </div>
 </template>
 <script>
 import { AgGridVue } from "ag-grid-vue3";
 import Modal_Group from "@/components/modals/ModalGroup.vue";
 import axios from "axios";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 
 export default {
   name: "GroupManagement",
@@ -69,6 +79,9 @@ export default {
   },
   data() {
     return {
+      textAlert: "",
+      color: "",
+      snackbar: false,
       deletedRow: null,
       deleteDialog: false,
       rowEdit: {},
@@ -129,12 +142,20 @@ export default {
         .then((response) => {
           // Handle the successful response
           this.deleteDialog = false;
-          location.reload();
-          console.log("Resource deleted:", response.data);
+          this.closeModal();
+
+          this.snackbar = true;
+          this.color = "success";
+          this.textAlert = response.data.msg;
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
         })
-        .catch((error) => {
-          // Handle any errors that occur during the request
-          console.error("Error deleting resource:", error);
+        .catch((i) => {
+          this.snackbar = true;
+          this.color = "red";
+          this.textAlert = i.response.data.error;
         });
     },
     openModal() {
@@ -404,9 +425,6 @@ export default {
 };
 </script>
 <style lang="scss">
-@import "~ag-grid-community/dist/styles/ag-grid.css";
-@import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
-
 .add-btn-group {
   background: #213e9f;
 }

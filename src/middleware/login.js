@@ -10,13 +10,32 @@ import login from '../views/auth/login.vue';
 import { createI18n } from 'vue-i18n';
 import enJson from '../locales/en.json'; 
 import frJson from '../locales/fr.json';
-
+import axios from 'axios'
 
 const app = createApp(login);
 const vuetifyComponents = createVuetify({
     components,
     directives
   })
+
+ 
+  axios.interceptors.response.use(
+    (response) => {
+      
+      console.log('response000.login',response)
+      return response;
+    },
+    (error) => {
+      console.log('errorMainlogin',error)
+      
+      if ((error.response.status === 401 )||(error.response.status === 403)) {
+     
+        console.log('Token expired or unauthorized. Redirecting to login.');
+        window.location.href = '/';
+      }
+      return Promise.reject(error);
+    }
+  );
 
   const i18n = new createI18n({
   locale: 'en',

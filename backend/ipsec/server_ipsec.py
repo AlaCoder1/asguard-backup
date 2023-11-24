@@ -30,6 +30,9 @@ def install_server_ipsec(conn_config, authentication, interface_address, remote_
 
     with open('/etc/ipsec.conf', 'a') as ipsec_file:
         ipsec_file.write(conn_config)
+    
+    # Restart IPsec service to take the new configuration
+    execute_command_without_arguments(['sudo', 'ipsec', 'restart'])
 
 
 def delete_server_ipsec(conn_name_to_delete, deleted_line):
@@ -61,6 +64,9 @@ def delete_server_ipsec(conn_name_to_delete, deleted_line):
     secrets_content = secrets_content.replace('\n', "")
     with open('/etc/ipsec.secrets', 'w') as secrets_file:
         secrets_file.write(secrets_content)
+
+    # Restart IPsec service to take the new configuration
+    execute_command_without_arguments(['sudo', 'ipsec', 'restart'])
 
 
 def update_server_ipsec(conn_name_to_update, updated_line_in_secrets_file, conn_config, authentication, interface_address, remote_gateway, ca):

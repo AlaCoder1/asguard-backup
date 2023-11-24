@@ -26,6 +26,7 @@ conn {json_object["conn_name"]}
     installpolicy=yes
     rekey=yes
     reauth=yes
+    forceencaps=no
     mobike =yes
     #inactivity=10s
     #margintime=10s
@@ -59,10 +60,8 @@ conn {json_object["conn_name"]}
                                             f"""rightid="C={json_object["authentication"]["remote_distingushed_name"]}" """)
     
     ike = ""
-    list_hash_algorithm = list(json_object["hash_algorithm_ph1"].split(","))
-    list_dh_key_group = list(json_object["dh_key_group"].split(","))
-    for hash_algorithm in list_hash_algorithm:
-        for dh_key_group in list_dh_key_group:
+    for hash_algorithm in json_object["hash_algorithm_ph1"]:
+        for dh_key_group in json_object["dh_key_group"]:
             dh_byte = list(dh_key_group.split(":"))
             if int(dh_byte[0]) in range(15, 19):
                 dh = f"modp{dh_byte[1]}"
@@ -88,6 +87,9 @@ conn {json_object["conn_name"]}
     if json_object["reauth"]:
         config_input = config_input.replace("reauth=yes", "reauth=no")
         
+    if json_object["nat_traversal"] == "Enable":
+        config_input = config_input.replace("forceencaps=no", "forceencaps=yes")
+        
     if json_object["mobike"]:
         config_input = config_input.replace("mobike=yes", "mobike=no")
     
@@ -111,7 +113,6 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("type=tunnel", "type=transport")
     
     sa_key_exchange = json_object["sa_key_exchange"]
-    list_hash_algorithm = list(sa_key_exchange["hash_algorithm_ph2"].split(","))
     pfs = ""
     if sa_key_exchange["pfs_key_group"] != "off":
         pfs = list(sa_key_exchange["pfs_key_group"].split(":"))
@@ -124,10 +125,9 @@ conn {json_object["conn_name"]}
         else:
             pfs = f"-curve{pfs[1]}"
     esp = ""
-    for hash_algorithm in list_hash_algorithm:
+    for hash_algorithm in sa_key_exchange["hash_algorithm_ph2"]:
         if sa_key_exchange["protocol"] == "ESP":
-            list_encryption_algorithm = list(sa_key_exchange["encryption_algorithm_ph2"].split(","))
-            for encryption_algorithm in list_encryption_algorithm:
+            for encryption_algorithm in sa_key_exchange["encryption_algorithm_ph2"]:
                 esp += f"aes{encryption_algorithm}gcm16-{hash_algorithm}{pfs},"
         else:
             esp += f"{hash_algorithm}{pfs},"

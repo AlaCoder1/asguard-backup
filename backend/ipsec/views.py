@@ -41,7 +41,7 @@ def getServerIPsec(request, id):
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN IPSEC",
                      request_body=openapi.Schema(type=openapi.TYPE_OBJECT, 
-                                                 required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'my_identifier', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
+                                                 required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
                                                  properties={'conn_name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'connection_method': openapi.Schema(type=openapi.TYPE_STRING, enum=["default", "Respond Only", "Start on traffic", "Start immediate"]),
                                                              'key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, required=['key_exchange_version'], 
@@ -59,11 +59,11 @@ def getServerIPsec(request, id):
                                                                                                           'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA"),
                                                                                                           'remote_distingushed_name': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
-                                                             'my_identifier': openapi.Schema(type=openapi.TYPE_STRING, enum=["My IP address", "IP address", "Distinguished name", "User distinguished name", "ASN.1 distinguished name", "KeyID tag", "Dynamic DN"]),
-                                                             'peer_identifier': openapi.Schema(type=openapi.TYPE_STRING, enum=["Peer IP address", "IP address", "Distinguished name", "User distinguished name", "ASN.1 distinguished name", "KeyID tag"]),
                                                              'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256"]),
-                                                             'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like sha256 and the list of hash_algorithm must sepeate with comma. Example: sha256,sha512"),
-                                                             'dh_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072 and the list of key_group must sepeate with comma. Example: 15:3072,20:384"),
+                                                             'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like sha256 or sha384. Example: [sha256,sha512]",
+                                                                                                  items=openapi.Schema(type=openapi.TYPE_STRING)),
+                                                             'dh_key_group': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072. Example: [15:3072,20:384]",
+                                                                                            items=openapi.Schema(type=openapi.TYPE_STRING)),
                                                              'lifetime_ph1': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime with its unit like 1h or 3600s", pattern=r"(\d+)([hms])"),
                                                              'policy': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
                                                              'rekey': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
@@ -93,8 +93,8 @@ def getServerIPsec(request, id):
                                                                                                           'mask': openapi.Schema(type=openapi.TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
                                                              'sa_key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'], 
                                                                                                properties={'protocol': openapi.Schema(type=openapi.TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
-                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like 256 and the list of hash_algorithm must sepeate with comma. Example: 128,256"),
-                                                                                                           'hash_algorithm_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like sha256 and the list of hash_algorithm must sepeate with comma. Example: sha256,sha384"),
+                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like 256. Example: [128,256]"),
+                                                                                                           'hash_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like sha256. Example: [sha256,sha384]"),
                                                                                                            'pfs_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="If not off should be group:key like 15:3072. Example: 15:3072")}),
                                                              'lifetime_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime with its unit like 1h or 3600s", pattern=r"(\d+)([hms])"),
                                                              }
@@ -121,12 +121,11 @@ def createServerIPsec(request):
             authentication = data.get("authentication", "")
             authentication_method = authentication.get("authentication_method", "")
 
-            my_identifier = data.get("my_identifier", "")
-            peer_identifier = data.get("peer_identifier", "")
-
             encryption_algorithm_ph1 = data.get("encryption_algorithm_ph1", "")
-            hash_algorithm_ph1 = data.get("hash_algorithm_ph1", "")
-            dh_key_group = data.get("dh_key_group", "")
+            hash_algorithm_ph1_list = data.get("hash_algorithm_ph1", "")
+            hash_algorithm_ph1 = ",".join(hash_algorithm_ph1_list)
+            dh_key_group_list = data.get("dh_key_group", "")
+            dh_key_group = ",".join(dh_key_group_list)
             lifetime_ph1 = data.get("lifetime_ph1", "")
 
             policy = data.get("policy", "")
@@ -156,7 +155,8 @@ def createServerIPsec(request):
 
             sa_key_exchange = data.get("sa_key_exchange", "")
             protocol = sa_key_exchange.get("protocol", "")
-            hash_algorithm_ph2 = sa_key_exchange.get("hash_algorithm_ph2", "")
+            hash_algorithm_ph2_list = sa_key_exchange.get("hash_algorithm_ph2", "")
+            hash_algorithm_ph2 = ",".join(hash_algorithm_ph2_list)
             pfs_key_group = sa_key_exchange.get("pfs_key_group", "")
             lifetime_ph2 = data.get("lifetime_ph2", "")
 
@@ -171,14 +171,12 @@ def createServerIPsec(request):
                            "connection_method": connection_method,
                            "key_exchange_version": key_exchange_version,
                            "internet_protocol": internet_protocol,
-                           "interface": interface,
+                           "interface": interface_name,
                            "remote_gateway": remote_gateway,
                            "dynamic_gateway": dynamic_gateway,
                            "description_ph1": description_ph1,
 
                            "authentication_method": authentication_method,
-                           "my_identifier": my_identifier,
-                           "peer_identifier": peer_identifier,
                            
                            "encryption_algorithm_ph1": encryption_algorithm_ph1,
                            "hash_algorithm_ph1": hash_algorithm_ph1,
@@ -261,7 +259,8 @@ def createServerIPsec(request):
             data["address_remote_network"] = address_remote_network
 
             if protocol == "ESP":
-                encryption_algorithm_ph2 = sa_key_exchange.get("encryption_algorithm_ph2", "")
+                encryption_algorithm_ph2_list = sa_key_exchange.get("encryption_algorithm_ph2", "")
+                encryption_algorithm_ph2 = ",".join(encryption_algorithm_ph2_list)
                 data["encryption_algorithm_ph2"] = encryption_algorithm_ph2
 
             serializer_server = ServerIPsecSerializer(data=server_data)
@@ -323,7 +322,7 @@ def deleteServerIPsec(request, id):
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN IPSEC (same as create)",
                      request_body=openapi.Schema(type=openapi.TYPE_OBJECT, 
-                                                 required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'my_identifier', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
+                                                 required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
                                                  properties={'conn_name': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'connection_method': openapi.Schema(type=openapi.TYPE_STRING, enum=["default", "Respond Only", "Start on traffic", "Start immediate"]),
                                                              'key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, required=['key_exchange_version'], 
@@ -341,8 +340,6 @@ def deleteServerIPsec(request, id):
                                                                                                           'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA"),
                                                                                                           'remote_distingushed_name': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
-                                                             'my_identifier': openapi.Schema(type=openapi.TYPE_STRING, enum=["My IP address", "IP address", "Distinguished name", "User distinguished name", "ASN.1 distinguished name", "KeyID tag", "Dynamic DN"]),
-                                                             'peer_identifier': openapi.Schema(type=openapi.TYPE_STRING, enum=["Peer IP address", "IP address", "Distinguished name", "User distinguished name", "ASN.1 distinguished name", "KeyID tag"]),
                                                              'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256"]),
                                                              'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like sha256 and the list of hash_algorithm must sepeate with comma. Example: sha256,sha512"),
                                                              'dh_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072 and the list of key_group must sepeate with comma. Example: 15:3072,20:384"),
@@ -413,9 +410,6 @@ def updateServerIPsec(request, id):
             authentication = data.get("authentication", "")
             server.authentication_method = authentication.get("authentication_method", "")
 
-            server.my_identifier = data.get("my_identifier", "")
-            server.peer_identifier = data.get("peer_identifier", "")
-
             server.encryption_algorithm_ph1 = data.get("encryption_algorithm_ph1", "")
             server.hash_algorithm_ph1 = data.get("hash_algorithm_ph1", "")
             server.dh_key_group = data.get("dh_key_group", "")
@@ -470,6 +464,9 @@ def updateServerIPsec(request, id):
             else:
                 server.cert = authentication.get("cert")
                 certificate = Certificate.objects.get(name=server.cert)
+                print("certificate", certificate)
+                print("certificate_auth", CertificateAuthority.objects.get(id=certificate.pk))
+                print("certificate_auth name", CertificateAuthority.objects.get(id=certificate.pk).name)
                 ca = CertificateAuthority.objects.get(id=certificate.pk).name
                 server.remote_distingushed_name = authentication.get("remote_distingushed_name", "")
                 

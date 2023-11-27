@@ -150,9 +150,25 @@ def AllInterfaces(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
+            # if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")):
             list_interface.append(res[i]['fields'])
         return list_interface
-    
+####
+def AllInterfacesVersion2(request):
+    list_interface = []
+    if (request.method == 'GET'):
+        interfaces = Interface.objects.all()
+        interfaceDict=serializers.serialize("json",interfaces)
+        # interfaceDict = serializers.serialize("json", interfaces)
+        res = json.loads(interfaceDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")):
+                list_interface.append(res[i]['fields'])
+        return list_interface    
     
 def GetInformationsByInterface(request,name_interface):
     info={}
@@ -239,7 +255,7 @@ def user_certificate_managment_page(request):
 
 @login_required(login_url='/')
 def interface_page(request):
-    interfaces=AllInterfaces(request)
+    interfaces=AllInterfacesVersion2(request)
     config={}
     allStaticGateways={}
     for i in range(len(interfaces)):
@@ -300,7 +316,7 @@ def login(request):
 def index_page(request):
     info=get_system_infomations()
     gateways=getAllGateways(request)
-    interfaces=AllInterfaces(request)
+    interfaces=AllInterfacesVersion2(request)
     config=[]
     for i in range(len(interfaces)):
         info_interface={}

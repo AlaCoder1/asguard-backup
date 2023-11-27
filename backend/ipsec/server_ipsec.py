@@ -42,7 +42,7 @@ def delete_server_ipsec(conn_name_to_delete, deleted_line):
     conn_name_end = server_conf_content.find('conn', conn_name_start+5)
     if conn_name_end == -1:
         conn_name_end = len(server_conf_content)
-    conn_delete_content = '\n\n' + server_conf_content[conn_name_start:conn_name_end]
+    conn_delete_content = '\n' + server_conf_content[conn_name_start:conn_name_end]
     server_conf_content = server_conf_content.replace(conn_delete_content, '')
     with open('/etc/ipsec.conf','w') as ipsec_file:
         ipsec_file.write(server_conf_content)

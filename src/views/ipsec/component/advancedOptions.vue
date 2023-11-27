@@ -37,9 +37,9 @@
           :items="[
             {
               name: 'Force',
-              slug: 'Force',
+              slug: 'Enable',
             },
-            { name: 'Unforce', slug: 'Unforce' },
+            { name: 'Unforce', slug: 'Disable' },
           ]"
         ></v-select>
       </v-col>
@@ -56,42 +56,39 @@
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="deadPeer" />
         <label class="ml-2">Disable dead Peer</label>
-        <v-text-field
-          class="mt-3"
-          label="Seconds"
-          v-model="seconds"
-        ></v-text-field>
-        <v-text-field label="retries" v-model="retries"></v-text-field>
-        <v-select
-          label="Dead Peer Detection"
-          v-model="selectDear"
-          item-title="name"
-          item-value="slug"
-          return-object
-          :items="[
-            {
-              name: 'Default',
-              slug: 'default',
-            },
-            { name: 'Respond only', slug: 'Respond only' },
-            {
-              name: 'Start on traffic',
-              slug: 'Start on traffic',
-            },
-            {
-              name: 'Start immediate',
-              slug: 'Start immediate',
-            },
-          ]"
-        ></v-select>
+        <template v-if="props.isdeadPeer">
+          <v-text-field
+            class="mt-3"
+            label="Seconds (unité)"
+            v-model="seconds"
+          ></v-text-field>
+          <v-text-field label="retries (unité)" v-model="retries"></v-text-field>
+          <v-select
+            label="Dead Peer Action"
+            v-model="selectDear"
+            item-title="name"
+            item-value="slug"
+            return-object
+            :items="[
+              {
+                name: 'Default',
+                slug: 'default',
+              },
+              { name: 'Restart the tunnel', slug: 'Restart the tunnel' },
+              {
+                name: 'Stop the tunnel',
+                slug: 'Stop the tunnel',
+              },
+            ]"
+          ></v-select>
+        </template>
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>Inactivity timeout</label>
+        <label>Inactivity timeout (unité)</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          
           label="Inactivity timeout"
           v-model="interactivityTimout"
         ></v-text-field>
@@ -117,20 +114,20 @@
             },
           ]"
         ></v-select> -->
-        <v-text-field
+        <!-- <v-text-field
           label="Inactivity timeout"
           v-model="interactivityTimout2"
-        ></v-text-field>
+        ></v-text-field> -->
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>Margin time</label>
+        <label>Margin time (unité)</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field label="Margin time" v-model="marginTime"></v-text-field>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>Rekey fuzz</label>
+        <label>Rekey fuzz (%)</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field label="Rekey fuzz" v-model="rekeyFuzz"></v-text-field>
@@ -148,6 +145,7 @@
 import { useVModels } from "@vueuse/core";
 
 const props = defineProps([
+  "isdeadPeer",
   "errors",
   "policy",
   "rekey",

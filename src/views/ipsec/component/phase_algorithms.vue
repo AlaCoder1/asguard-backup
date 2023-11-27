@@ -16,15 +16,15 @@
           :items="[
             {
               name: '128 bit AES-GCM with 128 bit ICV',
-              slug: '128 bit AES-GCM with 128 bit ICV',
+              slug: '128',
             },
             {
               name: '192 bit AES-GCM with 128 bit ICV',
-              slug: '192 bit AES-GCM with 128 bit ICV',
+              slug: '192',
             },
             {
               name: '256 bit AES-GCM with 128 bit ICV',
-              slug: '256 bit AES-GCM with 128 bit ICV',
+              slug: '256',
             },
           ]"
         ></v-select>
@@ -42,18 +42,19 @@
         <v-select
           label="Hash algorithm"
           v-model="hashAlgo"
+          multiple
           item-title="name"
           item-value="slug"
           return-object
           :items="[
             {
               name: 'SHA256',
-              slug: 'SHA256',
+              slug: 'sha256',
             },
-            { name: 'SHA384', slug: 'SHA384' },
+            { name: 'SHA384', slug: 'sha384' },
             {
               name: 'SHA512',
-              slug: 'SHA512',
+              slug: 'sha512',
             },
           ]"
         ></v-select>
@@ -71,6 +72,7 @@
         <v-select
           label="DH key group"
           v-model="dhKey"
+          multiple
           item-title="name"
           item-value="slug"
           return-object
@@ -82,7 +84,7 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>Lifetime</label>
+        <label>Lifetime (unité)</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field label="Lifetime" v-model="lifetime"></v-text-field>
@@ -102,52 +104,44 @@ import { useVModels } from "@vueuse/core";
 const dhKeyList = ref([
   {
     name: "15 (3072 bits)",
-    slug: "15 (3072 bits)",
+    slug: "15:3072",
   },
-  { name: "16 (4096 bits)", slug: "16 (4096 bits)" },
+  { name: "16 (4096 bits)", slug: "16:4096" },
   {
     name: "17 (6144 bits)",
-    slug: "17 (6144 bits)",
+    slug: "17:6144",
   },
   {
     name: "18 (8192 bits)",
-    slug: "18 (8192 bits)",
+    slug: "18:8192",
   },
   {
     name: "19 (NIST EC 256 bits)",
-    slug: "19 (NIST EC 256 bits)",
+    slug: "19:256",
   },
   {
     name: "20 (NIST EC 384 bits)",
-    slug: "20 (NIST EC 384 bits)",
+    slug: "20:384",
   },
   {
     name: "21 (NIST EC 521 bits)",
-    slug: "21 (NIST EC 521 bits)",
+    slug: "21:521",
   },
   {
     name: "28 (Brainpool EC 256 bits)",
-    slug: "28 (Brainpool EC 256 bits)",
-  },
-  {
-    name: "28 (Brainpool EC 256 bits)",
-    slug: "28 (Brainpool EC 256 bits)",
+    slug: "28:256",
   },
   {
     name: "29 (Brainpool EC 384 bits)",
-    slug: "29 (Brainpool EC 384 bits)",
-  },
-  {
-    name: "29 (Brainpool EC 384 bits)",
-    slug: "29 (Brainpool EC 384 bits)",
+    slug: "29:384",
   },
   {
     name: "30 (Brainpool EC 512 bits)",
-    slug: "30 (Brainpool EC 512 bits)",
+    slug: "30:512",
   },
   {
     name: "31 (Elliptic Curve 25519)",
-    slug: "31 (Elliptic Curve 25519)",
+    slug: "31:25519",
   },
 ]);
 

@@ -33,7 +33,7 @@
               name: 'Default',
               slug: 'default',
             },
-            { name: 'Respond only', slug: 'Respond only' },
+            { name: 'Respond only', slug: 'Respond Only' },
             {
               name: 'Start on traffic',
               slug: 'Start on traffic',

@@ -28,25 +28,28 @@
           {{ props.errors.protocol.$errors?.[0].$message }}
         </p>
       </v-col>
-      <v-col cols="4" class="mt-5">
-        <label>Encryption algorithms</label>
-      </v-col>
-      <v-col cols="8" class="mb-n6">
-        <v-select
-          label="Encryption algorithms"
-          v-model="encryptAlgoExchange"
-          item-title="name"
-          item-value="slug"
-          return-object
-          :items="encryptAlgoList"
-        ></v-select>
-        <p
-          class="error-feedback mb-5"
-          v-if="props.errors.encryptAlgoExchange.$errors.length"
-        >
-          {{ props.errors.encryptAlgoExchange.$errors?.[0].$message }}
-        </p>
-      </v-col>
+      <template v-if="props.isProtocol?.slug === 'ESP'">
+        <v-col cols="4" class="mt-5">
+          <label>Encryption algorithms</label>
+        </v-col>
+        <v-col cols="8" class="mb-n6">
+          <v-select
+            label="Encryption algorithms"
+            v-model="encryptAlgoExchange"
+            item-title="name"
+            item-value="slug"
+            return-object
+            multiple
+            :items="encryptAlgoList"
+          ></v-select>
+          <p
+            class="error-feedback mb-5"
+            v-if="props.errors.encryptAlgoExchange.$errors.length"
+          >
+            {{ props.errors.encryptAlgoExchange.$errors?.[0].$message }}
+          </p>
+        </v-col>
+      </template>
       <v-col cols="4" class="mt-5">
         <label>Hash algorithms</label>
       </v-col>
@@ -57,15 +60,16 @@
           item-title="name"
           item-value="slug"
           return-object
+          multiple
           :items="[
             {
               name: 'SHA256',
-              slug: 'SHA256',
+              slug: 'sha256',
             },
-            { name: 'SHA384', slug: 'SHA384' },
+            { name: 'SHA384', slug: 'sha384' },
             {
               name: 'SHA512',
-              slug: 'SHA512',
+              slug: 'sha512',
             },
           ]"
         ></v-select>
@@ -111,40 +115,42 @@
           {{ props.errors.lifetimeExchange.$errors?.[0].$message }}
         </p>
       </v-col>
-      <v-col cols="12">
-        <h4>Advanced Options</h4>
-        <v-divider class="mt-2"></v-divider>
-      </v-col>
-      <v-col cols="4" class="mt-5">
-        <label>Automatically ping host</label>
-      </v-col>
-      <v-col cols="8" class="mb-n6">
-        <v-text-field
-          label="Automatically ping host"
-          v-model="pingHost"
-        ></v-text-field>
-        <p
-          class="error-feedback mb-5"
-          v-if="props.errors.pingHost.$errors.length"
-        >
-          {{ props.errors.pingHost.$errors?.[0].$message }}
-        </p>
-      </v-col>
-      <v-col cols="4" class="mt-5">
-        <label>Manual SPD entries</label>
-      </v-col>
-      <v-col cols="8" class="mb-n6">
-        <v-text-field
-          label="Manual SPD entries"
-          v-model="spdEntries"
-        ></v-text-field>
-        <p
-          class="error-feedback mb-5"
-          v-if="props.errors.spdEntries.$errors.length"
-        >
-          {{ props.errors.spdEntries.$errors?.[0].$message }}
-        </p>
-      </v-col>
+      <!-- <template v-if="false">
+        <v-col cols="12">
+          <h4>Advanced Options</h4>
+          <v-divider class="mt-2"></v-divider>
+        </v-col>
+        <v-col cols="4" class="mt-5">
+          <label>Automatically ping host</label>
+        </v-col>
+        <v-col cols="8" class="mb-n6">
+          <v-text-field
+            label="Automatically ping host"
+            v-model="pingHost"
+          ></v-text-field>
+          <p
+            class="error-feedback mb-5"
+            v-if="props.errors.pingHost.$errors.length"
+          >
+            {{ props.errors.pingHost.$errors?.[0].$message }}
+          </p>
+        </v-col>
+        <v-col cols="4" class="mt-5">
+          <label>Manual SPD entries</label>
+        </v-col>
+        <v-col cols="8" class="mb-n6">
+          <v-text-field
+            label="Manual SPD entries"
+            v-model="spdEntries"
+          ></v-text-field>
+          <p
+            class="error-feedback mb-5"
+            v-if="props.errors.spdEntries.$errors.length"
+          >
+            {{ props.errors.spdEntries.$errors?.[0].$message }}
+          </p>
+        </v-col>
+      </template> -->
     </v-row>
   </div>
 </template>
@@ -157,44 +163,37 @@ const pfsList = ref([
     name: "off",
     slug: "off",
   },
-  { name: "15 (3072 bits)", slug: "15 (3072 bits)" },
-  { name: "16 (4096 bits)", slug: "16 (4096 bits)" },
-  { name: "17 (6144 bits)", slug: "17 (6144 bits)" },
-  { name: "18 (8192 bits)", slug: "18 (8192 bits)" },
-  { name: "19 (NIST EC 256 bits)", slug: "19 (NIST EC 256 bits)" },
-  { name: "20 (NIST EC 384 bits)", slug: "20 (NIST EC 384 bits)" },
-  { name: "21 (NIST EC 521 bits)", slug: "21 (NIST EC 521 bits)" },
-  { name: "28 (Brainpool EC 256 bits)", slug: "28 (Brainpool EC 256 bits)" },
-  { name: "29 (Brainpool EC 384 bits)", slug: "29 (Brainpool EC 384 bits)" },
-  { name: "30 (Brainpool EC 512 bits)", slug: "30 (Brainpool EC 512 bits)" },
-  { name: "31 (Elliptic Curve 25519)", slug: "31 (Elliptic Curve 25519)" },
+  { name: "15 (3072 bits)", slug: "15:3072" },
+  { name: "16 (4096 bits)", slug: "16:4096" },
+  { name: "17 (6144 bits)", slug: "17:6144" },
+  { name: "18 (8192 bits)", slug: "18:8192" },
+  { name: "19 (NIST EC 256 bits)", slug: "19:256" },
+  { name: "20 (NIST EC 384 bits)", slug: "20:384" },
+  { name: "21 (NIST EC 521 bits)", slug: "21:521" },
+  { name: "28 (Brainpool EC 256 bits)", slug: "28:256" },
+  { name: "29 (Brainpool EC 384 bits)", slug: "29:384" },
+  { name: "30 (Brainpool EC 512 bits)", slug: "30:512" },
+  { name: "31 (Elliptic Curve 25519)", slug: "31:25519" },
 ]);
 
 const encryptAlgoList = ref([
   {
-    name: "AES128",
-    slug: "AES128",
-  },
-  { name: "AES192", slug: "AES192" },
-  {
-    name: "AES256",
-    slug: "AES256",
-  },
-  {
     name: "aes128gcm16",
-    slug: "aes128gcm16",
+    slug: "128",
   },
   {
     name: "aes192gcm16",
-    slug: "aes192gcm16",
+    slug: "192",
   },
   {
     name: "aes256gcm16",
-    slug: "aes256gcm16",
+    slug: "256",
   },
 ]);
 
 const props = defineProps([
+  "isProtocol",
+  "isMode",
   "errors",
   "spdEntries",
   "protocol",

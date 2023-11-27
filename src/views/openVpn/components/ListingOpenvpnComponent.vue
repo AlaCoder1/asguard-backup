@@ -14,7 +14,6 @@
             :rowData="rowDataServers.value"
             :defaultColDef="defaultColDef"
             :rowGroupPanelShow="rowGroupPanelShow"
-            @cell-clicked="cellWasClicked"
             @grid-ready="onGridReady"
           />
           <div class="d-flex justify-end mt-3">
@@ -320,7 +319,6 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "play":
-          console.log("play", rowData);
           axios
             .post(`/openvpn/startServerOpenvpn/${rowData.id}`)
             .then((response) => {
@@ -333,7 +331,6 @@ export default {
               }, 1000);
             })
             .catch((i) => {
-              console.log("i", i.response.data.error);
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
@@ -343,12 +340,10 @@ export default {
             });
           break;
         case "edit":
-          console.log("edit", rowData);
           emitter.emit("add-server");
           emitter.emit("edit-server", rowData);
           break;
         case "stop":
-          console.log("stop", rowData);
           axios
             .delete(`/openvpn/stopServerOpenvpn/${rowData.id}`)
             .then((response) => {
@@ -361,7 +356,6 @@ export default {
               }, 1000);
             })
             .catch((i) => {
-              console.log("i", i.response.data.error);
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
@@ -371,7 +365,6 @@ export default {
             });
           break;
         case "restart":
-          console.log("restart", rowData);
           axios
             .put(`/openvpn/restartServerOpenvpn/${rowData.id}`)
             .then((response) => {
@@ -384,7 +377,6 @@ export default {
               }, 1000);
             })
             .catch((i) => {
-              console.log("i", i.response.data.error);
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
@@ -395,7 +387,6 @@ export default {
 
           break;
         case "delete":
-          console.log("delete", rowData);
 
           axios
             .delete(`/openvpn/deleteServerOpenvpn/${rowData.id}`)
@@ -409,7 +400,6 @@ export default {
               }, 1000);
             })
             .catch((i) => {
-              console.log("i", i.response.data.error);
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
@@ -473,7 +463,7 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "download":
-          console.log("download", rowData);
+          
 
           let id = rowData.id;
           let fileExtention = `${rowData.name}.ovpn`;
@@ -484,7 +474,7 @@ export default {
           axios
             .post(`/openvpn/exportClientOpenvpn/${id}`)
             .then((response) => {
-              console.log("res", response.data.client);
+              
 
               const text = response.data.client;
               const blob = new Blob([text], {
@@ -503,14 +493,9 @@ export default {
               window.URL.revokeObjectURL(url);
               document.body.removeChild(a);
 
-              if (response.status == "201") {
-                console.log("success");
-              } else {
-                console.log("error");
-              }
+            
             })
             .catch((i) => {
-              console.log("i", i.response);
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
@@ -518,7 +503,6 @@ export default {
 
           break;
         case "editClient":
-          console.log("edit", rowData);
           emitter.emit("add-client");
           setTimeout(() => {
             emitter.emit("edit-client", rowData);
@@ -527,7 +511,7 @@ export default {
           break;
 
         case "delete":
-          console.log("delete", rowData);
+          
 
           axios
             .delete(`/openvpn/deleteClientOpenvpn/${rowData.id}`)
@@ -541,7 +525,6 @@ export default {
               }, 1000);
             })
             .catch((i) => {
-              console.log("i", i.response.data.error);
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
@@ -631,7 +614,7 @@ export default {
           .replace(/False/g, "false")
           .replace(/None/g, "null");
         const parsedArrayClients = JSON.parse(validJsonStringClients);
-        console.log("parsedArrayClients", parsedArrayClients);
+        
 
         rowDataClients.value = parsedArrayClients;
       } catch (error) {
@@ -651,10 +634,6 @@ export default {
       snackbar,
       textAlert,
       actionCellRendererClient,
-      cellWasClicked: (event) => {
-        // Example of consuming Grid Event
-        console.log("cell was clicked", event);
-      },
       deselectRows: () => {
         gridApi.value.deselectAll();
       },

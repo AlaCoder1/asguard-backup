@@ -20,16 +20,11 @@ app.provide('emitter', emitter)
 
 axios.interceptors.response.use(
   (response) => {
-    
-    console.log('response000.vpn',response)
     return response;
   },
   (error) => {
-    console.log('errorMainVpn',error)
     
     if ((error.response.status === 401 )||(error.response.status === 403)) {
-   
-      console.log('Token expired or unauthorized. Redirecting to login.');
       window.location.href = '/';
     }
     return Promise.reject(error);

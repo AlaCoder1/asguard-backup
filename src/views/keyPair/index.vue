@@ -103,7 +103,7 @@ export default {
     onMounted(() => {
       let privateKeyAttribute =
         document.getElementById("app").attributes["privateKey"].value;
-      console.log("privateKeyAttribute", privateKeyAttribute);
+      
 
       const validJsonString = privateKeyAttribute
         .replace(/'/g, '"')
@@ -114,7 +114,7 @@ export default {
 
       let publicKeyAttribute =
         document.getElementById("app").attributes["publicKey"].value;
-      console.log("publicKeyAttribute", publicKeyAttribute);
+     
 
       const validJsonString2 = publicKeyAttribute
         .replace(/'/g, '"')
@@ -293,7 +293,6 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            console.log("i", i.response.data.error);
             state.snackbar = true;
             state.color = "red";
             state.textAlert = i.response.data.error;
@@ -311,7 +310,6 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            console.log("i", i.response.data.error);
             state.snackbar = true;
             state.color = "red";
             state.textAlert = i.response.data.error;

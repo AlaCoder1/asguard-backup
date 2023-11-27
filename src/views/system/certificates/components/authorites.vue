@@ -252,7 +252,6 @@ export default {
       axios
         .post(`/certificates/exportCertAuth/${id}`, payload)
         .then((response) => {
-          console.log("response", response.data.cert);
           const text = response.data.cert;
           const blob = new Blob([text], {
             type: "application/x-x509-ca-cert",
@@ -270,14 +269,8 @@ export default {
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
 
-          if (response.status == "201") {
-            console.log("success");
-          } else {
-            console.log("error");
-          }
         })
         .catch((i) => {
-          console.log("i", i.response.data.error);
           this.snackbar = true;
           this.color = "red";
           this.textAlert = i.response.data.error;
@@ -306,7 +299,6 @@ export default {
           }
         })
         .catch((i) => {
-          console.log("i", i.response);
           this.snackbar = true;
           this.color = "red";
           this.textAlert = i.response.data.error;

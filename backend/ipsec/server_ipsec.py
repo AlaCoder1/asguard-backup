@@ -26,7 +26,7 @@ def install_server_ipsec(conn_config, authentication, interface_address, remote_
                                                 "-out", f"/etc/ipsec.d/private/{authentication['cert']}Key.pem"],
                                                 ]
             execute_list_commands_without_arguments(commands_list_without_arguments)
-            ipsec_secrets_file.write(f"""\n : RSA {authentication["cert"]}Key.pem """)
+            ipsec_secrets_file.write(f"""\n\n : RSA {authentication["cert"]}Key.pem """)
 
     with open('/etc/ipsec.conf', 'a') as ipsec_file:
         ipsec_file.write(conn_config)

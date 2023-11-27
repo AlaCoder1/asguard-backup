@@ -64,7 +64,7 @@ def getServerIPsec(request, id):
                                                                                                   items=openapi.Schema(type=openapi.TYPE_STRING)),
                                                              'dh_key_group': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072. Example: [15:3072,20:384]",
                                                                                             items=openapi.Schema(type=openapi.TYPE_STRING)),
-                                                             'lifetime_ph1': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime with its unit like 1h or 3600s", pattern=r"(\d+)([hms])"),
+                                                             'lifetime_ph1': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
                                                              'policy': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
                                                              'rekey': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'reauth': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
@@ -72,12 +72,12 @@ def getServerIPsec(request, id):
                                                              'mobike': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'deed_peer': openapi.Schema(type=openapi.TYPE_OBJECT, description="Deed Peer block", required=['disable'], 
                                                                                          properties={'disable': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
-                                                                                                     'deed_peer_delay': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)([hms])", description="set deed peer delay with its unit like 10s, required when selecting deed peer"),
-                                                                                                     'deed_peer_timeout': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)([hms])", description="set deed peer timeout with its unit like 160s, required when selecting deed peer"),
+                                                                                                     'deed_peer_delay': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)", description="set deed peer delay like 10, required when selecting deed peer"),
+                                                                                                     'deed_peer_timeout': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)", description="set deed peer timeout like 160, required when selecting deed peer"),
                                                                                                      'deed_peer_action': openapi.Schema(type=openapi.TYPE_STRING, enum=["default", "Restart the tunnel", "Stop the tunnel"], default="default", description="set deed peer action, required when selecting deed peer")}),
-                                                             'inactivity_timeout': openapi.Schema(type=openapi.TYPE_STRING, description="set inactivity timeout with its unit like 10s", pattern=r"(\d+)([hms])"),
-                                                             'margin_time': openapi.Schema(type=openapi.TYPE_STRING, description="set margin time with its unit like 10s", pattern=r"(\d+)([hms])"),
-                                                             'rekey_fuzz': openapi.Schema(type=openapi.TYPE_STRING, description="set rekey_fuzz with % (percentage symbol) like 10%", pattern=r"(\d+)%"),
+                                                             'inactivity_timeout': openapi.Schema(type=openapi.TYPE_STRING, description="set inactivity timeout like 10", pattern=r"(\d+)"),
+                                                             'margin_time': openapi.Schema(type=openapi.TYPE_STRING, description="set margin time like 10", pattern=r"(\d+)"),
+                                                             'rekey_fuzz': openapi.Schema(type=openapi.TYPE_STRING, description="set rekey_fuzz like 10", pattern=r"(\d+)"),
                                                              'mode_ph2': openapi.Schema(type=openapi.TYPE_OBJECT, description="General information of phase 2", required=['mode'], 
                                                                                         properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Route-based", "Transport"]),
                                                                                                     'local_address': openapi.Schema(type=openapi.TYPE_STRING, description="Local Address, required when selecting Route-based"),
@@ -96,7 +96,7 @@ def getServerIPsec(request, id):
                                                                                                            'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like 256. Example: [128,256]"),
                                                                                                            'hash_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like sha256. Example: [sha256,sha384]"),
                                                                                                            'pfs_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="If not off should be group:key like 15:3072. Example: 15:3072")}),
-                                                             'lifetime_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime with its unit like 1h or 3600s", pattern=r"(\d+)([hms])"),
+                                                             'lifetime_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
                                                              }
                                                              ))
 @api_view(['POST'])
@@ -158,7 +158,7 @@ def createServerIPsec(request):
             interface = Interface.objects.get(name_interface=interface_name)
             interface = interface.pk
             interface_address = IP4Config.objects.get(interface_id=interface)
-            data["interface_address"] = interface_address.ip_address
+            data["interface_address"] = f'{interface_address.ip_address}/{interface_address.netmask}'
 
             server_data = {"conn_name": conn_name,
                            "connection_method": connection_method,
@@ -246,7 +246,7 @@ def createServerIPsec(request):
                 type_remote_network = remote_network.get("type_remote_network", "")
                 address_remote_network = remote_network.get("address_local_network", "")
                 if type_remote_network == "Network":
-                    address_remote_network += remote_network.get("mask", "")
+                    address_remote_network += f'/{remote_network.get("mask", "")}'
                 server_data["type_remote_network"] = type_remote_network
                 server_data["address_remote_network"] = address_remote_network
                 data["address_remote_network"] = address_remote_network
@@ -340,9 +340,11 @@ def deleteServerIPsec(request, id):
                                                                                                           'cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA"),
                                                                                                           'remote_distingushed_name': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
                                                              'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256"]),
-                                                             'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like sha256 and the list of hash_algorithm must sepeate with comma. Example: sha256,sha512"),
-                                                             'dh_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072 and the list of key_group must sepeate with comma. Example: 15:3072,20:384"),
-                                                             'lifetime_ph1': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime with its unit like 1h or 3600s", pattern=r"(\d+)([hms])"),
+                                                             'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like sha256 or sha384. Example: [sha256,sha512]",
+                                                                                                  items=openapi.Schema(type=openapi.TYPE_STRING)),
+                                                             'dh_key_group': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072. Example: [15:3072,20:384]",
+                                                                                            items=openapi.Schema(type=openapi.TYPE_STRING)),
+                                                             'lifetime_ph1': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
                                                              'policy': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
                                                              'rekey': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'reauth': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
@@ -350,12 +352,12 @@ def deleteServerIPsec(request, id):
                                                              'mobike': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'deed_peer': openapi.Schema(type=openapi.TYPE_OBJECT, description="Deed Peer block", required=['disable'], 
                                                                                          properties={'disable': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
-                                                                                                     'deed_peer_delay': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)([hms])", description="set deed peer delay with its unit like 10s, required when selecting deed peer"),
-                                                                                                     'deed_peer_timeout': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)([hms])", description="set deed peer timeout with its unit like 160s, required when selecting deed peer"),
+                                                                                                     'deed_peer_delay': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)", description="set deed peer delay like 10, required when selecting deed peer"),
+                                                                                                     'deed_peer_timeout': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)", description="set deed peer timeout like 160, required when selecting deed peer"),
                                                                                                      'deed_peer_action': openapi.Schema(type=openapi.TYPE_STRING, enum=["default", "Restart the tunnel", "Stop the tunnel"], default="default", description="set deed peer action, required when selecting deed peer")}),
-                                                             'inactivity_timeout': openapi.Schema(type=openapi.TYPE_STRING, description="set inactivity timeout with its unit like 10s", pattern=r"(\d+)([hms])"),
-                                                             'margin_time': openapi.Schema(type=openapi.TYPE_STRING, description="set margin time with its unit like 10s", pattern=r"(\d+)([hms])"),
-                                                             'rekey_fuzz': openapi.Schema(type=openapi.TYPE_STRING, description="set rekey_fuzz with % (percentage symbol) like 10%", pattern=r"(\d+)%"),
+                                                             'inactivity_timeout': openapi.Schema(type=openapi.TYPE_STRING, description="set inactivity timeout like 10", pattern=r"(\d+)"),
+                                                             'margin_time': openapi.Schema(type=openapi.TYPE_STRING, description="set margin time like 10", pattern=r"(\d+)"),
+                                                             'rekey_fuzz': openapi.Schema(type=openapi.TYPE_STRING, description="set rekey_fuzz like 10", pattern=r"(\d+)"),
                                                              'mode_ph2': openapi.Schema(type=openapi.TYPE_OBJECT, description="General information of phase 2", required=['mode'], 
                                                                                         properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Route-based", "Transport"]),
                                                                                                     'local_address': openapi.Schema(type=openapi.TYPE_STRING, description="Local Address, required when selecting Route-based"),
@@ -371,10 +373,10 @@ def deleteServerIPsec(request, id):
                                                                                                           'mask': openapi.Schema(type=openapi.TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
                                                              'sa_key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'], 
                                                                                                properties={'protocol': openapi.Schema(type=openapi.TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
-                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like 256 and the list of hash_algorithm must sepeate with comma. Example: 128,256"),
-                                                                                                           'hash_algorithm_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like sha256 and the list of hash_algorithm must sepeate with comma. Example: sha256,sha384"),
+                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like 256. Example: [128,256]"),
+                                                                                                           'hash_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like sha256. Example: [sha256,sha384]"),
                                                                                                            'pfs_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="If not off should be group:key like 15:3072. Example: 15:3072")}),
-                                                             'lifetime_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime with its unit like 1h or 3600s", pattern=r"(\d+)([hms])"),
+                                                             'lifetime_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
                                                              }
                                                              ))
 @api_view(['PUT'])

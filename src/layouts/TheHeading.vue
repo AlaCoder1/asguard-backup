@@ -7,26 +7,19 @@
       <v-spacer />
       <v-menu>
         <template v-slot:activator="{ props }">
-
           <v-avatar class="ml-3 mr-3" size="30" v-bind="props">
-            <v-icon size="30" class="white--text" color="white">mdi-account-circle-outline</v-icon>
+            <v-icon size="30" class="white--text" color="white"
+              >mdi-account-circle-outline</v-icon
+            >
           </v-avatar>
         </template>
-        <v-list style="cursor: pointer; padding: 15px;">
-          <v-list-item>
-            Profile
-          </v-list-item>
-          <v-list-item>
-            Settings
-          </v-list-item>
-          <v-list-item>
-            <v-list-item @click="logout">
-              Logout
-            </v-list-item>
-          </v-list-item>
+        <v-list style="cursor: pointer; padding: 15px">
+          <v-list-item> Profile </v-list-item>
+          <v-list-item> Settings </v-list-item>
+
+          <v-list-item> <span @click="logout">Logout</span> </v-list-item>
         </v-list>
       </v-menu>
-
 
       <div class="userInfo">
         <span class="white-color">{{ userName }}</span>
@@ -39,6 +32,7 @@
 </template>
 
 <script>
+import axios from "axios";
 export default {
   name: "ToolbarComponent",
   data() {
@@ -50,8 +44,21 @@ export default {
   mounted() {
     let retriveInfo = localStorage.getItem("userInfo");
     this.user = JSON.parse(retriveInfo);
-    this.userName = this.user.username;
-    this.email = this.user.email;
+    this.userName = this.user.username ?? "";
+    this.email = this.user.email ?? "";
+  },
+  methods: {
+    async logout() {
+      try {
+        await axios.get("/auth/logout");
+
+        // this.loggedIn = false;
+        // this.user = null;
+        window.location.href = "/";
+      } catch (error) {
+        console.error("Error during logout:", error);
+      }
+    },
   },
 };
 </script>
@@ -65,7 +72,7 @@ export default {
 }
 
 .white-color {
-  color: white
+  color: white;
 }
 
 .v-toolbar {
@@ -74,6 +81,6 @@ export default {
   font-size: 18.16px;
   font-family: Nunito;
   font-weight: 400;
-  word-wrap: break-word
+  word-wrap: break-word;
 }
 </style>

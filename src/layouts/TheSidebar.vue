@@ -207,13 +207,18 @@ export default {
             {
               title: "Site to site VPN",
               icon: "",
-              href: "/services/site-to-site-vpn",
+              href: "/ipsec",
               active: "Site to site VPN",
+            },
+            {
+              title: "RSA Key Pairs",
+              icon: "",
+              href: "/key_pairs",
+              active: "RSA Key Pairs",
             },
             {
               title: "OPEN VPN",
               icon: "",
-              href: "/openvpn",
               href: "/openvpn",
               active: "OPEN VPN",
             },

@@ -53,12 +53,30 @@ import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import firewall from '../views/firewall/firewall.vue';
-
+import axios from 'axios'
 const app = createApp(firewall);
 const vuetify = createVuetify({
     components,
     directives
   })
+
+  axios.interceptors.response.use(
+    (response) => {
+      
+      console.log('response000.firewall',response)
+      return response;
+    },
+    (error) => {
+      console.log('errorMainfirewall',error)
+      
+      if ((error.response.status === 401 )||(error.response.status === 403)) {
+     
+        console.log('Token expired or unauthorized. Redirecting to login.');
+        window.location.href = '/';
+      }
+      return Promise.reject(error);
+    }
+  );
 
 app
 .use(store)

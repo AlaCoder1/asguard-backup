@@ -1,7 +1,6 @@
 <template>
   <v-row justify="center">
-    <v-dialog v-model="openModal"  persistent width="600">
-
+    <v-dialog v-model="openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
@@ -12,7 +11,6 @@
           <v-card-text>
             <v-container>
               <v-row class="mb-5">
-        
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
                     label="Group name*"
@@ -48,25 +46,41 @@
             <small class="mt-10">*indicates required field</small>
           </v-card-text>
           <v-card-actions>
-            <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
+            <!-- <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
             <span style="color: rgb(245, 8, 8); margin-top: 10px">{{
               textAlertDanger
-            }}</span>
+            }}</span> -->
             <v-spacer></v-spacer>
-            <v-btn :rounded="true" class="mt-3 btn-add" color="blue-darken-1" variant="text" type="submit">
+            <v-btn
+              :rounded="true"
+              class="mt-3 btn-add"
+              color="blue-darken-1"
+              variant="text"
+              type="submit"
+            >
               <span class="text-white">Save</span>
             </v-btn>
-            <v-btn :rounded="true" class="mt-3 btn-add" color="blue-darken-1" variant="text" @click="closeModal">
+            <v-btn
+              :rounded="true"
+              class="mt-3 btn-add"
+              color="blue-darken-1"
+              variant="text"
+              @click="closeModal"
+            >
               <span class="text-white">Close</span>
             </v-btn>
-
-            
-
-
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+    </v-snackbar>
   </v-row>
 </template>
 
@@ -97,11 +111,10 @@ export default {
     },
   },
   setup() {
-  
     const state = reactive({
       formData: {
         groupname: "",
-        description:""
+        description: "",
       },
     });
     const rules = computed(() => {
@@ -115,16 +128,14 @@ export default {
             isValidName: helpers.withMessage(
               `name can include letters, digits, underscores, and hyphens. It must start with a letter and can be up to 32 characters.`,
 
-              helpers.regex(
-                /^[a-zA-Z][a-zA-Z0-9_\-]{0,31}$/
-              )
+              helpers.regex(/^[a-zA-Z][a-zA-Z0-9_\-]{0,31}$/)
             ),
           },
           description: {
             required: helpers.withMessage(
               "This field must be indicated",
               required
-            )
+            ),
           },
         },
       };
@@ -138,10 +149,12 @@ export default {
   },
   data() {
     return {
-      openModal:false,
-      groupNameCheck:'',
+      openModal: false,
+      groupNameCheck: "",
       groupId: null,
       textAlert: "",
+      color: "",
+      snackbar: false,
       textAlertDanger: "",
     };
   },
@@ -180,118 +193,133 @@ export default {
     submitForm() {
       this.v$.$validate();
       if (!this.v$.$error) {
-      function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-          const cookies = document.cookie.split(";");
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === name + "=") {
-              cookieValue = decodeURIComponent(
-                cookie.substring(name.length + 1)
-              );
-              break;
+        function getCookie(name) {
+          let cookieValue = null;
+          if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+              const cookie = cookies[i].trim();
+              if (cookie.substring(0, name.length + 1) === name + "=") {
+                cookieValue = decodeURIComponent(
+                  cookie.substring(name.length + 1)
+                );
+                break;
+              }
             }
           }
+          return cookieValue;
         }
-        return cookieValue;
-      }
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      console.log("token :" + csrfToken);
-      console.log("DataList :" + JSON.stringify(this.DataList));
+        console.log("token :" + csrfToken);
+        console.log("DataList :" + JSON.stringify(this.DataList));
 
-      // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
+        // {"email":"mohamedkaabi90@gmail.com","role":"root","groups":["Group 2","Group 3"],"deactivateUser":true,"fullname":"name","password":"password","username":"username"}
 
-      const params = {
-        groupname: this.state.formData.groupname,
-        description: this.state.formData.description,
-        // sudoers: this.formData.sudoers
-      };
-
-      if (this.mode == "create") {
-        console.log("params are : " + JSON.stringify(params));
-
-        axios.post("/groups/createGroup", params).then(
-          (response) => {
-            console.log("res", response);
-            if (response.data.msg.includes("exists")) {
-              this.textAlertDanger = `Group ${this.state.formData.groupname} already exists`;
-              setTimeout(() => {
-                this.textAlertDanger = "";
-              }, 2000);
-            } else {
-              this.textAlert = "Group Created Successfully";
-              setTimeout(() => {
-                this.closeModal();
-                this.textAlert = "";
-                location.reload();
-              }, 2000);
-              console.log(response);
-            }
-          },
-          (err) => {
-            if (err.response && err.response.status === 401) {
-              const responseData = err.response.data; // Access the response data
-              console.log("401 Error Response:", responseData);
-              // this.invalid = true ;
-              this.message = responseData.message;
-              // Handle the 401 error here
-            } else {
-              console.error("Error occurred:", err);
-              // Handle other errors
-            }
-          }
-        );
-      } else {
-        const payload = {
-          Newgroupname: this.state.formData.groupname,
+        const params = {
+          groupname: this.state.formData.groupname,
           description: this.state.formData.description,
           // sudoers: this.formData.sudoers
         };
-        axios
-          .put(`/groups/groupChangeGroupname/${this.groupId}`, payload)
-          .then((response) => {
 
-            // if(this.groupNameCheck == this.formData.groupname){
-            //   console.log("response", response);
-            //   this.textAlertDanger = ''
-            //   this.textAlert = "Group Updated Successfully";
-            //   setTimeout(() => {
-            //     this.closeModal();
-            //     location.reload();
-            //     this.textAlert = "";
-            //   }, 2000);
-            // }
-            if (response.data.msg.includes("exists")) {
-              this.textAlertDanger = `Group ${this.state.formData.groupname} already exists`;
-              setTimeout(() => {
-                this.textAlertDanger = "";
-              }, 2000);
-            } 
-            else {
-              console.log("response", response);
-              this.textAlert = "Group Updated Successfully";
-              setTimeout(() => {
+        if (this.mode == "create") {
+          console.log("params are : " + JSON.stringify(params));
+
+          axios
+            .post("/groups/createGroup", params)
+            .then(
+              (response) => {
+                console.log("res", response);
+                if (response.data.msg.includes("exists")) {
+                  let textAlertDanger = `Group ${this.state.formData.groupname} already exists`;
+                  setTimeout(() => {
+                    this.snackbar = true;
+                    this.color = "red";
+                    this.textAlert = textAlertDanger;
+                  }, 1000);
+                } else {
+                  this.closeModal();
+
+                  this.snackbar = true;
+                  this.color = "success";
+                  this.textAlert = response.data.msg;
+
+                  setTimeout(() => {
+                    location.reload();
+                  }, 2000);
+                  console.log(response);
+                }
+              },
+              (err) => {
+                if (err.response && err.response.status === 401) {
+                  const responseData = err.response.data; // Access the response data
+                  console.log("401 Error Response:", responseData);
+                  // this.invalid = true ;
+                  this.message = responseData.message;
+                  // Handle the 401 error here
+                } else {
+                  console.error("Error occurred:", err);
+                  // Handle other errors
+                }
+              }
+            )
+            .catch((i) => {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+            });
+        } else {
+          const payload = {
+            Newgroupname: this.state.formData.groupname,
+            description: this.state.formData.description,
+            // sudoers: this.formData.sudoers
+          };
+          axios
+            .put(`/groups/groupChangeGroupname/${this.groupId}`, payload)
+            .then((response) => {
+              // if(this.groupNameCheck == this.formData.groupname){
+              //   console.log("response", response);
+              //   this.textAlertDanger = ''
+              //   this.textAlert = "Group Updated Successfully";
+              //   setTimeout(() => {
+              //     this.closeModal();
+              //     location.reload();
+              //     this.textAlert = "";
+              //   }, 2000);
+              // }
+              if (response.data.msg.includes("exists")) {
+                let textAlertDanger = `Group ${this.state.formData.groupname} already exists`;
+                setTimeout(() => {
+                  this.snackbar = true;
+                  this.color = "red";
+                  this.textAlert = textAlertDanger;
+                }, 1000);
+              } else {
                 this.closeModal();
-                location.reload();
-                this.textAlert = "";
-              }, 2000);
-            }
-            
 
-            // Handle the successful response
-            console.log("Resource updated:", response.data);
-          })
-          .catch((error) => {
-            // Handle any errors that occur during the request
-            console.error("Error updating resource:", error);
-          });
+                this.snackbar = true;
+                this.color = "success";
+                this.textAlert = response.data.msg;
+
+                setTimeout(() => {
+                  location.reload();
+                }, 2000);
+              }
+
+              // Handle the successful response
+              console.log("Resource updated:", response.data);
+            })
+            .catch((i) => {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+            });
+        }
+
+        console.log("submitForm :", this.state.formData);
       }
-
-      console.log("submitForm :", this.state.formData);
-     } },
+    },
   },
   // components: {
   //   VTextField: Vue.extend(VTextField),

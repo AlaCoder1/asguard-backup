@@ -5,14 +5,14 @@ def json_to_str_server_ipsec(json_object):
 
 conn {json_object["conn_name"]}
     authby=secret
-    type=tunnel
+    type=transport
     left=%any
     #leftid=10.1.12.155
-    leftsubnet={json_object["address_local_network"]}
+    #leftsubnet
     #leftcert=path_cert
     right={json_object["remote_gateway"]}
     #rightid=distingushed_name
-    rightsubnet={json_object["address_remote_network"]}
+    #rightsubnet
     #rightallowany=yes
     ike=ike
     esp=esp
@@ -109,8 +109,10 @@ conn {json_object["conn_name"]}
     if json_object["rekey_fuzz"] != "":
         config_input = config_input.replace("#rekeyfuzz=10%", f"rekeyfuzz={json_object['rekey_fuzz']}")
     
-    if json_object["mode_ph2"] == "Transport":
-        config_input = config_input.replace("type=tunnel", "type=transport")
+    if json_object["mode_ph2"]["mode"] == "Tunnel IPv4":
+        config_input = config_input.replace("type=transport", "type=tunnel")
+        config_input = config_input.replace("#leftsubnet", f"leftsubnet={json_object['address_local_network']}")
+        config_input = config_input.replace("#rightsubnet", f"rightsubnet={json_object['address_remote_network']}")
     
     sa_key_exchange = json_object["sa_key_exchange"]
     pfs = ""

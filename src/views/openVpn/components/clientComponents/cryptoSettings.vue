@@ -104,7 +104,7 @@
     </p>
   </v-col>
   <v-col align-self="center" cols="4">
-    <label>Hardware Crypto*</label>
+    <label>Hardware Crypto</label>
   </v-col>
   <v-col align-self="center" cols="8" class="mb-n6">
     <v-select
@@ -115,12 +115,12 @@
       item-value="slug"
       return-object
     ></v-select>
-    <p
+    <!-- <p
       class="error-feedback mb-5"
       v-if="props.errors.hardwareCrypto.$errors.length"
     >
       {{ props.errors.hardwareCrypto.$errors?.[0].$message }}
-    </p>
+    </p> -->
   </v-col>
 </template>
 
@@ -196,7 +196,7 @@ const authDigestAlgorithmList = ref([
 const hardwareCryptoList = ref([
   {
     name: "No hardware Crypto acceleration",
-    slug: "No hardware Crypto acceleration",
+    slug: "No hardware Crypto",
   },
   {
     name: "Intel RDRAND engine -RAND",

@@ -84,7 +84,7 @@
                 {{ v$.device_mode.$errors?.[0].$message }}
               </p>
             </v-col>
-            <v-col align-self="center" cols="4">
+            <!-- <v-col align-self="center" cols="4">
               <label>Interface</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
@@ -97,7 +97,7 @@
                 item-value="id"
                 return-object
               ></v-select>
-            </v-col>
+            </v-col> -->
             <v-col align-self="center" cols="4">
               <label>Retry DNS resolution</label>
             </v-col>
@@ -406,7 +406,7 @@ export default {
       server_mode: "",
       protocol: "",
       device_mode: "",
-      interface: "",
+      // interface: "",
       resolv_retry: false,
       proxy_host: "",
       proxy_port: "",
@@ -420,7 +420,7 @@ export default {
       username: "",
       password: "",
       local_port: "",
-      mapedInterface: [],
+      // mapedInterface: [],
       mapedCertifAuth: [],
       //User Auth
       username: "",
@@ -433,10 +433,11 @@ export default {
       clientCertificate: "",
       encryptionAlgorithm: "",
       authDigestAlgorithm: "",
-      hardwareCrypto: {
-        name: "No hardware Crypto acceleration",
-        slug: "No hardware Crypto acceleration",
-      },
+      hardwareCrypto:"",
+      // hardwareCrypto: {
+      //   name: "No hardware Crypto acceleration",
+      //   slug: "No hardware Crypto acceleration",
+      // },
       //tunnelSettings
       ipv4TunnelNetwork: "",
       ipv6TunnelNetwork: "",
@@ -459,7 +460,7 @@ export default {
     });
 
     onMounted(() => {
-      getInterface();
+      // getInterface();
       getAllCertAuth();
       getAllClientCertif();
       protocolsList.value = protocols;
@@ -487,14 +488,14 @@ export default {
 
         state.device_mode = filtredDevice[0];
 
-        let filtredInterfaces = state.mapedInterface.filter(
-          (i) => i.id === +data.interface
-        );
-        let filtredInter = state.mapedInterface.filter(
-          (i) => i.name === data.interface
-        );
+        // let filtredInterfaces = state.mapedInterface.filter(
+        //   (i) => i.id === +data.interface
+        // );
+        // let filtredInter = state.mapedInterface.filter(
+        //   (i) => i.name === data.interface
+        // );
 
-        state.interface = filtredInterfaces[0] ?? filtredInter[0];
+        // state.interface = filtredInterfaces[0] ?? filtredInter[0] ?? "";
         state.resolv_retry = data.resolv_retry;
         state.proxy_host = data.proxy_host;
         state.proxy_port = data.proxy_port;
@@ -539,7 +540,7 @@ export default {
         let filtredHardware = hardwareCryptoList.value.filter(
           (i) => i.slug === data.hardware_crypto
         );
-        state.hardwareCrypto = filtredHardware[0];
+        state.hardwareCrypto = filtredHardware[0] ?? "";
 
         state.ipv4TunnelNetwork = data.ipv4_tunnel_network;
         // state.ipv6TunnelNetwork= data.,
@@ -601,7 +602,7 @@ export default {
         peerCertificateAuthority: { required },
         clientCertificate: { required },
         authDigestAlgorithm: { required },
-        hardwareCrypto: { required },
+        // hardwareCrypto: { required },
         encryptionAlgorithm: { required },
       };
     });
@@ -796,28 +797,28 @@ export default {
         slug: "11",
       },
     ]);
-    const getInterface = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    // const getInterface = () => {
+    //   const csrfToken = getCookie("csrftoken");
+    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.get("/network/AllInterfaces").then(
-        (response) => {
-          let interfaces = response.data.map((i) => {
-            return {
-              id: i.id,
-              name: i.name_interface,
-            };
-          });
+    //   axios.get("/network/AllInterfaces").then(
+    //     (response) => {
+    //       let interfaces = response.data.map((i) => {
+    //         return {
+    //           id: i.id,
+    //           name: i.name_interface,
+    //         };
+    //       });
           
-          let listInter = [{ id: 0, name: "Any" }];
-          var combinedArray = [...listInter,...interfaces ];
-          state.mapedInterface =combinedArray ;
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
-    };
+    //       let listInter = [{ id: 0, name: "Any" }];
+    //       var combinedArray = [...listInter,...interfaces ];
+    //       state.mapedInterface =combinedArray ;
+    //     },
+    //     (error) => {
+    //       console.log(error);
+    //     }
+    //   );
+    // };
     const hasEmptyProperty = (obj) => {
       var invalidHostChars = /[^0-9.]/.test(obj.host);
       var invalidPortChars = /[^0-9]/.test(obj.port);
@@ -1072,7 +1073,7 @@ export default {
     const hardwareCryptoList = ref([
       {
         name: "No hardware Crypto acceleration",
-        slug: "No hardware Crypto acceleration",
+        slug: "No hardware Crypto",
       },
       {
         name: "Intel RDRAND engine -RAND",
@@ -1198,7 +1199,7 @@ export default {
       getCookie,
       color,
       // populate,
-      getInterface,
+      // getInterface,
       onRowValueChanged,
       authDigestAlgorithmList,
       onCellValueChanged,

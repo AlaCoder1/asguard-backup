@@ -146,13 +146,6 @@ def createServerIPsec(request):
 
             description_ph2 = data.get("description_ph2", "")
 
-            local_network = data.get("local_network", "")
-            type_local_network = local_network.get("type_local_network", "")
-
-            remote_network = data.get("remote_network", "")
-            type_remote_network = remote_network.get("type_remote_network", "")
-            address_remote_network = remote_network.get("address_local_network", "")
-
             sa_key_exchange = data.get("sa_key_exchange", "")
             protocol = sa_key_exchange.get("protocol", "")
             hash_algorithm_ph2_list = sa_key_exchange.get("hash_algorithm_ph2", "")
@@ -196,10 +189,6 @@ def createServerIPsec(request):
                            "mode": mode,
                            "description_ph2": description_ph2,
                            
-                           "type_local_network": type_local_network,
-                           
-                           "type_remote_network": type_remote_network,
-                           
                            "protocol": protocol,
                            "hash_algorithm_ph2": hash_algorithm_ph2,
                            "pfs_key_group": pfs_key_group,
@@ -237,26 +226,36 @@ def createServerIPsec(request):
                 server_data["deed_peer_delay"] = deed_peer_delay
                 server_data["deed_peer_timeout"] = deed_peer_timeout
                 server_data["deed_peer_action"] = deed_peer_action
+            
+            if mode == "Tunnel IPv4":
+                # Local Network
+                local_network = mode_ph2.get("local_network", "")
+                type_local_network = local_network.get("type_local_network", "")
+                if type_local_network == "Address":
+                    address_local_network = local_network.get("address_local_network", "")
+                elif type_local_network == "Network":
+                    address_local_network = f'{local_network.get("address_local_network", "")}/{local_network.get("mask", "")}'
+                else:
+                    address_local_network = f'{interface_address.ip_address}/{interface_address.netmask}'
+                server_data["type_local_network"] = type_local_network
+                server_data["address_local_network"] = address_local_network
+                data["address_local_network"] = address_local_network
 
-            if mode == "Route-based":
+                # Remote Network
+                remote_network = mode_ph2.get("remote_network", "")
+                type_remote_network = remote_network.get("type_remote_network", "")
+                address_remote_network = remote_network.get("address_local_network", "")
+                if type_remote_network == "Network":
+                    address_remote_network += remote_network.get("mask", "")
+                server_data["type_remote_network"] = type_remote_network
+                server_data["address_remote_network"] = address_remote_network
+                data["address_remote_network"] = address_remote_network
+                
+            elif mode == "Route-based":
                 local_address = mode_ph2.get("local_address", "")
                 remote_address = mode_ph2.get("remote_address", "")
                 server_data["local_address"] = local_address
                 server_data["remote_address"] = remote_address
-
-            if type_local_network == "Address":
-                address_local_network = local_network.get("address_local_network", "")
-            elif type_local_network == "Network":
-                address_local_network = f'{local_network.get("address_local_network", "")}/{local_network.get("mask", "")}'
-            else:
-                address_local_network = f'{interface_address.ip_address}/{interface_address.netmask}'
-            server_data["address_local_network"] = address_local_network
-            data["address_local_network"] = address_local_network
-                
-            if type_remote_network == "Network":
-                address_remote_network += remote_network.get("mask", "")
-            server_data["address_remote_network"] = address_remote_network
-            data["address_remote_network"] = address_remote_network
 
             if protocol == "ESP":
                 encryption_algorithm_ph2_list = sa_key_exchange.get("encryption_algorithm_ph2", "")
@@ -302,7 +301,7 @@ def deleteServerIPsec(request, id):
         if (request.method == 'DELETE'):
             server = ServerIPsec.objects.get(id=id)
             # delete from system
-            interface = Interface.objects.get(id=server.interface)
+            interface = Interface.objects.get(name_interface=server.interface)
             interface_address = IP4Config.objects.get(interface_id=interface.pk)
             if server.authentication_method == "Mutual PSK":
                 deleted_line_in_secrets_file = f"""{interface_address.ip_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """

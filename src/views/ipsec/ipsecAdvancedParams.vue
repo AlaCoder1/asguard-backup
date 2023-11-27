@@ -278,6 +278,13 @@ export default {
             "This field must be indicated",
             requiredIf(() => state.authMethod.slug === "Mutual PSK")
           ),
+          isValidKey: helpers.withMessage(
+            `There must be at least 32 characters, including at least one uppercase,one lowercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{32,128}$/
+            )
+          ),
         },
 
         certificate: {
@@ -441,16 +448,18 @@ export default {
         }
         if (state.type.slug === "Address") {
           state.defaultValue = "32";
+          state.selectAddressNetwork=""
           state.isDefault = true;
         } else {
-          state.defaultValue = "Address";
+          state.defaultValue = "mask";
           state.isDefault = false;
         }
         if (state.typeRemoteNetwork.slug === "Address") {
+          state.selectRemoteAddressNetwork =""
           state.defaultValueRemote = "32";
           state.isDefaultRemote = true;
         } else {
-          state.defaultValueRemote = "Address";
+          state.defaultValueRemote = "mask";
           state.isDefaultRemote = false;
         }
       },

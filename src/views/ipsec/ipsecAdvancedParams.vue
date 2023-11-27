@@ -192,7 +192,7 @@ export default {
         name: "20 (NIST EC 384 bits)",
         slug: "20:384",
       },
-      lifetime: "28800",
+      lifetime: "28800s",
       //advancedOptions
       policy: true,
       rekey: false,
@@ -319,7 +319,6 @@ export default {
         encryptAlgo: { required },
         hashAlgo: { required },
         dhKey: { required },
-        lifetime: { required },
         // general info phase 2
         mode: { required },
         // remoteTunnelAddress: {
@@ -333,7 +332,10 @@ export default {
         type: { required },
 
         remoteNetworkAddress: {
-          required,
+          requiredIfFuction: helpers.withMessage(
+            "This field must be indicated",
+            requiredIf(() => state.mode.slug === "Tunnel IPv4")
+          ),
           isValidremoteNetworkAddress: helpers.withMessage(
             `Format must be like adresse IP : X.X.X.X`,
 
@@ -363,7 +365,9 @@ export default {
             "This field must be indicated",
             requiredIf(
               () =>
-                state.type.slug === "Network" || state.type.slug === "Address"
+                (state.type.slug === "Network" ||
+                  state.type.slug === "Address") &&
+                state.mode.slug === "Tunnel IPv4"
             )
           ),
           isValidlocalNetworkAddress: helpers.withMessage(
@@ -376,7 +380,11 @@ export default {
         selectRemoteAddressNetwork: {
           requiredIfFuction: helpers.withMessage(
             "This field must be indicated",
-            requiredIf(() => state.typeRemoteNetwork.slug === "Network")
+            requiredIf(
+              () =>
+                state.typeRemoteNetwork.slug === "Network" &&
+                state.mode.slug === "Tunnel IPv4"
+            )
           ),
         },
 
@@ -386,7 +394,6 @@ export default {
         encryptAlgoExchange: { required },
         hashAlgoExchange: { required },
         pfsKey: { required },
-        lifetimeExchange: { required },
         // pingHost: { required },
         // spdEntries: { required },
       };
@@ -448,14 +455,17 @@ export default {
         }
         if (state.type.slug === "Address") {
           state.defaultValue = "32";
-          state.selectAddressNetwork=""
+          state.selectAddressNetwork = "";
           state.isDefault = true;
-        } else {
+        } else if (state.type.slug === "Network") {
           state.defaultValue = "mask";
+          state.isDefault = false;
+        } else {
+          state.defaultValue = "32";
           state.isDefault = false;
         }
         if (state.typeRemoteNetwork.slug === "Address") {
-          state.selectRemoteAddressNetwork =""
+          state.selectRemoteAddressNetwork = "";
           state.defaultValueRemote = "32";
           state.isDefaultRemote = true;
         } else {

@@ -220,7 +220,6 @@ import { useVModels } from "@vueuse/core";
 import { ref, onMounted } from "vue";
 
 const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
-console.log("numberList", numberList.value);
 
 const props = defineProps([
   "defaultValueRemote",

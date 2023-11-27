@@ -14,16 +14,11 @@ const vuetify = createVuetify({
 
   axios.interceptors.response.use(
     (response) => {
-      
-      console.log('response000.keyPair',response)
       return response;
     },
     (error) => {
-      console.log('errorMainkeyPair',error)
       
       if ((error.response.status === 401 )||(error.response.status === 403)) {
-     
-        console.log('Token expired or unauthorized. Redirecting to login.');
         window.location.href = '/';
       }
       return Promise.reject(error);

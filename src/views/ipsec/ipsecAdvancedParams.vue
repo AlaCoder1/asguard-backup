@@ -447,7 +447,7 @@ export default {
     watch(
       state,
       () => {
-        console.log("state", state);
+        
         if (state.type.slug === "WAN" || state.type.slug === "LAN") {
           state.isTypeWAn = true;
         } else {
@@ -463,6 +463,7 @@ export default {
         } else {
           state.defaultValue = "32";
           state.isDefault = false;
+          state.localNetworkAddress = ""
         }
         if (state.typeRemoteNetwork.slug === "Address") {
           state.selectRemoteAddressNetwork = "";
@@ -477,7 +478,6 @@ export default {
     );
 
     const save = async () => {
-      console.log("save", state);
       const result = await v$.value.$validate();
 
       if (result) {
@@ -625,7 +625,6 @@ export default {
           sa_key_exchange: isKeyExchange,
           mode_ph2: isMode_ph2,
         };
-        console.log("payload", payload);
         axios
           .post("/ipsec/createServerIPsec", payload)
           .then((response) => {

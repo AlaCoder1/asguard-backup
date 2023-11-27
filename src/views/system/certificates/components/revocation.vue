@@ -116,7 +116,7 @@ export default {
   },
   methods: {
     openModal() {
-      console.log("ok");
+      
       this.modalData = {};
       this.isModalOpen = true;
     },
@@ -199,10 +199,8 @@ export default {
           this.rowEdit = rowData;
           this.openModal();
           this.modalMode = "update";
-          console.log("Edit clicked for row:", rowData);
           break;
         case "export":
-          console.log("Edit clicked for row:", rowData);
           let id = rowData.id;
           let fileExtention = `${rowData.nom}_crl.pem`;
 
@@ -212,7 +210,6 @@ export default {
           axios
             .post(`/certificates/exportCertAuthListRev/${id}`)
             .then((response) => {
-              console.log("res", response);
 
               const text = response.data.list_revocation;
               const blob = new Blob([text], {
@@ -231,14 +228,9 @@ export default {
               window.URL.revokeObjectURL(url);
               document.body.removeChild(a);
 
-              if (response.status == "201") {
-                console.log("success");
-              } else {
-                console.log("error");
-              }
+        
             })
             .catch((i) => {
-              console.log("i", i.response);
               this.snackbar = true;
               this.color = "red";
               this.textAlert = i.response.data.error;

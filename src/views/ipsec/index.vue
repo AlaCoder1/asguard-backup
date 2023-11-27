@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="IPSEC" active-menu="activeTab">
+    <base-layout title="Site to site VPN" active-menu="activeTab">
       <template #content>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">
@@ -12,23 +12,19 @@
           <v-window-item
             v-for="tab in tabs"
             :key="tab.id"
-            value="CONFIGURATION"
+            value="TUNNEL CONFIGURATION"
           >
             <v-card>
-              <v-card-text><ConfigurationList/></v-card-text>
+              <v-card-text><ipsecAdvancedParams /></v-card-text>
+            </v-card>
+          </v-window-item>
+          <v-window-item v-for="tab in tabs" :key="tab.id" value="LISTING">
+            <v-card>
+              <v-card-text><ConfigurationList /></v-card-text>
             </v-card>
           </v-window-item>
           <v-window-item v-for="tab in tabs" :key="tab.id" value="MONITORING">
             <v-card> </v-card>
-          </v-window-item>
-          <v-window-item
-            v-for="tab in tabs"
-            :key="tab.id"
-            value="IPESEC : CUSTOM TUNNEL SETTINGS"
-          >
-            <v-card>
-              <v-card-text><ipsecAdvancedParams/></v-card-text>
-            </v-card>
           </v-window-item>
         </v-window>
       </template>
@@ -45,19 +41,19 @@ export default {
   components: {
     BaseLayout,
     ipsecAdvancedParams,
-    ConfigurationList
+    ConfigurationList,
   },
   inject: ["emitter"],
   data() {
     return {
-      activeTab: "CONFIGURATION",
+      activeTab: "TUNNEL CONFIGURATION",
       tabs: [
-        { id: 1, label: "CONFIGURATION" },
-        { id: 2, label: "MONITORING" },
-        { id: 3, label: "IPESEC : CUSTOM TUNNEL SETTINGS" },
+        { id: 1, label: "TUNNEL CONFIGURATION" },
+        { id: 2, label: "LISTING" },
+        { id: 3, label: "MONITORING" },
       ],
       rowDataServers: [],
-            serverInfo: null,
+      serverInfo: null,
     };
   },
   watch: {
@@ -66,15 +62,15 @@ export default {
     },
   },
   mounted: async function () {
-    let tab = localStorage.getItem("ipsec-tab") || "CONFIGURATION";
+    let tab = localStorage.getItem("ipsec-tab") || "TUNNEL CONFIGURATION";
     this.activeTab = tab;
 
     this.serverInfo =
       document.getElementById("app").attributes["servers"].value;
     this.emitter.on("add-server", () => {
-      this.activeTab = "IPESEC : CUSTOM TUNNEL SETTINGS";
+      this.activeTab = "TUNNEL CONFIGURATION";
     });
-   
+
     this.rowDataServers =
       document.getElementById("app").attributes["servers"].value;
     let validJsonString = this.rowDataServers
@@ -84,7 +80,6 @@ export default {
       .replace(/None/g, "null");
     let parsedArray = JSON.parse(validJsonString);
     this.rowDataServers = parsedArray;
-
   },
 };
 </script>

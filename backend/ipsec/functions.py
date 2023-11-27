@@ -18,8 +18,8 @@ conn {json_object["conn_name"]}
     esp=esp
     keyexchange=ike
     #aggressive=no
-    #ikelifetime=1h
-    #lifetime=8h
+    #ikelifetime=1s
+    #lifetime=28800s
     #dpddelay=60s
     #dpdtimeout=120s
     #dpdaction=restart
@@ -76,7 +76,7 @@ conn {json_object["conn_name"]}
     config_input = config_input.replace("ike=ike", f"ike={ike}")
 
     if json_object["lifetime_ph1"] != "":
-        config_input = config_input.replace("#ikelifetime=1h", f"ikelifetime={json_object['lifetime_ph1']}")
+        config_input = config_input.replace("#ikelifetime=1s", f"ikelifetime={json_object['lifetime_ph1']}s")
         
     if not json_object["policy"]:
         config_input = config_input.replace("installpolicy=yes", "installpolicy=no")
@@ -94,20 +94,20 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("mobike=yes", "mobike=no")
     
     if json_object["deed_peer"]["disable"]:
-        config_input = config_input.replace("#dpddelay=60s", f"dpddelay={json_object['deed_peer']['deed_peer_delay']}")
-        config_input = config_input.replace("#dpdtimeout=120s", f"dpdtimeout={json_object['deed_peer']['deed_peer_timeout']}")
+        config_input = config_input.replace("#dpddelay=60s", f"dpddelay={json_object['deed_peer']['deed_peer_delay']}s")
+        config_input = config_input.replace("#dpdtimeout=120s", f"dpdtimeout={json_object['deed_peer']['deed_peer_timeout']}s")
         config_input = config_input.replace("#dpdaction=restart", f"dpdaction=restart")
         if json_object['deed_peer']['deed_peer_action'] == "Stop the tunnel":
             config_input = config_input.replace("dpdaction=restart", f"dpdaction=clear")
     
     if json_object["inactivity_timeout"] != "":
-        config_input = config_input.replace("#inactivity=10s", f"inactivity={json_object['inactivity_timeout']}")
+        config_input = config_input.replace("#inactivity=10s", f"inactivity={json_object['inactivity_timeout']}s")
     
     if json_object["margin_time"] != "":
-        config_input = config_input.replace("#margintime=10s", f"margintime={json_object['margin_time']}")
+        config_input = config_input.replace("#margintime=10s", f"margintime={json_object['margin_time']}s")
     
     if json_object["rekey_fuzz"] != "":
-        config_input = config_input.replace("#rekeyfuzz=10%", f"rekeyfuzz={json_object['rekey_fuzz']}")
+        config_input = config_input.replace("#rekeyfuzz=10%", f"rekeyfuzz={json_object['rekey_fuzz']}%")
     
     if json_object["mode_ph2"]["mode"] == "Tunnel IPv4":
         config_input = config_input.replace("type=transport", "type=tunnel")
@@ -140,6 +140,6 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("esp=esp", f"ah={esp}")
 
     if json_object["lifetime_ph2"] != "":
-        config_input = config_input.replace("#lifetime=8h", f"lifetime={json_object['lifetime_ph2']}")
+        config_input = config_input.replace("#lifetime=28800s", f"lifetime={json_object['lifetime_ph2']}s")
 
     return config_input

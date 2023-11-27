@@ -120,7 +120,7 @@
     </p>
   </v-col>
   <v-col cols="4" align-self="center">
-    <label>Hardware Crypto*</label>
+    <label>Hardware Crypto</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
     <v-select
@@ -131,19 +131,13 @@
       :items="[
         {
           name: 'No hardware Crypto acceleration',
-          slug: 'No hardware Crypto acceleration',
+          slug: 'No hardware Crypto',
         },
 
         { name: 'Intel RDRAND engine -RAND', slug: 'Intel RDRAND engine' },
       ]"
       return-object
     ></v-select>
-    <p
-      class="error-feedback mb-5"
-      v-if="props.errors.hardwareCrypto.$errors.length"
-    >
-      {{ props.errors.hardwareCrypto.$errors?.[0].$message }}
-    </p>
   </v-col>
 </template>
 

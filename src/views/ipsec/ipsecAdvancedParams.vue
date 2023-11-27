@@ -22,6 +22,8 @@
           v-model:keyPair="state.keyPair"
           v-model:localKey="state.localKey"
           v-model:peerIdentifier="state.peerIdentifier"
+          :keyExchange="state.keyExchange"
+          :authMethodItem="state.authMethod"
           :errors="v$"
         />
 
@@ -46,6 +48,7 @@
           v-model:seconds="state.seconds"
           v-model:rekeyFuzz="state.rekeyFuzz"
           v-model:marginTime="state.marginTime"
+          :isdeadPeer="state.deadPeer"
         />
       </v-col>
       <v-col cols="6">
@@ -55,11 +58,17 @@
           v-model:type="state.type"
           v-model:remoteNetworkAddress="state.remoteNetworkAddress"
           v-model:selectAddressNetwork="state.selectAddressNetwork"
-          v-model:description="state.description"
+          v-model:description="state.descriptionPh2"
           v-model:localAddress="state.localAddress"
           v-model:localNetworkAddress="state.localNetworkAddress"
           v-model:selectRemoteAddressNetwork="state.selectRemoteAddressNetwork"
           v-model:typeRemoteNetwork="state.typeRemoteNetwork"
+          :isMode="state.mode"
+          :isTypeWAn="state.isTypeWAn"
+          :defaultValue="state.defaultValue"
+          :isDefault="state.isDefault"
+          :isDefaultRemote="state.isDefaultRemote"
+          :defaultValueRemote="state.defaultValueRemote"
           :errors="v$"
         />
         <phaseTwoExchange
@@ -70,6 +79,8 @@
           v-model:lifetimeExchange="state.lifetimeExchange"
           v-model:pingHost="state.pingHost"
           v-model:spdEntries="state.spdEntries"
+          :isMode="state.mode"
+          :isProtocol="state.protocol"
           :errors="v$"
         />
         <div class="btnCreate mt-6 mr-3">
@@ -107,7 +118,7 @@ import axios from "axios";
 import useValidate from "@vuelidate/core";
 import VButton from "@/components/VButton.vue";
 import { required, requiredIf, helpers } from "@vuelidate/validators";
-import { reactive, onMounted, computed } from "vue";
+import { reactive, onMounted, computed, watch } from "vue";
 import generalInfoPhaseOne from "./component/general_info_phase_one.vue";
 import phaseAuth from "./component/phase_authentification.vue";
 import phaseAlgo from "./component/phase_algorithms.vue";
@@ -128,6 +139,11 @@ export default {
   },
   setup() {
     const state = reactive({
+      defaultValueRemote: "",
+      isDefaultRemote: false,
+      defaultValue: "",
+      isDefault: false,
+      isTypeWAn: false,
       snackbar: false,
       color: "",
       textAlert: "",
@@ -166,22 +182,22 @@ export default {
       //phase algo
       encryptAlgo: {
         name: "256 bit AES-GCM with 128 bit ICV",
-        slug: "256 bit AES-GCM with 128 bit ICV",
+        slug: "256",
       },
       hashAlgo: {
         name: "SHA256",
-        slug: "SHA256",
+        slug: "sha256",
       },
       dhKey: {
         name: "20 (NIST EC 384 bits)",
-        slug: "20 (NIST EC 384 bits)",
+        slug: "20:384",
       },
       lifetime: "28800",
       //advancedOptions
       policy: true,
       rekey: false,
       reauth: false,
-      natTraversal: { name: "Unforce", slug: "Unforce" },
+      natTraversal: { name: "Unforce", slug: "Disable" },
       deadPeer: false,
       retries: "",
       mobike: false,
@@ -203,7 +219,7 @@ export default {
       },
       remoteNetworkAddress: "",
       selectAddressNetwork: "",
-      description: "",
+      descriptionPh2: "",
       localAddress: "",
       localNetworkAddress: "",
       selectRemoteAddressNetwork: "",
@@ -215,11 +231,11 @@ export default {
       },
       encryptAlgoExchange: {
         name: "aes256gcm16",
-        slug: "aes256gcm16",
+        slug: "256",
       },
       hashAlgoExchange: {
         name: "SHA256",
-        slug: "SHA256",
+        slug: "sha256",
       },
       pfsKey: {
         name: "off",
@@ -250,12 +266,48 @@ export default {
         generalinterface: { required },
         // phase Auth
         authMethod: { required },
-        negotiationMode: { required },
-        sharedKey: { required },
-        certificate: { required },
-        keyPair: { required },
-        localKey: { required },
-        peerIdentifier: { required },
+        negotiationMode: {
+          requiredIfFuction: helpers.withMessage(
+            "This field must be indicated",
+            requiredIf(() => state.keyExchange.slug === "v1")
+          ),
+        },
+
+        sharedKey: {
+          requiredIfFuction: helpers.withMessage(
+            "This field must be indicated",
+            requiredIf(() => state.authMethod.slug === "Mutual PSK")
+          ),
+        },
+
+        certificate: {
+          requiredIfFuction: helpers.withMessage(
+            "This field must be indicated",
+            requiredIf(() => state.authMethod.slug === "Mutual RSA")
+          ),
+        },
+
+        keyPair: {
+          requiredIfFuction: helpers.withMessage(
+            "This field must be indicated",
+            requiredIf(() => state.authMethod.slug === "Mutual Public key")
+          ),
+        },
+
+        localKey: {
+          requiredIfFuction: helpers.withMessage(
+            "This field must be indicated",
+            requiredIf(() => state.authMethod.slug === "Mutual Public key")
+          ),
+        },
+
+        peerIdentifier: {
+          requiredIfFuction: helpers.withMessage(
+            "This field must be indicated",
+            requiredIf(() => state.authMethod.slug === "Mutual RSA")
+          ),
+        },
+
         // phase algo
         encryptAlgo: { required },
         hashAlgo: { required },
@@ -263,14 +315,14 @@ export default {
         lifetime: { required },
         // general info phase 2
         mode: { required },
-        remoteTunnelAddress: {
-          required,
-          isValidRemoteTunnelAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+        // remoteTunnelAddress: {
+        //   required,
+        //   isValidRemoteTunnelAddress: helpers.withMessage(
+        //     `Format must be like adresse IP : X.X.X.X`,
 
-            helpers.regex(/^[0-9.]+$/)
-          ),
-        },
+        //     helpers.regex(/^[0-9.]+$/)
+        //   ),
+        // },
         type: { required },
 
         remoteNetworkAddress: {
@@ -282,19 +334,31 @@ export default {
           ),
         },
 
-        selectAddressNetwork: { required },
-        description: { required },
-
-        localAddress: {
-          required,
-          isValidlocalAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
-
-            helpers.regex(/^[0-9.]+$/)
+        selectAddressNetwork: {
+          requiredIfFuction: helpers.withMessage(
+            "This field must be indicated",
+            requiredIf(() => state.type.slug === "Network")
           ),
         },
+        // description: { required },
+
+        // localAddress: {
+        //   required,
+        //   isValidlocalAddress: helpers.withMessage(
+        //     `Format must be like adresse IP : X.X.X.X`,
+
+        //     helpers.regex(/^[0-9.]+$/)
+        //   ),
+        // },
+
         localNetworkAddress: {
-          required,
+          requiredIfFuction: helpers.withMessage(
+            "This field must be indicated",
+            requiredIf(
+              () =>
+                state.type.slug === "Network" || state.type.slug === "Address"
+            )
+          ),
           isValidlocalNetworkAddress: helpers.withMessage(
             `Format must be like adresse IP : X.X.X.X`,
 
@@ -302,7 +366,13 @@ export default {
           ),
         },
 
-        selectRemoteAddressNetwork: { required },
+        selectRemoteAddressNetwork: {
+          requiredIfFuction: helpers.withMessage(
+            "This field must be indicated",
+            requiredIf(() => state.typeRemoteNetwork.slug === "Network")
+          ),
+        },
+
         typeRemoteNetwork: { required },
         //exchange
         protocol: { required },
@@ -310,8 +380,8 @@ export default {
         hashAlgoExchange: { required },
         pfsKey: { required },
         lifetimeExchange: { required },
-        pingHost: { required },
-        spdEntries: { required },
+        // pingHost: { required },
+        // spdEntries: { required },
       };
     });
 
@@ -360,165 +430,208 @@ export default {
       getInterface();
     });
 
+    watch(
+      state,
+      () => {
+        console.log("state", state);
+        if (state.type.slug === "WAN" || state.type.slug === "LAN") {
+          state.isTypeWAn = true;
+        } else {
+          state.isTypeWAn = false;
+        }
+        if (state.type.slug === "Address") {
+          state.defaultValue = "32";
+          state.isDefault = true;
+        } else {
+          state.defaultValue = "Address";
+          state.isDefault = false;
+        }
+        if (state.typeRemoteNetwork.slug === "Address") {
+          state.defaultValueRemote = "32";
+          state.isDefaultRemote = true;
+        } else {
+          state.defaultValueRemote = "Address";
+          state.isDefaultRemote = false;
+        }
+      },
+      { immediate: true }
+    );
+
     const save = async () => {
       console.log("save", state);
       const result = await v$.value.$validate();
 
       if (result) {
-        console.log("ok");
+        let KeyExchange = null;
+
+        if (state.keyExchange.slug === "v1") {
+          KeyExchange = {
+            key_exchange_version: state.keyExchange?.name,
+            negotiation_mode: state.negotiationMode.name,
+          };
+        } else {
+          KeyExchange = {
+            key_exchange_version: state.keyExchange?.name,
+          };
+        }
+        let authen = null;
+        if (state.authMethod?.slug === "Mutual Public key") {
+          authen = {
+            authentication_method: state.authMethod?.slug,
+            local_key_pair: state.localKey,
+            peer_key_pair: state.keyPair,
+          };
+        } else if (state.authMethod?.slug === "Mutual PSK") {
+          authen = {
+            authentication_method: state.authMethod?.slug,
+            pre_shared_key: state.sharedKey,
+          };
+        } else if (state.authMethod?.slug === "Mutual RSA") {
+          authen = {
+            authentication_method: state.authMethod?.slug,
+            cert: state.certificate.name,
+            remote_distingushed_name: state.peerIdentifier,
+          };
+        }
+
+        let isdeadPeer = null;
+
+        if (state.deadPeer) {
+          isdeadPeer = {
+            disable: state.deadPeer,
+            deed_peer_delay: state.seconds,
+            deed_peer_timeout: state.retries,
+            deed_peer_action: state.selectDear.slug,
+          };
+        } else {
+          isdeadPeer = {
+            disable: state.deadPeer,
+          };
+        }
+        if (Array.isArray(state.dhKey)) {
+          var mappedDhKey = state.dhKey.map((e) => e.slug);
+        } else {
+          var mappedDhKey = [state.dhKey.slug];
+        }
+        if (Array.isArray(state.hashAlgo)) {
+          var mappedhashAlgo = state.hashAlgo.map((e) => e.slug);
+        } else {
+          var mappedhashAlgo = [state.hashAlgo.slug];
+        }
+        if (Array.isArray(state.encryptAlgoExchange)) {
+          var mappedencryptAlgoExchange = state.encryptAlgoExchange.map(
+            (e) => e.slug
+          );
+        } else {
+          var mappedencryptAlgoExchange = [state.encryptAlgoExchange.slug];
+        }
+        if (Array.isArray(state.hashAlgoExchange)) {
+          var mappedhashAlgoExchange = state.hashAlgoExchange.map(
+            (e) => e.slug
+          );
+        } else {
+          var mappedhashAlgoExchange = [state.hashAlgoExchange.slug];
+        }
+
+        let isKeyExchange = null;
+
+        if (state.protocol.slug === "ESP") {
+          isKeyExchange = {
+            protocol: state.protocol.slug,
+            encryption_algorithm_ph2: mappedencryptAlgoExchange,
+            hash_algorithm_ph2: mappedhashAlgoExchange,
+            pfs_key_group: state.pfsKey.slug,
+          };
+        } else if (state.protocol.slug === "AH") {
+          isKeyExchange = {
+            protocol: state.protocol.slug,
+            hash_algorithm_ph2: mappedhashAlgoExchange,
+            pfs_key_group: state.pfsKey.slug,
+          };
+        }
+
+        let isMode_ph2 = null;
+
+        if (state.mode.slug === "Tunnel IPv4") {
+          isMode_ph2 = {
+            mode: state.mode?.slug,
+            local_network: {
+              type_local_network: state.type?.slug,
+              address_local_network: state.localNetworkAddress,
+              mask:
+                state.type?.slug === "Address"
+                  ? "32"
+                  : state.selectAddressNetwork.toString(),
+            },
+            remote_network: {
+              type_remote_network: state.typeRemoteNetwork.slug,
+              address_local_network: state.remoteNetworkAddress,
+              mask:
+                state.typeRemoteNetwork.slug === "Address"
+                  ? "32"
+                  : state.selectRemoteAddressNetwork.toString(),
+            },
+          };
+        } else if (state.mode.slug === "Transport") {
+          isMode_ph2 = {
+            mode: state.mode?.slug,
+          };
+        }
+
+        let payload = {
+          conn_name: state.tunnelSettings,
+          connection_method: state.connectionMethod?.slug,
+          key_exchange: KeyExchange,
+          internet_protocol: state.internetProtocol.slug,
+          interface_name: state.generalinterface?.name,
+          remote_gateway: state.remoteGateway,
+          dynamic_gateway: state.remoteConnect,
+          description_ph1: state.description,
+          authentication: authen,
+          encryption_algorithm_ph1: state.encryptAlgo?.slug,
+          hash_algorithm_ph1: mappedhashAlgo,
+          dh_key_group: mappedDhKey,
+          lifetime_ph1: state.lifetime,
+          policy: state.policy,
+          rekey: state.rekey,
+          reauth: state.reauth,
+          mobike: state.mobike,
+          nat_traversal: state.natTraversal.slug,
+          inactivity_timeout: state.interactivityTimout,
+          margin_time: state.marginTime,
+          rekey_fuzz: state.rekeyFuzz,
+          deed_peer: isdeadPeer,
+          description_ph2: state.descriptionPh2,
+          lifetime_ph2: state.lifetimeExchange,
+          sa_key_exchange: isKeyExchange,
+          mode_ph2: isMode_ph2,
+        };
+        console.log("payload", payload);
+        axios
+          .post("/ipsec/createServerIPsec", payload)
+          .then((response) => {
+            if (response.status == "201") {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          });
       } else {
         console.log("error", v$.value);
       }
     };
-    // const submitForm = async () => {
-    //   const result = await v$.value.$validate();
-
-    //   if (result) {
-    //     let tls_auth = null;
-    //     if (state.isEnableAuth) {
-    //       tls_auth = {
-    //         generate: state.isEnableAuth,
-    //       };
-    //     } else {
-    //       tls_auth = {
-    //         generate: state.isEnableAuth,
-    //         tls_key: state.tlsGenerate,
-    //       };
-    //     }
-
-    //     let bridgeSelect = null;
-    //     if (!state.isBridge) {
-    //       bridgeSelect = {
-    //         bridge_select: state.isBridge,
-    //       };
-    //     } else {
-    //       bridgeSelect = {
-    //         bridge_select: state.isBridge,
-    //         bridge_interface: state.interfaceBridge.id,
-    //         bridge_start_dhcp: state.startDHCPBridge,
-    //         bridge_end_dhcp: state.endDHCPBridge,
-    //       };
-    //     }
-    //     let addressPoolElected = null;
-    //     if (!state.adressPool) {
-    //       addressPoolElected = {
-    //         address_pool_select: state.adressPool,
-    //       };
-    //     } else {
-    //       addressPoolElected = {
-    //         address_pool_select: state.adressPool,
-    //         address_pool_start: state.startAddressPool,
-    //         address_pool_end: state.endAddressPool,
-    //       };
-    //     }
-    //     let electedDefaultDns = null;
-    //     if (!state.dnsDefaultDomain) {
-    //       electedDefaultDns = {
-    //         dns_default_domain_select: state.dnsDefaultDomain,
-    //       };
-    //     } else {
-    //       electedDefaultDns = {
-    //         dns_default_domain_select: state.dnsDefaultDomain,
-    //         dns_default_domain_server: state.activeDnsDefault,
-    //       };
-    //     }
-    //     let electedDnsServers = null;
-    //     if (!state.dnsServers) {
-    //       electedDnsServers = {
-    //         dns_servers_select: state.dnsServers,
-    //       };
-    //     } else {
-    //       electedDnsServers = {
-    //         dns_servers_select: state.dnsServers,
-    //         dns_server1: state.activeDnsServer1,
-    //         dns_server2: state.activeDnsServer2,
-    //       };
-    //     }
-    //     let electedNtpServers = null;
-    //     if (!state.ntpServers) {
-    //       electedNtpServers = {
-    //         ntp_servers_select: state.ntpServers,
-    //       };
-    //     } else {
-    //       electedNtpServers = {
-    //         ntp_servers_select: state.ntpServers,
-    //         ntp_server1: state.activeNtpServer1,
-    //         ntp_server2: state.activeNtpServer2,
-    //       };
-    //     }
-
-    //     let payload = {
-    //       name: state.clientName,
-    //       description: state.description,
-    //       server_mode: {
-    //         mode: state.serverMode.slug,
-    //       },
-    //       protocol: state.protocol.slug,
-    //       device_mode: state.deviceMode.slug,
-    //       interface: state.interface.name,
-    //       local_port: state.localPort,
-    //       tls_auth: tls_auth,
-    //       ca_name: state.peerCertif.name,
-    //       server_cert: state.serverCertif.name,
-    //       dh_params_length: state.dhParameters,
-    //       encryption_algorithm: state.encryptAlgo,
-    //       auth_digest_algorithm: state.authDigest.name,
-    //       hardware_crypto: state.hardwareCrypto.slug,
-
-    //       ipv4_tunnel_network: state.ip4Tunnel,
-    //       gateway: state.isGateway,
-    //       bridge: bridgeSelect,
-    //       ipv4_local_network: state.iPv4Local,
-    //       ipv4_remote_network: state.iPv4Remote,
-    //       concurrent_connections: state.concurrentConnections,
-    //       compression: state.compression.slug,
-    //       type_of_service: state.typefService,
-    //       duplicate_connections: state.Connections,
-    //       ipv6: state.IPv6,
-    //       inter_clients: state.interClients,
-    //       address_pool: addressPoolElected,
-    //       dynamic_ip: state.dynamicIP,
-    //       topology: state.topology,
-    //       dns_default_domain: electedDefaultDns,
-    //       dns_servers: electedDnsServers,
-    //       force_dns_cache_update: state.forceDNS,
-    //       ntp_servers: electedNtpServers,
-    //       verbosity_level: state.verbLevel?.slug ?? "",
-    //     };
-    //     state.loading = true;
-    //     state.isLoadingDialogue = true;
-
-    //     axios
-    //       .post("/openvpn/createServerOpenvpn", payload)
-    //       .then((response) => {
-    //         if (response.status == "201") {
-    //           state.loading = false;
-    //           state.isLoadingDialogue = false;
-    //           state.snackbar = true;
-    //           state.color = "success";
-    //           state.textAlert = response.data.msg;
-
-    //           setTimeout(() => {
-    //             location.reload();
-    //           }, 1000);
-    //         }
-    //       })
-    //       .catch((i) => {
-    //         state.loading = false;
-    //         state.isLoadingDialogue = false;
-    //         state.snackbar = true;
-    //         state.color = "red";
-    //         state.textAlert = i.response.data.error;
-    //       });
-    //   } else {
-    //     console.log("res", v$.value);
-    //   }
-    // };
 
     return {
       getCookie,
       getInterface,
-      //   submitForm,
       save,
       state,
       v$,

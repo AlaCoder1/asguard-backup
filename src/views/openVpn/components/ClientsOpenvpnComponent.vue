@@ -433,11 +433,11 @@ export default {
       clientCertificate: "",
       encryptionAlgorithm: "",
       authDigestAlgorithm: "",
-      hardwareCrypto:"",
-      // hardwareCrypto: {
-      //   name: "No hardware Crypto acceleration",
-      //   slug: "No hardware Crypto acceleration",
-      // },
+      hardwareCrypto: {
+        name: "No Hardware Crypto acceleration",
+        slug: "No Hardware Crypto",
+      },
+
       //tunnelSettings
       ipv4TunnelNetwork: "",
       ipv6TunnelNetwork: "",
@@ -809,7 +809,7 @@ export default {
     //           name: i.name_interface,
     //         };
     //       });
-          
+
     //       let listInter = [{ id: 0, name: "Any" }];
     //       var combinedArray = [...listInter,...interfaces ];
     //       state.mapedInterface =combinedArray ;

@@ -304,7 +304,10 @@ export default {
       dhParameters: "",
       encryptAlgo: "",
       authDigest: "",
-      hardwareCrypto: "",
+      hardwareCrypto: {
+        name: "No Hardware Crypto acceleration",
+        slug: "No Hardware Crypto",
+      },
       //tunnelSettings
       ip4Tunnel: "",
       ip6Tunnel: "",

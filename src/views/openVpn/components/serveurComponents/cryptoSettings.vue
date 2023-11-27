@@ -130,8 +130,8 @@
       item-value="slug"
       :items="[
         {
-          name: 'No hardware Crypto acceleration',
-          slug: 'No hardware Crypto',
+          name: 'No Hardware Crypto acceleration',
+          slug: 'No Hardware Crypto',
         },
 
         { name: 'Intel RDRAND engine -RAND', slug: 'Intel RDRAND engine' },

@@ -314,7 +314,7 @@ export default {
       // if (!this.v$.$error) {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      console.log("ths", this.state.formData);
+
       let payload = {
         download_type: "p12",
         password: this.state.formData?.password,
@@ -322,8 +322,6 @@ export default {
       axios
         .post(`/certificates/exportCert/${this.rowId}`, payload)
         .then((response) => {
-          console.log("res", response.data);
-
           const text = response.data.cert;
           const blob = new Blob([text], {
             type: "blob",
@@ -342,7 +340,6 @@ export default {
           document.body.removeChild(a);
         })
         .catch((i) => {
-          console.log("i", i.response);
           this.snackbar = true;
           this.color = "red";
           this.textAlert = i.response.data.error;
@@ -493,8 +490,6 @@ export default {
       axios
         .post(`/certificates/exportCert/${id}`, payload)
         .then((response) => {
-          console.log("res", response.data.cert);
-
           const text = response.data.cert;
           const blob = new Blob([text], {
             type: "application/x-x509-ca-cert",
@@ -511,15 +506,8 @@ export default {
 
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
-
-          if (response.status == "201") {
-            console.log("success");
-          } else {
-            console.log("error");
-          }
         })
         .catch((i) => {
-          console.log("i", i.response.data.error);
           this.snackbar = true;
           this.color = "red";
           this.textAlert = i.response.data.error;
@@ -549,8 +537,6 @@ export default {
       axios
         .delete(`/certificates/deleteCertificate/${this.deletedRow.id}`)
         .then((response) => {
-          console.log("Resource deleted:", response.data);
-
           if (response.status == 201) {
             this.closeModal();
 
@@ -564,7 +550,6 @@ export default {
           }
         })
         .catch((i) => {
-          console.log("i", i.response.data.error);
           this.snackbar = true;
           this.color = "red";
           this.textAlert = i.response.data.error;
@@ -580,7 +565,6 @@ export default {
           break;
 
         case "delete":
-          console.log("Delete clicked for row:", rowData);
           this.deleteDialogCertif = true;
           this.deletedRow = rowData;
 
@@ -592,15 +576,12 @@ export default {
           // }
           break;
         case "lock":
-          console.log("lock:", rowData);
-
           const csrfToken = this.getCookie("csrftoken");
           axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
           axios
             .put(`/certificates/unrevokeCertificate/${rowData.id}`)
             .then((response) => {
-              console.log("res", response);
               this.closeModal();
 
               this.snackbar = true;
@@ -610,13 +591,12 @@ export default {
               setTimeout(() => {
                 location.reload();
               }, 1000);
-            })
-            // .catch((i) => {
-            //   console.log("i", i.response.data);
-            //   this.snackbar = true;
-            //   this.color = "red";
-            //   this.textAlert = i.response.data.error;
-            // });
+            });
+          // .catch((i) => {
+          //   this.snackbar = true;
+          //   this.color = "red";
+          //   this.textAlert = i.response.data.error;
+          // });
 
           break;
         case "export":
@@ -627,7 +607,6 @@ export default {
 
           break;
         case "exportKey":
-          console.log("Update clicked for row:", rowData);
           let rowId = rowData.id;
           let typeName = "private_key";
           let fileExt = `${rowData.nom}.key`;
@@ -635,13 +614,11 @@ export default {
 
           break;
         case "revoce":
-          console.log("revoce row:", rowData);
           this.rowEdit = rowData;
           this.openModalRevoce();
           this.modalMode = "revoce";
           break;
         case "cancel":
-          console.log("Cancel clicked for row:", rowData);
           break;
         default:
           break;

@@ -8,12 +8,14 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from backend.ipsec.models import ServerIPsec
 
 from backend.managementCertificates.certificate import create_ca_in_system, create_certificate_in_system, delete_ca_in_system, delete_certificate_in_system, export_ca_in_system, export_ca_list_rev_in_system, export_certificate_in_system, import_ca_in_system, import_certificate_in_system, revoke_certificates_in_system, unrevoke_certificates_in_system
 from backend.managementCertificates.list_certificates import get_all_cert_auth, get_all_certificates, get_cert_auth, get_certificate
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementCertificates.serializers import CertificateAuthoritySerializer, CertificateSerializer
 from backend.openvpn.manage_errors import CommandExecutionError
+from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 
 # Create your views here.
 
@@ -428,11 +430,25 @@ def deleteCertificate(request, id):
     if (request.method == 'DELETE'):
         try:
             cert = Certificate.objects.get(id=id)
-            # delete from system
-            delete_certificate_in_system(cert.name, cert.certificate_type)
-            # delete from database
-            cert.delete()
-            return JsonResponse({"msg": f"delete {cert.name} succesfully"}, status=201)
+
+            # Test if this certificate is used in OpenVPN or IPsec
+            list_server_vpn = ServerOpenvpn.objects.filter(cert_name=cert.name)
+            list_client_vpn = ClientOpenvpn.objects.filter(cert_name=cert.name)
+            list_server_ipsec = ServerIPsec.objects.filter(cert=cert.name)
+
+            if len(list_server_vpn) == 0 and len(list_client_vpn) == 0 and len(list_server_ipsec) == 0: # Not used certififcate
+                # delete from system
+                delete_certificate_in_system(cert.name, cert.certificate_type)
+                # delete from database
+                cert.delete()
+                return JsonResponse({"msg": f"delete {cert.name} succesfully"}, status=201)
+            
+            elif len(list_server_vpn) > 0:
+                return JsonResponse({"error": f"You can't delete this certificate, it is used in openvpn servers"}, status=400)
+            elif len(list_client_vpn) > 0:
+                return JsonResponse({"error": f"You can't delete this certificate, it is used in openvpn clients"}, status=400)
+            elif len(list_server_ipsec) > 0:
+                return JsonResponse({"error": f"You can't delete this certificate, it is used in ipsec configuration"}, status=400)
         except Certificate.DoesNotExist:
             return JsonResponse({"error": "This Certificate does not exist"}, status=400)
 

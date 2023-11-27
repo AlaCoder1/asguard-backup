@@ -88,12 +88,6 @@
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field label="Lifetime" v-model="lifetime"></v-text-field>
-        <p
-          class="error-feedback mb-5"
-          v-if="props.errors.lifetime.$errors.length"
-        >
-          {{ props.errors.lifetime.$errors?.[0].$message }}
-        </p>
       </v-col>
     </v-row>
   </div>

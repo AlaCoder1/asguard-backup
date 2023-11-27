@@ -211,10 +211,6 @@ export default {
     handleAction(action, rowData) {
       switch (action) {
         case "lock":
-          console.log("revoce row:", rowData);
-
-          console.log("lock:", rowData);
-
           const csrfToken = this.getCookie("csrftoken");
           axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -232,11 +228,10 @@ export default {
               }, 1000);
             })
             .catch((i) => {
-            console.log("i", i.response.data.error);
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = i.response.data.error;
-          });
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+            });
 
           break;
         default:

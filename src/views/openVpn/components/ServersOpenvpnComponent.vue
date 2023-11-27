@@ -304,7 +304,10 @@ export default {
       dhParameters: "",
       encryptAlgo: "",
       authDigest: "",
-      hardwareCrypto: "",
+      hardwareCrypto: {
+        name: "No Hardware Crypto acceleration",
+        slug: "No Hardware Crypto",
+      },
       //tunnelSettings
       ip4Tunnel: "",
       ip6Tunnel: "",
@@ -641,13 +644,11 @@ export default {
     );
 
     onMounted(() => {
-      console.log("ok server");
       getInterface();
       getAllCertAuth();
       getCertif();
 
       emitter.on("edit-server", (data) => {
-        console.log("data", data);
         if (data) state.isEditState = "edit";
 
         state.id = data.id;
@@ -742,7 +743,6 @@ export default {
     });
 
     const submitForm = async () => {
-      console.log("state", state);
       const result = await v$.value.$validate();
 
       if (result) {
@@ -860,10 +860,7 @@ export default {
         state.loading = true;
         state.isLoadingDialogue = true;
 
-        console.log("state", state);
-
         if (state.isEditState === "edit") {
-          console.log("payload", payload);
           axios
             .put(`/openvpn/updateServerOpenVPN/${state.id}`, payload)
             .then((response) => {

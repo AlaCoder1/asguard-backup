@@ -280,8 +280,6 @@
                     :rowData="rowDataCertificats.value"
                     style="width: 100%; height: 100%"
                     @grid-ready="onGridReady"
-                    @cell-value-changed="onCellValueChanged"
-                    @row-value-changed="onRowValueChanged"
                   />
                 </v-col>
               </v-row>
@@ -433,11 +431,11 @@ export default {
       clientCertificate: "",
       encryptionAlgorithm: "",
       authDigestAlgorithm: "",
-      hardwareCrypto:"",
-      // hardwareCrypto: {
-      //   name: "No hardware Crypto acceleration",
-      //   slug: "No hardware Crypto acceleration",
-      // },
+      hardwareCrypto: {
+        name: "No Hardware Crypto acceleration",
+        slug: "No Hardware Crypto",
+      },
+
       //tunnelSettings
       ipv4TunnelNetwork: "",
       ipv6TunnelNetwork: "",
@@ -466,7 +464,6 @@ export default {
       protocolsList.value = protocols;
 
       emitter.on("edit-client", (data) => {
-        console.log("dataClient", data);
         if (data) state.isEditState = "edit";
         state.id = data.id;
         state.clientName = data.name;
@@ -633,11 +630,6 @@ export default {
       }
       return cookieValue;
     };
-
-    const onCellValueChanged = (event) => {
-      console.log("even", event);
-      console.log("row", rowDataCertificats.value);
-    };
     const defaultColDef = ref({
       flex: 1,
       editable: true,
@@ -669,8 +661,6 @@ export default {
     const handleAction = (action, rowData, index) => {
       switch (action) {
         case "edit":
-          console.log("edit", rowData);
-          console.log("index", index);
           gridApi.value.setFocusedCell(index);
           gridApi.value.startEditingCell({
             rowIndex: index,
@@ -678,14 +668,12 @@ export default {
           });
           break;
         case "delete":
-          console.log("rowData", rowData);
           const index = rowDataCertificats.value.findIndex(
             (item) => item.host === rowData.host
           );
-          console.log("index", index);
+
           if (index !== -1) {
             rowDataCertificats.value.splice(index, 1);
-            console.log("rowData", rowDataCertificats.value);
             if (gridApi.value) {
               gridApi.value.setRowData(rowDataCertificats.value);
             } else {
@@ -696,10 +684,6 @@ export default {
         default:
           break;
       }
-    };
-    const onRowValueChanged = (event) => {
-      console.log("event:", event);
-      console.log("daa:", rowDataCertificats.value);
     };
 
     const columnCertificats = ref([
@@ -797,28 +781,6 @@ export default {
         slug: "11",
       },
     ]);
-    // const getInterface = () => {
-    //   const csrfToken = getCookie("csrftoken");
-    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-    //   axios.get("/network/AllInterfaces").then(
-    //     (response) => {
-    //       let interfaces = response.data.map((i) => {
-    //         return {
-    //           id: i.id,
-    //           name: i.name_interface,
-    //         };
-    //       });
-          
-    //       let listInter = [{ id: 0, name: "Any" }];
-    //       var combinedArray = [...listInter,...interfaces ];
-    //       state.mapedInterface =combinedArray ;
-    //     },
-    //     (error) => {
-    //       console.log(error);
-    //     }
-    //   );
-    // };
     const hasEmptyProperty = (obj) => {
       var invalidHostChars = /[^0-9.]/.test(obj.host);
       var invalidPortChars = /[^0-9]/.test(obj.port);
@@ -873,7 +835,6 @@ export default {
       );
     };
     const save = async () => {
-      console.log("state?1", state);
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -953,10 +914,8 @@ export default {
           verbosity_level: state.verbosityLevel.slug ?? "",
           server_remote: rowDataCertificats.value,
         };
-        console.log("pay", payload);
 
         if (state.isEditState === "edit") {
-          console.log("payload", payload);
           axios
             .put(`/openvpn/updateClientOpenvpn/${state.id}`, payload)
             .then((response) => {
@@ -982,7 +941,6 @@ export default {
             .post("/openvpn/createClientOpenvpn", payload)
             .then((response) => {
               if (response.status == "201") {
-                console.log("response", response);
                 snackbar.value = true;
                 color.value = "success";
                 textAlert.value = response.data.msg;
@@ -994,7 +952,6 @@ export default {
               }
             })
             .catch((i) => {
-              console.log("i", i.response);
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
@@ -1108,7 +1065,6 @@ export default {
     ]);
 
     const cancel = () => {
-      console.log("cancel");
       state.id = "";
       state.isEditState = "";
       //general information
@@ -1198,11 +1154,7 @@ export default {
       verbosityLevelList,
       getCookie,
       color,
-      // populate,
-      // getInterface,
-      onRowValueChanged,
       authDigestAlgorithmList,
-      onCellValueChanged,
       compression,
       defaultColDef,
       gridApi,

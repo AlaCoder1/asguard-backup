@@ -274,7 +274,7 @@ export default {
 
     const initializeWebSocket = () => {
       state.socket = new WebSocket(
-        "ws://" + window.location.host + "/ws/data/"
+        "wss://" + window.location.host + "/ws/data/"
       );
 
       state.socket.onopen = () => {

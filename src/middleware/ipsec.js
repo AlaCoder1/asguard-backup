@@ -6,7 +6,14 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import ipsec from '../views/ipsec/index.vue';
 import axios from 'axios'
+import mitt from 'mitt'
+
+const emitter = mitt()
+
 const app = createApp(ipsec);
+
+app.provide('emitter', emitter)
+
 const vuetify = createVuetify({
     components,
     directives
@@ -15,15 +22,11 @@ const vuetify = createVuetify({
  
   axios.interceptors.response.use(
     (response) => {
-      
-      console.log('response000.ipsec',response)
       return response;
     },
     (error) => {
       console.log('errorMainipsec',error)
-      
       if ((error.response.status === 401 )||(error.response.status === 403)) {
-     
         console.log('Token expired or unauthorized. Redirecting to login.');
         window.location.href = '/';
       }

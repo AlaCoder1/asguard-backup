@@ -1,58 +1,36 @@
-// import Vue from 'vue';
-// import vuetify from '@/plugins/vuetify';
-// import 'vuetify/dist/vuetify.min.css'
-// import App from '@/pages/openvpn';
-// import store from '@/store/index';
-
-
-// // import VeeValidate from 'vee-validate';
-// import VueI18n from 'vue-i18n';
-// import dictionnary from './dictionnary';
-// import enJson from './translations/en.json'; 
-// import frJson from './translations/fr.json'; 
-
-// Vue.use(VueI18n);
-
-// const i18n = new VueI18n({
-//   locale: 'en',
-//   messages: {
-//     en: enJson, 
-//     fr: frJson, 
-//   },
-// });
-
-// Vue.use( {
-//   i18n,
-//   classes: true,
-//   fieldsBagName: 'formFields',
-//   dictionary: {
-//     en: {
-//       messages: enJson.messages,
-//       attributes: dictionnary,
-//     },
-//     fr: {
-//       messages: frJson.messages,
-//       attributes: dictionnary,
-//     },
-//   },
-// });
-
-// new Vue({
-//   vuetify,
-//   store,
-//     i18n,
-//     data: {},
-//     render: (h) => h(App),
-// }).$mount('#app');
 import {createApp } from 'vue';
 import store from '../store/index.js'
 import 'vuetify/styles'
 import { createVuetify } from 'vuetify'
 import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
+import mitt from 'mitt'
 import openvpn from '../views/openVpn/openvpn';
+import ClientsOpenvpnComponent from '../views/openVpn/components/ClientsOpenvpnComponent.vue'
+import axios from 'axios'
+
+
+const emitter = mitt()
 
 const app = createApp(openvpn);
+
+app.component('ClientsOpenvpnComponent', ClientsOpenvpnComponent)
+app.provide('emitter', emitter)
+
+
+axios.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    
+    if ((error.response.status === 401 )||(error.response.status === 403)) {
+      window.location.href = '/';
+    }
+    return Promise.reject(error);
+  }
+);
+
 const vuetify = createVuetify({
     components,
     directives

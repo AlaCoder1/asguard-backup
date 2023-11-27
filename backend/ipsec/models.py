@@ -21,8 +21,6 @@ class ServerIPsec(models.Model):
     # Proposal (Authentication)
     authentication_method = models.CharField(max_length=100, default='Mutual PSK', blank=True, null=True)
     negotiation_mode = models.CharField(max_length=100, default=None, blank=True, null=True)
-    my_identifier = models.CharField(max_length=100, default='My IP address', blank=True, null=True)
-    peer_identifier = models.CharField(max_length=100, default='Peer IP address', blank=True, null=True)
     pre_shared_key = models.CharField(max_length=100, default=None, blank=True, null=True)
     cert = models.CharField(max_length=300, default=None, null=True, blank=True)
     remote_distingushed_name = models.CharField(max_length=1000, default=None, blank=True, null=True)

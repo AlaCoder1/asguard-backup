@@ -142,13 +142,18 @@
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+    </v-snackbar>
   </v-row>
 </template>
 
 <script>
-import { mapState } from "pinia";
-import { useAuthStore } from "@/store/modules/auth.js";
-const storeAuth = useAuthStore();
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import {
@@ -158,7 +163,7 @@ import {
   helpers,
   requiredIf,
 } from "@vuelidate/validators";
-import { reactive, computed, watch } from "vue";
+import { reactive, computed } from "vue";
 export default {
   name: "Modal_User",
   props: {
@@ -254,11 +259,10 @@ export default {
     return {
       openModal: false,
       textAlert: "",
+      color: "",
+      snackbar: false,
       userId: null,
     };
-  },
-  mounted() {
-    // this.state.userRole = this.user.currentUser.role;
   },
 
   watch: {
@@ -275,9 +279,7 @@ export default {
       }
     },
   },
-  computed: {
-    // ...mapState(storeAuth, ["user"]),
-  },
+
   methods: {
     populate(data) {
       if (this.mode == "update") {
@@ -287,11 +289,11 @@ export default {
         this.state.formData.role = data.role;
         let groupsIds = data.group.map((i) => {
           return {
-            id:i.id,
-            groupname:i.name
-          }
+            id: i.id,
+            groupname: i.name,
+          };
         });
-        this.state.formData.groups =groupsIds;
+        this.state.formData.groups = groupsIds;
 
         this.state.formData.deactivateUser = data.is_active;
         this.userId = data.id;
@@ -318,13 +320,27 @@ export default {
         (this.state.formData.groups = null),
         (this.state.formData.deactivateUser = false);
     },
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
     submitForm() {
       this.v$.$validate();
       if (!this.v$.$error) {
         let groupsIds = this.state.formData?.groups?.map((i) => {
           return i.id;
         });
-        console.log({"this.state.formData":this.state.formData});
+        console.log({ "this.state.formData": this.state.formData });
         const payload = {
           username: this.state.formData.username,
           password: this.state.formData.password,
@@ -341,44 +357,38 @@ export default {
           // group: [67],
           // is_active: true
         };
-        console.log({payload});
-        function getCookie(name) {
-          let cookieValue = null;
-          if (document.cookie && document.cookie !== "") {
-            const cookies = document.cookie.split(";");
-            for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i].trim();
-              if (cookie.substring(0, name.length + 1) === name + "=") {
-                cookieValue = decodeURIComponent(
-                  cookie.substring(name.length + 1)
-                );
-                break;
-              }
-            }
-          }
-          return cookieValue;
-        }
+        console.log({ payload });
 
-        const csrfToken = getCookie("csrftoken");
+        const csrfToken = this.getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
         if (this.mode == "create") {
-          axios.post("/users/createUser", payload).then(
-            (response) => {
+          axios
+            .post("/users/createUser", payload)
+            .then((response) => {
               console.log("res", response);
               if (response.status == "201") {
-                this.textAlert = "user Created Successfully";
+                this.closeModal();
+
+                this.snackbar = true;
+                this.color = "success";
+                this.textAlert = response.data.msg;
+
                 setTimeout(() => {
-                  this.closeModal();
-                  // location.reload();
-                }, 2000);
-              } else {
-                console.log("error");
+                  location.reload();
+                }, 1000);
+
+                // this.textAlert = "user Created Successfully";
+                // setTimeout(() => {
+                //   this.closeModal();
+                //   location.reload();
+                // }, 2000);
               }
-            },
-            (error) => {
-              console.log(error);
-            }
-          );
+            })
+            .catch((i) => {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+            });
         } else {
           let groupsIds = this.state.formData?.groups?.map((i) => {
             return i.id;
@@ -397,17 +407,26 @@ export default {
             .then((response) => {
               console.log("resUpdate", response);
               if (response.status == 200) {
-                this.textAlert = "User updated succesfully";
+                this.closeModal();
+
+                this.snackbar = true;
+                this.color = "success";
+                this.textAlert = response.data.msg;
+
                 setTimeout(() => {
-                  this.closeModal();
-                  // location.reload();
-                }, 2000);
-              } else {
-                console.log("error");
+                  location.reload();
+                }, 1000);
+                // this.textAlert = "User updated succesfully";
+                // setTimeout(() => {
+                //   this.closeModal();
+                //   location.reload();
+                // }, 2000);
               }
             })
-            .catch((error) => {
-              console.error("Error updating resource:", error);
+            .catch((i) => {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
             });
         }
       }

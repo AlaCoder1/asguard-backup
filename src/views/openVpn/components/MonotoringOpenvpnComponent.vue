@@ -57,6 +57,9 @@ import monitoringCards from "./monitoringCards.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VueApexCharts from "vue3-apexcharts";
 
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
+
 export default {
   name: "MonotoringOpenvpnComponent",
   components: {
@@ -195,9 +198,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-@import "~ag-grid-community/dist/styles/ag-grid.css";
-@import "~ag-grid-community/dist/styles/ag-theme-alpine.css";
-
 
 #grid-wrapper {
   width: 100%;

@@ -18,6 +18,8 @@ Encore.setOutputPath("static/")
   .addEntry("firewall", "./src/middleware/firewall.js")
   .addEntry("openvpn", "./src/middleware/openvpn.js")
   // .addEntry("settings", "./src/middleware/settings.js")
+  .addEntry("ipsec", "./src/middleware/ipsec.js")
+  .addEntry("keyPair", "./src/middleware/keyPair.js")
   .addEntry("UserAndCertificateManagement", "./src/middleware/userManagment.js")
   .addEntry("404", "./src/middleware/404.js")
   .enableVueLoader(() => {}, {

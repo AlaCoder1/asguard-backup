@@ -8,6 +8,10 @@ from backend.rules.models import *
 from backend.gateway.models import *
 from backend.dashboard.functions import get_system_infomations
 from django.db.models import Q
+from backend.openvpn.list_servers_clients import get_all_client_openvpn,  get_all_server_openvpn
+from backend.managementKeypairs.list_key_pairs import get_all_private_key, get_all_public_key
+from backend.ipsec.list_ipsec import get_all_server_ipsec
+
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -146,9 +150,25 @@ def AllInterfaces(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
+            # if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")):
             list_interface.append(res[i]['fields'])
         return list_interface
-    
+####
+def AllInterfacesVersion2(request):
+    list_interface = []
+    if (request.method == 'GET'):
+        interfaces = Interface.objects.all()
+        interfaceDict=serializers.serialize("json",interfaces)
+        # interfaceDict = serializers.serialize("json", interfaces)
+        res = json.loads(interfaceDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")):
+                list_interface.append(res[i]['fields'])
+        return list_interface    
     
 def GetInformationsByInterface(request,name_interface):
     info={}
@@ -194,7 +214,7 @@ def GetInformationsByInterface(request,name_interface):
                 gateway_id=GatewayInterfaceObject.gateway_id
                 addrgw4=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=True)).gwaddress
                 resultat[0]['fields']['addrgw']=addrgw4
-                info['IPV4Config']=resultat[0]['fields']
+            info['IPV4Config']=resultat[0]['fields']
         else:
             info['IPV4Config']=[]
         
@@ -225,9 +245,6 @@ def GetInformationsByInterface(request,name_interface):
         print({"info":info})
     return info
 
-
-
-
 @login_required(login_url='/')
 def user_certificate_managment_page(request):
     usr=getUsers(request)
@@ -238,7 +255,7 @@ def user_certificate_managment_page(request):
 
 @login_required(login_url='/')
 def interface_page(request):
-    interfaces=AllInterfaces(request)
+    interfaces=AllInterfacesVersion2(request)
     config={}
     allStaticGateways={}
     for i in range(len(interfaces)):
@@ -255,7 +272,6 @@ def interface_page(request):
     context = {'interfaces':interfaces,'IPV4Config':config,'allStaticGateways':allStaticGateways}
     return render(request, 'interface_page.html',context)
 
-
 @login_required(login_url='/')
 def firewall_page(request):
     rules=GetAllRules(request)
@@ -269,7 +285,23 @@ def settings_page(request):
 
 @login_required(login_url='/')
 def openvpn_page(request):
-    return render(request, 'openvpn_page.html')
+    servers=get_all_server_openvpn()
+    clients=get_all_client_openvpn()
+    context = {'servers':servers,'clients':clients}
+    return render(request, 'openvpn_page.html', context)
+@login_required(login_url='/')
+def ipsec_page(request):
+    servers=get_all_server_ipsec()
+    context = {'servers':servers}
+    return render(request, 'ipsec_page.html', context)
+
+@login_required(login_url='/')
+def keyPair_page(request):
+    privateKey =get_all_private_key()
+    publicKey =get_all_public_key()
+    context = {'privateKey':privateKey,'publicKey':publicKey}
+    return render(request, 'keyPair_page.html',context)
+
 
 def login(request):
     usr=getAllUsers(request)
@@ -284,7 +316,7 @@ def login(request):
 def index_page(request):
     info=get_system_infomations()
     gateways=getAllGateways(request)
-    interfaces=AllInterfaces(request)
+    interfaces=AllInterfacesVersion2(request)
     config=[]
     for i in range(len(interfaces)):
         info_interface={}

@@ -1,11 +1,12 @@
-import json
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from django.core import serializers
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from backend.ipsec.functions import json_to_str_server_ipsec
+from backend.ipsec.list_ipsec import get_all_server_ipsec, get_server_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
 from backend.ipsec.server_ipsec import delete_server_ipsec, install_server_ipsec, update_server_ipsec
 from backend.managementCertificates.models import Certificate, CertificateAuthority
@@ -15,41 +16,89 @@ from backend.openvpn.manage_errors import CommandExecutionError
 from .models import ServerIPsec
 
 
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL IPSEC",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def getAllServerIPsec(request):
-    list_ipsec = []
     if (request.method == 'GET'):
-        ipsec = ServerIPsec.objects.all()
-        ipsecDict = serializers.serialize("json", ipsec)
-        res = json.loads(ipsecDict)
-        for i in range(len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            list_ipsec.append(res[i]['fields'])
-        # return list_ipsec
+        list_ipsec = get_all_server_ipsec()
         return JsonResponse(list_ipsec, safe=False)
     
 
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET AN IPSEC",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def getServerIPsec(request, id):
     """Getting server by id from database"""
     if (request.method == 'GET'):
-        server_ipsec = ServerIPsec.objects.filter(pk=id)
-        server_ipsecDict = serializers.serialize("json", server_ipsec)
-        res = json.loads(server_ipsecDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields']['id'] = id
-        return JsonResponse(res[0]['fields'], safe=False)
+        server_ipsec = get_server_ipsec(id)
+        return JsonResponse(server_ipsec, safe=False)
 
 
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN IPSEC",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, 
+                                                 required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
+                                                 properties={'conn_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'connection_method': openapi.Schema(type=openapi.TYPE_STRING, enum=["default", "Respond Only", "Start on traffic", "Start immediate"]),
+                                                             'key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, required=['key_exchange_version'], 
+                                                                                            properties={'key_exchange_version': openapi.Schema(type=openapi.TYPE_STRING, default="auto", enum=["auto", "V1", "V2"]),
+                                                                                                        'negotiation_mode': openapi.Schema(type=openapi.TYPE_STRING, description="When Key version is V1", enum=["Main", "Aggressive"])}),
+                                                             'internet_protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["IPv4", "IPv6"]),
+                                                             'interface_name': openapi.Schema(type=openapi.TYPE_STRING, description="Interface name like LAN or WAN or any"),
+                                                             'remote_gateway': openapi.Schema(type=openapi.TYPE_STRING, description="Remote address like 10.1.12.22"),
+                                                             'dynamic_gateway': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'description_ph1': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'authentication': openapi.Schema(type=openapi.TYPE_OBJECT, required=['authentication'], 
+                                                                                              properties={'authentication': openapi.Schema(type=openapi.TYPE_STRING, default="Mutual PSK", enum=["Mutual PSK", "Mutual Public Key", "Mutual RSA"]),
+                                                                                                          'pre_shared_key': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual PSK"),
+                                                                                                          'local_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
+                                                                                                          'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
+                                                                                                          'cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA"),
+                                                                                                          'remote_distingushed_name': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
+                                                             'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256"]),
+                                                             'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like sha256 or sha384. Example: [sha256,sha512]",
+                                                                                                  items=openapi.Schema(type=openapi.TYPE_STRING)),
+                                                             'dh_key_group': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072. Example: [15:3072,20:384]",
+                                                                                            items=openapi.Schema(type=openapi.TYPE_STRING)),
+                                                             'lifetime_ph1': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime with its unit like 1h or 3600s", pattern=r"(\d+)([hms])"),
+                                                             'policy': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
+                                                             'rekey': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'reauth': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'nat_traversal': openapi.Schema(type=openapi.TYPE_STRING, default="auto", enum=["Disable", "E,able", "Force"]),
+                                                             'mobike': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'deed_peer': openapi.Schema(type=openapi.TYPE_OBJECT, description="Deed Peer block", required=['disable'], 
+                                                                                         properties={'disable': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                     'deed_peer_delay': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)([hms])", description="set deed peer delay with its unit like 10s, required when selecting deed peer"),
+                                                                                                     'deed_peer_timeout': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)([hms])", description="set deed peer timeout with its unit like 160s, required when selecting deed peer"),
+                                                                                                     'deed_peer_action': openapi.Schema(type=openapi.TYPE_STRING, enum=["default", "Restart the tunnel", "Stop the tunnel"], default="default", description="set deed peer action, required when selecting deed peer")}),
+                                                             'inactivity_timeout': openapi.Schema(type=openapi.TYPE_STRING, description="set inactivity timeout with its unit like 10s", pattern=r"(\d+)([hms])"),
+                                                             'margin_time': openapi.Schema(type=openapi.TYPE_STRING, description="set margin time with its unit like 10s", pattern=r"(\d+)([hms])"),
+                                                             'rekey_fuzz': openapi.Schema(type=openapi.TYPE_STRING, description="set rekey_fuzz with % (percentage symbol) like 10%", pattern=r"(\d+)%"),
+                                                             'mode_ph2': openapi.Schema(type=openapi.TYPE_OBJECT, description="General information of phase 2", required=['mode'], 
+                                                                                        properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Route-based", "Transport"]),
+                                                                                                    'local_address': openapi.Schema(type=openapi.TYPE_STRING, description="Local Address, required when selecting Route-based"),
+                                                                                                    'remote_address': openapi.Schema(type=openapi.TYPE_STRING, description="Remote Address, required when selecting Route-based"),}),
+                                                             'description_ph2': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'local_network': openapi.Schema(type=openapi.TYPE_OBJECT, description="Local network block", required=['type_local_network'], 
+                                                                                             properties={'type_local_network': openapi.Schema(type=openapi.TYPE_STRING, default="Address", enum=["Address", "Network", "WAN subnet", "LAN subnet"]),
+                                                                                                         'address_local_network': openapi.Schema(type=openapi.TYPE_STRING, description="Address of local network like 10.1.12.0, required when selecting Address or Network"),
+                                                                                                         'mask': openapi.Schema(type=openapi.TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
+                                                             'remote_network': openapi.Schema(type=openapi.TYPE_OBJECT, description="Remote network block", required=['type_remote_network', 'address_remote_network'], 
+                                                                                              properties={'type_remote_network': openapi.Schema(type=openapi.TYPE_STRING, default="Address", enum=["Address", "Network"]),
+                                                                                                          'address_remote_network': openapi.Schema(type=openapi.TYPE_STRING, description="Address of remote network like 51.68.170.149"),
+                                                                                                          'mask': openapi.Schema(type=openapi.TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
+                                                             'sa_key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'], 
+                                                                                               properties={'protocol': openapi.Schema(type=openapi.TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
+                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like 256. Example: [128,256]"),
+                                                                                                           'hash_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like sha256. Example: [sha256,sha384]"),
+                                                                                                           'pfs_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="If not off should be group:key like 15:3072. Example: 15:3072")}),
+                                                             'lifetime_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime with its unit like 1h or 3600s", pattern=r"(\d+)([hms])"),
+                                                             }
+                                                             ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -72,12 +121,11 @@ def createServerIPsec(request):
             authentication = data.get("authentication", "")
             authentication_method = authentication.get("authentication_method", "")
 
-            my_identifier = data.get("my_identifier", "")
-            peer_identifier = data.get("peer_identifier", "")
-
             encryption_algorithm_ph1 = data.get("encryption_algorithm_ph1", "")
-            hash_algorithm_ph1 = data.get("hash_algorithm_ph1", "")
-            dh_key_group = data.get("dh_key_group", "")
+            hash_algorithm_ph1_list = data.get("hash_algorithm_ph1", "")
+            hash_algorithm_ph1 = ",".join(hash_algorithm_ph1_list)
+            dh_key_group_list = data.get("dh_key_group", "")
+            dh_key_group = ",".join(dh_key_group_list)
             lifetime_ph1 = data.get("lifetime_ph1", "")
 
             policy = data.get("policy", "")
@@ -98,16 +146,10 @@ def createServerIPsec(request):
 
             description_ph2 = data.get("description_ph2", "")
 
-            local_network = data.get("local_network", "")
-            type_local_network = local_network.get("type_local_network", "")
-
-            remote_network = data.get("remote_network", "")
-            type_remote_network = remote_network.get("type_remote_network", "")
-            address_remote_network = remote_network.get("address_local_network", "")
-
             sa_key_exchange = data.get("sa_key_exchange", "")
             protocol = sa_key_exchange.get("protocol", "")
-            hash_algorithm_ph2 = sa_key_exchange.get("hash_algorithm_ph2", "")
+            hash_algorithm_ph2_list = sa_key_exchange.get("hash_algorithm_ph2", "")
+            hash_algorithm_ph2 = ",".join(hash_algorithm_ph2_list)
             pfs_key_group = sa_key_exchange.get("pfs_key_group", "")
             lifetime_ph2 = data.get("lifetime_ph2", "")
 
@@ -122,14 +164,12 @@ def createServerIPsec(request):
                            "connection_method": connection_method,
                            "key_exchange_version": key_exchange_version,
                            "internet_protocol": internet_protocol,
-                           "interface": interface,
+                           "interface": interface_name,
                            "remote_gateway": remote_gateway,
                            "dynamic_gateway": dynamic_gateway,
                            "description_ph1": description_ph1,
 
                            "authentication_method": authentication_method,
-                           "my_identifier": my_identifier,
-                           "peer_identifier": peer_identifier,
                            
                            "encryption_algorithm_ph1": encryption_algorithm_ph1,
                            "hash_algorithm_ph1": hash_algorithm_ph1,
@@ -148,10 +188,6 @@ def createServerIPsec(request):
                            
                            "mode": mode,
                            "description_ph2": description_ph2,
-                           
-                           "type_local_network": type_local_network,
-                           
-                           "type_remote_network": type_remote_network,
                            
                            "protocol": protocol,
                            "hash_algorithm_ph2": hash_algorithm_ph2,
@@ -190,29 +226,40 @@ def createServerIPsec(request):
                 server_data["deed_peer_delay"] = deed_peer_delay
                 server_data["deed_peer_timeout"] = deed_peer_timeout
                 server_data["deed_peer_action"] = deed_peer_action
+            
+            if mode == "Tunnel IPv4":
+                # Local Network
+                local_network = mode_ph2.get("local_network", "")
+                type_local_network = local_network.get("type_local_network", "")
+                if type_local_network == "Address":
+                    address_local_network = local_network.get("address_local_network", "")
+                elif type_local_network == "Network":
+                    address_local_network = f'{local_network.get("address_local_network", "")}/{local_network.get("mask", "")}'
+                else:
+                    address_local_network = f'{interface_address.ip_address}/{interface_address.netmask}'
+                server_data["type_local_network"] = type_local_network
+                server_data["address_local_network"] = address_local_network
+                data["address_local_network"] = address_local_network
 
-            if mode == "Route-based":
+                # Remote Network
+                remote_network = mode_ph2.get("remote_network", "")
+                type_remote_network = remote_network.get("type_remote_network", "")
+                address_remote_network = remote_network.get("address_local_network", "")
+                if type_remote_network == "Network":
+                    address_remote_network += remote_network.get("mask", "")
+                server_data["type_remote_network"] = type_remote_network
+                server_data["address_remote_network"] = address_remote_network
+                data["address_remote_network"] = address_remote_network
+                
+            elif mode == "Route-based":
                 local_address = mode_ph2.get("local_address", "")
                 remote_address = mode_ph2.get("remote_address", "")
                 server_data["local_address"] = local_address
                 server_data["remote_address"] = remote_address
 
-            if type_local_network == "Address":
-                address_local_network = local_network.get("address_local_network", "")
-            elif type_local_network == "Network":
-                address_local_network = f'{local_network.get("address_local_network", "")}/{local_network.get("mask", "")}'
-            else:
-                address_local_network = f'{interface_address.ip_address}/{interface_address.netmask}'
-            server_data["address_local_network"] = address_local_network
-            data["address_local_network"] = address_local_network
-                
-            if type_remote_network == "Network":
-                address_remote_network += remote_network.get("mask", "")
-            server_data["address_remote_network"] = address_remote_network
-            data["address_remote_network"] = address_remote_network
-
             if protocol == "ESP":
-                encryption_algorithm_ph2 = sa_key_exchange.get("encryption_algorithm_ph2", "")
+                encryption_algorithm_ph2_list = sa_key_exchange.get("encryption_algorithm_ph2", "")
+                encryption_algorithm_ph2 = ",".join(encryption_algorithm_ph2_list)
                 data["encryption_algorithm_ph2"] = encryption_algorithm_ph2
 
             serializer_server = ServerIPsecSerializer(data=server_data)
@@ -230,20 +277,21 @@ def createServerIPsec(request):
                 serializer_server.save()
                 return JsonResponse({"msg": f"Connection {conn_name} Configuration is done"}, status=201)
             else:
-                print(serializer_server.errors)
-                return JsonResponse({"msg": "Error in server configuration"}, status=401)
+                return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
         except CommandExecutionError:
-            return JsonResponse({"msg": "Error in creating ipsec server"}, status=401)
+            return JsonResponse({"error": "Error in creating ipsec server"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+            return JsonResponse({"error": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
+            return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
         except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"msg": "This CA does not exist"}, status=401)
+            return JsonResponse({"error": "This CA does not exist"}, status=400)
         except Certificate.DoesNotExist:
-            return JsonResponse({"msg": "This Certificate does not exist"}, status=401)
+            return JsonResponse({"error": "This Certificate does not exist"}, status=400)
 
 
+@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE AN IPSEC",)
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -253,7 +301,7 @@ def deleteServerIPsec(request, id):
         if (request.method == 'DELETE'):
             server = ServerIPsec.objects.get(id=id)
             # delete from system
-            interface = Interface.objects.get(id=server.interface)
+            interface = Interface.objects.get(name_interface=server.interface)
             interface_address = IP4Config.objects.get(interface_id=interface.pk)
             if server.authentication_method == "Mutual PSK":
                 deleted_line_in_secrets_file = f"""{interface_address.ip_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
@@ -266,11 +314,69 @@ def deleteServerIPsec(request, id):
             server.delete()
             return JsonResponse({"msg": f"delete {server.conn_name} succesfully"})
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"msg": "This Server does not exist"}, status=401)
+        return JsonResponse({"error": "This Server does not exist"}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
+        return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
 
 
+@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN IPSEC (same as create)",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, 
+                                                 required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
+                                                 properties={'conn_name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'connection_method': openapi.Schema(type=openapi.TYPE_STRING, enum=["default", "Respond Only", "Start on traffic", "Start immediate"]),
+                                                             'key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, required=['key_exchange_version'], 
+                                                                                            properties={'key_exchange_version': openapi.Schema(type=openapi.TYPE_STRING, default="auto", enum=["auto", "V1", "V2"]),
+                                                                                                        'negotiation_mode': openapi.Schema(type=openapi.TYPE_STRING, description="When Key version is V1", enum=["Main", "Aggressive"])}),
+                                                             'internet_protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["IPv4", "IPv6"]),
+                                                             'interface_name': openapi.Schema(type=openapi.TYPE_STRING, description="Interface name like LAN or WAN or any"),
+                                                             'remote_gateway': openapi.Schema(type=openapi.TYPE_STRING, description="Remote address like 10.1.12.22"),
+                                                             'dynamic_gateway': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'description_ph1': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'authentication': openapi.Schema(type=openapi.TYPE_OBJECT, required=['authentication'], 
+                                                                                              properties={'authentication': openapi.Schema(type=openapi.TYPE_STRING, default="Mutual PSK", enum=["Mutual PSK", "Mutual Public Key", "Mutual RSA"]),
+                                                                                                          'pre_shared_key': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual PSK"),
+                                                                                                          'local_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
+                                                                                                          'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
+                                                                                                          'cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA"),
+                                                                                                          'remote_distingushed_name': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
+                                                             'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256"]),
+                                                             'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like sha256 and the list of hash_algorithm must sepeate with comma. Example: sha256,sha512"),
+                                                             'dh_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072 and the list of key_group must sepeate with comma. Example: 15:3072,20:384"),
+                                                             'lifetime_ph1': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime with its unit like 1h or 3600s", pattern=r"(\d+)([hms])"),
+                                                             'policy': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
+                                                             'rekey': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'reauth': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'nat_traversal': openapi.Schema(type=openapi.TYPE_STRING, default="auto", enum=["Disable", "E,able", "Force"]),
+                                                             'mobike': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                             'deed_peer': openapi.Schema(type=openapi.TYPE_OBJECT, description="Deed Peer block", required=['disable'], 
+                                                                                         properties={'disable': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
+                                                                                                     'deed_peer_delay': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)([hms])", description="set deed peer delay with its unit like 10s, required when selecting deed peer"),
+                                                                                                     'deed_peer_timeout': openapi.Schema(type=openapi.TYPE_STRING, pattern=r"(\d+)([hms])", description="set deed peer timeout with its unit like 160s, required when selecting deed peer"),
+                                                                                                     'deed_peer_action': openapi.Schema(type=openapi.TYPE_STRING, enum=["default", "Restart the tunnel", "Stop the tunnel"], default="default", description="set deed peer action, required when selecting deed peer")}),
+                                                             'inactivity_timeout': openapi.Schema(type=openapi.TYPE_STRING, description="set inactivity timeout with its unit like 10s", pattern=r"(\d+)([hms])"),
+                                                             'margin_time': openapi.Schema(type=openapi.TYPE_STRING, description="set margin time with its unit like 10s", pattern=r"(\d+)([hms])"),
+                                                             'rekey_fuzz': openapi.Schema(type=openapi.TYPE_STRING, description="set rekey_fuzz with % (percentage symbol) like 10%", pattern=r"(\d+)%"),
+                                                             'mode_ph2': openapi.Schema(type=openapi.TYPE_OBJECT, description="General information of phase 2", required=['mode'], 
+                                                                                        properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Route-based", "Transport"]),
+                                                                                                    'local_address': openapi.Schema(type=openapi.TYPE_STRING, description="Local Address, required when selecting Route-based"),
+                                                                                                    'remote_address': openapi.Schema(type=openapi.TYPE_STRING, description="Remote Address, required when selecting Route-based"),}),
+                                                             'description_ph2': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'local_network': openapi.Schema(type=openapi.TYPE_OBJECT, description="Local network block", required=['type_local_network'], 
+                                                                                             properties={'type_local_network': openapi.Schema(type=openapi.TYPE_STRING, default="Address", enum=["Address", "Network", "WAN subnet", "LAN subnet"]),
+                                                                                                         'address_local_network': openapi.Schema(type=openapi.TYPE_STRING, description="Address of local network like 10.1.12.0, required when selecting Address or Network"),
+                                                                                                         'mask': openapi.Schema(type=openapi.TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
+                                                             'remote_network': openapi.Schema(type=openapi.TYPE_OBJECT, description="Remote network block", required=['type_remote_network', 'address_remote_network'], 
+                                                                                              properties={'type_remote_network': openapi.Schema(type=openapi.TYPE_STRING, default="Address", enum=["Address", "Network"]),
+                                                                                                          'address_remote_network': openapi.Schema(type=openapi.TYPE_STRING, description="Address of remote network like 51.68.170.149"),
+                                                                                                          'mask': openapi.Schema(type=openapi.TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
+                                                             'sa_key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'], 
+                                                                                               properties={'protocol': openapi.Schema(type=openapi.TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
+                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like 256 and the list of hash_algorithm must sepeate with comma. Example: 128,256"),
+                                                                                                           'hash_algorithm_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="User can choose more than one.Every choosed algorithm should be like sha256 and the list of hash_algorithm must sepeate with comma. Example: sha256,sha384"),
+                                                                                                           'pfs_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="If not off should be group:key like 15:3072. Example: 15:3072")}),
+                                                             'lifetime_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime with its unit like 1h or 3600s", pattern=r"(\d+)([hms])"),
+                                                             }
+                                                             ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -302,9 +408,6 @@ def updateServerIPsec(request, id):
 
             authentication = data.get("authentication", "")
             server.authentication_method = authentication.get("authentication_method", "")
-
-            server.my_identifier = data.get("my_identifier", "")
-            server.peer_identifier = data.get("peer_identifier", "")
 
             server.encryption_algorithm_ph1 = data.get("encryption_algorithm_ph1", "")
             server.hash_algorithm_ph1 = data.get("hash_algorithm_ph1", "")
@@ -360,6 +463,9 @@ def updateServerIPsec(request, id):
             else:
                 server.cert = authentication.get("cert")
                 certificate = Certificate.objects.get(name=server.cert)
+                print("certificate", certificate)
+                print("certificate_auth", CertificateAuthority.objects.get(id=certificate.pk))
+                print("certificate_auth name", CertificateAuthority.objects.get(id=certificate.pk).name)
                 ca = CertificateAuthority.objects.get(id=certificate.pk).name
                 server.remote_distingushed_name = authentication.get("remote_distingushed_name", "")
                 
@@ -393,8 +499,6 @@ def updateServerIPsec(request, id):
             
                 # Update the server config
                 server_conf = json_to_str_server_ipsec(data)
-                print("server_conf= ")
-                print(server_conf)
 
                 # Install the server in system
                 update_server_ipsec(server.conn_name, updated_line_in_secrets_file, server_conf, 
@@ -404,12 +508,11 @@ def updateServerIPsec(request, id):
                 serializer_server.save()
                 return JsonResponse({"msg": f"Connection {server.conn_name} Configuration is updated"}, status=201)
             else:
-                print(serializer_server.errors)
-                return JsonResponse({"msg": "Error in server configuration"}, status=401)
+                return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 
         except ServerIPsec.DoesNotExist:
-            return JsonResponse({"msg": "This Server does not exist"}, status=401)
+            return JsonResponse({"error": "This Server does not exist"}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"msg": "This Interface does not exist"}, status=401)
+            return JsonResponse({"error": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"msg": "This IPv4 config does not exist"}, status=401)
+            return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)

@@ -9,7 +9,7 @@
 //     store,
 //     render: (h) => h(App),
 // }).$mount('#app');
-
+import axios from 'axios'
 import {createApp } from 'vue';
 import store from '../store/index.js'
 import 'vuetify/styles'
@@ -23,6 +23,19 @@ const vuetify = createVuetify({
     components,
     directives
   })
+
+  axios.interceptors.response.use(
+    (response) => {
+      return response;
+    },
+    (error) => {    
+      if ((error.response.status === 401 )||(error.response.status === 403)) {
+        window.location.href = '/';
+      }
+      return Promise.reject(error);
+    }
+  );
+ 
 
 app
 .use(store)

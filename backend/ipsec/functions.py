@@ -27,7 +27,7 @@ conn {json_object["conn_name"]}
     rekey=yes
     reauth=yes
     forceencaps=no
-    mobike =yes
+    mobike=yes
     #inactivity=10s
     #margintime=10s
     #rekeyfuzz=10%
@@ -57,7 +57,7 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("#leftcert=path_cert", 
                                             f"""leftcert={json_object["authentication"]["cert"]}Cert.pem""")
         config_input = config_input.replace("#rightid=distingushed_name", 
-                                            f"""rightid="C={json_object["authentication"]["remote_distingushed_name"]}" """)
+                                            f"""rightid="{json_object["authentication"]["remote_distingushed_name"]}" """)
     
     ike = ""
     for hash_algorithm in json_object["hash_algorithm_ph1"]:
@@ -98,7 +98,7 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("#dpdtimeout=120s", f"dpdtimeout={json_object['deed_peer']['deed_peer_timeout']}")
         config_input = config_input.replace("#dpdaction=restart", f"dpdaction=restart")
         if json_object['deed_peer']['deed_peer_action'] == "Stop the tunnel":
-            config_input = config_input.replace("#dpdaction=restart", f"dpdaction=clear")
+            config_input = config_input.replace("dpdaction=restart", f"dpdaction=clear")
     
     if json_object["inactivity_timeout"] != "":
         config_input = config_input.replace("#inactivity=10s", f"inactivity={json_object['inactivity_timeout']}")

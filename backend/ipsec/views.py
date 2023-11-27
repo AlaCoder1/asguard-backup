@@ -158,7 +158,7 @@ def createServerIPsec(request):
             interface = Interface.objects.get(name_interface=interface_name)
             interface = interface.pk
             interface_address = IP4Config.objects.get(interface_id=interface)
-            data["interface_address"] = interface_address.ip_address
+            data["interface_address"] = f'{interface_address.ip_address}/{interface_address.netmask}'
 
             server_data = {"conn_name": conn_name,
                            "connection_method": connection_method,
@@ -246,7 +246,7 @@ def createServerIPsec(request):
                 type_remote_network = remote_network.get("type_remote_network", "")
                 address_remote_network = remote_network.get("address_local_network", "")
                 if type_remote_network == "Network":
-                    address_remote_network += remote_network.get("mask", "")
+                    address_remote_network += f'/{remote_network.get("mask", "")}'
                 server_data["type_remote_network"] = type_remote_network
                 server_data["address_remote_network"] = address_remote_network
                 data["address_remote_network"] = address_remote_network

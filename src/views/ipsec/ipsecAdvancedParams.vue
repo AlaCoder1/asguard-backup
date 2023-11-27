@@ -448,16 +448,18 @@ export default {
         }
         if (state.type.slug === "Address") {
           state.defaultValue = "32";
+          state.selectAddressNetwork=""
           state.isDefault = true;
         } else {
-          state.defaultValue = "Address";
+          state.defaultValue = "mask";
           state.isDefault = false;
         }
         if (state.typeRemoteNetwork.slug === "Address") {
+          state.selectRemoteAddressNetwork =""
           state.defaultValueRemote = "32";
           state.isDefaultRemote = true;
         } else {
-          state.defaultValueRemote = "Address";
+          state.defaultValueRemote = "mask";
           state.isDefaultRemote = false;
         }
       },

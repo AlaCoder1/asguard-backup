@@ -103,34 +103,41 @@
 
         <v-col class="mt-5" cols="4">
           <label>Address</label>
-          <p style="position: relative; top: 40px; left: 100%">/</p>
         </v-col>
         <v-col cols="8" class="mb-n6">
-          <v-text-field
-            label="Address"
-            :readonly="props.isTypeWAn"
-            v-model="localNetworkAddress"
-          ></v-text-field>
+          <v-row>
+            <v-col cols="8">
+              <v-text-field
+                label="Address"
+                :readonly="props.isTypeWAn"
+                v-model="localNetworkAddress"
+              ></v-text-field>
 
-          <p
-            class="error-feedback mb-5"
-            v-if="props.errors.localNetworkAddress.$errors.length"
-          >
-            {{ props.errors.localNetworkAddress.$errors?.[0].$message }}
-          </p>
-
-          <v-select
-            :label="props.defaultValue ?? 'Address'"
-            :readonly="props.isTypeWAn || props.isDefault"
-            v-model="selectAddressNetwork"
-            :items="numberList"
-          ></v-select>
-          <p
-            class="error-feedback mb-5"
-            v-if="props.errors.selectAddressNetwork.$errors.length"
-          >
-            {{ props.errors.selectAddressNetwork.$errors?.[0].$message }}
-          </p>
+              <p
+                class="error-feedback mb-5"
+                v-if="props.errors.localNetworkAddress.$errors.length"
+              >
+                {{ props.errors.localNetworkAddress.$errors?.[0].$message }}
+              </p>
+            </v-col>
+            <v-col cols="1" align-self="center">
+              <div class="mb-5 ml-1">/</div>
+            </v-col>
+            <v-col cols="3">
+              <v-select
+                :label="props.defaultValue ?? 'Address'"
+                :readonly="props.isTypeWAn || props.isDefault"
+                v-model="selectAddressNetwork"
+                :items="numberList"
+              ></v-select>
+              <p
+                class="error-feedback mb-5"
+                v-if="props.errors.selectAddressNetwork.$errors.length"
+              >
+                {{ props.errors.selectAddressNetwork.$errors?.[0].$message }}
+              </p>
+            </v-col>
+          </v-row>
         </v-col>
 
         <v-col cols="12">
@@ -166,32 +173,42 @@
 
         <v-col class="mt-5" cols="4">
           <label>Address</label>
-          <p style="position: relative; top: 40px; left: 100%">/</p>
         </v-col>
         <v-col cols="8" class="mb-n6">
-          <v-text-field
-            label="Address"
-            v-model="remoteNetworkAddress"
-          ></v-text-field>
+          <v-row>
+            <v-col cols="8">
+              <v-text-field
+                label="Address"
+                v-model="remoteNetworkAddress"
+              ></v-text-field>
 
-          <p
-            class="error-feedback mb-5"
-            v-if="props.errors.remoteNetworkAddress.$errors.length"
-          >
-            {{ props.errors.remoteNetworkAddress.$errors?.[0].$message }}
-          </p>
-          <v-select
-            :label="props.defaultValueRemote ?? 'Address'"
-            :readonly="props.isDefaultRemote"
-            v-model="selectRemoteAddressNetwork"
-            :items="numberList"
-          ></v-select>
-          <p
-            class="error-feedback mb-5"
-            v-if="props.errors.selectRemoteAddressNetwork.$errors.length"
-          >
-            {{ props.errors.selectRemoteAddressNetwork.$errors?.[0].$message }}
-          </p>
+              <p
+                class="error-feedback mb-5"
+                v-if="props.errors.remoteNetworkAddress.$errors.length"
+              >
+                {{ props.errors.remoteNetworkAddress.$errors?.[0].$message }}
+              </p>
+            </v-col>
+            <v-col cols="1" align-self="center">
+              <div class="mb-5 ml-1">/</div>
+            </v-col>
+            <v-col cols="3">
+              <v-select
+                :label="props.defaultValueRemote ?? 'Address'"
+                :readonly="props.isDefaultRemote"
+                v-model="selectRemoteAddressNetwork"
+                :items="numberList"
+              ></v-select>
+              <p
+                class="error-feedback mb-5"
+                v-if="props.errors.selectRemoteAddressNetwork.$errors.length"
+              >
+                {{
+                  props.errors.selectRemoteAddressNetwork.$errors?.[0].$message
+                }}
+              </p>
+            </v-col>
+          </v-row>
         </v-col>
       </template>
     </v-row>

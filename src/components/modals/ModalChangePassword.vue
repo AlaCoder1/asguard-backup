@@ -239,7 +239,6 @@ export default {
         axios
           .put(`/users/userChangePW/${this.userId}`, params)
           .then((response) => {
-            console.log("response :", response);
             if (response.status == 200) {
               this.closeModal();
 

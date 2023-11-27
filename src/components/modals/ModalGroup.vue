@@ -230,7 +230,6 @@ export default {
             .post("/groups/createGroup", params)
             .then(
               (response) => {
-                console.log("res", response);
                 if (response.data.msg.includes("exists")) {
                   let textAlertDanger = `Group ${this.state.formData.groupname} already exists`;
                   setTimeout(() => {

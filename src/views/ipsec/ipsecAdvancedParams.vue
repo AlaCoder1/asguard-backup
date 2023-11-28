@@ -49,6 +49,7 @@
           v-model:rekeyFuzz="state.rekeyFuzz"
           v-model:marginTime="state.marginTime"
           :isdeadPeer="state.deadPeer"
+          :errors="v$"
         />
       </v-col>
       <v-col cols="6">
@@ -192,7 +193,7 @@ export default {
         name: "20 (NIST EC 384 bits)",
         slug: "20:384",
       },
-      lifetime: "28800s",
+      lifetime: "28800",
       //advancedOptions
       policy: true,
       rekey: false,
@@ -263,19 +264,55 @@ export default {
           ),
         },
 
+        lifetime: {
+          isValidlifeTime: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        lifetimeExchange: {
+          isValidlifetimeExchange: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        interactivityTimout: {
+          isValidInteractivityTimout: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        marginTime: {
+          isValidMarginTime: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        rekeyFuzz: {
+          isValidRekeyFuzz: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+
         generalinterface: { required },
         // phase Auth
         authMethod: { required },
         negotiationMode: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(() => state.keyExchange.slug === "v1")
           ),
         },
 
         sharedKey: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(() => state.authMethod.slug === "Mutual PSK")
           ),
           isValidKey: helpers.withMessage(
@@ -289,28 +326,28 @@ export default {
 
         certificate: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(() => state.authMethod.slug === "Mutual RSA")
           ),
         },
 
         keyPair: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(() => state.authMethod.slug === "Mutual Public key")
           ),
         },
 
         localKey: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(() => state.authMethod.slug === "Mutual Public key")
           ),
         },
 
         peerIdentifier: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(() => state.authMethod.slug === "Mutual RSA")
           ),
         },
@@ -333,7 +370,7 @@ export default {
 
         remoteNetworkAddress: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(() => state.mode.slug === "Tunnel IPv4")
           ),
           isValidremoteNetworkAddress: helpers.withMessage(
@@ -345,12 +382,10 @@ export default {
 
         selectAddressNetwork: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(() => state.type.slug === "Network")
           ),
         },
-        // description: { required },
-
         // localAddress: {
         //   required,
         //   isValidlocalAddress: helpers.withMessage(
@@ -362,7 +397,7 @@ export default {
 
         localNetworkAddress: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(
               () =>
                 (state.type.slug === "Network" ||
@@ -379,7 +414,7 @@ export default {
 
         selectRemoteAddressNetwork: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(
               () =>
                 state.typeRemoteNetwork.slug === "Network" &&
@@ -447,7 +482,6 @@ export default {
     watch(
       state,
       () => {
-        
         if (state.type.slug === "WAN" || state.type.slug === "LAN") {
           state.isTypeWAn = true;
         } else {
@@ -463,7 +497,7 @@ export default {
         } else {
           state.defaultValue = "32";
           state.isDefault = false;
-          state.localNetworkAddress = ""
+          state.localNetworkAddress = "";
         }
         if (state.typeRemoteNetwork.slug === "Address") {
           state.selectRemoteAddressNetwork = "";

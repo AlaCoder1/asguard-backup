@@ -55,14 +55,17 @@
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="deadPeer" />
-        <label class="ml-2">Disable dead Peer</label>
+        <label class="ml-2">Enable dead Peer</label>
         <template v-if="props.isdeadPeer">
           <v-text-field
             class="mt-3"
-            label="Seconds (unité)"
+            label="Seconds"
             v-model="seconds"
           ></v-text-field>
-          <v-text-field label="retries (unité)" v-model="retries"></v-text-field>
+          <v-text-field
+            label="retries"
+            v-model="retries"
+          ></v-text-field>
           <v-select
             label="Dead Peer Action"
             v-model="selectDear"
@@ -85,13 +88,19 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>Inactivity timeout (unité)</label>
+        <label>Inactivity timeout</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          label="Inactivity timeout"
+          label="Inactivity timeout in seconds"
           v-model="interactivityTimout"
         ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.interactivityTimout.$errors.length"
+        >
+          {{ props.errors.interactivityTimout.$errors?.[0].$message }}
+        </p>
         <!-- <v-select
           label="Inactivity timeout"
           v-model="interactivityTimout"
@@ -121,16 +130,34 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>Margin time (unité)</label>
+        <label>Margin time</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
-        <v-text-field label="Margin time" v-model="marginTime"></v-text-field>
+        <v-text-field
+          label="Margin time in seconds"
+          v-model="marginTime"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.marginTime.$errors.length"
+        >
+          {{ props.errors.marginTime.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>Rekey fuzz (%)</label>
+        <label>Rekey fuzz </label>
       </v-col>
       <v-col cols="8" class="mb-n6">
-        <v-text-field label="Rekey fuzz" v-model="rekeyFuzz"></v-text-field>
+        <v-text-field
+          label="Rekey fuzz in (%)"
+          v-model="rekeyFuzz"
+        ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.rekeyFuzz.$errors.length"
+        >
+          {{ props.errors.rekeyFuzz.$errors?.[0].$message }}
+        </p>
       </v-col>
     </v-row>
     <v-row class="mt-2">

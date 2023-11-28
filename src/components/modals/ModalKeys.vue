@@ -337,20 +337,20 @@ export default {
 
         key: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(() => state.type.slug === "Create Private Key")
           ),
         },
         privateKey: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(() => state.type.slug === "create")
           ),
         },
 
         externKey: {
           requiredIfFuction: helpers.withMessage(
-            "This field must be indicated",
+            "Value is required",
             requiredIf(() => state.type.slug === "import")
           ),
         },

@@ -58,7 +58,7 @@ def getServerOpenvpn(request, id):
                                                              'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
                                                              'protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
                                                              'device_mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["tun", "tap"]),
-                                                             'interface': openapi.Schema(type=openapi.TYPE_STRING, description="Interface name like LAN or WAN or any"),
+                                                             'interface': openapi.Schema(type=openapi.TYPE_STRING, description="Interface name like LAN or WAN or Any"),
                                                              'local_port': openapi.Schema(type=openapi.TYPE_STRING, description="port number with 4 digits"),
                                                              'tls_auth': openapi.Schema(type=openapi.TYPE_OBJECT, description="importing tls key or generating it", 
                                                                                         required=['generate'], properties={'generate': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
@@ -147,10 +147,13 @@ def createServerOpenvpn(request):
             force_dns_cache_update = data.get('force_dns_cache_update', '')
             ntp_servers = data.get('ntp_servers', '')
             verb = data.get('verbosity_level', '')
-            interface = Interface.objects.get(name_interface=interface_name)
-            interface = interface.pk
-            interface_address = IP4Config.objects.get(interface_id=interface)
-            data["interface_address"] = interface_address.ip_address
+            if interface_name != "Any":
+                interface = Interface.objects.get(name_interface=interface_name)
+                interface = interface.pk
+                interface_address = IP4Config.objects.get(interface_id=interface)
+                data["interface_address"] = interface_address.ip_address
+            else:
+                interface = "Any"
         
             ca = f'/etc/certificates_{ca_name}/ca.crt'
             cert = f'/etc/openvpn/certificates_{server_cert_name}/server.crt'
@@ -280,7 +283,7 @@ def deleteServerOpenvpn(request, id):
                                                              'server_mode': openapi.Schema(type=openapi.TYPE_OBJECT, required=['mode'], properties={'mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
                                                              'protocol': openapi.Schema(type=openapi.TYPE_STRING, enum=["udp", "udp4", "udp6", "tcp", "tcp4", "tcp6"]),
                                                              'device_mode': openapi.Schema(type=openapi.TYPE_STRING, enum=["tun", "tap"]),
-                                                             'interface': openapi.Schema(type=openapi.TYPE_STRING, description="Interface name like LAN or WAN or any"),
+                                                             'interface': openapi.Schema(type=openapi.TYPE_STRING, description="Interface name like LAN or WAN or Any"),
                                                              'local_port': openapi.Schema(type=openapi.TYPE_STRING, description="port number with 4 digits"),
                                                              'tls_auth': openapi.Schema(type=openapi.TYPE_OBJECT, description="importing tls key or generating it", 
                                                                                         required=['generate'], properties={'generate': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
@@ -343,7 +346,7 @@ def updateServerOpenVPN(request, id):
             server.server_mode = server_mode.get('mode', '')
             server.proto = data.get('protocol', '')
             server.dev = data.get('device_mode', '')
-            server.interface = Interface.objects.get(name_interface=data.get('interface', ''))
+            server.interface=data.get('interface', '')
             server.port = data.get('local_port', '')
             tls_auth = data.get('tls_auth', '')
             server.tls = f'/etc/openvpn/server/static_{server.name}.key'
@@ -377,8 +380,10 @@ def updateServerOpenVPN(request, id):
             dns_servers = data.get('dns_servers', '')
             ntp_servers = data.get('ntp_servers', '')
             server.verb = data.get('verbosity_level', '')
-            interface_address = IP4Config.objects.get(interface_id=server.interface)
-            data["interface_address"] = interface_address.ip_address
+            if server.interface != "Any":
+                server.interface = Interface.objects.get(name_interface=server.interface)
+                interface_address = IP4Config.objects.get(interface_id=server.interface)
+                data["interface_address"] = interface_address.ip_address
 
             if bridge.get('bridge_select', ''):
                 server.bridge_interface = bridge.get('bridge_interface', '')

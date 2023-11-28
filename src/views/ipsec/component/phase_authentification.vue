@@ -127,6 +127,7 @@
             label="Local Key Pair"
             item-title="name"
             item-value="id"
+            :items="mapedKeyPublic"
             return-object
           ></v-select>
           <p
@@ -145,6 +146,7 @@
             label="Peer Key Pair"
             item-title="name"
             item-value="id"
+            :items="mapedKeyPublic"
             return-object
           ></v-select>
           <p
@@ -169,6 +171,7 @@ import { useVModels } from "@vueuse/core";
 import { ref, onMounted } from "vue";
 import axios from "axios";
 const CertificateList = ref([]);
+const mapedKeyPublic = ref([]);
 
 const getCookie = (name) => {
   let cookieValue = null;
@@ -208,6 +211,25 @@ const getAllCertif = () => {
 };
 onMounted(() => {
   getAllCertif();
+
+  let publicKeyAttribute =
+    document.getElementById("app").attributes["publicKey"].value;
+  console.log("locl", publicKeyAttribute);
+
+  const validJsonString = publicKeyAttribute
+    .replace(/'/g, '"')
+    .replace(/True/g, "true")
+    .replace(/False/g, "false")
+    .replace(/None/g, "null");
+  const parsedArray = JSON.parse(validJsonString);
+
+  let mapedPublicKey = parsedArray.map((i) => {
+    return {
+      id: i.id,
+      name: i.name,
+    };
+  });
+  mapedKeyPublic.value = mapedPublicKey;
 });
 const props = defineProps([
   "authMethodItem",

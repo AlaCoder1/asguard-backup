@@ -140,6 +140,7 @@ export default {
   },
   setup() {
     const state = reactive({
+      mapedKeyPublic: [],
       defaultValueRemote: "",
       isDefaultRemote: false,
       defaultValue: "",
@@ -477,6 +478,25 @@ export default {
 
     onMounted(() => {
       getInterface();
+
+      let publicKeyAttribute =
+        document.getElementById("app").attributes["publicKey"].value;
+      console.log("***", publicKeyAttribute);
+
+      const validJsonString = publicKeyAttribute
+        .replace(/'/g, '"')
+        .replace(/True/g, "true")
+        .replace(/False/g, "false")
+        .replace(/None/g, "null");
+      const parsedArray = JSON.parse(validJsonString);
+
+      let mapedPublicKey = parsedArray.map((i) => {
+        return {
+          id: i.id,
+          name: i.name,
+        };
+      });
+      state.mapedKeyPublic = mapedPublicKey;
     });
 
     watch(
@@ -531,8 +551,8 @@ export default {
         if (state.authMethod?.slug === "Mutual Public key") {
           authen = {
             authentication_method: state.authMethod?.slug,
-            local_key_pair: state.localKey,
-            peer_key_pair: state.keyPair,
+            local_key_pair: state.localKey?.id,
+            peer_key_pair: state.keyPair?.id,
           };
         } else if (state.authMethod?.slug === "Mutual PSK") {
           authen = {

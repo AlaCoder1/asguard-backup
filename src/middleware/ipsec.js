@@ -14,6 +14,7 @@ const app = createApp(ipsec);
 
 app.provide('emitter', emitter)
 
+
 const vuetify = createVuetify({
     components,
     directives
@@ -25,7 +26,9 @@ const vuetify = createVuetify({
       return response;
     },
     (error) => {
+      console.log('errorMainipsec',error)
       if ((error.response.status === 401 )||(error.response.status === 403)) {
+        console.log('Token expired or unauthorized. Redirecting to login.');
         window.location.href = '/';
       }
       return Promise.reject(error);

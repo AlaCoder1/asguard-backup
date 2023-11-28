@@ -404,7 +404,7 @@ export default {
 
           certificatData: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () =>
                   state.formData.method.name ===
@@ -414,7 +414,7 @@ export default {
           },
           privateKey: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () =>
                   state.formData.method.name ===
@@ -425,7 +425,7 @@ export default {
 
           autorityCertif: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )
@@ -433,7 +433,7 @@ export default {
           },
           keyLength: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )
@@ -441,7 +441,7 @@ export default {
           },
           hashAlgo: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )
@@ -449,7 +449,7 @@ export default {
           },
           type: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )
@@ -457,7 +457,7 @@ export default {
           },
           keyType: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )
@@ -465,7 +465,7 @@ export default {
           },
           lifeTime: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )
@@ -479,7 +479,7 @@ export default {
 
           country: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )
@@ -487,7 +487,7 @@ export default {
           },
           state: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )
@@ -500,7 +500,7 @@ export default {
           },
           place: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )
@@ -513,7 +513,7 @@ export default {
           },
           organisation: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )
@@ -521,7 +521,7 @@ export default {
           },
           mail: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )
@@ -530,7 +530,7 @@ export default {
           },
           communName: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(
                 () => state.formData.method.name === "Create Certificate"
               )

@@ -66,28 +66,28 @@
       </v-col>
       <v-col  cols="8" class="mb-n6">
         <input type="checkbox" v-model="typeOfService" />
-        <label class="ml-2">Infinitely resolve remote server</label>
+        <label class="ml-2">Active type of service</label>
       </v-col>
       <v-col  cols="4">
         <label>IPv6</label>
       </v-col>
       <v-col  cols="8" class="mb-n6">
         <input type="checkbox" v-model="ipv6" />
-        <label class="ml-2">Infinitely resolve remote server</label>
+        <label class="ml-2">Disable IPv6</label>
       </v-col>
       <v-col  cols="4">
         <label> pull routes</label>
       </v-col>
       <v-col  cols="8" class="mb-n6">
         <input type="checkbox" v-model="pullRoutes" />
-        <label class="ml-2">Infinitely resolve remote server</label>
+        <label class="ml-2">Don't pull routes</label>
       </v-col>
       <v-col  cols="4">
         <label>Add/remove routes</label>
       </v-col>
       <v-col  cols="8" class="mb-n6">
         <input type="checkbox" v-model="addRemoveRoutes" />
-        <label class="ml-2">Infinitely resolve remote server</label>
+        <label class="ml-2">Don't add/remove routes</label>
       </v-col>
     </v-row>
   </div>

@@ -73,14 +73,21 @@ def openvpn_interfaces():
     with open('list_interfaces.txt', 'w') as interfaces_file:
         interfaces_file.write(process.stdout)
 
+    # Interfaces with device mode TUN
     command = ['sudo', 'awk', '/^[0-9]+: tun[0-9]+:/ { iface = $2 } /inet / { print iface, $2}', 'list_interfaces.txt']
     process = execute_command_without_arguments(command)
-
-    interfaces = process.stdout
+    interfaces_tun = process.stdout
+    # Interfaces with device mode TAP
+    command = ['sudo', 'awk', '/^[0-9]+: tap[0-9]+:/ { iface = $2 } /inet / { print iface, $2}', 'list_interfaces.txt']
+    process = execute_command_without_arguments(command)
+    interfaces_tap = process.stdout
+    # All interfaces (TUN and TAP)
+    interfaces = f'{interfaces_tun}\n{interfaces_tap}'
     interfaces = list(interfaces.split("\n"))
+
     list_vpn_interfaces = []
     for interface in interfaces:
-        if interface.startswith('tun'):
+        if interface.startswith('tun') or interface.startswith('tap'):
             list_vpn_interfaces.append({"ifname": interface[:interface.find(':')],
                                         "ip_address": interface[interface.find(':')+2:interface.find('/')],
                                         "netmask": interface[interface.find('/')+1:]})
@@ -161,7 +168,6 @@ multihome
 duplicate-cn
 #max-clients
 #client-to-client
-#engine rdrand
 #tun-ipv6
 
 cipher {json_object["encryption_algorithm"]}
@@ -190,9 +196,6 @@ log-append /var/log/openvpn/openvpn.log
 
     if json_object["interface"] != "Any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
-
-    if json_object["hardware_crypto"] != "No Hardware Crypto":
-        config_input = config_input.replace("#engine rdrand", "engine rdrand")
     
     if json_object["bridge"]["bridge_select"]:  # When activating Bridge
         bridge_interface_address = json_object["bridge_interface_address"]
@@ -295,7 +298,6 @@ nobind
 #comp-lzo
 #compress migrate
 #tun-ipv6
-#engine rdrand
 remote-cert-tls server
 cipher {json_object["encryption_algorithm"]}
 auth-nocache
@@ -374,9 +376,6 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
         
     if json_object["renegotiate_time"] != '':
         config_input = config_input.replace("#reneg-sec", f"reneg-sec {json_object['renegotiate_time']}")
-
-    if json_object["hardware_crypto"] != "No Hardware Crypto":
-        config_input = config_input.replace("#engine rdrand", "engine rdrand")
     
     if json_object["ipv4_remote_network"] != '':
         remote_address = json_object["ipv4_remote_network"]

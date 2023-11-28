@@ -86,12 +86,7 @@
     <v-select
       label="Algorithm"
       v-model="encryptAlgo"
-      :items="[
-        'AES-256-GCM',
-        'AES-192-GCM',
-        'AES-128-GCM',
-        'CHACHA20-POLY1305',
-      ]"
+      :items="['AES-256-GCM', 'AES-128-GCM', 'CHACHA20-POLY1305']"
     ></v-select>
     <p
       class="error-feedback mb-5"
@@ -108,7 +103,7 @@
       label="Auth Digest Algorithm"
       v-model="authDigest"
       item-title="name"
-      item-value="id"
+      item-value="slug"
       return-object
       :items="authDigestList"
     ></v-select>
@@ -119,10 +114,10 @@
       {{ props.errors.authDigest.$errors?.[0].$message }}
     </p>
   </v-col>
-  <v-col cols="4" align-self="center">
+  <!-- <v-col cols="4" align-self="center">
     <label>Hardware Crypto</label>
-  </v-col>
-  <v-col cols="8" class="mb-n6">
+  </v-col> -->
+  <!-- <v-col cols="8" class="mb-n6">
     <v-select
       label="Hardware Crypto"
       v-model="hardwareCrypto"
@@ -138,7 +133,7 @@
       ]"
       return-object
     ></v-select>
-  </v-col>
+  </v-col> -->
 </template>
 
 <script setup>
@@ -193,66 +188,41 @@ const state = reactive({
 });
 const authDigestList = ref([
   {
-    name: "BLAKE2b512",
-    slug: "blake2b512",
-    id: "1",
-  },
-  {
-    name: "BLAKE2b256",
-    slug: "blake2b256",
-    id: "2",
-  },
-  {
     name: "SHA224",
     slug: "sha224",
-    id: "3",
+  },
+  {
+    name: "SHA244",
+    slug: "SHA244",
   },
   {
     name: "SHA256",
-    slug: "sha256",
-    id: "4",
+    slug: "SHA256",
   },
-  {
-    name: "SHA3-224",
-    slug: "sha3-224",
-    id: "5",
-  },
-  {
-    name: "SHA3-256",
-    slug: "sha3-256",
-    id: "6",
-  },
-  {
-    name: "SHA3-384",
-    slug: "sha3-384",
-    id: "7",
-  },
-  {
-    name: "SHA3-512",
-    slug: "sha3-512",
-    id: "8",
-  },
-
   {
     name: "SHA384",
-    slug: "sha384",
-    id: "9",
+    slug: "SHA384",
   },
 
   {
     name: "SHA512",
-    slug: "sha512",
-    id: "10",
+    slug: "SHA512",
   },
   {
-    name: "SHA512-224",
-    slug: "sha512-224",
-    id: "11",
+    name: "SHA3-224",
+    slug: "SHA3-224",
   },
   {
-    name: "SHA512-256",
-    slug: "sha512-256",
-    id: "12",
+    name: "SHA3-256",
+    slug: "SHA3-256",
+  },
+  {
+    name: "SHA3-384",
+    slug: "SHA3-384",
+  },
+  {
+    name: "SHA3-512",
+    slug: "SHA3-512",
   },
 ]);
 

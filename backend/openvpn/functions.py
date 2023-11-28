@@ -73,14 +73,21 @@ def openvpn_interfaces():
     with open('list_interfaces.txt', 'w') as interfaces_file:
         interfaces_file.write(process.stdout)
 
+    # Interfaces with device mode TUN
     command = ['sudo', 'awk', '/^[0-9]+: tun[0-9]+:/ { iface = $2 } /inet / { print iface, $2}', 'list_interfaces.txt']
     process = execute_command_without_arguments(command)
-
-    interfaces = process.stdout
+    interfaces_tun = process.stdout
+    # Interfaces with device mode TAP
+    command = ['sudo', 'awk', '/^[0-9]+: tap[0-9]+:/ { iface = $2 } /inet / { print iface, $2}', 'list_interfaces.txt']
+    process = execute_command_without_arguments(command)
+    interfaces_tap = process.stdout
+    # All interfaces (TUN and TAP)
+    interfaces = f'{interfaces_tun}\n{interfaces_tap}'
     interfaces = list(interfaces.split("\n"))
+
     list_vpn_interfaces = []
     for interface in interfaces:
-        if interface.startswith('tun'):
+        if interface.startswith('tun') or interface.startswith('tap'):
             list_vpn_interfaces.append({"ifname": interface[:interface.find(':')],
                                         "ip_address": interface[interface.find(':')+2:interface.find('/')],
                                         "netmask": interface[interface.find('/')+1:]})

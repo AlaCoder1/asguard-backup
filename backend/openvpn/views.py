@@ -259,7 +259,7 @@ def deleteServerOpenvpn(request, id):
             
             if len(Interface.objects.filter(name_interface=server.name)):
                 interface = Interface.objects.get(name_interface=server.name)
-                if len(Interface.objects.filter(interface_id=interface.pk)):
+                if len(IP4Config.objects.filter(interface_id=interface.pk)):
                     ipv4 = IP4Config.objects.get(interface_id=interface.pk)
                     ipv4.delete()
                     interface.delete()

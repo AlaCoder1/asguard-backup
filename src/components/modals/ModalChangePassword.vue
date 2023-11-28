@@ -123,7 +123,7 @@ export default {
         formData: {
           password: {
             required: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               required
             ),
             isValidPassword: helpers.withMessage(
@@ -141,7 +141,7 @@ export default {
               sameAs(state.formData.password)
             ), // can be a reference to a field or computed property
             required: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               required
             ),
 

@@ -328,7 +328,7 @@
 </template>
 
 <script>
-import { inject } from "vue";
+import { inject, toRefs } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import useValidate from "@vuelidate/core";
 import { required, requiredIf, helpers } from "@vuelidate/validators";
@@ -349,7 +349,9 @@ export default {
     VButton,
     AgGridVue,
   },
-  setup() {
+  props: ["dataClient"],
+  setup(props) {
+    const { dataClient } = toRefs(props);
     const emitter = inject("emitter");
     const color = ref(null);
     const snackbar = ref(false);
@@ -431,10 +433,10 @@ export default {
       clientCertificate: "",
       encryptionAlgorithm: "",
       authDigestAlgorithm: "",
-      hardwareCrypto: {
-        name: "No Hardware Crypto acceleration",
-        slug: "No Hardware Crypto",
-      },
+      // hardwareCrypto: {
+      //   name: "No Hardware Crypto acceleration",
+      //   slug: "No Hardware Crypto",
+      // },
 
       //tunnelSettings
       ipv4TunnelNetwork: "",
@@ -534,10 +536,10 @@ export default {
 
         state.authDigestAlgorithm = filtredAuth[0];
 
-        let filtredHardware = hardwareCryptoList.value.filter(
-          (i) => i.slug === data.hardware_crypto
-        );
-        state.hardwareCrypto = filtredHardware[0] ?? "";
+        // let filtredHardware = hardwareCryptoList.value.filter(
+        //   (i) => i.slug === data.hardware_crypto
+        // );
+        // state.hardwareCrypto = filtredHardware[0] ?? "";
 
         state.ipv4TunnelNetwork = data.ipv4_tunnel_network;
         // state.ipv6TunnelNetwork= data.,
@@ -614,6 +616,15 @@ export default {
         }
       },
       { immediate: true }
+    );
+
+    watch(
+      () => dataClient.value,
+      (newValue) => {
+        if (newValue != "CLIENTS") {
+          cancel();
+        }
+      }
     );
 
     const getCookie = (name) => {
@@ -902,7 +913,7 @@ export default {
           ca_name: state.peerCertificateAuthority.name,
           client_cert: state.clientCertificate.name,
           encryption_algorithm: state.encryptionAlgorithm.slug,
-          hardware_crypto: state.hardwareCrypto.slug,
+          // hardware_crypto: state.hardwareCrypto.slug,
           ipv4_tunnel_network: state.ipv4TunnelNetwork,
           ipv4_remote_network: state.ipv4RemoteNetwork,
           limit_outgoing_bandwidth: state.limitOutgoingBandwidth,
@@ -968,10 +979,6 @@ export default {
         slug: "AES-256-GCM",
       },
       {
-        name: "192-AES-GCM",
-        slug: "192-AES-GCM",
-      },
-      {
         name: "AES-128-GCM",
         slug: "AES-128-GCM",
       },
@@ -982,16 +989,25 @@ export default {
     ]);
     const authDigestAlgorithmList = ref([
       {
-        name: "BLAKE2b512",
-        slug: "BLAKE2b512",
+        name: "SHA224",
+        slug: "sha224",
       },
       {
-        name: "BLAKE2b256",
-        slug: "BLAKE2b256",
+        name: "SHA244",
+        slug: "SHA244",
       },
       {
         name: "SHA256",
         slug: "SHA256",
+      },
+      {
+        name: "SHA384",
+        slug: "SHA384",
+      },
+
+      {
+        name: "SHA512",
+        slug: "SHA512",
       },
       {
         name: "SHA3-224",
@@ -1009,28 +1025,12 @@ export default {
         name: "SHA3-512",
         slug: "SHA3-512",
       },
-      {
-        name: "SHA384",
-        slug: "SHA384",
-      },
-      {
-        name: "SHA512",
-        slug: "SHA512",
-      },
-      {
-        name: "SHA512-224",
-        slug: "SHA512-224",
-      },
-      {
-        name: "SHA512-256",
-        slug: "SHA512-256",
-      },
     ]);
 
     const hardwareCryptoList = ref([
       {
-        name: "No hardware Crypto acceleration",
-        slug: "No hardware Crypto",
+        name: "No Hardware Crypto acceleration",
+        slug: "No Hardware Crypto",
       },
       {
         name: "Intel RDRAND engine -RAND",
@@ -1098,10 +1098,10 @@ export default {
       state.clientCertificate = "";
       state.encryptionAlgorithm = "";
       state.authDigestAlgorithm = "";
-      state.hardwareCrypto = {
-        name: "No hardware Crypto acceleration",
-        slug: "No hardware Crypto acceleration",
-      };
+      // state.hardwareCrypto = {
+      //   name: "No Hardware Crypto acceleration",
+      //   slug: "No Hardware Crypto acceleration",
+      // };
       //tunnelSettings
       state.ipv4TunnelNetwork = "";
       state.ipv6TunnelNetwork = "";

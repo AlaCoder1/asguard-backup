@@ -4,8 +4,7 @@
     class="vbtn"
     :color="customColor"
     :large="isLarge"
-    @click="handleClick"
-  >
+    >
     <span :style="`color: ${labelColor}`">{{ label }}</span>
   </v-btn>
 </template>
@@ -29,11 +28,6 @@ export default {
     labelColor: {
       type: String,
       default: "black",
-    },
-  },
-  methods: {
-    handleClick() {
-      this.$emit("click");
     },
   },
 };

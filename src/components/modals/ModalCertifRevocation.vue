@@ -18,6 +18,7 @@
                     :alwaysShowHorizontalScroll="false"
                     :alwaysShowVarticalScroll="false"
                     :gridOptions="gridOptions"
+                    :rowData="rowDataCertificats"
                     style="width: 100%; height: 100%"
                     @grid-ready="onGridReady"
                   />
@@ -25,11 +26,7 @@
               </v-row>
             </v-container>
           </v-card-text>
-          <v-snackbar v-model="snackbar" location="bottom right" :color="color">
-            {{ textAlert }}
 
-            <template v-slot:actions> </template>
-          </v-snackbar>
           <v-card-actions class="actionBtn">
             <v-btn
               :rounded="true"
@@ -44,6 +41,16 @@
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+
+      <template v-slot:actions> </template>
+    </v-snackbar>
   </v-row>
 </template>
 
@@ -113,9 +120,9 @@ export default {
           };
         });
         this.rowDataCertificats = infoList;
-        setTimeout(() => {
-          this.gridApi.setRowData(this.rowDataCertificats);
-        }, 5);
+        // setTimeout(() => {
+        // this.gridApi.setRowData(this.rowDataCertificats);
+        // });
       }
     },
   },
@@ -204,28 +211,26 @@ export default {
     handleAction(action, rowData) {
       switch (action) {
         case "lock":
-          console.log("revoce row:", rowData);
-
-          console.log("lock:", rowData);
-
           const csrfToken = this.getCookie("csrftoken");
           axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
           axios
             .put(`/certificates/unrevokeCertificate/${rowData.id}`)
             .then((response) => {
+              this.closeModal();
+
               this.snackbar = true;
               this.color = "success";
               this.textAlert = response.data.msg;
+
               setTimeout(() => {
-                this.closeModal();
                 location.reload();
-              }, 2000);
+              }, 1000);
             })
-            .catch((error) => {
+            .catch((i) => {
               this.snackbar = true;
               this.color = "red";
-              this.textAlert = "error";
+              this.textAlert = i.response.data.error;
             });
 
           break;

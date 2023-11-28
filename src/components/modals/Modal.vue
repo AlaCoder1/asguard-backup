@@ -106,7 +106,6 @@ export default {
     initialData(newValue) {
       // React to prop changes
       this.formData = newValue;
-      console.log('Prop changed:', newValue);
     }
   },
   methods: {
@@ -127,7 +126,6 @@ export default {
       // Emit an event to send form data to the parent component
       this.$emit('updateModalData', this.formData);
 
-      console.log("submitForm :", this.formData)
     },
   },
   // components: {

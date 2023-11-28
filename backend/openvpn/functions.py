@@ -168,7 +168,6 @@ multihome
 duplicate-cn
 #max-clients
 #client-to-client
-#engine rdrand
 #tun-ipv6
 
 cipher {json_object["encryption_algorithm"]}
@@ -197,9 +196,6 @@ log-append /var/log/openvpn/openvpn.log
 
     if json_object["interface"] != "Any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
-
-    if json_object["hardware_crypto"] != "No Hardware Crypto":
-        config_input = config_input.replace("#engine rdrand", "engine rdrand")
     
     if json_object["bridge"]["bridge_select"]:  # When activating Bridge
         bridge_interface_address = json_object["bridge_interface_address"]
@@ -302,7 +298,6 @@ nobind
 #comp-lzo
 #compress migrate
 #tun-ipv6
-#engine rdrand
 remote-cert-tls server
 cipher {json_object["encryption_algorithm"]}
 auth-nocache
@@ -381,9 +376,6 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
         
     if json_object["renegotiate_time"] != '':
         config_input = config_input.replace("#reneg-sec", f"reneg-sec {json_object['renegotiate_time']}")
-
-    if json_object["hardware_crypto"] != "No Hardware Crypto":
-        config_input = config_input.replace("#engine rdrand", "engine rdrand")
     
     if json_object["ipv4_remote_network"] != '':
         remote_address = json_object["ipv4_remote_network"]

@@ -16,7 +16,7 @@
               :defaultColDef="defaultColDef"
               :rowGroupPanelShow="rowGroupPanelShow"
               @grid-ready="onGridReady"
-               style="width: 100%; height: 100%;"
+              style="width: 100%; height: 100%"
             />
             <div class="justify-end d-flex mr-3 mt-3 mb-3">
               <VButton
@@ -78,62 +78,71 @@ export default {
       {
         headerName: "Type",
         cellRenderer: TypePeers,
-        minWidth: 100, suppressSizeToFit: true ,
+        minWidth: 100,
+        suppressSizeToFit: true,
         sortable: true,
         filter: true,
       },
       {
         headerName: "Remote Gateway",
         cellRenderer: RemoteGateway,
-        minWidth: 200, suppressSizeToFit: true ,
+        minWidth: 200,
+        suppressSizeToFit: true,
         sortable: true,
         filter: true,
       },
       {
         headerName: "Mode",
         field: "negotiation_mode",
-        minWidth: 100, suppressSizeToFit: true ,
+        minWidth: 100,
+        suppressSizeToFit: true,
         sortable: true,
         filter: true,
       },
       {
         headerName: "Phase 1 Proposal",
         cellRenderer: FirstPhaseProposal,
-        minWidth: 200, suppressSizeToFit: true ,
+        minWidth: 300,
+        suppressSizeToFit: true,
         sortable: true,
         filter: true,
       },
       {
         headerName: "Authentication",
         field: "authentication_method",
-        minWidth: 150, suppressSizeToFit: true ,
+        minWidth: 150,
+        suppressSizeToFit: true,
         sortable: true,
         filter: true,
       },
       {
         headerName: "Local Subnet",
         field: "address_local_network",
-        minWidth: 150, suppressSizeToFit: true ,
+        minWidth: 150,
+        suppressSizeToFit: true,
         sortable: true,
         filter: true,
       },
       {
         headerName: "Remote subnet",
         field: "address_remote_network",
-        minWidth: 150, suppressSizeToFit: true ,
+        minWidth: 150,
+        suppressSizeToFit: true,
         sortable: true,
         filter: true,
       },
       {
         headerName: "Phase 2 Proposal",
         cellRenderer: SecondPhaseProposal,
-        minWidth: 200, suppressSizeToFit: true ,
+        minWidth: 200,
+        suppressSizeToFit: true,
         sortable: true,
         filter: true,
       },
       {
         headerName: "Enable",
-        minWidth: 100, suppressSizeToFit: true ,
+        minWidth: 100,
+        suppressSizeToFit: true,
         field: "enable",
         checkboxSelection: true,
       },
@@ -150,40 +159,96 @@ export default {
     function TypePeers(data) {
       let eGui = document.createElement("div");
       eGui.innerHTML = `
-         ${data.data.internet_protocol}  ${data.data.key_exchange_version}
-        `;
+          ${data.data.internet_protocol}  ${data.data.key_exchange_version}
+          `;
       eGui.style.lineHeight = "2";
       return eGui;
     }
     function RemoteGateway(data) {
       let eGui = document.createElement("div");
       eGui.innerHTML = `
-         ${data.data.interface}  ${data.data.remote_gateway}
-        `;
+          ${data.data.interface}  ${data.data.remote_gateway}
+          `;
       eGui.style.lineHeight = "2";
       return eGui;
+    }
+    function extractDHKey(data) {
+      let data_dh_key_group = String(data); // Ensure data is converted to a string
+      let split_data_dh_key_group = data_dh_key_group.split(":")[0];
+      return split_data_dh_key_group;
+    }
+    function extractPFSKey(data) {
+      let data_dh_key_group = String(data); // Ensure data is converted to a string
+      let split_data_dh_key_group = data_dh_key_group.split(":")[1];
+      console.log(split_data_dh_key_group);
+      return split_data_dh_key_group;
+    }
+    function uppercaseData(data) {
+      let data_uppercase = String(data); // Ensure data is converted to a string
+      let uppercase_data = data_uppercase.toUpperCase();
+      return uppercase_data;
     }
     function FirstPhaseProposal(data) {
       let eGui = document.createElement("div");
+      let encryptionText = "";
+
+      switch (data.data.encryption_algorithm_ph1) {
+        case "128":
+          encryptionText = "128 bit AES-GCM with 128 bit ICV";
+          break;
+        case "192":
+          encryptionText = "192 bit AES-GCM with 128 bit ICV";
+          break;
+        case "256":
+          encryptionText = "256 bit AES-GCM with 128 bit ICV";
+          break;
+        default:
+          encryptionText = "Unknown Encryption";
+      }
+
       eGui.innerHTML = `
-         ${data.data.encryption_algorithm_ph1}  +  ${data.data.hash_algorithm_ph1}  +  ${data.data.dh_key_group}
-        `;
+          ${encryptionText} <br/>
+          ${uppercaseData(data.data.hash_algorithm_ph1)} <br/> DH Group 
+          ${extractDHKey(data.data.dh_key_group)}
+          `;
       eGui.style.lineHeight = "2";
       return eGui;
     }
+
     function SecondPhaseProposal(data) {
       let eGui = document.createElement("div");
+      let encryptionText = "";
+
+      switch (data.data.encryption_algorithm_ph2) {
+        case "128":
+          encryptionText = "aes128gcm16";
+          break;
+        case "192":
+          encryptionText = "aes192gcm16";
+          break;
+        case "256":
+          encryptionText = "aes256gcm16";
+          break;
+        default:
+          encryptionText = "Unknown Encryption";
+      }
       eGui.innerHTML = `
-         ${data.data.encryption_algorithm_ph2}  +  ${data.data.hash_algorithm_ph2}  +  ${data.data.pfs_key_group}
-        `;
+          ${encryptionText} <br/> 
+          ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
+          ${extractDHKey(data.data.pfs_key_group)} (
+          ${extractPFSKey(data.data.pfs_key_group)}
+          )bits         `;
       eGui.style.lineHeight = "2";
       return eGui;
     }
+
     const gridApi = ref(null);
     const gridOptions = ref({
       pagination: true,
       paginationPageSize: 5,
       rowSelection: "single",
+      domLayout: "autoHeight",
+      rowHeight: 80,
     });
 
     // Obtain API from grid's onGridReady event
@@ -219,30 +284,30 @@ export default {
       });
       if (isCurrentRowEditing) {
         eGui.innerHTML = `
-        <button  
-          class="action-button update"
-          data-action="update">
-               update  
-        </button>
-        <button  
-          class="action-button cancel"
-          data-action="cancel">
-               cancel
-        </button>
-        `;
+          <button  
+            class="action-button update"
+            data-action="update">
+                update  
+          </button>
+          <button  
+            class="action-button cancel"
+            data-action="cancel">
+                cancel
+          </button>
+          `;
       } else {
         eGui.innerHTML = `
-          <button
-          class="action-button editClient"
-          data-action="edit" title="Edit">
-             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
-          </button>
-          <button
-          class="action-button delete"
-          data-action="delete" title="Delete">
-             <i class="mdi mdi-delete" style="color: #086EAE; font-size: 20px;"></i>
-          </button>
-       `;
+            <button
+            class="action-button editClient"
+            data-action="edit" title="Edit">
+              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+            </button>
+            <button
+            class="action-button delete"
+            data-action="delete" title="Delete">
+              <i class="mdi mdi-delete" style="color: #086EAE; font-size: 20px;"></i>
+            </button>
+        `;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -330,6 +395,9 @@ export default {
       gridOptions,
       TypePeers,
       RemoteGateway,
+      extractDHKey,
+      extractPFSKey,
+      uppercaseData,
       FirstPhaseProposal,
       SecondPhaseProposal,
       onGridReady,

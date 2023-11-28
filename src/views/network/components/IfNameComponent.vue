@@ -27,14 +27,11 @@
               </v-col>
             </v-row>
             <v-row class="ml-3 mr-3">
-              <v-text-field v-model="description"></v-text-field>
-              <p
-                v-if="v$.description.$errors.length"
-                style="color: red"
-                class="error-feedback"
-              >
-                {{ v$.description.$errors?.[0].$message }}
-              </p>
+              <v-text-field
+                v-model="description"
+                :rules="[(v) => !!v || 'Description is required']"
+                required
+              ></v-text-field>
             </v-row>
           </div>
           <v-card-title class="title-text mt-5"
@@ -68,20 +65,14 @@
                     <span style="color: red">*</span>
                   </div>
                 </td>
-                <td>
+                <td class="new-style">
                   <v-select
                     background-color="#f6f6f6"
                     v-model="setuptypeip4"
-                    :items="items.map((item) => item.text)"
+                    :items="items.map((item) => item.value)"
                     class="ml-3"
+                    :rules="[(v) => !!v || 'IPV4 Setup Type is required']"
                   ></v-select>
-                  <p
-                    v-if="v$.setuptypeip4.$errors.length"
-                    style="color: red"
-                    class="error-feedback"
-                  >
-                    {{ v$.setuptypeip4.$errors?.[0].$message }}
-                  </p>
                 </td>
               </tr>
               <tr>
@@ -93,14 +84,8 @@
                     label="Enter MAC address"
                     class="ml-3"
                     v-model="addmac"
+                    :rules="[macAddressValidation]"
                   ></v-text-field>
-                  <p
-                    v-if="v$.addmac.$errors.length"
-                    style="color: red"
-                    class="error-feedback"
-                  >
-                    {{ v$.addmac.$errors?.[0].$message }}
-                  </p>
                 </td>
               </tr>
               <tr>
@@ -112,6 +97,7 @@
                     label="Enter MTU"
                     class="ml-3"
                     v-model="mtuv"
+                    :rules="[validateRange]"
                   ></v-text-field>
                 </td>
               </tr>
@@ -143,7 +129,7 @@
           </table>
         </v-col>
         <v-col cols="12" sm="6">
-          <div v-if="setuptypeip4 === 'Static'">
+          <div v-if="setuptypeip4 === 'static'">
             <v-card-title class="title-text"
               >Static IPV4 address configuration</v-card-title
             >
@@ -159,6 +145,10 @@
                     label="Enter IPV4 address"
                     v-model="value_setup_Ipv4.ip_address4"
                     class="ip-address-style"
+                    :rules="[
+                      (v) => !!v || 'Description is required',
+                      () => ipAddressValidation(value_setup_Ipv4.ip_address4),
+                    ]"
                   ></v-text-field>
                 </v-col>
                 <v-col cols="4" class="mb-n6">
@@ -166,6 +156,7 @@
                     v-model="value_setup_Ipv4.netmask4"
                     :items="netmaskItems"
                     class="ml-3 netmask-select-style"
+                    :rules="[(v) => !!v || 'Netmask is required']"
                   ></v-select>
                 </v-col>
                 <v-col align-self="center" cols="4">
@@ -215,12 +206,13 @@
                   <v-select
                     v-model="value_setup_Ipv4.gateway4.value"
                     :items="allStaticGatewaysAddresses"
+                    :rules="[(v) => !!v || 'IPV4 gateway is required']"
                   ></v-select>
                 </v-col>
               </v-row>
             </div>
           </div>
-          <div v-if="setuptypeip4 === 'DHCP'">
+          <div v-if="setuptypeip4 === 'dhcp'">
             <v-card-title class="title-text"
               >Configuring the DHCP Client</v-card-title
             >
@@ -400,10 +392,6 @@ import ConfigDHCPv4 from "./configDHCP/ConfigDHCPv4.vue";
 import AdvancedConfigDHCPv4 from "./configDHCP/AdvancedConfigDHCPv4.vue";
 import VButton from "../../../components/VButton.vue";
 import netmaskItems from "../../../constants/netmask.js";
-import useValidate from "@vuelidate/core";
-import { required, minLength, helpers } from "@vuelidate/validators";
-import { inject } from "vue";
-import { computed, reactive } from "vue";
 
 export default {
   name: "IfNameComponent",
@@ -427,8 +415,8 @@ export default {
         overrideMTU: false,
       },
       items: [
-        { text: "DHCP", value: "DHCP" },
-        { text: "Static", value: "static" },
+        { id: 1, value: "static" },
+        { id: 2, value: "dhcp" },
       ],
       speedDuplexItems: [
         "100baseTx-FD",
@@ -490,67 +478,6 @@ export default {
       },
     };
   },
-  setup() {
-    const emitter = inject("emitter");
-    const state = reactive({
-      description: "",
-      setuptypeip4: "",
-      addmac: "",
-      value_setup_Ipv4: {
-        ip_address4: "",
-        netmask4: "",
-        gateway4: {
-          id: "",
-          value: "",
-        },
-      },
-    });
-    const rules = computed(() => {
-      return {
-        description: {
-          required,
-          minLength: helpers.withMessage(
-            "Description must be at least 3 characters",
-            minLength(3)
-          ),
-        },
-        setuptypeip4: {
-          required,
-        },
-        addmac: {
-          addmac: helpers.regex(
-            "addmac",
-            /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/
-          ),
-        },
-        value_setup_Ipv4: {
-          ip_address4: {
-            required,
-            ipAddress: helpers.regex(
-              "ipAddress",
-              /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)(\.|$)){4}$/
-            ),
-          },
-          netmask4: {
-            required,
-          },
-          gateway4: {
-            value: {
-              required,
-            },
-          },
-        },
-      };
-    });
-
-    const v$ = useValidate(rules, state);
-    return {
-      emitter,
-      state,
-      v$,
-    };
-  },
-
   computed: {
     alertStyle() {
       return {
@@ -565,9 +492,52 @@ export default {
     },
   },
   methods: {
+    validateRange(value) {
+      const num = parseFloat(value); // Parse the value to a number
+
+      if (isNaN(num)) {
+        return "Please enter a valid number";
+      }
+
+      if (num < 1500 || num > 9000) {
+        return "Number must be between 1500 and 9000";
+      }
+
+      return true; // Return true when the value is within the range
+    },
+    macAddressValidation(value) {
+      // if value is empty, return true
+      if (!value) {
+        return true;
+      }
+
+      // Regular expression for MAC address validation
+      const macRegex = /^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$/;
+
+      // Validate the input value against the regex
+      if (!macRegex.test(value)) {
+        return "Please enter a valid MAC address"; // Error message for invalid MAC address
+      }
+      return true; // Return true when the input is valid
+    },
+    ipAddressValidation(value) {
+      if (!value) {
+        return true;
+      }
+
+      // Regular expression for IP address validation
+      const ipRegex =
+        /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+      // Validate the input value against the regex
+      if (!ipRegex.test(value)) {
+        return "Please enter a valid IP address"; // Error message for invalid IP address
+      }
+      return true; // Return true when the input is valid
+    },
     addNetwork() {
       // todo: add network refactoring && optimization needed
-      if (this.setuptypeip4 === "Static") {
+      if (this.setuptypeip4 === "static") {
         const params = {
           name_interface: this.activeTab,
           device: this.device,
@@ -620,7 +590,7 @@ export default {
           }
         );
       }
-      if (this.setuptypeip4 === "DHCP") {
+      if (this.setuptypeip4 === "dhcp") {
         const params = {
           name_interface: this.activeTab,
           device: this.device,
@@ -803,10 +773,7 @@ export default {
       this.addNetwork();
     },
     handleSubmit() {
-      this.v$.$validate();
-      if (!this.v$.$error) {
-        this.onSubmit();
-      }
+      this.onSubmit();
     },
   },
   beforeMount: async function () {
@@ -935,5 +902,9 @@ export default {
   position: fixed;
   overflow-x: unset;
   overflow-y: unset;
+}
+
+.new-style {
+  width: 70%;
 }
 </style>

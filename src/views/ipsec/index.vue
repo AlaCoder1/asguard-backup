@@ -14,7 +14,7 @@
             :key="tab.id"
             value="TUNNEL CONFIGURATION"
           >
-            <v-card>
+<v-card>
               <v-card-text><ipsecAdvancedParams /></v-card-text>
             </v-card>
           </v-window-item>

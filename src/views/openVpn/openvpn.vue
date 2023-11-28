@@ -11,7 +11,7 @@
         <v-window v-model="activeTab">
           <v-window-item v-for="tab in tabs" :key="tab.id" value="SERVERS">
             <v-card>
-              <v-card-text> <ServersOpenvpnComponent /></v-card-text>
+              <v-card-text> <ServersOpenvpnComponent :dataServer="dataServer" /></v-card-text>
             </v-card>
           </v-window-item>
           <v-window-item v-for="tab in tabs" :key="tab.id" value="CLIENTS">
@@ -58,6 +58,7 @@ export default {
     return {
       activeTab: "SERVERS",
       dataClient: null,
+      dataServer: null,
       tabs: [
         { id: 1, label: "SERVERS" },
         { id: 2, label: "CLIENTS" },
@@ -71,6 +72,8 @@ export default {
   },
   watch: {
     activeTab(val) {
+      this.dataClient = val
+      this.dataServer = val
       localStorage.setItem("openvpn-tab", val);
     },
   },

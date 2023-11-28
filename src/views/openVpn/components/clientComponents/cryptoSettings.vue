@@ -103,18 +103,18 @@
       {{ props.errors.authDigestAlgorithm.$errors?.[0].$message }}
     </p>
   </v-col>
-  <v-col align-self="center" cols="4">
+  <!-- <v-col align-self="center" cols="4">
     <label>Hardware Crypto</label>
-  </v-col>
+  </v-col> -->
   <v-col align-self="center" cols="8" class="mb-n6">
-    <v-select
+    <!-- <v-select
       label="Hardware Crypto"
       v-model="hardwareCrypto"
       :items="hardwareCryptoList"
       item-title="name"
       item-value="slug"
       return-object
-    ></v-select>
+    ></v-select> -->
     <!-- <p
       class="error-feedback mb-5"
       v-if="props.errors.hardwareCrypto.$errors.length"
@@ -135,10 +135,6 @@ const encryptionAlgorithmList = ref([
     slug: "AES-256-GCM",
   },
   {
-    name: "192-AES-GCM",
-    slug: "192-AES-GCM",
-  },
-  {
     name: "AES-128-GCM",
     slug: "AES-128-GCM",
   },
@@ -149,16 +145,25 @@ const encryptionAlgorithmList = ref([
 ]);
 const authDigestAlgorithmList = ref([
   {
-    name: "BLAKE2b512",
-    slug: "BLAKE2b512",
+    name: "SHA224",
+    slug: "sha224",
   },
   {
-    name: "BLAKE2b256",
-    slug: "BLAKE2b256",
+    name: "SHA244",
+    slug: "SHA244",
   },
   {
     name: "SHA256",
     slug: "SHA256",
+  },
+  {
+    name: "SHA384",
+    slug: "SHA384",
+  },
+
+  {
+    name: "SHA512",
+    slug: "SHA512",
   },
   {
     name: "SHA3-224",
@@ -175,22 +180,6 @@ const authDigestAlgorithmList = ref([
   {
     name: "SHA3-512",
     slug: "SHA3-512",
-  },
-  {
-    name: "SHA384",
-    slug: "SHA384",
-  },
-  {
-    name: "SHA512",
-    slug: "SHA512",
-  },
-  {
-    name: "SHA512-224",
-    slug: "SHA512-224",
-  },
-  {
-    name: "SHA512-256",
-    slug: "SHA512-256",
   },
 ]);
 const hardwareCryptoList = ref([

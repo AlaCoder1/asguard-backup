@@ -57,7 +57,7 @@ def create_tls_file(tls_auth, path_tls):
         execute_command_without_arguments(command)
     else:
         with open(path_tls, 'w') as tls_file:
-            tls_file.write(tls_auth["tls_key"])
+            tls_file.write(f'{tls_auth["tls_key"]}\n')
 
 
 def prefix_to_masque(prefix):

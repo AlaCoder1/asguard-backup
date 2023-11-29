@@ -1,5 +1,3 @@
-from datetime import datetime
-import datetime as dt
 import time
 from django.http import JsonResponse
 from django.db.models.deletion import ProtectedError
@@ -11,12 +9,12 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from backend.network.models import IP4Config, Interface
-from backend.network.serializers import IP4ConfigSerializer, InterfaceOpenVPNSerializer, InterfaceSerializer
 from backend.openvpn.list_servers_clients import get_all_client_openvpn, get_all_server_openvpn, get_client_openvpn, get_server_openvpn
 from backend.openvpn.manage_errors import CommandExecutionError
+from .servers_status import change_status_server_openvpn
 from .models import ServerOpenvpn, ClientOpenvpn
 from .serializers import ServerOpenvpnSerializer, ClientOpenvpnSerializer
-from .functions import change_status_server_openvpn, get_changed_row_in_openvpn_interfaces, json_to_str_client, json_to_str_server, openvpn_interfaces
+from .functions import json_to_str_client, json_to_str_server
 from .server_openvpn import install_server_openvpn, delete_server_openvpn, update_server_openvpn
 from .client_openvpn import delete_client_openvpn, export_client_in_system, install_client_openvpn
 
@@ -455,47 +453,9 @@ def startServerOpenvpn(request, id):
     if request.method == 'POST':
         try:
             server = ServerOpenvpn.objects.get(id=id)
-            if not server.server_status:
-                interfaces_before = openvpn_interfaces()
-                change_status_server_openvpn(server_name=server.name, server_status='start')
-                time.sleep(3)
-                interfaces = openvpn_interfaces()
-                interface = get_changed_row_in_openvpn_interfaces(interfaces_before, interfaces)
-                if interface:
-                    server.server_status = True
-                    server.save()
-
-                    interface_data = {"ifname": interface,
-                                      "name_interface": server.name}
-
-                    interface_serializer = InterfaceOpenVPNSerializer(data=interface_data)
-                    if interface_serializer.is_valid():
-                        interface_serializer.save()
-                        new_interface = Interface.objects.get(name_interface=server.name)
-                        ipv4_data = {"typedhcp": "static",
-                                     "ip_address": server.ipv4_tunnel_network[:server.ipv4_tunnel_network.find('/')],
-                                     "netmask": server.ipv4_tunnel_network[server.ipv4_tunnel_network.find('/')+1:],
-                                     "interface": new_interface.pk
-                                     }
-                        ipv4_serializer = IP4ConfigSerializer(data=ipv4_data)
-                        if ipv4_serializer.is_valid():
-                            ipv4_serializer.save()
-                            return JsonResponse({"msg": f"Server {server.name} is started"}, status=201)
-                        else:
-                            new_interface.delete()
-                            change_status_server_openvpn(server_name=server.name, server_status='stop')
-                            server.server_status = False
-                            server.save()
-                            return JsonResponse({"error": list(ipv4_serializer.errors.values())[0][0]}, status=400)
-                    else:
-                        change_status_server_openvpn(server_name=server.name, server_status='stop')
-                        server.server_status = False
-                        server.save()
-                        return JsonResponse({"error": list(interface_serializer.errors.values())[0][0]}, status=400)
-                else:
-                    return JsonResponse({"error": f"Nothing is changed, Server {server.name} hasn't started or it was started before"}, status=400)
-            else:
-                return JsonResponse({"error": f"Server {server.name} was started before"}, status=400)
+            change_status_server_openvpn(server_name=server.name, server_status='start')
+            time.sleep(3)
+            return JsonResponse({"msg": f"Server {server.name} is started"}, status=201)
             
         except CommandExecutionError:
             return JsonResponse({"error": "Error in starting openvpn server"}, status=400)
@@ -513,28 +473,9 @@ def restartServerOpenvpn(request, id):
     if request.method == 'PUT':
         try:
             server = ServerOpenvpn.objects.get(id=id)
-            if server.server_status:
-                interfaces_before_stop = openvpn_interfaces()
-                change_status_server_openvpn(server_name=server.name, server_status='stop')
-                time.sleep(3)
-                interfaces_after_stop = openvpn_interfaces()
-                interface_deleted_name = get_changed_row_in_openvpn_interfaces(interfaces_after_stop, interfaces_before_stop)
-                if interface_deleted_name:
-                    change_status_server_openvpn(server_name=server.name, server_status='start')
-                    time.sleep(3)
-                    interfaces_after_start = openvpn_interfaces()
-                    interface_updated_name = get_changed_row_in_openvpn_interfaces(interfaces_after_stop, interfaces_after_start)
-                    if interface_updated_name:
-                        interface = Interface.objects.get(ifname=interface_updated_name)
-                        interface.updated_at = datetime.now()
-                        interface.save()
-                        return JsonResponse({"msg": f"Server {server.name} is restarted"}, status=201)
-                    else:
-                        return JsonResponse({"error": f"Nothing is changed, Server {server.name} hasn't started or it was started before"}, status=400)
-                else:
-                    return JsonResponse({"error": f"Nothing is changed, Server {server.name} hasn't started or it was started before"}, status=400)
-            else:
-                return JsonResponse({"error": f"Server {server.name} wasn't started before"}, status=400)
+            change_status_server_openvpn(server_name=server.name, server_status='restart')
+            time.sleep(3)
+            return JsonResponse({"msg": f"Server {server.name} is restarted"}, status=201)
         
         except CommandExecutionError:
             return JsonResponse({"error": "Error in starting openvpn server"}, status=400)
@@ -554,24 +495,9 @@ def stopServerOpenvpn(request, id):
     if request.method == 'DELETE':
         try:
             server = ServerOpenvpn.objects.get(id=id)
-            if server.server_status:
-                interfaces_before = openvpn_interfaces()
-                interfaces = change_status_server_openvpn(server_name=server.name, server_status='stop')
-                time.sleep(3)
-                interfaces = openvpn_interfaces()
-                interface_deleted_name = get_changed_row_in_openvpn_interfaces(interfaces, interfaces_before)
-                if interface_deleted_name:
-                    server.server_status = False
-                    server.save()
-                    interface = Interface.objects.get(ifname=interface_deleted_name)
-                    ipv4 = IP4Config.objects.get(interface=interface)
-                    ipv4.delete()
-                    interface.delete()
-                    return JsonResponse({"msg": f"Server {server.name} is stoped"}, status=201)
-                else:
-                    return JsonResponse({"error": "Interface dosen't exist"}, status=404)
-            else:
-                return JsonResponse({"error": f"Server {server.name} wasn't started before"}, status=400)
+            change_status_server_openvpn(server_name=server.name, server_status='stop')
+            time.sleep(3)
+            return JsonResponse({"msg": f"Server {server.name} is stoped"}, status=201)
         
         except CommandExecutionError:
             return JsonResponse({"error": "Error in stoping openvpn server"}, status=400)

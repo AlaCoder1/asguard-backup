@@ -60,51 +60,6 @@ def create_tls_file(tls_auth, path_tls):
             tls_file.write(tls_auth["tls_key"])
 
 
-def change_status_server_openvpn(server_name, server_status):
-    """Change the status of a server openvpn: start, restart or stop"""
-    command = ['sudo', 'systemctl', f'{server_status}', f'openvpn-server@server_{server_name}']
-    execute_command_without_arguments(command)
-
-
-def openvpn_interfaces():
-    """A function that return a list of openvpn activated servers"""
-    command = ['sudo', 'ip', 'addr', 'show']
-    process = execute_command_without_arguments(command)
-    with open('list_interfaces.txt', 'w') as interfaces_file:
-        interfaces_file.write(process.stdout)
-
-    # Interfaces with device mode TUN
-    command = ['sudo', 'awk', '/^[0-9]+: tun[0-9]+:/ { iface = $2 } /inet / { print iface, $2}', 'list_interfaces.txt']
-    process = execute_command_without_arguments(command)
-    interfaces_tun = process.stdout
-    # Interfaces with device mode TAP
-    command = ['sudo', 'awk', '/^[0-9]+: tap[0-9]+:/ { iface = $2 } /inet / { print iface, $2}', 'list_interfaces.txt']
-    process = execute_command_without_arguments(command)
-    interfaces_tap = process.stdout
-    # All interfaces (TUN and TAP)
-    interfaces = f'{interfaces_tun}\n{interfaces_tap}'
-    interfaces = list(interfaces.split("\n"))
-
-    list_vpn_interfaces = []
-    for interface in interfaces:
-        if interface.startswith('tun') or interface.startswith('tap'):
-            list_vpn_interfaces.append({"ifname": interface[:interface.find(':')],
-                                        "ip_address": interface[interface.find(':')+2:interface.find('/')],
-                                        "netmask": interface[interface.find('/')+1:]})
-
-    return list_vpn_interfaces
-
-
-def get_changed_row_in_openvpn_interfaces(interfaces_smallest, interfaces_largest):
-    """Find the name of the changed openvpn interface in system"""
-    list_interfaces_smallest = [interface["ifname"] for interface in interfaces_smallest]
-    list_interfaces_largest = [interface["ifname"] for interface in interfaces_largest]
-    difference = set(list_interfaces_largest) - set(list_interfaces_smallest)
-    if difference:
-        return list(difference)[0]
-    return False
-
-
 def prefix_to_masque(prefix):
     # Prefix must be between 0 and 32
     if not 0 <= prefix <= 32:
@@ -136,7 +91,7 @@ def json_to_str_server(json_object):
     
     config_input = f'''port {json_object["local_port"]}
 proto {json_object["protocol"]}
-dev {json_object["device_mode"]}
+dev {json_object["device_mode"]}_{json_object["name"]}
 topology subnet
 
 ca /etc/certificates_{json_object["ca_name"]}/ca.crt

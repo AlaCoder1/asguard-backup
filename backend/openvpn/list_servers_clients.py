@@ -3,10 +3,13 @@ from django.core import serializers
 from backend.managementCertificates.models import Certificate
 
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
+from backend.openvpn.servers_status import synchronize_server_openvpn
 
 
 def get_all_server_openvpn():
     """Getting all servers from database"""
+    synchronize_server_openvpn()
+
     list_server = []
     server = ServerOpenvpn.objects.all()
     serverDict = serializers.serialize("json",server)

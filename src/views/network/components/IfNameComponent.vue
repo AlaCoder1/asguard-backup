@@ -430,7 +430,7 @@ export default {
       description: "",
       private_aux: false,
       bogon_aux: false,
-      setuptypeip4: "",
+      setuptypeip4: "static",
       addmac: "",
       mtuv: "",
       mssv: "",
@@ -798,7 +798,7 @@ export default {
     parsedArray = JSON.parse(validJsonString);
     this.allStaticGateways = parsedArray;
 
-    this.activate = this.IPV4Config.interface !== null ? true : false;
+    this.activate = this.IPV4Config?.interface !== null ? true : false;
     this.device = this.IPV4Config.interface.ifname;
     this.description = this.IPV4Config.interface.description;
 

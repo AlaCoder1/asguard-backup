@@ -488,7 +488,11 @@ export default {
 
       axios.get("/network/AllInterfaces").then(
         (response) => {
-          let interfaces = response.data.map((i) => {
+          let filtredInterface = response.data.filter(
+            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+          );
+
+          let interfaces = filtredInterface.map((i) => {
             return {
               id: i.id,
               name: i.name_interface,

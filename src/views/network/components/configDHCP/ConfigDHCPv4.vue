@@ -14,18 +14,17 @@
             </v-col>
             <v-col align-self="center" cols="4">
               <label class="ml-2">IPV4 address</label>
-              <small style="color: red">*</small>
             </v-col>
             <v-col cols="4" class="mb-n6">
               <v-text-field
                 label="Enter IPV4 address"
-                v-model="ipv4_address"
+                v-model="alias_add"
                 class="ip-address-style"
               ></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
               <v-select
-                v-model="ipv4_netmask"
+                v-model="alias_mask"
                 :items="netmasks"
                 class="ml-3 netmask-select-style"
               ></v-select>
@@ -43,10 +42,7 @@
               <label class="ml-2">Hostname</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
-              <v-text-field
-                label="Hostname"
-                v-model="hostname"
-              ></v-text-field>
+              <v-text-field label="Hostname" v-model="hostname"></v-text-field>
             </v-col>
             <v-col align-self="center" cols="4">
               <label class="ml-2">Override MTU</label>
@@ -74,27 +70,21 @@ const netmasks = ref(netmaskItems);
 const props = defineProps([
   "errors",
   "ipAddress",
-  "ipv4_address",
-  "ipv4_netmask",
+  "alias_add",
+  "alias_mask",
   "rejectLeases",
   "hostname",
   "overrideMTU",
 ]);
 
 const emit = defineEmits([
-  "update:ipv4_netmask",
-  "update:ipv4_address",
+  "update:alias_add",
+  "update:alias_mask",
   "update:rejectLeases",
   "update:hostname",
-  "update:overrideMTU"
+  "update:overrideMTU",
 ]);
 
-const {
-  ipv4_netmask,
-  ipv4_address,
-  rejectLeases,
-  hostname,
-  overrideMTU
-} = useVModels(props, emit);
-
+const { alias_add, alias_mask, rejectLeases, hostname, overrideMTU } =
+  useVModels(props, emit);
 </script>

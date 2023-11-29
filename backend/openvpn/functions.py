@@ -57,45 +57,7 @@ def create_tls_file(tls_auth, path_tls):
         execute_command_without_arguments(command)
     else:
         with open(path_tls, 'w') as tls_file:
-            tls_file.write(tls_auth["tls_key"])
-
-
-def change_status_server_openvpn(server_name, server_status):
-    """Change the status of a server openvpn: start, restart or stop"""
-    command = ['sudo', 'systemctl', f'{server_status}', f'openvpn-server@server_{server_name}']
-    execute_command_without_arguments(command)
-
-
-def openvpn_interfaces():
-    """A function that return a list of openvpn activated servers"""
-    command = ['sudo', 'ip', 'addr', 'show']
-    process = execute_command_without_arguments(command)
-    with open('list_interfaces.txt', 'w') as interfaces_file:
-        interfaces_file.write(process.stdout)
-
-    command = ['sudo', 'awk', '/^[0-9]+: tun[0-9]+:/ { iface = $2 } /inet / { print iface, $2}', 'list_interfaces.txt']
-    process = execute_command_without_arguments(command)
-
-    interfaces = process.stdout
-    interfaces = list(interfaces.split("\n"))
-    list_vpn_interfaces = []
-    for interface in interfaces:
-        if interface.startswith('tun'):
-            list_vpn_interfaces.append({"ifname": interface[:interface.find(':')],
-                                        "ip_address": interface[interface.find(':')+2:interface.find('/')],
-                                        "netmask": interface[interface.find('/')+1:]})
-
-    return list_vpn_interfaces
-
-
-def get_changed_row_in_openvpn_interfaces(interfaces_smallest, interfaces_largest):
-    """Find the name of the changed openvpn interface in system"""
-    list_interfaces_smallest = [interface["ifname"] for interface in interfaces_smallest]
-    list_interfaces_largest = [interface["ifname"] for interface in interfaces_largest]
-    difference = set(list_interfaces_largest) - set(list_interfaces_smallest)
-    if difference:
-        return list(difference)[0]
-    return False
+            tls_file.write(f'{tls_auth["tls_key"]}\n')
 
 
 def prefix_to_masque(prefix):
@@ -129,7 +91,7 @@ def json_to_str_server(json_object):
     
     config_input = f'''port {json_object["local_port"]}
 proto {json_object["protocol"]}
-dev {json_object["device_mode"]}
+dev {json_object["device_mode"]}_{json_object["name"]}
 topology subnet
 
 ca /etc/certificates_{json_object["ca_name"]}/ca.crt
@@ -161,7 +123,6 @@ multihome
 duplicate-cn
 #max-clients
 #client-to-client
-#engine rdrand
 #tun-ipv6
 
 cipher {json_object["encryption_algorithm"]}
@@ -190,9 +151,6 @@ log-append /var/log/openvpn/openvpn.log
 
     if json_object["interface"] != "Any":
         config_input = config_input.replace("multihome", f"local {json_object['interface_address']}")
-
-    if json_object["hardware_crypto"] != "No Hardware Crypto":
-        config_input = config_input.replace("#engine rdrand", "engine rdrand")
     
     if json_object["bridge"]["bridge_select"]:  # When activating Bridge
         bridge_interface_address = json_object["bridge_interface_address"]
@@ -295,7 +253,6 @@ nobind
 #comp-lzo
 #compress migrate
 #tun-ipv6
-#engine rdrand
 remote-cert-tls server
 cipher {json_object["encryption_algorithm"]}
 auth-nocache
@@ -374,9 +331,6 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
         
     if json_object["renegotiate_time"] != '':
         config_input = config_input.replace("#reneg-sec", f"reneg-sec {json_object['renegotiate_time']}")
-
-    if json_object["hardware_crypto"] != "No Hardware Crypto":
-        config_input = config_input.replace("#engine rdrand", "engine rdrand")
     
     if json_object["ipv4_remote_network"] != '':
         remote_address = json_object["ipv4_remote_network"]

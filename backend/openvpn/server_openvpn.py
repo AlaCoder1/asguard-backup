@@ -1,6 +1,7 @@
 import shutil
 from backend.managementCertificates.functions import initialize_ca
-from backend.openvpn.functions import change_status_server_openvpn, create_tls_file, execute_command_without_arguments, execute_list_commands_without_arguments, get_current_directory
+from backend.openvpn.functions import create_tls_file, execute_command_without_arguments, execute_list_commands_without_arguments, get_current_directory
+from backend.openvpn.servers_status import change_status_server_openvpn
 
 
 def install_server_openvpn(server_name, ca_name, tls_auth, dh_length, server_conf:str):

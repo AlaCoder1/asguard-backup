@@ -211,7 +211,7 @@ export default {
           username: { required },
           password: {
             requiredIfFuction: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(() => state.ModalMode == "create")
             ),
             isValidPassword: helpers.withMessage(
@@ -229,7 +229,7 @@ export default {
               sameAs(state.formData.password)
             ),
             requiredIf: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               requiredIf(() => state.ModalMode == "create")
             ),
 

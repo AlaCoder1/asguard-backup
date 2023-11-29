@@ -254,7 +254,7 @@
 </template>
 
 <script>
-import { inject, ref } from "vue";
+import { inject, ref, toRefs } from "vue";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import VButton from "@/components/VButton.vue";
@@ -274,7 +274,9 @@ export default {
     cryptoSettings,
     VButton,
   },
-  setup() {
+  props: ["dataServer"],
+  setup(props) {
+    const { dataServer } = toRefs(props);
     const emitter = inject("emitter");
 
     const state = reactive({
@@ -304,10 +306,10 @@ export default {
       dhParameters: "",
       encryptAlgo: "",
       authDigest: "",
-      hardwareCrypto: {
-        name: "No Hardware Crypto acceleration",
-        slug: "No Hardware Crypto",
-      },
+      // hardwareCrypto: {
+      //   name: "No Hardware Crypto acceleration",
+      //   slug: "No Hardware Crypto",
+      // },
       //tunnelSettings
       ip4Tunnel: "",
       ip6Tunnel: "",
@@ -427,66 +429,41 @@ export default {
 
     const authDigestList = ref([
       {
-        name: "BLAKE2b512",
-        slug: "blake2b512",
-        id: "1",
-      },
-      {
-        name: "BLAKE2b256",
-        slug: "blake2b256",
-        id: "2",
-      },
-      {
         name: "SHA224",
         slug: "sha224",
-        id: "3",
+      },
+      {
+        name: "SHA244",
+        slug: "SHA244",
       },
       {
         name: "SHA256",
-        slug: "sha256",
-        id: "4",
+        slug: "SHA256",
       },
-      {
-        name: "SHA3-224",
-        slug: "sha3-224",
-        id: "5",
-      },
-      {
-        name: "SHA3-256",
-        slug: "sha3-256",
-        id: "6",
-      },
-      {
-        name: "SHA3-384",
-        slug: "sha3-384",
-        id: "7",
-      },
-      {
-        name: "SHA3-512",
-        slug: "sha3-512",
-        id: "8",
-      },
-
       {
         name: "SHA384",
-        slug: "sha384",
-        id: "9",
+        slug: "SHA384",
       },
 
       {
         name: "SHA512",
-        slug: "sha512",
-        id: "10",
+        slug: "SHA512",
       },
       {
-        name: "SHA512-224",
-        slug: "sha512-224",
-        id: "11",
+        name: "SHA3-224",
+        slug: "SHA3-224",
       },
       {
-        name: "SHA512-256",
-        slug: "sha512-256",
-        id: "12",
+        name: "SHA3-256",
+        slug: "SHA3-256",
+      },
+      {
+        name: "SHA3-384",
+        slug: "SHA3-384",
+      },
+      {
+        name: "SHA3-512",
+        slug: "SHA3-512",
       },
     ]);
 
@@ -511,7 +488,11 @@ export default {
 
       axios.get("/network/AllInterfaces").then(
         (response) => {
-          let interfaces = response.data.map((i) => {
+          let filtredInterface = response.data.filter(
+            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+          );
+
+          let interfaces = filtredInterface.map((i) => {
             return {
               id: i.id,
               name: i.name_interface,
@@ -591,6 +572,14 @@ export default {
       { name: "Enabled without Adaptive Compression", slug: "enabled" },
     ]);
 
+    watch(
+      () => dataServer.value,
+      (newValue) => {
+        if (newValue != "SERVERS") {
+          cancel();
+        }
+      }
+    );
     watch(
       () => state.isEnableAuth,
       (newValue) => {
@@ -698,13 +687,23 @@ export default {
         );
 
         state.authDigest = filtredAuth[0];
-        state.hardwareCrypto = data.hardware_crypto;
+        // state.hardwareCrypto = data.hardware_crypto;
         //tunnelSettings
         state.ip4Tunnel = data.ipv4_tunnel_network;
         // state.ip6Tunnel= "";
         state.isGateway = data.gateway;
         state.isBridge = data.bridge_interface ? true : false;
-        state.interfaceBridge = data.bridge_interface;
+
+        let filtredInterfacesBridge = state.mapedInterface.filter(
+          (i) => i.id === +data.bridge_interface
+        );
+        let filtredInterBridge = state.mapedInterface.filter(
+          (i) => i.name === data.bridge_interface
+        );
+
+        state.interfaceBridge =
+          filtredInterfacesBridge[0] ?? filtredInterBridge[0];
+
         state.startDHCPBridge = data.bridge_start_dhcp;
         state.endDHCPBridge = data.bridge_end_dhcp;
         state.iPv4Local = data.ipv4_local_network;
@@ -835,7 +834,7 @@ export default {
           dh_params_length: state.dhParameters,
           encryption_algorithm: state.encryptAlgo,
           auth_digest_algorithm: state.authDigest.slug ?? state.authDigest,
-          hardware_crypto: state.hardwareCrypto.slug ?? state.hardwareCrypto,
+          // hardware_crypto: state.hardwareCrypto.slug ?? state.hardwareCrypto,
 
           ipv4_tunnel_network: state.ip4Tunnel,
           gateway: state.isGateway,
@@ -934,10 +933,10 @@ export default {
       state.dhParameters = "";
       state.encryptAlgo = "";
       state.authDigest = "";
-      state.hardwareCrypto = {
-        name: "No hardware Crypto acceleration",
-        slug: "No hardware Crypto acceleration",
-      };
+      // state.hardwareCrypto = {
+      //   name: "No Hardware Crypto acceleration",
+      //   slug: "No Hardware Crypto acceleration",
+      // };
       //tunnelSettings
       state.ip4Tunnel = "";
       state.ip6Tunnel = "";

@@ -105,9 +105,15 @@
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          label="Lifetime"
+          label="Lifetime in seconds"
           v-model="lifetimeExchange"
         ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.lifetimeExchange.$errors.length"
+        >
+          {{ props.errors.lifetimeExchange.$errors?.[0].$message }}
+        </p>
       </v-col>
       <!-- <template v-if="false">
         <v-col cols="12">

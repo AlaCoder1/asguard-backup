@@ -122,7 +122,7 @@ export default {
         formData: {
           groupname: {
             required: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               required
             ),
             isValidName: helpers.withMessage(
@@ -133,7 +133,7 @@ export default {
           },
           description: {
             required: helpers.withMessage(
-              "This field must be indicated",
+              "Value is required",
               required
             ),
           },

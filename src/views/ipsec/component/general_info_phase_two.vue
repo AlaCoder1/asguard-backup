@@ -106,7 +106,7 @@
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-row>
-            <v-col cols="8">
+            <v-col cols="7">
               <v-text-field
                 label="Address"
                 :readonly="props.isTypeWAn"
@@ -123,7 +123,7 @@
             <v-col cols="1" >
               <div class="ml-1 mt-5">/</div>
             </v-col>
-            <v-col cols="3">
+            <v-col cols="4">
               <v-select
                 :label="props.defaultValue ?? 'Address'"
                 :readonly="props.isTypeWAn || props.isDefault"
@@ -176,7 +176,7 @@
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-row>
-            <v-col cols="8">
+            <v-col cols="7">
               <v-text-field
                 label="Address"
                 v-model="remoteNetworkAddress"
@@ -192,7 +192,7 @@
             <v-col cols="1">
               <div class="ml-1 mt-5">/</div>
             </v-col>
-            <v-col cols="3">
+            <v-col cols="4">
               <v-select
                 :label="props.defaultValueRemote ?? 'Address'"
                 :readonly="props.isDefaultRemote"

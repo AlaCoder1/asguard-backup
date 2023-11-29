@@ -146,7 +146,7 @@
                     v-model="value_setup_Ipv4.ip_address4"
                     class="ip-address-style"
                     :rules="[
-                      (v) => !!v || 'Description is required',
+                      (v) => !!v || 'IPV4 address is required',
                       () => ipAddressValidation(value_setup_Ipv4.ip_address4),
                     ]"
                   ></v-text-field>
@@ -212,19 +212,18 @@
               </v-row>
             </div>
           </div>
-          <div v-if="setuptypeip4 === 'dhcp'">
+          <div v-if="setuptypeip4.toUpperCase() === 'dhcp'">
             <v-card-title class="title-text"
               >Configuring the DHCP Client</v-card-title
             >
             <v-divider class="ml-3"></v-divider>
             <ConfigDHCPv4
               :ipAddress="value_setup_Ipv4.ip_address4"
-              v-model:ipv4_address="interface.ipv4_adress"
-              v-model:ipv4_netmask="interface.netmask4"
+              v-model:alias_add="interface.alias_add"
+              v-model:alias_mask="interface.alias_mask"
               v-model:rejectLeases="interface.rejectLeases"
               v-model:hostname="interface.hostname"
               v-model:overrideMTU="interface.overrideMTU"
-              :errors="v$"
             />
             <v-row class="advanced-parameters-style">
               <label class="ml-3">Advanced parameters</label>
@@ -252,7 +251,6 @@
               v-model:require="AdvancedConfigDHCPv4.require"
               v-model:domain_name="AdvancedConfigDHCPv4.domain_name"
               v-model:domain_server="AdvancedConfigDHCPv4.domain_server"
-              :errors="v$"
             />
           </div>
         </v-col>
@@ -279,7 +277,6 @@
           :isLarge="true"
           type="submit"
           class="ml-2"
-          @click="addNetwork"
         />
       </div>
       <br /><br /><br />
@@ -408,8 +405,8 @@ export default {
       typeDHCP4: "",
       advancedParameters: false,
       interface: {
-        ipv4_adress: "",
-        ipv4_netmask: "",
+        alias_add: "",
+        alias_mask: "",
         rejectLeases: "",
         hostname: "",
         overrideMTU: false,
@@ -496,7 +493,7 @@ export default {
       const num = parseFloat(value); // Parse the value to a number
 
       if (isNaN(num)) {
-        return "Please enter a valid number";
+        return true; // Return true if the value is not a number
       }
 
       if (num < 1500 || num > 9000) {
@@ -536,6 +533,11 @@ export default {
       return true; // Return true when the input is valid
     },
     addNetwork() {
+      if (this.advancedParameters) {
+        this.typeDHCP4 = "Advanced"
+      } else {
+        this.typeDHCP4 = "Base";
+      }
       // todo: add network refactoring && optimization needed
       if (this.setuptypeip4 === "static") {
         const params = {
@@ -604,8 +606,8 @@ export default {
           setuptypeIP4: this.setuptypeip4,
           value_setup_Ipv4: {
             typeDHCP4: this.typeDHCP4,
-            alias_add: this.interface.ipv4_adress,
-            alias_mask: this.interface.ipv4_netmask,
+            alias_add: this.interface.alias_add,
+            alias_mask: this.interface.alias_mask,
             reject: this.interface.rejectLeases,
             hostname: this.interface.hostname,
             timeout: this.AdvancedConfigDHCPv4.timeout,
@@ -816,8 +818,8 @@ export default {
     this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw;
 
     this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
-    this.interface.ipv4_adress = this.IPV4Config.IPV4Config.alias_add;
-    this.interface.ipv4_netmask = this.IPV4Config.IPV4Config.alias_mask;
+    this.interface.alias_add = this.IPV4Config.IPV4Config.alias_add;
+    this.interface.alias_mask = this.IPV4Config.IPV4Config.alias_mask;
     this.interface.rejectLeases = this.IPV4Config.IPV4Config.reject;
     this.interface.hostname = this.IPV4Config.IPV4Config.hostname;
   },

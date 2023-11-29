@@ -212,7 +212,7 @@
               </v-row>
             </div>
           </div>
-          <div v-if="setuptypeip4.toUpperCase() === 'dhcp'">
+          <div v-if="setuptypeip4.toUpperCase() === 'DHCP'">
             <v-card-title class="title-text"
               >Configuring the DHCP Client</v-card-title
             >

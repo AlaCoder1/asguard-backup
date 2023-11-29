@@ -14,17 +14,12 @@
             </v-col>
             <v-col align-self="center" cols="4">
               <label class="ml-2">IPV4 address</label>
-              <small style="color: red">*</small>
             </v-col>
             <v-col cols="4" class="mb-n6">
               <v-text-field
                 label="Enter IPV4 address"
                 v-model="alias_add"
                 class="ip-address-style"
-                :rules="[
-                  (v) => !!v || 'IPV4 address is required',
-                  () => ipAddressValidation(alias_add),
-                ]"
               ></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
@@ -32,7 +27,6 @@
                 v-model="alias_mask"
                 :items="netmasks"
                 class="ml-3 netmask-select-style"
-                :rules="[(v) => !!v || 'Netmask is required']"
               ></v-select>
             </v-col>
             <v-col align-self="center" cols="4">
@@ -93,20 +87,4 @@ const emit = defineEmits([
 
 const { alias_add, alias_mask, rejectLeases, hostname, overrideMTU } =
   useVModels(props, emit);
-
-const ipAddressValidation = (value) => {
-  if (!value) {
-    return true;
-  }
-
-  // Regular expression for IP address validation
-  const ipRegex =
-    /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-
-  // Validate the input value against the regex
-  if (!ipRegex.test(value)) {
-    return "Please enter a valid IP address"; // Error message for invalid IP address
-  }
-  return true; // Return true when the input is valid
-};
 </script>

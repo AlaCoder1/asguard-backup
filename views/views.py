@@ -292,7 +292,8 @@ def openvpn_page(request):
 @login_required(login_url='/')
 def ipsec_page(request):
     servers=get_all_server_ipsec()
-    context = {'servers':servers}
+    publicKey =get_all_public_key()
+    context = {'servers':servers,'publicKey':publicKey}
     return render(request, 'ipsec_page.html', context)
 
 @login_required(login_url='/')

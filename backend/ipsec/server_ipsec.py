@@ -8,7 +8,7 @@ def install_server_ipsec(conn_config, authentication, interface_address, remote_
     with open('/etc/ipsec.secrets', 'a') as ipsec_secrets_file:
         if authentication["authentication_method"] == "Mutual PSK":
             # Pre-shared key method
-            ipsec_secrets_file.write(f"""\n{interface_address} {remote_gateway} : PSK '{authentication["pre_shared_key"]}' """)
+            ipsec_secrets_file.write(f"""\n\n{interface_address} {remote_gateway} : PSK '{authentication["pre_shared_key"]}' """)
         else:
             # Certificates method
             # Putting the certificates and its authoity in the ipsec.d directory in pem format

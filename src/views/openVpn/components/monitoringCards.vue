@@ -1,10 +1,10 @@
 <template>
   <v-col cols="4">
-    <v-card class="mx-auto" max-width="344">
+    <v-card class="mx-auto">
       <v-card-item>
         <div>
           <div class="title-card mb-2">Capacity</div>
-          <div class="float-right mb-3">
+          <div class="float-right mt-5">
             <span class="mb-1 numberTitle">2.23 GB</span>
           </div>
           <div>
@@ -22,8 +22,8 @@
       </v-card-item>
     </v-card>
   </v-col>
-  <v-col cols="4">
-    <v-card class="mx-auto" max-width="344">
+  <v-col cols="5">
+    <v-card class="mx-auto">
       <v-card-item>
         <div class="title-card mb-6">Users</div>
         <v-row>
@@ -41,9 +41,7 @@
                     50
                   </v-progress-circular>
                 </v-col>
-                <v-col class="mt-n5 ml-5">
-                  <span class="subTitle"> of 100</span>
-                </v-col>
+                <span class="subTitle"> of 100</span>
               </v-row>
             </div>
             <div class="text-caption">Active Users</div>
@@ -62,9 +60,7 @@
                     25
                   </v-progress-circular>
                 </v-col>
-                <v-col class="mt-n5 ml-5">
-                  <span class="subTitle"> of 100</span>
-                </v-col>
+                <span class="subTitle"> of 100</span>
               </v-row>
             </div>
             <div class="text-caption">Active Devices</div>
@@ -73,10 +69,10 @@
       </v-card-item>
     </v-card>
   </v-col>
-  <v-col cols="4">
-    <v-card class="mx-auto" max-width="344">
+  <v-col cols="3">
+    <v-card class="mx-auto">
       <v-card-item>
-        <div >
+        <div>
           <div class="mb-3 title-card">Traffic distribution</div>
           <div class="text-caption">client1</div>
           <div class="text-caption">client2</div>
@@ -94,3 +90,11 @@ export default {
   },
 };
 </script>
+<style>
+.subTitle {
+  position: relative;
+  left: 30px;
+  display: flex;
+  flex-wrap: wrap;
+}
+</style>

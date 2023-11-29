@@ -1,5 +1,24 @@
 <template>
   <div class="mt-3 ml-3 mr-3">
+    <v-overlay v-model="loading">
+      <v-dialog
+        v-model="isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            Please Wait...
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
     <v-row>
       <v-col cols="12">
         <h4>List Servers</h4>
@@ -98,6 +117,8 @@ export default {
     const color = ref(null);
     const snackbar = ref(false);
     const textAlert = ref(false);
+    const loading = ref(false);
+    const isLoadingDialogue = ref(false);
 
     const columnServers = [
       {
@@ -319,12 +340,16 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "play":
+          loading.value = true;
+          isLoadingDialogue.value = true;
           axios
             .post(`/openvpn/startServerOpenvpn/${rowData.id}`)
             .then((response) => {
               snackbar.value = true;
               color.value = "success";
               textAlert.value = response.data.msg;
+              loading.value = false;
+              isLoadingDialogue.value = false;
 
               setTimeout(() => {
                 location.reload();
@@ -334,6 +359,8 @@ export default {
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
+              loading.value = false;
+              isLoadingDialogue.value = false;
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -344,12 +371,16 @@ export default {
           emitter.emit("edit-server", rowData);
           break;
         case "stop":
+          loading.value = true;
+          isLoadingDialogue.value = true;
           axios
             .delete(`/openvpn/stopServerOpenvpn/${rowData.id}`)
             .then((response) => {
               snackbar.value = true;
               color.value = "success";
               textAlert.value = response.data.msg;
+              loading.value = false;
+              isLoadingDialogue.value = false;
 
               setTimeout(() => {
                 location.reload();
@@ -359,18 +390,24 @@ export default {
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
+              loading.value = false;
+              isLoadingDialogue.value = false;
               setTimeout(() => {
                 location.reload();
               }, 1000);
             });
           break;
         case "restart":
+          loading.value = true;
+          isLoadingDialogue.value = true;
           axios
             .put(`/openvpn/restartServerOpenvpn/${rowData.id}`)
             .then((response) => {
               snackbar.value = true;
               color.value = "success";
               textAlert.value = response.data.msg;
+              loading.value = false;
+              isLoadingDialogue.value = false;
 
               setTimeout(() => {
                 location.reload();
@@ -380,6 +417,8 @@ export default {
               snackbar.value = true;
               color.value = "red";
               textAlert.value = i.response.data.error;
+              loading.value = false;
+              isLoadingDialogue.value = false;
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -387,7 +426,6 @@ export default {
 
           break;
         case "delete":
-
           axios
             .delete(`/openvpn/deleteServerOpenvpn/${rowData.id}`)
             .then((response) => {
@@ -463,8 +501,6 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "download":
-          
-
           let id = rowData.id;
           let fileExtention = `${rowData.name}.ovpn`;
 
@@ -474,8 +510,6 @@ export default {
           axios
             .post(`/openvpn/exportClientOpenvpn/${id}`)
             .then((response) => {
-              
-
               const text = response.data.client;
               const blob = new Blob([text], {
                 type: "application/x-x509-ca-cert",
@@ -492,8 +526,6 @@ export default {
 
               window.URL.revokeObjectURL(url);
               document.body.removeChild(a);
-
-            
             })
             .catch((i) => {
               snackbar.value = true;
@@ -511,8 +543,6 @@ export default {
           break;
 
         case "delete":
-          
-
           axios
             .delete(`/openvpn/deleteClientOpenvpn/${rowData.id}`)
             .then((response) => {
@@ -614,7 +644,6 @@ export default {
           .replace(/False/g, "false")
           .replace(/None/g, "null");
         const parsedArrayClients = JSON.parse(validJsonStringClients);
-        
 
         rowDataClients.value = parsedArrayClients;
       } catch (error) {
@@ -623,6 +652,8 @@ export default {
     });
 
     return {
+      loading,
+      isLoadingDialogue,
       columnServers,
       columnClients,
       rowDataServers,

@@ -3,22 +3,22 @@
     <base-layout title="Rules">
       <template #content>
         <v-tabs
-          v-model="selectedTab"
+          v-model="activeTab"
           background-color="#f5f5f5"
           color="black"
           :class="{ 'elevation-0': true }"
           :slider-color="'#FFC300'"
-          @change="handleTabChange"
         >
           <v-tab
             v-for="tab in tabs"
             :key="tab.name_interface"
+            :value="tab.name_interface"
           >
             <span style="color: #020202">{{ tab.name_interface }}</span>
           </v-tab>
         </v-tabs>
 
-        <v-window v-model="selectedTab">
+        <v-window v-model="activeTab">
           <v-window-item
             v-for="tab in tabs"
             :key="tab.name_interface"
@@ -28,7 +28,7 @@
               <v-card-text>
                 <FirewallComponent
                   :id="tab.name_interface"
-                  :activeTab="selectedTab"
+                  :activeTab="activeTab"
               /></v-card-text>
             </v-card>
           </v-window-item>
@@ -49,21 +49,20 @@ export default {
   },
   data() {
     return {
-      selectedTab: "",
       activeTab: "",
       interfaces: [],
     };
+  },
+  watch: {
+    activeTab(val) {
+      localStorage.setItem("firewall-tab", val);
+    },
   },
   computed: {
     tabs() {
       return this.interfaces.map((element) => ({
         name_interface: element.name_interface,
       }));
-    },
-  },
-  methods: {
-    handleTabChange(newTabValue) {
-      this.activeTab = this.tabs[newTabValue].name_interface;
     },
   },
   mounted() {
@@ -76,8 +75,13 @@ export default {
       .replace(/None/g, "null");
     let parsedArray = JSON.parse(validJsonString);
     this.interfaces = parsedArray;
-    this.selectedTab = this.interfaces[0].name_interface;
-    console.log(this.selectedTab);
+
+    let tab = localStorage.getItem("firewall-tab");
+    if (tab) {
+      this.activeTab = tab;
+    } else {
+      this.activeTab = this.tabs[0].name_interface;
+    }
   },
 };
 </script>

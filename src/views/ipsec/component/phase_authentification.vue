@@ -13,17 +13,7 @@
           item-title="name"
           item-value="slug"
           return-object
-          :items="[
-            {
-              name: 'Mutual PSK',
-              slug: 'Mutual PSK',
-            },
-            { name: 'Mutual Public key', slug: 'Mutual Public key' },
-            {
-              name: 'Mutual RSA',
-              slug: 'Mutual RSA',
-            },
-          ]"
+          :items="props.authenticationMethodList"
         ></v-select>
         <p
           class="error-feedback mb-5"
@@ -32,7 +22,7 @@
           {{ props.errors.authMethod.$errors?.[0].$message }}
         </p>
       </v-col>
-      <template v-if="props.keyExchange?.slug === 'v1'">
+      <template v-if="props.keyExchange?.slug === 'V1'">
         <v-col cols="4" class="mt-5">
           <label>Negotiation mode</label>
         </v-col>
@@ -43,13 +33,7 @@
             item-title="name"
             item-value="slug"
             return-object
-            :items="[
-              {
-                name: 'Main',
-                slug: 'Main',
-              },
-              { name: 'Aggressive', slug: 'Aggressive' },
-            ]"
+            :items="props.negotiationList"
           ></v-select>
           <p
             class="error-feedback mb-5"
@@ -90,7 +74,7 @@
             label="My Certificate"
             item-title="name"
             item-value="id"
-            :items="CertificateList"
+            :items="props.CertificateList"
             return-object
           ></v-select>
           <p
@@ -127,7 +111,7 @@
             label="Local Key Pair"
             item-title="name"
             item-value="id"
-            :items="mapedKeyPublic"
+            :items="props.mapedKeyPublic"
             return-object
           ></v-select>
           <p
@@ -146,7 +130,7 @@
             label="Peer Key Pair"
             item-title="name"
             item-value="id"
-            :items="mapedKeyPublic"
+            :items="props.mapedKeyPublic"
             return-object
           ></v-select>
           <p
@@ -168,72 +152,14 @@
 </template>
 <script setup>
 import { useVModels } from "@vueuse/core";
-import { ref, onMounted } from "vue";
-import axios from "axios";
-const CertificateList = ref([]);
-const mapedKeyPublic = ref([]);
 
-const getCookie = (name) => {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === name + "=") {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-};
-
-const getAllCertif = () => {
-  const csrfToken = getCookie("csrftoken");
-  axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-  axios.get("/certificates/getAllCertificates").then(
-    (response) => {
-      let mapedListCertif = response.data.filter(
-        (i) => i.certificate_type === "server"
-      );
-      CertificateList.value = mapedListCertif.map((i) => {
-        return {
-          id: i.id,
-          name: i.name,
-        };
-      });
-    },
-    (error) => {
-      console.log(error);
-    }
-  );
-};
-onMounted(() => {
-  getAllCertif();
-
-  let publicKeyAttribute =
-    document.getElementById("app").attributes["publicKey"].value;
-  console.log("locl", publicKeyAttribute);
-
-  const validJsonString = publicKeyAttribute
-    .replace(/'/g, '"')
-    .replace(/True/g, "true")
-    .replace(/False/g, "false")
-    .replace(/None/g, "null");
-  const parsedArray = JSON.parse(validJsonString);
-
-  let mapedPublicKey = parsedArray.map((i) => {
-    return {
-      id: i.id,
-      name: i.name,
-    };
-  });
-  mapedKeyPublic.value = mapedPublicKey;
-});
 const props = defineProps([
+  "mapedKeyPublic",
+  "CertificateList",
+  "negotiationList",
   "authMethodItem",
   "keyExchange",
+  "authenticationMethodList",
   "errors",
   "authMethod",
   "negotiationMode",

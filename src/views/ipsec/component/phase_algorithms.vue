@@ -13,20 +13,7 @@
           item-title="name"
           item-value="slug"
           return-object
-          :items="[
-            {
-              name: '128 bit AES-GCM with 128 bit ICV',
-              slug: '128',
-            },
-            {
-              name: '192 bit AES-GCM with 128 bit ICV',
-              slug: '192',
-            },
-            {
-              name: '256 bit AES-GCM with 128 bit ICV',
-              slug: '256',
-            },
-          ]"
+          :items="props.encryptAlgoList"
         ></v-select>
         <p
           class="error-feedback mb-5"
@@ -46,17 +33,7 @@
           item-title="name"
           item-value="slug"
           return-object
-          :items="[
-            {
-              name: 'SHA256',
-              slug: 'sha256',
-            },
-            { name: 'SHA384', slug: 'sha384' },
-            {
-              name: 'SHA512',
-              slug: 'sha512',
-            },
-          ]"
+          :items="props.hashAlgoList"
         ></v-select>
         <p
           class="error-feedback mb-5"
@@ -76,7 +53,7 @@
           item-title="name"
           item-value="slug"
           return-object
-          :items="dhKeyList"
+          :items="props.dhKeyList"
         ></v-select>
         <p class="error-feedback mb-5" v-if="props.errors.dhKey.$errors.length">
           {{ props.errors.dhKey.$errors?.[0].$message }}
@@ -92,64 +69,22 @@
           v-model="lifetime"
         ></v-text-field>
         <p
-        class="error-feedback mb-5"
-        v-if="props.errors.lifetime.$errors.length"
-      >
-        {{ props.errors.lifetime.$errors?.[0].$message }}
-      </p>
+          class="error-feedback mb-5"
+          v-if="props.errors.lifetime.$errors.length"
+        >
+          {{ props.errors.lifetime.$errors?.[0].$message }}
+        </p>
       </v-col>
-
     </v-row>
   </div>
 </template>
 <script setup>
-import { ref } from "vue";
 import { useVModels } from "@vueuse/core";
-const dhKeyList = ref([
-  {
-    name: "15 (3072 bits)",
-    slug: "15:3072",
-  },
-  { name: "16 (4096 bits)", slug: "16:4096" },
-  {
-    name: "17 (6144 bits)",
-    slug: "17:6144",
-  },
-  {
-    name: "18 (8192 bits)",
-    slug: "18:8192",
-  },
-  {
-    name: "19 (NIST EC 256 bits)",
-    slug: "19:256",
-  },
-  {
-    name: "20 (NIST EC 384 bits)",
-    slug: "20:384",
-  },
-  {
-    name: "21 (NIST EC 521 bits)",
-    slug: "21:521",
-  },
-  {
-    name: "28 (Brainpool EC 256 bits)",
-    slug: "28:256",
-  },
-  {
-    name: "29 (Brainpool EC 384 bits)",
-    slug: "29:384",
-  },
-  {
-    name: "30 (Brainpool EC 512 bits)",
-    slug: "30:512",
-  },
-  {
-    name: "31 (Elliptic Curve 25519)",
-    slug: "31:25519",
-  },
-]);
 
 const props = defineProps([
+  "hashAlgoList",
+  "encryptAlgoList",
+  "dhKeyList",
   "errors",
   "encryptAlgo",
   "hashAlgo",

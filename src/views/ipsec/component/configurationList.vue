@@ -322,8 +322,9 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "edit":
-          emitter.emit("add-server");
-          emitter.emit("edit-server", rowData);
+          console.log("edit :", rowData);
+          emitter.emit("add-serverIpsec");
+          emitter.emit("edit-serverIpsec", rowData);
           break;
         case "delete":
           currentRowToDelete.value = rowData;
@@ -334,7 +335,7 @@ export default {
       }
     };
     const addServer = () => {
-      emitter.emit("add-server");
+      emitter.emit("add-serverIpsec");
     };
     const deleteItem = () => {
       // Perform delete action when confirmed

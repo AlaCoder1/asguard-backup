@@ -12,6 +12,9 @@
           v-model:remoteConnect="state.remoteConnect"
           v-model:description="state.description"
           :mapedInterface="state.mapedInterface"
+          :connectionMethodList="connectionMethodList"
+          :exchangeList="exchangeList"
+          :protocolList="protocolList"
           :errors="v$"
         />
         <phaseAuth
@@ -24,6 +27,10 @@
           v-model:peerIdentifier="state.peerIdentifier"
           :keyExchange="state.keyExchange"
           :authMethodItem="state.authMethod"
+          :authenticationMethodList="authenticationMethodList"
+          :negotiationList="negotiationList"
+          :CertificateList="CertificateList"
+          :mapedKeyPublic="mapedKeyPublic"
           :errors="v$"
         />
 
@@ -32,6 +39,9 @@
           v-model:hashAlgo="state.hashAlgo"
           v-model:dhKey="state.dhKey"
           v-model:lifetime="state.lifetime"
+          :dhKeyList="dhKeyList"
+          :encryptAlgoList="encryptAlgoList"
+          :hashAlgoList="hashAlgoList"
           :errors="v$"
         />
         <advancedOption
@@ -49,6 +59,8 @@
           v-model:rekeyFuzz="state.rekeyFuzz"
           v-model:marginTime="state.marginTime"
           :isdeadPeer="state.deadPeer"
+          :traversalList="traversalList"
+          :deadPeerList="deadPeerList"
           :errors="v$"
         />
       </v-col>
@@ -70,6 +82,10 @@
           :isDefault="state.isDefault"
           :isDefaultRemote="state.isDefaultRemote"
           :defaultValueRemote="state.defaultValueRemote"
+          :modeList="modeList"
+          :mapedInterfaceType="mapedInterfaceType"
+          :numberList="numberList"
+          :remoteTypeList="remoteTypeList"
           :errors="v$"
         />
         <phaseTwoExchange
@@ -82,15 +98,33 @@
           v-model:spdEntries="state.spdEntries"
           :isMode="state.mode"
           :isProtocol="state.protocol"
+          :hashAlgoList="hashAlgoList"
+          :protocolListph2="protocolListph2"
+          :pfsList="pfsList"
+          :encryptAlgoListExchange="encryptAlgoListExchange"
           :errors="v$"
         />
-        <div class="btnCreate mt-6 mr-3">
+      </v-col>
+    </v-row>
+    <v-row class="flex py-8 mb-5">
+      <v-col cols="4"> </v-col>
+      <v-col>
+        <div class="mr-3 flex center">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            label="cancel"
+            :isLarge="true"
+            @click="cancel"
+          />
           <VButton
             rounded
             outlined
             color="#213E9F"
             label-color="#ffffff"
-            label="Create"
+            :label="state.isEditState === 'edit' ? 'Edit' : 'Create'"
             :isLarge="true"
             class="ml-2"
             @click="save"
@@ -98,8 +132,7 @@
         </div>
       </v-col>
     </v-row>
-
-    <div class="flex py-8 mb-5"></div>
+    <!-- return json.dumps(list_ipsec) -->
 
     <v-snackbar
       :timeout="2000"
@@ -116,6 +149,7 @@
 
 <script>
 import axios from "axios";
+import { inject, ref, toRefs } from "vue";
 import useValidate from "@vuelidate/core";
 import VButton from "@/components/VButton.vue";
 import { required, requiredIf, helpers } from "@vuelidate/validators";
@@ -128,7 +162,7 @@ import generalInfoPhaseTwo from "./component/general_info_phase_two.vue";
 import phaseTwoExchange from "./component/phase_two_exchange.vue";
 
 export default {
-  name: "ClientsOpenvpnComponent",
+  name: "IpsecComponent",
   components: {
     generalInfoPhaseOne,
     generalInfoPhaseTwo,
@@ -138,9 +172,14 @@ export default {
     advancedOption,
     VButton,
   },
-  setup() {
+  props: ["dataServer"],
+  setup(props) {
+    const emitter = inject("emitter");
+
+    const { dataServer } = toRefs(props);
     const state = reactive({
-      mapedKeyPublic: [],
+      id: null,
+      isEditState: "Create",
       defaultValueRemote: "",
       isDefaultRemote: false,
       defaultValue: "",
@@ -157,7 +196,7 @@ export default {
       },
       keyExchange: {
         name: "V2",
-        slug: "v2",
+        slug: "V2",
       },
       internetProtocol: {
         name: "IPv4",
@@ -248,6 +287,277 @@ export default {
       spdEntries: "",
     });
 
+    const connectionMethodList = ref([
+      {
+        name: "Default",
+        slug: "default",
+      },
+      { name: "Respond only", slug: "Respond Only" },
+      {
+        name: "Start on traffic",
+        slug: "Start on traffic",
+      },
+      {
+        name: "Start immediate",
+        slug: "Start immediate",
+      },
+    ]);
+    const exchangeList = ref([
+      {
+        name: "auto",
+        slug: "auto",
+      },
+      { name: "V1", slug: "V1" },
+      {
+        name: "V2",
+        slug: "V2",
+      },
+    ]);
+    const authenticationMethodList = ref([
+      {
+        name: "Mutual PSK",
+        slug: "Mutual PSK",
+      },
+      { name: "Mutual Public key", slug: "Mutual Public key" },
+      {
+        name: "Mutual RSA",
+        slug: "Mutual RSA",
+      },
+    ]);
+    const negotiationList = ref([
+      {
+        name: "Main",
+        slug: "Main",
+      },
+      { name: "Aggressive", slug: "Aggressive" },
+    ]);
+    const protocolList = ref([
+      {
+        name: "IPv4",
+        slug: "IPv4",
+      },
+      { name: "IPv6", slug: "IPv6" },
+    ]);
+    const dhKeyList = ref([
+      {
+        name: "15 (3072 bits)",
+        slug: "15:3072",
+      },
+      { name: "16 (4096 bits)", slug: "16:4096" },
+      {
+        name: "17 (6144 bits)",
+        slug: "17:6144",
+      },
+      {
+        name: "18 (8192 bits)",
+        slug: "18:8192",
+      },
+      {
+        name: "19 (NIST EC 256 bits)",
+        slug: "19:256",
+      },
+      {
+        name: "20 (NIST EC 384 bits)",
+        slug: "20:384",
+      },
+      {
+        name: "21 (NIST EC 521 bits)",
+        slug: "21:521",
+      },
+      {
+        name: "28 (Brainpool EC 256 bits)",
+        slug: "28:256",
+      },
+      {
+        name: "29 (Brainpool EC 384 bits)",
+        slug: "29:384",
+      },
+      {
+        name: "30 (Brainpool EC 512 bits)",
+        slug: "30:512",
+      },
+      {
+        name: "31 (Elliptic Curve 25519)",
+        slug: "31:25519",
+      },
+    ]);
+
+    const encryptAlgoList = ref([
+      {
+        name: "128 bit AES-GCM with 128 bit ICV",
+        slug: "128",
+      },
+      {
+        name: "192 bit AES-GCM with 128 bit ICV",
+        slug: "192",
+      },
+      {
+        name: "256 bit AES-GCM with 128 bit ICV",
+        slug: "256",
+      },
+    ]);
+
+    const hashAlgoList = ref([
+      {
+        name: "SHA256",
+        slug: "sha256",
+      },
+      { name: "SHA384", slug: "sha384" },
+      {
+        name: "SHA512",
+        slug: "sha512",
+      },
+    ]);
+    const traversalList = ref([
+      {
+        name: "Force",
+        slug: "Enable",
+      },
+      { name: "Unforce", slug: "Disable" },
+    ]);
+
+    const deadPeerList = ref([
+      {
+        name: "Default",
+        slug: "default",
+      },
+      { name: "Restart the tunnel", slug: "Restart the tunnel" },
+      {
+        name: "Stop the tunnel",
+        slug: "Stop the tunnel",
+      },
+    ]);
+    const modeList = ref([
+      {
+        name: "Tunnel IPv4",
+        slug: "Tunnel IPv4",
+      },
+      { name: "Tunnel IPv6", slug: "Tunnel IPv6" },
+      { name: "Transport", slug: "Transport" },
+    ]);
+    const remoteTypeList = ref([
+      {
+        name: "Address",
+        slug: "Address",
+      },
+      { name: "Network", slug: "Network" },
+    ]);
+
+    watch(
+      () => dataServer.value,
+      (newValue) => {
+        if (newValue != "TUNNEL CONFIGURATION") {
+          state.isEditState = "";
+          cancel();
+        }
+      }
+    );
+
+    const cancel = () => {
+      //General information Phase 1
+      state.tunnelSettings = "";
+      state.connectionMethod = {
+        name: "Default",
+        slug: "default",
+      };
+      state.keyExchange = {
+        name: "V2",
+        slug: "V2",
+      };
+      state.internetProtocol = {
+        name: "IPv4",
+        slug: "IPv4",
+      };
+      state.remoteGateway = "";
+      state.generalinterface = "";
+      state.remoteConnect = false;
+      state.description = "";
+      //phase auth
+      state.authMethod = {
+        name: "Mutual RSA",
+        slug: "Mutual RSA",
+      };
+      state.negotiationMode = {
+        name: "Main",
+        slug: "Main",
+      };
+      state.sharedKey = "";
+      state.certificate = "";
+      state.keyPair = "";
+      state.localKey = "";
+      state.peerIdentifier = "";
+      //phase algo
+      state.encryptAlgo = {
+        name: "256 bit AES-GCM with 128 bit ICV",
+        slug: "256",
+      };
+      state.hashAlgo = {
+        name: "SHA256",
+        slug: "sha256",
+      };
+      state.dhKey = {
+        name: "20 (NIST EC 384 bits)",
+        slug: "20:384",
+      };
+      state.lifetime = "28800";
+      //advancedOptions
+      state.policy = true;
+      state.rekey = false;
+      state.reauth = false;
+      state.natTraversal = { name: "Unforce", slug: "Disable" };
+      state.deadPeer = false;
+      state.retries = "";
+      state.mobike = false;
+      state.selectDear = "";
+      state.interactivityTimout = "";
+      state.interactivityTimout2 = "";
+      state.seconds = "";
+      state.rekeyFuzz = "";
+      state.marginTime = "";
+      //general info 2
+      state.mode = {
+        name: "Tunnel IPv4",
+        slug: "Tunnel IPv4",
+      };
+      state.remoteTunnelAddress = "";
+      state.type = {
+        name: "Address",
+        slug: "Address",
+      };
+      state.remoteNetworkAddress = "";
+      state.selectAddressNetwork = "";
+      state.descriptionPh2 = "";
+      state.localAddress = "";
+      state.localNetworkAddress = "";
+      state.selectRemoteAddressNetwork = "";
+      state.typeRemoteNetwork = { name: "Network", slug: "Network" };
+      //exchange
+      state.protocol = {
+        name: "ESP",
+        slug: "ESP",
+      };
+      state.encryptAlgoExchange = {
+        name: "aes256gcm16",
+        slug: "256",
+      };
+      state.hashAlgoExchange = {
+        name: "SHA256",
+        slug: "sha256",
+      };
+      state.pfsKey = {
+        name: "off",
+        slug: "off",
+      };
+      state.lifetimeExchange = "";
+
+      v$.value.$reset();
+    };
+
+    const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
+    const CertificateList = ref([]);
+    const mapedInterfaceType = ref([]);
+    const mapedKeyPublic = ref([]);
+
     const rules = computed(() => {
       return {
         //General information Phase 1
@@ -307,7 +617,7 @@ export default {
         negotiationMode: {
           requiredIfFuction: helpers.withMessage(
             "Value is required",
-            requiredIf(() => state.keyExchange.slug === "v1")
+            requiredIf(() => state.keyExchange.slug === "V1")
           ),
         },
 
@@ -469,7 +779,9 @@ export default {
             };
           });
 
-          state.mapedInterface = interfaces;
+          let listInter = [{ id: 0, name: "Any" }];
+          var combinedArray = [...listInter, ...interfaces];
+          state.mapedInterface = combinedArray;
 
           let resultObject = interfaces.filter((i) => i.name === "WAN");
           state.generalinterface = resultObject[0];
@@ -479,13 +791,9 @@ export default {
         }
       );
     };
-
-    onMounted(() => {
-      getInterface();
-
+    const getPublickKey = () => {
       let publicKeyAttribute =
         document.getElementById("app").attributes["publicKey"].value;
-      console.log("***", publicKeyAttribute);
 
       const validJsonString = publicKeyAttribute
         .replace(/'/g, '"')
@@ -500,8 +808,280 @@ export default {
           name: i.name,
         };
       });
-      state.mapedKeyPublic = mapedPublicKey;
+      mapedKeyPublic.value = mapedPublicKey;
+    };
+
+    const getAllCertif = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/certificates/getAllCertificates").then(
+        (response) => {
+          let mapedListCertif = response.data.filter(
+            (i) => i.certificate_type === "server"
+          );
+          CertificateList.value = mapedListCertif.map((i) => {
+            return {
+              id: i.id,
+              name: i.name,
+            };
+          });
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
+
+    const getInterfaceType = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/network/AllInterfaces").then(
+        (response) => {
+          let interfaces = response.data.map((i) => {
+            return {
+              id: i.id,
+              name: i.name_interface,
+              slug: i.name_interface,
+            };
+          });
+          let listInter = [
+            {
+              name: "Address",
+              slug: "Address",
+            },
+            { name: "Network", slug: "Network" },
+          ];
+
+          var combinedArray = [...listInter, ...interfaces];
+          mapedInterfaceType.value = combinedArray;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
+
+    onMounted(() => {
+      getInterface();
+      getPublickKey();
+      getAllCertif();
+      getInterfaceType();
+
+      emitter.on("edit-serverIpsec", (data) => {
+        console.log("data", data);
+        if (data) state.isEditState = "edit";
+        state.id = data.id;
+        //General information Phase 1
+        state.tunnelSettings = data.conn_name;
+
+        let filtredconnectionMethod = connectionMethodList.value.filter(
+          (i) => i.slug === data?.connection_method
+        );
+
+        state.connectionMethod = filtredconnectionMethod[0];
+        let filtredexchangeList = exchangeList.value.filter(
+          (i) => i.slug === data?.key_exchange_version
+        );
+        let filtredprotocolList = protocolList.value.filter(
+          (i) => i.slug === data?.internet_protocol
+        );
+        let filtredInterfaceList = state.mapedInterface.filter(
+          (i) => i.name === data?.interface
+        );
+        state.keyExchange = filtredexchangeList[0];
+        state.internetProtocol = filtredprotocolList[0];
+        state.remoteGateway = data.remote_gateway;
+        state.generalinterface = filtredInterfaceList[0];
+        state.remoteConnect = data.dynamic_gateway;
+        state.description = data.description_ph1;
+
+        // Phase 1 proposal (Authentication)
+
+        let filtredAuthMethodList = authenticationMethodList.value.filter(
+          (i) => i.slug === data?.authentication_method
+        );
+        let filtredNegotiationModeList = negotiationList.value.filter(
+          (i) => i.name === data?.negotiation_mode
+        );
+        let filtredCertList = CertificateList.value.filter(
+          (i) => i.name === data?.cert
+        );
+        let filtredPublicLocalList = mapedKeyPublic.value.filter(
+          (i) => i.name === data?.local_key_pair
+        );
+        let filtredKeyPairList = mapedKeyPublic.value.filter(
+          (i) => i.name === data?.peer_key_pair
+        );
+        state.authMethod = filtredAuthMethodList[0];
+        state.negotiationMode = filtredNegotiationModeList[0];
+        state.sharedKey = data?.pre_shared_key;
+        state.certificate = filtredCertList[0];
+        state.keyPair = filtredKeyPairList[0];
+        state.localKey = filtredPublicLocalList[0];
+        state.peerIdentifier = data?.remote_distingushed_name ?? "";
+
+        // Phase 1 proposal (Algorithms)
+
+        let filtredEncryptAlgoList = encryptAlgoList.value.filter(
+          (i) => i.slug === data?.encryption_algorithm_ph1
+        );
+
+        let filtredHashAlgoList = [];
+        data?.hash_algorithm_ph1.forEach((e) => {
+          filtredHashAlgoList = [
+            ...filtredHashAlgoList,
+            ...hashAlgoList.value.filter((i) => i.slug === e),
+          ];
+        });
+
+        let filtredDhKeyList = [];
+        data?.dh_key_group.forEach((e) => {
+          filtredDhKeyList = [
+            ...filtredDhKeyList,
+            ...dhKeyList.value.filter((i) => i.slug === e),
+          ];
+        });
+
+        state.encryptAlgo = filtredEncryptAlgoList[0];
+        state.hashAlgo = filtredHashAlgoList;
+        state.dhKey = filtredDhKeyList;
+        state.lifetime = data?.lifetime_ph1;
+
+        // Advanced Options
+
+        state.policy = data?.policy;
+        state.rekey = data?.rekey;
+        state.reauth = data?.reauth;
+
+        let filtredtraversalList = traversalList.value.filter(
+          (i) => i.slug === data?.nat_traversal
+        );
+        state.natTraversal = filtredtraversalList[0];
+        state.deadPeer = data?.deed_peer_detection;
+        state.retries = data?.deed_peer_timeout;
+        state.mobike = data?.mobike;
+
+        let filtredDeadPeerList = deadPeerList.value.filter(
+          (i) => i.slug === data?.deed_peer_action
+        );
+
+        state.selectDear = filtredDeadPeerList[0];
+
+        state.interactivityTimout = data?.inactivity_timeout;
+
+        state.seconds = data?.deed_peer_delay;
+        state.rekeyFuzz = data?.rekey_fuzz;
+        state.marginTime = data?.margin_time;
+
+        //general info 2
+
+        let filtredDModeList = modeList.value.filter(
+          (i) => i.slug === data?.mode
+        );
+        let filtredtypeLocalNetworkList = mapedInterfaceType.value.filter(
+          (i) => i.slug === data?.type_local_network
+        );
+
+        let filtredtypeRemoteNetworkList = remoteTypeList.value.filter(
+          (i) => i.slug === data?.type_remote_network
+        );
+
+        let result = data?.address_local_network.split("/");
+        result[1] = parseInt(result[1], 10);
+
+        let resultRemote = data?.address_remote_network.split("/");
+        resultRemote[1] = parseInt(resultRemote[1], 10);
+
+        state.mode = filtredDModeList[0];
+        state.descriptionPh2 = data.description_ph2;
+        state.type = filtredtypeLocalNetworkList[0];
+        state.remoteNetworkAddress = resultRemote[0];
+        state.selectAddressNetwork = result[1];
+        state.localNetworkAddress = result[0];
+        state.selectRemoteAddressNetwork = resultRemote[1];
+        state.typeRemoteNetwork = filtredtypeRemoteNetworkList[0];
+
+        // exchage
+
+        let filtredProtocolph2List = protocolListph2.value.filter(
+          (i) => i.slug === data?.protocol
+        );
+
+        let filtredHashAlgoListExchange = [];
+        data?.hash_algorithm_ph2.forEach((e) => {
+          filtredHashAlgoListExchange = [
+            ...filtredHashAlgoListExchange,
+            ...hashAlgoList.value.filter((i) => i.slug === e),
+          ];
+        });
+
+        state.protocol = filtredProtocolph2List[0];
+        state.hashAlgoExchange = filtredHashAlgoListExchange;
+
+        let filtredencryptAlgoExchange = [];
+        data?.encryption_algorithm_ph2.forEach((e) => {
+          filtredencryptAlgoExchange = [
+            ...filtredencryptAlgoExchange,
+            ...encryptAlgoListExchange.value.filter((i) => i.slug === e),
+          ];
+        });
+
+        state.encryptAlgoExchange = filtredencryptAlgoExchange;
+
+        let filtredPfsKeyList = pfsList.value.filter(
+          (i) => i.slug === data?.pfs_key_group
+        );
+
+        state.pfsKey = filtredPfsKeyList[0];
+
+        state.lifetimeExchange = data.lifetime_ph2;
+
+        console.log("state", state);
+      });
     });
+
+    const protocolListph2 = ref([
+      {
+        name: "ESP",
+        slug: "ESP",
+      },
+      { name: "AH", slug: "AH" },
+    ]);
+
+    const pfsList = ref([
+      {
+        name: "off",
+        slug: "off",
+      },
+      { name: "15 (3072 bits)", slug: "15:3072" },
+      { name: "16 (4096 bits)", slug: "16:4096" },
+      { name: "17 (6144 bits)", slug: "17:6144" },
+      { name: "18 (8192 bits)", slug: "18:8192" },
+      { name: "19 (NIST EC 256 bits)", slug: "19:256" },
+      { name: "20 (NIST EC 384 bits)", slug: "20:384" },
+      { name: "21 (NIST EC 521 bits)", slug: "21:521" },
+      { name: "28 (Brainpool EC 256 bits)", slug: "28:256" },
+      { name: "29 (Brainpool EC 384 bits)", slug: "29:384" },
+      { name: "30 (Brainpool EC 512 bits)", slug: "30:512" },
+      { name: "31 (Elliptic Curve 25519)", slug: "31:25519" },
+    ]);
+
+    const encryptAlgoListExchange = ref([
+      {
+        name: "aes128gcm16",
+        slug: "128",
+      },
+      {
+        name: "aes192gcm16",
+        slug: "192",
+      },
+      {
+        name: "aes256gcm16",
+        slug: "256",
+      },
+    ]);
 
     watch(
       state,
@@ -522,6 +1102,7 @@ export default {
           state.defaultValue = "32";
           state.isDefault = false;
           state.localNetworkAddress = "";
+          state.selectAddressNetwork = "";
         }
         if (state.typeRemoteNetwork.slug === "Address") {
           state.selectRemoteAddressNetwork = "";
@@ -541,7 +1122,7 @@ export default {
       if (result) {
         let KeyExchange = null;
 
-        if (state.keyExchange.slug === "v1") {
+        if (state.keyExchange.slug === "V1") {
           KeyExchange = {
             key_exchange_version: state.keyExchange?.name,
             negotiation_mode: state.negotiationMode.name,
@@ -555,8 +1136,8 @@ export default {
         if (state.authMethod?.slug === "Mutual Public key") {
           authen = {
             authentication_method: state.authMethod?.slug,
-            local_key_pair: state.localKey?.id,
-            peer_key_pair: state.keyPair?.id,
+            local_key_pair: state.localKey?.name,
+            peer_key_pair: state.keyPair?.name,
           };
         } else if (state.authMethod?.slug === "Mutual PSK") {
           authen = {
@@ -642,7 +1223,7 @@ export default {
             },
             remote_network: {
               type_remote_network: state.typeRemoteNetwork.slug,
-              address_local_network: state.remoteNetworkAddress,
+              address_remote_network: state.remoteNetworkAddress,
               mask:
                 state.typeRemoteNetwork.slug === "Address"
                   ? "32"
@@ -683,23 +1264,47 @@ export default {
           sa_key_exchange: isKeyExchange,
           mode_ph2: isMode_ph2,
         };
-        axios
-          .post("/ipsec/createServerIPsec", payload)
-          .then((response) => {
-            if (response.status == "201") {
+
+        if (state.isEditState === "edit") {
+          axios
+            .put(`/ipsec/updateServerIPsec/${state.id}`, payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                state.isEditState = "";
+                setTimeout(() => {
+                  location.reload();
+                  emitter.emit("open-listingIpsec");
+                }, 1000);
+              }
+            })
+            .catch((i) => {
               state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
-          });
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          axios
+            .post("/ipsec/createServerIPsec", payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                  emitter.emit("open-listingIpsec");
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        }
       } else {
         console.log("error", v$.value);
       }
@@ -708,8 +1313,31 @@ export default {
     return {
       getCookie,
       getInterface,
+      getPublickKey,
+      getAllCertif,
+      connectionMethodList,
+      exchangeList,
+      protocolList,
+      protocolListph2,
+      authenticationMethodList,
+      encryptAlgoListExchange,
+      pfsList,
+      negotiationList,
+      CertificateList,
+      mapedKeyPublic,
+      dhKeyList,
+      hashAlgoList,
+      encryptAlgoList,
+      traversalList,
+      deadPeerList,
+      modeList,
+      mapedInterfaceType,
+      numberList,
+      remoteTypeList,
       save,
+      cancel,
       state,
+      emitter,
       v$,
     };
   },
@@ -720,9 +1348,5 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
-}
-.btnCreate {
-  display: flex;
-  justify-content: flex-end;
 }
 </style>

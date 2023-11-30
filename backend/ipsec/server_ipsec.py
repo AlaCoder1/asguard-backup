@@ -1,3 +1,4 @@
+from backend.managementKeypairs.models import PrivateKey, PublicKey
 from backend.openvpn.functions import execute_command_without_arguments, execute_list_commands_without_arguments
 
 
@@ -9,7 +10,7 @@ def install_server_ipsec(conn_config, authentication, interface_address, remote_
         if authentication["authentication_method"] == "Mutual PSK":
             # Pre-shared key method
             ipsec_secrets_file.write(f"""\n\n{interface_address} {remote_gateway} : PSK '{authentication["pre_shared_key"]}' """)
-        else:
+        elif authentication["authentication_method"] == "Mutual RSA":
             # Certificates method
             # Putting the certificates and its authoity in the ipsec.d directory in pem format
             commands_list_without_arguments = [["sudo", "openssl", "x509", "-inform DER",
@@ -27,6 +28,15 @@ def install_server_ipsec(conn_config, authentication, interface_address, remote_
                                                 ]
             execute_list_commands_without_arguments(commands_list_without_arguments)
             ipsec_secrets_file.write(f"""\n\n : RSA {authentication["cert"]}Key.pem """)
+        else:
+            # Public Key method
+            # Putting the Private Key in the ipsec.d directory in pem format
+            public_key = PublicKey.objects.get(name=authentication["local_key_pair"])
+            private_key = public_key.private_key.name
+            execute_command_without_arguments(["sudo", "openssl", "rsa", 
+                                               "-in", f"/etc/ipsec.d/private/{private_key}.key",
+                                               "-out", f"/etc/ipsec.d/private/{private_key}Key.pem"])
+            ipsec_secrets_file.write(f"""\n\n : RSA {private_key}Key.pem """)
 
     with open('/etc/ipsec.conf', 'a') as ipsec_file:
         ipsec_file.write(conn_config)

@@ -1,21 +1,20 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="List of interface">
+    <base-layout title="List of interface" active-menu="activeTab">
       <template #content>
         <v-tabs
-          v-model="selectedTab"
+          v-model="activeTab"
           background-color="#f5f5f5"
           color="black"
           :class="{'elevation-0': true}"
           :slider-color="'#FFC300'"
-          @change="handleTabChange"
         >
-          <v-tab v-for="tab in tabs" :key="tab.id">
+          <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.name_interface">
             <span style="color: #020202">{{ tab.name_interface }}</span>
           </v-tab>
         </v-tabs>
 
-        <v-window v-model="selectedTab">
+        <v-window v-model="activeTab">
           <v-window-item
             v-for="tab in tabs"
             :key="tab.name_interface"
@@ -23,7 +22,7 @@
           >
             <IfNameComponent
               :id="tab.name_interface"
-              :activeTab="selectedTab"
+              :activeTab="activeTab"
             />
           </v-window-item>
         </v-window>
@@ -43,16 +42,15 @@ export default {
   },
   data() {
     return {
-      selectedTab: "",
-      activeTabValue: "",
+      activeTab: "",
       interfaces: [],
       IPV4Config: {},
       allStaticGateways: [],
     };
   },
-  methods: {
-    handleTabChange(newTabValue) {
-      this.activeTabValue = this.tabs[newTabValue].name_interface;
+  watch: {
+    activeTab(val) {
+      localStorage.setItem("network-tab", val);
     },
   },
   computed: {
@@ -74,6 +72,13 @@ export default {
       .replace(/None/g, "null");
     let parsedArray = JSON.parse(validJsonString);
     this.interfaces = parsedArray;
+
+    let tab = localStorage.getItem("network-tab")
+    if (tab) {
+      this.activeTab = tab;
+    } else {
+      this.activeTab = this.interfaces[0].name_interface;
+    }
 
     this.IPV4Config =
       document.getElementById("app").attributes["IPV4Config"].value;

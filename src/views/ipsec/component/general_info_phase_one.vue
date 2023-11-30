@@ -28,21 +28,7 @@
           item-title="name"
           item-value="slug"
           return-object
-          :items="[
-            {
-              name: 'Default',
-              slug: 'default',
-            },
-            { name: 'Respond only', slug: 'Respond Only' },
-            {
-              name: 'Start on traffic',
-              slug: 'Start on traffic',
-            },
-            {
-              name: 'Start immediate',
-              slug: 'Start immediate',
-            },
-          ]"
+          :items="props.connectionMethodList"
         ></v-select>
         <p
           class="error-feedback mb-5"
@@ -61,17 +47,7 @@
           item-title="name"
           item-value="slug"
           return-object
-          :items="[
-            {
-              name: 'auto',
-              slug: 'auto',
-            },
-            { name: 'V1', slug: 'v1' },
-            {
-              name: 'V2',
-              slug: 'v2',
-            },
-          ]"
+          :items="props.exchangeList"
         ></v-select>
         <p
           class="error-feedback mb-5"
@@ -91,13 +67,7 @@
           item-title="name"
           item-value="slug"
           return-object
-          :items="[
-            {
-              name: 'IPv4',
-              slug: 'IPv4',
-            },
-            { name: 'IPv6', slug: 'IPv6' },
-          ]"
+          :items="props.protocolList"
         ></v-select>
         <p
           class="error-feedback mb-5"
@@ -164,6 +134,9 @@ import { useVModels } from "@vueuse/core";
 
 const props = defineProps([
   "errors",
+  "connectionMethodList",
+  "exchangeList",
+  "protocolList",
   "mapedInterface",
   "tunnelSettings",
   "connectionMethod",

@@ -20,7 +20,7 @@ def get_all_server_ipsec():
             config['fields']['encryption_algorithm_ph2'] = list(config['fields']['encryption_algorithm_ph2'].split(','))
         config['fields']['hash_algorithm_ph2'] = list(config['fields']['hash_algorithm_ph2'].split(','))
         list_ipsec.append(config['fields'])
-    return list_ipsec
+    return json.dumps(list_ipsec)
     
 
 def get_server_ipsec(id):

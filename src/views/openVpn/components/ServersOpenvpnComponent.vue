@@ -897,8 +897,8 @@ export default {
 
                 setTimeout(() => {
                   location.reload();
+                  emitter.emit("open-listing");
                 }, 1000);
-                emitter.emit("open-listing");
               }
             })
             .catch((i) => {

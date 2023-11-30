@@ -13,14 +13,7 @@
           item-title="name"
           item-value="slug"
           return-object
-          :items="[
-            {
-              name: 'Tunnel IPv4',
-              slug: 'Tunnel IPv4',
-            },
-            { name: 'Tunnel IPv6', slug: 'Tunnel IPv6' },
-            { name: 'Transport', slug: 'Transport' },
-          ]"
+          :items="props.modeList"
         ></v-select>
         <p class="error-feedback mb-5" v-if="props.errors.mode.$errors.length">
           {{ props.errors.mode.$errors?.[0].$message }}
@@ -91,7 +84,7 @@
             item-title="name"
             item-value="slug"
             return-object
-            :items="mapedInterface"
+            :items="props.mapedInterfaceType"
           ></v-select>
           <p
             class="error-feedback mb-5"
@@ -120,7 +113,7 @@
                 {{ props.errors.localNetworkAddress.$errors?.[0].$message }}
               </p>
             </v-col>
-            <v-col cols="1" >
+            <v-col cols="1">
               <div class="ml-1 mt-5">/</div>
             </v-col>
             <v-col cols="4">
@@ -128,7 +121,7 @@
                 :label="props.defaultValue ?? 'Address'"
                 :readonly="props.isTypeWAn || props.isDefault"
                 v-model="selectAddressNetwork"
-                :items="numberList"
+                :items="props.numberList"
               ></v-select>
               <p
                 class="error-feedback mb-5"
@@ -155,13 +148,7 @@
             item-title="name"
             item-value="slug"
             return-object
-            :items="[
-              {
-                name: 'Address',
-                slug: 'Address',
-              },
-              { name: 'Network', slug: 'Network' },
-            ]"
+            :items="props.remoteTypeList"
           ></v-select>
           <p
             class="error-feedback mb-5"
@@ -197,7 +184,7 @@
                 :label="props.defaultValueRemote ?? 'Address'"
                 :readonly="props.isDefaultRemote"
                 v-model="selectRemoteAddressNetwork"
-                :items="numberList"
+                :items="props.numberList"
               ></v-select>
               <p
                 class="error-feedback mb-5"
@@ -215,13 +202,13 @@
   </div>
 </template>
 <script setup>
-import axios from "axios";
 import { useVModels } from "@vueuse/core";
-import { ref, onMounted } from "vue";
-
-const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
 
 const props = defineProps([
+  "remoteTypeList",
+  "mapedInterfaceType",
+  "numberList",
+  "modeList",
   "defaultValueRemote",
   "isDefaultRemote",
   "defaultValue",
@@ -264,55 +251,4 @@ const {
   selectRemoteAddressNetwork,
   typeRemoteNetwork,
 } = useVModels(props, emit);
-
-const mapedInterface = ref([]);
-
-const getCookie = (name) => {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === name + "=") {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-};
-
-const getInterface = () => {
-  const csrfToken = getCookie("csrftoken");
-  axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-  axios.get("/network/AllInterfaces").then(
-    (response) => {
-      let interfaces = response.data.map((i) => {
-        return {
-          id: i.id,
-          name: i.name_interface,
-          slug: i.name_interface,
-        };
-      });
-      let listInter = [
-        {
-          name: "Address",
-          slug: "Address",
-        },
-        { name: "Network", slug: "Network" },
-      ];
-
-      var combinedArray = [...listInter, ...interfaces];
-      mapedInterface.value = combinedArray;
-    },
-    (error) => {
-      console.log(error);
-    }
-  );
-};
-
-onMounted(() => {
-  getInterface();
-});
 </script>

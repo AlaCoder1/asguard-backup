@@ -34,13 +34,7 @@
           item-title="name"
           item-value="slug"
           return-object
-          :items="[
-            {
-              name: 'Force',
-              slug: 'Enable',
-            },
-            { name: 'Unforce', slug: 'Disable' },
-          ]"
+          :items="props.traversalList"
         ></v-select>
       </v-col>
       <v-col cols="4">
@@ -72,17 +66,7 @@
             item-title="name"
             item-value="slug"
             return-object
-            :items="[
-              {
-                name: 'Default',
-                slug: 'default',
-              },
-              { name: 'Restart the tunnel', slug: 'Restart the tunnel' },
-              {
-                name: 'Stop the tunnel',
-                slug: 'Stop the tunnel',
-              },
-            ]"
+            :items="props.deadPeerList"
           ></v-select>
         </template>
       </v-col>
@@ -172,6 +156,8 @@
 import { useVModels } from "@vueuse/core";
 
 const props = defineProps([
+  "deadPeerList",
+  "traversalList",
   "isdeadPeer",
   "errors",
   "policy",

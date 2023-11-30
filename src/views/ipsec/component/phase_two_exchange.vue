@@ -13,13 +13,7 @@
           item-title="name"
           item-value="slug"
           return-object
-          :items="[
-            {
-              name: 'ESP',
-              slug: 'ESP',
-            },
-            { name: 'AH', slug: 'AH' },
-          ]"
+          :items="props.protocolListph2"
         ></v-select>
         <p
           class="error-feedback mb-5"
@@ -40,7 +34,7 @@
             item-value="slug"
             return-object
             multiple
-            :items="encryptAlgoList"
+            :items="props.encryptAlgoListExchange"
           ></v-select>
           <p
             class="error-feedback mb-5"
@@ -61,17 +55,7 @@
           item-value="slug"
           return-object
           multiple
-          :items="[
-            {
-              name: 'SHA256',
-              slug: 'sha256',
-            },
-            { name: 'SHA384', slug: 'sha384' },
-            {
-              name: 'SHA512',
-              slug: 'sha512',
-            },
-          ]"
+          :items="props.hashAlgoList"
         ></v-select>
         <p
           class="error-feedback mb-5"
@@ -91,7 +75,7 @@
           item-title="name"
           item-value="slug"
           return-object
-          :items="pfsList"
+          :items="props.pfsList"
         ></v-select>
         <p
           class="error-feedback mb-5"
@@ -158,40 +142,11 @@
 import { ref } from "vue";
 import { useVModels } from "@vueuse/core";
 
-const pfsList = ref([
-  {
-    name: "off",
-    slug: "off",
-  },
-  { name: "15 (3072 bits)", slug: "15:3072" },
-  { name: "16 (4096 bits)", slug: "16:4096" },
-  { name: "17 (6144 bits)", slug: "17:6144" },
-  { name: "18 (8192 bits)", slug: "18:8192" },
-  { name: "19 (NIST EC 256 bits)", slug: "19:256" },
-  { name: "20 (NIST EC 384 bits)", slug: "20:384" },
-  { name: "21 (NIST EC 521 bits)", slug: "21:521" },
-  { name: "28 (Brainpool EC 256 bits)", slug: "28:256" },
-  { name: "29 (Brainpool EC 384 bits)", slug: "29:384" },
-  { name: "30 (Brainpool EC 512 bits)", slug: "30:512" },
-  { name: "31 (Elliptic Curve 25519)", slug: "31:25519" },
-]);
-
-const encryptAlgoList = ref([
-  {
-    name: "aes128gcm16",
-    slug: "128",
-  },
-  {
-    name: "aes192gcm16",
-    slug: "192",
-  },
-  {
-    name: "aes256gcm16",
-    slug: "256",
-  },
-]);
-
 const props = defineProps([
+  "protocolListph2",
+  "pfsList",
+  "encryptAlgoListExchange",
+  "hashAlgoList",
   "isProtocol",
   "isMode",
   "errors",

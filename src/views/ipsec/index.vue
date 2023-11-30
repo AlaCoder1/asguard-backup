@@ -14,8 +14,8 @@
             :key="tab.id"
             value="TUNNEL CONFIGURATION"
           >
-<v-card>
-              <v-card-text><ipsecAdvancedParams /></v-card-text>
+            <v-card>
+              <v-card-text><ipsecAdvancedParams :dataServer="dataServer" /></v-card-text>
             </v-card>
           </v-window-item>
           <v-window-item v-for="tab in tabs" :key="tab.id" value="LISTING">
@@ -54,11 +54,13 @@ export default {
       ],
       rowDataServers: [],
       serverInfo: null,
+      dataServer:null
     };
   },
   watch: {
     activeTab(val) {
       localStorage.setItem("ipsec-tab", val);
+      this.dataServer = val;
     },
   },
   mounted: async function () {
@@ -67,17 +69,20 @@ export default {
 
     this.serverInfo =
       document.getElementById("app").attributes["servers"].value;
-    this.emitter.on("add-server", () => {
+    this.emitter.on("add-serverIpsec", () => {
       this.activeTab = "TUNNEL CONFIGURATION";
+    });
+    this.emitter.on("open-listingIpsec", () => {
+      this.activeTab = "LISTING";
     });
 
     this.rowDataServers =
       document.getElementById("app").attributes["servers"].value;
-    let validJsonString = this.rowDataServers
-      .replace(/'/g, '"')
-      .replace(/True/g, "true")
-      .replace(/False/g, "false")
-      .replace(/None/g, "null");
+    let validJsonString = this.rowDataServers;
+    // .replace(/'/g, '"')
+    // .replace(/True/g, "true")
+    // .replace(/False/g, "false")
+    // .replace(/None/g, "null");
     let parsedArray = JSON.parse(validJsonString);
     this.rowDataServers = parsedArray;
   },

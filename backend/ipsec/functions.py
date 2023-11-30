@@ -10,8 +10,10 @@ conn {json_object["conn_name"]}
     #leftid=10.1.12.155
     #leftsubnet
     #leftcert=path_cert
+    #leftrsasigkey=path_public_key
     right={json_object["remote_gateway"]}
     #rightid=distingushed_name
+    #rightrsasigkey=path_public_key
     #rightsubnet
     #rightallowany=yes
     ike=ike
@@ -47,7 +49,7 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("keyexchange=ike", "keyexchange=ikev2")
     
     if json_object["interface_name"] != "Any":
-        config_input = config_input.replace("left=%any", f"left={json_object['interface_address']}")
+        config_input = config_input.replace(f"left=%any", f"left={json_object['interface_address']}")
         
     if json_object["dynamic_gateway"]:
         config_input = config_input.replace("#rightallowany=yes", "rightallowany=yes")
@@ -58,6 +60,12 @@ conn {json_object["conn_name"]}
                                             f"""leftcert={json_object["authentication"]["cert"]}Cert.pem""")
         config_input = config_input.replace("#rightid=distingushed_name", 
                                             f"""rightid="{json_object["authentication"]["remote_distingushed_name"]}" """)
+    elif json_object["authentication"]["authentication_method"] == "Mutual Public Key":
+        config_input = config_input.replace("authby=secret", "authby=pubkey")
+        config_input = config_input.replace("#leftrsasigkey=path_public_key", 
+                                            f"""leftrsasigkey={json_object["authentication"]["local_key_pair"]}Cert.pem""")
+        config_input = config_input.replace("#rightrsasigkey=path_public_key", 
+                                            f"""rightrsasigkey={json_object["authentication"]["peer_key_pair"]}Cert.pem""")
     
     ike = ""
     for hash_algorithm in json_object["hash_algorithm_ph1"]:

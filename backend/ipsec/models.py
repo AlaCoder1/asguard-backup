@@ -29,8 +29,8 @@ class ServerIPsec(models.Model):
 
     # Proposal (Algorithms)
     encryption_algorithm_ph1 = models.CharField(max_length=100, default='128', blank=True, null=True)
-    hash_algorithm_ph1 = models.CharField(max_length=100, default='sha256', blank=True, null=True)
-    dh_key_group = models.CharField(max_length=100, default='15', blank=True, null=True)
+    hash_algorithm_ph1 = models.CharField(max_length=100, default=None, blank=True, null=True)
+    dh_key_group = models.CharField(max_length=100, default=None, blank=True, null=True)
     lifetime_ph1 = models.CharField(max_length=100, default=None, blank=True, null=True)
 
     # Advanced Options
@@ -40,9 +40,9 @@ class ServerIPsec(models.Model):
     nat_traversal = models.CharField(max_length=100, default='disable', blank=True, null=True)
     mobike = models.BooleanField(default=False, blank=True, null=True)
     deed_peer_detection = models.BooleanField(default=False, blank=True, null=True)
-    deed_peer_delay = models.CharField(max_length=100, default='disable', blank=True, null=True)
-    deed_peer_timeout = models.CharField(max_length=100, default='disable', blank=True, null=True)
-    deed_peer_action = models.CharField(max_length=100, default='default', blank=True, null=True)
+    deed_peer_delay = models.CharField(max_length=100, default=None, blank=True, null=True)
+    deed_peer_timeout = models.CharField(max_length=100, default=None, blank=True, null=True)
+    deed_peer_action = models.CharField(max_length=100, default=None, blank=True, null=True)
     inactivity_timeout = models.CharField(max_length=100, default=None, blank=True, null=True)
     margin_time = models.CharField(max_length=100, default='default', blank=True, null=True)
     rekey_fuzz = models.CharField(max_length=100, default='default', blank=True, null=True)

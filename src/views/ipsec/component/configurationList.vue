@@ -369,11 +369,11 @@ export default {
       try {
         const serversAttribute =
           document.getElementById("app").attributes["servers"].value;
-        const validJsonString = serversAttribute
-          .replace(/'/g, '"')
-          .replace(/True/g, "true")
-          .replace(/False/g, "false")
-          .replace(/None/g, "null");
+        const validJsonString = serversAttribute;
+          // .replace(/'/g, '"')
+          // .replace(/True/g, "true")
+          // .replace(/False/g, "false")
+          // .replace(/None/g, "null");
         const parsedArray = JSON.parse(validJsonString);
         rowData.value = parsedArray;
       } catch (error) {

@@ -1,5 +1,24 @@
 <template>
   <div class="mt-3">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            Please Wait...
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
     <v-row>
       <v-col cols="6">
         <generalInfoPhaseOne
@@ -178,6 +197,8 @@ export default {
 
     const { dataServer } = toRefs(props);
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       id: null,
       isEditState: "Create",
       defaultValueRemote: "",
@@ -887,13 +908,19 @@ export default {
         let filtredprotocolList = protocolList.value.filter(
           (i) => i.slug === data?.internet_protocol
         );
+
+        let filtredInterfaces = state.mapedInterface.filter(
+          (i) => i.id === +data.interface
+        );
+
         let filtredInterfaceList = state.mapedInterface.filter(
           (i) => i.name === data?.interface
         );
         state.keyExchange = filtredexchangeList[0];
         state.internetProtocol = filtredprotocolList[0];
         state.remoteGateway = data.remote_gateway;
-        state.generalinterface = filtredInterfaceList[0];
+        state.generalinterface =
+          filtredInterfaces[0] ?? filtredInterfaceList[0];
         state.remoteConnect = data.dynamic_gateway;
         state.description = data.description_ph1;
 
@@ -988,19 +1015,23 @@ export default {
           (i) => i.slug === data?.type_remote_network
         );
 
-        let result = data?.address_local_network.split("/");
-        result[1] = parseInt(result[1], 10);
+        let result = data?.address_local_network?.split("/");
+        if (result) {
+          result[1] = parseInt(result[1], 10);
+        }
 
-        let resultRemote = data?.address_remote_network.split("/");
-        resultRemote[1] = parseInt(resultRemote[1], 10);
+        let resultRemote = data?.address_remote_network?.split("/");
+        if (resultRemote) {
+          resultRemote[1] = parseInt(resultRemote[1], 10);
+        }
 
         state.mode = filtredDModeList[0];
         state.descriptionPh2 = data.description_ph2;
         state.type = filtredtypeLocalNetworkList[0];
-        state.remoteNetworkAddress = resultRemote[0];
-        state.selectAddressNetwork = result[1];
-        state.localNetworkAddress = result[0];
-        state.selectRemoteAddressNetwork = resultRemote[1];
+        state.remoteNetworkAddress = resultRemote ? resultRemote[0] : "";
+        state.selectAddressNetwork = result ? result[1] : "";
+        state.localNetworkAddress = result ? result[0] : "";
+        state.selectRemoteAddressNetwork = resultRemote ? resultRemote[1] : "";
         state.typeRemoteNetwork = filtredtypeRemoteNetworkList[0];
 
         // exchage
@@ -1086,16 +1117,25 @@ export default {
     watch(
       state,
       () => {
-        if (state.type.slug === "WAN" || state.type.slug === "LAN") {
+        if (
+          (state.type?.slug === "WAN" || state.type?.slug === "LAN") &&
+          state.mode?.slug === "Tunnel IPv4"
+        ) {
           state.isTypeWAn = true;
         } else {
           state.isTypeWAn = false;
         }
-        if (state.type.slug === "Address") {
+        if (
+          state.type?.slug === "Address" &&
+          state.mode?.slug === "Tunnel IPv4"
+        ) {
           state.defaultValue = "32";
           state.selectAddressNetwork = "";
           state.isDefault = true;
-        } else if (state.type.slug === "Network") {
+        } else if (
+          state.type?.slug === "Network" &&
+          state.mode?.slug === "Tunnel IPv4"
+        ) {
           state.defaultValue = "mask";
           state.isDefault = false;
         } else {
@@ -1104,7 +1144,10 @@ export default {
           state.localNetworkAddress = "";
           state.selectAddressNetwork = "";
         }
-        if (state.typeRemoteNetwork.slug === "Address") {
+        if (
+          state.typeRemoteNetwork?.slug === "Address" &&
+          state.mode?.slug === "Tunnel IPv4"
+        ) {
           state.selectRemoteAddressNetwork = "";
           state.defaultValueRemote = "32";
           state.isDefaultRemote = true;
@@ -1264,12 +1307,15 @@ export default {
           sa_key_exchange: isKeyExchange,
           mode_ph2: isMode_ph2,
         };
-
+        state.loading = true;
+        state.isLoadingDialogue = true;
         if (state.isEditState === "edit") {
           axios
             .put(`/ipsec/updateServerIPsec/${state.id}`, payload)
             .then((response) => {
               if (response.status == "201") {
+                state.loading = false;
+                state.isLoadingDialogue = false;
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
@@ -1281,6 +1327,8 @@ export default {
               }
             })
             .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;
@@ -1290,6 +1338,8 @@ export default {
             .post("/ipsec/createServerIPsec", payload)
             .then((response) => {
               if (response.status == "201") {
+                state.loading = false;
+                state.isLoadingDialogue = false;
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
@@ -1300,6 +1350,8 @@ export default {
               }
             })
             .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;

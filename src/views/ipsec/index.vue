@@ -24,7 +24,9 @@
             </v-card>
           </v-window-item>
           <v-window-item v-for="tab in tabs" :key="tab.id" value="MONITORING">
-            <v-card> </v-card>
+            <v-card> 
+              <v-card-text><Monotoring /></v-card-text>
+            </v-card>
           </v-window-item>
         </v-window>
       </template>
@@ -36,12 +38,15 @@
 import BaseLayout from "@/layouts/layout.vue";
 import ipsecAdvancedParams from "./ipsecAdvancedParams.vue";
 import ConfigurationList from "./component/configurationList.vue";
+import Monotoring from "./component/monotoring.vue";
+
 export default {
   name: "IpsecComponent",
   components: {
     BaseLayout,
     ipsecAdvancedParams,
     ConfigurationList,
+    Monotoring,
   },
   inject: ["emitter"],
   data() {

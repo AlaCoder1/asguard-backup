@@ -1063,14 +1063,19 @@ export default {
         state.hashAlgoExchange = filtredHashAlgoListExchange;
 
         let filtredencryptAlgoExchange = [];
-        data?.encryption_algorithm_ph2.forEach((e) => {
-          filtredencryptAlgoExchange = [
-            ...filtredencryptAlgoExchange,
-            ...encryptAlgoListExchange.value.filter((i) => i.slug === e),
-          ];
-        });
 
-        state.encryptAlgoExchange = filtredencryptAlgoExchange;
+        if (data.encryption_algorithm_ph2) {
+          data?.encryption_algorithm_ph2?.forEach((e) => {
+            filtredencryptAlgoExchange = [
+              ...filtredencryptAlgoExchange,
+              ...encryptAlgoListExchange.value.filter((i) => i.slug === e),
+            ];
+          });
+        }
+
+        state.encryptAlgoExchange = filtredencryptAlgoExchange
+          ? filtredencryptAlgoExchange
+          : "";
 
         let filtredPfsKeyList = pfsList.value.filter(
           (i) => i.slug === data?.pfs_key_group

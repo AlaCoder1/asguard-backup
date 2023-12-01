@@ -264,7 +264,7 @@ def createServerIPsec(request):
             if protocol == "ESP":
                 encryption_algorithm_ph2_list = sa_key_exchange.get("encryption_algorithm_ph2", "")
                 encryption_algorithm_ph2 = ",".join(encryption_algorithm_ph2_list)
-                data["encryption_algorithm_ph2"] = encryption_algorithm_ph2
+                server_data["encryption_algorithm_ph2"] = encryption_algorithm_ph2
 
             serializer_server = ServerIPsecSerializer(data=server_data)
             if serializer_server.is_valid():
@@ -306,10 +306,14 @@ def deleteServerIPsec(request, id):
         if (request.method == 'DELETE'):
             server = ServerIPsec.objects.get(id=id)
             # delete from system
-            interface = Interface.objects.get(name_interface=server.interface)
-            interface_address = IP4Config.objects.get(interface_id=interface.pk)
+            if server.interface != "Any":
+                interface = Interface.objects.get(name_interface=server.interface)
+                interface_address = IP4Config.objects.get(interface_id=interface.pk).ip_address
+            else:
+                interface_address = "any"
+            
             if server.authentication_method == "Mutual PSK":
-                deleted_line_in_secrets_file = f"""{interface_address.ip_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
+                deleted_line_in_secrets_file = f"""{interface_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
             elif server.authentication_method == "Mutual RSA":
                 deleted_line_in_secrets_file = f""" : RSA {server.cert}Key.pem """
             else:
@@ -396,20 +400,24 @@ def updateServerIPsec(request, id):
             # parse the incoming information
             data = request.data
             server = ServerIPsec.objects.get(id=id)
-
             if server.authentication_method == "Mutual PSK":
-                previous_interface_address = IP4Config.objects.get(interface_id=Interface.objects.get(name_interface=server.interface).pk)
-                updated_line_in_secrets_file = f"""{previous_interface_address.ip_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
-            else:
+                if server.interface != "Any":
+                    previous_interface_address = IP4Config.objects.get(interface_id=Interface.objects.get(name_interface=server.interface).pk)
+                    updated_line_in_secrets_file = f"""{previous_interface_address.ip_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
+                else:
+                    updated_line_in_secrets_file = f"""any {server.remote_gateway} : PSK '{server.pre_shared_key}' """
+            elif server.authentication_method == "Mutual RSA":
                 updated_line_in_secrets_file = f""" : RSA {server.cert}Key.pem """
-
+            else:
+                private_key = PublicKey.objects.get(name=server.local_key_pair).private_key
+                updated_line_in_secrets_file = f""" : RSA {private_key.name}Key.pem """
             
             server.conn_name = data.get("conn_name", "")
             server.connection_method = data.get("connection_method", "")
             key_exchange = data.get("key_exchange", "")
             server.key_exchange_version = key_exchange.get("key_exchange_version", "")
             server.internet_protocol = data.get("internet_protocol", "")
-            interface_name = data.get("interface_name", "")
+            server.interface = data.get("interface_name", "")
             server.remote_gateway = data.get("remote_gateway", "")
             server.dynamic_gateway = data.get("dynamic_gateway", "")
             server.description_ph1 = data.get("description_ph1", "")
@@ -451,10 +459,12 @@ def updateServerIPsec(request, id):
 
             # auto_ping_host = data.get("auto_ping_host", "")
             # manual_spd_entries = data.get("manual_spd_entries", "")
-            interface = Interface.objects.get(name_interface=interface_name)
-            server.interface = interface.pk
-            interface_address = IP4Config.objects.get(interface_id=interface)
-            data["interface_address"] = interface_address.ip_address
+            if server.interface == "Any":
+                server.interface = "Any"
+            else:
+                interface = Interface.objects.get(name_interface=server.interface)
+                interface_address = IP4Config.objects.get(interface_id=interface)
+                data["interface_address"] = interface_address.ip_address
 
             if server.key_exchange_version == "V1":
                 server.negotiation_mode = key_exchange.get("negotiation_mode", "")
@@ -515,15 +525,17 @@ def updateServerIPsec(request, id):
                 data["dh_key_group"] = dh_key_group_list
                 server_conf = json_to_str_server_ipsec(data)
                 # Install the server in system
-                update_server_ipsec(server.conn_name, updated_line_in_secrets_file, server_conf, 
-                                    authentication, interface_address.ip_address, server.remote_gateway, ca)
+                if server.interface == "Any":
+                    update_server_ipsec(server.conn_name, updated_line_in_secrets_file, server_conf, 
+                                        authentication, "any", server.remote_gateway, ca)
+                else:
+                    update_server_ipsec(server.conn_name, updated_line_in_secrets_file, server_conf, 
+                                        authentication, interface_address.ip_address, server.remote_gateway, ca)
 
                 # Add the server to the database
                 serializer_server.save()
                 return JsonResponse({"msg": f"Connection {server.conn_name} Configuration is updated"}, status=201)
             else:
-                print(serializer_server.data)
-                print(serializer_server.errors)
                 return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 
         except ServerIPsec.DoesNotExist:

@@ -2,23 +2,25 @@
   <v-col cols="4">
     <v-card class="mx-auto">
       <v-card-item>
-        <div>
-          <div class="title-card mb-2">Capacity</div>
-          <div class="float-right mt-5">
-            <span class="mb-1 numberTitle">2.23 GB</span>
-          </div>
-          <div>
+        <v-row>
+          <v-col cols="7">
+            <div class="title-card mb-2">Capacity</div>
             <span class="mb-1 soutitle">Transferred</span>
             <h6 class="daysTitle">Today</h6>
-          </div>
-          <div class="float-right mt-5">
-            <span class="mb-1 numberTitle">2.23 GB</span>
-          </div>
-          <div class="mt-2">
+          </v-col>
+          <v-col class="mt-4" cols="5" align-self="center">
+            <span  class="numberTitle">2.23 GB</span>
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col cols="7">
             <span class="mb-1 soutitle">Recieved</span>
             <h6 class="daysTitle">Today</h6>
-          </div>
-        </div>
+          </v-col>
+          <v-col cols="5" align-self="center">
+            <span class="mb-1 numberTitle">2.23 GB</span>
+          </v-col>
+        </v-row>
       </v-card-item>
     </v-card>
   </v-col>

@@ -698,7 +698,13 @@ export default {
         //     helpers.regex(/^[0-9.]+$/)
         //   ),
         // },
-        type: { required },
+
+        type: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.mode.slug === "Tunnel IPv4")
+          ),
+        },
 
         remoteNetworkAddress: {
           requiredIfFuction: helpers.withMessage(
@@ -755,7 +761,12 @@ export default {
           ),
         },
 
-        typeRemoteNetwork: { required },
+        typeRemoteNetwork: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.mode.slug === "Tunnel IPv4")
+          ),
+        },
         //exchange
         protocol: { required },
         encryptAlgoExchange: { required },
@@ -1154,6 +1165,22 @@ export default {
         } else {
           state.defaultValueRemote = "mask";
           state.isDefaultRemote = false;
+        }
+        if (state.mode?.slug === "Transport") {
+          console.log("Transport oui0");
+
+          state.typeRemoteNetwork = "";
+          state.type = "";
+        } else if (state.mode?.slug === "Tunnel IPv4") {
+          if (!state.type) {
+            state.type = {
+              name: "Address",
+              slug: "Address",
+            };
+          }
+          if (!state.typeRemoteNetwork) {
+            state.typeRemoteNetwork = { name: "Network", slug: "Network" };
+          }
         }
       },
       { immediate: true }

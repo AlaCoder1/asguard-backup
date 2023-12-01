@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Certificat Name "
+                    label="Certificat Name"
                     v-model="state.formData.certifName"
                   ></v-text-field>
                   <p
@@ -36,7 +36,7 @@
                     return-object
                     :items="[
                       {
-                        name: 'Import an existing Certificat',
+                        name: 'Import an existing Certificate',
                         slug: 'import',
                         id: '1',
                       },

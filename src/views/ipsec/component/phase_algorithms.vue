@@ -4,7 +4,7 @@
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-5">
-        <label>Encryption algorithm</label>
+        <label>Encryption algorithm*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
@@ -23,7 +23,7 @@
         </p>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>Hash algorithm</label>
+        <label>Hash algorithm*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
@@ -43,7 +43,7 @@
         </p>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>DH key group</label>
+        <label>DH key group*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select

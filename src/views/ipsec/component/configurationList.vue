@@ -2,7 +2,18 @@
   <div class="mt-3 ml-3 mr-3">
     <v-row>
       <v-col cols="12">
-        <h4>VPN PEERS</h4>
+        <h4 class="mb-1">
+          IPSEC PEERS
+          <i
+            class="mdi mdi-play-circle mr-1 ml-1"
+            style="color: #4caf50; font-size: 20px"
+          ></i>
+          <i
+            class="mdi mdi-stop-circle"
+            style="color: #b00020; font-size: 20px"
+          ></i>
+        </h4>
+
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column">
           <v-card class="flex mt-3">
@@ -144,7 +155,7 @@ export default {
         minWidth: 100,
         suppressSizeToFit: true,
         field: "enable",
-        checkboxSelection: true,
+        cellRenderer: checkboxRender,
       },
       {
         headerName: "Action",
@@ -155,6 +166,46 @@ export default {
         filter: false,
       },
     ]);
+
+    function checkboxRender(params) {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      // return `<input type="checkbox" ${params.value ? "checked" : ""} />`;
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      input.checked = params.value;
+
+      input.style.margin = "10px";
+      input.addEventListener("click", function (event) {
+        console.log("params", params.data.id);
+        console.log("evene", event);
+        params.value = !params.value;
+        console.log("params.value", params.value);
+        params.node.data.fieldName = params.value;
+
+        axios
+          .put(`/ipsec/updateServerIPsec/${state.id}`, payload)
+          .then((response) => {
+            if (response.status == "201") {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              state.isEditState = "";
+              setTimeout(() => {
+                location.reload();
+                emitter.emit("open-listingIpsec");
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            console.log("eroor");
+          });
+      });
+      return input;
+    }
+
     const rowData = reactive([]);
     function TypePeers(data) {
       let eGui = document.createElement("div");
@@ -370,10 +421,10 @@ export default {
         const serversAttribute =
           document.getElementById("app").attributes["servers"].value;
         const validJsonString = serversAttribute;
-          // .replace(/'/g, '"')
-          // .replace(/True/g, "true")
-          // .replace(/False/g, "false")
-          // .replace(/None/g, "null");
+        // .replace(/'/g, '"')
+        // .replace(/True/g, "true")
+        // .replace(/False/g, "false")
+        // .replace(/None/g, "null");
         const parsedArray = JSON.parse(validJsonString);
         rowData.value = parsedArray;
       } catch (error) {
@@ -395,6 +446,7 @@ export default {
       gridApi,
       gridOptions,
       TypePeers,
+      checkboxRender,
       RemoteGateway,
       extractDHKey,
       extractPFSKey,

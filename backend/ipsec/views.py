@@ -468,6 +468,8 @@ def updateServerIPsec(request, id):
 
             if server.key_exchange_version == "V1":
                 server.negotiation_mode = key_exchange.get("negotiation_mode", "")
+            else:
+                server.negotiation_mode = None
 
             ca = ''
             if server.authentication_method == "Mutual PSK":
@@ -485,6 +487,10 @@ def updateServerIPsec(request, id):
                 server.deed_peer_delay = deed_peer.get("deed_peer_delay", "")
                 server.deed_peer_timeout = deed_peer.get("deed_peer_timeout", "")
                 server.deed_peer_action = deed_peer.get("deed_peer_action")
+            else:
+                server.deed_peer_delay = None
+                server.deed_peer_timeout = None
+                server.deed_peer_action = None
 
             if server.mode == "Tunnel IPv4":
                 # Local Network
@@ -514,6 +520,8 @@ def updateServerIPsec(request, id):
                 encryption_algorithm_ph2_list = sa_key_exchange.get("encryption_algorithm_ph2", "")
                 server.encryption_algorithm_ph2 = ",".join(encryption_algorithm_ph2_list)
                 data["encryption_algorithm_ph2"] = server.encryption_algorithm_ph2
+            else:
+                server.encryption_algorithm_ph2 = None
 
             serializer_server = ServerIPsecSerializer(server, data=data)
             data["hash_algorithm_ph1"] = server.hash_algorithm_ph1

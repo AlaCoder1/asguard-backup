@@ -6,11 +6,13 @@
           IPSEC PEERS
           <i
             class="mdi mdi-play-circle mr-1 ml-1"
-            style="color: #4caf50; font-size: 20px"
+            style="color: #4caf50; font-size: 20px; cursor: pointer"
+            @click="startStopServer('start')"
           ></i>
           <i
             class="mdi mdi-stop-circle"
-            style="color: #b00020; font-size: 20px"
+            style="color: #b00020; font-size: 20px; cursor: pointer"
+            @click="startStopServer('stop')"
           ></i>
         </h4>
 
@@ -445,6 +447,32 @@ export default {
       }
     });
 
+    const startStopServer = (data) => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let payload = {
+        status: data,
+      };
+
+      axios
+        .post("/ipsec/statusIPsec", payload)
+        .then((response) => {
+          snackbar.value = true;
+          color.value = "success";
+          textAlert.value = response.data.msg;
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          snackbar.value = true;
+          color.value = "red";
+          textAlert.value = i.response.data.error;
+        });
+    };
+
     return {
       emitter,
       color,
@@ -472,11 +500,8 @@ export default {
       handleAction,
       addServer,
       deleteItem,
+      startStopServer,
     };
   },
 };
 </script>
-
-<style scoped>
-/* Add your custom styles here */
-</style>

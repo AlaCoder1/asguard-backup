@@ -769,7 +769,14 @@ export default {
         },
         //exchange
         protocol: { required },
-        encryptAlgoExchange: { required },
+
+        encryptAlgoExchange: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.protocol.slug === "ESP")
+          ),
+        },
+
         hashAlgoExchange: { required },
         pfsKey: { required },
         // pingHost: { required },
@@ -1193,6 +1200,9 @@ export default {
 
     const save = async () => {
       const result = await v$.value.$validate();
+
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (result) {
         let KeyExchange = null;

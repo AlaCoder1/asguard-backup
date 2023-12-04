@@ -4,7 +4,7 @@
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-5">
-        <label>Tunnel settings name</label>
+        <label>Tunnel settings name*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
@@ -19,7 +19,7 @@
         </p>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>Connection method</label>
+        <label>Connection method*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
@@ -38,7 +38,7 @@
         </p>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>Key Exchange version</label>
+        <label>Key Exchange version*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
@@ -58,7 +58,7 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>Internet Protocol</label>
+        <label>Internet Protocol*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
@@ -78,7 +78,7 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>Interface</label>
+        <label>Interface*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
@@ -98,7 +98,7 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>Remote gateway</label>
+        <label>Remote gateway*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field

@@ -582,7 +582,14 @@ export default {
     const rules = computed(() => {
       return {
         //General information Phase 1
-        tunnelSettings: { required },
+      
+        tunnelSettings: {
+          required,
+          isValidTunnelSettings: helpers.withMessage(
+            `champs can include only letters & Numbers & underscores & hyphens without space.`,
+            helpers.regex(/^[A-Za-z0-9_\-]+$/)
+          ),
+        },
         connectionMethod: { required },
         keyExchange: { required },
         internetProtocol: { required },

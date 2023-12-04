@@ -18,7 +18,7 @@
               <v-card-text><ipsecAdvancedParams :dataServer="dataServer" /></v-card-text>
             </v-card>
           </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="LISTING">
+          <v-window-item v-for="tab in tabs" :key="tab.id" value="IPSEC PEERS">
             <v-card>
               <v-card-text><ConfigurationList /></v-card-text>
             </v-card>
@@ -54,7 +54,7 @@ export default {
       activeTab: "TUNNEL CONFIGURATION",
       tabs: [
         { id: 1, label: "TUNNEL CONFIGURATION" },
-        { id: 2, label: "LISTING" },
+        { id: 2, label: "IPSEC PEERS" },
         { id: 3, label: "MONITORING" },
       ],
       rowDataServers: [],
@@ -78,7 +78,7 @@ export default {
       this.activeTab = "TUNNEL CONFIGURATION";
     });
     this.emitter.on("open-listingIpsec", () => {
-      this.activeTab = "LISTING";
+      this.activeTab = "IPSEC PEERS";
     });
 
     this.rowDataServers =

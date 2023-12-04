@@ -78,5 +78,8 @@ class ServerIPsec(models.Model):
     auto_ping_host = models.CharField(max_length=300, default=None, null=True, blank=True)
     manual_spd_entries = models.CharField(max_length=300, default=None, null=True, blank=True)
 
+    # Config status (Enable or Disable)
+    server_status = models.BooleanField(default=True, null=True, blank=True)
+
     class Meta:
         db_table = 'server_ipsec'

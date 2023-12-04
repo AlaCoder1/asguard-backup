@@ -48,6 +48,16 @@
         </div>
       </v-col>
     </v-row>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+
+      <template v-slot:actions> </template>
+    </v-snackbar>
   </div>
   <!-- Dialog for delete confirmation -->
   <v-dialog v-model="dialogDelete" max-width="500">
@@ -173,34 +183,37 @@ export default {
       // return `<input type="checkbox" ${params.value ? "checked" : ""} />`;
       var input = document.createElement("input");
       input.type = "checkbox";
+      params.value = params.data.server_status;
       input.checked = params.value;
 
       input.style.margin = "10px";
+      input.style.width = "20px";
+      input.style.height = "18px";
+      input.style.cursor = "pointer";
+
       input.addEventListener("click", function (event) {
-        console.log("params", params.data.id);
-        console.log("evene", event);
         params.value = !params.value;
-        console.log("params.value", params.value);
-        params.node.data.fieldName = params.value;
+        params.data.server_status = params.value;
+        let payload = {
+          enable: params.value,
+        };
 
         axios
-          .put(`/ipsec/updateServerIPsec/${state.id}`, payload)
+          .put(`/ipsec/statusServerIPsec/${params.data.id}`, payload)
           .then((response) => {
-            if (response.status == "201") {
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              state.isEditState = "";
+            if (response.status == "200") {
+              snackbar.value = true;
+              color.value = "success";
+              textAlert.value = response.data.msg;
               setTimeout(() => {
                 location.reload();
-                emitter.emit("open-listingIpsec");
               }, 1000);
             }
           })
           .catch((i) => {
-            console.log("eroor");
+            snackbar.value = true;
+            color.value = "red";
+            textAlert.value = i.response.data.error;
           });
       });
       return input;

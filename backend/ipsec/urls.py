@@ -8,4 +8,5 @@ urlpatterns = [
     path('deleteServerIPsec/<int:id>', views.deleteServerIPsec, name="deleteServerIPsec"),
     path('updateServerIPsec/<int:id>', views.updateServerIPsec, name="updateServerIPsec"),
     path('statusServerIPsec/<int:id>', views.statusServerIPsec, name="statusServerIPsec"),
+    path('statusIPsec', views.statusIPsec, name="statusIPsec"),
 ]

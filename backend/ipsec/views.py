@@ -12,6 +12,7 @@ from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec, 
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
+from backend.openvpn.functions import execute_command_without_arguments
 from backend.openvpn.manage_errors import CommandExecutionError
 
 from .models import ServerIPsec
@@ -575,6 +576,31 @@ def statusServerIPsec(request, id):
                 return JsonResponse({"msg": f"{server.conn_name} is enabled"})
             else:
                 return JsonResponse({"msg": f"{server.conn_name} is disabled"})
+        
+    except ServerIPsec.DoesNotExist:
+        return JsonResponse({"error": "This Server does not exist"}, status=400)
+    except IP4Config.DoesNotExist:
+        return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
+
+
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO STOP OR START IPSEC",)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def statusIPsec(request):
+    """Change status of a server config from system and then from database"""
+    try:
+        if (request.method == 'POST'):
+            data = request.data
+            status = data.get("status", "")
+
+            execute_command_without_arguments(['sudo', 'ipsec', status])
+
+            if status == "start":
+                return JsonResponse({"msg": "IPsec is started"})
+            else:
+                return JsonResponse({"msg": "IPsec is stoped"})
         
     except ServerIPsec.DoesNotExist:
         return JsonResponse({"error": "This Server does not exist"}, status=400)

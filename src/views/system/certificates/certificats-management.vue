@@ -26,8 +26,8 @@ export default {
   props: {},
   data() {
     return {
-      authoritesData: null,
-      certifData: null,
+      authoritesData: [],
+      certifData: [],
     };
   },
   beforeMount: async function () {

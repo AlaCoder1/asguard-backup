@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Site to site VPN" active-menu="activeTab">
+    <base-layout title="Site to Site VPN" active-menu="activeTab">
       <template #content>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">

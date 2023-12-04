@@ -4,44 +4,19 @@
       <v-col cols="12">
         <h4 class="mb-1">
           IPSEC PEERS
-          <i
-            class="mdi mdi-play-circle mr-1 ml-1"
-            style="color: #4caf50; font-size: 20px; cursor: pointer"
-            @click="startStopServer('start')"
-          ></i>
-          <i
-            class="mdi mdi-stop-circle"
-            style="color: #b00020; font-size: 20px; cursor: pointer"
-            @click="startStopServer('stop')"
-          ></i>
+          <i class="mdi mdi-play-circle mr-1 ml-1" style="color: #4caf50; font-size: 20px"></i>
+          <i class="mdi mdi-stop-circle" style="color: #b00020; font-size: 20px"></i>
         </h4>
 
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column">
           <v-card class="flex mt-3">
-            <ag-grid-vue
-              id="grid-wrapper"
-              domLayout="autoHeight"
-              class="ag-theme-alpine mt-3 mb-3 ml-3 mr-3"
-              :columnDefs="columns"
-              :rowData="rowData.value"
-              :gridOptions="gridOptions"
-              :defaultColDef="defaultColDef"
-              :rowGroupPanelShow="rowGroupPanelShow"
-              @grid-ready="onGridReady"
-              style="width: 100%; height: 100%"
-            />
+            <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3 mb-3 ml-3 mr-3"
+              :columnDefs="columns" :rowData="rowData.value" :gridOptions="gridOptions" :defaultColDef="defaultColDef"
+              :rowGroupPanelShow="rowGroupPanelShow" @grid-ready="onGridReady" style="width: 100%; height: 100%" />
             <div class="justify-end d-flex mr-3 mt-3 mb-3">
-              <VButton
-                rounded
-                outlined
-                color="#213E9F"
-                label-color="#ffffff"
-                label="Add New Peer"
-                :isLarge="true"
-                class="ml-2"
-                @click="addServer"
-              />
+              <VButton rounded outlined color="#213E9F" label-color="#ffffff" label="Add New Peer" :isLarge="true"
+                class="ml-2" @click="addServer" />
             </div>
           </v-card>
           <br />
@@ -50,16 +25,6 @@
         </div>
       </v-col>
     </v-row>
-    <v-snackbar
-      :timeout="2000"
-      v-model="snackbar"
-      location="bottom right"
-      :color="color"
-    >
-      {{ textAlert }}
-
-      <template v-slot:actions> </template>
-    </v-snackbar>
   </div>
   <!-- Dialog for delete confirmation -->
   <v-dialog v-model="dialogDelete" max-width="500">
@@ -185,37 +150,34 @@ export default {
       // return `<input type="checkbox" ${params.value ? "checked" : ""} />`;
       var input = document.createElement("input");
       input.type = "checkbox";
-      params.value = params.data.server_status;
       input.checked = params.value;
 
       input.style.margin = "10px";
-      input.style.width = "20px";
-      input.style.height = "18px";
-      input.style.cursor = "pointer";
-
       input.addEventListener("click", function (event) {
+        console.log("params", params.data.id);
+        console.log("evene", event);
         params.value = !params.value;
-        params.data.server_status = params.value;
-        let payload = {
-          enable: params.value,
-        };
+        console.log("params.value", params.value);
+        params.node.data.fieldName = params.value;
 
         axios
-          .put(`/ipsec/statusServerIPsec/${params.data.id}`, payload)
+          .put(`/ipsec/updateServerIPsec/${state.id}`, payload)
           .then((response) => {
-            if (response.status == "200") {
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
+            if (response.status == "201") {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              state.isEditState = "";
               setTimeout(() => {
                 location.reload();
+                emitter.emit("open-listingIpsec");
               }, 1000);
             }
           })
           .catch((i) => {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = i.response.data.error;
+            console.log("eroor");
           });
       });
       return input;
@@ -269,7 +231,7 @@ export default {
           encryptionText = "256 bit AES-GCM with 128 bit ICV";
           break;
         default:
-          encryptionText = "Unknown Encryption";
+          encryptionText = "";
       }
 
       eGui.innerHTML = `
@@ -296,17 +258,34 @@ export default {
           encryptionText = "aes256gcm16";
           break;
         default:
-          encryptionText = "Unknown Encryption";
+          encryptionText = null; // Set encryptionText as null instead of an empty string
       }
-      eGui.innerHTML = `
-          ${encryptionText} <br/> 
-          ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
-          ${extractDHKey(data.data.pfs_key_group)} (
-          ${extractPFSKey(data.data.pfs_key_group)}
-          )bits         `;
+
+      // Conditionally add <br/> if encryptionText is not null
+      let lineBreak = encryptionText !== null ? '<br/>' : '';
+      if (data.data.pfs_key_group !== "off") {
+        let pfsKey = data.data.pfs_key_group ? `(${extractPFSKey(data.data.pfs_key_group)}) bits` : '';
+        eGui.innerHTML = `
+    ${encryptionText ? `${encryptionText} ${lineBreak}` : ''} 
+    ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
+    ${extractDHKey(data.data.pfs_key_group)} ${pfsKey}
+  `;
+      } else {
+        eGui.innerHTML = `
+    ${encryptionText ? `${encryptionText} ${lineBreak}` : ''} 
+    ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
+    ${extractDHKey(data.data.pfs_key_group)}
+  `;
+
+      }
+
+
+
+
       eGui.style.lineHeight = "2";
       return eGui;
     }
+
 
     const gridApi = ref(null);
     const gridOptions = ref({
@@ -447,32 +426,6 @@ export default {
       }
     });
 
-    const startStopServer = (data) => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-      let payload = {
-        status: data,
-      };
-
-      axios
-        .post("/ipsec/statusIPsec", payload)
-        .then((response) => {
-          snackbar.value = true;
-          color.value = "success";
-          textAlert.value = response.data.msg;
-
-          setTimeout(() => {
-            location.reload();
-          }, 1000);
-        })
-        .catch((i) => {
-          snackbar.value = true;
-          color.value = "red";
-          textAlert.value = i.response.data.error;
-        });
-    };
-
     return {
       emitter,
       color,
@@ -500,8 +453,11 @@ export default {
       handleAction,
       addServer,
       deleteItem,
-      startStopServer,
     };
   },
 };
 </script>
+
+<style scoped>
+/* Add your custom styles here */
+</style>

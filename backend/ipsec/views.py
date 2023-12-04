@@ -8,7 +8,7 @@ from drf_yasg import openapi
 from backend.ipsec.functions import json_to_str_server_ipsec
 from backend.ipsec.list_ipsec import get_all_server_ipsec, get_server_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
-from backend.ipsec.server_ipsec import delete_server_ipsec, install_server_ipsec, update_server_ipsec
+from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec, install_server_ipsec, update_server_ipsec
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
@@ -297,7 +297,7 @@ def createServerIPsec(request):
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO DELETE AN IPSEC",)
-@api_view(['Delete'])
+@api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def deleteServerIPsec(request, id):
@@ -552,3 +552,31 @@ def updateServerIPsec(request, id):
             return JsonResponse({"error": "This Interface does not exist"}, status=400)
         except IP4Config.DoesNotExist:
             return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
+
+
+@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO ENABLE OR DISABLE AN IPSEC CONFIGURATION",)
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def statusServerIPsec(request, id):
+    """Change status of a server config from system and then from database"""
+    try:
+        if (request.method == 'PUT'):
+            data = request.data
+            enable = data.get("enable", "")
+
+            server = ServerIPsec.objects.get(id=id)
+            change_status_conn(server.conn_name, enable, server)
+            server.server_status = enable
+            server.save()
+
+            if enable:
+                return JsonResponse({"msg": f"{server.conn_name} is enabled"})
+            else:
+                return JsonResponse({"msg": f"{server.conn_name} is disabled"})
+        
+    except ServerIPsec.DoesNotExist:
+        return JsonResponse({"error": "This Server does not exist"}, status=400)
+    except IP4Config.DoesNotExist:
+        return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)

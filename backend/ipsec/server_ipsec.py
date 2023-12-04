@@ -1,4 +1,5 @@
-from backend.managementKeypairs.models import PrivateKey, PublicKey
+from backend.ipsec.functions import comment_conn_in_config_file, comment_line_in_secrets_file, edit_conn_in_config_file, find_conn_in_config, find_line_in_secrets_file, uncomment_conn_in_config_file, uncomment_line_in_secrets_file
+from backend.managementKeypairs.models import PublicKey
 from backend.openvpn.functions import execute_command_without_arguments, execute_list_commands_without_arguments
 
 
@@ -86,3 +87,25 @@ def update_server_ipsec(conn_name_to_update, updated_line_in_secrets_file, conn_
 
     # Restart IPsec service to take the new configuration
     execute_command_without_arguments(['sudo', 'ipsec', 'restart'])
+
+
+def change_status_conn(conn_name, enable, server):
+    """Change status of a config in .conf and .secrets files by commenting or uncommenting"""
+    with open('/etc/ipsec.conf', 'r') as ipsec_file:
+        server_conf_content = ipsec_file.read()
+    if enable:
+        new_conn_content = uncomment_conn_in_config_file(server_conf_content, conn_name)
+    else:
+        new_conn_content = comment_conn_in_config_file(server_conf_content, conn_name)
+    server_conf_content = edit_conn_in_config_file(server_conf_content, conn_name, new_conn_content)
+    with open('/etc/ipsec.conf', 'w') as ipsec_file:
+        ipsec_file.write(server_conf_content)
+    
+    with open('/etc/ipsec.secrets', 'r') as secrets_file:
+        secrets_content = secrets_file.read()
+    if enable:
+        new_secrets = uncomment_line_in_secrets_file(secrets_content, server)
+    else:
+        new_secrets = comment_line_in_secrets_file(secrets_content, server)
+    with open('/etc/ipsec.secrets', 'w') as secrets_file:
+        secrets_file.write(new_secrets)

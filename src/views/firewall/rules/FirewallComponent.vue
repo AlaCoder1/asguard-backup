@@ -3,29 +3,20 @@
     <div class="container">
       <h4>Inbound rules</h4>
       <v-divider></v-divider>
-      <v-alert type="success" class="d-flex mt-3" v-if="alert">
-        <span class="c-o ml-3">
+      <v-alert type="success" class="d-flex mt-3 alert-style" v-if="alert">
+        <span class="ml-3">
           <strong>Success!</strong> Rules saved successfully.
-        </span>
-        <span class="ml-16" style="margin-top: 20px !important">
-          <i class="fas fa-times justify-end cursor" @click="handleRemove"></i>
         </span>
       </v-alert>
       <v-dialog v-model="deleteDialog" max-width="500px">
         <v-card>
           <v-card-title class="headline">Delete Confirmation</v-card-title>
-          <v-card-text
-            >Are you sure you want to delete this rule from the
-            Firewall?</v-card-text
-          >
+          <v-card-text>Are you sure you want to delete this rule from the
+            Firewall?</v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="cancelDelete"
-              >Cancel</v-btn
-            >
-            <v-btn color="blue darken-1" text @click="confirmDelete"
-              >Delete</v-btn
-            >
+            <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
+            <v-btn color="blue darken-1" text @click="confirmDelete">Delete</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -33,17 +24,8 @@
         <v-card-title>
           <v-row>
             <v-col cols="12" md="6">
-              <v-text-field
-                id="filter-text-box"
-                v-model="filterText"
-                placeholder="Search"
-                clearable
-                hide-details
-                dense
-                prepend-inner-icon="mdi-magnify"
-                variant="outlined"
-                @input="onFilterTextBoxChanged"
-              ></v-text-field>
+              <v-text-field id="filter-text-box" v-model="filterText" placeholder="Search" clearable hide-details dense
+                prepend-inner-icon="mdi-magnify" variant="outlined" @input="onFilterTextBoxChanged"></v-text-field>
             </v-col>
             <v-col cols="12" md="6" class="d-flex justify-end">
               <v-btn class="ml-3 mt-2" @click="addRow">
@@ -54,27 +36,12 @@
           </v-row>
         </v-card-title>
         <v-card-text>
-          <ag-grid-vue
-            id="grid-wrapper"
-            domLayout="autoHeight"
-            class="ag-theme-alpine"
-            :columnDefs="columnDefs"
-            :rowData="rowData.value"
-            @grid-ready="onGridReady"
-            :rowDrag="true"
-            :defaultColDef="defaultColDef"
-            :editType="editType"
-            style="width: 100%"
-            :animateRows="true"
-            @cell-value-changed="onCellValueChanged"
-            @column-row-group-changed="onColumnRowGroupChanged"
-            @column-row-drag-end="onColumnRowDragEnd"
-            @firstDataRendered="onFirstDataRendered"
-            @row-drag-end="onRowDragEnd"
-            :pagination="true"
-            :paginationPageSize="10"
-            :rowSelection="'multiple'"
-          >
+          <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
+            :rowData="rowData.value" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef"
+            :editType="editType" style="width: 100%" :animateRows="true" @cell-value-changed="onCellValueChanged"
+            @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
+            @firstDataRendered="onFirstDataRendered" @row-drag-end="onRowDragEnd" :pagination="true"
+            :paginationPageSize="10" :rowSelection="'multiple'">
           </ag-grid-vue>
         </v-card-text>
       </v-card>
@@ -83,26 +50,10 @@
       <div class="row justify-content-center">
         <br />
         <div class="col-12 d-flex justify-end">
-          <VButton
-            rounded
-            outlined
-            border-color="'#213E9F'"
-            color="#ffffff"
-            label-color="#213E9F"
-            label="cancel"
-            :isLarge="true"
-            @click="cancel"
-          />
-          <VButton
-            rounded
-            outlined
-            color="#213E9F"
-            label-color="#ffffff"
-            label="save"
-            :isLarge="true"
-            class="ml-2"
-            @click="save"
-          />
+          <VButton rounded outlined border-color="'#213E9F'" color="#ffffff" label-color="#213E9F" label="cancel"
+            :isLarge="true" @click="cancel" />
+          <VButton rounded outlined color="#213E9F" label-color="#ffffff" label="save" :isLarge="true" class="ml-2"
+            @click="save" />
         </div>
       </div>
     </div>
@@ -629,8 +580,15 @@ export default defineComponent({
   background-color: #f5f5f5;
 }
 
-.v-alert.d-flex.mt-3.v-sheet.theme--dark.success {
-  width: 28%;
-  margin-left: auto;
+.v-alert.v-theme--light.bg-success.v-alert--density-default.v-alert--variant-flat.d-flex.mt-3.alert-style {
+  width: 350px;
+  right: -78%;
+  /* Default value for small and medium screens */
+
+  /* Media query for large screens */
+  @media screen and (min-width: 1080px) {
+    right: -70%;
+    /* Value for larger screens */
+  }
 }
 </style>

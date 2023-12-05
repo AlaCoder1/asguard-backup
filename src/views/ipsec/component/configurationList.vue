@@ -285,37 +285,42 @@ export default {
       let eGui = document.createElement("div");
       let encryptionText = "";
 
-      switch (data.data.encryption_algorithm_ph2) {
-        case "128":
-          encryptionText = "aes128gcm16";
-          break;
-        case "192":
-          encryptionText = "aes192gcm16";
-          break;
-        case "256":
-          encryptionText = "aes256gcm16";
-          break;
-        default:
-          encryptionText = null; // Set encryptionText as null instead of an empty string
+      // Assuming data.data.encryption_algorithm_ph2 is an array
+      if (Array.isArray(data.data.encryption_algorithm_ph2) && data.data.encryption_algorithm_ph2.length > 0) {
+        encryptionText = data.data.encryption_algorithm_ph2.map(algorithm => {
+          switch (algorithm) {
+            case "128":
+              return "aes128gcm16";
+            case "192":
+              return "aes192gcm16";
+            case "256":
+              return "aes256gcm16";
+            default:
+              return ""; // For unknown cases, add an empty string or handle accordingly
+          }
+        }).join(" "); // Join the algorithms with space
+      } else {
+        encryptionText = null; // Set encryptionText as null if encryption algorithms array is empty or undefined
       }
 
       // Conditionally add <br/> if encryptionText is not null
       let lineBreak = encryptionText !== null ? "<br/>" : "";
+
       if (data.data.pfs_key_group !== "off") {
         let pfsKey = data.data.pfs_key_group
           ? `(${extractPFSKey(data.data.pfs_key_group)}) bits`
           : "";
         eGui.innerHTML = `
-    ${encryptionText ? `${encryptionText} ${lineBreak}` : ""} 
-    ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
-    ${extractDHKey(data.data.pfs_key_group)} ${pfsKey}
-  `;
+      ${encryptionText ? `${encryptionText} ${lineBreak}` : ""}
+      ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
+      ${extractDHKey(data.data.pfs_key_group)} ${pfsKey}
+    `;
       } else {
         eGui.innerHTML = `
-    ${encryptionText ? `${encryptionText} ${lineBreak}` : ""} 
-    ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
-    ${extractDHKey(data.data.pfs_key_group)}
-  `;
+      ${encryptionText ? `${encryptionText} ${lineBreak}` : ""}
+      ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
+      ${extractDHKey(data.data.pfs_key_group)}
+    `;
       }
 
       eGui.style.lineHeight = "2";

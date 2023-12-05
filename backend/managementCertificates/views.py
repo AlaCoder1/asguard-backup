@@ -188,11 +188,17 @@ def deleteCertAuth(request, id):
     try:
         if (request.method == 'DELETE'):
             ca = CertificateAuthority.objects.get(id=id)
-            # delete from system
-            delete_ca_in_system(ca.name)
-            # delete from database
-            ca.delete()
-            return JsonResponse({"msg": f"delete {ca.name} succesfully"})
+            
+            # Test if there is a certificates authorid by this CA
+            list_cert = Certificate.objects.filter(certificate_authority=ca)
+            if len(list_cert) == 0:
+                # delete from system
+                delete_ca_in_system(ca.name)
+                # delete from database
+                ca.delete()
+                return JsonResponse({"msg": f"delete {ca.name} succesfully"})
+            else:
+                return JsonResponse({"error": "You have to delete Certificates authoried by this CA"}, status=400)
     except ProtectedError:
         return JsonResponse({"error": "You have to delete Certificates authoried by this CA"}, status=400)
     except CertificateAuthority.DoesNotExist:

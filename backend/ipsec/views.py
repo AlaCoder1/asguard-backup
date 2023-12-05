@@ -161,7 +161,7 @@ def createServerIPsec(request):
                 interface = Interface.objects.get(name_interface=interface_name)
                 interface = interface.pk
                 interface_address = IP4Config.objects.get(interface_id=interface)
-                data["interface_address"] = f'{interface_address.ip_address}/{interface_address.netmask}'
+                data["interface_address"] = f'{interface_address.ip_address}'
             else:
                 interface = 'Any'
 
@@ -275,9 +275,9 @@ def createServerIPsec(request):
 
                 # Install the server in system
                 if interface_name != 'Any':
-                    install_server_ipsec(server_conf, authentication, interface_address.ip_address, remote_gateway, ca)
+                    install_server_ipsec(conn_name, server_conf, authentication, interface_address.ip_address, remote_gateway, ca)
                 else:
-                    install_server_ipsec(server_conf, authentication, 'any', remote_gateway, ca)
+                    install_server_ipsec(conn_name, server_conf, authentication, 'any', remote_gateway, ca)
 
                 # Add the server to the database
                 serializer_server.save()
@@ -319,7 +319,8 @@ def deleteServerIPsec(request, id):
                 deleted_line_in_secrets_file = f""" : RSA {server.cert}Key.pem """
             else:
                 private_key = PublicKey.objects.get(name=server.local_key_pair).private_key
-                deleted_line_in_secrets_file = f""" : RSA {private_key.name}Key.pem """
+                deleted_line_in_secrets_file = f""" : RSA {private_key.name}.pem """
+                print('deleted_line_in_secrets_file: ', deleted_line_in_secrets_file)
             
             delete_server_ipsec(server.conn_name, deleted_line_in_secrets_file)
             # delete from database
@@ -411,7 +412,7 @@ def updateServerIPsec(request, id):
                 updated_line_in_secrets_file = f""" : RSA {server.cert}Key.pem """
             else:
                 private_key = PublicKey.objects.get(name=server.local_key_pair).private_key
-                updated_line_in_secrets_file = f""" : RSA {private_key.name}Key.pem """
+                updated_line_in_secrets_file = f""" : RSA {private_key.name}.pem """
             
             server.conn_name = data.get("conn_name", "")
             server.connection_method = data.get("connection_method", "")
@@ -460,9 +461,7 @@ def updateServerIPsec(request, id):
 
             # auto_ping_host = data.get("auto_ping_host", "")
             # manual_spd_entries = data.get("manual_spd_entries", "")
-            if server.interface == "Any":
-                server.interface = "Any"
-            else:
+            if server.interface != "Any":
                 interface = Interface.objects.get(name_interface=server.interface)
                 interface_address = IP4Config.objects.get(interface_id=interface)
                 data["interface_address"] = interface_address.ip_address

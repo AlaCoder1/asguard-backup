@@ -8,11 +8,11 @@ def find_conn_in_config(config:str, conn_name):
     conn_name_start = config.find(f'conn {conn_name}')
     if config[conn_name_start-1] == "#":
         conn_name_start -= 1
-    conn_name_end = config.find('conn ', conn_name_start+5)
+    conn_name_end = config.find('\n\nconn ', conn_name_start+5)
     if conn_name_end == -1:
-        conn_name_end = len(config)
-    elif config[conn_name_end-1] == "#":
-        conn_name_end -= 1
+        conn_name_end = config.find('\n\n#conn ', conn_name_start+5)
+        if conn_name_end == -1:
+            conn_name_end = len(config)
     return config[conn_name_start:conn_name_end]
 
 

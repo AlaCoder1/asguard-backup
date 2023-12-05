@@ -82,7 +82,7 @@ export default defineComponent({
   },
   setup(props) {
     // Variables
-    const columnDefs = reactive([
+    const columnDefs = [
       {
         width: 50,
         minWidth: 50,
@@ -187,10 +187,11 @@ export default defineComponent({
       },
       {
         headerName: "Action",
+        field: "action",
         cellRenderer: actionCellRenderer,
         editable: false,
       },
-    ]);
+    ];
     const gridApi = ref(null);
     const gridColumnApi = ref(null);
     const defaultColDef = ref({
@@ -251,7 +252,7 @@ export default defineComponent({
     const onFirstDataRendered = (params) => {
       params.api.sizeColumnsToFit();
     };
-    const actionCellRenderer = (params) => {
+    function actionCellRenderer(params) {
       let eGui = document.createElement("div");
       let editingCells = params.api.getEditingCells();
       let isCurrentRowEditing = editingCells.some((cell) => {
@@ -263,7 +264,7 @@ export default defineComponent({
           class="action-button delete"
           data-action="delete"
           >
-            <i class="fas fa-times" style="color: #086eae;"></i>
+             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         `;
       } else {
@@ -271,7 +272,7 @@ export default defineComponent({
         <button 
           class="action-button delete"
           data-action="delete">
-            <i class="fas fa-times" style="color: #086eae;"></i>
+                       <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         `;
       }

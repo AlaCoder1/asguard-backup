@@ -582,7 +582,7 @@ export default {
     const rules = computed(() => {
       return {
         //General information Phase 1
-      
+
         tunnelSettings: {
           required,
           isValidTunnelSettings: helpers.withMessage(
@@ -885,13 +885,18 @@ export default {
 
       axios.get("/network/AllInterfaces").then(
         (response) => {
-          let interfaces = response.data.map((i) => {
+          let filtredInterface = response.data.filter(
+            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+          );
+
+          let interfaces = filtredInterface.map((i) => {
             return {
               id: i.id,
               name: i.name_interface,
               slug: i.name_interface,
             };
           });
+
           let listInter = [
             {
               name: "Address",

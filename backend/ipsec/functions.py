@@ -51,7 +51,7 @@ def construct_line_secrets(server:ServerIPsec):
         return f""" : RSA {server.cert}Key.pem """
     else:
         private_key = PublicKey.objects.get(name=server.local_key_pair).private_key
-        return f""" : RSA {private_key.name}Key.pem """
+        return f""" : RSA {private_key.name}.pem """
 
 
 def find_line_in_secrets_file(config:str, server:ServerIPsec):
@@ -145,12 +145,12 @@ conn {json_object["conn_name"]}
                                             f"""leftcert={json_object["authentication"]["cert"]}Cert.pem""")
         config_input = config_input.replace("#rightid=distingushed_name", 
                                             f"""rightid="{json_object["authentication"]["remote_distingushed_name"]}" """)
-    elif json_object["authentication"]["authentication_method"] == "Mutual Public Key":
+    elif json_object["authentication"]["authentication_method"] == "Mutual Public key":
         config_input = config_input.replace("authby=secret", "authby=pubkey")
         config_input = config_input.replace("#leftrsasigkey=path_public_key", 
-                                            f"""leftrsasigkey={json_object["authentication"]["local_key_pair"]}Cert.pem""")
+                                            f"""leftrsasigkey={json_object["authentication"]["local_key_pair"]}.pem""")
         config_input = config_input.replace("#rightrsasigkey=path_public_key", 
-                                            f"""rightrsasigkey={json_object["authentication"]["peer_key_pair"]}Cert.pem""")
+                                            f"""rightrsasigkey={json_object["authentication"]["peer_key_pair"]}.pem""")
     
     ike = ""
     for hash_algorithm in json_object["hash_algorithm_ph1"]:
@@ -172,7 +172,7 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("#ikelifetime=1s", f"ikelifetime={json_object['lifetime_ph1']}s")
         
     if not json_object["policy"]:
-        config_input = config_input.replace("installpolicy=yes", "installpolicy=no")
+        config_input = config_input.replace("installpolicy=yes", "#installpolicy=yes")
         
     if json_object["rekey"]:
         config_input = config_input.replace("rekey=yes", "rekey=no")
@@ -231,6 +231,8 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("esp=esp", f"esp={esp}")
     else:
         config_input = config_input.replace("esp=esp", f"ah={esp}")
+        config_input = config_input.replace("#installpolicy=yes", "installpolicy=yes")
+        config_input = config_input.replace("forceencaps=yes", "forceencaps=no")
 
     if json_object["lifetime_ph2"] != "":
         config_input = config_input.replace("#lifetime=28800s", f"lifetime={json_object['lifetime_ph2']}s")

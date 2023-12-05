@@ -35,7 +35,7 @@ def get_finger_print(private_key_name):
 
 def get_key_size(public_key_name):
     """Returns the key size of a public key"""
-    process = execute_command_without_arguments(["sudo", "openssl", "rsa", "-in", f'/etc/ipsec.d/certs/{public_key_name}.key', "-pubin", "-text", "-noout"])
+    process = execute_command_without_arguments(["sudo", "openssl", "rsa", "-in", f'/etc/ipsec.d/certs/{public_key_name}.pem', "-pubin", "-text", "-noout"])
     public_key = process.stdout
     key_size_line = public_key[public_key.find("Public-Key: "):public_key.find("\n", public_key.find("Public-Key: "))]
     key_size = re.findall(r'\d+', key_size_line)

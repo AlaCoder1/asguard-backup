@@ -209,13 +209,11 @@ def save_rules_suricata(request, id):
             else:
                 # Obtenir la ligne à supprimer en utilisant la fonction get_line_by_sid
                 line_to_update = get_line_by_sid(file_path, sid)
-                print(line_to_update)
                 # Vérification des erreurs lors de la suppression de la ligne
                 if line_to_update is not None:
                     # Ajouter la nouvelle règle dans le système distant en spécifiant si elle doit être activée ou désactivée
                     must_be_comment = not activate_rule  # Ajouter "#" à la règle si activate_rule est False
                     output, rule,error = update_rule_remote(must_be_comment,contenu,line_to_update,file_path)
-                    print({"rule updated":rule})
                     # Vérification des erreurs lors de l'ajout de la nouvelle règle
                     if error == '':
                         # Mettre à jour la règle dans la base de données locale
@@ -356,7 +354,6 @@ def update_status_rule(request, sid):
 @authentication_classes([SessionAuthentication])
 def getSuricataFile(request):
     file = read_suricata_config() 
-    print(file)
     return JsonResponse({"file:":file.split('\n')})     
   
 #Modifier la status du suricata (enable/disable)  //  
@@ -373,7 +370,7 @@ def update_suricata_status(request,id):
                    execute_cmd(enable_command)
                    suricatafile_instance.status_enabled = True
                    suricatafile_instance.save()
-                   print("Suricata a été activé.")
+                #    print("Suricata a été activé.")
                    return JsonResponse({'message': 'Suricata a été activé.'})
                 elif status_enabled is False or status_enabled.lower() == 'false':
                     disable_command = "systemctl disable suricata.service"
@@ -438,7 +435,7 @@ def addGeneralConfig(request):
                 status_enabled = True
             else:
                 status_enabled = False
-            print({"HOME_NET": home_net,  "promisc": promisc, "eve_log_enabled": eve_log, "syslog-enabled": syslog, "mpm-algo": mpm_algo, "profile": profile,"copy-mode": copy_mode})
+            # print({"HOME_NET": home_net,  "promisc": promisc, "eve_log_enabled": eve_log, "syslog-enabled": syslog, "mpm-algo": mpm_algo, "profile": profile,"copy-mode": copy_mode})
             if not suricatafile.objects.filter(home_net=home_net).exists():
                 # Créer une instance du modèle suricatafile
                 suricata_config = suricatafile(home_net=home_net, promisc=promisc, eve_log=eve_log, syslog=syslog, mpm_algo=mpm_algo, profile=profile,copy_mode=copy_mode,status_enabled=status_enabled)
@@ -482,7 +479,6 @@ def update_suricata_configuration(request, id):
             interface_ids_input = data.get("interface", [])
             interface_ids=[]
             interface_ids = [x["id"] for x in interface_ids_input]
-            print("interface_ids",interface_ids)
             allowed_profiles = ["medium", "high", "low"]
             allowed_ips = ["none", "tap", "ips"]
             allowed_mpm_algo = ["auto", "ac", "ac-bs", "ac-ks", "hs"]
@@ -586,7 +582,6 @@ def get_suricata_configuration(request, id):
                 interface_ids_final.append(i)
             else:
                 pass
-                print(i, "n'existe pas !!")
         # Créez une chaîne avec les adresses HOME_NET finales
         home_net_value = ' , '.join(address_home_net_final)
         home_net_value = f'[{home_net_value}]'

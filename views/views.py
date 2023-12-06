@@ -15,7 +15,7 @@ from backend.ids_ips.function_BD import get_home_net_de_la_base_de_donnees, get_
 from backend.ids_ips.function_sys import execute_cmd
 from backend.ids_ips.models import alert, ids_ips_rule, suricatafile
 from backend.ids_ips.serializers import AlertSerializer
-
+import ast
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):

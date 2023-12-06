@@ -18,7 +18,7 @@ def read_suricata_config():
         output, error = execute_cmd("cat " + suricata_yaml_path)
         return output
     except FileNotFoundError:
-        print(f"Le fichier {suricata_yaml_path} n'a pas été trouvé.")
+        # print(f"Le fichier {suricata_yaml_path} n'a pas été trouvé.")
         return None
 
     
@@ -62,13 +62,13 @@ def read_config():
                     copy_mode= stripped_line.split(":")[1].strip()  
             return {"HOME_NET": home_net, "promisc": promisc, "eve-log-enabled": eve_log_enabled, "syslog-enabled": syslog_enabled, "mpm-algo": mpm_algo, "profile": profile, "copy-mode": copy_mode }
         else:
-            print(f"La commande a échoué : {error}")
+            # print(f"La commande a échoué : {error}")
             return None
     except FileNotFoundError:
-        print(f"Le fichier {suricata_yaml_path} n'a pas été trouvé.")
+        # print(f"Le fichier {suricata_yaml_path} n'a pas été trouvé.")
         return None
     except yaml.YAMLError as e:
-        print(f"Erreur lors de la lecture du fichier {suricata_yaml_path}: {e}")
+        # print(f"Erreur lors de la lecture du fichier {suricata_yaml_path}: {e}")
         return None
    
 # Fonction pour lire la première occurrence de "syslog" et "enabled"//
@@ -90,7 +90,8 @@ def read_first_syslog_enabled(suricata_yaml_path):
                 syslog_enabled = stripped_line.split(":")[1].strip()
                 break  # Sortir de la boucle après avoir trouvé la première occurrence de "syslog:"
     except Exception as e:
-        print(f"Erreur lors de la lecture du fichier {suricata_yaml_path}: {e}")
+        return None
+        # print(f"Erreur lors de la lecture du fichier {suricata_yaml_path}: {e}")
     return syslog_enabled  
 
 #Update fichier de configuration suricata.yaml//
@@ -160,7 +161,7 @@ def update_suricata_config( status_enabled,new_promisc, new_eve_log, new_syslog,
             return None
     except Exception as e:
         # Capture toute autre exception et affiche un message d'erreur
-        print(f"Erreur lors de la mise à jour du fichier {suricata_yaml_path}: {e}")
+        # print(f"Erreur lors de la mise à jour du fichier {suricata_yaml_path}: {e}")
         return None
 
 #*********** Les régles ****************
@@ -257,7 +258,6 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     content=content if content!="" else None    
     protocol=protocol if protocol!="" else None
     flowbit=flowbit if flowbit!="" else None  
-    print({"action":action,"protocol":protocol,"flowbit":flowbit})
     if contenu['action'] is not None:
         if contenu["activate_rule"] is False:
             contenu['action']="#"+contenu['action']
@@ -277,7 +277,10 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
 
     if  contenu['msg'] is not None and rule.find("msg")!=-1:
         rule=rule.replace(msg,contenu['msg'])   
-        
+    
+    if  contenu['content'] is not None and rule.find("msg")!=-1:
+        rule=rule.replace(content,contenu['content'])   
+            
     if  contenu['flowbit'] is not None:
         if rule.find("flowbit")!=-1:
             rule=rule.replace(flowbit,contenu['flowbit'])   
@@ -290,12 +293,10 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
         
     if  contenu['sid'] is not None:
         rule=rule.replace(str(sid),str(contenu['sid']))   
-    print("rule",rule)
         
     # cmd = "sed -i '/sid:{}/ s/{}/{}/' {}".format(sid,line_to_update,formatted_content,file_path)
     cmd = "sed -i '/sid:{}/ s/{}/{}/' {}".format(sid, line_to_update.strip(), rule.strip(), file_path)
     output, error = execute_cmd(cmd)
-    print(cmd,error)
     
     return output,rule, error
 # //
@@ -320,10 +321,8 @@ def delete_line_in_remote_file(file_path, line_to_delete):
         cmd_read = f"grep -v '{line_to_delete}' {file_path} > {file_path}.tmp && mv {file_path}.tmp {file_path}"
         output,error =execute_cmd(cmd_read)
         # Print the command output
-        print(output)
         return output,error
     except Exception as e:
-        print("Error:", str(e))
         return "Error:"+ str(e)
 
 #Afficher les rules par défaut //
@@ -338,9 +337,10 @@ def get_suricata_default_rules():
             rules = output.splitlines()
             return rules
         else:
-            print(f"Erreur lors de la lecture des règles : {error}")
+            return None
+            # print(f"Erreur lors de la lecture des règles : {error}")
     except Exception as e:
-        print(f"Erreur : {str(e)}")
+        # print(f"Erreur : {str(e)}")
         return []
 
 #*********** Les alertes ****************//
@@ -379,5 +379,6 @@ def read_suricata_log():
                           })      
         # Utilisation d'une expression régulière pour extraire le protocole
     except Exception as e:
-        print("Une exception s'est produite:", str(e))
+        # print("Une exception s'est produite:", str(e))
+        return None
     return logs

@@ -249,7 +249,7 @@ export default {
             {
               title: "Intrusion Detection",
               icon: "",
-              href: "/services/intrusion-detection",
+              href: "/ids-ips",
               active: "Intrusion Detection",
             },
             {

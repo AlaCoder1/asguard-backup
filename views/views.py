@@ -11,7 +11,11 @@ from django.db.models import Q
 from backend.openvpn.list_servers_clients import get_all_client_openvpn,  get_all_server_openvpn
 from backend.managementKeypairs.list_key_pairs import get_all_private_key, get_all_public_key
 from backend.ipsec.list_ipsec import get_all_server_ipsec
-
+from backend.ids_ips.function_BD import get_home_net_de_la_base_de_donnees, get_ip_addresses
+from backend.ids_ips.function_sys import execute_cmd
+from backend.ids_ips.models import alert, ids_ips_rule, suricatafile
+from backend.ids_ips.serializers import AlertSerializer
+import ast
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -244,7 +248,120 @@ def GetInformationsByInterface(request,name_interface):
             info['IPV6Config']=[]
         print({"info":info})
     return info
+################################################ IDS-IPS #######################################################
+############### General configuration suricata #################
+## function to get suricata configuration
+def general_suricata_configuration(request, id):
+    if request.method=="GET":
+        # Obtenez le champ HOME_NET du système et de la base de données
+        home_net_database, interface_ids = get_home_net_de_la_base_de_donnees(id)
 
+        address_home_net = home_net_database.strip("[]").split(",")
+        # Récupérez les adresses IP à partir de la configuration IP4Config
+        ip4config_object = IP4Config.objects.all()
+        ip4config_dict = serializers.serialize("json", ip4config_object)
+        res = json.loads(ip4config_dict)
+        interfaces_ids_ip4config = []
+        interfaces_address_ip4config = []
+        # Parcourez les enregistrements IP4Config pour obtenir les interfaces et leurs adresses
+        for i in range(len(res)):
+            interfaces_ids_ip4config.append(res[i]['fields']['interface'])
+            interfaces_address_ip4config = get_ip_addresses(interfaces_ids_ip4config)
+        # Initialisez des listes pour stocker les valeurs finales
+        address_home_net_final = []
+        interface_ids_final = []
+        # Comparez les interfaces et leurs adresses pour déterminer la configuration finale
+        if interface_ids is not None:
+            interface_ids = ast.literal_eval(interface_ids)
+            for i in interface_ids:
+                if i in interfaces_ids_ip4config:
+                    if address_home_net[interface_ids.index(i)] == interfaces_address_ip4config[interfaces_ids_ip4config.index(i)]:
+                        address = address_home_net[interface_ids.index(i)]
+                    else:
+                        address = interfaces_address_ip4config[interfaces_ids_ip4config.index(i)]
+                    address_home_net_final.append(address)
+                    interface_ids_final.append(i)
+                else:
+                    pass
+        # Créez une chaîne avec les adresses HOME_NET finales
+        home_net_value = ' , '.join(address_home_net_final)
+        home_net_value = f'[{home_net_value}]'
+        interfaces_ids_value = str(interface_ids_final)
+        suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+        # Exécutez la commande 'sudo cat' pour lire le contenu du fichier
+        output, error = execute_cmd("sudo cat " + suricata_yaml_path)
+        # Mettez à jour la configuration dans le système
+        if output:
+            # Lit les lignes du fichier
+            lines = output.split('\n')
+            updated_lines = []
+            for line in lines:
+                stripped_line = line.strip()
+                if stripped_line.startswith("#"):
+                    updated_lines.append(line + '\n')
+                    # Conserve les lignes de commentaire telles quelles
+                elif "HOME_NET:" in stripped_line:
+                    # Met à jour la ligne HOME_NET avec la nouvelle valeur
+                    updated_lines.append(f'    HOME_NET: "{home_net_value}"'+'\n')
+                else:
+                    # Conserve les autres lignes telles quelles
+                    updated_lines.append(line + '\n')
+                    with open(suricata_yaml_path, 'w') as local_file:
+                        for string in updated_lines:
+                            local_file.write(string)
+        # Mettez à jour la configuration dans la base de données
+        suricata_instance = suricatafile.objects.get(id=id)
+        suricata_instance.interface_ids = interfaces_ids_value
+        suricata_instance.home_net = home_net_value
+        suricata_instance.save()
+        current_configuration = {
+            "id":id,
+            "promisc": suricata_instance.promisc,
+            "eve_log": suricata_instance.eve_log,
+            "syslog": suricata_instance.syslog,
+            "mpm_algo": suricata_instance.mpm_algo,
+            "profile": suricata_instance.profile,
+            "copy_mode": suricata_instance.copy_mode, 
+            "status_enabled":suricata_instance.status_enabled
+            }
+    return json.dumps({"configuration": current_configuration, "interface_ids": interface_ids_final, "address_home_net": address_home_net_final})
+############### End General configuration suricata #################
+############### Rules suricata #################
+def getRulesFromDatabase(request):
+    if request.method=="GET":
+        rules_list = []
+        # Récupérer toutes les règles de la base de données
+        rules_from_db = ids_ips_rule.objects.all()
+        rule_suricata = serializers.serialize("json", rules_from_db)
+        res = json.loads(rule_suricata)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            res[i]['fields'].pop("rule")
+            # res[i]['fields'].pop("msg")
+            # res[i]['fields']['msg']=res[i]['fields']['msg'].strip("'")
+            rules_list.append(res[i]['fields'])
+    # Renvoyer la liste des règles au format JSON
+    return json.dumps(rules_list)
+############### End Rules suricata #################
+############### Alerts suricata #################
+def GetAlertsFromDatabase(request):
+    if request.method=="GET":
+        alert_list=[]
+        # alerts_object = alert.objects.all()  # Récupérer toutes les alertes de la base de données
+        alerts_object = alert.objects.all().order_by('-id')[:10] 
+        alerts = serializers.serialize("json", alerts_object)
+        res = json.loads(alerts)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            # res[i]['fields'].pop("alert")
+            alert_list.append(res[i]['fields'])
+    return json.dumps(alert_list)
 @login_required(login_url='/')
 def user_certificate_managment_page(request):
     usr=getUsers(request)
@@ -343,3 +460,16 @@ def index_page(request):
 
 def error_404_view(request, exception):
     return render(request,'404.html',status=404)
+
+@login_required(login_url='/')
+def suricata(request):
+    objectSuricata=suricatafile.objects.all()
+    suricata = serializers.serialize("json", objectSuricata)
+    res = json.loads(suricata)
+    id=res[0]['pk']
+    general_config_suricata=general_suricata_configuration(request, id)
+    rules_suricata=getRulesFromDatabase(request)
+    alerts_suricata=GetAlertsFromDatabase(request)
+    interfaces=AllInterfacesVersion2(request)
+    context={"general_config_suricata":general_config_suricata,"rules_suricata":rules_suricata,"alerts_suricata":alerts_suricata,"all_interfaces":interfaces}
+    return render(request, 'ids_ips.html',context)

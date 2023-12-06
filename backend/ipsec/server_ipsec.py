@@ -26,6 +26,7 @@ def install_server_ipsec(conn_name, conn_config, authentication, interface_addre
                                                 ["sudo", "openssl", "rsa",
                                                 "-in", f"/etc/openvpn/certificates_{authentication['cert']}/server.key",
                                                 "-out", f"/etc/ipsec.d/private/{authentication['cert']}Key.pem"],
+                                                ["sudo", "chmod", "600", f"/etc/ipsec.d/private/{authentication['cert']}Key.pem"],
                                                 ]
             execute_list_commands_without_arguments(commands_list_without_arguments)
             ipsec_secrets_file.write(f"""\n\n : RSA {authentication["cert"]}Key.pem """)

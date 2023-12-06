@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "backend.rules",
     "backend.gateway",
     "backend.dashboard",
+    "backend.ids_ips",
     'channels',
     'drf_yasg'
 ]

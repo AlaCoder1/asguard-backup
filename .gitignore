@@ -55,3 +55,7 @@ yarn-error.log
 
 /backend/dashboard/__pycache__/
 /backend/dashboard/migrations/__pycache__/
+
+
+/backend/ids_ips/migrations/__pycache__/
+/backend/ids_ips/__pycache__/

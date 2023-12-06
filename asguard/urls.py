@@ -65,7 +65,9 @@ urlpatterns = [
     path('ipsec/', ipsec_page),
     path('rules/', include('backend.rules.urls')),
     path('gateway/', include('backend.gateway.urls')),
-    path("monitoring/",include("backend.dashboard.urls"))
+    path("monitoring/",include("backend.dashboard.urls")),
+    path("ids-ips/",include("backend.ids_ips.urls")),
+    path("ids-ips/",suricata)
 ]
 
 # ws/wss url patterns

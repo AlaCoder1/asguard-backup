@@ -255,7 +255,7 @@ export default {
             {
               title: "Proxy Web",
               icon: "",
-              href: "/services/proxy-web",
+              href: "/proxy-web",
               active: "Proxy Web",
             },
           ],

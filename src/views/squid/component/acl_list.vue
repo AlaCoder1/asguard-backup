@@ -42,21 +42,28 @@
             </ag-grid-vue>
           </div>
         </v-row>
+
+        <ModalSquidBlackList
+          :isOpen="state.isModalOpen"
+          :editRow="state.editRow"
+        />
       </v-col>
     </v-row>
   </div>
 </template>
 
 <script>
-import { reactive, ref } from "vue";
+import { reactive, ref, onMounted } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import ModalSquidBlackList from "@/components/modals/ModalSquidBlackList.vue";
 export default {
   components: {
     AgGridVue,
     VButton,
+    ModalSquidBlackList,
   },
   setup() {
     const state = reactive({
@@ -65,6 +72,11 @@ export default {
       proxyPort: "",
       enable: false,
       filterText: "",
+
+      modalData: {},
+      editRow: null,
+      modalMode: "",
+      isModalOpen: false,
     });
     const rowDataAclList = reactive({});
     const gridColumnApi = ref(null);
@@ -128,9 +140,6 @@ export default {
         console.error("Grid API.");
       }
     };
-  
-
-
 
     const onFilterTextBoxChanged = () => {
       gridApi.value.setQuickFilter(
@@ -179,12 +188,40 @@ export default {
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
-          this.handleAction(action, params.node.data, params.node.rowIndex);
+          handleAction(action, params.node.data, params.node.rowIndex);
         });
       });
 
       return eGui;
     }
+
+    const handleAction = (action, rowData) => {
+      switch (action) {
+        case "edit":
+          console.log("rowData", rowData);
+
+          state.modalData = {};
+          state.editRow = rowData;
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+
+          break;
+        default:
+          break;
+      }
+    };
+
+    onMounted(() => {
+      if (!rowDataAclList.value) {
+        rowDataAclList.value = [];
+      }
+      const newRow = {
+        list_name: "souhail",
+        category: "category",
+        list_count: "list_count",
+      };
+      rowDataAclList.value.push(newRow);
+    });
 
     return {
       state,
@@ -194,7 +231,8 @@ export default {
       onGridReady,
       actionCellRenderer,
       defaultColDef,
-      onFilterTextBoxChanged      
+      onFilterTextBoxChanged,
+      handleAction
     };
   },
 };

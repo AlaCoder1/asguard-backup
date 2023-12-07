@@ -658,7 +658,7 @@ def addalertsToDatabase(request,id):
 def GetAlertsFromDatabase(request):
     if request.method=="GET":
         alert_list=[]
-        alerts = alert.objects.all()  # Récupérer toutes les alertes de la base de données
+        alerts = Alert.objects.all()  # Récupérer toutes les alertes de la base de données
         if alerts:
             serializer = AlertSerializer(alerts, many=True)
             alert_list=serializer.data

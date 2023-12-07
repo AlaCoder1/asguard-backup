@@ -95,12 +95,7 @@
                   ]"
                 ></v-select>
   
-                <p
-                  class="error-feedback mb-5"
-                  v-if="v$.serverMode.$errors.length"
-                >
-                  {{ v$.serverMode.$errors?.[0].$message }}
-                </p>
+              
               </v-col>
               <v-col cols="4" align-self="center">
                 <label>Detect Profile</label>
@@ -131,12 +126,7 @@
                   ]"
                 ></v-select>
   
-                <p
-                  class="error-feedback mb-5"
-                  v-if="v$.serverMode.$errors.length"
-                >
-                  {{ v$.serverMode.$errors?.[0].$message }}
-                </p>
+               
               </v-col>
               <v-col cols="4" align-self="center">
                 <label>Interface</label>
@@ -154,9 +144,7 @@
                 >
                 </v-select>
   
-                <p class="error-feedback mb-5" v-if="v$.interface.$errors.length">
-                  {{ v$.interface.$errors?.[0].$message }}
-                </p>
+              
               </v-col>
             </v-row>
           </div>
@@ -248,8 +236,6 @@
         }
       };
       const listeInterfaces = reactive([]);
-      const v$ = useValidate(rules, state);
-  
       const getCookie = (name) => {
         let cookieValue = null;
         if (document.cookie && document.cookie !== "") {
@@ -385,7 +371,6 @@
         clearInterface,
         handleRemove,
         state,
-        v$,
       };
     },
   };

@@ -34,7 +34,7 @@ class SuricataFileSerializer(serializers.ModelSerializer):
 class AlertSerializer(serializers.ModelSerializer):
     suricatafile = serializers.PrimaryKeyRelatedField(queryset=suricatafile.objects.all())
     class Meta:
-            model = alert
+            model = Alert
             fields = ['timestamp','sid','priority',
                       'protocol','src_addr','src_port','dst_addr',
                       'dst_port','suricatafile','alert'

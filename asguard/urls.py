@@ -63,6 +63,7 @@ urlpatterns = [
     path('openvpn/', include('backend.openvpn.urls')),
     path('ipsec/', include('backend.ipsec.urls')),
     path('ipsec/', ipsec_page),
+    path('proxy-web/', squid_proxy),
     path('rules/', include('backend.rules.urls')),
     path('gateway/', include('backend.gateway.urls')),
     path("monitoring/",include("backend.dashboard.urls")),

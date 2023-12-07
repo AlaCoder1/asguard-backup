@@ -11,12 +11,18 @@
       <v-dialog v-model="deleteDialog" max-width="500px">
         <v-card>
           <v-card-title class="headline">Delete Confirmation</v-card-title>
-          <v-card-text>Are you sure you want to delete this rule from the
-            Firewall?</v-card-text>
+          <v-card-text
+            >Are you sure you want to delete this rule from the
+            Firewall?</v-card-text
+          >
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
-            <v-btn color="blue darken-1" text @click="confirmDelete">Delete</v-btn>
+            <v-btn color="blue darken-1" text @click="cancelDelete"
+              >Cancel</v-btn
+            >
+            <v-btn color="blue darken-1" text @click="confirmDelete"
+              >Delete</v-btn
+            >
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -24,8 +30,17 @@
         <v-card-title>
           <v-row>
             <v-col cols="12" md="6">
-              <v-text-field id="filter-text-box" v-model="filterText" placeholder="Search" clearable hide-details dense
-                prepend-inner-icon="mdi-magnify" variant="outlined" @input="onFilterTextBoxChanged"></v-text-field>
+              <v-text-field
+                id="filter-text-box"
+                v-model="filterText"
+                placeholder="Search"
+                clearable
+                hide-details
+                dense
+                prepend-inner-icon="mdi-magnify"
+                variant="outlined"
+                @input="onFilterTextBoxChanged"
+              ></v-text-field>
             </v-col>
             <v-col cols="12" md="6" class="d-flex justify-end">
               <v-btn class="ml-3 mt-2" @click="addRow">
@@ -36,12 +51,27 @@
           </v-row>
         </v-card-title>
         <v-card-text>
-          <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
-            :rowData="rowData.value" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef"
-            :editType="editType" style="width: 100%" :animateRows="true" @cell-value-changed="onCellValueChanged"
-            @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
-            @firstDataRendered="onFirstDataRendered" @row-drag-end="onRowDragEnd" :pagination="true"
-            :paginationPageSize="10" :rowSelection="'multiple'">
+          <ag-grid-vue
+            id="grid-wrapper"
+            domLayout="autoHeight"
+            class="ag-theme-alpine"
+            :columnDefs="columnDefs"
+            :rowData="rowData.value"
+            @grid-ready="onGridReady"
+            :rowDrag="true"
+            :defaultColDef="defaultColDef"
+            :editType="editType"
+            style="width: 100%"
+            :animateRows="true"
+            @cell-value-changed="onCellValueChanged"
+            @column-row-group-changed="onColumnRowGroupChanged"
+            @column-row-drag-end="onColumnRowDragEnd"
+            @firstDataRendered="onFirstDataRendered"
+            @row-drag-end="onRowDragEnd"
+            :pagination="true"
+            :paginationPageSize="10"
+            :rowSelection="'multiple'"
+          >
           </ag-grid-vue>
         </v-card-text>
       </v-card>
@@ -50,10 +80,26 @@
       <div class="row justify-content-center">
         <br />
         <div class="col-12 d-flex justify-end">
-          <VButton rounded outlined border-color="'#213E9F'" color="#ffffff" label-color="#213E9F" label="cancel"
-            :isLarge="true" @click="cancel" />
-          <VButton rounded outlined color="#213E9F" label-color="#ffffff" label="save" :isLarge="true" class="ml-2"
-            @click="save" />
+          <VButton
+            rounded
+            outlined
+            border-color="'#213E9F'"
+            color="#ffffff"
+            label-color="#213E9F"
+            label="cancel"
+            :isLarge="true"
+            @click="cancel"
+          />
+          <VButton
+            rounded
+            outlined
+            color="#213E9F"
+            label-color="#ffffff"
+            label="save"
+            :isLarge="true"
+            class="ml-2"
+            @click="save"
+          />
         </div>
       </div>
     </div>
@@ -283,7 +329,7 @@ export default defineComponent({
         });
       });
       return eGui;
-    };
+    }
     const onFilterTextBoxChanged = () => {
       gridApi.value.setQuickFilter(
         document.getElementById("filter-text-box").value

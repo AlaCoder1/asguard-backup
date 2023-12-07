@@ -420,6 +420,10 @@ def keyPair_page(request):
     context = {'privateKey':privateKey,'publicKey':publicKey}
     return render(request, 'keyPair_page.html',context)
 
+@login_required(login_url='/')
+def squid_proxy(request):
+    return render(request, 'squid_proxy.html')
+
 
 def login(request):
     usr=getAllUsers(request)

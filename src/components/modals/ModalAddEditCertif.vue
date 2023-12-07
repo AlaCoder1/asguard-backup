@@ -607,6 +607,10 @@ export default {
               countryID: element.ccn3,
             };
           });
+          countryList.sort((a, b) =>
+            a.countryName.localeCompare(b.countryName)
+          );
+
           this.countriesList = countryList;
         })
         .catch(() => {

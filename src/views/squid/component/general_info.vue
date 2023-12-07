@@ -64,25 +64,32 @@
               :isLarge="true"
               type="submit"
               class="ml-2"
-              @click="openModalAddUser"
+              @click="openModalAdd"
             />
           </div>
         </v-row>
       </v-col>
     </v-row>
+    <ModalSquidUser
+      :isOpen="state.isModalOpen"
+      :editRow="state.editRow"
+      :modalMode="state.modalMode"
+    />
   </div>
 </template>
 
 <script>
-import { reactive, ref } from "vue";
+import { reactive, ref, onMounted } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import ModalSquidUser from "@/components/modals/ModalSquidUser.vue";
 export default {
   components: {
     AgGridVue,
     VButton,
+    ModalSquidUser,
   },
   setup() {
     const state = reactive({
@@ -90,6 +97,11 @@ export default {
       on: false,
       proxyPort: "",
       enable: false,
+      modalData: {},
+      isOpen: null,
+      modalMode: "",
+      isModalOpen: false,
+      editRow: null,
     });
     const rowDataUser = reactive({});
     const gridApi = ref(null);
@@ -104,7 +116,7 @@ export default {
       },
       {
         headerName: "Actions",
-        field: "action",
+        cellRenderer: actionCellRenderer,
         sortable: true,
         filter: true,
       },
@@ -126,12 +138,94 @@ export default {
         console.error("Grid API.");
       }
     };
+
+    const openModalAdd = () => {
+      state.modalData = {};
+      state.modalMode = "create";
+      state.isModalOpen = true;
+    };
+
+    onMounted(() => {
+      if (!rowDataUser.value) {
+        rowDataUser.value = [];
+      }
+      const newRow = {
+        username: "souhail",
+      };
+      rowDataUser.value.push(newRow);
+    });
+
+    function actionCellRenderer(params) {
+      let eGui = document.createElement("div");
+
+      let editingCells = params.api.getEditingCells();
+      // checks if the rowIndex matches in at least one of the editing cells
+      let isCurrentRowEditing = editingCells.some((cell) => {
+        return cell.rowIndex === params.node.rowIndex;
+      });
+
+      if (isCurrentRowEditing) {
+        eGui.innerHTML = `
+    <button  
+      class="action-button update"
+      data-action="update">
+           update  
+    </button>
+    <button  
+      class="action-button cancel"
+      data-action="cancel">
+           cancel
+    </button>
+    `;
+      } else {
+        eGui.innerHTML = `
+    <button 
+      class="action-button edit"  
+      data-action="edit">
+         <i class="far fa-edit" style="color: #086eae;"></i> 
+      </button>
+    `;
+      }
+
+      // Add event listeners to handle button clicks
+      eGui.querySelectorAll(".action-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.getAttribute("data-action");
+          handleAction(action, params.node.data, params.node.rowIndex);
+        });
+      });
+
+      return eGui;
+    }
+
+    const handleAction = (action, rowData) => {
+      switch (action) {
+        case "edit":
+          console.log("rowData", rowData);
+
+          state.modalData = {};
+          state.editRow = rowData;
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+
+          break;
+        default:
+          break;
+      }
+    };
     return {
       state,
       columnUser,
       rowDataUser,
       onGridReady,
+      actionCellRenderer,
+      openModalAdd,
     };
   },
 };
 </script>
+<style>
+.actionBtn {
+  justify-content: end;
+}
+</style>

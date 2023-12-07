@@ -23,7 +23,7 @@ class Command(BaseCommand):
                 for log in logs:
                     suricatafile_obj = suricatafile.objects.get(pk=id)  
                     log['suricatafile']=int(suricatafile_obj.id)
-                    if not alert.objects.filter(alert=log['alert']).exists():
+                    if not Alert.objects.filter(alert=log['alert']).exists():
                         serializerAlert = AlertSerializer(data=log)
                         if serializerAlert.is_valid():
                             serializerAlert.save()

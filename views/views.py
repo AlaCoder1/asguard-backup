@@ -303,6 +303,10 @@ def keyPair_page(request):
     context = {'privateKey':privateKey,'publicKey':publicKey}
     return render(request, 'keyPair_page.html',context)
 
+@login_required(login_url='/')
+def subscription_page(request):
+    context = {}
+    return render(request, 'subscription_page.html', context)
 
 def login(request):
     usr=getAllUsers(request)

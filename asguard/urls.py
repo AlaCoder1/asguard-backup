@@ -48,6 +48,7 @@ urlpatterns = [
     path('firewall/rules', firewall_page),
     path('settings/', settings_page),
     path('openvpn/', openvpn_page),
+    path('subscription/', subscription_page),
     path('', include('backend.tasks.urls')),
     path('auth/', include('backend.authentification.urls')),
     path('network/', include('backend.network.urls')),

@@ -53,7 +53,7 @@
 </template>
 
 <script>
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, onMounted, inject } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
@@ -66,6 +66,7 @@ export default {
     ModalSquidBlackList,
   },
   setup() {
+    const emitter = inject("emitter");
     const state = reactive({
       off: false,
       on: false,
@@ -78,6 +79,7 @@ export default {
       modalMode: "",
       isModalOpen: false,
     });
+
     const rowDataAclList = reactive({});
     const gridColumnApi = ref(null);
     const gridApi = ref(null);
@@ -212,6 +214,9 @@ export default {
     };
 
     onMounted(() => {
+      emitter.on("closeAclListModal", () => {
+        state.isModalOpen = false;
+      });
       if (!rowDataAclList.value) {
         rowDataAclList.value = [];
       }
@@ -225,6 +230,7 @@ export default {
 
     return {
       state,
+      emitter,
       columnAclList,
       gridColumnApi,
       rowDataAclList,
@@ -232,7 +238,7 @@ export default {
       actionCellRenderer,
       defaultColDef,
       onFilterTextBoxChanged,
-      handleAction
+      handleAction,
     };
   },
 };

@@ -10,10 +10,10 @@
             <label>Enable</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <input type="checkbox" v-model="state.off" />
+            <input type="checkbox" v-model="state.offState" />
             <label class="ml-2">Off</label>
             <br />
-            <input type="checkbox" v-model="state.on" />
+            <input type="checkbox" v-model="state.onState" />
             <label class="ml-2">On</label>
           </v-col>
 
@@ -25,7 +25,24 @@
               label="Proxy Port"
               v-model="state.proxyPort"
             ></v-text-field>
+            <p class="error-feedback mb-5" v-if="v$.proxyPort.$error">
+              {{ v$.proxyPort.$errors[0].$message }}
+            </p>
           </v-col>
+        </v-row>
+        <v-row class="mt-5">
+          <div>
+            <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              label="Validation"
+              :isLarge="true"
+              class="ml-2"
+              @click="testValidation"
+            />
+          </div>
         </v-row>
       </v-col>
 
@@ -53,6 +70,7 @@
             />
           </div>
         </v-row>
+
         <v-row class="d-flex justify-end mt-5">
           <div>
             <VButton
@@ -62,24 +80,25 @@
               label-color="#ffffff"
               label="Add User"
               :isLarge="true"
-              type="submit"
               class="ml-2"
               @click="openModalAdd"
             />
           </div>
         </v-row>
       </v-col>
+      <ModalSquidUser
+        :isOpen="state.isModalOpen"
+        :editRow="state.editRow"
+        :modalMode="state.modalMode"
+      />
     </v-row>
-    <ModalSquidUser
-      :isOpen="state.isModalOpen"
-      :editRow="state.editRow"
-      :modalMode="state.modalMode"
-    />
   </div>
 </template>
 
 <script>
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, computed, onMounted,inject  } from "vue";
+import useValidate from "@vuelidate/core";
+import { required } from "@vuelidate/validators";
 import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
@@ -92,9 +111,10 @@ export default {
     ModalSquidUser,
   },
   setup() {
+    const emitter = inject("emitter");
     const state = reactive({
-      off: false,
-      on: false,
+      offState: false,
+      onState: false,
       proxyPort: "",
       enable: false,
       modalData: {},
@@ -103,6 +123,26 @@ export default {
       isModalOpen: false,
       editRow: null,
     });
+
+    const rules = computed(() => {
+      return {
+        proxyPort: { required },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
+
+    const testValidation = async () => {
+      const result = await v$.value.$validate();
+      console.log("result", result);
+
+      if (result) {
+        console.log("state", state);
+      } else {
+        console.log("error", v$.value);
+      }
+    };
+
     const rowDataUser = reactive({});
     const gridApi = ref(null);
 
@@ -146,6 +186,9 @@ export default {
     };
 
     onMounted(() => {
+      emitter.on("closeSquidUserModal", () => {
+        state.isModalOpen = false;
+      });
       if (!rowDataUser.value) {
         rowDataUser.value = [];
       }
@@ -213,12 +256,16 @@ export default {
           break;
       }
     };
+
     return {
+      v$,
       state,
+      emitter,
       columnUser,
       rowDataUser,
       onGridReady,
       actionCellRenderer,
+      testValidation,
       openModalAdd,
     };
   },
@@ -227,5 +274,9 @@ export default {
 <style>
 .actionBtn {
   justify-content: end;
+}
+.error-feedback {
+  color: red;
+  font-size: 0.85em;
 }
 </style>

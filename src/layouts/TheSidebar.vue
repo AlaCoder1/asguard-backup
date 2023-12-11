@@ -229,10 +229,10 @@ export default {
               active: "IP Filter double masque",
             },
             {
-              title: "Calm AV",
+              title: "Clam AV",
               icon: "",
-              href: "/services/calm-av",
-              active: "Calm AV",
+              href: "/clamaV",
+              active: "Clam AV",
             },
             {
               title: "DHCP V4",
@@ -249,13 +249,13 @@ export default {
             {
               title: "Intrusion Detection",
               icon: "",
-              href: "/services/intrusion-detection",
+              href: "/ids-ips",
               active: "Intrusion Detection",
             },
             {
               title: "Proxy Web",
               icon: "",
-              href: "/services/proxy-web",
+              href: "/proxy-web",
               active: "Proxy Web",
             },
           ],

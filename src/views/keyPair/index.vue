@@ -103,7 +103,6 @@ export default {
     onMounted(() => {
       let privateKeyAttribute =
         document.getElementById("app").attributes["privateKey"].value;
-      
 
       const validJsonString = privateKeyAttribute
         .replace(/'/g, '"')
@@ -114,7 +113,6 @@ export default {
 
       let publicKeyAttribute =
         document.getElementById("app").attributes["publicKey"].value;
-     
 
       const validJsonString2 = publicKeyAttribute
         .replace(/'/g, '"')

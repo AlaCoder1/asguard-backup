@@ -63,9 +63,13 @@ urlpatterns = [
     path('openvpn/', include('backend.openvpn.urls')),
     path('ipsec/', include('backend.ipsec.urls')),
     path('ipsec/', ipsec_page),
+    path('proxy-web/', squid_proxy),
+    path('clamaV/', clamaV_page),
     path('rules/', include('backend.rules.urls')),
     path('gateway/', include('backend.gateway.urls')),
-    path("monitoring/",include("backend.dashboard.urls"))
+    path("monitoring/",include("backend.dashboard.urls")),
+    path("ids-ips/",include("backend.ids_ips.urls")),
+    path("ids-ips/",suricata)
 ]
 
 # ws/wss url patterns

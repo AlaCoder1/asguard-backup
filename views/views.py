@@ -423,6 +423,9 @@ def keyPair_page(request):
 @login_required(login_url='/')
 def squid_proxy(request):
     return render(request, 'squid_proxy.html')
+@login_required(login_url='/')
+def clamaV_page(request):
+    return render(request, 'clamaV_page.html')
 
 
 def login(request):

@@ -63,7 +63,7 @@ class ids_ips_rule(models.Model):
         db_table = 'ids_ips_rules' # Nom de la table dans la base de données
 
 #Alert
-class alert(models.Model):
+class Alert(models.Model):
     # Horodatage de l'alerte
     timestamp=models.CharField(max_length=200, null=True)
      # Numéro SID de la règle, unique

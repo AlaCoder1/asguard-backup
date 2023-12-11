@@ -106,8 +106,8 @@
 
 <script>
 import useValidate from "@vuelidate/core";
-import { required, sameAs, helpers } from "@vuelidate/validators";
-import { reactive, computed, toRefs, watch } from "vue";
+import { sameAs, helpers, requiredIf } from "@vuelidate/validators";
+import { reactive, computed, toRefs, watch,inject  } from "vue";
 import VButton from "@/components/VButton.vue";
 export default {
   name: "Modal_User_Squid",
@@ -133,6 +133,7 @@ export default {
   },
   setup(props) {
     const { isOpen, editRow, modalMode } = toRefs(props);
+    const emitter = inject("emitter");
     const state = reactive({
       formData: {
         password: "",
@@ -148,7 +149,10 @@ export default {
       return {
         formData: {
           password: {
-            required: helpers.withMessage("Value is required", required),
+            required: helpers.withMessage(
+              "Value is required",
+              requiredIf(() => modalMode.value === "create")
+            ),
             isValidPassword: helpers.withMessage(
               `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
 
@@ -163,7 +167,10 @@ export default {
 
               sameAs(state.formData.password)
             ), // can be a reference to a field or computed property
-            required: helpers.withMessage("Value is required", required),
+            required: helpers.withMessage(
+              "Value is required",
+              requiredIf(() => modalMode.value === "create")
+            ),
 
             isValidPassword: helpers.withMessage(
               `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
@@ -173,7 +180,12 @@ export default {
               )
             ),
           },
-          userName: { required },
+          userName: {
+            required: helpers.withMessage(
+              "Value is required",
+              requiredIf(() => modalMode.value === "create")
+            ),
+          },
         },
       };
     });
@@ -182,8 +194,9 @@ export default {
 
     watch(
       () => isOpen.value,
-      () => {
-        state.openModal = true;
+      (val) => {
+        state.openModal = val;
+        v$.value.$reset();
       }
     );
     watch(
@@ -199,16 +212,25 @@ export default {
       }
     );
     const closeModal = () => {
-      state.openModal = false;
-      setTimeout(() => {
-        location.reload();
-      }, 1000);
+      emitter.emit('closeSquidUserModal')
+    };
+    const submitForm = async () => {
+      const result = await v$.value.$validate();
+      console.log("result", result);
+
+      if (result) {
+        console.log("state", state);
+      } else {
+        console.log("error", v$.value);
+      }
     };
 
     return {
       state,
       v$,
+      emitter,
       closeModal,
+      submitForm,
     };
   },
 };

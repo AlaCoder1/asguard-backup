@@ -112,6 +112,12 @@
         {{ textAlert }}
       </v-snackbar>
     </v-row>
+
+    <ModalCreateClient :isOpen="state.isModalOpen" :editRow="state.editRow" />
+    <ModalListClient
+      :isOpenListView="state.isModalOpenListView"
+      :editRow="state.editRow"
+    />
   </div>
 </template>
 
@@ -122,9 +128,10 @@ import { AgGridVue } from "ag-grid-vue3";
 import { onMounted, reactive, ref } from "vue";
 import { inject } from "vue";
 import CertStatusRenderVue from "./agGridCustomRender/CertStatusRenderVue.vue";
-
-import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
-import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSS
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
+import ModalCreateClient from "@/components/modals/ModalCreateClient.vue";
+import ModalListClient from "@/components/modals/ModalListClient.vue";
 
 export default {
   name: "ListingOpenvpnComponent",
@@ -132,6 +139,8 @@ export default {
     AgGridVue,
     VButton,
     CertStatusRenderVue,
+    ModalCreateClient,
+    ModalListClient,
   },
   setup() {
     const emitter = inject("emitter");
@@ -144,6 +153,12 @@ export default {
     const textAlert = ref(false);
     const loading = ref(false);
     const isLoadingDialogue = ref(false);
+
+    const state = reactive({
+      isModalOpen: false,
+      isModalOpenListView: false,
+      editRow: {},
+    });
 
     const columnServers = [
       {
@@ -247,15 +262,11 @@ export default {
     ];
     const rowDataServers = reactive({});
     const rowDataClients = reactive({});
-
     const gridApi = ref(null);
 
-    // Obtain API from grid's onGridReady event
     const onGridReady = (params) => {
       gridApi.value = params.api;
     };
-
-    // DefaultColDef sets props common to all Columns
     const defaultColDef = {
       sortable: true,
       filter: true,
@@ -305,6 +316,17 @@ export default {
           eGui.innerHTML = `
         
         <button
+          id="account"
+          class="action-button account"
+          data-action="account" title="Client">
+             <i class="mdi mdi-account" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          <button 
+          class="action-button show "  
+          data-action="show">
+          <i class="mdi mdi-eye" style="color: #086eae;font-size: 20px;"></i>
+          </button>
+        <button
           id="play"
           class="action-button play"
           data-action="play" title="Start Server">
@@ -325,6 +347,18 @@ export default {
         `;
         } else {
           eGui.innerHTML = `
+
+          <button
+          id="account"
+          class="action-button account"
+          data-action="account" title="Client">
+             <i class="mdi mdi-account" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          <button 
+          class="action-button show "  
+          data-action="show">
+          <i class="mdi mdi-eye" style="color: #086eae;font-size: 20px;"></i>
+          </button>
           <button
           id="restart"
           class="action-button restart"
@@ -457,6 +491,18 @@ export default {
           rowID.value = rowData.id;
 
           break;
+
+        case "account":
+          state.isModalOpen = true;
+          state.editRow = rowData;
+
+          break;
+        case "show":
+          state.isModalOpenListView = true;
+          state.editRow = rowData;
+
+          break;
+
         default:
           break;
       }
@@ -616,6 +662,13 @@ export default {
     };
 
     onMounted(async () => {
+      emitter.on("closeModalClient", () => {
+        state.isModalOpenListView = false;
+      });
+      emitter.on("closeModalCreateClient", () => {
+        state.isModalOpen = false;
+      });
+
       try {
         const serversAttribute =
           document.getElementById("app").attributes["servers"].value;
@@ -695,6 +748,7 @@ export default {
     };
 
     return {
+      state,
       deleteRow,
       rowID,
       isDeletedType,

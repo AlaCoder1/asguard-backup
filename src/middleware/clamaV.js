@@ -5,11 +5,11 @@ import mitt from 'mitt'
 import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
-import squid from "../views/squid/index.vue";
+import clamaV from "../views/clamaV/index.vue";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import axios from "axios";
-const app = createApp(squid);
+const app = createApp(clamaV);
 const vuetify = createVuetify({
   components,
   directives,

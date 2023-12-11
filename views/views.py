@@ -13,7 +13,7 @@ from backend.managementKeypairs.list_key_pairs import get_all_private_key, get_a
 from backend.ipsec.list_ipsec import get_all_server_ipsec
 from backend.ids_ips.function_BD import get_home_net_de_la_base_de_donnees, get_ip_addresses
 from backend.ids_ips.function_sys import execute_cmd
-from backend.ids_ips.models import alert, ids_ips_rule, suricatafile
+from backend.ids_ips.models import *
 from backend.ids_ips.serializers import AlertSerializer
 import ast
 def getUsers(request):
@@ -351,7 +351,7 @@ def GetAlertsFromDatabase(request):
     if request.method=="GET":
         alert_list=[]
         # alerts_object = alert.objects.all()  # Récupérer toutes les alertes de la base de données
-        alerts_object = alert.objects.all().order_by('-id')[:10] 
+        alerts_object = Alert.objects.all().order_by('-id')[:10] 
         alerts = serializers.serialize("json", alerts_object)
         res = json.loads(alerts)
         for i in range(0, len(res)):
@@ -423,6 +423,9 @@ def keyPair_page(request):
 @login_required(login_url='/')
 def squid_proxy(request):
     return render(request, 'squid_proxy.html')
+@login_required(login_url='/')
+def clamaV_page(request):
+    return render(request, 'clamaV_page.html')
 
 @login_required(login_url='/')
 def subscription_page(request):

@@ -202,7 +202,7 @@ export default {
           break;
         case "export":
           let id = rowData.id;
-          let fileExtention = `${rowData.nom}_crl.pem`;
+          let fileExtention = `${rowData.nom}_crl.crl`;
 
           const csrfToken = this.getCookie("csrftoken");
           axios.defaults.headers.common["X-CSRFToken"] = csrfToken;

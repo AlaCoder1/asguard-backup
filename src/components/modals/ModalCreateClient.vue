@@ -4,7 +4,7 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> Edit Black List </span>
+            <span class="text-h5"> Create New Client </span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -22,45 +22,20 @@
                   </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    label="Category"
-                    v-model="state.formData.category"
-                  ></v-text-field>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.formData.category.$error"
-                  >
-                    {{ v$.formData.category.$errors[0].$message }}
-                  </p>
-                </v-col>
-                <v-col cols="12" class="mb-n6">
                   <v-select
-                    label="URL List"
-                    v-model="state.formData.urlList"
-                    multiple
+                    label="Client Certificate"
+                    v-model="state.formData.clientCertificate"
                     item-title="name"
-                    item-value="slug"
+                    item-value="id"
+                    :items="clientCertificateList"
                     return-object
-                    :items="[
-                      { name: 'Facebook', slug: 'fb' },
-                      { name: 'Youtube', slug: 'YB' },
-                      { name: 'TikTok', slug: 'tik' },
-                    ]"
                   ></v-select>
                   <p
                     class="error-feedback mb-5"
-                    v-if="v$.formData.urlList.$error"
+                    v-if="v$.formData.clientCertificate.$errors.length"
                   >
-                    {{ v$.formData.urlList.$errors[0].$message }}
+                    {{ v$.formData.clientCertificate.$errors?.[0].$message }}
                   </p>
-                </v-col>
-                <v-col cols="12" class="mb-n6">
-                  <v-textarea
-                    class="mt-3"
-                    v-model="state.formData.description"
-                    label="Description"
-                    variant="outlined"
-                  ></v-textarea>
                 </v-col>
               </v-row>
             </v-container>
@@ -91,9 +66,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{
-                modalMode === "create" ? "Create" : "Edit"
-              }}</span>
+              <span class="text-white pr-3 pl-3">Create</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -111,12 +84,13 @@
 </template>
 
 <script>
+import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
-import { reactive, computed, toRefs, watch, inject } from "vue";
+import { reactive, computed, toRefs, watch, ref, onMounted, inject } from "vue";
 import VButton from "@/components/VButton.vue";
 export default {
-  name: "Modal_User_Squid",
+  name: "Modal_Client",
   components: {
     VButton,
   },
@@ -127,39 +101,33 @@ export default {
     },
     editRow: {
       type: Object,
-      Array,
-      required: true,
-    },
-    modalMode: {
-      type: Object,
-      Array,
-      String,
       required: true,
     },
   },
   setup(props) {
-    const { isOpen, editRow, modalMode } = toRefs(props);
     const emitter = inject("emitter");
+    onMounted(() => {
+      getAllClientCertif();
+    });
+
+    const { isOpen, editRow } = toRefs(props);
+    const clientCertificateList = ref([]);
     const state = reactive({
       formData: {
-        password: "",
-        confirm_password: "",
         userName: null,
-        category: "",
-        description: "",
-        urlList: [],
+        clientCertificate: "",
       },
       openModal: false,
       textAlert: "",
       color: "",
       snackbar: false,
+      rowEditFilter: null,
     });
     const rules = computed(() => {
       return {
         formData: {
           userName: { required },
-          category: { required },
-          urlList: { required },
+          clientCertificate: { required },
         },
       };
     });
@@ -168,31 +136,80 @@ export default {
 
     watch(
       () => isOpen.value,
-      (val) => {
-        state.openModal = val;
+      (value) => {
+        state.openModal = value;
       }
     );
     watch(
       () => editRow.value,
-      (val) => {
-        console.log("val*", val);
+      (editRow) => {
+        state.rowEditFilter = editRow;
+        console.log("rowFilter", state.rowEditFilter);
       }
     );
-    watch(
-      () => modalMode.value,
-      (val) => {
-        console.log("modalMode*s", val);
+
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
       }
-    );
+      return cookieValue;
+    };
+
+    const getAllClientCertif = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/certificates/getAllCertificates").then(
+        (response) => {
+          console.log("response.data", response.data);
+         
+          let mapedListCertif = response.data.filter(
+            (i) => i.certificate_type === "client" 
+          );
+
+          clientCertificateList.value = mapedListCertif.map((i) => {
+            return {
+              id: i.id,
+              name: i.name,
+            };
+          });
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
+
     const closeModal = () => {
-      emitter.emit("closeAclListModal");
+      emitter.emit("closeModalCreateClient");
+    };
+
+    const submitForm = async () => {
+      const result = await v$.value.$validate();
+
+      if (result) {
+        console.log("state", state);
+      } else {
+        console.log("error", v$.value);
+      }
     };
 
     return {
       state,
-      v$,
       emitter,
+      clientCertificateList,
+      v$,
+      getAllClientCertif,
       closeModal,
+      submitForm,
     };
   },
 };
@@ -201,5 +218,8 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
+}
+.actionBtn {
+  justify-content: end;
 }
 </style>

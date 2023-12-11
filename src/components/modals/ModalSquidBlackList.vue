@@ -112,8 +112,8 @@
 
 <script>
 import useValidate from "@vuelidate/core";
-import { required} from "@vuelidate/validators";
-import { reactive, computed, toRefs, watch } from "vue";
+import { required } from "@vuelidate/validators";
+import { reactive, computed, toRefs, watch, inject } from "vue";
 import VButton from "@/components/VButton.vue";
 export default {
   name: "Modal_User_Squid",
@@ -139,6 +139,7 @@ export default {
   },
   setup(props) {
     const { isOpen, editRow, modalMode } = toRefs(props);
+    const emitter = inject("emitter");
     const state = reactive({
       formData: {
         password: "",
@@ -167,8 +168,8 @@ export default {
 
     watch(
       () => isOpen.value,
-      () => {
-        state.openModal = true;
+      (val) => {
+        state.openModal = val;
       }
     );
     watch(
@@ -184,15 +185,13 @@ export default {
       }
     );
     const closeModal = () => {
-      state.openModal = false;
-      setTimeout(() => {
-        location.reload();
-      }, 1000);
+      emitter.emit("closeAclListModal");
     };
 
     return {
       state,
       v$,
+      emitter,
       closeModal,
     };
   },

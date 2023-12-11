@@ -21,7 +21,7 @@
             ></v-text-field>
           </v-col>
           <v-col cols="12" md="6" class="d-flex justify-end">
-            <v-btn class="ml-3 mt-2" @click="addRow" :disabled="state.isValid">
+            <v-btn class="ml-3 mt-2" @click="addRow">
               <i class="fa fa-plus-circle" style="color: #086eae"></i>
               <span class="ml-2" style="color: #086eae">Add New</span>
             </v-btn>
@@ -104,7 +104,6 @@ export default {
       enable: false,
       filterText: "",
       published: "",
-      isValid: false,
     });
 
     const rowDataRules = reactive({});
@@ -244,10 +243,10 @@ export default {
       let eGui = document.createElement("div");
 
       eGui.innerHTML = `
-      <button 
-      class="action-button edit"  
+      <button
+      class="action-button edit"
       data-action="edit">
-         <i class="far fa-edit" style="color: #086eae;"></i> 
+         <i class="far fa-edit" style="color: #086eae;"></i>
       </button>
 
       <button
@@ -271,8 +270,6 @@ export default {
         case "edit":
           console.log("rowData", rowData);
 
-         
-
           break;
         default:
           break;
@@ -287,7 +284,7 @@ export default {
         emptyProperties.push("Rule Name");
       }
 
-      if (obj.routage_type === "" ) {
+      if (obj.routage_type === "") {
         emptyProperties.push("Routage Type");
       }
       if (obj.start_time === "") {
@@ -315,21 +312,23 @@ export default {
     };
 
     const save = () => {
-      console.log("row", rowDataRules.value);
       if (!rowDataRules.value) rowDataRules.value = [];
 
       var emptyPropertiesList = rowDataRules.value
         .map(hasEmptyProperty)
         .filter((properties) => properties.length > 0);
 
+      const concatenatedArray = emptyPropertiesList.reduce(
+        (acc, curr) => acc.concat(curr),
+        []
+      );
+
+      const uniqueArray = [...new Set(concatenatedArray)];
+
       if (emptyPropertiesList.length > 0) {
-        textAlert.value =
-          "The following properties are empty: " +
-          emptyPropertiesList.join(",");
-        state.isValid = true;
+        textAlert.value = "The following properties are empty: " + uniqueArray;
       } else {
         textAlert.value = "";
-        state.isValid = false;
       }
     };
     function checkboxRender(params) {

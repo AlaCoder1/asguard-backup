@@ -296,8 +296,8 @@ export default {
         {
           title: "Subscription",
           icon: "mdi mdi-cash-sync",
-          href: "/subscription",
-          active: "Firewall",
+          href: "/asguard/subscription",
+          active: "Subscription",
           subItems: [],
           subMenuVisible: false,
         },

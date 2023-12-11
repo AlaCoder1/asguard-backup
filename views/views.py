@@ -427,6 +427,10 @@ def squid_proxy(request):
 def clamaV_page(request):
     return render(request, 'clamaV_page.html')
 
+@login_required(login_url='/')
+def subscription_page(request):
+    context = {}
+    return render(request, 'subscription_page.html', context)
 
 def login(request):
     usr=getAllUsers(request)

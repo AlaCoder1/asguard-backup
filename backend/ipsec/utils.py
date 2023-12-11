@@ -37,6 +37,13 @@ def uncomment_conn_in_config_file(config:str, conn_name):
     return conn_config.replace('\n#', '\n')
 
 
+def reorganize_file(config:str):
+    """Reorganize file by removing unused empty lines"""
+    while config.find("\n\n\n") > -1:
+        config = config.replace("\n\n\n", "\n\n")
+    return config
+
+
 def construct_line_secrets(server:ServerIPsec):
     """Return a line secrets of a server IPsec"""
     if server.interface != "Any":
@@ -134,7 +141,7 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("keyexchange=ike", "keyexchange=ikev2")
     
     if json_object["interface_name"] != "Any":
-        config_input = config_input.replace(f"left=%any", f"left={json_object['interface_address']}")
+        config_input = config_input.replace("left=%any", f"left={json_object['interface_address']}")
         
     if json_object["dynamic_gateway"]:
         config_input = config_input.replace("#rightallowany=yes", "rightallowany=yes")
@@ -189,9 +196,9 @@ conn {json_object["conn_name"]}
     if json_object["deed_peer"]["disable"]:
         config_input = config_input.replace("#dpddelay=60s", f"dpddelay={json_object['deed_peer']['deed_peer_delay']}s")
         config_input = config_input.replace("#dpdtimeout=120s", f"dpdtimeout={json_object['deed_peer']['deed_peer_timeout']}s")
-        config_input = config_input.replace("#dpdaction=restart", f"dpdaction=restart")
+        config_input = config_input.replace("#dpdaction=restart", "dpdaction=restart")
         if json_object['deed_peer']['deed_peer_action'] == "Stop the tunnel":
-            config_input = config_input.replace("dpdaction=restart", f"dpdaction=clear")
+            config_input = config_input.replace("dpdaction=restart", "dpdaction=clear")
     
     if json_object["inactivity_timeout"] != "":
         config_input = config_input.replace("#inactivity=10s", f"inactivity={json_object['inactivity_timeout']}s")

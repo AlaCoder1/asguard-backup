@@ -1,20 +1,17 @@
-from django.conf import settings
 from django.http import JsonResponse
-from django.db.models import Q
 from rest_framework.authentication import SessionAuthentication
-from django.core import serializers
 from django.db.models.deletion import ProtectedError
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-from rest_framework.parsers import JSONParser
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from backend.managementKeypairs.key_pairs import create_private_key, create_public_key, delete_private_key_in_system, delete_public_key_in_system, import_public_key
-from backend.managementKeypairs.list_key_pairs import get_all_private_key, get_all_public_key, get_private_key, get_public_key
+from backend.managementKeypairs.list_key_pairs import get_list_all_private_key, get_list_all_public_key, get_one_private_key, get_one_public_key
 from backend.managementKeypairs.models import PrivateKey, PublicKey
 from backend.managementKeypairs.serializers import PrivateKeySerializer, PublicKeySerializer
+from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_DELETE_USED_PRIVATE_KEY, ERROR_MESSAGES_INEXISTANT, CONSTANT_PRIVATE_KEY, CONSTANT_PUBLIC_KEY, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_DELETE
 
-from backend.openvpn.manage_errors import CommandExecutionError
+from utils.errors_utils import CommandExecutionError
 
 # Create your views here.
 
@@ -30,7 +27,7 @@ from backend.openvpn.manage_errors import CommandExecutionError
 def getAllPrivateKey(request):
     """Getting all Private Keys from database"""
     if (request.method == 'GET'):
-        list_private_key = get_all_private_key()
+        list_private_key = get_list_all_private_key()
         return JsonResponse(list_private_key, safe=False)
 
 
@@ -42,7 +39,7 @@ def getAllPrivateKey(request):
 def getPrivateKey(request, id):
     """Getting a Certificates Authority by id from database"""
     if (request.method == 'GET'):
-        private_key = get_private_key(id)
+        private_key = get_one_private_key(id)
         return JsonResponse(private_key, safe=False)
 
 
@@ -77,12 +74,11 @@ def createPrivateKey(request):
                 # Install the private key in system
                 create_private_key(name, key_size)
                 
-                private_key_data["private_key_path"] = f'/etc/ipsec.d/private/{name}.key'
                 serializer_private_key = PrivateKeySerializer(data=private_key_data)
                 if serializer_private_key.is_valid():
                     # Add the server to the database
                     serializer_private_key.save()
-                    return JsonResponse({"msg": f"Private key {name} is created"}, status=201)
+                    return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_PRIVATE_KEY, name)}, status=201)
                 
                 else:
                     return JsonResponse({"error": list(serializer_private_key.errors.values())[0][0]}, status=400)
@@ -91,7 +87,7 @@ def createPrivateKey(request):
                 return JsonResponse({"error": list(serializer_private_key.errors.values())[0][0]}, status=400)
 
         except CommandExecutionError:
-            return JsonResponse({"error": "Error in creating Private Key"}, status=400)
+            return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_PRIVATE_KEY)}, status=400)
         except ValueError as error:
             return JsonResponse({"error": error.__str__()}, status=400)
 
@@ -110,11 +106,11 @@ def deletePrivateKey(request, id):
             delete_private_key_in_system(private_key.name)
             # delete from database
             private_key.delete()
-            return JsonResponse({"msg": f"delete private key {private_key.name} succesfully"})
+            return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(private_key.name)}, status=201)
     except ProtectedError:
-        return JsonResponse({"error": "You have to delete Public Key created by this Private Key"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_PRIVATE_KEY}, status=400)
     except PrivateKey.DoesNotExist:
-        return JsonResponse({"error": "This Private Key does not exist"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_PRIVATE_KEY)}, status=400)
 
 
 ##################################################
@@ -129,7 +125,7 @@ def deletePrivateKey(request, id):
 def getAllPublicKey(request):
     """Getting all Private Keys from database"""
     if (request.method == 'GET'):
-        list_public_key = get_all_public_key()
+        list_public_key = get_list_all_public_key()
         return JsonResponse(list_public_key, safe=False)
 
 
@@ -141,7 +137,7 @@ def getAllPublicKey(request):
 def getPublicKey(request, id):
     """Getting a Certificates Authority by id from database"""
     if (request.method == 'GET'):
-        public_key = get_public_key(id)
+        public_key = get_one_public_key(id)
         return JsonResponse(public_key, safe=False)
 
 
@@ -161,67 +157,63 @@ def getPublicKey(request, id):
 @permission_classes([IsAuthenticated])
 def createPublicKey(request):
     """Creating a new Public Key in system and adding it to the database"""
-    if request.method == 'POST':
-        try:
-            # parse the incoming information
-            data = request.data
+    try:
+        # parse the incoming information
+        data = request.data
 
-            name = data.get('name', '')
-            method = data.get('method', '')
-            public_key_data = {"name": name}
+        name = data.get('name', '')
+        method = data.get('method', '')
+        public_key_data = {"name": name}
 
-            if method.get('method_name', '') == "create":
-                private_key_id = method.get('private_key', '')
-                private_key = PrivateKey.objects.get(id=private_key_id)
-                encryption_algorithm = data.get('encryption_algorithm', '')
-                public_key_data["private_key"] = private_key_id
-                public_key_data["encryption_algorithm"] = encryption_algorithm
-                public_key_data["key_size"] = private_key.key_size
-                # Creating Private Key
+        if method.get('method_name', '') == "create":
+            private_key_id = method.get('private_key', '')
+            private_key = PrivateKey.objects.get(id=private_key_id)
+            encryption_algorithm = data.get('encryption_algorithm', '')
+            public_key_data["private_key"] = private_key_id
+            public_key_data["encryption_algorithm"] = encryption_algorithm
+            public_key_data["key_size"] = private_key.key_size
+            # Creating Private Key
+            serializer_public_key = PublicKeySerializer(data=public_key_data)
+            if serializer_public_key.is_valid():
+                # Install the public key in system
+                create_public_key(private_key.name, name)
+                # public_key_data["finger_print"] = finger_print
                 serializer_public_key = PublicKeySerializer(data=public_key_data)
                 if serializer_public_key.is_valid():
-                    # Install the public key in system
-                    create_public_key(private_key.name, name)
-                    public_key_data["public_key_path"] = f'/etc/ipsec.d/certs/{name}.key'
-                    # public_key_data["finger_print"] = finger_print
-                    serializer_public_key = PublicKeySerializer(data=public_key_data)
-                    if serializer_public_key.is_valid():
-                        # Add the server to the database
-                        serializer_public_key.save()
-                        return JsonResponse({"msg": f"Public Key {name} is created"}, status=201)
-                    
-                    else:
-                        return JsonResponse({"error": list(serializer_public_key.errors.values())[0][0]}, status=400)
-                    
+                    # Add the server to the database
+                    serializer_public_key.save()
+                    return JsonResponse({"msg":  SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_PUBLIC_KEY, name)}, status=201)
+                
                 else:
                     return JsonResponse({"error": list(serializer_public_key.errors.values())[0][0]}, status=400)
                 
-            else: # Import method
-                public_key_value = method.get('public_key_value', '')
-                public_key_data["encryption_algorithm"] = "RSA"
+            else:
+                return JsonResponse({"error": list(serializer_public_key.errors.values())[0][0]}, status=400)
+            
+        else: # Import method
+            public_key_value = method.get('public_key_value', '')
+            public_key_data["encryption_algorithm"] = "RSA"
+            serializer_public_key = PublicKeySerializer(data=public_key_data)
+            if serializer_public_key.is_valid():
+                public_key_length = import_public_key(name, public_key_value)
+                # public_key_data["finger_print"] = finger_print
+                public_key_data["key_size"] = public_key_length
                 serializer_public_key = PublicKeySerializer(data=public_key_data)
                 if serializer_public_key.is_valid():
-                    public_key_length = import_public_key(name, public_key_value)
-                    print("public_key_length: ", public_key_length)
-                    public_key_data["public_key_path"] = f'/etc/ipsec.d/certs/{name}.key'
-                    # public_key_data["finger_print"] = finger_print
-                    public_key_data["key_size"] = public_key_length
-                    serializer_public_key = PublicKeySerializer(data=public_key_data)
-                    if serializer_public_key.is_valid():
-                        # Add the server to the database
-                        serializer_public_key.save()
-                        return JsonResponse({"msg": f"Public Key {name} is created"}, status=201)
-                    
-                    else:
-                        return JsonResponse({"error": list(serializer_public_key.errors.values())[0][0]}, status=400)
-                    
+                    # Add the server to the database
+                    serializer_public_key.save()
+                    return JsonResponse({"msg":  SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_PUBLIC_KEY, name)}, status=201)
+                
                 else:
                     return JsonResponse({"error": list(serializer_public_key.errors.values())[0][0]}, status=400)
+                
+            else:
+                return JsonResponse({"error": list(serializer_public_key.errors.values())[0][0]}, status=400)
 
-        except CommandExecutionError:
-            return JsonResponse({"error": "Error in creating Public Key"}, status=400)
-        except ValueError as error:
-            return JsonResponse({"error": error.__str__()}, status=400)
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('PublicKey')}, status=400)
+    except ValueError as error:
+        return JsonResponse({"error": error.__str__()}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -238,7 +230,7 @@ def deletePublicKey(request, id):
             delete_public_key_in_system(public_key.name)
             # delete from database
             public_key.delete()
-            return JsonResponse({"msg": f"delete public key {public_key.name} succesfully"})
+            return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(public_key.name)}, status=201)
         
     except PublicKey.DoesNotExist:
-        return JsonResponse({"error": "This Public Key does not exist"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Public Key')}, status=400)

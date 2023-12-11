@@ -6,7 +6,7 @@ from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 from backend.openvpn.servers_status import synchronize_server_openvpn
 
 
-def get_all_server_openvpn():
+def get_list_all_server_openvpn():
     """Getting all servers from database"""
     synchronize_server_openvpn()
 
@@ -27,7 +27,7 @@ def get_all_server_openvpn():
     return list_server
     
 
-def get_server_openvpn(id):
+def get_one_server_openvpn(id):
     """Getting server by id from database"""
     server_openvpn = ServerOpenvpn.objects.filter(pk=id)
     server_openvpnDict = serializers.serialize("json", server_openvpn)
@@ -43,7 +43,7 @@ def get_server_openvpn(id):
     return res[0]['fields']
 
 
-def get_all_client_openvpn():
+def get_list_all_client_openvpn():
     """Getting all clients from database"""
     list_client = []
     client = ClientOpenvpn.objects.all()
@@ -67,7 +67,7 @@ def get_all_client_openvpn():
     return list_client
 
 
-def get_client_openvpn(id):
+def get_one_client_openvpn(id):
     """Getting client by id from database"""
     client_openvpn = ClientOpenvpn.objects.filter(pk=id)
     client_openvpn = serializers.serialize("json", client_openvpn)

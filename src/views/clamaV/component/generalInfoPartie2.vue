@@ -111,15 +111,15 @@
         ></v-text-field>
       </v-col>
 
-      <v-col cols="4" class="mt-0">
+      <!-- <v-col cols="4" class="mt-0">
         <label>Malware Expert Signatures</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="malwareExpert" />
         <label class="ml-2">Add Malware Expert Signatures</label>
-      </v-col>
+      </v-col> -->
 
-      <v-col cols="4" class="mt-0">
+      <!-- <v-col cols="4" class="mt-0">
         <label>BLURL Signatures</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
@@ -141,7 +141,7 @@
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="bofhLandSign" />
         <label class="ml-2">Add BOFHLand Signatures</label>
-      </v-col>
+      </v-col> -->
     </v-row>
   </div>
 </template>
@@ -162,10 +162,10 @@ const props = defineProps([
   "freshclamLog",
   "freshclamDatabase",
   "freshclamConnect",
-  "malwareExpert",
-  "blurlSign",
-  "jurlblaSign",
-  "bofhLandSign",
+  // "malwareExpert",
+  // "blurlSign",
+  // "jurlblaSign",
+  // "bofhLandSign",
 ]);
 const emit = defineEmits([
   "update:scanXmlDocs",
@@ -181,10 +181,10 @@ const emit = defineEmits([
   "update:freshclamLog",
   "update:freshclamDatabase",
   "update:freshclamConnect",
-  "update:malwareExpert",
-  "update:blurlSign",
-  "update:jurlblaSign",
-  "update:bofhLandSign",
+  // "update:malwareExpert",
+  // "update:blurlSign",
+  // "update:jurlblaSign",
+  // "update:bofhLandSign",
 ]);
 const {
   scanXmlDocs,
@@ -200,9 +200,9 @@ const {
   freshclamLog,
   freshclamDatabase,
   freshclamConnect,
-  malwareExpert,
-  blurlSign,
-  jurlblaSign,
-  bofhLandSign,
+  // malwareExpert,
+  // blurlSign,
+  // jurlblaSign,
+  // bofhLandSign,s
 } = useVModels(props, emit);
 </script>

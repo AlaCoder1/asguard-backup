@@ -53,8 +53,8 @@ export default {
         filter: true,
       },
       {
-        headerName: "Precess",
-        field: "Precess",
+        headerName: "Process",
+        field: "Process",
         sortable: true,
         filter: true,
       },

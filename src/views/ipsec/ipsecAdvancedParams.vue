@@ -582,7 +582,14 @@ export default {
     const rules = computed(() => {
       return {
         //General information Phase 1
-        tunnelSettings: { required },
+
+        tunnelSettings: {
+          required,
+          isValidTunnelSettings: helpers.withMessage(
+            `champs can include only letters & Numbers & underscores & hyphens without space.`,
+            helpers.regex(/^[A-Za-z0-9_\-]+$/)
+          ),
+        },
         connectionMethod: { required },
         keyExchange: { required },
         internetProtocol: { required },
@@ -698,7 +705,13 @@ export default {
         //     helpers.regex(/^[0-9.]+$/)
         //   ),
         // },
-        type: { required },
+
+        type: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.mode.slug === "Tunnel IPv4")
+          ),
+        },
 
         remoteNetworkAddress: {
           requiredIfFuction: helpers.withMessage(
@@ -755,10 +768,22 @@ export default {
           ),
         },
 
-        typeRemoteNetwork: { required },
+        typeRemoteNetwork: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.mode.slug === "Tunnel IPv4")
+          ),
+        },
         //exchange
         protocol: { required },
-        encryptAlgoExchange: { required },
+
+        encryptAlgoExchange: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.protocol.slug === "ESP")
+          ),
+        },
+
         hashAlgoExchange: { required },
         pfsKey: { required },
         // pingHost: { required },
@@ -860,13 +885,18 @@ export default {
 
       axios.get("/network/AllInterfaces").then(
         (response) => {
-          let interfaces = response.data.map((i) => {
+          let filtredInterface = response.data.filter(
+            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+          );
+
+          let interfaces = filtredInterface.map((i) => {
             return {
               id: i.id,
               name: i.name_interface,
               slug: i.name_interface,
             };
           });
+
           let listInter = [
             {
               name: "Address",
@@ -1052,14 +1082,19 @@ export default {
         state.hashAlgoExchange = filtredHashAlgoListExchange;
 
         let filtredencryptAlgoExchange = [];
-        data?.encryption_algorithm_ph2.forEach((e) => {
-          filtredencryptAlgoExchange = [
-            ...filtredencryptAlgoExchange,
-            ...encryptAlgoListExchange.value.filter((i) => i.slug === e),
-          ];
-        });
 
-        state.encryptAlgoExchange = filtredencryptAlgoExchange;
+        if (data.encryption_algorithm_ph2) {
+          data?.encryption_algorithm_ph2?.forEach((e) => {
+            filtredencryptAlgoExchange = [
+              ...filtredencryptAlgoExchange,
+              ...encryptAlgoListExchange.value.filter((i) => i.slug === e),
+            ];
+          });
+        }
+
+        state.encryptAlgoExchange = filtredencryptAlgoExchange
+          ? filtredencryptAlgoExchange
+          : "";
 
         let filtredPfsKeyList = pfsList.value.filter(
           (i) => i.slug === data?.pfs_key_group
@@ -1155,12 +1190,31 @@ export default {
           state.defaultValueRemote = "mask";
           state.isDefaultRemote = false;
         }
+        if (state.mode?.slug === "Transport") {
+          console.log("Transport oui0");
+
+          state.typeRemoteNetwork = "";
+          state.type = "";
+        } else if (state.mode?.slug === "Tunnel IPv4") {
+          if (!state.type) {
+            state.type = {
+              name: "Address",
+              slug: "Address",
+            };
+          }
+          if (!state.typeRemoteNetwork) {
+            state.typeRemoteNetwork = { name: "Network", slug: "Network" };
+          }
+        }
       },
       { immediate: true }
     );
 
     const save = async () => {
       const result = await v$.value.$validate();
+
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (result) {
         let KeyExchange = null;

@@ -32,6 +32,7 @@
         "ag-grid-vue3": "^30.2.1",
         "apexcharts": "^3.41.0",
         "depcheck": "^1.4.7",
+        "element-plus": "^2.4.3",
         "font-awesome": "^4.7.0",
         "install": "^0.13.0",
         "mitt": "^3.0.1",

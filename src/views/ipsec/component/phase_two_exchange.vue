@@ -4,7 +4,7 @@
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-5">
-        <label>Protocol</label>
+        <label>Protocol*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
@@ -24,7 +24,7 @@
       </v-col>
       <template v-if="props.isProtocol?.slug === 'ESP'">
         <v-col cols="4" class="mt-5">
-          <label>Encryption algorithms</label>
+          <label>Encryption algorithms*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select
@@ -45,7 +45,7 @@
         </v-col>
       </template>
       <v-col cols="4" class="mt-5">
-        <label>Hash algorithms</label>
+        <label>Hash algorithms*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
@@ -66,7 +66,7 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>PFS key group</label>
+        <label>PFS key group*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select

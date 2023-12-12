@@ -20,7 +20,7 @@
           </v-window-item>
           <v-window-item v-for="tab in tabs" :key="tab.id" value="Scan">
             <v-card>
-              <v-card-text></v-card-text>
+              <v-card-text><scan /></v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -32,12 +32,14 @@
 <script>
 import BaseLayout from "@/layouts/layout.vue";
 import config from "./config.vue";
+import scan from "./scan.vue";
 
 export default {
   name: "ClamaV",
   components: {
     BaseLayout,
     config,
+    scan
   },
   data() {
     return {

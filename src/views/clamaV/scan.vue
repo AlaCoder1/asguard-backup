@@ -32,12 +32,12 @@
         />
         <h5 class="title mr-2">Targeted scan</h5>
         <span class="mb-5 subtitle">Scan spécific file or directory</span>
-        <div style="text-align: center; position: relative; left: 27%">
+        <div style="text-align: center; position: relative; left: 20%">
           <v-text-field
             v-model="path"
             density="compact"
             variant="solo"
-            class="w-50 mt-7"
+            class="w-75 mt-5"
             label="Enter specific file or directory path "
             single-line
             rounded

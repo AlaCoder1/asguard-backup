@@ -68,7 +68,7 @@ def revoke_list_certs(current_dir, ca_name, list_revoked_cert):
             execute_command_without_arguments(command)
             execute_command_with_arguments(['sudo', 'easyrsa', 'revoke', 'server'], 'yes\n')
         elif revoked_cert.certificate_type == 'client':
-            command = ['cp', PATH_CLIENT_CERT_CRT.format(revoked_cert.name), f'{current_dir}/pki/issued/{revoked_cert.name}.crt']
+            command = ['cp', PATH_CLIENT_CERT_CRT.format(revoked_cert.name, revoked_cert.name), f'{current_dir}/pki/issued/{revoked_cert.name}.crt']
             execute_command_without_arguments(command)
             execute_command_with_arguments(['sudo', 'easyrsa', 'revoke', f'{revoked_cert.name}'], 'yes\n')
 
@@ -89,8 +89,8 @@ def save_certificate(current_dir, cert_name, cert_type):
     if cert_type == 'client':
         cert_directory = PATH_CLIENT_CERT.format(cert_name)
         cert_vars = PATH_CLIENT_CERT_VARS.format(cert_name)
-        cert_path = PATH_CLIENT_CERT_CRT.format(cert_name)
-        cert_private_key = PATH_CLIENT_CERT_KEY.format(cert_name)
+        cert_path = PATH_CLIENT_CERT_CRT.format(cert_name, cert_name)
+        cert_private_key = PATH_CLIENT_CERT_KEY.format(cert_name, cert_name)
 
     commands_list_without_arguments = [['mkdir', '-p', cert_directory],
                                        ['cp', f'{current_dir}/pki/vars', cert_vars],

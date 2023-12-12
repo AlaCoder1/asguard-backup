@@ -244,7 +244,8 @@ def createServerIPsec(request):
                 elif type_local_network == "Network":
                     address_local_network = f'{local_network.get("address_local_network", "")}/{local_network.get("mask", "")}'
                 else:
-                    address_local_network = f'{interface_address.ip_address}/{interface_address.netmask}'
+                    interface_local = Interface.objects.get(name_interface=type_local_network).pk
+                    address_local_network = IP4Config.objects.get(interface_id=interface_local).ip_address
                 server_data["type_local_network"] = type_local_network
                 server_data["address_local_network"] = address_local_network
                 data["address_local_network"] = address_local_network
@@ -503,7 +504,8 @@ def updateServerIPsec(request, id):
                 elif server.type_local_network == "Network":
                     server.address_local_network = f'{local_network.get("address_local_network", "")}/{local_network.get("mask", "")}'
                 else:
-                    server.address_local_network = f'{interface_address.ip_address}/{interface_address.netmask}'
+                    interface_local = Interface.objects.get(name_interface=server.type_local_network).pk
+                    server.address_local_network = IP4Config.objects.get(interface_id=interface_local).ip_address
                 data["address_local_network"] = server.address_local_network
 
                 # Remote Network

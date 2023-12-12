@@ -4,16 +4,19 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from backend.ipsec.constant_variables import IPV4_CONFIG
 
-from backend.ipsec.functions import json_to_str_server_ipsec
-from backend.ipsec.list_ipsec import get_all_server_ipsec, get_server_ipsec
+from backend.ipsec.utils import json_to_str_server_ipsec
+from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
 from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec, install_server_ipsec, update_server_ipsec
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
-from backend.openvpn.functions import execute_command_without_arguments
-from backend.openvpn.manage_errors import CommandExecutionError
+from backend.openvpn.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA
+from utils.commands_utils import execute_command_without_arguments
+from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INEXISTANT, SUCCESS_MESSAGES_CONFIGURATION, SUCCESS_MESSAGES_DELETE
+from utils.errors_utils import CommandExecutionError
 
 from .models import ServerIPsec
 
@@ -25,7 +28,7 @@ from .models import ServerIPsec
 @permission_classes([IsAuthenticated])
 def getAllServerIPsec(request):
     if (request.method == 'GET'):
-        list_ipsec = get_all_server_ipsec()
+        list_ipsec = get_list_all_server_ipsec()
         return JsonResponse(list_ipsec, safe=False)
     
 
@@ -37,7 +40,7 @@ def getAllServerIPsec(request):
 def getServerIPsec(request, id):
     """Getting server by id from database"""
     if (request.method == 'GET'):
-        server_ipsec = get_server_ipsec(id)
+        server_ipsec = get_one_server_ipsec(id)
         return JsonResponse(server_ipsec, safe=False)
 
 
@@ -55,7 +58,7 @@ def getServerIPsec(request, id):
                                                              'dynamic_gateway': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'description_ph1': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'authentication': openapi.Schema(type=openapi.TYPE_OBJECT, required=['authentication'], 
-                                                                                              properties={'authentication': openapi.Schema(type=openapi.TYPE_STRING, default="Mutual PSK", enum=["Mutual PSK", "Mutual Public Key", "Mutual RSA"]),
+                                                                                              properties={'authentication': openapi.Schema(type=openapi.TYPE_STRING, default=CONSTANT_METHOD_PSK, enum=[CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA]),
                                                                                                           'pre_shared_key': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual PSK"),
                                                                                                           'local_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
@@ -208,10 +211,10 @@ def createServerIPsec(request):
                 server_data["negotiation_mode"] = negotiation_mode
 
             ca = ''
-            if authentication_method == "Mutual PSK":
+            if authentication_method == CONSTANT_METHOD_PSK:
                 pre_shared_key = authentication.get("pre_shared_key", "")
                 server_data["pre_shared_key"] = pre_shared_key
-            elif authentication_method == "Mutual Public key":
+            elif authentication_method == CONSTANT_METHOD_PUBLIC_KEY:
                 local_key_pair = authentication.get("local_key_pair", "")
                 peer_key_pair = authentication.get("peer_key_pair", "")
                 server_data["local_key_pair"] = local_key_pair
@@ -281,19 +284,19 @@ def createServerIPsec(request):
 
                 # Add the server to the database
                 serializer_server.save()
-                return JsonResponse({"msg": f"Connection {conn_name} Configuration is done"}, status=201)
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(conn_name, 'done')}, status=201)
             else:
                 return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
         except CommandExecutionError:
-            return JsonResponse({"error": "Error in creating ipsec server"}, status=400)
+            return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('ipsec server')}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"error": "This Interface does not exist"}, status=400)
+            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('interface')}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
+            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
         except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"error": "This CA does not exist"}, status=400)
+            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
         except Certificate.DoesNotExist:
-            return JsonResponse({"error": "This Certificate does not exist"}, status=400)
+            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -313,23 +316,22 @@ def deleteServerIPsec(request, id):
             else:
                 interface_address = "any"
             
-            if server.authentication_method == "Mutual PSK":
+            if server.authentication_method == CONSTANT_METHOD_PSK:
                 deleted_line_in_secrets_file = f"""{interface_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
-            elif server.authentication_method == "Mutual RSA":
+            elif server.authentication_method == CONSTANT_METHOD_RSA:
                 deleted_line_in_secrets_file = f""" : RSA {server.cert}Key.pem """
             else:
                 private_key = PublicKey.objects.get(name=server.local_key_pair).private_key
                 deleted_line_in_secrets_file = f""" : RSA {private_key.name}.pem """
-                print('deleted_line_in_secrets_file: ', deleted_line_in_secrets_file)
             
             delete_server_ipsec(server.conn_name, deleted_line_in_secrets_file)
             # delete from database
             server.delete()
-            return JsonResponse({"msg": f"delete {server.conn_name} succesfully"})
+            return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(server.conn_name)}, status=201)
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"error": "This Server does not exist"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN IPSEC (same as create)",
@@ -346,7 +348,7 @@ def deleteServerIPsec(request, id):
                                                              'dynamic_gateway': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=False),
                                                              'description_ph1': openapi.Schema(type=openapi.TYPE_STRING),
                                                              'authentication': openapi.Schema(type=openapi.TYPE_OBJECT, required=['authentication'], 
-                                                                                              properties={'authentication': openapi.Schema(type=openapi.TYPE_STRING, default="Mutual PSK", enum=["Mutual PSK", "Mutual Public Key", "Mutual RSA"]),
+                                                                                              properties={'authentication': openapi.Schema(type=openapi.TYPE_STRING, default=CONSTANT_METHOD_PSK, enum=[CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA]),
                                                                                                           'pre_shared_key': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual PSK"),
                                                                                                           'local_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
@@ -402,13 +404,13 @@ def updateServerIPsec(request, id):
             # parse the incoming information
             data = request.data
             server = ServerIPsec.objects.get(id=id)
-            if server.authentication_method == "Mutual PSK":
+            if server.authentication_method == CONSTANT_METHOD_PSK:
                 if server.interface != "Any":
                     previous_interface_address = IP4Config.objects.get(interface_id=Interface.objects.get(name_interface=server.interface).pk)
                     updated_line_in_secrets_file = f"""{previous_interface_address.ip_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
                 else:
                     updated_line_in_secrets_file = f"""any {server.remote_gateway} : PSK '{server.pre_shared_key}' """
-            elif server.authentication_method == "Mutual RSA":
+            elif server.authentication_method == CONSTANT_METHOD_RSA:
                 updated_line_in_secrets_file = f""" : RSA {server.cert}Key.pem """
             else:
                 private_key = PublicKey.objects.get(name=server.local_key_pair).private_key
@@ -472,9 +474,9 @@ def updateServerIPsec(request, id):
                 server.negotiation_mode = None
 
             ca = ''
-            if server.authentication_method == "Mutual PSK":
+            if server.authentication_method == CONSTANT_METHOD_PSK:
                 server.pre_shared_key = authentication.get("pre_shared_key", "")
-            elif server.authentication_method == "Mutual Public key":
+            elif server.authentication_method == CONSTANT_METHOD_PUBLIC_KEY:
                 server.local_key_pair = authentication.get("local_key_pair", "")
                 server.peer_key_pair = authentication.get("peer_key_pair")
             else:
@@ -542,16 +544,16 @@ def updateServerIPsec(request, id):
 
                 # Add the server to the database
                 serializer_server.save()
-                return JsonResponse({"msg": f"Connection {server.conn_name} Configuration is updated"}, status=201)
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(server.conn_name, 'updated')}, status=201)
             else:
                 return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 
         except ServerIPsec.DoesNotExist:
-            return JsonResponse({"error": "This Server does not exist"}, status=400)
+            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
         except Interface.DoesNotExist:
-            return JsonResponse({"error": "This Interface does not exist"}, status=400)
+            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('interface')}, status=400)
         except IP4Config.DoesNotExist:
-            return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
+            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -577,9 +579,9 @@ def statusServerIPsec(request, id):
                 return JsonResponse({"msg": f"{server.conn_name} is disabled"})
         
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"error": "This Server does not exist"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -602,6 +604,6 @@ def statusIPsec(request):
                 return JsonResponse({"msg": "IPsec is stoped"})
         
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"error": "This Server does not exist"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": "This IPv4 config does not exist"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)

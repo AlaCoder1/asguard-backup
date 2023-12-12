@@ -5,7 +5,7 @@ from backend.managementCertificates.models import Certificate, CertificateAuthor
 from django.core import serializers
 
 
-def get_all_cert_auth():
+def get_list_all_cert_auth():
     """Getting all Certificates Authority from database"""
     list_ca = []
     ca = CertificateAuthority.objects.all()
@@ -29,7 +29,7 @@ def get_all_cert_auth():
     return list_ca
 
 
-def get_cert_auth(id):
+def get_one_cert_auth(id):
     """Getting a Certificates Authority by id from database"""
     ca = CertificateAuthority.objects.filter(pk=id)
     caDict = serializers.serialize("json", ca)
@@ -41,7 +41,7 @@ def get_cert_auth(id):
     return res[0]['fields']
 
 
-def get_all_certificates():
+def get_list_all_certificates():
     """Getting all Certificates from database"""
     list_cert = []
     cert = Certificate.objects.all()
@@ -56,7 +56,7 @@ def get_all_certificates():
     return list_cert
 
 
-def get_certificate(id):
+def get_one_certificate(id):
     """Getting a Certificate by id from database"""
     cert = Certificate.objects.filter(pk=id)
     certDict = serializers.serialize("json", cert)

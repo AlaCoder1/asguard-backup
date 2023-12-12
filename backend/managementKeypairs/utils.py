@@ -1,6 +1,7 @@
 import re
 import subprocess
-from backend.openvpn.functions import execute_command_without_arguments
+from backend.ipsec.constant_variables import PATH_IPSEC_D_CERTS, PATH_IPSEC_D_PRIVATE
+from utils.commands_utils import execute_command_without_arguments
 
 
 # def get_finger_print(public_key_name, public_key_length):
@@ -22,7 +23,7 @@ from backend.openvpn.functions import execute_command_without_arguments
 def get_finger_print(private_key_name):
     """Returns the finger print of a public key"""
     # Command 1: Save the public key in DER format to a temporary file
-    process = execute_command_without_arguments(["openssl", "rsa", "-in", f"/etc/ipsec.d/private/{private_key_name}.key", "-pubout", "-outform", "DER"])
+    process = execute_command_without_arguments(["openssl", "rsa", "-in", f"{PATH_IPSEC_D_PRIVATE}{private_key_name}.key", "-pubout", "-outform", "DER"])
     with open(f"/etc/ipsec.d/finger_prints/{private_key_name}.der", "w") as der_file:
         der_file.write(process.stdout)
 
@@ -35,7 +36,7 @@ def get_finger_print(private_key_name):
 
 def get_key_size(public_key_name):
     """Returns the key size of a public key"""
-    process = execute_command_without_arguments(["sudo", "openssl", "rsa", "-in", f'/etc/ipsec.d/certs/{public_key_name}.pem', "-pubin", "-text", "-noout"])
+    process = execute_command_without_arguments(["sudo", "openssl", "rsa", "-in", f'{PATH_IPSEC_D_CERTS}{public_key_name}.pem', "-pubin", "-text", "-noout"])
     public_key = process.stdout
     key_size_line = public_key[public_key.find("Public-Key: "):public_key.find("\n", public_key.find("Public-Key: "))]
     key_size = re.findall(r'\d+', key_size_line)

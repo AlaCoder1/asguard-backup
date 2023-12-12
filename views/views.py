@@ -8,14 +8,15 @@ from backend.rules.models import *
 from backend.gateway.models import *
 from backend.dashboard.functions import get_system_infomations
 from django.db.models import Q
-from backend.openvpn.list_servers_clients import get_all_client_openvpn,  get_all_server_openvpn
-from backend.managementKeypairs.list_key_pairs import get_all_private_key, get_all_public_key
-from backend.ipsec.list_ipsec import get_all_server_ipsec
+from backend.openvpn.list_servers_clients import get_list_all_client_openvpn,  get_list_all_server_openvpn
+from backend.managementKeypairs.list_key_pairs import get_list_all_private_key, get_list_all_public_key
+from backend.ipsec.list_ipsec import get_list_all_server_ipsec
 from backend.ids_ips.function_BD import get_home_net_de_la_base_de_donnees, get_ip_addresses
 from backend.ids_ips.function_sys import execute_cmd
 from backend.ids_ips.models import *
 from backend.ids_ips.serializers import AlertSerializer
 import ast
+
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -402,21 +403,21 @@ def settings_page(request):
 
 @login_required(login_url='/')
 def openvpn_page(request):
-    servers=get_all_server_openvpn()
-    clients=get_all_client_openvpn()
+    servers=get_list_all_server_openvpn()
+    clients=get_list_all_client_openvpn()
     context = {'servers':servers,'clients':clients}
     return render(request, 'openvpn_page.html', context)
 @login_required(login_url='/')
 def ipsec_page(request):
-    servers=get_all_server_ipsec()
-    publicKey =get_all_public_key()
+    servers=get_list_all_server_ipsec()
+    publicKey =get_list_all_public_key()
     context = {'servers':servers,'publicKey':publicKey}
     return render(request, 'ipsec_page.html', context)
 
 @login_required(login_url='/')
 def keyPair_page(request):
-    privateKey =get_all_private_key()
-    publicKey =get_all_public_key()
+    privateKey =get_list_all_private_key()
+    publicKey =get_list_all_public_key()
     context = {'privateKey':privateKey,'publicKey':publicKey}
     return render(request, 'keyPair_page.html',context)
 
@@ -427,6 +428,10 @@ def squid_proxy(request):
 def clamaV_page(request):
     return render(request, 'clamaV_page.html')
 
+@login_required(login_url='/')
+def subscription_page(request):
+    context = {}
+    return render(request, 'subscription_page.html', context)
 
 def login(request):
     usr=getAllUsers(request)

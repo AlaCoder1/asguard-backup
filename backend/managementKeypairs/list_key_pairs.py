@@ -4,7 +4,7 @@ from django.core import serializers
 from backend.managementKeypairs.models import PrivateKey, PublicKey
 
 
-def get_all_private_key():
+def get_list_all_private_key():
     list_private_key = []
     private_key = PrivateKey.objects.all()
     caDict = serializers.serialize("json", private_key)
@@ -19,7 +19,7 @@ def get_all_private_key():
     return list_private_key
 
 
-def get_private_key(id):
+def get_one_private_key(id):
     private_key = PrivateKey.objects.filter(pk=id)
     private_keyDict = serializers.serialize("json", private_key)
     res = json.loads(private_keyDict)
@@ -30,7 +30,7 @@ def get_private_key(id):
     return res[0]['fields']
 
 
-def get_all_public_key():
+def get_list_all_public_key():
     list_public_key = []
     public_key = PublicKey.objects.all()
     caDict = serializers.serialize("json", public_key)
@@ -45,7 +45,7 @@ def get_all_public_key():
     return list_public_key
 
 
-def get_public_key(id):
+def get_one_public_key(id):
     public_key = PublicKey.objects.filter(pk=id)
     public_keyDict = serializers.serialize("json", public_key)
     res = json.loads(public_keyDict)

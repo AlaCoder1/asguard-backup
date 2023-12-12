@@ -119,8 +119,8 @@ def create_certificate_in_system(cert_name, common_name, ca_name, cert_type, upd
     if cert_type == 'client':
         cert_directory = PATH_CLIENT_CERT.format(cert_name)
         cert_vars = PATH_CLIENT_CERT_VARS.format(cert_name)
-        cert_path = PATH_CLIENT_CERT_CRT.format(cert_name)
-        cert_private_key = PATH_CLIENT_CERT_KEY.format(cert_name)
+        cert_path = PATH_CLIENT_CERT_CRT.format(cert_name, cert_name)
+        cert_private_key = PATH_CLIENT_CERT_KEY.format(cert_name, cert_name)
 
     commands_list_without_arguments = [['mkdir', '-p', cert_directory],
                                        ['cp', f'{current_dir}/pki/vars', cert_vars],
@@ -165,8 +165,8 @@ def import_certificate_in_system(cert_name, input_fields):
     if cert_type == 'client':
         cert_directory = PATH_CLIENT_CERT.format(cert_name)
         cert_vars = PATH_CLIENT_CERT_VARS.format(cert_name)
-        cert_path = PATH_CLIENT_CERT_CRT.format(cert_name)
-        cert_private_key = PATH_CLIENT_CERT_KEY.format(cert_name)
+        cert_path = PATH_CLIENT_CERT_CRT.format(cert_name, cert_name)
+        cert_private_key = PATH_CLIENT_CERT_KEY.format(cert_name, cert_name)
 
     commands_list_without_arguments = [['mkdir', '-p', cert_directory],
                                        ['cp', f'{current_dir}/pki/vars', cert_vars],
@@ -228,9 +228,9 @@ def unrevoke_certificates_in_system(ca_name, cert, list_revoked_cert):
 def export_certificate_in_system(cert_name, cert_type, download_type, password=''):
     """Export a certificate from system"""
     # configure certificate path: Server or Client
-    cert_path = PATH_SERVER_CERT.format(cert_name)
-    if cert_type == 'cient':
-        cert_path = PATH_CLIENT_CERT.format(cert_name)
+    cert_path = PATH_SERVER_CERT_CRT.format(cert_name)
+    if cert_type == 'client':
+        cert_path = PATH_CLIENT_CERT_CRT.format(cert_name, cert_name)
     
     if download_type == 'certificate':
         cert_value = read_certificate_value(cert_path)

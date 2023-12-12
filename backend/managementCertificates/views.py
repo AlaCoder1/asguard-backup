@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 from django.http import JsonResponse
 from django.db.models import Q
 from django.db.models.deletion import ProtectedError
-import json
 from rest_framework.authentication import SessionAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
@@ -333,23 +332,23 @@ def createCertificate(request):
             ca_id = method.get('ca', '')
             ca = CertificateAuthority.objects.get(pk=ca_id)
             cert_data = {"certificate_authority": ca_id,
-                            "name": name,
-                            "certificate_type": certificate_type,
-                            "activation": activation,
-                            "valid_from": valid_from,
-                            "valid_until": valid_until,
-                            "key_type": key_type,
-                            "key_length": key_length,
-                            "digest_algorithm": digest_algorithm,
-                            "lifetime": lifetime,
-                            "private_key_location": private_key_location,
-                            "country_code": country_code,
-                            "state": state,
-                            "city": city,
-                            "organization": organization,
-                            "email": email,
-                            "common_name": common_name,
-                            }
+                         "name": name,
+                         "certificate_type": certificate_type,
+                         "activation": activation,
+                         "valid_from": valid_from,
+                         "valid_until": valid_until,
+                         "key_type": key_type,
+                         "key_length": key_length,
+                         "digest_algorithm": digest_algorithm,
+                         "lifetime": lifetime,
+                         "private_key_location": private_key_location,
+                         "country_code": country_code,
+                         "state": state,
+                         "city": city,
+                         "organization": organization,
+                         "email": email,
+                         "common_name": common_name,
+                         }
             serializer_cert = CertificateSerializer(data=cert_data)
             if serializer_cert.is_valid():
                 date_now = datetime.now()
@@ -369,7 +368,7 @@ def createCertificate(request):
                                             "DN": "\"org\"",
                                             }
                     serial = create_certificate_in_system(cert_name=name, common_name=common_name, ca_name=ca.name, 
-                                                            type_cert=certificate_type, updated_fields_vars=updated_fields_vars)
+                                                          cert_type=certificate_type, updated_fields_vars=updated_fields_vars)
                     cert_data["serial"] = serial
 
                     # Add the certificate to the database
@@ -392,9 +391,9 @@ def createCertificate(request):
             serializer_cert = CertificateSerializer(data=cert_data)
             if serializer_cert.is_valid():
                 input_cert = {"certificate_data": certificate_data,
-                                "certificate_private_key": certificate_key,
-                                "serial": serial
-                                }
+                              "certificate_private_key": certificate_key,
+                              "serial": serial
+                              }
                 serial, start_date, end_date, lifetime, distingushed_name, certificate_type = import_certificate_in_system(name, input_cert)
                 # if serial != cert_data["serial"]:
                 #     return JsonResponse({"error": "Serial number input are not correct"}, status=400)

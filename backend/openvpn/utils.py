@@ -235,8 +235,8 @@ auth {json_object["auth_digest_algorithm"]}
 
 #Server Key and keep this is secret
 ca {PATH_CA_CRT.format(json_object["ca_name"])}
-cert {PATH_CLIENT_CERT_CRT.format(json_object["client_cert"])}
-key {PATH_CLIENT_CERT_KEY.format(json_object["client_cert"])}
+cert {PATH_CLIENT_CERT_CRT.format(json_object["client_cert"], json_object["client_cert"])}
+key {PATH_CLIENT_CERT_KEY.format(json_object["client_cert"], json_object["client_cert"])}
 crl-verify {PATH_CA_CRL_PEM.format(json_object["ca_name"])}
 
 tls-version-min 1.2

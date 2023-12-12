@@ -11,19 +11,23 @@
       <div id="leftbox">
         <img
           src="../../assets/images/Fichier 2icone-Sasyx-supp 1.svg"
+          style="margin-bottom: -7px"
           class="ml-10"
         />
         <h5 class="title mr-2">Full virus scan</h5>
         <span class="mb-5 subtitle">Scan your entire device</span><br />
-        <VButton
+
+        <v-btn
           rounded
           outlined
           color="#213E9F"
           label-color="#ffffff"
-          label="Scan now"
-          class="ml-2 mt-5 w-80"
+          class="ml-2 mt-5 btn-scan"
+          size="large"
           @click="save"
-        />
+        >
+          <span>Scan now</span>
+        </v-btn>
       </div>
 
       <div id="middlebox" class="mb-5">
@@ -32,7 +36,7 @@
         />
         <h5 class="title mr-2">Targeted scan</h5>
         <span class="mb-5 subtitle">Scan spécific file or directory</span>
-        <div style="text-align: center; position: relative; left: 20%">
+        <div style="text-align: center; position: relative; left: 25%">
           <v-text-field
             v-model="path"
             density="compact"
@@ -57,20 +61,21 @@
       <div id="rightbox">
         <img src="../../assets/images/Group 182.svg" />
         <h5 class="title mr-2">Full virus scan</h5>
-        <span class="mb-5 subtitle" style="margin-left: 16px"
+        <span class="mb-6 subtitle" style="margin-left: 16px"
           >Scan your remote agent</span
         >
         <br />
-        <VButton
+        <v-btn
           rounded
           outlined
           color="#213E9F"
           label-color="#ffffff"
-          label="Scan now"
-          :isLarge="true"
-          class="ml-5 mt-5"
+          class="ml-4 mt-6 btn-scan"
+          size="large"
           @click="save"
-        />
+        >
+          <span>Scan now</span>
+        </v-btn>
       </div>
     </div>
 
@@ -145,10 +150,20 @@ export default {
   float: right;
   width: 25%;
   position: relative;
-  right: 9%;
+  right: 3%;
   height: 280px;
 }
 #newRow {
   clear: both;
+}
+.btn-scan {
+  height: 43px;
+  width: 183px;
+  font-family: "Nunito-Regular", Helvetica;
+  left: 0;
+  letter-spacing: 0;
+  line-height: normal;
+  text-align: center;
+  text-transform: capitalize;
 }
 </style>

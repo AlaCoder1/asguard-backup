@@ -23,26 +23,50 @@
         </p>
       </v-col>
       <template v-if="props.isProtocol?.slug === 'ESP'">
-        <v-col cols="4" class="mt-5">
-          <label>Encryption algorithms*</label>
-        </v-col>
-        <v-col cols="8" class="mb-n6">
-          <v-select
-            label="Encryption algorithms"
-            v-model="encryptAlgoExchange"
-            item-title="name"
-            item-value="slug"
-            return-object
-            multiple
-            :items="props.encryptAlgoListExchange"
-          ></v-select>
-          <p
-            class="error-feedback mb-5"
-            v-if="props.errors.encryptAlgoExchange.$errors.length"
-          >
-            {{ props.errors.encryptAlgoExchange.$errors?.[0].$message }}
-          </p>
-        </v-col>
+        <template v-if="props.keyExchange.slug === 'V1'">
+          <v-col cols="4" class="mt-5">
+            <label>Encryption algorithms*</label>
+          </v-col>
+          <v-col cols="8" class="mb-n6">
+            <v-select
+              label="Encryption algorithms1"
+              v-model= "encryptAlgoExch2"
+              item-title="name"
+              item-value="slug"
+              return-object
+              multiple
+              :items="props.filteredAlgoListExchangeV1"
+            ></v-select>
+            <p
+              class="error-feedback mb-5"
+              v-if="props.errors.encryptAlgoExchange.$errors.length"
+            >
+              {{ props.errors.encryptAlgoExchange.$errors?.[0].$message }}
+            </p>
+          </v-col>
+        </template>
+        <template v-else>
+          <v-col cols="4" class="mt-5">
+            <label>Encryption algorithms*</label>
+          </v-col>
+          <v-col cols="8" class="mb-n6">
+            <v-select
+              label="Encryption algorithms2"
+              v-model="encryptAlgoExchange"
+              item-title="name"
+              item-value="slug"
+              return-object
+              multiple
+              :items="props.filteredAlgoListExchangeV1"
+            ></v-select>
+            <p
+              class="error-feedback mb-5"
+              v-if="props.errors.encryptAlgoExch2.$errors.length"
+            >
+              {{ props.errors.encryptAlgoExch2.$errors?.[0].$message }}
+            </p>
+          </v-col>
+        </template>
       </template>
       <v-col cols="4" class="mt-5">
         <label>Hash algorithms*</label>
@@ -143,9 +167,12 @@ import { ref } from "vue";
 import { useVModels } from "@vueuse/core";
 
 const props = defineProps([
+  "keyExchange",
   "protocolListph2",
+  "encryptAlgoExch2",
   "pfsList",
   "encryptAlgoListExchange",
+  "filteredAlgoListExchangeV1",
   "hashAlgoList",
   "isProtocol",
   "isMode",
@@ -166,10 +193,12 @@ const emit = defineEmits([
   "update:hashAlgoExchange",
   "update:pfsKey",
   "update:lifetimeExchange",
+  "update:encryptAlgoExch2",
 ]);
 const {
   protocol,
   encryptAlgoExchange,
+  encryptAlgoExch2,
   hashAlgoExchange,
   pfsKey,
   lifetimeExchange,

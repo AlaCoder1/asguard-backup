@@ -25,7 +25,7 @@ class Command(BaseCommand):
                 alert_list=[l['alert'] for l in alert_list]
             logs_all=[l['alert'] for l in logs]    
             difference=list(set(logs_all)-set(alert_list))
-            # print(difference)
+            print({"difference":len(difference)})
             max_size=10000
             if len(difference)!=0:
                 added_logs = []  # Pour stocker les logs ajoutés avec succès en base de données
@@ -65,25 +65,21 @@ class Command(BaseCommand):
                         pass
             nb_lines=len(logs)
             if nb_lines>max_size:
+                nb_iter=1
                 nb_iter=nb_lines//max_size
-                print({"nblines initiales":nb_lines})
-                print(nb_iter)
-                if len(logs)%max_size!=0:
-                    nb_line_delete=nb_iter*max_size
+                print({"nblines initiales":nb_lines,"nb_iter":nb_iter})
+                nb_line_delete=nb_iter*max_size
                 list_logs = [l['alert'] for l in logs[:nb_line_delete]]
                 date_systeme = datetime.now().date()
                 print("logs to delete==>",nb_line_delete)
                 print("logs reste",nb_lines-nb_line_delete)
-                
                 for l in list_logs:
                     commandes=[
                 "mkdir -p /var/log/suricata/backup_logs",
                 '[ -e "/var/log/suricata/backup_logs/{}" ] || touch "/var/log/suricata/backup_logs/logs_{}"'.format(date_systeme,date_systeme),
-    # 'sudo grep -qF "{} {}" /var/log/suricata/backup_logs/logs_{} || sudo bash -c \'cat <<EOF >> /var/log/suricata/backup_logs/logs_{}  {}\\nEOF\''.format(date_systeme, l, date_systeme, date_systeme, l)
-
-             """sudo cat <<EOF >> /var/log/suricata/backup_logs/logs_{}
+             """grep -qF "{}" /var/log/suricata/backup_logs/logs_{} || sudo cat <<EOF >> /var/log/suricata/backup_logs/logs_{}
 {}
-EOF""".format(date_systeme, l)
+EOF""".format(l,date_systeme,date_systeme, l)
                 ]   
                     print("this alert ================>",l)
                     for cmd in commandes:

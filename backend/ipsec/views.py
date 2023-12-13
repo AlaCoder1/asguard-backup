@@ -222,10 +222,14 @@ def createServerIPsec(request):
             else:
                 cert = authentication.get("cert")
                 certificate = Certificate.objects.get(name=cert)
-                ca = CertificateAuthority.objects.get(id=certificate.certificate_authority.pk).name
                 remote_distingushed_name = authentication.get("remote_distingushed_name", "")
                 server_data["cert"] = cert
                 server_data["remote_distingushed_name"] = remote_distingushed_name
+
+                # if the certificate dosen't have a CA (imported cert) ca will be null
+                ca = certificate.certificate_authority
+                if ca:
+                    ca = CertificateAuthority.objects.get(id=ca.pk).name
                 
             if deed_peer_detection:
                 deed_peer_delay = deed_peer.get("deed_peer_delay", "")
@@ -483,7 +487,9 @@ def updateServerIPsec(request, id):
             else:
                 server.cert = authentication.get("cert")
                 certificate = Certificate.objects.get(name=server.cert)
-                ca = certificate.certificate_authority.name
+                ca = certificate.certificate_authority
+                if ca:
+                    ca = ca.name
                 server.remote_distingushed_name = authentication.get("remote_distingushed_name", "")
                 
             if server.deed_peer_detection:

@@ -61,3 +61,6 @@ yarn-error.log
 
 /backend/ids_ips/migrations/__pycache__/
 /backend/ids_ips/__pycache__/
+
+/backend/clamav/migrations/__pycache__/
+/backend/clamav/__pycache__/

@@ -1,52 +1,6 @@
-import subprocess
-import time
-from backend.openvpn.manage_errors import create_error_command
-
-
-def execute_command_without_arguments(command:list, decode=True, shell=False):
-    """Function that execute a command line without arguments"""
-    print(f'command: {" ".join(command)}')
-    process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=decode, shell=shell)
-    create_error_command(process, command)
-    return process
-
-
-def execute_list_commands_without_arguments(commands_list):
-    """Function that execute a list of commands line without arguments"""
-    for command in commands_list:
-        execute_command_without_arguments(command)
-
-
-def execute_command_with_arguments(command:list, arguments:str, time_sleep=0.5):
-    """Function that execute a command line with arguments"""
-    try:
-        with subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
-            print("Command: ", " ".join(command))
-            list_arg = list(arguments.split("\n"))
-            for arg in range(len(list_arg)):
-                print(f"argument {arg}: {list_arg[arg]}")
-            time.sleep(time_sleep)
-            process.communicate(input=arguments)
-
-            create_error_command(process, command)
-    except subprocess.CalledProcessError as e:
-        print(f'Command failed with error: {e}')
-    except Exception as e:
-        print(f'An unexpected error occurred: {e}')
-
-def execute_list_commands_with_arguments(list_commands, time_sleep=0.5):
-    """Function that execute a list of commands line with arguments"""
-    for command in list_commands:
-        execute_command_with_arguments(command=command['command'], arguments=command['arguments'],
-                                       time_sleep=time_sleep)
-
-
-def get_current_directory():
-    """A function to get the current directory"""
-    process = execute_command_without_arguments(['pwd'])
-    current_directory = process.stdout
-    current_directory = current_directory[:len(current_directory)-1]
-    return current_directory
+from backend.managementCertificates.constant_variables import PATH_CA_CRL_PEM, PATH_CA_CRT, PATH_CLIENT_CERT_CRT, PATH_CLIENT_CERT_KEY, PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
+from backend.openvpn.constant_variables import CONSTANT_COMP_LZO, CONSTANT_COMPRESS_MIGRATE, PATH_CLIENT_PAS, PATH_CLIENT_STATIC, PATH_CLIENT_UP, PATH_LOG_OPENVPN_LOG, PATH_SERVER_DH, PATH_SERVER_STATIC, PATH_STATUS_LOG
+from utils.commands_utils import execute_command_without_arguments
 
 
 def create_tls_file(tls_auth, path_tls):
@@ -60,7 +14,8 @@ def create_tls_file(tls_auth, path_tls):
             tls_file.write(f'{tls_auth["tls_key"]}\n')
 
 
-def prefix_to_masque(prefix):
+def prefix_to_masque(prefix:int):
+    """Convert address prefix to mask. For example: 24 will be 255.255.255.0"""
     # Prefix must be between 0 and 32
     if not 0 <= prefix <= 32:
         return "Invalid Prefix"
@@ -94,15 +49,15 @@ proto {json_object["protocol"]}
 dev {json_object["device_mode"]}_{json_object["name"]}
 topology subnet
 
-ca /etc/certificates_{json_object["ca_name"]}/ca.crt
-cert /etc/openvpn/certificates_{json_object["server_cert"]}/server.crt
-key /etc/openvpn/certificates_{json_object["server_cert"]}/server.key
-dh /etc/openvpn/server/dh_{json_object["name"]}.pem
-crl-verify /etc/certificates_{json_object["ca_name"]}/crl.pem
+ca {PATH_CA_CRT.format(json_object["ca_name"])}
+cert {PATH_SERVER_CERT_CRT.format(json_object["server_cert"])}
+key {PATH_SERVER_CERT_KEY.format(json_object["server_cert"])}
+dh {PATH_SERVER_DH.format(json_object["name"])}
+crl-verify {PATH_CA_CRL_PEM.format(json_object["ca_name"])}
 
 tls-version-min 1.2
 tls-server
-tls-auth /etc/openvpn/server/static_{json_object["name"]}.key
+tls-auth {PATH_SERVER_STATIC.format(json_object["name"])}
 
 #server server_tunnel
 #mode server
@@ -129,8 +84,8 @@ cipher {json_object["encryption_algorithm"]}
 auth {json_object["auth_digest_algorithm"]}
 
 keepalive 20 60
-#comp-lzo
-#compress migrate
+#{CONSTANT_COMP_LZO}
+#{CONSTANT_COMPRESS_MIGRATE}
 #passtos
 persist-key
 persist-tun
@@ -138,10 +93,10 @@ daemon
 #float
 
 #openvpn status log
-#status /var/log/openvpn/status.log
+#status {PATH_STATUS_LOG}
 
 #enable log
-log-append /var/log/openvpn/openvpn.log
+log-append {PATH_LOG_OPENVPN_LOG}
 
 #Log Level
 #verb verbosity_level'''
@@ -189,14 +144,14 @@ log-append /var/log/openvpn/openvpn.log
         config_input = config_input.replace("push \"redirect-gateway def1\"", "#push \"redirect-gateway def1\"")
 
     if json_object["compression"] == "disabled":
-        config_input = config_input.replace("#comp-lzo", "comp-lzo no")
-        config_input = config_input.replace("#compress migrate", "compress migrate")
+        config_input = config_input.replace(f"#{CONSTANT_COMP_LZO}", f"{CONSTANT_COMP_LZO} no")
+        config_input = config_input.replace(f"#{CONSTANT_COMPRESS_MIGRATE}", f"{CONSTANT_COMPRESS_MIGRATE}")
     elif json_object["compression"] == "enabled":
-        config_input = config_input.replace("#comp-lzo", "comp-lzo yes")
-        config_input = config_input.replace("#compress migrate", "compress migrate")
+        config_input = config_input.replace(f"#{CONSTANT_COMP_LZO}", f"{CONSTANT_COMP_LZO} yes")
+        config_input = config_input.replace(f"#{CONSTANT_COMPRESS_MIGRATE}", f"{CONSTANT_COMPRESS_MIGRATE}")
     elif json_object["compression"] == "adaptive":
-        config_input = config_input.replace("#comp-lzo", "comp-lzo adaptive")
-        config_input = config_input.replace("#compress migrate", "compress migrate")
+        config_input = config_input.replace(f"#{CONSTANT_COMP_LZO}", f"{CONSTANT_COMP_LZO} adaptive")
+        config_input = config_input.replace(f"#{CONSTANT_COMPRESS_MIGRATE}", f"{CONSTANT_COMPRESS_MIGRATE}")
 
     if json_object["type_of_service"]:
         config_input = config_input.replace("#passtos", "passtos")
@@ -250,8 +205,8 @@ nobind
 
 #resolv-retry infinite
 #passtos
-#comp-lzo
-#compress migrate
+#{CONSTANT_COMP_LZO}
+#{CONSTANT_COMPRESS_MIGRATE}
 #tun-ipv6
 remote-cert-tls server
 cipher {json_object["encryption_algorithm"]}
@@ -279,14 +234,14 @@ auth {json_object["auth_digest_algorithm"]}
 #route-noexec
 
 #Server Key and keep this is secret
-ca /etc/certificates_{json_object["ca_name"]}/ca.crt
-cert /etc/openvpn/client/certificates_{json_object["client_cert"]}/{json_object["client_cert"]}.crt
-key /etc/openvpn/client/certificates_{json_object["client_cert"]}/{json_object["client_cert"]}.key
-crl-verify /etc/certificates_{json_object["ca_name"]}/crl.pem
+ca {PATH_CA_CRT.format(json_object["ca_name"])}
+cert {PATH_CLIENT_CERT_CRT.format(json_object["client_cert"], json_object["client_cert"])}
+key {PATH_CLIENT_CERT_KEY.format(json_object["client_cert"], json_object["client_cert"])}
+crl-verify {PATH_CA_CRL_PEM.format(json_object["ca_name"])}
 
 tls-version-min 1.2
 tls-client
-tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
+tls-auth {PATH_CLIENT_STATIC.format(json_object["name"])}
 '''
     
     if json_object["protocol"].startswith("tcp"):
@@ -310,7 +265,7 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
                 proxy_auth_file.write(file_content)
             config_input = config_input.replace("#proto tcp-client", "proto tcp-client")
             config_input = config_input.replace("#http-proxy", 
-                                                f"http-proxy {json_object['proxy_host']} {json_object['proxy_port']} /etc/openvpn/client/client_{json_object['name']}.pas basic")
+                                                f"http-proxy {json_object['proxy_host']} {json_object['proxy_port']} {PATH_CLIENT_PAS.format(json_object['name'])} basic")
     
     if json_object["local_port"] != '':
         config_input = config_input.replace('#lport', f'lport {json_object["local_port"]}')
@@ -321,7 +276,7 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
         with open(f'/etc/openvpn/client/client_{json_object["name"]}.up', 'w') as auth_file:
             auth_file.write(file_content)
         config_input = config_input.replace("#pull", "pull")
-        config_input = config_input.replace("#auth-user-pass", f"auth-user-pass /etc/openvpn/client/client_{json_object['name']}.up")
+        config_input = config_input.replace("#auth-user-pass", f"auth-user-pass {PATH_CLIENT_UP.format(json_object['name'])}")
         config_input = config_input.replace("client\n", "#client\n", 1)
         
     elif json_object["ipv4_tunnel_network"] != '':
@@ -342,14 +297,14 @@ tls-auth /etc/openvpn/client/static_{json_object["name"]}.key
         config_input = config_input.replace("#shaper", f"shaper {json_object['limit_outgoing_bandwidth']}")
         
     if json_object["compression"] == "disabled":
-        config_input = config_input.replace("#comp-lzo", "comp-lzo no")
-        config_input = config_input.replace("#compress migrate", "compress migrate")
+        config_input = config_input.replace(f"#{CONSTANT_COMP_LZO}", f"{CONSTANT_COMP_LZO} no")
+        config_input = config_input.replace(f"#{CONSTANT_COMPRESS_MIGRATE}", f"{CONSTANT_COMPRESS_MIGRATE}")
     elif json_object["compression"] == "enabled":
-        config_input = config_input.replace("#comp-lzo", "comp-lzo yes")
-        config_input = config_input.replace("#compress migrate", "compress migrate")
+        config_input = config_input.replace(f"#{CONSTANT_COMP_LZO}", f"{CONSTANT_COMP_LZO} yes")
+        config_input = config_input.replace(f"#{CONSTANT_COMPRESS_MIGRATE}", f"{CONSTANT_COMPRESS_MIGRATE}")
     elif json_object["compression"] == "adaptive":
-        config_input = config_input.replace("#comp-lzo", "comp-lzo adaptive")
-        config_input = config_input.replace("#compress migrate", "compress migrate")
+        config_input = config_input.replace(f"#{CONSTANT_COMP_LZO}", f"{CONSTANT_COMP_LZO} adaptive")
+        config_input = config_input.replace(f"#{CONSTANT_COMPRESS_MIGRATE}", f"{CONSTANT_COMPRESS_MIGRATE}")
 
     if json_object["type_of_service"]:
         config_input = config_input.replace("#passtos", "passtos")

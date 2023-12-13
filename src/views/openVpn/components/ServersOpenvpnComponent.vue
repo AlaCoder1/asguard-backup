@@ -241,7 +241,7 @@
       </v-col>
     </v-row>
     <v-snackbar
-      :timeout="2000"
+      :timeout="1000"
       v-model="state.snackbar"
       location="bottom right"
       :color="state.color"

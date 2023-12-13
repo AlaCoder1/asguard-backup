@@ -4,7 +4,7 @@
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-5">
-        <label>Mode</label>
+        <label>Mode*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
@@ -75,7 +75,7 @@
         </v-col>
 
         <v-col cols="4" class="mt-5">
-          <label>Type</label>
+          <label>Type*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select
@@ -95,7 +95,7 @@
         </v-col>
 
         <v-col class="mt-5" cols="4">
-          <label>Address</label>
+          <label>{{ props.isTypeWAn ? "Address" : "Address*" }}</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-row>
@@ -139,7 +139,7 @@
         </v-col>
 
         <v-col cols="4" class="mt-5">
-          <label>Type</label>
+          <label>Type*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select
@@ -159,7 +159,7 @@
         </v-col>
 
         <v-col class="mt-5" cols="4">
-          <label>Address</label>
+          <label>Address*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-row>

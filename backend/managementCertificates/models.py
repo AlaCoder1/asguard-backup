@@ -5,7 +5,6 @@ from django.db import models
 class CertificateAuthority(models.Model):
     """Model of activated authority certificates"""
     name = models.CharField(max_length=300, unique=True, default=None, blank=True, null=True)
-    certificate_path = models.CharField(max_length=1000, default=None, blank=True, null=True)
     valid_from = models.DateTimeField(default=None, blank=True, null=True)
     valid_until = models.DateTimeField(default=None, blank=True, null=True)
     key_type = models.CharField(max_length=100, default='RSA', blank=True, null=True)
@@ -28,7 +27,6 @@ class Certificate(models.Model):
     """Model of activated certificates or keys"""
     certificate_authority = models.ForeignKey(CertificateAuthority, on_delete=models.PROTECT, default=None, blank=True, null=True)
     name = models.CharField(max_length=300, unique=True, default=None, blank=True, null=True)
-    certificate_path = models.CharField(max_length=1000, default=None, blank=True, null=True)
     certificate_type = models.CharField(max_length=1000, default=None, blank=True, null=True)  # can be certificate or key or Diffie-Hellman
     activation = models.BooleanField(default=True)  # Activated or Revoked
     valid_from = models.DateTimeField(default=None, blank=True, null=True)

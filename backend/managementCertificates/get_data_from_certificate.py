@@ -1,5 +1,5 @@
 from datetime import datetime
-from backend.openvpn.functions import execute_command_without_arguments
+from utils.commands_utils import execute_command_without_arguments
 
 
 def read_certificate_value(certificate_path, decode=True):

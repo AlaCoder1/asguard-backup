@@ -2,7 +2,7 @@ import re
 import time
 from backend.network.models import Interface
 from backend.network.serializers import IP4ConfigSerializer, InterfaceOpenVPNSerializer
-from backend.openvpn.functions import execute_command_without_arguments
+from utils.commands_utils import execute_command_without_arguments
 from backend.openvpn.models import ServerOpenvpn
 
 

@@ -5,24 +5,17 @@
                 <v-row class="mt-5">
                     <v-col cols="2" />
                     <v-col cols="8">
-                        <h1>Shoose your plan!</h1>
-                        <p>
-                            Lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam
-                            voluptatum, voluptatibus, quibusdam, quia voluptates voluptate
-                            quos quod quas voluptatem doloribus natus. Quisquam voluptatum,
-                            voluptatibus, quibusdam, quia voluptates voluptate quos quod
-                            quas voluptatem doloribus natus.
+                        <h1>Choose your plan!</h1>
+                        <p style="font-weight: bold;">
+                            Subscription for ASGUARD is available in three offers
                         </p>
-                        <div style="display: flex; justify-content: space-between;">
-                            <SubscriptionTypeCard :title="cardTitleBase" :prices="cardPrices" :services="cardServicesBase"
-                                :communservices="cardServices" :backgroundColor="cardBackgroundColor"
-                                :buttonColor="cardButtonColor" />
-                            <SubscriptionTypeCard :title="cardTitleStandard" :prices="cardPrices"
-                                :communservices="cardServices" :services="cardServicesStandard"
-                                :backgroundColor="cardBackgroundColorStandard" :buttonColor="cardButtonColorStandard" />
-                            <SubscriptionTypeCard :title="cardTitlePremuim" :prices="cardPricesPremuim"
-                                :communservices="cardServices" :services="cardServicesPremium"
-                                :backgroundColor="cardBackgroundColor" :buttonColor="cardButtonColor" />
+                        <p class="mt-3">
+                            (Also available in hardware version)
+                        </p>
+                        <div class="subscription-cards">
+                            <SubscriptionTypeCard v-for="card in subscriptionCards" :key="card.title" :title="card.title"
+                                :prices="card.prices" :communservices="card.communservices" :services="card.services"
+                                :backgroundColor="card.backgroundColor" :buttonColor="card.buttonColor" />
                         </div>
                     </v-col>
                     <v-col cols="2" />
@@ -44,47 +37,55 @@ export default {
         SubscriptionTypeCard
     },
     setup() {
-        const cardTitleBase = "Base"
-        const cardTitleStandard = "Custom"
-        const cardTitlePremuim = "Premuim"
-        const cardPrices = [
-            { label: 'Annuel', amount: '1000' },
-            { label: 'Mensuel', amount: '100' },
-        ]
-        const cardPricesPremuim = [
-            { label: 'Annuel', amount: '1500' },
-            { label: 'Mensuel', amount: '150' },
-        ]
-        const cardServices = ['Firewall', 'ZTNA', 'LDAP']
-        const cardServicesBase = ['', '', '', '', '', '', '', '', '', '', '']
-        const cardServicesStandard = ['Double Masque 150 €/ Annuel​​', 'CASB 150 €/ Annuel​', 'SWG 100 €/ Annuel​ ', 'Anti-virus​  100 €/ Annuel']
-        const cardServicesPremium = ['Double Masque​', 'CASB​', 'SWG', 'Anti-virus​']
-        const cardBackgroundColor = '#213E9F'
-        const cardButtonColor = '#213E9F'
-
-        const cardBackgroundColorStandard = '#FFC300'
-        const cardButtonColorStandard = '#FFC300'
+        const subscriptionCards = [
+            {
+                title: "Base",
+                prices: [
+                    { label: 'Annual', amount: '1000' },
+                    { label: 'Monthly', amount: '100' },
+                ],
+                communservices: ['Firewall', 'ZTNA', 'LDAP'],
+                services: ['', '', '', '', '', '', '', '', '', '', ''],
+                backgroundColor: '#213E9F',
+                buttonColor: '#213E9F'
+            },
+            {
+                title: "Custom",
+                prices: [
+                    { label: 'Annual', amount: '1500' },
+                    { label: 'Monthly', amount: '150' },
+                ],
+                communservices: ['Firewall', 'ZTNA', 'LDAP'],
+                services: ['Double Mask 150 €/Annual​​', 'CASB 150 €/Annual​', 'SWG 100 €/Annual​', 'Anti-virus 100 €/Annual'],
+                backgroundColor: '#FFC300',
+                buttonColor: '#FFC300'
+            },
+            {
+                title: "Premium",
+                prices: [
+                    { label: 'Annual', amount: '1500' },
+                    { label: 'Monthly', amount: '150' },
+                ],
+                communservices: ['Firewall', 'ZTNA', 'LDAP'],
+                services: ['Double Mask​', 'CASB​', 'SWG', 'Anti-virus​'],
+                backgroundColor: '#213E9F',
+                buttonColor: '#213E9F'
+            }
+        ];
 
         return {
-            cardTitleBase,
-            cardTitleStandard,
-            cardTitlePremuim,
-            cardPrices,
-            cardPricesPremuim,
-            cardServices,
-            cardServicesBase,
-            cardServicesStandard,
-            cardServicesPremium,
-            cardBackgroundColor,
-            cardBackgroundColorStandard,
-            cardButtonColor,
-            cardButtonColorStandard
+            subscriptionCards
         };
     },
 };
 </script>
 
 <style scoped>
+.subscription-cards {
+    display: flex;
+    justify-content: space-between;
+}
+
 .text-center {
     text-align: center;
 }

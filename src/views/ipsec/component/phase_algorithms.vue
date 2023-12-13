@@ -6,22 +6,45 @@
       <v-col cols="4" class="mt-5">
         <label>Encryption algorithm*</label>
       </v-col>
-      <v-col cols="8" class="mb-n6">
-        <v-select
-          label="Encryption algorithm"
-          v-model="encryptAlgo"
-          item-title="name"
-          item-value="slug"
-          return-object
-          :items="props.encryptAlgoList"
-        ></v-select>
-        <p
-          class="error-feedback mb-5"
-          v-if="props.errors.encryptAlgo.$errors.length"
-        >
-          {{ props.errors.encryptAlgo.$errors?.[0].$message }}
-        </p>
-      </v-col>
+
+      <template v-if="props.keyExchange.slug === 'V1'">
+        <v-col cols="8" class="mb-n6">
+          <v-select
+            label="Encryption algorithm"
+            v-model="encryptAlgoV1"
+            item-title="name"
+            item-value="slug"
+            return-object
+            :items="props.filteredEncryptAlgoListV1"
+          ></v-select>
+          <p
+            class="error-feedback mb-5"
+            v-if="props.errors.encryptAlgoV1.$errors.length"
+          >
+            {{ props.errors.encryptAlgoV1.$errors?.[0].$message }}
+          </p>
+        </v-col>
+      </template>
+
+      <template v-else>
+        <v-col cols="8" class="mb-n6">
+          <v-select
+            label="Encryption algorithm"
+            v-model="encryptAlgo"
+            item-title="name"
+            item-value="slug"
+            return-object
+            :items="props.filteredEncryptAlgoListV1"
+          ></v-select>
+          <p
+            class="error-feedback mb-5"
+            v-if="props.errors.encryptAlgo.$errors.length"
+          >
+            {{ props.errors.encryptAlgo.$errors?.[0].$message }}
+          </p>
+        </v-col>
+      </template>
+
       <v-col cols="4" class="mt-5">
         <label>Hash algorithm*</label>
       </v-col>
@@ -82,9 +105,12 @@
 import { useVModels } from "@vueuse/core";
 
 const props = defineProps([
+  "keyExchange",
+  "filteredEncryptAlgoListV1",
   "hashAlgoList",
   "encryptAlgoList",
   "dhKeyList",
+  "encryptAlgoV1",
   "errors",
   "encryptAlgo",
   "hashAlgo",
@@ -96,6 +122,10 @@ const emit = defineEmits([
   "update:hashAlgo",
   "update:dhKey",
   "update:lifetime",
+  "update:encryptAlgoV1",
 ]);
-const { encryptAlgo, hashAlgo, dhKey, lifetime } = useVModels(props, emit);
+const { encryptAlgo, hashAlgo, dhKey, lifetime, encryptAlgoV1 } = useVModels(
+  props,
+  emit
+);
 </script>

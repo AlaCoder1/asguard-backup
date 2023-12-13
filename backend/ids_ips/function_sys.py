@@ -345,7 +345,7 @@ def get_suricata_default_rules():
 
 #*********** Les alertes ****************//
 def read_suricata_log():
-    suricata_log_path = "/var/log/suricata/fastcopie.log"
+    suricata_log_path = "/var/log/suricata/fastlogrotate.log"
     logs = []
     try:
         cmd_read = f"cat {suricata_log_path}"
@@ -353,32 +353,36 @@ def read_suricata_log():
         # print (stderr.read().decode())
         if not error:
             lines = output.split('\n')
-            for line in lines:
-                # Votre code de traitement ici
-                attributes = line.split()
-                if len(attributes)!=0:
-                    timestamp = attributes[0] + ' ' + attributes[1].replace("[**]", "",2)
-                    priority=attributes[-5][:1]
-                    protocol = attributes[-4][1:-1]
-                    src_addr=attributes[-3].split(":")[0]
-                    src_port=attributes[-3].split(":")[1]
-                    dst_addr=attributes[-1].split(":")[0]
-                    dst_port=attributes[-1].split(":")[1]
-                    sid=attributes[2].split(":")[1]
-                    # Afficher les attributs
-                    logs.append({
-                        "timestamp": timestamp,
-                        "sid":sid,
-                        "priority": int(priority),
-                        "protocol": protocol,
-                        "src_addr": src_addr,
-                        "src_port": int(src_port),
-                        "dst_addr": dst_addr,
-                        "dst_port": int(dst_port),
-                        "alert":line.strip(),
-                          })      
+            logs=lines
         # Utilisation d'une expression régulière pour extraire le protocole
     except Exception as e:
         # print("Une exception s'est produite:", str(e))
         return None
+    return logs
+def prepare_alert_attribut(lines):
+    logs = []
+    for line in lines:
+        # Votre code de traitement ici
+        attributes = line.split()
+        if len(attributes)!=0:
+            timestamp = attributes[0] + ' ' + attributes[1].replace("[**]", "",2)
+            priority=attributes[-5][:1]
+            protocol = attributes[-4][1:-1]
+            src_addr=attributes[-3].split(":")[0]
+            src_port=attributes[-3].split(":")[1]
+            dst_addr=attributes[-1].split(":")[0]
+            dst_port=attributes[-1].split(":")[1]
+            sid=attributes[2].split(":")[1]
+            # Afficher les attributs
+            logs.append({
+                "timestamp": timestamp,
+                "sid":sid,
+                "priority": int(priority),
+                "protocol": protocol,
+                "src_addr": src_addr,
+                "src_port": int(src_port),
+                "dst_addr": dst_addr,
+                "dst_port": int(dst_port),
+                "alert":line.strip(),
+                })      
     return logs

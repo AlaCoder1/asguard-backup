@@ -18,12 +18,6 @@ def install_server_ipsec(conn_name, conn_config, authentication, interface_addre
             # Certificates method
             # Putting the certificates and its authoity in the ipsec.d directory in pem format
             commands_list_without_arguments = [["sudo", "openssl", "x509", "-inform DER",
-                                                "-in", PATH_CA_CRT.format(ca),
-                                                "-out", f"{PATH_IPSEC_D_CACERTS}{ca}Cert.pem"],
-                                                ["sudo", "openssl", "rsa",
-                                                "-in", PATH_CA_KEY.format(ca),
-                                                "-out", f"{PATH_IPSEC_D_PRIVATE}{ca}Key.pem"],
-                                                ["sudo", "openssl", "x509", "-inform DER",
                                                 "-in", PATH_SERVER_CERT_CRT.format(authentication['cert']),
                                                 "-out", f"{PATH_IPSEC_D_CERTS}{authentication['cert']}Cert.pem"],
                                                 ["sudo", "openssl", "rsa",
@@ -31,6 +25,14 @@ def install_server_ipsec(conn_name, conn_config, authentication, interface_addre
                                                 "-out", f"{PATH_IPSEC_D_PRIVATE}{authentication['cert']}Key.pem"],
                                                 ["sudo", "chmod", "600", f"{PATH_IPSEC_D_PRIVATE}{authentication['cert']}Key.pem"],
                                                 ]
+            # Test if the certificate had an authority or no
+            if ca:
+                commands_list_without_arguments.append(["sudo", "openssl", "x509", "-inform DER",
+                                                "-in", PATH_CA_CRT.format(ca),
+                                                "-out", f"{PATH_IPSEC_D_CACERTS}{ca}Cert.pem"])
+                commands_list_without_arguments.append(["sudo", "openssl", "rsa",
+                                                "-in", PATH_CA_KEY.format(ca),
+                                                "-out", f"{PATH_IPSEC_D_PRIVATE}{ca}Key.pem"])
             execute_list_commands_without_arguments(commands_list_without_arguments)
             ipsec_secrets_file.write(f"""\n\n : RSA {authentication["cert"]}Key.pem """)
         else:

@@ -45,9 +45,20 @@ def delete_server_openvpn(server_name):
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
-def update_server_openvpn(server_name, tls_auth, dh_length, server_conf):
+def update_server_openvpn(previous_server_name, server_name, tls_auth, dh_length, server_conf):
     """Function to update an openvpn server in system"""
-
+    # Change files name related to the server openvpn
+    change_status_server_openvpn(previous_server_name, 'stop')
+    if previous_server_name != server_name:
+        commands_list_without_arguments = [['sudo', 'mv', PATH_SERVER_CONF.format(previous_server_name), 
+                                            PATH_SERVER_CONF.format(server_name)],
+                                           ['sudo', 'mv', PATH_SERVER_DH.format(previous_server_name), 
+                                            PATH_SERVER_DH.format(server_name)],
+                                           ['sudo', 'mv', PATH_SERVER_STATIC.format(previous_server_name), 
+                                            PATH_SERVER_STATIC.format(server_name)],
+                                           ]
+        execute_list_commands_without_arguments(commands_list_without_arguments)
+    
     create_tls_file(tls_auth, PATH_SERVER_STATIC.format(server_name))
     
     with open(PATH_SERVER_CONF.format(server_name), 'w') as server_file:
@@ -56,4 +67,4 @@ def update_server_openvpn(server_name, tls_auth, dh_length, server_conf):
     execute_command_without_arguments(['cp', PATH_DH_FILES.format(dh_length), PATH_SERVER_DH.format(server_name)])
     
     #Restart server in system
-    change_status_server_openvpn(server_name, 'restart')
+    change_status_server_openvpn(server_name, 'start')

@@ -137,6 +137,7 @@ export default {
           utility: "Public",
           key_size: i.key_size,
           fingerPrint: i.finger_print ?? "--",
+          public_key_value: i.public_key_value,
         };
       });
       var combinedArray = [...mapedPrivateKey, ...mapedPublicKey];
@@ -236,15 +237,33 @@ export default {
         </button>
         `;
       } else {
-        eGui.innerHTML = `
-
+        if (params.data.utility === "Public") {
+          eGui.innerHTML = `     
+          <button
+           class="action-button copy"
+           data-action="copy"  title="Copy Public Key">
+              <i class="mdi mdi-content-copy" style="color: #086eae;font-size: 20px;"></i>
+           </button>
+          <button
+           class="action-button download"
+           data-action="export"  title="Download Public Key">
+              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
+           </button>
+           <button
+          class="action-button delete"
+          data-action="delete" title="Delete Server">
+            <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>`;
+        } else {
+          eGui.innerHTML = `
           <button
           class="action-button delete"
           data-action="delete" title="Delete Server">
-             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+            <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
 
-        `;
+          `;
+        }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -254,11 +273,49 @@ export default {
       });
       return eGui;
     }
+
+    const copyContent = async (text) => {
+      try {
+        await navigator.clipboard.writeText(text);
+        state.snackbar = true;
+        state.color = "success";
+        state.textAlert = "Public Key copied Successfully";
+      } catch (err) {
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = "Failed to Copy";
+      }
+    };
     const handleActionClient = (action, rowData, index) => {
       switch (action) {
         case "delete":
           state.deleteDialog = true;
           state.deletedRow = rowData;
+
+          break;
+        case "copy":
+          let text = rowData.public_key_value;
+          copyContent(text);
+          break;
+        case "export":
+          if (rowData.public_key_value) {
+            const text = rowData.public_key_value;
+            const blob = new Blob([text], {
+              type: "application/x-x509-ca-cert",
+            });
+
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = `${rowData.name}.pem`;
+
+            document.body.appendChild(a);
+            a.click();
+
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          }
 
           break;
         default:

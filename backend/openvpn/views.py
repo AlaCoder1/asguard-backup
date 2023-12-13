@@ -17,7 +17,7 @@ from .models import ServerOpenvpn, ClientOpenvpn
 from .serializers import ServerOpenvpnSerializer, ClientOpenvpnSerializer
 from .utils import json_to_str_client, json_to_str_server
 from .server_openvpn import install_server_openvpn, delete_server_openvpn, update_server_openvpn
-from .client_openvpn import delete_client_openvpn, export_client_in_system, install_client_openvpn
+from .client_openvpn import delete_client_openvpn, export_client_in_system, install_client_openvpn, update_client_openvpn
 
 # Create your views here.
 
@@ -329,6 +329,7 @@ def updateServerOpenVPN(request, id):
         # parse the incoming information
         data = request.data
         server = ServerOpenvpn.objects.get(id=id)
+        previous_name = server.name
         server.name = data.get('name', '')
         server.description = data.get('description', '')
         server_mode = data.get('server_mode', '')
@@ -415,7 +416,7 @@ def updateServerOpenVPN(request, id):
             server_conf = json_to_str_server(data)
         
             #updating the server in system
-            update_server_openvpn(server_name=server.name, tls_auth=tls_auth, dh_length=server.dh, server_conf=server_conf)
+            update_server_openvpn(previous_server_name=previous_name, server_name=server.name, tls_auth=tls_auth, dh_length=server.dh, server_conf=server_conf)
 
             #updating the server in database
             serializer_server.save()
@@ -738,9 +739,10 @@ def updateClientOpenvpn(request, id):
     """Updating a client from system and database"""
     if (request.method == 'PUT'):
         try:
+            data = request.data
 
             client = ClientOpenvpn.objects.get(id=id)
-            data = request.data
+            previous_name = client.name
             client.name = data.get('name', '')
             client.description = data.get('description', '')
             server_mode = data.get('server_mode', '')
@@ -794,7 +796,8 @@ def updateClientOpenvpn(request, id):
                 client_conf = json_to_str_client(data)
 
                 # Updating the client in system
-                install_client_openvpn(client_name=client.name, client_conf=client_conf, tls_auth=tls_auth)
+                update_client_openvpn(previous_client_name=previous_name, client_name=client.name, client_conf=client_conf, 
+                                      tls_auth=tls_auth)
 
                 # Updating the client in database
                 client_serializer.save()

@@ -25,7 +25,8 @@ python manage.py initBD_subscription
 python manage.py init_openVPN -u root -p root
 
 
-python manage.py init_ASGUARD -u root -p root
+python manage.py init_ASGUARD 
+
 
 python manage.py create_wheel_group
 
@@ -34,6 +35,7 @@ python manage.py conf_nftable_dhclient -u root -p root
 // a ne pas exécuter python manage.py confInterfaces -u root -p root 
 
 python manage.py init_bd_interfaces -u root -p root
+
 python manage.py init_network
 
 //need to pull and migrate 
@@ -53,3 +55,19 @@ python manage.py init_services
 //to collect static data of swagger UI in production
 
 python manage.py collectstatic //avec debug=False 
+
+//commande to generate file suricata.rules
+
+sudo suricata-update
+
+//commande to init Suricata config  (all config general config , default rules and alerts)
+
+python manage.py init_config_suricata 
+
+//commande to init  default rules 
+
+python manage.py init_rules_suricata -id id_suricata
+
+//commande to init  default alerts 
+
+python manage.py init_alerts_suricata -id id_suricata

@@ -1,3 +1,95 @@
+from backend.ipsec.models import ServerIPsec
+from backend.managementKeypairs.models import PublicKey
+from backend.network.models import IP4Config, Interface
+
+
+def find_conn_in_config(config:str, conn_name):
+    """Find a conn config in ipsec.conf file"""
+    conn_name_start = config.find(f'conn {conn_name}')
+    if config[conn_name_start-1] == "#":
+        conn_name_start -= 1
+    conn_name_end = config.find('\n\nconn ', conn_name_start+5)
+    if conn_name_end == -1:
+        conn_name_end = config.find('\n\n#conn ', conn_name_start+5)
+        if conn_name_end == -1:
+            conn_name_end = len(config)
+    return config[conn_name_start:conn_name_end]
+
+
+def edit_conn_in_config_file(config:str, conn_name, new_conn_config):
+    """Edit a conn config in ipsec.conf file"""
+    previous_conn_config = find_conn_in_config(config, conn_name)
+    config = config.replace(previous_conn_config, new_conn_config)
+    return config
+
+
+def comment_conn_in_config_file(config:str, conn_name):
+    """Comment a conn config in ipsec.conf file by adding a # in each line"""
+    previous_conn_config = find_conn_in_config(config, conn_name)
+    conn_config = "#" + previous_conn_config
+    return conn_config.replace('\n', '\n#')
+
+
+def uncomment_conn_in_config_file(config:str, conn_name):
+    """Uncomment a conn config in ipsec.conf file by reoving the # in each line"""
+    previous_conn_config = find_conn_in_config(config, conn_name)
+    conn_config = previous_conn_config[1:]
+    return conn_config.replace('\n#', '\n')
+
+
+def reorganize_file(config:str):
+    """Reorganize file by removing unused empty lines"""
+    while config.find("\n\n\n") > -1:
+        config = config.replace("\n\n\n", "\n\n")
+    return config
+
+
+def construct_line_secrets(server:ServerIPsec):
+    """Return a line secrets of a server IPsec"""
+    if server.interface != "Any":
+        interface = Interface.objects.get(name_interface=server.interface)
+        interface_address = IP4Config.objects.get(interface_id=interface.pk).ip_address
+    else:
+        interface_address = "any"
+    
+    if server.authentication_method == "Mutual PSK":
+        return f"""{interface_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
+    elif server.authentication_method == "Mutual RSA":
+        return f""" : RSA {server.cert}Key.pem """
+    else:
+        private_key = PublicKey.objects.get(name=server.local_key_pair).private_key
+        return f""" : RSA {private_key.name}.pem """
+
+
+def find_line_in_secrets_file(config:str, server:ServerIPsec):
+    """Find a line secrets in ipsec.secrets file"""
+    line_secrets = construct_line_secrets(server)
+    if config[config.find(line_secrets)-1] == "#":
+        return f'#{line_secrets}'
+    return line_secrets
+
+
+def edit_line_in_secrets_file(config:str, server, new_line_secrets):
+    """Edit a line in secrets file (/etc/ipsec.secrets)"""
+    previous_line_secrets = find_line_in_secrets_file(config, server)
+    config = config.replace(previous_line_secrets, new_line_secrets)
+    return config
+
+
+def comment_line_in_secrets_file(secrets:str, server):
+    """Comment a line in secrets file ipsec.secrets by adding a # in a line"""
+    previous_line_secrets = find_line_in_secrets_file(secrets, server)
+    new_line_secrets = "#" + previous_line_secrets
+    return secrets.replace(previous_line_secrets, new_line_secrets)
+
+
+def uncomment_line_in_secrets_file(secrets:str, server):
+    """Unomment a line in secrets file ipsec.secrets by removing a # in the line"""
+    previous_line_secrets = find_line_in_secrets_file(secrets, server)
+    new_line_secrets = previous_line_secrets[1:]
+    return secrets.replace(previous_line_secrets, new_line_secrets)
+
+
 def json_to_str_server_ipsec(json_object):
     """Function to convert a json object to an input of ipsec server config file"""
     
@@ -49,7 +141,7 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("keyexchange=ike", "keyexchange=ikev2")
     
     if json_object["interface_name"] != "Any":
-        config_input = config_input.replace(f"left=%any", f"left={json_object['interface_address']}")
+        config_input = config_input.replace("left=%any", f"left={json_object['interface_address']}")
         
     if json_object["dynamic_gateway"]:
         config_input = config_input.replace("#rightallowany=yes", "rightallowany=yes")
@@ -60,12 +152,12 @@ conn {json_object["conn_name"]}
                                             f"""leftcert={json_object["authentication"]["cert"]}Cert.pem""")
         config_input = config_input.replace("#rightid=distingushed_name", 
                                             f"""rightid="{json_object["authentication"]["remote_distingushed_name"]}" """)
-    elif json_object["authentication"]["authentication_method"] == "Mutual Public Key":
+    elif json_object["authentication"]["authentication_method"] == "Mutual Public key":
         config_input = config_input.replace("authby=secret", "authby=pubkey")
         config_input = config_input.replace("#leftrsasigkey=path_public_key", 
-                                            f"""leftrsasigkey={json_object["authentication"]["local_key_pair"]}Cert.pem""")
+                                            f"""leftrsasigkey={json_object["authentication"]["local_key_pair"]}.pem""")
         config_input = config_input.replace("#rightrsasigkey=path_public_key", 
-                                            f"""rightrsasigkey={json_object["authentication"]["peer_key_pair"]}Cert.pem""")
+                                            f"""rightrsasigkey={json_object["authentication"]["peer_key_pair"]}.pem""")
     
     ike = ""
     for hash_algorithm in json_object["hash_algorithm_ph1"]:
@@ -87,7 +179,7 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("#ikelifetime=1s", f"ikelifetime={json_object['lifetime_ph1']}s")
         
     if not json_object["policy"]:
-        config_input = config_input.replace("installpolicy=yes", "installpolicy=no")
+        config_input = config_input.replace("installpolicy=yes", "#installpolicy=yes")
         
     if json_object["rekey"]:
         config_input = config_input.replace("rekey=yes", "rekey=no")
@@ -104,9 +196,9 @@ conn {json_object["conn_name"]}
     if json_object["deed_peer"]["disable"]:
         config_input = config_input.replace("#dpddelay=60s", f"dpddelay={json_object['deed_peer']['deed_peer_delay']}s")
         config_input = config_input.replace("#dpdtimeout=120s", f"dpdtimeout={json_object['deed_peer']['deed_peer_timeout']}s")
-        config_input = config_input.replace("#dpdaction=restart", f"dpdaction=restart")
+        config_input = config_input.replace("#dpdaction=restart", "dpdaction=restart")
         if json_object['deed_peer']['deed_peer_action'] == "Stop the tunnel":
-            config_input = config_input.replace("dpdaction=restart", f"dpdaction=clear")
+            config_input = config_input.replace("dpdaction=restart", "dpdaction=clear")
     
     if json_object["inactivity_timeout"] != "":
         config_input = config_input.replace("#inactivity=10s", f"inactivity={json_object['inactivity_timeout']}s")
@@ -146,6 +238,8 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("esp=esp", f"esp={esp}")
     else:
         config_input = config_input.replace("esp=esp", f"ah={esp}")
+        config_input = config_input.replace("#installpolicy=yes", "installpolicy=yes")
+        config_input = config_input.replace("forceencaps=yes", "forceencaps=no")
 
     if json_object["lifetime_ph2"] != "":
         config_input = config_input.replace("#lifetime=28800s", f"lifetime={json_object['lifetime_ph2']}s")

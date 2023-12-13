@@ -1,0 +1,51 @@
+import time
+from utils.errors_utils import create_error_command
+
+import subprocess
+
+
+def execute_command_without_arguments(command:list, decode=True, shell=False):
+    """Function that execute a command line without arguments"""
+    print(f'command: {" ".join(command)}')
+    process = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=decode, shell=shell)
+    create_error_command(process, command)
+    return process
+
+
+def execute_list_commands_without_arguments(commands_list):
+    """Function that execute a list of commands line without arguments"""
+    for command in commands_list:
+        execute_command_without_arguments(command)
+
+
+def execute_command_with_arguments(command:list, arguments:str, time_sleep=0.5):
+    """Function that execute a command line with arguments"""
+    try:
+        with subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True) as process:
+            print("Command: ", " ".join(command))
+            list_arg = list(arguments.split("\n"))
+            for arg in range(len(list_arg)):
+                print(f"argument {arg}: {list_arg[arg]}")
+            time.sleep(time_sleep)
+            process.communicate(input=arguments)
+
+            create_error_command(process, command)
+    except subprocess.CalledProcessError as e:
+        print(f'Command failed with error: {e}')
+    except Exception as e:
+        print(f'An unexpected error occurred: {e}')
+
+
+def execute_list_commands_with_arguments(list_commands, time_sleep=0.5):
+    """Function that execute a list of commands line with arguments"""
+    for command in list_commands:
+        execute_command_with_arguments(command=command['command'], arguments=command['arguments'],
+                                       time_sleep=time_sleep)
+
+
+def get_current_directory():
+    """A function to get the current directory"""
+    process = execute_command_without_arguments(['pwd'])
+    current_directory = process.stdout
+    current_directory = current_directory[:len(current_directory)-1]
+    return current_directory

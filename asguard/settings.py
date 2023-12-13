@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "backend.gateway",
     "backend.dashboard",
     "backend.ids_ips",
+    "backend.clamav",
     'channels',
     'drf_yasg'
 ]

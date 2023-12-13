@@ -248,7 +248,7 @@ tls-auth {PATH_CLIENT_STATIC.format(json_object["name"])}
         config_input = config_input.replace(f'proto {json_object["protocol"]}', f'proto {json_object["protocol"]}-client')
     
     for server in json_object["server_remote"]:
-        config_input = config_input.replace("#remote server_host server_port", f"#remote server_host server_port\n remote {server['host']} {server['port']}")
+        config_input = config_input.replace("#remote server_host server_port", f"#remote server_host server_port\nremote {server['host']} {server['port']}")
 
     if json_object["resolv_retry"]:
         config_input = config_input.replace("#resolv-retry", "resolv-retry")

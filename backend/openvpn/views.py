@@ -9,6 +9,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from backend.network.models import IP4Config, Interface
+from backend.openvpn.constant_variables import PATH_SERVER_STATIC
 from backend.openvpn.list_servers_clients import get_list_all_client_openvpn, get_list_all_server_openvpn, get_one_client_openvpn, get_one_server_openvpn
 from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_DELETE_USED_SERVER, ERROR_MESSAGES_EXPORTING, ERROR_MESSAGES_INEXISTANT, ERROR_MESSAGES_STATUS_OPENVPN_SERVER, IPV4_CONFIG, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_DELETE, SUCCESS_MESSAGES_STATUS_OPENVPN_SERVER, SUCCESS_MESSAGES_UPDATE
 from utils.errors_utils import CommandExecutionError
@@ -834,3 +835,112 @@ def exportClientOpenvpn(request, id):
             return JsonResponse({"error": ERROR_MESSAGES_EXPORTING.format("openvpn client")}, status=400)
         except ClientOpenvpn.DoesNotExist:
             return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
+
+
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO GENERATE AN OPENVPN Client FROM A SERVER",
+                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'client_cert'],
+                                                 properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
+                                                             'client_cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from Certificates list with type client"),}
+                                                             ))
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def generateClientOpenvpn(request, id):
+    """Generating a new client from a server in system and adding it to the database"""
+    if request.method == 'POST':
+        try:
+            # parse the incoming information
+            data = request.data
+            server = ServerOpenvpn.objects.get(id=id)
+
+            # Construct a complete data variable:
+            # 1. Getting from API body
+            # 2. Taking some parameters from server
+            # 3. Set default values for the rest of fields
+            name = data.get('name', '')
+            data['protocol'] = server.proto
+            data['device_mode'] = server.dev
+            data['resolv_retry'] = False
+            data['proxy_host'] = ''
+            data['proxy_port'] = ''
+            data['proxy_authentication'] = {'option': 'none'}
+            data['local_port'] = ''
+            data['username'] = ''
+            data['password'] = ''
+            data['renegotiate_time'] = ''
+            # Get the same TLS as the server
+            with open(PATH_SERVER_STATIC.format(server.name)) as tls_file:
+                tls_key = tls_file.read()
+                tls_auth = {"generate": False,
+                            "tls_key": tls_key}
+            data['tls_auth'] = tls_auth
+            data['ca_name'] = server.ca_name
+            cert_name = data.get('client_cert', '')
+            data['encryption_algorithm'] = server.cipher
+            data['auth_digest_algorithm'] = server.auth
+            data['ipv4_tunnel_network'] = ''
+            data['ipv4_remote_network'] = ''
+            data['limit_outgoing_bandwidth'] = ''
+            data['compression'] = server.compression
+            data['type_of_service'] = False
+            data['ipv6'] = False
+            data['pull_routes'] = False
+            data['add_remove_routes'] = False
+            data['verbosity_level'] = '3'
+
+            if server.interface != "Any":
+                server_interface = Interface.objects.get(name_interface=server.interface)
+                interface_address = IP4Config.objects.get(interface_id=server_interface)
+                server_remote = f'{interface_address.ip_address}:{server.port}'
+                data['server_remote'] = [{"host": interface_address.ip_address,
+                                          "port": server.port}]
+
+            client_data = {"name": name,
+                           "description": f"Client generate from server {server.name}",
+                           "server_mode": "peer_to_peer",
+                           "proto": server.proto,
+                           "dev": server.dev,
+                           "resolv_retry": False,
+                           "proxy_host": '',
+                           "proxy_port": '',
+                           "proxy_authentication_option": 'none',
+                           "port": '',
+                           "username": '',
+                           "password": '',
+                           "renegotiate_time": '',
+                           "ca_name": server.ca_name,
+                           "cert_name": cert_name,
+                           "cipher": server.cipher,
+                           "auth": server.auth,
+                           "ipv4_tunnel_network": '',
+                           "ipv4_remote_network": '',
+                           "limit_outgoing_bandwidth": '',
+                           "compression": server.compression,
+                           "type_of_service": False,
+                           "ipv6": False,
+                           "pull_routes": False,
+                           "add_remove_routes": False,
+                           "verb": "3",
+                           "server_remote": server_remote,
+                           }
+
+            client_serializer = ClientOpenvpnSerializer(data=client_data)
+            if client_serializer.is_valid():
+
+                # Update the client config
+                client_conf = json_to_str_client(data)
+                
+                # Install the client in system
+                install_client_openvpn(client_name=name, client_conf=client_conf, tls_auth=tls_auth)
+
+                # Add the client to the database
+                client_serializer.save()
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('Client', data['name'])}, status=201)
+            else:
+                return JsonResponse({"error": list(client_serializer.errors.values())[0][0]}, status=400)
+        except CommandExecutionError:
+            return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('client for openvpn server')}, status=400)
+        except ServerOpenvpn.DoesNotExist:
+            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
+        except IP4Config.DoesNotExist:
+            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)

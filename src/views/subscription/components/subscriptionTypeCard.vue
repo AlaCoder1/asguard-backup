@@ -25,6 +25,9 @@
                         <span class="ml-2">{{ service }}</span>
                     </v-row>
                     <v-row v-for="service in services" :key="service" class="text-center ml-14 mb-1" style="display: flex;">
+                        <template v-if="title === 'Custom'">
+                        <input type="checkbox" :id="'checkbox_' + index" :value="service" v-model="selectedServices" />
+                    </template>
                         <v-icon v-if="service != ''">
                             <svg width="14" height="22" viewBox="0 0 14 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <path
@@ -53,6 +56,8 @@
 
 <script>
 import VButton from "@/components/VButton.vue";
+import axios from "axios";
+import { ref } from "vue";
 
 export default {
     name: "SubscriptionTypeCard",
@@ -68,12 +73,116 @@ export default {
         buttonColor: String,
     },
     setup(props) {
-        const submitForm = () => {
-            // Fonction pour soumettre le formulaire
+
+        const selectedServices = ref([]);
+        const getCookie = (name) => {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== "") {
+                const cookies = document.cookie.split(";");
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === name + "=") {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        };
+
+        const submitForm = async () => {
+
+            const csrfToken = getCookie("csrftoken");
+            axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+            const subscriptionId = getSubscriptionId();
+            console.log("subscriptionId", subscriptionId);
+
+            try {
+                const response = await axios.post("/subscription/payment", {
+                    "status": "true",
+                    "subscription_id": subscriptionId,
+                });
+                if (response.ok) {
+                    // Payment successful, handle the response as needed
+                    console.log('Payment successful');
+                } else {
+                    // Handle other response statuses (e.g., errors)
+                    console.error('Payment failed');
+                }
+            } catch (error) {
+                console.log(error);
+            }
+
+        };
+
+        const getSubscriptionId = () => {
+            switch (props.title) {
+                case "Base":
+                    return 1;
+                case "Premium":
+                    return 2;
+                case "Custom":
+                    let selectedServicesArray = selectedServices.value;
+                    console.log(selectedServicesArray);
+                    if (selectedServicesArray.length === 0) {
+                        return "You have to choose at least one service";
+                    }
+                    if (selectedServicesArray.includes('Double Mask 150 €/Annual')) {
+                        if (selectedServicesArray.includes('CASB 150 €/Annual​')) {
+                            if (selectedServicesArray.includes('SWG 100 €/Annual​')) {
+                                if (selectedServicesArray.includes('Anti-virus 100 €/Annual')) {
+                                    return 17;
+                                } else {
+                                    return 13;
+                                }
+                            } else if (selectedServicesArray.includes('Anti-virus 100 €/Annual')) {
+                                return 14;
+                            } else {
+                                return 7;
+                            }
+                        } else if (selectedServicesArray.includes('SWG 100 €/Annual​')) {
+                            if (selectedServicesArray.includes('Anti-virus 100 €/Annual')) {
+                                return 15;
+                            } else {
+                                return 8;
+                            }
+                        } else if (selectedServicesArray.includes('Anti-virus 100 €/Annual')) {
+                            return 9;
+                        } else {
+                            return 3;
+                        }
+                    } else if (selectedServicesArray.includes('CASB 150 €/Annual​')) {
+                        if (selectedServicesArray.includes('SWG 100 €/Annual​')) {
+                            if (selectedServicesArray.includes('Anti-virus 100 €/Annual')) {
+                                return 16;
+                            } else {
+                                return 10;
+                            }
+                        } else if (selectedServicesArray.includes('Anti-virus 100 €/Annual')) {
+                            return 11;
+                        } else {
+                            return 4;
+                        }
+                    } else if (selectedServicesArray.includes('SWG 100 €/Annual​')) {
+                        if (selectedServicesArray.includes('Anti-virus 100 €/Annual')) {
+                            return 12;
+                        } else {
+                            return 5;
+                        }
+                    } else if (selectedServicesArray.includes('Anti-virus 100 €/Annual')) {
+                        return 6;
+                    }
+                default:
+                    return 1;
+            }
         };
 
         return {
+            selectedServices,
+            getCookie,
             submitForm,
+            getSubscriptionId,
         };
     },
 };

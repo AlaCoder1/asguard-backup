@@ -24,12 +24,12 @@ export default {
   },
   beforeMount() {
     console.log('this.params',this.params)
-    this.protocols = this.params.values;
+    this.protocols = this.params.values ?? "";
     if (this.params.data.start_time) {
-      this.selectedProtocols = this.params.data.start_time;
+      this.selectedProtocols = this.params.data.start_time ?? "";
     }
     if (!this.params.data.start_time) {
-      this.selectedProtocols = this.protocols;
+      this.selectedProtocols = this.protocols ?? "";
     }
   },
   methods: {
@@ -38,11 +38,11 @@ export default {
     },
     agInit(params) {
       this.params = params;
-      this.selectedProtocols = params.data.start_time;
+      this.selectedProtocols = params.data.start_time ?? "";
     },
     refresh(params) {
       this.params = params;
-      this.selectedProtocols = params.data.start_time;
+      this.selectedProtocols = params.data.start_time ?? "";
     },
     onSelectChange() {
       this.params.node.setDataValue("start_time", this.selectedProtocols);

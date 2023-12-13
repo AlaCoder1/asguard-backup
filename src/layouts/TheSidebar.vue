@@ -229,10 +229,10 @@ export default {
               active: "IP Filter double masque",
             },
             {
-              title: "Calm AV",
+              title: "Clam AV",
               icon: "",
-              href: "/services/calm-av",
-              active: "Calm AV",
+              href: "/clamaV",
+              active: "Clam AV",
             },
             {
               title: "DHCP V4",
@@ -296,8 +296,8 @@ export default {
         {
           title: "Subscription",
           icon: "mdi mdi-cash-sync",
-          href: "/subscription",
-          active: "Firewall",
+          href: "/asguard/subscription",
+          active: "Subscription",
           subItems: [],
           subMenuVisible: false,
         },

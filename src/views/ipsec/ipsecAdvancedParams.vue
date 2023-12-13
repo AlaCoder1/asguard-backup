@@ -58,9 +58,12 @@
           v-model:hashAlgo="state.hashAlgo"
           v-model:dhKey="state.dhKey"
           v-model:lifetime="state.lifetime"
+          v-model:encryptAlgoV1="state.encryptAlgoV1"
           :dhKeyList="dhKeyList"
           :encryptAlgoList="encryptAlgoList"
           :hashAlgoList="hashAlgoList"
+          :keyExchange="state.keyExchange"
+          :filteredEncryptAlgoListV1="filteredEncryptAlgoListV1"
           :errors="v$"
         />
         <advancedOption
@@ -115,12 +118,15 @@
           v-model:lifetimeExchange="state.lifetimeExchange"
           v-model:pingHost="state.pingHost"
           v-model:spdEntries="state.spdEntries"
+          v-model:encryptAlgoExch2="state.encryptAlgoExch2"
           :isMode="state.mode"
           :isProtocol="state.protocol"
           :hashAlgoList="hashAlgoList"
           :protocolListph2="protocolListph2"
           :pfsList="pfsList"
           :encryptAlgoListExchange="encryptAlgoListExchange"
+          :filteredAlgoListExchangeV1="filteredAlgoListExchangeV1"
+          :keyExchange="state.keyExchange"
           :errors="v$"
         />
       </v-col>
@@ -246,6 +252,10 @@ export default {
         name: "256 bit AES-GCM with 128 bit ICV",
         slug: "256",
       },
+      encryptAlgoV1: {
+        name: "AES256",
+        slug: "AES256",
+      },
       hashAlgo: {
         name: "SHA256",
         slug: "sha256",
@@ -294,6 +304,10 @@ export default {
       encryptAlgoExchange: {
         name: "aes256gcm16",
         slug: "256",
+      },
+      encryptAlgoExch2: {
+        name: "AES256",
+        slug: "AES256",
       },
       hashAlgoExchange: {
         name: "SHA256",
@@ -404,6 +418,18 @@ export default {
     ]);
 
     const encryptAlgoList = ref([
+      {
+        name: "AES128",
+        slug: "AES128",
+      },
+      {
+        name: "AES192",
+        slug: "AES192",
+      },
+      {
+        name: "AES256",
+        slug: "AES256",
+      },
       {
         name: "128 bit AES-GCM with 128 bit ICV",
         slug: "128",
@@ -692,7 +718,27 @@ export default {
         },
 
         // phase algo
-        encryptAlgo: { required },
+
+        encryptAlgo: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.keyExchange.slug === "V2")
+          ),
+        },
+
+        encryptAlgoV1: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.keyExchange.slug === "V1")
+          ),
+        },
+        encryptAlgoExch2: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.keyExchange.slug === "V1")
+          ),
+        },
+
         hashAlgo: { required },
         dhKey: { required },
         // general info phase 2
@@ -1001,7 +1047,8 @@ export default {
           ];
         });
 
-        state.encryptAlgo = filtredEncryptAlgoList[0];
+        state.encryptAlgo = filtredEncryptAlgoList[0] ?? "";
+        state.encryptAlgoV1 = filtredEncryptAlgoList[0] ?? "";
         state.hashAlgo = filtredHashAlgoList;
         state.dhKey = filtredDhKeyList;
         state.lifetime = data?.lifetime_ph1;
@@ -1079,7 +1126,7 @@ export default {
         });
 
         state.protocol = filtredProtocolph2List[0];
-        state.hashAlgoExchange = filtredHashAlgoListExchange;
+        state.hashAlgoExchange = filtredHashAlgoListExchange ?? [];
 
         let filtredencryptAlgoExchange = [];
 
@@ -1092,9 +1139,11 @@ export default {
           });
         }
 
-        state.encryptAlgoExchange = filtredencryptAlgoExchange
-          ? filtredencryptAlgoExchange
-          : "";
+        if (data.key_exchange_version === "V1") {
+          state.encryptAlgoExch2 = filtredencryptAlgoExchange;
+        } else {
+          state.encryptAlgoExchange = filtredencryptAlgoExchange;
+        }
 
         let filtredPfsKeyList = pfsList.value.filter(
           (i) => i.slug === data?.pfs_key_group
@@ -1135,6 +1184,18 @@ export default {
     ]);
 
     const encryptAlgoListExchange = ref([
+      {
+        name: "AES128",
+        slug: "AES128",
+      },
+      {
+        name: "AES192",
+        slug: "AES192",
+      },
+      {
+        name: "AES256",
+        slug: "AES256",
+      },
       {
         name: "aes128gcm16",
         slug: "128",
@@ -1273,6 +1334,7 @@ export default {
         } else {
           var mappedhashAlgo = [state.hashAlgo.slug];
         }
+
         if (Array.isArray(state.encryptAlgoExchange)) {
           var mappedencryptAlgoExchange = state.encryptAlgoExchange.map(
             (e) => e.slug
@@ -1280,6 +1342,14 @@ export default {
         } else {
           var mappedencryptAlgoExchange = [state.encryptAlgoExchange.slug];
         }
+        if (Array.isArray(state.encryptAlgoExch2)) {
+          var mappedencryptAlgoExch2 = state.encryptAlgoExch2.map(
+            (e) => e.slug
+          );
+        } else {
+          var mappedencryptAlgoExch2 = [state.encryptAlgoExch2.slug];
+        }
+
         if (Array.isArray(state.hashAlgoExchange)) {
           var mappedhashAlgoExchange = state.hashAlgoExchange.map(
             (e) => e.slug
@@ -1293,7 +1363,8 @@ export default {
         if (state.protocol.slug === "ESP") {
           isKeyExchange = {
             protocol: state.protocol.slug,
-            encryption_algorithm_ph2: mappedencryptAlgoExchange,
+            encryption_algorithm_ph2:
+              mappedencryptAlgoExchange ?? mappedencryptAlgoExch2,
             hash_algorithm_ph2: mappedhashAlgoExchange,
             pfs_key_group: state.pfsKey.slug,
           };
@@ -1343,7 +1414,10 @@ export default {
           dynamic_gateway: state.remoteConnect,
           description_ph1: state.description,
           authentication: authen,
-          encryption_algorithm_ph1: state.encryptAlgo?.slug,
+          encryption_algorithm_ph1:
+            state.keyExchange.slug === "V1"
+              ? state.encryptAlgoV1
+              : state.encryptAlgo?.slug,
           hash_algorithm_ph1: mappedhashAlgo,
           dh_key_group: mappedDhKey,
           lifetime_ph1: state.lifetime,
@@ -1415,6 +1489,20 @@ export default {
         console.log("error", v$.value);
       }
     };
+    const filteredAlgoListExchangeV1 = computed(() => {
+      if (state.keyExchange.slug === "V1") {
+        return encryptAlgoListExchange.value.slice(0, 3);
+      } else {
+        return encryptAlgoListExchange.value;
+      }
+    });
+    const filteredEncryptAlgoListV1 = computed(() => {
+      if (state.keyExchange.slug === "V1") {
+        return encryptAlgoList.value.slice(0, 3);
+      } else {
+        return encryptAlgoList.value;
+      }
+    });
 
     return {
       getCookie,
@@ -1425,6 +1513,8 @@ export default {
       exchangeList,
       protocolList,
       protocolListph2,
+      filteredAlgoListExchangeV1,
+      filteredEncryptAlgoListV1,
       authenticationMethodList,
       encryptAlgoListExchange,
       pfsList,

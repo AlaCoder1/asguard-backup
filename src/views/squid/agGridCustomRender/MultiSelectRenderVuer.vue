@@ -1,8 +1,6 @@
 <template>
   <div style="margin-bottom: 150%; position: relative; top: -10px">
     <v-select
-      item-text="text"
-      item-value="value"
       :items="protocols"
       v-model="selectedProtocols"
       @change="onSelectChange"
@@ -16,16 +14,16 @@ export default {
   data() {
     return {
       protocols: [],
-      selectedProtocols: [],
+      selectedProtocols: "",
     };
   },
   beforeMount() {
-    this.protocols = this.params.values;
+    this.protocols = this.params.values ?? [];
     if (this.params.data.routage_type) {
-      this.selectedProtocols = this.params.data.routage_type;
+      this.selectedProtocols = this.params.data.routage_type ?? "";
     }
     if (!this.params.data.routage_type) {
-      this.selectedProtocols = [this.protocols[0]];
+      // this.selectedProtocols = [this.protocols[0]];
     }
   },
   methods: {
@@ -34,11 +32,11 @@ export default {
     },
     agInit(params) {
       this.params = params;
-      this.selectedProtocols = params.data.routage_type;
+      this.selectedProtocols = params.data.routage_type ?? "";
     },
     refresh(params) {
       this.params = params;
-      this.selectedProtocols = params.data.routage_type;
+      this.selectedProtocols = params.data.routage_type ?? "";
     },
     onSelectChange() {
       this.params.node.setDataValue("routage_type", this.selectedProtocols);

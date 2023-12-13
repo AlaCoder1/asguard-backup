@@ -43,9 +43,6 @@
               :animateRows="true"
               @cell-value-changed="onCellValueChanged"
               @column-row-group-changed="onColumnRowGroupChanged"
-              @column-row-drag-end="onColumnRowDragEnd"
-              @firstDataRendered="onFirstDataRendered"
-              @row-drag-end="onRowDragEnd"
               :pagination="true"
               :paginationPageSize="10"
               :rowSelection="'multiple'"
@@ -53,6 +50,7 @@
             </ag-grid-vue>
           </div>
         </v-row>
+        <div class="error-feedback mt-5">{{ textAlert }}</div>
       </v-col>
     </v-row>
     <v-row class="d-flex justify-end mt-5">
@@ -110,6 +108,7 @@ export default {
 
     const rowDataRules = reactive({});
     const gridColumnApi = ref(null);
+    const textAlert = ref(null);
     const editType = ref("fullRow");
     const gridApi = ref(null);
     const defaultColDef = ref({
@@ -244,6 +243,11 @@ export default {
       let eGui = document.createElement("div");
 
       eGui.innerHTML = `
+      <button
+      class="action-button edit"
+      data-action="edit">
+         <i class="far fa-edit" style="color: #086eae;"></i>
+      </button>
 
       <button
         class="action-button delete"
@@ -254,15 +258,78 @@ export default {
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
-          this.handleAction(action, params.node.data, params.node.rowIndex);
+          handleAction(action, params.node.data, params.node.rowIndex);
         });
       });
 
       return eGui;
     }
 
+    const handleAction = (action, rowData) => {
+      switch (action) {
+        case "edit":
+          console.log("rowData", rowData);
+
+          break;
+        default:
+          break;
+      }
+    };
+
+    const hasEmptyProperty = (obj) => {
+      console.log("object", obj);
+
+      const emptyProperties = [];
+      if (obj.rule_name === "") {
+        emptyProperties.push("Rule Name");
+      }
+
+      if (obj.routage_type === "") {
+        emptyProperties.push("Routage Type");
+      }
+      if (obj.start_time === "") {
+        emptyProperties.push("Start Time");
+      }
+
+      if (obj.end_time === "") {
+        emptyProperties.push("End Time");
+      }
+
+      if (obj.value === "") {
+        emptyProperties.push("Value");
+      } else if (
+        obj.routage_type === "subnet" &&
+        !isValidSubnetFormat(obj.value)
+      ) {
+        emptyProperties.push("Value Format must be XX.XX.XX.XX/XX");
+      }
+
+      return emptyProperties;
+    };
+    const isValidSubnetFormat = (value) => {
+      const subnetRegex = /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/;
+      return subnetRegex.test(value);
+    };
+
     const save = () => {
-      console.log("row", rowDataRules.value);
+      if (!rowDataRules.value) rowDataRules.value = [];
+
+      var emptyPropertiesList = rowDataRules.value
+        .map(hasEmptyProperty)
+        .filter((properties) => properties.length > 0);
+
+      const concatenatedArray = emptyPropertiesList.reduce(
+        (acc, curr) => acc.concat(curr),
+        []
+      );
+
+      const uniqueArray = [...new Set(concatenatedArray)];
+
+      if (emptyPropertiesList.length > 0) {
+        textAlert.value = "The following properties are empty: " + uniqueArray;
+      } else {
+        textAlert.value = "";
+      }
     };
     function checkboxRender(params) {
       var input = document.createElement("input");
@@ -278,13 +345,13 @@ export default {
       input.addEventListener("click", function (event) {
         params.value = !params.value;
         // params.data.server_status = params.value;
-      
       });
       return input;
     }
 
     return {
       state,
+      textAlert,
       columnRules,
       gridColumnApi,
       rowDataRules,
@@ -302,4 +369,9 @@ export default {
   },
 };
 </script>
-<style></style>
+<style>
+.error-feedback {
+  color: red;
+  font-size: 0.85em;
+}
+</style>

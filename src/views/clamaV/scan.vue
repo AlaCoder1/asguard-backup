@@ -12,7 +12,7 @@
         <img
           src="../../assets/images/Fichier 2icone-Sasyx-supp 1.svg"
           style="margin-bottom: -7px"
-          class="ml-10"
+          
         />
         <h5 class="title mr-2">Full virus scan</h5>
         <span class="mb-5 subtitle">Scan your entire device</span><br />

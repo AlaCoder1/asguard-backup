@@ -479,6 +479,11 @@ def updateServerIPsec(request, id):
                 server.negotiation_mode = None
 
             ca = ''
+            server.pre_shared_key = None
+            server.local_key_pair = None
+            server.peer_key_pair = None
+            server.cert = None
+            server.remote_distingushed_name = None
             if server.authentication_method == CONSTANT_METHOD_PSK:
                 server.pre_shared_key = authentication.get("pre_shared_key", "")
             elif server.authentication_method == CONSTANT_METHOD_PUBLIC_KEY:

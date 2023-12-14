@@ -34,10 +34,8 @@
               @grid-ready="onGridReady"
               :defaultColDef="defaultColDef"
               style="width: 100%"
-              :animateRows="true"
               :pagination="true"
               :paginationPageSize="10"
-              :rowSelection="'multiple'"
             >
             </ag-grid-vue>
           </div>
@@ -85,7 +83,6 @@ export default {
     const gridApi = ref(null);
     const defaultColDef = ref({
       flex: 1,
-      editable: true,
       cellDataType: false,
     });
     const columnAclList = [
@@ -131,11 +128,6 @@ export default {
         });
       });
 
-      if (rowDataAclList.value && rowDataAclList.value.length > 0) {
-        gridApi.value.forEachNode((node) =>
-          node.setSelected(node.rowIndex === 0)
-        );
-      }
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataAclList.value);
       } else {
@@ -153,7 +145,6 @@ export default {
       let eGui = document.createElement("div");
 
       let editingCells = params.api.getEditingCells();
-      // checks if the rowIndex matches in at least one of the editing cells
       let isCurrentRowEditing = editingCells.some((cell) => {
         return cell.rowIndex === params.node.rowIndex;
       });
@@ -185,8 +176,6 @@ export default {
     </button>
     `;
       }
-
-      // Add event listeners to handle button clicks
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");

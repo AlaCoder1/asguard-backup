@@ -64,7 +64,7 @@ def getServerIPsec(request, id):
                                                                                                           'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA"),
                                                                                                           'remote_distingushed_name': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
-                                                             'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256"]),
+                                                             'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256", "aes128", "aes192", "aes256"]),
                                                              'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like sha256 or sha384. Example: [sha256,sha512]",
                                                                                                   items=openapi.Schema(type=openapi.TYPE_STRING)),
                                                              'dh_key_group': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072. Example: [15:3072,20:384]",
@@ -98,7 +98,7 @@ def getServerIPsec(request, id):
                                                                                                           'mask': openapi.Schema(type=openapi.TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
                                                              'sa_key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'], 
                                                                                                properties={'protocol': openapi.Schema(type=openapi.TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
-                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like 256. Example: [128,256]"),
+                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one. Example: [128,256,sha192]"),
                                                                                                            'hash_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like sha256. Example: [sha256,sha384]"),
                                                                                                            'pfs_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="If not off should be group:key like 15:3072. Example: 15:3072")}),
                                                              'lifetime_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
@@ -359,7 +359,7 @@ def deleteServerIPsec(request, id):
                                                                                                           'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA"),
                                                                                                           'remote_distingushed_name': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
-                                                             'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256"]),
+                                                             'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256", "aes128", "aes192", "aes256"]),
                                                              'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like sha256 or sha384. Example: [sha256,sha512]",
                                                                                                   items=openapi.Schema(type=openapi.TYPE_STRING)),
                                                              'dh_key_group': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072. Example: [15:3072,20:384]",
@@ -393,7 +393,7 @@ def deleteServerIPsec(request, id):
                                                                                                           'mask': openapi.Schema(type=openapi.TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
                                                              'sa_key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'], 
                                                                                                properties={'protocol': openapi.Schema(type=openapi.TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
-                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like 256. Example: [128,256]"),
+                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one. Example: [128,256,sha192]"),
                                                                                                            'hash_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like sha256. Example: [sha256,sha384]"),
                                                                                                            'pfs_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="If not off should be group:key like 15:3072. Example: 15:3072")}),
                                                              'lifetime_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
@@ -479,6 +479,11 @@ def updateServerIPsec(request, id):
                 server.negotiation_mode = None
 
             ca = ''
+            server.pre_shared_key = None
+            server.local_key_pair = None
+            server.peer_key_pair = None
+            server.cert = None
+            server.remote_distingushed_name = None
             if server.authentication_method == CONSTANT_METHOD_PSK:
                 server.pre_shared_key = authentication.get("pre_shared_key", "")
             elif server.authentication_method == CONSTANT_METHOD_PUBLIC_KEY:

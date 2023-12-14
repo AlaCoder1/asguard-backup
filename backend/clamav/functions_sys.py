@@ -10,7 +10,7 @@ def execute_cmd(command):
 def read_and_extract_clamav_config():
     """Reads the ClamAV config file and extracts commented parameters"""
 
-    clamav_conf_path = "/etc/clamav/clamdbackup.conf"
+    clamav_conf_path = "/etc/clamav/clamd.conf"
     
     try:
         output, error = execute_cmd("cat " + clamav_conf_path)
@@ -75,8 +75,8 @@ def read_and_extract_freshclam_config():
 
 def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,scanhtml=None,scanarchive=None,scanxmldocs=None,scanmail=None,scanhwp3=None,scanpdf=None,scanole2=None,disablecache=None,scanelf=None,scanpe=None,alertole2macros=None,alertencryptedarchive=None,alertbrokenexecutables=None,followdirectorysymlinks=None,followfilesymlinks=None,freshclamdatabasemirror=None,freshclamconnectiontimeout=None,tcpport=None,maxpartitions=None,tcpsocket=None,maxqueue=None,maxrecursion=None,proxyport=None,maxscansize=None,maxdirectoryrecursion=None,idletimeout=None,clamd_enabled=None,freshclam_enabled=None,logverbose=None, maxthreads=None):
     
-    Clamav_path = "/etc/clamav/clamdbackup2.conf"
-    freshclam_path= "/etc/clamav/freshclambackup2.conf"
+    Clamav_path = "/etc/clamav/clamd.conf"
+    freshclam_path= "/etc/clamav/freshclam.conf"
     try:
         ################################## Update the clamav config file ###################################################
     

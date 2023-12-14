@@ -177,7 +177,7 @@ def update_freshclam_database(request):
             message = 'Freshclam updated successfully'
         else:
             # Create a new entry
-            freshclam_data = FreshclamDatabase(clamav=clamav, process_type='update', line='\n'.join(result), date=datetime.now())
+            freshclam_data = FreshclamDatabase(clamav=clamav, process_type='Update', line='\n'.join(result), date=datetime.now())
             freshclam_data.save()
             message = 'Freshclam updated successfully'
 

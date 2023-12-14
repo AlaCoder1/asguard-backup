@@ -11,8 +11,7 @@ from django.core import serializers
 from django.db.models import Q
 
 
-def getclamavconfigurations(request):
-    if request.method=="GET":
+def getclamavconfigurations():
         clamd_list = []
         # Get all configurations from database
         clamavconfig_from_db = ClamAV.objects.all()
@@ -27,5 +26,5 @@ def getclamavconfigurations(request):
             clamd_list.append(res[i]['fields'])
 
         # Return the list in json form 
-    return json.dumps(clamd_list)
+        return json.dumps(clamd_list)
     

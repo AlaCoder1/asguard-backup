@@ -11,7 +11,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Username"
+                    label="Client Name"
                     v-model="state.formData.userName"
                   ></v-text-field>
                   <p
@@ -122,6 +122,7 @@ export default {
       color: "",
       snackbar: false,
       rowEditFilter: null,
+      id: "",
     });
     const rules = computed(() => {
       return {
@@ -145,6 +146,7 @@ export default {
       (editRow) => {
         state.rowEditFilter = editRow;
         console.log("rowFilter", state.rowEditFilter);
+        state.id = editRow.id;
       }
     );
 
@@ -170,9 +172,9 @@ export default {
       axios.get("/certificates/getAllCertificates").then(
         (response) => {
           console.log("response.data", response.data);
-         
+
           let mapedListCertif = response.data.filter(
-            (i) => i.certificate_type === "client" 
+            (i) => i.certificate_type === "client"
           );
 
           clientCertificateList.value = mapedListCertif.map((i) => {
@@ -190,13 +192,43 @@ export default {
 
     const closeModal = () => {
       emitter.emit("closeModalCreateClient");
+      v$.value.$reset();
     };
 
     const submitForm = async () => {
       const result = await v$.value.$validate();
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (result) {
         console.log("state", state);
+        let payload = {
+          name: state.formData.userName,
+          client_cert: state.formData.clientCertificate?.name,
+        };
+        console.log('payload',payload)
+
+        axios
+            .post(`/openvpn/generateClientOpenvpn/${state.id}`, payload)
+            .then((response) => {
+              console.log("response", response);
+              if (response.status == "201") {
+                state.openModal = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+
       } else {
         console.log("error", v$.value);
       }

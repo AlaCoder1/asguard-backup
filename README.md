@@ -71,3 +71,5 @@ python manage.py init_rules_suricata -id id_suricata
 //commande to init  default alerts 
 
 python manage.py init_alerts_suricata -id id_suricata
+
+// commande to init default values clamav

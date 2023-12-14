@@ -13,7 +13,7 @@ class Command(BaseCommand):
         # Optional argument
         parser.add_argument('-id', '--id', type=str, help='Defineid suricata file')
     def handle(self, *args, **kwargs):
-        # Your code to add data to the database here
+         # Your code to add data to the database here
         try:
             id=kwargs['id']
             logs = read_suricata_log()

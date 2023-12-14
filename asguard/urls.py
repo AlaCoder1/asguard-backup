@@ -66,6 +66,7 @@ urlpatterns = [
     path('ipsec/', ipsec_page),
     path('proxy-web/', squid_proxy),
     path('clamaV/', clamaV_page),
+    path('clamaV/', include('backend.clamav.urls')),
     path('rules/', include('backend.rules.urls')),
     path('gateway/', include('backend.gateway.urls')),
     path("monitoring/",include("backend.dashboard.urls")),

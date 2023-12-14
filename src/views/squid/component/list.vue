@@ -4,7 +4,6 @@
       <v-col cols="12">
         <h4>List</h4>
         <v-divider class="mt-2"></v-divider>
-
         <v-row class="mt-5">
           <v-col cols="12" md="6">
             <v-text-field
@@ -20,12 +19,6 @@
               @input="onFilterTextBoxChanged"
             ></v-text-field>
           </v-col>
-          <v-col cols="12" md="6" class="d-flex justify-end">
-            <v-btn class="ml-3 mt-2" @click="addRow">
-              <i class="fa fa-plus-circle" style="color: #086eae"></i>
-              <span class="ml-2" style="color: #086eae">Add New</span>
-            </v-btn>
-          </v-col>
         </v-row>
         <v-row>
           <div style="overflow: hidden; flex-grow: 1">
@@ -38,14 +31,9 @@
               @grid-ready="onGridReady"
               :rowDrag="true"
               :defaultColDef="defaultColDef"
-              :editType="editType"
               style="width: 100%"
-              :animateRows="true"
-              @cell-value-changed="onCellValueChanged"
-              @column-row-group-changed="onColumnRowGroupChanged"
               :pagination="true"
               :paginationPageSize="10"
-              :rowSelection="'multiple'"
             >
             </ag-grid-vue>
           </div>
@@ -58,62 +46,52 @@
         <VButton
           rounded
           outlined
-          color="#ffffff"
-          label-color="#213E9F"
-          label="cancel"
-          :isLarge="true"
-          @click="cancel"
-        />
-        <VButton
-          rounded
-          outlined
           color="#213E9F"
           label-color="#ffffff"
-          label="save"
+          label="Add"
           :isLarge="true"
           class="ml-2"
-          @click="save"
+          @click="openModalRule"
         />
       </div>
     </v-row>
+    <ModalAddRule
+      :isOpenModal="state.isModalOpenRule"
+      :editRowRule="state.editRowRule"
+      :modalModeRule="state.modalModeRule"
+    />
   </div>
 </template>
 
 <script>
-import { reactive, ref } from "vue";
+import { reactive, ref, onMounted, inject } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import MultiSelectRenderVue from "../agGridCustomRender/MultiSelectRenderVuer.vue";
-import StartDateFieldRenderVue from "../agGridCustomRender/StartDateFieldRenderVue.vue";
-import EndDateFieldRenderVue from "../agGridCustomRender/EndDateFieldRenderVue.vue";
+import ModalAddRule from "@/components/modals/ModalAddRule.vue";
+
 export default {
   components: {
     AgGridVue,
-    MultiSelectRenderVue,
-    StartDateFieldRenderVue,
-    EndDateFieldRenderVue,
     VButton,
+    ModalAddRule,
   },
   setup() {
+    const emitter = inject("emitter");
     const state = reactive({
-      off: false,
-      on: false,
-      proxyPort: "",
-      enable: false,
-      filterText: "",
-      published: "",
+      modalDataRule: {},
+      isOpenModal: null,
+      modalModeRule: "",
+      isModalOpenRule: false,
+      editRowRule: {},
     });
-
     const rowDataRules = reactive({});
     const gridColumnApi = ref(null);
     const textAlert = ref(null);
-    const editType = ref("fullRow");
     const gridApi = ref(null);
     const defaultColDef = ref({
       flex: 1,
-      editable: true,
       cellDataType: false,
     });
     const columnRules = [
@@ -122,59 +100,33 @@ export default {
         field: "rule_name",
         sortable: true,
         filter: true,
-        editable: true,
       },
 
       {
         field: "routage_type",
         headerName: "Routage Type",
-        editable: true,
-        cellEditor: "MultiSelectRenderVue",
-        cellEditorParams: {
-          values: ["subnet", "ips", "domains"],
-          formatValue: (value) => value.toUpperCase(),
-          cellRenderer: (params) => params.value.toUpperCase(),
-
-          onProtocolsSelected: (event) => {
-            params.setValue(event);
-          },
-        },
       },
       {
         headerName: "Value",
         field: "value",
         sortable: true,
         filter: true,
-        editable: true,
       },
       {
-        headerName: "Start Time",
-        field: "start_time",
+        headerName: "Allowed by authentification",
+        field: "allowed",
         sortable: true,
         filter: true,
-        editable: true,
-        cellEditor: "StartDateFieldRenderVue",
-      },
-      {
-        headerName: "End Time",
-        field: "end_time",
-        sortable: true,
-        filter: true,
-        editable: true,
-        cellEditor: "EndDateFieldRenderVue",
       },
       {
         headerName: "Status",
         field: "status",
-        cellRenderer: checkboxRender,
         sortable: true,
         filter: true,
-        editable: false,
       },
       {
         headerName: "Actions",
         cellRenderer: actionCellRenderer,
-        editable: false,
       },
     ];
 
@@ -188,27 +140,11 @@ export default {
           gridApi.value.sizeColumnsToFit();
         });
       });
-
-      if (rowDataRules.value && rowDataRules.value.length > 0) {
-        gridApi.value.forEachNode((node) =>
-          node.setSelected(node.rowIndex === 0)
-        );
-      }
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataRules.value);
       } else {
         console.error("Grid API.");
       }
-    };
-    const onCellValueChanged = (event) => {
-      //   const row = event.data;
-      //   row.isModified = true;
-    };
-
-    const onColumnRowGroupChanged = (event) => {
-      //   const newColumnOrder = event.columns.map((column) => column.colId);
-      //   gridApi.value.setColumnDefs(columnDefs.value);
-      //   gridApi.value.setColumnOrder(newColumnOrder);
     };
 
     const onFilterTextBoxChanged = () => {
@@ -217,28 +153,6 @@ export default {
       );
     };
 
-    const addRow = () => {
-      const newRow = {
-        rule_name: "",
-        routage_type: "",
-        value: "",
-        start_time: "",
-        end_time: "",
-        status: "",
-      };
-
-      if (!rowDataRules.value) {
-        rowDataRules.value = [];
-      }
-
-      rowDataRules.value.push(newRow);
-      // Check if gridApi is available before using it
-      if (gridApi.value) {
-        gridApi.value.setRowData(rowDataRules.value);
-      } else {
-        console.error("gridApi is not available");
-      }
-    };
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
 
@@ -270,84 +184,40 @@ export default {
         case "edit":
           console.log("rowData", rowData);
 
+          state.modalDataRule = {};
+          state.modalModeRule = "edit";
+          state.isModalOpenRule = true;
+          state.editRowRule = rowData;
+
           break;
         default:
           break;
       }
     };
 
-    const hasEmptyProperty = (obj) => {
-      console.log("object", obj);
-
-      const emptyProperties = [];
-      if (obj.rule_name === "") {
-        emptyProperties.push("Rule Name");
-      }
-
-      if (obj.routage_type === "") {
-        emptyProperties.push("Routage Type");
-      }
-      if (obj.start_time === "") {
-        emptyProperties.push("Start Time");
-      }
-
-      if (obj.end_time === "") {
-        emptyProperties.push("End Time");
-      }
-
-      if (obj.value === "") {
-        emptyProperties.push("Value");
-      } else if (
-        obj.routage_type === "subnet" &&
-        !isValidSubnetFormat(obj.value)
-      ) {
-        emptyProperties.push("Value Format must be XX.XX.XX.XX/XX");
-      }
-
-      return emptyProperties;
-    };
-    const isValidSubnetFormat = (value) => {
-      const subnetRegex = /^(\d{1,3}\.){3}\d{1,3}\/\d{1,2}$/;
-      return subnetRegex.test(value);
+    const openModalRule = () => {
+      state.modalDataRule = {};
+      state.modalModeRule = "create";
+      state.isModalOpenRule = true;
     };
 
-    const save = () => {
-      if (!rowDataRules.value) rowDataRules.value = [];
-
-      var emptyPropertiesList = rowDataRules.value
-        .map(hasEmptyProperty)
-        .filter((properties) => properties.length > 0);
-
-      const concatenatedArray = emptyPropertiesList.reduce(
-        (acc, curr) => acc.concat(curr),
-        []
-      );
-
-      const uniqueArray = [...new Set(concatenatedArray)];
-
-      if (emptyPropertiesList.length > 0) {
-        textAlert.value = "The following properties are empty: " + uniqueArray;
-      } else {
-        textAlert.value = "";
-      }
-    };
-    function checkboxRender(params) {
-      var input = document.createElement("input");
-      input.type = "checkbox";
-      // params.value = params.data.server_status;
-      input.checked = params.value;
-
-      input.style.margin = "10px";
-      input.style.width = "20px";
-      input.style.height = "18px";
-      input.style.cursor = "pointer";
-
-      input.addEventListener("click", function (event) {
-        params.value = !params.value;
-        // params.data.server_status = params.value;
+    onMounted(() => {
+      emitter.on("closeAddRuleModal", () => {
+        state.isModalOpenRule = false;
       });
-      return input;
-    }
+
+      if (!rowDataRules.value) {
+        rowDataRules.value = [];
+      }
+      let obj = {
+        rule_name: "rule name",
+        value: "test",
+        routage_type: "test",
+        allowed: "test",
+        status: "test",
+      };
+      rowDataRules.value.push(obj);
+    });
 
     return {
       state,
@@ -356,15 +226,11 @@ export default {
       gridColumnApi,
       rowDataRules,
       onGridReady,
-      save,
+      emitter,
+      openModalRule,
       actionCellRenderer,
       defaultColDef,
-      onCellValueChanged,
-      onColumnRowGroupChanged,
       onFilterTextBoxChanged,
-      addRow,
-      checkboxRender,
-      editType,
     };
   },
 };

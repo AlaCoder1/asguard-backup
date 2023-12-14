@@ -4,7 +4,6 @@ import logging
 import traceback
 from cryptography.fernet import Fernet
 import re
-import pam
 import hashlib
 from backend.authentification.views import *
 

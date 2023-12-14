@@ -71,6 +71,7 @@ urlpatterns = [
     path('gateway/', include('backend.gateway.urls')),
     path("monitoring/",include("backend.dashboard.urls")),
     path("ids-ips/",include("backend.ids_ips.urls")),
+    path('proxy/', include('backend.proxy.urls')),
     path("ids-ips/",suricata)
 ]
 

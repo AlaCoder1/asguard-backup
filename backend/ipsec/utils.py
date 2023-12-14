@@ -90,6 +90,25 @@ def uncomment_line_in_secrets_file(secrets:str, server):
     return secrets.replace(previous_line_secrets, new_line_secrets)
 
 
+def set_encryption_algorithm_config(encryption_algorithm):
+    """Set the encryption algorithm for the config file. Encryption algorithm can be 128, 192, 256, aes128, aes192, aes256"""
+    if not encryption_algorithm.startswith("aes"):
+        return f"aes{encryption_algorithm}gcm16"
+    return encryption_algorithm
+
+
+def set_key_group_config(key_group:str):
+    """Set the DH key group (phase1) or PFS Key group (phase2) for the config file. key group can be 20:384 or 28:256 ..."""
+    dh_byte = list(key_group.split(":"))
+    if int(dh_byte[0]) in range(15, 19):
+        return f"modp{dh_byte[1]}"
+    elif int(dh_byte[0]) in range(19, 22):
+        return f"ecp{dh_byte[1]}"
+    elif int(dh_byte[0]) in range(28, 31):
+        return f"ecp{dh_byte[1]}bq"
+    return f"curve{dh_byte[1]}"
+
+
 def json_to_str_server_ipsec(json_object):
     """Function to convert a json object to an input of ipsec server config file"""
     
@@ -162,16 +181,13 @@ conn {json_object["conn_name"]}
     ike = ""
     for hash_algorithm in json_object["hash_algorithm_ph1"]:
         for dh_key_group in json_object["dh_key_group"]:
-            dh_byte = list(dh_key_group.split(":"))
-            if int(dh_byte[0]) in range(15, 19):
-                dh = f"modp{dh_byte[1]}"
-            elif int(dh_byte[0]) in range(19, 22):
-                dh = f"ecp{dh_byte[1]}"
-            elif int(dh_byte[0]) in range(28, 31):
-                dh = f"ecp{dh_byte[1]}bq"
-            else:
-                dh = f"curve{dh_byte[1]}"
-            ike += f"aes{json_object['encryption_algorithm_ph1']}gcm16-{hash_algorithm}-{dh},"
+            # Encryption algorithm
+            encryption_algorithm_ph1 = set_encryption_algorithm_config(json_object['encryption_algorithm_ph1'])
+
+            # DH Key group
+            dh = set_key_group_config(dh_key_group)
+            
+            ike += f"{encryption_algorithm_ph1}-{hash_algorithm}-{dh},"
     ike = ike[:len(ike)-1] + "!"
     config_input = config_input.replace("ike=ike", f"ike={ike}")
 
@@ -215,22 +231,17 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("#rightsubnet", f"rightsubnet={json_object['address_remote_network']}")
     
     sa_key_exchange = json_object["sa_key_exchange"]
+    # PFS Key group: if the user choose off nothing is added to the esp and the pfs will be an empty string
     pfs = ""
     if sa_key_exchange["pfs_key_group"] != "off":
-        pfs = list(sa_key_exchange["pfs_key_group"].split(":"))
-        if int(pfs[0]) in range(15, 19):
-            pfs = f"-modp{pfs[1]}"
-        elif int(pfs[0]) in range(19, 22):
-            pfs = f"-ecp{pfs[1]}"
-        elif int(pfs[0]) in range(28, 31):
-            pfs = f"-ecp{pfs[1]}bq"
-        else:
-            pfs = f"-curve{pfs[1]}"
+        pfs = set_key_group_config(sa_key_exchange["pfs_key_group"])
+        pfs = f'-{pfs}'
     esp = ""
     for hash_algorithm in sa_key_exchange["hash_algorithm_ph2"]:
         if sa_key_exchange["protocol"] == "ESP":
-            for encryption_algorithm in sa_key_exchange["encryption_algorithm_ph2"]:
-                esp += f"aes{encryption_algorithm}gcm16-{hash_algorithm}{pfs},"
+            for encryption_algorithm_ph2 in sa_key_exchange["encryption_algorithm_ph2"]:
+                encryption_algorithm_ph2 = set_encryption_algorithm_config(encryption_algorithm_ph2)
+                esp += f"{encryption_algorithm_ph2}-{hash_algorithm}{pfs},"
         else:
             esp += f"{hash_algorithm}{pfs},"
     esp = esp[:len(esp)-1] + "!"

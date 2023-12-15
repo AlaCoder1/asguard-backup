@@ -19,4 +19,5 @@ urlpatterns = [
     path('deleteClientOpenvpn/<int:id>', views.deleteClientOpenvpn, name="deleteClientOpenvpn"),
     path('updateClientOpenvpn/<int:id>', views.updateClientOpenvpn, name="updateClientOpenvpn"),
     path('exportClientOpenvpn/<int:id>', views.exportClientOpenvpn, name="exportClientOpenvpn"),
+    path('generateClientOpenvpn/<int:id>', views.generateClientOpenvpn, name="generateClientOpenvpn"),
 ]

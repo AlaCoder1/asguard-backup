@@ -1,164 +1,76 @@
 <template>
   <div class="mt-3">
     <v-overlay v-model="state.loading">
-      <v-dialog
-        v-model="state.isLoadingDialogue"
-        :scrim="false"
-        persistent
-        width="auto"
-      >
+      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
         <v-card color="#193286">
           <v-card-text>
             Please Wait...
-            <v-progress-linear
-              indeterminate
-              color="white"
-              class="mb-0"
-            ></v-progress-linear>
+            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
     </v-overlay>
     <v-row>
       <v-col cols="6">
-        <generalInfoPhaseOne
-          v-model:tunnelSettings="state.tunnelSettings"
-          v-model:connectionMethod="state.connectionMethod"
-          v-model:keyExchange="state.keyExchange"
-          v-model:internetProtocol="state.internetProtocol"
-          v-model:remoteGateway="state.remoteGateway"
-          v-model:generalinterface="state.generalinterface"
-          v-model:remoteConnect="state.remoteConnect"
-          v-model:description="state.description"
-          :mapedInterface="state.mapedInterface"
-          :connectionMethodList="connectionMethodList"
-          :exchangeList="exchangeList"
-          :protocolList="protocolList"
-          :errors="v$"
-        />
-        <phaseAuth
-          v-model:authMethod="state.authMethod"
-          v-model:negotiationMode="state.negotiationMode"
-          v-model:sharedKey="state.sharedKey"
-          v-model:certificate="state.certificate"
-          v-model:keyPair="state.keyPair"
-          v-model:localKey="state.localKey"
-          v-model:peerIdentifier="state.peerIdentifier"
-          :keyExchange="state.keyExchange"
-          :authMethodItem="state.authMethod"
-          :authenticationMethodList="authenticationMethodList"
-          :negotiationList="negotiationList"
-          :CertificateList="CertificateList"
-          :mapedKeyPublic="mapedKeyPublic"
-          :errors="v$"
-        />
+        <generalInfoPhaseOne v-model:tunnelSettings="state.tunnelSettings"
+          v-model:connectionMethod="state.connectionMethod" v-model:keyExchange="state.keyExchange"
+          v-model:internetProtocol="state.internetProtocol" v-model:remoteGateway="state.remoteGateway"
+          v-model:generalinterface="state.generalinterface" v-model:remoteConnect="state.remoteConnect"
+          v-model:description="state.description" :mapedInterface="state.mapedInterface"
+          :connectionMethodList="connectionMethodList" :exchangeList="exchangeList" :protocolList="protocolList"
+          :errors="v$" />
+        <phaseAuth v-model:authMethod="state.authMethod" v-model:negotiationMode="state.negotiationMode"
+          v-model:sharedKey="state.sharedKey" v-model:certificate="state.certificate" v-model:keyPair="state.keyPair"
+          v-model:localKey="state.localKey" v-model:peerIdentifier="state.peerIdentifier" :keyExchange="state.keyExchange"
+          :authMethodItem="state.authMethod" :authenticationMethodList="authenticationMethodList"
+          :negotiationList="negotiationList" :CertificateList="CertificateList" :mapedKeyPublic="mapedKeyPublic"
+          :errors="v$" />
 
-        <phaseAlgo
-          v-model:encryptAlgo="state.encryptAlgo"
-          v-model:hashAlgo="state.hashAlgo"
-          v-model:dhKey="state.dhKey"
-          v-model:lifetime="state.lifetime"
-          :dhKeyList="dhKeyList"
-          :encryptAlgoList="encryptAlgoList"
-          :hashAlgoList="hashAlgoList"
-          :errors="v$"
-        />
-        <advancedOption
-          v-model:policy="state.policy"
-          v-model:rekey="state.rekey"
-          v-model:reauth="state.reauth"
-          v-model:natTraversal="state.natTraversal"
-          v-model:deadPeer="state.deadPeer"
-          v-model:retries="state.retries"
-          v-model:mobike="state.mobike"
-          v-model:selectDear="state.selectDear"
+        <phaseAlgo v-model:encryptAlgo="state.encryptAlgo" v-model:hashAlgo="state.hashAlgo" v-model:dhKey="state.dhKey"
+          v-model:lifetime="state.lifetime" v-model:encryptAlgoV1="state.encryptAlgoV1" :dhKeyList="dhKeyList"
+          :encryptAlgoList="encryptAlgoList" :hashAlgoList="hashAlgoList" :keyExchange="state.keyExchange"
+          :filteredEncryptAlgoListV1="filteredEncryptAlgoListV1" :errors="v$" />
+        <advancedOption v-model:policy="state.policy" v-model:rekey="state.rekey" v-model:reauth="state.reauth"
+          v-model:natTraversal="state.natTraversal" v-model:deadPeer="state.deadPeer" v-model:retries="state.retries"
+          v-model:mobike="state.mobike" v-model:selectDear="state.selectDear"
           v-model:interactivityTimout="state.interactivityTimout"
-          v-model:interactivityTimout2="state.interactivityTimout2"
-          v-model:seconds="state.seconds"
-          v-model:rekeyFuzz="state.rekeyFuzz"
-          v-model:marginTime="state.marginTime"
-          :isdeadPeer="state.deadPeer"
-          :traversalList="traversalList"
-          :deadPeerList="deadPeerList"
-          :errors="v$"
-        />
+          v-model:interactivityTimout2="state.interactivityTimout2" v-model:seconds="state.seconds"
+          v-model:rekeyFuzz="state.rekeyFuzz" v-model:marginTime="state.marginTime" :isdeadPeer="state.deadPeer"
+          :traversalList="traversalList" :deadPeerList="deadPeerList" :errors="v$" />
       </v-col>
       <v-col cols="6">
-        <generalInfoPhaseTwo
-          v-model:mode="state.mode"
-          v-model:remoteTunnelAddress="state.remoteTunnelAddress"
-          v-model:type="state.type"
-          v-model:remoteNetworkAddress="state.remoteNetworkAddress"
-          v-model:selectAddressNetwork="state.selectAddressNetwork"
-          v-model:description="state.descriptionPh2"
-          v-model:localAddress="state.localAddress"
-          v-model:localNetworkAddress="state.localNetworkAddress"
+        <generalInfoPhaseTwo v-model:mode="state.mode" v-model:remoteTunnelAddress="state.remoteTunnelAddress"
+          v-model:type="state.type" v-model:remoteNetworkAddress="state.remoteNetworkAddress"
+          v-model:selectAddressNetwork="state.selectAddressNetwork" v-model:description="state.descriptionPh2"
+          v-model:localAddress="state.localAddress" v-model:localNetworkAddress="state.localNetworkAddress"
           v-model:selectRemoteAddressNetwork="state.selectRemoteAddressNetwork"
-          v-model:typeRemoteNetwork="state.typeRemoteNetwork"
-          :isMode="state.mode"
-          :isTypeWAn="state.isTypeWAn"
-          :defaultValue="state.defaultValue"
-          :isDefault="state.isDefault"
-          :isDefaultRemote="state.isDefaultRemote"
-          :defaultValueRemote="state.defaultValueRemote"
-          :modeList="modeList"
-          :mapedInterfaceType="mapedInterfaceType"
-          :numberList="numberList"
-          :remoteTypeList="remoteTypeList"
-          :errors="v$"
-        />
-        <phaseTwoExchange
-          v-model:protocol="state.protocol"
-          v-model:encryptAlgoExchange="state.encryptAlgoExchange"
-          v-model:hashAlgoExchange="state.hashAlgoExchange"
-          v-model:pfsKey="state.pfsKey"
-          v-model:lifetimeExchange="state.lifetimeExchange"
-          v-model:pingHost="state.pingHost"
-          v-model:spdEntries="state.spdEntries"
-          :isMode="state.mode"
-          :isProtocol="state.protocol"
-          :hashAlgoList="hashAlgoList"
-          :protocolListph2="protocolListph2"
-          :pfsList="pfsList"
-          :encryptAlgoListExchange="encryptAlgoListExchange"
-          :errors="v$"
-        />
+          v-model:typeRemoteNetwork="state.typeRemoteNetwork" :isMode="state.mode" :isTypeWAn="state.isTypeWAn"
+          :defaultValue="state.defaultValue" :isDefault="state.isDefault" :isDefaultRemote="state.isDefaultRemote"
+          :defaultValueRemote="state.defaultValueRemote" :modeList="modeList" :mapedInterfaceType="mapedInterfaceType"
+          :numberList="numberList" :remoteTypeList="remoteTypeList" :errors="v$" />
+        <phaseTwoExchange v-model:protocol="state.protocol" v-model:encryptAlgoExchange="state.encryptAlgoExchange"
+          v-model:hashAlgoExchange="state.hashAlgoExchange" v-model:pfsKey="state.pfsKey"
+          v-model:lifetimeExchange="state.lifetimeExchange" v-model:pingHost="state.pingHost"
+          v-model:spdEntries="state.spdEntries" v-model:encryptAlgoExch2="state.encryptAlgoExch2" :isMode="state.mode"
+          :isProtocol="state.protocol" :hashAlgoList="hashAlgoList" :protocolListph2="protocolListph2" :pfsList="pfsList"
+          :encryptAlgoListExchange="encryptAlgoListExchange" :filteredAlgoListExchangeV1="filteredAlgoListExchangeV1"
+          :keyExchange="state.keyExchange" :errors="v$" />
       </v-col>
     </v-row>
     <v-row class="flex py-8 mb-5">
       <v-col cols="4"> </v-col>
       <v-col>
         <div class="mr-3 flex center">
-          <VButton
-            rounded
-            outlined
-            color="#ffffff"
-            label-color="#213E9F"
-            label="cancel"
-            :isLarge="true"
-            @click="cancel"
-          />
-          <VButton
-            rounded
-            outlined
-            color="#213E9F"
-            label-color="#ffffff"
-            :label="state.isEditState === 'edit' ? 'Edit' : 'Create'"
-            :isLarge="true"
-            class="ml-2"
-            @click="save"
-          />
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="cancel" :isLarge="true"
+            @click="cancel" />
+          <VButton rounded outlined color="#213E9F" label-color="#ffffff"
+            :label="state.isEditState === 'edit' ? 'Edit' : 'Create'" :isLarge="true" class="ml-2" @click="save" />
         </div>
       </v-col>
     </v-row>
     <!-- return json.dumps(list_ipsec) -->
 
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
 
       <template v-slot:actions> </template>
@@ -246,6 +158,10 @@ export default {
         name: "256 bit AES-GCM with 128 bit ICV",
         slug: "256",
       },
+      encryptAlgoV1: {
+        name: "AES256",
+        slug: "aes256",
+      },
       hashAlgo: {
         name: "SHA256",
         slug: "sha256",
@@ -294,6 +210,10 @@ export default {
       encryptAlgoExchange: {
         name: "aes256gcm16",
         slug: "256",
+      },
+      encryptAlgoExch2: {
+        name: "AES256",
+        slug: "aes256",
       },
       hashAlgoExchange: {
         name: "SHA256",
@@ -404,6 +324,18 @@ export default {
     ]);
 
     const encryptAlgoList = ref([
+      {
+        name: "AES128",
+        slug: "aes128",
+      },
+      {
+        name: "AES192",
+        slug: "aes192",
+      },
+      {
+        name: "AES256",
+        slug: "aes256",
+      },
       {
         name: "128 bit AES-GCM with 128 bit ICV",
         slug: "128",
@@ -582,7 +514,14 @@ export default {
     const rules = computed(() => {
       return {
         //General information Phase 1
-        tunnelSettings: { required },
+
+        tunnelSettings: {
+          required,
+          isValidTunnelSettings: helpers.withMessage(
+            `champs can include only letters & Numbers & underscores & hyphens without space.`,
+            helpers.regex(/^[A-Za-z0-9_\-]+$/)
+          ),
+        },
         connectionMethod: { required },
         keyExchange: { required },
         internetProtocol: { required },
@@ -651,7 +590,7 @@ export default {
             `There must be at least 32 characters, including at least one uppercase,one lowercase, one number, and one special character.`,
 
             helpers.regex(
-              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{32,128}$/
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~\\]{32,128}$/
             )
           ),
         },
@@ -685,7 +624,27 @@ export default {
         },
 
         // phase algo
-        encryptAlgo: { required },
+
+        encryptAlgo: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.keyExchange.slug === "V2")
+          ),
+        },
+
+        encryptAlgoV1: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.keyExchange.slug === "V1")
+          ),
+        },
+        encryptAlgoExch2: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.keyExchange.slug === "V1")
+          ),
+        },
+
         hashAlgo: { required },
         dhKey: { required },
         // general info phase 2
@@ -698,7 +657,13 @@ export default {
         //     helpers.regex(/^[0-9.]+$/)
         //   ),
         // },
-        type: { required },
+
+        type: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.mode.slug === "Tunnel IPv4")
+          ),
+        },
 
         remoteNetworkAddress: {
           requiredIfFuction: helpers.withMessage(
@@ -755,10 +720,22 @@ export default {
           ),
         },
 
-        typeRemoteNetwork: { required },
+        typeRemoteNetwork: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.mode.slug === "Tunnel IPv4")
+          ),
+        },
         //exchange
         protocol: { required },
-        encryptAlgoExchange: { required },
+
+        encryptAlgoExchange: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.protocol.slug === "ESP")
+          ),
+        },
+
         hashAlgoExchange: { required },
         pfsKey: { required },
         // pingHost: { required },
@@ -860,13 +837,18 @@ export default {
 
       axios.get("/network/AllInterfaces").then(
         (response) => {
-          let interfaces = response.data.map((i) => {
+          let filtredInterface = response.data.filter(
+            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+          );
+
+          let interfaces = filtredInterface.map((i) => {
             return {
               id: i.id,
               name: i.name_interface,
               slug: i.name_interface,
             };
           });
+
           let listInter = [
             {
               name: "Address",
@@ -971,7 +953,8 @@ export default {
           ];
         });
 
-        state.encryptAlgo = filtredEncryptAlgoList[0];
+        state.encryptAlgo = filtredEncryptAlgoList[0] ?? "";
+        state.encryptAlgoV1 = filtredEncryptAlgoList[0] ?? "";
         state.hashAlgo = filtredHashAlgoList;
         state.dhKey = filtredDhKeyList;
         state.lifetime = data?.lifetime_ph1;
@@ -1049,17 +1032,24 @@ export default {
         });
 
         state.protocol = filtredProtocolph2List[0];
-        state.hashAlgoExchange = filtredHashAlgoListExchange;
+        state.hashAlgoExchange = filtredHashAlgoListExchange ?? [];
 
         let filtredencryptAlgoExchange = [];
-        data?.encryption_algorithm_ph2.forEach((e) => {
-          filtredencryptAlgoExchange = [
-            ...filtredencryptAlgoExchange,
-            ...encryptAlgoListExchange.value.filter((i) => i.slug === e),
-          ];
-        });
 
-        state.encryptAlgoExchange = filtredencryptAlgoExchange;
+        if (data.encryption_algorithm_ph2) {
+          data?.encryption_algorithm_ph2?.forEach((e) => {
+            filtredencryptAlgoExchange = [
+              ...filtredencryptAlgoExchange,
+              ...encryptAlgoListExchange.value.filter((i) => i.slug === e),
+            ];
+          });
+        }
+
+        if (data.key_exchange_version === "V1") {
+          state.encryptAlgoExch2 = filtredencryptAlgoExchange;
+        } else {
+          state.encryptAlgoExchange = filtredencryptAlgoExchange;
+        }
 
         let filtredPfsKeyList = pfsList.value.filter(
           (i) => i.slug === data?.pfs_key_group
@@ -1100,6 +1090,18 @@ export default {
     ]);
 
     const encryptAlgoListExchange = ref([
+      {
+        name: "AES128",
+        slug: "aes128",
+      },
+      {
+        name: "AES192",
+        slug: "aes192",
+      },
+      {
+        name: "AES256",
+        slug: "aes256",
+      },
       {
         name: "aes128gcm16",
         slug: "128",
@@ -1155,12 +1157,31 @@ export default {
           state.defaultValueRemote = "mask";
           state.isDefaultRemote = false;
         }
+        if (state.mode?.slug === "Transport") {
+          console.log("Transport oui0");
+
+          state.typeRemoteNetwork = "";
+          state.type = "";
+        } else if (state.mode?.slug === "Tunnel IPv4") {
+          if (!state.type) {
+            state.type = {
+              name: "Address",
+              slug: "Address",
+            };
+          }
+          if (!state.typeRemoteNetwork) {
+            state.typeRemoteNetwork = { name: "Network", slug: "Network" };
+          }
+        }
       },
       { immediate: true }
     );
 
     const save = async () => {
       const result = await v$.value.$validate();
+
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (result) {
         let KeyExchange = null;
@@ -1219,6 +1240,7 @@ export default {
         } else {
           var mappedhashAlgo = [state.hashAlgo.slug];
         }
+
         if (Array.isArray(state.encryptAlgoExchange)) {
           var mappedencryptAlgoExchange = state.encryptAlgoExchange.map(
             (e) => e.slug
@@ -1226,6 +1248,14 @@ export default {
         } else {
           var mappedencryptAlgoExchange = [state.encryptAlgoExchange.slug];
         }
+        if (Array.isArray(state.encryptAlgoExch2)) {
+          var mappedencryptAlgoExch2 = state.encryptAlgoExch2.map(
+            (e) => e.slug
+          );
+        } else {
+          var mappedencryptAlgoExch2 = [state.encryptAlgoExch2.slug];
+        }
+
         if (Array.isArray(state.hashAlgoExchange)) {
           var mappedhashAlgoExchange = state.hashAlgoExchange.map(
             (e) => e.slug
@@ -1239,7 +1269,8 @@ export default {
         if (state.protocol.slug === "ESP") {
           isKeyExchange = {
             protocol: state.protocol.slug,
-            encryption_algorithm_ph2: mappedencryptAlgoExchange,
+            encryption_algorithm_ph2:
+              state.keyExchange.slug === "V1" ? mappedencryptAlgoExch2 : mappedencryptAlgoExchange,
             hash_algorithm_ph2: mappedhashAlgoExchange,
             pfs_key_group: state.pfsKey.slug,
           };
@@ -1289,7 +1320,10 @@ export default {
           dynamic_gateway: state.remoteConnect,
           description_ph1: state.description,
           authentication: authen,
-          encryption_algorithm_ph1: state.encryptAlgo?.slug,
+          encryption_algorithm_ph1:
+            state.keyExchange.slug === "V1"
+              ? state.encryptAlgoV1.slug
+              : state.encryptAlgo?.slug,
           hash_algorithm_ph1: mappedhashAlgo,
           dh_key_group: mappedDhKey,
           lifetime_ph1: state.lifetime,
@@ -1310,6 +1344,7 @@ export default {
         state.loading = true;
         state.isLoadingDialogue = true;
         if (state.isEditState === "edit") {
+          console.log('payload', payload)
           axios
             .put(`/ipsec/updateServerIPsec/${state.id}`, payload)
             .then((response) => {
@@ -1361,6 +1396,20 @@ export default {
         console.log("error", v$.value);
       }
     };
+    const filteredAlgoListExchangeV1 = computed(() => {
+      if (state.keyExchange.slug === "V1") {
+        return encryptAlgoListExchange.value.slice(0, 3);
+      } else {
+        return encryptAlgoListExchange.value;
+      }
+    });
+    const filteredEncryptAlgoListV1 = computed(() => {
+      if (state.keyExchange.slug === "V1") {
+        return encryptAlgoList.value.slice(0, 3);
+      } else {
+        return encryptAlgoList.value;
+      }
+    });
 
     return {
       getCookie,
@@ -1371,6 +1420,8 @@ export default {
       exchangeList,
       protocolList,
       protocolListph2,
+      filteredAlgoListExchangeV1,
+      filteredEncryptAlgoListV1,
       authenticationMethodList,
       encryptAlgoListExchange,
       pfsList,

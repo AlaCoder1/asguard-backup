@@ -82,6 +82,27 @@
           <br />
         </div>
       </v-col>
+
+      <v-dialog v-model="dialogDelete" max-width="500px">
+        <v-card>
+          <v-card-title class="headline">Delete Confirmation</v-card-title>
+          <v-card-text
+            >Are you sure you want to delete this
+            {{ isDeletedType === "server" ? "Server" : "Client" }}
+            ?</v-card-text
+          >
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="blue darken-1" text @click="dialogDelete = false"
+              >Cancel</v-btn
+            >
+            <v-btn color="blue darken-1" text @click="confirmDelete"
+              >Delete</v-btn
+            >
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+
       <v-snackbar
         :timeout="2000"
         v-model="snackbar"
@@ -91,6 +112,12 @@
         {{ textAlert }}
       </v-snackbar>
     </v-row>
+
+    <ModalCreateClient :isOpen="state.isModalOpen" :editRow="state.editRow" />
+    <ModalListClient
+      :isOpenListView="state.isModalOpenListView"
+      :editRow="state.editRow"
+    />
   </div>
 </template>
 
@@ -101,9 +128,10 @@ import { AgGridVue } from "ag-grid-vue3";
 import { onMounted, reactive, ref } from "vue";
 import { inject } from "vue";
 import CertStatusRenderVue from "./agGridCustomRender/CertStatusRenderVue.vue";
-
-import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
-import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSS
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
+import ModalCreateClient from "@/components/modals/ModalCreateClient.vue";
+import ModalListClient from "@/components/modals/ModalListClient.vue";
 
 export default {
   name: "ListingOpenvpnComponent",
@@ -111,14 +139,26 @@ export default {
     AgGridVue,
     VButton,
     CertStatusRenderVue,
+    ModalCreateClient,
+    ModalListClient,
   },
   setup() {
     const emitter = inject("emitter");
+    const dialogDelete = ref(false);
+    const isDeletedType = ref("");
+    const rowID = ref("");
+    const deleteRow = ref(null);
     const color = ref(null);
     const snackbar = ref(false);
     const textAlert = ref(false);
     const loading = ref(false);
     const isLoadingDialogue = ref(false);
+
+    const state = reactive({
+      isModalOpen: false,
+      isModalOpenListView: false,
+      editRow: {},
+    });
 
     const columnServers = [
       {
@@ -222,15 +262,11 @@ export default {
     ];
     const rowDataServers = reactive({});
     const rowDataClients = reactive({});
-
     const gridApi = ref(null);
 
-    // Obtain API from grid's onGridReady event
     const onGridReady = (params) => {
       gridApi.value = params.api;
     };
-
-    // DefaultColDef sets props common to all Columns
     const defaultColDef = {
       sortable: true,
       filter: true,
@@ -280,6 +316,17 @@ export default {
           eGui.innerHTML = `
         
         <button
+          id="account"
+          class="action-button account"
+          data-action="account" title="Client">
+             <i class="mdi mdi-account" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          <button 
+          class="action-button show "  
+          data-action="show">
+          <i class="mdi mdi-eye" style="color: #086eae;font-size: 20px;"></i>
+          </button>
+        <button
           id="play"
           class="action-button play"
           data-action="play" title="Start Server">
@@ -300,6 +347,18 @@ export default {
         `;
         } else {
           eGui.innerHTML = `
+
+          <button
+          id="account"
+          class="action-button account"
+          data-action="account" title="Client">
+             <i class="mdi mdi-account" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          <button 
+          class="action-button show "  
+          data-action="show">
+          <i class="mdi mdi-eye" style="color: #086eae;font-size: 20px;"></i>
+          </button>
           <button
           id="restart"
           class="action-button restart"
@@ -426,23 +485,24 @@ export default {
 
           break;
         case "delete":
-          axios
-            .delete(`/openvpn/deleteServerOpenvpn/${rowData.id}`)
-            .then((response) => {
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
+          isDeletedType.value = "server";
+          deleteRow.value = rowData;
+          dialogDelete.value = true;
+          rowID.value = rowData.id;
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-            });
           break;
+
+        case "account":
+          state.isModalOpen = true;
+          state.editRow = rowData;
+
+          break;
+        case "show":
+          state.isModalOpenListView = true;
+          state.editRow = rowData;
+
+          break;
+
         default:
           break;
       }
@@ -543,22 +603,10 @@ export default {
           break;
 
         case "delete":
-          axios
-            .delete(`/openvpn/deleteClientOpenvpn/${rowData.id}`)
-            .then((response) => {
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
-
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-            });
+          isDeletedType.value = "client";
+          deleteRow.value = rowData;
+          dialogDelete.value = true;
+          rowID.value = rowData.id;
           break;
         default:
           break;
@@ -614,6 +662,13 @@ export default {
     };
 
     onMounted(async () => {
+      emitter.on("closeModalClient", () => {
+        state.isModalOpenListView = false;
+      });
+      emitter.on("closeModalCreateClient", () => {
+        state.isModalOpen = false;
+      });
+
       try {
         const serversAttribute =
           document.getElementById("app").attributes["servers"].value;
@@ -651,7 +706,53 @@ export default {
       }
     });
 
+    const confirmDelete = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      if (isDeletedType.value === "server") {
+        axios
+          .delete(`/openvpn/deleteServerOpenvpn/${rowID.value}`)
+          .then((response) => {
+            snackbar.value = true;
+            color.value = "success";
+            textAlert.value = response.data.msg;
+
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          })
+          .catch((i) => {
+            snackbar.value = true;
+            color.value = "red";
+            textAlert.value = i.response.data.error;
+          });
+      } else if (isDeletedType.value === "client") {
+        axios
+          .delete(`/openvpn/deleteClientOpenvpn/${rowID.value}`)
+          .then((response) => {
+            snackbar.value = true;
+            color.value = "success";
+            textAlert.value = response.data.msg;
+
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          })
+          .catch((i) => {
+            snackbar.value = true;
+            color.value = "red";
+            textAlert.value = i.response.data.error;
+          });
+      }
+    };
+
     return {
+      state,
+      deleteRow,
+      rowID,
+      isDeletedType,
+      dialogDelete,
       loading,
       isLoadingDialogue,
       columnServers,
@@ -664,6 +765,7 @@ export default {
       color,
       snackbar,
       textAlert,
+      confirmDelete,
       actionCellRendererClient,
       deselectRows: () => {
         gridApi.value.deselectAll();

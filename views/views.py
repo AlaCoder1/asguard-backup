@@ -7,6 +7,7 @@ from backend.network.models import *
 from backend.rules.models import *
 from backend.gateway.models import *
 from backend.dashboard.functions import get_system_infomations
+from backend.clamav.list_configurations import getclamavconfigurations
 from django.db.models import Q
 from backend.openvpn.list_servers_clients import get_list_all_client_openvpn,  get_list_all_server_openvpn
 from backend.managementKeypairs.list_key_pairs import get_list_all_private_key, get_list_all_public_key
@@ -426,7 +427,10 @@ def squid_proxy(request):
     return render(request, 'squid_proxy.html')
 @login_required(login_url='/')
 def clamaV_page(request):
-    return render(request, 'clamaV_page.html')
+    config= getclamavconfigurations()
+    context = {'config':config}
+    print('******************** :',context)
+    return render(request, 'clamaV_page.html',context)
 
 @login_required(login_url='/')
 def subscription_page(request):

@@ -1,0 +1,28 @@
+from django.db import models
+from django.utils import timezone
+# Create your models here.
+
+
+
+class ProxyRules(models.Model):
+    rule_name = models.CharField(max_length=200, null=True)
+    type = models.CharField(max_length=20, null = False)
+    value = models.CharField(max_length=200, null=True, unique=True)
+    status = models.BooleanField(default=False)
+    allow_by_auth = models.BooleanField(default=False)
+    created_at = models.DateTimeField(default=timezone.now, editable=False)
+
+    def save(self, *args, **kwargs):
+        if not self.id:
+            self.created_at = timezone.now()
+        self.updated_at = timezone.now()
+        super(ProxyRules, self).save(*args, **kwargs)
+    class Meta:
+        db_table = 'proxy_rules'
+
+
+class ProxyUser(models.Model):
+    username = models.CharField(max_length=200, null=True, unique=True)
+
+    class Meta:
+        db_table = 'proxy_user'  

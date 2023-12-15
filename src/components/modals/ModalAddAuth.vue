@@ -40,7 +40,11 @@
                         slug: 'import',
                         id: '1',
                       },
-                      { name: 'Create Certificate Authority', slug: 'create', id: '2' },
+                      {
+                        name: 'Create Certificate Authority',
+                        slug: 'create',
+                        id: '2',
+                      },
                     ]"
                   ></v-select>
                   <p
@@ -379,7 +383,8 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate Authority"
+                () =>
+                  state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -387,7 +392,8 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate Authority"
+                () =>
+                  state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -395,7 +401,8 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate Authority"
+                () =>
+                  state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -403,7 +410,8 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate Authority"
+                () =>
+                  state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidlifeTime: helpers.withMessage(
@@ -416,7 +424,8 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate Authority"
+                () =>
+                  state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -424,7 +433,8 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate Authority"
+                () =>
+                  state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidState: helpers.withMessage(
@@ -437,7 +447,8 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate Authority"
+                () =>
+                  state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidPlace: helpers.withMessage(
@@ -450,7 +461,8 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate Authority"
+                () =>
+                  state.formData.method.name === "Create Certificate Authority"
               )
             ),
           },
@@ -458,7 +470,8 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate Authority"
+                () =>
+                  state.formData.method.name === "Create Certificate Authority"
               )
             ),
             email,
@@ -467,7 +480,8 @@ export default {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
               requiredIf(
-                () => state.formData.method.name === "Create Certificate Authority"
+                () =>
+                  state.formData.method.name === "Create Certificate Authority"
               )
             ),
             isValidCommne: helpers.withMessage(
@@ -541,6 +555,11 @@ export default {
               countryID: element.ccn3,
             };
           });
+
+          countryList.sort((a, b) =>
+            a.countryName.localeCompare(b.countryName)
+          );
+
           this.countriesList = countryList;
         },
         (error) => {

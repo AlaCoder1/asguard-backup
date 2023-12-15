@@ -2,7 +2,21 @@
   <div class="mt-3 ml-3 mr-3">
     <v-row>
       <v-col cols="12">
-        <h4>VPN PEERS</h4>
+        <h4 class="mb-1">
+          IPSEC PEERS
+          <i
+            class="mdi mdi-play-circle mr-1 ml-1"
+            style="color: #4caf50; font-size: 20px; cursor: pointer"
+            @click="startStopServer('start')"
+          ></i>
+          <i
+            v-if="status"
+            class="mdi mdi-stop-circle"
+            style="color: #b00020; font-size: 20px; cursor: pointer"
+            @click="startStopServer('stop')"
+          ></i>
+        </h4>
+
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column">
           <v-card class="flex mt-3">
@@ -37,6 +51,16 @@
         </div>
       </v-col>
     </v-row>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+
+      <template v-slot:actions> </template>
+    </v-snackbar>
   </div>
   <!-- Dialog for delete confirmation -->
   <v-dialog v-model="dialogDelete" max-width="500">
@@ -74,6 +98,7 @@ export default {
     const textAlert = ref(false);
     const dialogDelete = ref(false);
     const currentRowToDelete = ref(null);
+    const status = ref(false);
     const columns = ref([
       {
         headerName: "Type",
@@ -144,7 +169,7 @@ export default {
         minWidth: 100,
         suppressSizeToFit: true,
         field: "enable",
-        checkboxSelection: true,
+        cellRenderer: checkboxRender,
       },
       {
         headerName: "Action",
@@ -155,6 +180,49 @@ export default {
         filter: false,
       },
     ]);
+
+    function checkboxRender(params) {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      // return `<input type="checkbox" ${params.value ? "checked" : ""} />`;
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      params.value = params.data.server_status;
+      input.checked = params.value;
+
+      input.style.margin = "10px";
+      input.style.width = "20px";
+      input.style.height = "18px";
+      input.style.cursor = "pointer";
+
+      input.addEventListener("click", function (event) {
+        params.value = !params.value;
+        params.data.server_status = params.value;
+        let payload = {
+          enable: params.value,
+        };
+
+        axios
+          .put(`/ipsec/statusServerIPsec/${params.data.id}`, payload)
+          .then((response) => {
+            if (response.status == "200") {
+              snackbar.value = true;
+              color.value = "success";
+              textAlert.value = response.data.msg;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            snackbar.value = true;
+            color.value = "red";
+            textAlert.value = i.response.data.error;
+          });
+      });
+      return input;
+    }
+
     const rowData = reactive([]);
     function TypePeers(data) {
       let eGui = document.createElement("div");
@@ -203,7 +271,7 @@ export default {
           encryptionText = "256 bit AES-GCM with 128 bit ICV";
           break;
         default:
-          encryptionText = "Unknown Encryption";
+          encryptionText = "";
       }
 
       eGui.innerHTML = `
@@ -219,25 +287,49 @@ export default {
       let eGui = document.createElement("div");
       let encryptionText = "";
 
-      switch (data.data.encryption_algorithm_ph2) {
-        case "128":
-          encryptionText = "aes128gcm16";
-          break;
-        case "192":
-          encryptionText = "aes192gcm16";
-          break;
-        case "256":
-          encryptionText = "aes256gcm16";
-          break;
-        default:
-          encryptionText = "Unknown Encryption";
+      // Assuming data.data.encryption_algorithm_ph2 is an array
+      if (
+        Array.isArray(data.data.encryption_algorithm_ph2) &&
+        data.data.encryption_algorithm_ph2.length > 0
+      ) {
+        encryptionText = data.data.encryption_algorithm_ph2
+          .map((algorithm) => {
+            switch (algorithm) {
+              case "128":
+                return "aes128gcm16";
+              case "192":
+                return "aes192gcm16";
+              case "256":
+                return "aes256gcm16";
+              default:
+                return ""; // For unknown cases, add an empty string or handle accordingly
+            }
+          })
+          .join(" "); // Join the algorithms with space
+      } else {
+        encryptionText = null; // Set encryptionText as null if encryption algorithms array is empty or undefined
       }
-      eGui.innerHTML = `
-          ${encryptionText} <br/> 
-          ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
-          ${extractDHKey(data.data.pfs_key_group)} (
-          ${extractPFSKey(data.data.pfs_key_group)}
-          )bits         `;
+
+      // Conditionally add <br/> if encryptionText is not null
+      let lineBreak = encryptionText !== null ? "<br/>" : "";
+
+      if (data.data.pfs_key_group !== "off") {
+        let pfsKey = data.data.pfs_key_group
+          ? `(${extractPFSKey(data.data.pfs_key_group)}) bits`
+          : "";
+        eGui.innerHTML = `
+      ${encryptionText ? `${encryptionText} ${lineBreak}` : ""}
+      ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
+      ${extractDHKey(data.data.pfs_key_group)} ${pfsKey}
+    `;
+      } else {
+        eGui.innerHTML = `
+      ${encryptionText ? `${encryptionText} ${lineBreak}` : ""}
+      ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
+      ${extractDHKey(data.data.pfs_key_group)}
+    `;
+      }
+
       eGui.style.lineHeight = "2";
       return eGui;
     }
@@ -370,18 +462,47 @@ export default {
         const serversAttribute =
           document.getElementById("app").attributes["servers"].value;
         const validJsonString = serversAttribute;
-          // .replace(/'/g, '"')
-          // .replace(/True/g, "true")
-          // .replace(/False/g, "false")
-          // .replace(/None/g, "null");
         const parsedArray = JSON.parse(validJsonString);
         rowData.value = parsedArray;
+
+        const statusAttribute =
+          document.getElementById("app").attributes["status"].value;
+        console.log("statusAttribute", statusAttribute);
+
+        status.value = statusAttribute === "False" ? false : true;
       } catch (error) {
         console.log(error);
       }
     });
 
+    const startStopServer = (data) => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let payload = {
+        status: data,
+      };
+
+      axios
+        .post("/ipsec/statusIPsec", payload)
+        .then((response) => {
+          snackbar.value = true;
+          color.value = "success";
+          textAlert.value = response.data.msg;
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          snackbar.value = true;
+          color.value = "red";
+          textAlert.value = i.response.data.error;
+        });
+    };
+
     return {
+      status,
       emitter,
       color,
       snackbar,
@@ -395,6 +516,7 @@ export default {
       gridApi,
       gridOptions,
       TypePeers,
+      checkboxRender,
       RemoteGateway,
       extractDHKey,
       extractPFSKey,
@@ -407,6 +529,7 @@ export default {
       handleAction,
       addServer,
       deleteItem,
+      startStopServer,
     };
   },
 };

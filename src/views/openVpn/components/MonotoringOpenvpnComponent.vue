@@ -6,7 +6,7 @@
           <v-row class="mt-2 mb-5">
             <monitoringCards />
           </v-row>
-          <v-row class="mt-2 ml-3 mr-3">
+          <v-row class="mt-2">
             <v-col cols="6">
               <apexchart
                 id="top-trafic-chart"

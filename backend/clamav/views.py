@@ -52,7 +52,6 @@ def update_clamav_configuration(request, id):
 
             # Extract parameters from the request data
             logverbose = request.data.get('logverbose')
-            databasedirectory = request.data.get('databasedirectory')
             tcpport = request.data.get('tcpport')
             tcpsocket = request.data.get('tcpsocket')
             maxqueue = request.data.get('maxqueue')
@@ -78,7 +77,6 @@ def update_clamav_configuration(request, id):
             maxfilesize = request.data.get('maxfilesize')
             maxrecursion = request.data.get('maxrecursion')
             maxfiles = request.data.get('maxfiles')
-            maxpartitions = request.data.get('maxpartitions')
             freshclamdatabasemirror = request.data.get('freshclamdatabasemirror')
             freshclamconnectiontimeout = request.data.get('frechclamconnectiontimeout')
             proxyport = request.data.get('proxyport')
@@ -86,7 +84,7 @@ def update_clamav_configuration(request, id):
             freshclam_enabled = request.data.get('freshclam_enabled')
 
             # Call the update_clamav_config function
-            result = update_clamav_config(databasedirectory,maxfiles,maxfilesize,scanhtml,scanarchive,scanxmldocs,scanmail,scanhwp3,scanpdf,scanole2,disablecache,scanelf,scanpe,alertole2macros,alertencryptedarchive,alertbrokenexecutables,followdirectorysymlinks,followfilesymlinks,freshclamdatabasemirror,freshclamconnectiontimeout,tcpport,maxpartitions,tcpsocket,maxqueue,maxrecursion,proxyport,maxscansize,maxdirectoryrecursion,idletimeout,clamd_enabled,freshclam_enabled,logverbose,maxthreads)
+            result = update_clamav_config(maxfiles,maxfilesize,scanhtml,scanarchive,scanxmldocs,scanmail,scanhwp3,scanpdf,scanole2,disablecache,scanelf,scanpe,alertole2macros,alertencryptedarchive,alertbrokenexecutables,followdirectorysymlinks,followfilesymlinks,freshclamdatabasemirror,freshclamconnectiontimeout,tcpport,tcpsocket,maxqueue,maxrecursion,proxyport,maxscansize,maxdirectoryrecursion,idletimeout,clamd_enabled,freshclam_enabled,logverbose,maxthreads)
             
            
             print("result:", result)
@@ -94,7 +92,6 @@ def update_clamav_configuration(request, id):
             if result is True:
             # Save the updated ClamAV object
                 clamav_object.logverbose = logverbose
-                clamav_object.databasedirectory = databasedirectory
                 clamav_object.tcpport = tcpport
                 clamav_object.tcpsocket = tcpsocket
                 clamav_object.maxthreads = maxthreads
@@ -120,7 +117,6 @@ def update_clamav_configuration(request, id):
                 clamav_object.maxfilesize = maxfilesize
                 clamav_object.maxrecursion = maxrecursion
                 clamav_object.maxfiles = maxfiles
-                clamav_object.maxpartitions = maxpartitions
                 clamav_object.freshclamdatabasemirror = freshclamdatabasemirror
                 clamav_object.frechclamconnectiontimeout = freshclamconnectiontimeout
                 clamav_object.proxyport = proxyport

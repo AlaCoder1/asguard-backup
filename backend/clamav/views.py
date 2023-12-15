@@ -1,17 +1,18 @@
 from django.shortcuts import render
-from .models import *
+from .models import ClamAV,FreshclamDatabase
 from django.http import JsonResponse
 import json
 from django.http import JsonResponse
 from backend.authentification.views import *
-from .serializers import *
+from .serializers import ClamavSerializer,FreshclamDatabaseSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from django.core import serializers
 from django.db.models import Q
-from backend.clamav.functions_sys import *
-from django.utils import timezone
-import re
+from backend.clamav.functions_sys import update_clamav_config,execute_cmd
+from backend.clamav.list_configurations import getclamavconfigurations
+
+
 
 ################ Get the clamav configurations data from the database #############
 
@@ -20,23 +21,11 @@ import re
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-def getConfiguratiosnFromDatabase(request):
-    if request.method=="GET":
-        Clamd_list = []
-        # Get all configurations from database
-        clamavconfig_from_db = ClamAV.objects.all()
-        clamd = serializers.serialize("json", clamavconfig_from_db)
-        res = json.loads(clamd)
-        print(res)
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            Clamd_list.append(res[i]['fields'])
-
-        # Return the list in json form 
-    return JsonResponse({"Clamav_Configuration": Clamd_list})
+def getconfiguratiosnfromdatabase(request):
+    """Getting clamav configurations from database"""
+    if (request.method == 'GET'):
+        configurations_clamav = getclamavconfigurations()
+        return JsonResponse(configurations_clamav, safe=False)
 
 
 
@@ -55,7 +44,7 @@ def getConfiguratiosnFromDatabase(request):
 @permission_classes([IsAuthenticated])
 def update_clamav_configuration(request, id):
     if request.method=="PUT":
-
+        """Update clamav configurations in config and freshclam file"""
         try:
             print("Request Data:", request.data)
             # Retrieve ClamAV object from the database using the id
@@ -162,6 +151,7 @@ def update_clamav_configuration(request, id):
 @permission_classes([IsAuthenticated])
 def update_freshclam_database(request):
     if request.method == 'POST':
+        """Update the freshclam database"""
         clamav = ClamAV.objects.first()
         
         result = execute_cmd('freshclam')

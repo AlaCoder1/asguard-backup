@@ -75,12 +75,12 @@ def read_and_extract_freshclam_config():
 
 def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,scanhtml=None,scanarchive=None,scanxmldocs=None,scanmail=None,scanhwp3=None,scanpdf=None,scanole2=None,disablecache=None,scanelf=None,scanpe=None,alertole2macros=None,alertencryptedarchive=None,alertbrokenexecutables=None,followdirectorysymlinks=None,followfilesymlinks=None,freshclamdatabasemirror=None,freshclamconnectiontimeout=None,tcpport=None,maxpartitions=None,tcpsocket=None,maxqueue=None,maxrecursion=None,proxyport=None,maxscansize=None,maxdirectoryrecursion=None,idletimeout=None,clamd_enabled=None,freshclam_enabled=None,logverbose=None, maxthreads=None):
     
-    Clamav_path = "/etc/clamav/clamd.conf"
+    clamav_path = "/etc/clamav/clamd.conf"
     freshclam_path= "/etc/clamav/freshclam.conf"
     try:
         ################################## Update the clamav config file ###################################################
     
-        cmd_read = f"sudo cat {Clamav_path}"
+        cmd_read = f"sudo cat {clamav_path}"
         output, error = execute_cmd(cmd_read)
 
         if not error:
@@ -207,7 +207,7 @@ def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,s
                 updated_lines.append(line)
 
             # Write the updated config back to the file
-            with open(Clamav_path, 'w') as file:
+            with open(clamav_path, 'w') as file:
                 file.write('\n'.join(updated_lines))
 
             print("ClamAV config updated successfully!")
@@ -273,7 +273,7 @@ def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,s
     except Exception as e:
         
         print(f"Erreur lors de la mise à jour du fichier {freshclam_path}: {e}")
-        print(f"Erreur lors de la mise à jour du fichier {Clamav_path}: {e}")
+        print(f"Erreur lors de la mise à jour du fichier {clamav_path}: {e}")
 
         return False
 

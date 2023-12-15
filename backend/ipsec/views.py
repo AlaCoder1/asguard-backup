@@ -9,7 +9,7 @@ from backend.ipsec.constant_variables import IPV4_CONFIG
 from backend.ipsec.utils import json_to_str_server_ipsec
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
-from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec, install_server_ipsec, update_server_ipsec
+from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec, install_server_ipsec, up_ipsec_conn, update_server_ipsec
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
@@ -289,7 +289,11 @@ def createServerIPsec(request):
 
                 # Add the server to the database
                 serializer_server.save()
-                return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(conn_name, 'done')}, status=201)
+                up_ipsec_status = up_ipsec_conn(conn_name)
+                if up_ipsec_status:
+                    return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(conn_name, 'updated')}, status=201)
+                else:
+                    return JsonResponse({"error": "Error in up ipsec"}, status=400)
             else:
                 return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
         except CommandExecutionError:
@@ -557,7 +561,11 @@ def updateServerIPsec(request, id):
 
                 # Add the server to the database
                 serializer_server.save()
-                return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(server.conn_name, 'updated')}, status=201)
+                up_ipsec_status = up_ipsec_conn(server.conn_name)
+                if up_ipsec_status:
+                    return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(server.conn_name, 'updated')}, status=201)
+                else:
+                    return JsonResponse({"error": "Error in up ipsec"}, status=400)
             else:
                 return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 

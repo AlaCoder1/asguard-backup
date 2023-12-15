@@ -10,6 +10,7 @@
             @click="startStopServer('start')"
           ></i>
           <i
+            v-if="status"
             class="mdi mdi-stop-circle"
             style="color: #b00020; font-size: 20px; cursor: pointer"
             @click="startStopServer('stop')"
@@ -97,6 +98,7 @@ export default {
     const textAlert = ref(false);
     const dialogDelete = ref(false);
     const currentRowToDelete = ref(null);
+    const status = ref(false);
     const columns = ref([
       {
         headerName: "Type",
@@ -286,19 +288,24 @@ export default {
       let encryptionText = "";
 
       // Assuming data.data.encryption_algorithm_ph2 is an array
-      if (Array.isArray(data.data.encryption_algorithm_ph2) && data.data.encryption_algorithm_ph2.length > 0) {
-        encryptionText = data.data.encryption_algorithm_ph2.map(algorithm => {
-          switch (algorithm) {
-            case "128":
-              return "aes128gcm16";
-            case "192":
-              return "aes192gcm16";
-            case "256":
-              return "aes256gcm16";
-            default:
-              return ""; // For unknown cases, add an empty string or handle accordingly
-          }
-        }).join(" "); // Join the algorithms with space
+      if (
+        Array.isArray(data.data.encryption_algorithm_ph2) &&
+        data.data.encryption_algorithm_ph2.length > 0
+      ) {
+        encryptionText = data.data.encryption_algorithm_ph2
+          .map((algorithm) => {
+            switch (algorithm) {
+              case "128":
+                return "aes128gcm16";
+              case "192":
+                return "aes192gcm16";
+              case "256":
+                return "aes256gcm16";
+              default:
+                return ""; // For unknown cases, add an empty string or handle accordingly
+            }
+          })
+          .join(" "); // Join the algorithms with space
       } else {
         encryptionText = null; // Set encryptionText as null if encryption algorithms array is empty or undefined
       }
@@ -455,12 +462,14 @@ export default {
         const serversAttribute =
           document.getElementById("app").attributes["servers"].value;
         const validJsonString = serversAttribute;
-        // .replace(/'/g, '"')
-        // .replace(/True/g, "true")
-        // .replace(/False/g, "false")
-        // .replace(/None/g, "null");
         const parsedArray = JSON.parse(validJsonString);
         rowData.value = parsedArray;
+
+        const statusAttribute =
+          document.getElementById("app").attributes["status"].value;
+        console.log("statusAttribute", statusAttribute);
+
+        status.value = statusAttribute === "False" ? false : true;
       } catch (error) {
         console.log(error);
       }
@@ -493,6 +502,7 @@ export default {
     };
 
     return {
+      status,
       emitter,
       color,
       snackbar,

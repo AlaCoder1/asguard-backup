@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { ref, reactive } from "vue";
+import { ref, toRefs, reactive, watch } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -40,7 +40,14 @@ export default {
     AgGridVue,
   },
 
-  setup() {
+  props: {
+    freshclam: {
+      type: Array,
+    },
+  },
+
+  setup(props) {
+    const { freshclam } = toRefs(props);
     const gridApi = ref(null);
     const rowDataUpdate = reactive({});
 
@@ -48,22 +55,26 @@ export default {
       {
         headerName: "Date",
         field: "date",
+        width: 150,
         sortable: true,
         autoHeight: true,
         filter: true,
       },
       {
         headerName: "Process",
-        field: "Process",
+        field: "process_type",
         sortable: true,
+        autoHeight: true,
+        width: 150,
         filter: true,
       },
       {
         headerName: "Line",
         autoHeight: true,
-        field: "Line",
+        cellRenderer: formatedLine,
         sortable: true,
         filter: true,
+        width: 350,
       },
     ];
 
@@ -72,8 +83,6 @@ export default {
         document.getElementById("filter-text-box").value
       );
     };
-
-
     const onGridReady = (params) => {
       gridApi.value = params.api;
 
@@ -89,9 +98,32 @@ export default {
         console.error("Grid API.");
       }
     };
+    watch(
+      () => freshclam.value,
+      (val) => {
+        if (!rowDataUpdate.value) rowDataUpdate.value = [];
+        rowDataUpdate.value = val;
+      }
+    );
+
+    function formatedLine(data) {
+      const longString = data.data.line;
+      const chunks = longString.match(/.{1,100}/g);
+
+      const resultWithBr = chunks.map((chunk) => chunk + "<br>").join("");
+
+      let eGui = document.createElement("div");
+
+      eGui.innerHTML = `${resultWithBr}
+        `;
+      eGui.style.lineHeight = "2";
+      return eGui;
+    }
+
     return {
       onGridReady,
       onFilterTextBoxChanged,
+      formatedLine,
       columnUpdate,
       rowDataUpdate,
       gridApi,

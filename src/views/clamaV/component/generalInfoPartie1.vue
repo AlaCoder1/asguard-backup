@@ -40,6 +40,14 @@
           v-model="maxNumberQueued"
         ></v-text-field>
       </v-col>
+
+      <v-col cols="4" class="mt-5">
+        <label>Proxy port</label>
+      </v-col>
+      <v-col cols="8" class="mb-n6">
+        <v-text-field label="Proxy port" v-model="proxyPort"></v-text-field>
+      </v-col>
+
       <v-col cols="4" class="mt-5">
         <label>Idle timeout</label>
       </v-col>
@@ -128,6 +136,7 @@
 import { useVModels } from "@vueuse/core";
 
 const props = defineProps([
+  "proxyPort",
   "enableService",
   "enableFreshClamService",
   "enableTcpPort",
@@ -161,6 +170,7 @@ const emit = defineEmits([
   "update:brokenExecutables",
   "update:qle2",
   "update:qle2Marcos",
+  "update:proxyPort",
   "update:pdfFiles",
 ]);
 const {
@@ -174,6 +184,7 @@ const {
   directorySymlinks,
   regularFile,
   cache,
+  proxyPort,
   portableExecutable,
   linkingFormat,
   brokenExecutables,

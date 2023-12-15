@@ -53,7 +53,7 @@
     <v-row class="flex py-8 mb-5">
       <v-col cols="4"> </v-col>
       <v-col>
-        <div class="flex center" style="margin-left: 15%;">
+        <div class="flex center" style="margin-left: 15%">
           <VButton
             rounded
             outlined
@@ -73,7 +73,7 @@
         <v-divider></v-divider>
       </v-col>
     </v-row>
-    <v-row class="flex py-8 mb-1" style="margin-left: 15%;">
+    <v-row class="flex py-8 mb-1" style="margin-left: 15%">
       <v-col cols="4"> </v-col>
       <v-col>
         <div class="flex center">
@@ -235,9 +235,7 @@ export default {
       let payload = {
         logverbose: state.freshclamLog,
         tcpport: state.enableTcpPort,
-        databasedirectory: "/var/lib/clamav",
         tcpsocket: "3310",
-        maxpartitions: "128",
         maxthreads: state.maxNumberThread,
         maxqueue: state.maxNumberQueued,
         idletimeout: state.idleTimeout,

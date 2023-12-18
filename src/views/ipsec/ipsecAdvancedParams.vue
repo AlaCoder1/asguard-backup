@@ -590,7 +590,7 @@ export default {
             `There must be at least 32 characters, including at least one uppercase,one lowercase, one number, and one special character.`,
 
             helpers.regex(
-              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{32,128}$/
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~\\]{32,128}$/
             )
           ),
         },

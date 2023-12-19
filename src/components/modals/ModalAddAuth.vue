@@ -79,12 +79,6 @@
                     label="Private key certificate (facultatif)"
                     variant="outlined"
                   ></v-textarea>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.formData.privateKey.$error"
-                  >
-                    {{ v$.formData.privateKey.$errors[0].$message }}
-                  </p>
 
                   <v-text-field
                     label="Serial number certificate"
@@ -359,16 +353,6 @@ export default {
           },
           method: { required },
           certificatData: {
-            requiredIfFuction: helpers.withMessage(
-              "Value is required",
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                  "Import an existing Certificate Authority"
-              )
-            ),
-          },
-          privateKey: {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
               requiredIf(

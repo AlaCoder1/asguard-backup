@@ -8,7 +8,7 @@ class RuleIdsIpsSerializer(serializers.ModelSerializer):
             model = ids_ips_rule
             fields = ['sid','action',
                       'protocol','source_ip','direction','destination_ip',
-                      'msg','content','flowbit','rev',"rule",'suricatafile','activate_rule','default_rule'
+                      'msg','rev',"rule",'suricatafile','activate_rule','default_rule'
                       ]
 
 # class RuleSerializerForSwagger(serializers.Serializer):
@@ -18,7 +18,7 @@ class RuleSerializerForSwagger(serializers.ModelSerializer):
     class Meta:
         model = ids_ips_rule
         fields = ['id', 'sid', 'action', 'protocol', 'source_ip', 'direction', 'destination_ip',
-                'msg', 'content', 'flowbit', 'rev', 'activate_rule',]
+                'msg', 'rev', 'activate_rule',]
             
     id = serializers.IntegerField(required=False)
 #Suricata Config
@@ -37,5 +37,5 @@ class AlertSerializer(serializers.ModelSerializer):
             model = Alert
             fields = ['timestamp','sid','priority',
                       'protocol','src_addr','src_port','dst_addr',
-                      'dst_port','suricatafile','alert'
+                      'dst_port','suricatafile','message','alert'
                       ]

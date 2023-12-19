@@ -1,5 +1,4 @@
 from django.shortcuts import render
-
 # Create your views here.
 import ast
 from .models import *
@@ -41,8 +40,6 @@ def addDefaultRulesToDatabase(request, id):
             direction=None
             dest_ip=None
             msg=None
-            content=None
-            flowbit=None
             rev=None
             if rule.startswith("#") is True:
                 active=False
@@ -61,11 +58,6 @@ def addDefaultRulesToDatabase(request, id):
                 dest_ip=rule[rule.find("->")+len("->"):rule.find("(msg")].strip()
             if rule.find("msg:")!=-1:
                 msg=rule[rule.find("msg:")+len("msg:"): rule.find('";')].strip()
-            if rule.find("content:")!=-1:
-                rule_content=rule[rule.find("content:")+len("content:"):].strip()
-                content=rule_content[:rule_content.find('";')]
-            if rule.find("flowbit:")!=-1:
-                flowbit=rule[rule.find("flowbit:")+len("flowbit:"): rule.find(";")].strip()
             if rule.find("rev:")!=-1:
                 rev=rule[rule.find("rev:")+len("rev:"): rule.find(";sid")].strip(";")
                 if rev.isdigit():
@@ -78,7 +70,6 @@ def addDefaultRulesToDatabase(request, id):
             direction=direction if direction!="" else None  
             dest_ip=dest_ip if dest_ip!="" else None    
             msg=msg if msg!="" else None  
-            content=content if content!="" else None    
             protocol=protocol if protocol!="" else None  
             data = {
                 "sid":sid,
@@ -88,8 +79,6 @@ def addDefaultRulesToDatabase(request, id):
                 "direction":direction,
                 "destination_ip":dest_ip,
                 "msg":msg,
-                "content":content,
-                "flowbit":flowbit,
                 "rev":rev,
                 "rule": rule,
                 "suricatafile": suricatafile_obj.id,
@@ -155,8 +144,6 @@ def save_rules_suricata(request, id):
             direction=None if data.get('direction', None) == "" else data.get('direction', None)
             destination_ip=None if data.get('destination_ip', None) == "" else data.get('destination_ip', None)
             msg=None if data.get('msg', None) == "" else data.get('msg', None)
-            content=None if data.get('content', None) == "" else data.get('content', None)
-            flowbit=None if data.get('flowbit', None) == "" else data.get('flowbit', None)
             rev=None if data.get('rev', None) == "" else data.get('rev', None)
             sid=None if data.get('sid', None) == "" else data.get('sid', None)
             activate_rule=None if data.get('activate_rule', None) == "" else data.get('activate_rule', None)
@@ -172,8 +159,6 @@ def save_rules_suricata(request, id):
                     "direction": direction,
                     "destination_ip": destination_ip,
                     "msg": msg,
-                    "content": content,
-                    "flowbit": flowbit,
                     "rev": rev,
                     "sid": sid,
                     "activate_rule": activate_rule,
@@ -224,8 +209,6 @@ def save_rules_suricata(request, id):
                         ids_ips_rule_from_db.direction = direction
                         ids_ips_rule_from_db.destination_ip = destination_ip
                         ids_ips_rule_from_db.msg = msg
-                        ids_ips_rule_from_db.content = content
-                        ids_ips_rule_from_db.flowbit = flowbit
                         ids_ips_rule_from_db.rev = rev
                         ids_ips_rule_from_db.activate_rule = activate_rule
                         ids_ips_rule_from_db.save()
@@ -647,32 +630,29 @@ def addalertsToDatabase(request,id):
             logs_add=prepare_alert_attribut(logs_add)
             logs_delete = [log for log in alert_list if log not in logs]   
             
-        if len(logs_add)!=0 or len(logs_delete)!=0:
-            if len(logs_add)!=0:
-                # Parcourir les logs récupérés et ajoutez-les à la base de données
-                for log in logs_add:
-                    print("data to add ==>",log['alert'])
-                    suricatafile_obj = suricatafile.objects.get(pk=id)  
-                    log['suricatafile']=int(suricatafile_obj.id)
-                    if not Alert.objects.filter(alert=log['alert']).exists():
-                        serializerAlert = AlertSerializer(data=log)
-                        if serializerAlert.is_valid():
-                            serializerAlert.save()
-                        else:
-                            return str(serializerAlert.errors)
+        if len(logs_add)!=0:
+            # Parcourir les logs récupérés et ajoutez-les à la base de données
+            for log in logs_add:
+                print("data to add ==>",log['alert'])
+                suricatafile_obj = suricatafile.objects.get(pk=id)  
+                log['suricatafile']=int(suricatafile_obj.id)
+                if not Alert.objects.filter(alert=log['alert']).exists():
+                    serializerAlert = AlertSerializer(data=log)
+                    if serializerAlert.is_valid():
+                        serializerAlert.save()
                     else:
-                        pass
-            if len(logs_delete)!=0:
-                for l in logs_delete:
-                    if Alert.objects.filter(alert=l).exists():
-                        alert = Alert.objects.get(alert=l)
-                        alert.delete()
-                    else:
-                        return JsonResponse({"message": "Alert not found!!"},status=400)
-                    
-            return JsonResponse({"message":"Tous les alerts ont été mis à jour avec succès!!"},status=200)
-        else:
-            JsonResponse({"message":"Tous les alerts ont été mis à jour avec succès!!"},status=200)
+                        return str(serializerAlert.errors)
+                else:
+                    pass
+        elif len(logs_delete)!=0:
+            for l in logs_delete:
+                if Alert.objects.filter(alert=l).exists():
+                    alert = Alert.objects.get(alert=l)
+                    alert.delete()
+                else:
+                    return JsonResponse({"message": "Alert not found!!"},status=400)
+        return JsonResponse({"message":"Tous les alerts ont été mis à jour avec succès!!"},status=200)           
+
     
 #Afficher les alertes de la BD//
 @api_view(['GET'])

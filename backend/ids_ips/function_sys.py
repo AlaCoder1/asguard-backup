@@ -167,13 +167,14 @@ def update_suricata_config( status_enabled,new_promisc, new_eve_log, new_syslog,
 #*********** Les régles ****************
 
 
-def return_rule(sid,action,protocol,source_ip,direction,destination_ip,msg,content,flowbit,rev):
-   rule={sid:{"action":action,"protocol":protocol,"source_ip":source_ip,"direction":direction,"destination_ip":destination_ip,"msg":msg,"content":content,"flowbit":flowbit,"rev":rev,"sid":sid}}
+def return_rule(sid,action,protocol,source_ip,direction,destination_ip,msg,rev):
+   rule={sid:{"action":action,"protocol":protocol,"source_ip":source_ip,"direction":direction,"destination_ip":destination_ip,"msg":msg,"rev":rev,"sid":sid}}
    return rule
+
 
 #Format des régles    
 def format_dict_as_suricata_rules(content):    
-    rule_template = "{action} {protocol} {source_ip} {direction} {destination_ip} (msg:\"{msg}\"; content:\"{content}\"; flowbit:\"{flowbit}\"; rev:{rev};sid:{sid};)"
+    rule_template = "{action} {protocol} {source_ip} {direction} {destination_ip} (msg:\"{msg}\"; rev:{rev};sid:{sid};)"
     rule_str = rule_template.format(
         action=content['action'],
         protocol=content['protocol'],
@@ -181,20 +182,9 @@ def format_dict_as_suricata_rules(content):
         direction=content['direction'],
         destination_ip=content['destination_ip'],
         msg=content['msg'],
-        content=content['content'],
-        flowbit=content['flowbit'],
         rev=content['rev'],
         sid=content['sid']
     )
-    # if content['msg'] is None:
-    #     rule_str=rule_str[:rule_str.find('msg:"None";')]+rule_str[rule_str.find('msg:"None";')+len('msg:"None";'):]
-    # if content['content'] is None:
-    #     rule_str=rule_str[:rule_str.find('content:"None";')]+rule_str[rule_str.find('content:"None";')+len('content:"None";'):]
-    # if content['rev'] is None:
-    #     rule_str=rule_str[:rule_str.find('rev:"None";')]+rule_str[rule_str.find('rev:"None";')+len('rev:"None";'):]
-    # if content['flowbit'] is None:
-    #     rule_str=rule_str[:rule_str.find('flowbit:"None";')]+rule_str[rule_str.find('flowbit:"None";')+len('flowbit:"None";'):]
-    # print({"rule_str":rule_str})
     return rule_str
 
 # Ajouter une régle
@@ -218,8 +208,6 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     direction=None
     dest_ip=None
     msg=None
-    content=None
-    flowbit=None
     rev=None
     if rule.startswith("#") is True:
         action=rule.split(" ")[0].strip()
@@ -237,12 +225,6 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
         dest_ip=rule[rule.find("->")+len("->"):rule.find("(msg")].strip()
     if rule.find("msg:")!=-1:
         msg=rule[rule.find("msg:")+len("msg:"): rule.find('";')].strip()
-    if rule.find("content:")!=-1:
-        rule_content=rule[rule.find("content:")+len("content:"):].strip()
-        content=rule_content[:rule_content.find('";')]
-    if rule.find("flowbit:")!=-1:
-        rule_flowbit=rule[rule.find("flowbit:")+len("flowbit:"):]
-        flowbit=rule_flowbit[:rule_flowbit.find(";")].strip()
     if rule.find("rev:")!=-1:
         rev=rule[rule.find("rev:")+len("rev:"): rule.find(";sid")].strip(";")
         if rev.isdigit():
@@ -254,10 +236,9 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     src_ip=src_ip if src_ip!="" else None    
     direction=direction if direction!="" else None  
     dest_ip=dest_ip if dest_ip!="" else None    
-    msg=msg if msg!="" else None  
-    content=content if content!="" else None    
+    msg=msg if msg!="" else None   
     protocol=protocol if protocol!="" else None
-    flowbit=flowbit if flowbit!="" else None  
+    print({"action":action,"protocol":protocol})
     if contenu['action'] is not None:
         if contenu["activate_rule"] is False:
             contenu['action']="#"+contenu['action']
@@ -278,27 +259,16 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     if  contenu['msg'] is not None and rule.find("msg")!=-1:
         rule=rule.replace(msg,contenu['msg'])   
     
-    if  contenu['content'] is not None and rule.find("msg")!=-1:
-        rule=rule.replace(content,contenu['content'])   
-            
-    if  contenu['flowbit'] is not None:
-        if rule.find("flowbit")!=-1:
-            rule=rule.replace(flowbit,contenu['flowbit'])   
-        # elif rule.find("msg")!=-1:
-        #     rule=rule[:rule.find(contenu['msg'])+len(contenu['msg']+";")+1]+'content: '+content+";"+rule[rule.find(contenu['msg'])+len(contenu['msg']+";"):]
-            
-    
     if  contenu['rev'] is not None and rule.find("rev")!=-1:
         rule=rule.replace(str(rev),str(contenu['rev']))    
         
     if  contenu['sid'] is not None:
         rule=rule.replace(str(sid),str(contenu['sid']))   
         
-    # cmd = "sed -i '/sid:{}/ s/{}/{}/' {}".format(sid,line_to_update,formatted_content,file_path)
     cmd = "sed -i '/sid:{}/ s/{}/{}/' {}".format(sid, line_to_update.strip(), rule.strip(), file_path)
     output, error = execute_cmd(cmd)
-    
     return output,rule, error
+
 # //
 def get_line_by_sid(file_path, sid):
     try:
@@ -345,7 +315,7 @@ def get_suricata_default_rules():
 
 #*********** Les alertes ****************//
 def read_suricata_log():
-    suricata_log_path = "/var/log/suricata/fast.log"
+    suricata_log_path = "/var/log/suricata/fastlogrotate.log"
     logs = []
     try:
         cmd_read = f"cat {suricata_log_path}"
@@ -359,6 +329,8 @@ def read_suricata_log():
         # print("Une exception s'est produite:", str(e))
         return None
     return logs
+
+# function to split informations
 def prepare_alert_attribut(lines):
     logs = []
     for line in lines:
@@ -373,10 +345,12 @@ def prepare_alert_attribut(lines):
             dst_addr=attributes[-1].split(":")[0]
             dst_port=attributes[-1].split(":")[1]
             sid=attributes[2].split(":")[1]
+            message = ' '.join(attributes[3:-11]).replace("[**]", "").strip()
             # Afficher les attributs
             logs.append({
                 "timestamp": timestamp,
                 "sid":sid,
+                "message": message,
                 "priority": int(priority),
                 "protocol": protocol,
                 "src_addr": src_addr,
@@ -384,5 +358,5 @@ def prepare_alert_attribut(lines):
                 "dst_addr": dst_addr,
                 "dst_port": int(dst_port),
                 "alert":line.strip(),
-                })      
+                    })  
     return logs

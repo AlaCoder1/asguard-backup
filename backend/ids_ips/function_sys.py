@@ -345,7 +345,7 @@ def get_suricata_default_rules():
 
 #*********** Les alertes ****************//
 def read_suricata_log():
-    suricata_log_path = "/var/log/suricata/fastlogrotate.log"
+    suricata_log_path = "/var/log/suricata/fast.log"
     logs = []
     try:
         cmd_read = f"cat {suricata_log_path}"

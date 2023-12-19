@@ -36,7 +36,7 @@
               @cell-clicked="cellWasClicked"
               @grid-ready="onGridReady"
               :pagination="true"
-              :paginationPageSize="100"
+              :paginationPageSize="10"
             />
             
           </div>

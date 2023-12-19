@@ -633,25 +633,47 @@ def get_suricata_configuration(request, id):
 def addalertsToDatabase(request,id):
     if request.method=="POST":
         logs = read_suricata_log()
-        if logs:
-            added_logs = []  # Pour stocker les logs ajoutés avec succès en base de données
-            # Parcourir les logs récupérés et ajoutez-les à la base de données
-            for log in logs:
-                if  suricatafile.objects.filter(pk=id).exists():
+        alerts = Alert.objects.all()  # Récupérer toutes les alertes de la base de données
+        logs_add=[]
+        logs_delete=[]
+        if len(alerts)==0:
+            logs_add=prepare_alert_attribut(logs)
+        else:
+            alert_list=[]
+            serializer = AlertSerializer(alerts, many=True)
+            alert_list=serializer.data
+            alert_list=[l['alert'] for l in alert_list]
+            logs_add = [log for log in logs if log not in alert_list]
+            logs_add=prepare_alert_attribut(logs_add)
+            logs_delete = [log for log in alert_list if log not in logs]   
+            
+        if len(logs_add)!=0 or len(logs_delete)!=0:
+            if len(logs_add)!=0:
+                # Parcourir les logs récupérés et ajoutez-les à la base de données
+                for log in logs_add:
+                    print("data to add ==>",log['alert'])
                     suricatafile_obj = suricatafile.objects.get(pk=id)  
                     log['suricatafile']=int(suricatafile_obj.id)
-                    serializer = AlertSerializer(data=log)
-                    if serializer.is_valid():
-                        serializer.save()
-                        added_logs.append(serializer.data)
+                    if not Alert.objects.filter(alert=log['alert']).exists():
+                        serializerAlert = AlertSerializer(data=log)
+                        if serializerAlert.is_valid():
+                            serializerAlert.save()
+                        else:
+                            return str(serializerAlert.errors)
                     else:
                         pass
-                else:
-                    return JsonResponse({"message": "Le fichier Suricata est non trouvé!"},status=400)
-            return JsonResponse({"message": "Les alerts ont été ajoutées avec succès.", "added_logs": added_logs},status=200)
+            if len(logs_delete)!=0:
+                for l in logs_delete:
+                    if Alert.objects.filter(alert=l).exists():
+                        alert = Alert.objects.get(alert=l)
+                        alert.delete()
+                    else:
+                        return JsonResponse({"message": "Alert not found!!"},status=400)
+                    
+            return JsonResponse({"message":"Tous les alerts ont été mis à jour avec succès!!"},status=200)
         else:
-            return JsonResponse({"message": "Aucun log n'a été trouvé pour ajouter."},status=400)
-
+            JsonResponse({"message":"Tous les alerts ont été mis à jour avec succès!!"},status=200)
+    
 #Afficher les alertes de la BD//
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])

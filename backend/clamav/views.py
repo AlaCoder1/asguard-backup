@@ -10,7 +10,7 @@ from rest_framework import status
 from django.core import serializers
 from django.db.models import Q
 from backend.clamav.functions_sys import update_clamav_config,execute_cmd
-from backend.clamav.list_configurations import getclamavconfigurations
+from backend.clamav.list_configurations import getclamavconfigurations,clamav_full_scan_result
 
 
 
@@ -183,6 +183,18 @@ def update_freshclam_database(request):
         return JsonResponse({'message': message, 'data': serialized_data})
     
     return JsonResponse({'error': 'Invalid request method'})
+
+############################ API Full scan clamav #################################
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def clamavscanview(request):
+    """Getting Result of full scan"""
+    if (request.method == 'GET'):
+        aggregated_summary, log_files = clamav_full_scan_result()
+        return JsonResponse({'result': aggregated_summary, 'log_files': log_files}, safe=False)
 
 
 

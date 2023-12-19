@@ -1,3 +1,4 @@
+import subprocess
 from backend.ipsec.constant_variables import PATH_IPSEC_CONF, PATH_IPSEC_D_CACERTS, PATH_IPSEC_D_CERTS, PATH_IPSEC_D_PRIVATE, PATH_IPSEC_SECRETS
 from backend.ipsec.utils import comment_conn_in_config_file, comment_line_in_secrets_file, edit_conn_in_config_file, reorganize_file, uncomment_conn_in_config_file, uncomment_line_in_secrets_file
 from backend.managementCertificates.constant_variables import PATH_CA_CRT, PATH_CA_KEY, PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
@@ -47,9 +48,6 @@ def install_server_ipsec(conn_name, conn_config, authentication, interface_addre
     
     # Restart IPsec service to take the new configuration
     execute_command_without_arguments(['sudo', 'ipsec', 'restart'])
-    
-    # Up IPsec config
-    # execute_command_without_arguments(['sudo', 'ipsec', 'up', conn_name])
 
 
 def delete_server_ipsec(conn_name_to_delete, deleted_line):
@@ -103,3 +101,14 @@ def change_status_conn(conn_name, enable, server):
         new_secrets = comment_line_in_secrets_file(secrets_content, server)
     with open(PATH_IPSEC_SECRETS, 'w') as secrets_file:
         secrets_file.write(new_secrets)
+
+
+def up_ipsec_conn(conn_name):
+    """Up IPsec config"""
+    process = subprocess.run(['sudo', 'ipsec', 'up', conn_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print('error: ', process.stderr.decode())
+    error_up_command = process.stderr.decode()
+    if len(error_up_command) != 0:
+        return False
+    return True
+    # execute_command_without_arguments(['sudo', 'ipsec', 'up', conn_name])

@@ -16,85 +16,49 @@ class Command(BaseCommand):
         # Your code to add data to the database here
         try:
             id=kwargs['id']
-            rules = get_suricata_default_rules()
-            added_rule_ids = []  # Pour stocker les IDs des règles ajoutées avec succès
-            # Recherche du fichier SuricataFile par ID
-            try:
-                suricatafile_obj = suricatafile.objects.get(pk=id)
-            except suricatafile.DoesNotExist:
-                return  "SuricataFile non trouvé"
-            # Parcourez les règles récupérées et ajoutez-les à la base de données
-            for rule in rules:
-                rule = rule.strip()  # Supprimez les espaces inutiles
-                if len(rule)!=0:
-                    action=None
-                    protocol=None
-                    # Vérifiez si la règle n'est pas vide
-                    if rule.startswith("#") is True:
-                        active=False
-                        action=rule.split(" ")[0].strip()+rule.split(" ")[1]
-                        protocol=rule.split(" ")[2].strip()
-                        
-                    else:
-                        active=True
-                        action=rule.split(" ")[0].strip()
-                        protocol=rule.split(" ")[1].strip()
-                        print({"protocol":protocol})
+            rules_DB = ids_ips_rule.objects.all()  # Récupérer toutes les alertes de la base de données
+            rules_sys = get_suricata_default_rules()
+            rules_add=[]
+            rules_delete=[]
+            if len(rules_DB)==0:
+                rules_add=prepare_rule_attribut(rules_sys)
+                print("condition n° 1 : no data in database ==>")
+            else:
+                print("condition n° 2 : there is data in database ==>")
+                rules_list=[]
+                serializer = RuleIdsIpsSerializer(rules_DB, many=True)
+                rules_list=serializer.data
+                rules_list=[l['rule'] for l in rules_list]
+                rules_add = [log for log in rules_sys if log not in rules_list]
+                rules_delete = [log for log in rules_list if log not in rules_sys]   
+                rules_delete=prepare_rule_attribut(rules_delete)
+                rules_add=prepare_rule_attribut(rules_add)
                 
-            
-                    sid=None
-                    if rule.find("sid")!=-1:
-                        rule_inter=rule[rule.find("sid:"):]
-                        sid=int(rule_inter[rule_inter.find("sid:")+len("sid:"):rule_inter.find(";")])
-                    src_ip=None
-                    direction=None
-                    dest_ip=None
-                    if rule[1:].find("->")!=-1:
-                        src_ip=rule[rule.find(protocol)+len(protocol):rule.find("->")].strip()
-                        direction="->"
-                        dest_ip=rule[rule.find("->")+len("->"):rule.find("(msg")].strip()
-                    msg=None
-                    if rule.find("msg:")!=-1:
-                        msg=rule[rule.find('msg:"')+len('msg:"'): rule.find('";')].strip()
-                    rev=None
-                    if rule.find("rev:")!=-1:
-                        rev=rule[rule.find("rev:")+len("rev:"): rule.find(";sid")].strip(";")
-                        if rev.isdigit():
-                            rev=int(rev)
+            if len(rules_add)!=0 or len(rules_delete)!=0:
+                if len(rules_add)!=0:
+                    # Parcourir les logs récupérés et ajoutez-les à la base de données
+                    for rule in rules_add:
+                        print("data to add ==>",rule['rule'])
+                        rule['suricatafile']=int(id)
+                        if not ids_ips_rule.objects.filter(sid=rule['sid']).exists():
+                            serializerAlert = RuleIdsIpsSerializer(data=rule)
+                            if serializerAlert.is_valid():
+                                serializerAlert.save()
+                            else:
+                                return str(serializerAlert.errors)
                         else:
-                            rev=None
-                    action=action if action!="" else None    
-                    protocol=protocol if protocol!="" else None  
-                    src_ip=src_ip if src_ip!="" else None    
-                    direction=direction if direction!="" else None  
-                    dest_ip=dest_ip if dest_ip!="" else None    
-                    msg=msg if msg!="" else None  
-                    protocol=protocol if protocol!="" else None  
-                    data = {
-                        "sid":sid,
-                        "action":action.strip("#"),
-                        "protocol":protocol,
-                        "source_ip":src_ip,
-                        "direction":direction,
-                        "destination_ip":dest_ip,
-                        "msg":msg.strip('"'),
-                        "rev":rev,
-                        "rule": rule,
-                        "suricatafile": suricatafile_obj.id,
-                        "activate_rule":active,
-                         "default_rule":True
-                        }
-                    if ids_ips_rule.objects.filter(sid=sid).exists():
-                        pass
-                    else:
-                        InboundSerializer = RuleIdsIpsSerializer(data=data)
-                        if InboundSerializer.is_valid():
-                            InboundSerializer.save()
-                            added_rule_ids.append(data)
-                            print(data)# Ajoutez l'ID de la règle ajoutée à la liste
-                        else:
-                            # message = InboundSerializer.errors
                             pass
-            return "Les règles par défaut ont été ajoutées."
+                if len(rules_delete)!=0:
+                    for l in rules_delete:
+                        print("data to delete ==>",l)
+                        if ids_ips_rule.objects.filter(sid=l['sid']).exists():
+                            rule = ids_ips_rule.objects.get(rule=l)
+                            rule.delete()
+                        else:
+                            return "Rule not found!!"
+                return "Tous les rules ont été mis à jour avec succès!!"
+            else:
+                return "Pas de modification base et système sont synchonisés!!"
+          
         except IntegrityError as e:
             return "Error: " + str(e)

@@ -31,8 +31,8 @@ class Command(BaseCommand):
                 alert_list=serializer.data
                 alert_list=[l['alert'] for l in alert_list]
                 logs_add = [log for log in logs if log not in alert_list]
-                logs_add=prepare_alert_attribut(logs_add)
                 logs_delete = [log for log in alert_list if log not in logs]   
+                logs_add=prepare_alert_attribut(logs_add)
                 
             if len(logs_add)!=0 or len(logs_delete)!=0:
                 if len(logs_add)!=0:

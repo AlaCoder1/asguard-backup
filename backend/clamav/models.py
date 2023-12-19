@@ -49,3 +49,6 @@ class FreshclamDatabase(models.Model):
     class Meta:
         db_table = 'clamav_freshclamDatabase'
 
+
+
+

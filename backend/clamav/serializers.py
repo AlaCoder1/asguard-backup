@@ -14,3 +14,5 @@ class FreshclamDatabaseSerializer(serializers.ModelSerializer):
     class Meta:
         model = FreshclamDatabase
         fields = '__all__'
+
+        

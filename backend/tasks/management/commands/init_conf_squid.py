@@ -1,6 +1,6 @@
 import subprocess
 from django.core.management.base import BaseCommand
-from proxy.views import run_command
+from backend.proxy.views import run_command
 
 
 class Command(BaseCommand):
@@ -20,6 +20,7 @@ class Command(BaseCommand):
             'http_access deny blocked_domain',
             '',
             'http_access deny ads',
+            'http_access deny adult',
             'http_access deny astrology',
             'http_access deny audio_video',
             'http_access deny bitcoin',
@@ -46,6 +47,7 @@ class Command(BaseCommand):
             'acl allowed_subnet_by_auth dst "/etc/squid/allowed_subnet_by_auth.acl"',
             '',
             'acl ads url_regex "/etc/squid/acl/ads.acl"',
+            'acl adult url_regex "/etc/squid/acl/adult.acl"',
             'acl astrology url_regex "/etc/squid/acl/astrology.acl"',
             'acl audio_video url_regex "/etc/squid/acl/audio_video.acl"',
             'acl bitcoin url_regex "/etc/squid/acl/bitcoin.acl"',

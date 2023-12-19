@@ -23,6 +23,7 @@ class ProxyRules(models.Model):
 
 class ProxyUser(models.Model):
     username = models.CharField(max_length=200, null=True, unique=True)
+    email = models.CharField(max_length=200, null=True, unique=True)
 
     class Meta:
         db_table = 'proxy_user'  

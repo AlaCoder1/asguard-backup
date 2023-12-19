@@ -230,3 +230,8 @@ ASGUARD_VERSION = os.getenv('ASGUARD_VERSION')
 
 USERNAME=None
 PASSWORD=None
+
+EMAIL_HOST = 'smtp.office365.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'mh.benelghali@numeryx.fr'  
+EMAIL_HOST_PASSWORD = 'Ess4live***'  

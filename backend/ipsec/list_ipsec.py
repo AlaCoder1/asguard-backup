@@ -2,6 +2,16 @@ import json
 from django.core import serializers
 
 from backend.ipsec.models import ServerIPsec
+from utils.commands_utils import execute_command_without_arguments
+from utils.errors_utils import CommandExecutionError
+
+
+def get_status_ipsec():
+    try:
+        execute_command_without_arguments(['sudo', 'ipsec', 'status'])
+        return True
+    except CommandExecutionError:
+        return False
 
 
 def get_list_all_server_ipsec():

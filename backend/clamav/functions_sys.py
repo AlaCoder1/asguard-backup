@@ -73,7 +73,7 @@ def read_and_extract_freshclam_config():
 ######################### Function update the configuration data of Clamav #########################
 
 
-def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,scanhtml=None,scanarchive=None,scanxmldocs=None,scanmail=None,scanhwp3=None,scanpdf=None,scanole2=None,disablecache=None,scanelf=None,scanpe=None,alertole2macros=None,alertencryptedarchive=None,alertbrokenexecutables=None,followdirectorysymlinks=None,followfilesymlinks=None,freshclamdatabasemirror=None,freshclamconnectiontimeout=None,tcpport=None,maxpartitions=None,tcpsocket=None,maxqueue=None,maxrecursion=None,proxyport=None,maxscansize=None,maxdirectoryrecursion=None,idletimeout=None,clamd_enabled=None,freshclam_enabled=None,logverbose=None, maxthreads=None):
+def update_clamav_config(maxfiles=None,maxfilesize=None,scanhtml=None,scanarchive=None,scanxmldocs=None,scanmail=None,scanhwp3=None,scanpdf=None,scanole2=None,disablecache=None,scanelf=None,scanpe=None,alertole2macros=None,alertencryptedarchive=None,alertbrokenexecutables=None,followdirectorysymlinks=None,followfilesymlinks=None,freshclamdatabasemirror=None,freshclamconnectiontimeout=None,tcpport=None,tcpsocket=None,maxqueue=None,maxrecursion=None,proxyport=None,maxscansize=None,maxdirectoryrecursion=None,idletimeout=None,clamd_enabled=None,freshclam_enabled=None,logverbose=None, maxthreads=None):
     
     clamav_path = "/etc/clamav/clamd.conf"
     freshclam_path= "/etc/clamav/freshclam.conf"
@@ -92,13 +92,8 @@ def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,s
             for line in lines:
                 stripped_line = line.strip()
 
-                # Test and update DatabaseDirectory
-                if stripped_line.startswith('#DatabaseDirectory ') or stripped_line.startswith('DatabaseDirectory '):
-                    if databasedirectory:
-                        line = f'DatabaseDirectory {databasedirectory}'
-
                 # Test and update LogVerbose
-                elif stripped_line.startswith('#LogVerbose ') or stripped_line.startswith('LogVerbose '):
+                if stripped_line.startswith('#LogVerbose ') or stripped_line.startswith('LogVerbose '):
                     if logverbose is not None:
                         line = f'LogVerbose {"yes" if logverbose else "no"}'
 
@@ -136,11 +131,6 @@ def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,s
                 elif stripped_line.startswith('#MaxFiles ') or stripped_line.startswith('MaxFiles '):
                     if maxfiles is not None:
                         line = f'MaxFiles {maxfiles}'
-
-                elif stripped_line.startswith('#MaxPartitions ') or stripped_line.startswith('MaxPartitions '):
-                    if maxpartitions is not None:
-                        line = f'MaxPartitions {maxpartitions}'
-
 
                 elif stripped_line.startswith('#FollowDirectorySymlinks ') or stripped_line.startswith('FollowDirectorySymlinks '):
                     if followdirectorysymlinks is not None:

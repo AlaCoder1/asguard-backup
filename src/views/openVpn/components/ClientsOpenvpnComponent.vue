@@ -317,7 +317,7 @@
     <br />
     <v-spacer></v-spacer>
     <v-snackbar
-      :timeout="2000"
+      :timeout="1000"
       v-model="snackbar"
       location="bottom right"
       :color="color"
@@ -958,8 +958,8 @@ export default {
 
                 setTimeout(() => {
                   location.reload();
+                  emitter.emit("open-listing");
                 }, 1000);
-                emitter.emit("open-listing");
               }
             })
             .catch((i) => {

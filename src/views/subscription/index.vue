@@ -1,0 +1,92 @@
+<template>
+    <v-app id="inspire">
+        <base-layout title="Subscription">
+            <template #content>
+                <v-row class="mt-5">
+                    <v-col cols="2" />
+                    <v-col cols="8">
+                        <h1>Choose your plan!</h1>
+                        <p style="font-weight: bold;">
+                            Subscription for ASGUARD is available in three offers
+                        </p>
+                        <p class="mt-3">
+                            (Also available in hardware version)
+                        </p>
+                        <div class="subscription-cards">
+                            <SubscriptionTypeCard v-for="card in subscriptionCards" :key="card.title" :title="card.title"
+                                :prices="card.prices" :communservices="card.communservices" :services="card.services"
+                                :backgroundColor="card.backgroundColor" :buttonColor="card.buttonColor" />
+                        </div>
+                    </v-col>
+                    <v-col cols="2" />
+                </v-row>
+                <br />
+            </template>
+        </base-layout>
+    </v-app>
+</template>
+
+<script>
+import BaseLayout from "@/layouts/layout.vue";
+import SubscriptionTypeCard from "./components/subscriptionTypeCard.vue";
+
+export default {
+    name: "Subscription",
+    components: {
+        BaseLayout,
+        SubscriptionTypeCard
+    },
+    setup() {
+        const subscriptionCards = [
+            {
+                title: "Base",
+                prices: [
+                    { label: 'Annual', amount: '1000' },
+                    { label: 'Monthly', amount: '100' },
+                ],
+                communservices: ['Firewall', 'ZTNA', 'LDAP'],
+                services: ['', '', '', '', '', '', '', '', '', '', ''],
+                backgroundColor: '#213E9F',
+                buttonColor: '#213E9F'
+            },
+            {
+                title: "Custom",
+                prices: [
+                    { label: 'Annual', amount: '1500' },
+                    { label: 'Monthly', amount: '150' },
+                ],
+                communservices: ['Firewall', 'ZTNA', 'LDAP'],
+                services: ['Double Mask 150 €/Annual​​', 'CASB 150 €/Annual​', 'SWG 100 €/Annual​', 'Anti-virus 100 €/Annual'],
+                backgroundColor: '#FFC300',
+                buttonColor: '#FFC300'
+            },
+            {
+                title: "Premium",
+                prices: [
+                    { label: 'Annual', amount: '1500' },
+                    { label: 'Monthly', amount: '150' },
+                ],
+                communservices: ['Firewall', 'ZTNA', 'LDAP'],
+                services: ['Double Mask​', 'CASB​', 'SWG', 'Anti-virus​'],
+                backgroundColor: '#213E9F',
+                buttonColor: '#213E9F'
+            }
+        ];
+
+        return {
+            subscriptionCards
+        };
+    },
+};
+</script>
+
+<style scoped>
+.subscription-cards {
+    display: flex;
+    justify-content: space-between;
+}
+
+.text-center {
+    text-align: center;
+}
+</style>

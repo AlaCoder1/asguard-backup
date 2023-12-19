@@ -239,8 +239,33 @@ export default {
       return cookieValue;
     };
 
+    const addPublicKey = async (payload) => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios
+        .post("/key_pairs/createPublicKey", payload)
+        .then((response) => {
+          console.log("response", response);
+          if (response.status == "201") {
+            state.openModal = false;
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
+
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          }
+        })
+        .catch((i) => {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
+        });
+    };
+
     const submitForm = async () => {
-      console.log("state", state);
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -283,6 +308,8 @@ export default {
               encryption_algorithm: "RSA",
             },
           };
+
+          addPublicKey(payload);
         } else if (state.type.slug === "import") {
           payload = {
             name: state.keyName,
@@ -291,27 +318,8 @@ export default {
               public_key_value: state.externKey,
             },
           };
+          addPublicKey(payload);
         }
-        axios
-          .post("/key_pairs/createPublicKey", payload)
-          .then((response) => {
-            console.log("response", response);
-            if (response.status == "201") {
-              state.openModal = false;
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
-          });
       } else {
         console.log("v$", v$.value);
       }
@@ -380,6 +388,7 @@ export default {
       closeModal,
       submitForm,
       getCookie,
+      addPublicKey,
     };
   },
 };

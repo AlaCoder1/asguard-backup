@@ -3,12 +3,9 @@
     <div class="container">
       <h4>Inbound rules</h4>
       <v-divider></v-divider>
-      <v-alert type="success" class="d-flex mt-3" v-if="alert">
-        <span class="c-o ml-3">
+      <v-alert type="success" class="d-flex mt-3 alert-style" v-if="alert">
+        <span class="ml-3">
           <strong>Success!</strong> Rules saved successfully.
-        </span>
-        <span class="ml-16" style="margin-top: 20px !important">
-          <i class="fas fa-times justify-end cursor" @click="handleRemove"></i>
         </span>
       </v-alert>
       <v-dialog v-model="deleteDialog" max-width="500px">
@@ -131,7 +128,7 @@ export default defineComponent({
   },
   setup(props) {
     // Variables
-    const columnDefs = reactive([
+    const columnDefs = [
       {
         width: 50,
         minWidth: 50,
@@ -236,10 +233,11 @@ export default defineComponent({
       },
       {
         headerName: "Action",
+        field: "action",
         cellRenderer: actionCellRenderer,
         editable: false,
       },
-    ]);
+    ];
     const gridApi = ref(null);
     const gridColumnApi = ref(null);
     const defaultColDef = ref({
@@ -300,7 +298,7 @@ export default defineComponent({
     const onFirstDataRendered = (params) => {
       params.api.sizeColumnsToFit();
     };
-    const actionCellRenderer = (params) => {
+    function actionCellRenderer(params) {
       let eGui = document.createElement("div");
       let editingCells = params.api.getEditingCells();
       let isCurrentRowEditing = editingCells.some((cell) => {
@@ -312,7 +310,7 @@ export default defineComponent({
           class="action-button delete"
           data-action="delete"
           >
-            <i class="fas fa-times" style="color: #086eae;"></i>
+             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         `;
       } else {
@@ -320,7 +318,7 @@ export default defineComponent({
         <button 
           class="action-button delete"
           data-action="delete">
-            <i class="fas fa-times" style="color: #086eae;"></i>
+                       <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         `;
       }
@@ -331,7 +329,7 @@ export default defineComponent({
         });
       });
       return eGui;
-    };
+    }
     const onFilterTextBoxChanged = () => {
       gridApi.value.setQuickFilter(
         document.getElementById("filter-text-box").value
@@ -629,8 +627,15 @@ export default defineComponent({
   background-color: #f5f5f5;
 }
 
-.v-alert.d-flex.mt-3.v-sheet.theme--dark.success {
-  width: 28%;
-  margin-left: auto;
+.v-alert.v-theme--light.bg-success.v-alert--density-default.v-alert--variant-flat.d-flex.mt-3.alert-style {
+  width: 350px;
+  right: -78%;
+  /* Default value for small and medium screens */
+
+  /* Media query for large screens */
+  @media screen and (min-width: 1080px) {
+    right: -70%;
+    /* Value for larger screens */
+  }
 }
 </style>

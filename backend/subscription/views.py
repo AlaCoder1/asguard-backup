@@ -77,8 +77,8 @@ def function_paymentTransaction(checkbox_value,select_value):
         payment_instance.status = "declined"
     else:
         payment_instance.status = "approved"
-    payment_instance.organizationId = organization.objects.get(id=1)
-    payment_instance.planId = plan.objects.get(slug=select_value)
+    payment_instance.organization = organization.objects.get(id=1)
+    payment_instance.plan = plan.objects.get(slug=select_value)
     payment_instance.save()
 
 ##paymentTransaction_id
@@ -88,8 +88,8 @@ def function_paymentTransaction_id(checkbox_value,select_value):
         payment_instance.status = "declined"
     else:
         payment_instance.status = "approved"
-    payment_instance.organizationId = organization.objects.get(id=1)
-    payment_instance.planId = plan.objects.get(id=select_value)
+    payment_instance.organization = organization.objects.get(id=1)
+    payment_instance.plan = plan.objects.get(id=select_value)
     payment_instance.save()
         
 def function_plansSubscription():
@@ -100,7 +100,7 @@ def function_plansSubscription():
         payment_subscription_instance = plansSubscription()
         payment_subscription_instance.start_at=datetime.now()
         payment_subscription_instance.end_at=datetime.now()+ timedelta(days=365)
-        payment_subscription_instance.planId=plan.objects.get(id=payment_transaction_dict['planId_id'])
+        payment_subscription_instance.plan=plan.objects.get(id=payment_transaction_dict['plan_id'])
         payment_subscription_instance.save()
             
 
@@ -108,13 +108,13 @@ def function_planSubsciptionUsage():
     last_id = paymentTransaction.objects.last().id
     payment_transaction=paymentTransaction.objects.get(id=last_id)
     payment_transaction_dict=payment_transaction.__dict__
-    payment_features=plansFeatures.objects.filter(planId=payment_transaction_dict['planId_id'])
-    last_plansSubscription = plansSubscription.objects.filter(planId=payment_transaction_dict['planId_id']).last()
+    payment_features=plansFeatures.objects.filter(plan=payment_transaction_dict['plan_id'])
+    last_plansSubscription = plansSubscription.objects.filter(plan=payment_transaction_dict['plan_id']).last()
     # print({"last_plansSubscription":last_plansSubscription.__dict__['end_at']})
     for result in list(payment_features):
         if payment_transaction.status == "approved":
             payment_subscription_usage_instance = planSubsciptionUsage()
-            payment_subscription_usage_instance.plans_subscription =plansSubscription.objects.filter(planId=payment_transaction_dict['planId_id']).last()
+            payment_subscription_usage_instance.plans_subscription =plansSubscription.objects.filter(plan=payment_transaction_dict['plan_id']).last()
             payment_subscription_usage_instance.plans_feature =plansFeatures.objects.get(id=result.id)
             payment_subscription_usage_instance.valid_until =last_plansSubscription.__dict__['end_at']
             payment_subscription_usage_instance.save()

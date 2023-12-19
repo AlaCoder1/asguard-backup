@@ -7,7 +7,6 @@ import traceback
 from django.conf import settings
 from cryptography.fernet import Fernet
 import re
-import pam
 
 # function to get UID from system
 

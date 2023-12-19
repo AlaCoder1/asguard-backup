@@ -21,7 +21,7 @@
             </v-window-item>
             <v-window-item v-for="tab in tabs" :key="tab.id" value="ALERTS">
               <v-card>
-                <v-card-text> <AlertsComponent /></v-card-text>
+                <v-card-text> <AlertsComponent :configInfo="configurationInfo"/></v-card-text>
               </v-card>
             </v-window-item>
   

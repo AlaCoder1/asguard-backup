@@ -30,7 +30,7 @@ class Command(BaseCommand):
                     status_enabled = True
                 else:
                     status_enabled = False
-                if not suricatafile.objects.filter(home_net=home_net).exists():
+                if not suricatafile.objects.filter(home_net=home_net).exists() and suricatafile.objects.all().count()==0:
                     # Créer une instance du modèle suricatafile
                     suricata_config = suricatafile(home_net=home_net, promisc=promisc, eve_log=eve_log, syslog=syslog, mpm_algo=mpm_algo, profile=profile,copy_mode=copy_mode,status_enabled=status_enabled)
                     suricata_config.save()

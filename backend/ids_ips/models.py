@@ -44,10 +44,6 @@ class ids_ips_rule(models.Model):
     destination_ip=models.TextField(null=True,blank=True)
     # Message associé à la règle
     msg=models.TextField(null=True,blank=True)
-    # Contenu de la règle
-    content=models.TextField(null=True,blank=True)
-    # Flowbit associé à la règle
-    flowbit=models.TextField(null=True,blank=True)
     # Révision de la règle
     rev= models.IntegerField(null=True,blank=True)
     # La règle elle-même (peut être très longue)
@@ -80,6 +76,8 @@ class Alert(models.Model):
     dst_addr=models.TextField(null=True)
     # Port de destination de l'alerte
     dst_port=models.IntegerField(null=True)
+     # Messgae de l'alerte
+    message=models.TextField(null=True)
     #alerte in text
     alert=models.TextField(unique=True,null=True)
     # Clé étrangère pour établir la relation many-to-one avec SuricataFile

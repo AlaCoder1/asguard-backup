@@ -56,14 +56,6 @@ class Command(BaseCommand):
                     msg=None
                     if rule.find("msg:")!=-1:
                         msg=rule[rule.find('msg:"')+len('msg:"'): rule.find('";')].strip()
-                    content=None
-                    if rule.find("content:")!=-1:
-                        rule_content=rule[rule.find("content:")+len("content:"):].strip()
-                        content=rule_content[:rule_content.find('";')]
-                    flowbit=None
-                    if rule.find("flowbit:")!=-1:
-                        rule_flowbit=rule[rule.find("flowbit:")+len("flowbit:"):]
-                        flowbit=rule_flowbit[:rule_flowbit.find(";")].strip()
                     rev=None
                     if rule.find("rev:")!=-1:
                         rev=rule[rule.find("rev:")+len("rev:"): rule.find(";sid")].strip(";")
@@ -77,7 +69,6 @@ class Command(BaseCommand):
                     direction=direction if direction!="" else None  
                     dest_ip=dest_ip if dest_ip!="" else None    
                     msg=msg if msg!="" else None  
-                    content=content if content!="" else None    
                     protocol=protocol if protocol!="" else None  
                     data = {
                         "sid":sid,
@@ -87,8 +78,6 @@ class Command(BaseCommand):
                         "direction":direction,
                         "destination_ip":dest_ip,
                         "msg":msg.strip('"'),
-                        "content":content,
-                        "flowbit":flowbit,
                         "rev":rev,
                         "rule": rule,
                         "suricatafile": suricatafile_obj.id,

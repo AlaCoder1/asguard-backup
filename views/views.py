@@ -373,8 +373,8 @@ def get_rules_from_database(request):
 def get_alerts_from_database(request):
     if request.method=="GET":
         alert_list=[]
-        # alerts_object = alert.objects.all()  # Récupérer toutes les alertes de la base de données
-        alerts_object = Alert.objects.all().order_by('-id')[:10] 
+        alerts_object = Alert.objects.all()  # Récupérer toutes les alertes de la base de données
+        # alerts_object = Alert.objects.all().order_by('-id')[:10] 
         alerts = serializers.serialize("json", alerts_object)
         res = json.loads(alerts)
         for i in range(len(res)):

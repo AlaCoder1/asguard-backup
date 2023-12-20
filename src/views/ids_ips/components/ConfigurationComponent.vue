@@ -19,12 +19,19 @@
         </v-card>
       </v-dialog>
     </v-overlay>
-
-    <v-row>
-      <v-col cols="6">
-        <div class="ml-3 mr-3">
-          <h4>General information</h4>
-          <v-divider class="mt-2"></v-divider>
+      <v-row>
+        <v-col cols="6">
+          <div class="ml-3 mr-3">
+            <div class="container" style="display: flex;">
+              <h4>General information</h4>
+              <div style="margin-left: auto; color: orange; margin-top: -17px;text: bold">
+                  <v-switch id="mySwitch" 
+                          color="warning" v-model="switchValue" label="Full help" />
+                </div>
+            
+            </div>
+            <v-divider class="mb-2"></v-divider>
+         
           <v-row class="mt-2">
             <v-col cols="4" align-self="center">
               <label>Suricata</label>
@@ -32,6 +39,8 @@
             <v-col cols="8" class="mb-n6">
               <input type="checkbox" v-model="state.status_enabled" />
               <label class="ml-2"> Enable IDS system</label>
+              <br />
+              <small class="ml-5 error-feedback" v-show="switchValue">Enable intrusion detection system.</small>
             </v-col>
             <v-col cols="4" align-self="center">
               <label>IPS Mode</label>
@@ -39,6 +48,9 @@
             <v-col cols="8" class="mb-n6">
               <input type="checkbox" v-model="state.copy_mode" />
               <label class="ml-2">Enable IPS </label>
+              <br /> 
+              <small class="ml-5 error-feedback" v-show="switchValue">In IPS mode, Suricata actively blocks traffic according </small> <br/>
+              <small class="ml-5 error-feedback" v-show="switchValue"> to intrusion detection rules.</small>
             </v-col>
             <v-col cols="4" align-self="center">
               <label>Promisuous Mode</label>
@@ -46,6 +58,10 @@
             <v-col cols="8" class="mb-n6">
               <input type="checkbox" v-model="state.promisc" />
               <label class="ml-2">Enable Promisuous Mode </label>
+              <br/>
+              <small class="ml-5 error-feedback" v-show="switchValue">Promiscuous mode allows Suricata to capture </small>
+              <br /> 
+              <small class="ml-5 error-feedback" v-show="switchValue"> and analyze all traffic on the network interface.</small>
             </v-col>
             <v-col cols="4" align-self="center">
               <label>Enable syslog alerts</label>
@@ -53,6 +69,11 @@
             <v-col cols="8" class="mb-n6">
               <input type="checkbox" v-model="state.syslog" />
               <label class="ml-2">Enable syslog alerts</label>
+              <br/>
+              <small class="ml-5 error-feedback" v-show="switchValue">Send alerts to system log in fast log format.</small>
+              <br /> 
+              <small class="ml-5 error-feedback" v-show="switchValue">This will not change the alert logging</small> <br/>
+              <small class="ml-5 error-feedback" v-show="switchValue"> used by the product itself.</small>
             </v-col>
             <v-col cols="4" align-self="center">
               <label>Enable eve syslog output</label>
@@ -60,6 +81,14 @@
             <v-col cols="8" class="mb-n6">
               <input type="checkbox" v-model="state.eve_log" />
               <label class="ml-2">Enable syslog output</label>
+              <br/>
+              <small class="ml-5 error-feedback" v-show="switchValue">Enable Suricata to output events(logs) in EVE.</small> 
+              <br /> 
+              <small class="ml-5 error-feedback" v-show="switchValue">syslog format.EVE(Extensible Event Format) </small>
+              <br/>
+              <small class="ml-5 error-feedback" v-show="switchValue"> is a flexible logging format that can be used</small>
+              <br/>
+              <small class="ml-5 error-feedback" v-show="switchValue"> to analyze security events.</small>
             </v-col>
             <v-col cols="4" align-self="center">
               <label>Pattern matcher</label>
@@ -74,22 +103,27 @@
                 :items="[
                   {
                     id: '1',
-                    name: 'auto',
+                    name: 'Auto',
                     slug: 'auto',
                   },
                   {
                     id: '2',
-                    name: 'ac',
+                    name: 'Aho-Corasick, default implementation',
                     slug: 'ac',
                   },
                   {
                     id: '3',
-                    name: 'ac-ks',
-                    slug: 'ac-ks',
+                    name: 'Aho-Corasick, reduced memory implementation',
+                    slug: 'ac-bs',
                   },
                   {
                     id: '4',
-                    name: 'hs',
+                    name: 'Aho-Corasick, Ken Steele variant',
+                    slug: 'ac-ks',
+                  },
+                  {
+                    id: '5',
+                    name: 'Hyperscan',
                     slug: 'hs',
                   },
                 ]"
@@ -110,17 +144,17 @@
                 :items="[
                   {
                     id: '1',
-                    name: 'medium',
+                    name: 'Medium',
                     slug: 'medium',
                   },
                   {
                     id: '2',
-                    name: 'high',
+                    name: 'High',
                     slug: 'high',
                   },
                   {
                     id: '3',
-                    name: 'low',
+                    name: 'Low',
                     slug: 'low',
                   },
                 ]"
@@ -143,8 +177,9 @@
                 background-color="#fffffff"
               >
               </v-select>
-
-            
+              <small class="ml-5 error-feedback" v-show="switchValue">Specify the network interfaces on which Suricata</small> 
+              <br/>
+              <small class="ml-5 error-feedback" v-show="switchValue">should monitor traffic.</small>
             </v-col>
           </v-row>
         </div>
@@ -176,6 +211,8 @@
         </div>
       </v-col>
     </v-row>
+  </div>
+
     <h4>Update suricata rules</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="flex py-8 mb-5">
@@ -208,7 +245,7 @@
         <i class="fas fa-times justify-end cursor" @click="handleRemove"></i>
       </span>
     </v-alert>
-  </div>
+  <!-- </div> -->
 </template>
 
 <script>
@@ -217,7 +254,7 @@ import useValidate from "@vuelidate/core";
 import VButton from "@/components/VButton.vue";
 import { required, requiredIf, helpers } from "@vuelidate/validators";
 import UsersList from "../../system/user/components/UsersList.vue";
-import { reactive, onMounted, computed } from "vue";
+import { reactive, onMounted, computed,ref } from "vue";
 
 export default {
   name: "ConfigurationComponent",
@@ -228,6 +265,7 @@ export default {
   setup() {
     const rowDataConfiguration = reactive({});
     const rowDataInterfaces = reactive({});
+    const switchValue = ref(false)
     const state = reactive({
       loading: false,
       isLoadingDialogue: false,
@@ -445,6 +483,7 @@ export default {
     };
 
     return {
+      switchValue,
       cancel,
       getCookie,
       getInterface,
@@ -457,10 +496,26 @@ export default {
   },
 };
 </script>
-
 <style lang="scss">
 .error-feedback {
-  color: red;
+  color: orange;
   font-size: 0.85em;
 }
+
+.label-style {
+  color: #020202;
+font-family: Nunito;
+font-size: 15px;
+font-style: normal;
+font-weight: 300;
+line-height: normal;
+}
+/* CSS to style the text */
+.text-xs {
+  font-size: 12px; /* Example font size for small text */
+}
+.container {
+  height: 50px;
+}
+
 </style>

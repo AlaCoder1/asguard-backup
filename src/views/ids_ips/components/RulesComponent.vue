@@ -169,6 +169,7 @@ export default {
   },
   setup(props) {
     const emitter = inject("emitter");
+    
     const state = reactive({
       loading: false,
       isLoadingDialogue: false,

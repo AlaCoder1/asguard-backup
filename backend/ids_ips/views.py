@@ -22,59 +22,48 @@ from django.db.models import Q
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def activerSuricataUpdate(request, id):
-    data=request.data
-    update=None if data.get('update', None) == "" else data.get('update', None)
-    if update is True:
-        cmd="sudo suricata-update && sudo python manage.py init_rules_suricata -id {}".format(id)
-        output,error=execute_cmd(cmd)
-        if error!="":
-            return Response({"message":error}, status=400)
-        else:
-            return Response({"message":"Rules updated successfully!"}, status=200)
-     
-#Ajouter les régles par défaut dans la BD//
-@api_view(['POST'])
-@authentication_classes([SessionAuthentication])
-def addDefaultRulesToDatabase(request, id):
     if request.method=="POST":
-        rules_DB = ids_ips_rule.objects.all()  # Récupérer toutes les alertes de la base de données
-        rules_sys = get_suricata_default_rules()
-        rules_add=[]
-        rules_delete=[]
-        if len(rules_DB)==0:
-            rules_add=prepare_rule_attribut(rules_sys)
-        else:
+        cmd="sudo suricata-update"
+        output,error=execute_cmd(cmd)
+        if error.strip()=="":
+            rules_DB = ids_ips_rule.objects.all()  # Récupérer toutes les alertes de la base de données
+            rules_sys = get_suricata_default_rules()
+            rules_add=[]
+            rules_delete=[]
             rules_list=[]
             serializer = RuleIdsIpsSerializer(rules_DB, many=True)
             rules_list=serializer.data
-            rules_list=[l['rule'] for l in rules_list]
-            rules_add = [log for log in rules_sys if log not in rules_list]
-            rules_delete = [log for log in rules_list if log not in rules_sys]   
-            rules_delete=prepare_rule_attribut(rules_delete)
-            rules_add=prepare_rule_attribut(rules_add)
+            rules_list=[l['sid'] for l in rules_list]
+            rules_sys_list=[l['sid'] for l in prepare_rule_attribut(rules_sys)]
+            if len(list(set(rules_list)-set(rules_sys_list)))!=0:
+                rules_add = [log for log in rules_sys if log not in rules_list]
+                rules_delete = [log for log in rules_list if log not in rules_sys]   
+                if len(rules_add)!=0:
+                    rules_add=prepare_rule_attribut(rules_add)
+                    # Parcourir les logs récupérés et ajoutez-les à la base de données
+                    for rule in rules_add:
+                        print("data to add ==>",rule['rule'])
+                        rule['suricatafile']=int(id)
+                        if not ids_ips_rule.objects.filter(sid=rule['sid']).exists():
+                            serializerAlert = RuleIdsIpsSerializer(data=rule)
+                            if serializerAlert.is_valid():
+                                serializerAlert.save()
+                            else:
+                                return JsonResponse({"message": str(serializerAlert.errors)},status=400)
+                        else:
+                            pass
+                if len(rules_delete)!=0:
+                    rules_delete=prepare_rule_attribut(rules_delete)
+                    for l in rules_delete:
+                        if ids_ips_rule.objects.filter(sid=l['sid']).exists():
+                            rule = ids_ips_rule.objects.get(sid=l['sid'])
+                            rule.delete()
+                        else:
+                            return JsonResponse({"message": "Rule not found!"},status=400)
+            return JsonResponse({"message": "Rules updated successfully!"},status=200)
+        else:
+            return JsonResponse({"message":error},status=400)
             
-        if len(rules_add)!=0:
-            # Parcourir les logs récupérés et ajoutez-les à la base de données
-            for rule in rules_add:
-                print("data to add ==>",rule['rule'])
-                rule['suricatafile']=int(id)
-                if not ids_ips_rule.objects.filter(sid=rule['sid']).exists():
-                    serializerAlert = RuleIdsIpsSerializer(data=rule)
-                    if serializerAlert.is_valid():
-                        serializerAlert.save()
-                    else:
-                        return JsonResponse({"message": str(serializerAlert.errors)},status=400)
-                else:
-                    pass
-        if len(rules_delete)!=0:
-            for l in rules_delete:
-                if ids_ips_rule.objects.filter(sid=l['sid']).exists():
-                    rule = ids_ips_rule.objects.get(rule=l)
-                    rule.delete()
-                else:
-                    return JsonResponse({"message": "Rule not found!"},status=400)
-        return JsonResponse({"message": "Tous les rules ont été mis à jour avec succès!!"},status=200)
-      
 #//Récupérer les règles de la base de données //
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -628,7 +617,7 @@ def addalertsToDatabase(request,id):
                     alert.delete()
                 else:
                     return JsonResponse({"message": "Alert not found!!"},status=400)
-        return JsonResponse({"message":"Tous les alerts ont été mis à jour avec succès!!"},status=200)           
+        return JsonResponse({"message":"Alerts updated successfully!!"},status=200)           
 
     
 #Afficher les alertes de la BD//

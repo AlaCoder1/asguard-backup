@@ -362,7 +362,8 @@ def get_rules_from_database(request):
             res[i]['fields']['id'] = id
             res[i]['fields'].pop("rule")
             # res[i]['fields'].pop("msg")
-            # res[i]['fields']['msg']=res[i]['fields']['msg'].strip("'")
+            res[i]['fields']['msg']=res[i]['fields']['msg'].strip('"')
+            res[i]['fields']['action']=res[i]['fields']['action'].strip('#')
             rules_list.append(res[i]['fields'])
     # Renvoyer la liste des règles au format JSON
     return json.dumps(rules_list)

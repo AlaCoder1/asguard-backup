@@ -84,12 +84,12 @@
                   ></v-text-field>
                 </v-col>
               
-                <v-col cols="12" md="6" class="d-flex justify-end">
+                <!-- <v-col cols="12" md="6" class="d-flex justify-end">
                   <v-btn class="ml-3 mt-2" @click="addRow">
                     <i class="fas fa-plus" style="color: #086eae;"></i>
                     <span class="ml-2" style="color: #086eae;">Add</span>
                   </v-btn>
-                </v-col>
+                </v-col> -->
               </v-row>
             </v-card-title>
             <v-card-text>
@@ -206,7 +206,7 @@ export default {
       {
         headerName: "Sid",
         field: "sid",
-        editable: true,
+        // editable: true,
         minWidth: 100,
         sortable: false,
 
@@ -226,7 +226,7 @@ export default {
             "rejectnoth",
           ],
         },
-        editable: true,
+        // editable: true,
         minWidth: 120,
         sortable: false,
 
@@ -278,14 +278,14 @@ export default {
             "pkthdr",
           ],
         },
-        editable: true,
+        // editable: true,
         minWidth: 120,
         sortable: false,
       },
       {
         headerName: "Source",
         field: "source_ip",
-        editable: true,
+        // editable: true,
         minWidth: 300,
         autoHeight: true,
         cellStyle: {  whiteSpace: 'pre-wrap' , lineHeight: '2' },
@@ -294,7 +294,7 @@ export default {
       {
         headerName: "Direction",
         field: "direction",
-        editable: true,
+        // editable: true,
         minWidth: 125,
         sortable: false,
 
@@ -302,7 +302,7 @@ export default {
       {
         headerName: "Destination",
         field: "destination_ip",
-        editable: true,
+        // editable: true,
         minWidth: 300,
         autoHeight: true,
         cellStyle: { whiteSpace: 'pre-wrap' , lineHeight: '2'},
@@ -313,7 +313,7 @@ export default {
       {
         headerName: "Revision",
         field: "rev",
-        editable: true,
+        // editable: true,
         minWidth: 125,
         sortable: false,
 
@@ -328,15 +328,15 @@ export default {
 
       },
 
-      {
-        headerName: "Actions",
-        cellRenderer: actionCellRenderer,
-        minWidth: 100,
-        field: "action",
-        filter: true,
-        sortable: false,
+      // {
+      //   headerName: "Actions",
+      //   cellRenderer: actionCellRenderer,
+      //   minWidth: 100,
+      //   field: "action",
+      //   filter: true,
+      //   sortable: false,
 
-      },
+      // },
     ];
 
     const currentIndex = ref(0);

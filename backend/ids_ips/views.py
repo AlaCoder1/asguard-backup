@@ -97,7 +97,7 @@ def getRulesFromDatabase(request):
 def save_rules_suricata(request, id):
     # Initialisation d'une chaîne vide pour stocker les messages de réponse
     message = ""
-    file_path = '/var/lib/suricata/rules/suricataTest.rules'
+    file_path = '/var/lib/suricata/rules/suricata.rules'
     list_msg=[]
     if request.method == 'POST':
         # Analyse des données JSON de la requête POST
@@ -210,7 +210,7 @@ def deleteRule(request, sid):
                 rule_text = rule.rule
                 if rule.default_rule==False:
                     # Chemin du fichier à rechercher
-                    file_path_to_search = "/var/lib/suricata/rules/suricataTest.rules"  # Replace with the actual path
+                    file_path_to_search = "/var/lib/suricata/rules/suricata.rules"  # Replace with the actual path
                     sid_to_search = str(sid)  # Convert the rule's sid to string
                     # Obtention de la ligne à supprimer en utilisant la fonction get_line_by_sid
                     l = get_line_by_sid(file_path_to_search, sid_to_search)
@@ -250,7 +250,7 @@ def deleteRule(request, sid):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_status_rule(request, sid):
-    file_path = '/var/lib/suricata/rules/suricataTest.rules'
+    file_path = '/var/lib/suricata/rules/suricata.rules'
     try:
         # Récupération de la valeur de l'activation de la règle à partir de la requête PUT
         data = request.data
@@ -410,7 +410,7 @@ def addGeneralConfig(request):
 def update_suricata_configuration(request, id):
     if request.method=="PUT":
         try: 
-            suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+            suricata_yaml_path = "/etc/suricata/suricata.yaml"
             data = request.data
             new_promisc = data.get("promisc", "false")
             new_promisc=str(new_promisc)
@@ -535,7 +535,7 @@ def get_suricata_configuration(request, id):
         home_net_value = ' , '.join(address_home_net_final)
         home_net_value = f'[{home_net_value}]'
         interfaces_ids_value = str(interface_ids_final)
-        suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+        suricata_yaml_path = "/etc/suricata/suricata.yaml"
         # Exécutez la commande 'sudo cat' pour lire le contenu du fichier
         output, error = execute_cmd("sudo cat " + suricata_yaml_path)
         # Mettez à jour la configuration dans le système

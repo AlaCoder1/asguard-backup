@@ -4,7 +4,6 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 import json
 import ast
-
 from backend.managementGroup.models import Group
 from backend.managementUsers.models import User
 from backend.managementServers.models import Type, Server
@@ -306,7 +305,7 @@ def general_suricata_configuration(request, id):
         home_net_value = ' , '.join(address_home_net_final)
         home_net_value = f'[{home_net_value}]'
         interfaces_ids_value = str(interface_ids_final)
-        suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+        suricata_yaml_path = "/etc/suricata/suricata.yaml"
         # Exécutez la commande 'sudo cat' pour lire le contenu du fichier
         output, error = execute_cmd("sudo cat " + suricata_yaml_path)
         # Mettez à jour la configuration dans le système

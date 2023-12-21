@@ -13,7 +13,7 @@ def execute_cmd(command):
 #Lire le fichier de configuration suricata.yaml//
 def read_suricata_config():
     # Chemin vers le fichier suricata.yaml
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+    suricata_yaml_path = "/etc/suricata/suricata.yaml"
     try:
         output, error = execute_cmd("cat " + suricata_yaml_path)
         return output
@@ -24,7 +24,7 @@ def read_suricata_config():
     
 #Lire le fichier de configuration suricata.yaml//
 def read_config():
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+    suricata_yaml_path = "/etc/suricata/suricata.yaml"
     syslog_enabled = None
     mpm_algo = None
     try:
@@ -73,7 +73,7 @@ def read_config():
    
 # Fonction pour lire la première occurrence de "syslog" et "enabled"//
 def read_first_syslog_enabled(suricata_yaml_path):
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml" 
+    suricata_yaml_path = "/etc/suricata/suricata.yaml" 
     syslog_enabled = None
     try:
         output,error= execute_cmd("cat "+suricata_yaml_path)
@@ -96,7 +96,7 @@ def read_first_syslog_enabled(suricata_yaml_path):
 
 #Update fichier de configuration suricata.yaml//
 def update_suricata_config( status_enabled,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode):    
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+    suricata_yaml_path = "/etc/suricata/suricata.yaml"
     try:
         cmd_read = f"sudo cat {suricata_yaml_path}"
         output ,error = execute_cmd(cmd_read)
@@ -297,7 +297,7 @@ def delete_line_in_remote_file(file_path, line_to_delete):
 
 #Afficher les rules par défaut //
 def get_suricata_default_rules():
-    file_path = '/var/lib/suricata/rules/suricataTest.rules'
+    file_path = '/var/lib/suricata/rules/suricata.rules'
     try:
         # Utilisez la commande 'cat' pour lire le contenu du fichier
         cmd_read = f"cat {file_path}"
@@ -379,7 +379,7 @@ def prepare_rule_attribut(rules):
                     
 #*********** Les alertes ****************//
 def read_suricata_log():
-    suricata_log_path = "/var/log/suricata/fastlogrotate.log"
+    suricata_log_path = "/var/log/suricata/fast.log"
     logs = []
     try:
         cmd_read = f"cat {suricata_log_path}"

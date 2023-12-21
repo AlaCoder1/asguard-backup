@@ -22,13 +22,14 @@
       <v-row>
         <v-col cols="6">
           <div class="ml-3 mr-3">
-            <div class="container" style="display: flex;">
+            <!-- <div class="container" style="display: flex;"> -->
             <h4>General information</h4>
-              <div style="margin-left: auto; color: orange; margin-top: -17px;text: bold">
+            <br/>
+              <!-- <div style="margin-left: auto; color: orange; margin-top: -17px;text: bold">
                 <v-switch id="mySwitch" 
                         color="warning" v-model="switchValue" label="Full help" />
-              </div>
-            </div>
+              </div> -->
+            <!-- </div> -->
           <v-divider class="mb-2"></v-divider>
             </div>
            
@@ -427,8 +428,8 @@ export default {
         promisc: state.promisc,
         eve_log: state.eve_log,
         syslog: state.syslog,
-        mpm_algo: state.mpm_algo,
-        profile: state.profile,
+        mpm_algo: state.mpm_algo.slug,
+        profile: state.profile.slug,
         interface: state.interface,
       };
       state.loading = true;

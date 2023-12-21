@@ -476,6 +476,8 @@ def update_suricata_configuration(request, id):
                 # Appelez d'abord la fonction update_suricata_config pour mettre à jour le système
                 aux_update=update_suricata_config(status_enabled,str(new_promisc).lower(), new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode)
                 if aux_update is True:
+                    cmd="sudo systemctl restart suricata "
+                    output,error=execute_cmd(cmd)
                     # Ensuite, mettez à jour les enregistrements dans la base de données
                     suricata_instance = suricatafile.objects.get(id=id)
                     suricata_instance.status_enabled=status_enabled
@@ -487,8 +489,12 @@ def update_suricata_configuration(request, id):
                     suricata_instance.copy_mode = new_copy_mode
                     suricata_instance.interface_ids = interface_ids
                     suricata_instance.home_net = home_net_value
-                    suricata_instance.save()
-                    return JsonResponse({'success': True, 'msg': 'Mise à jour du fichier réussie !!!'},status=200)
+                    if error=="":
+                        suricata_instance.save()
+                        return JsonResponse({'success': True, 'msg': 'Mise à jour du fichier réussie !!!'},status=200)
+                    else:
+                        return JsonResponse({'success': False, 'msg': error},status=400)
+                        
                 else:
                     return JsonResponse({'success': False, 'msg': 'Lecture du fichier échouée.'}, status=500)
             

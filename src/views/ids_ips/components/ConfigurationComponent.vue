@@ -23,15 +23,15 @@
         <v-col cols="6">
           <div class="ml-3 mr-3">
             <div class="container" style="display: flex;">
-              <h4>General information</h4>
+            <h4>General information</h4>
               <div style="margin-left: auto; color: orange; margin-top: -17px;text: bold">
-                  <v-switch id="mySwitch" 
-                          color="warning" v-model="switchValue" label="Full help" />
-                </div>
-            
+                <v-switch id="mySwitch" 
+                        color="warning" v-model="switchValue" label="Full help" />
+              </div>
             </div>
-            <v-divider class="mb-2"></v-divider>
-         
+          <v-divider class="mb-2"></v-divider>
+            </div>
+           
           <v-row class="mt-2">
             <v-col cols="4" align-self="center">
               <label>Suricata</label>
@@ -182,7 +182,7 @@
               <small class="ml-5 error-feedback" v-show="switchValue">should monitor traffic.</small>
             </v-col>
           </v-row>
-        </div>
+        
       </v-col>
     </v-row>
     <v-row class="flex py-8 mb-5">
@@ -358,7 +358,7 @@ export default {
               // Automatically close the snackbar after 3000 milliseconds (3 seconds)
               setTimeout(() => {
                 state.snackbar = false;
-                location.reload();
+                // location.reload();
               }, 2000);
               
             }
@@ -371,7 +371,7 @@ export default {
               // Automatically close the snackbar after 3000 milliseconds (3 seconds)
               setTimeout(() => {
                 state.snackbar = false;
-                location.reload();
+                // location.reload();
 
               }, 2000);
        

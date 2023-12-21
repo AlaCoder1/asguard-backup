@@ -226,7 +226,7 @@ export default {
             "rejectnoth",
           ],
         },
-        // editable: true,
+        editable: true,
         minWidth: 120,
         sortable: false,
 

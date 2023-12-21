@@ -84,15 +84,12 @@
                   ></v-text-field>
                 </v-col>
               
-                <v-col cols="12" md="6" class="d-flex justify-end">
+                <!-- <v-col cols="12" md="6" class="d-flex justify-end">
                   <v-btn class="ml-3 mt-2" @click="addRow">
                     <i class="fas fa-plus" style="color: #086eae;"></i>
                     <span class="ml-2" style="color: #086eae;">Add</span>
                   </v-btn>
-                  <v-btn @click="reloadData" icon>
-                <v-icon class="small-refresh-icon">mdi-refresh</v-icon>
-              </v-btn>
-                </v-col>
+                </v-col> -->
               </v-row>
             </v-card-title>
             <v-card-text>
@@ -172,6 +169,7 @@ export default {
   },
   setup(props) {
     const emitter = inject("emitter");
+    
     const state = reactive({
       loading: false,
       isLoadingDialogue: false,
@@ -206,6 +204,14 @@ export default {
         sort: "asc",
       },
       {
+        headerName: "Sid",
+        field: "sid",
+        // editable: true,
+        minWidth: 100,
+        sortable: false,
+
+      },
+      {
         headerName: "Action",
         field: "action",
         cellEditor: "agSelectCellEditor",
@@ -221,7 +227,19 @@ export default {
           ],
         },
         editable: true,
-        minWidth: 150,
+        minWidth: 120,
+        sortable: false,
+
+      },
+      {
+        headerName: "Message",
+        field: "msg",
+        editable: true,
+        minWidth: 400,
+        autoHeight: true,
+        cellStyle: { whiteSpace: 'pre-wrap' , lineHeight: '2'},
+        sortable: false,
+       
       },
       {
         headerName: "Protocol",
@@ -260,60 +278,65 @@ export default {
             "pkthdr",
           ],
         },
-        editable: true,
-        minWidth: 150,
+        // editable: true,
+        minWidth: 120,
+        sortable: false,
       },
       {
-        headerName: "Source address",
+        headerName: "Source",
         field: "source_ip",
-        editable: true,
-        minWidth: 150,
+        // editable: true,
+        minWidth: 300,
+        autoHeight: true,
+        cellStyle: {  whiteSpace: 'pre-wrap' , lineHeight: '2' },
+        sortable: false,
       },
       {
         headerName: "Direction",
         field: "direction",
-        editable: true,
-        minWidth: 150,
+        // editable: true,
+        minWidth: 125,
+        sortable: false,
+
       },
       {
-        headerName: "Destination address",
+        headerName: "Destination",
         field: "destination_ip",
-        editable: true,
-        minWidth: 200,
+        // editable: true,
+        minWidth: 300,
+        autoHeight: true,
+        cellStyle: { whiteSpace: 'pre-wrap' , lineHeight: '2'},
+        sortable: false,
+
       },
-      {
-        headerName: "Message",
-        field: "msg",
-        editable: true,
-        minWidth: 400,
-      },
+      
       {
         headerName: "Revision",
         field: "rev",
-        editable: true,
+        // editable: true,
         minWidth: 125,
+        sortable: false,
+
       },
-      {
-        headerName: "Sid",
-        field: "sid",
-        editable: true,
-        minWidth: 100,
-      },
+      
       {
         headerName: "Status",
         field: "activate_rule",
         editable: true,
         minWidth: 100,
+        sortable: false,
+
       },
 
-      {
-        headerName: "Actions",
-        cellRenderer: actionCellRenderer,
-        minWidth: 150,
-        field: "action",
-        sortable: true,
-        filter: true,
-      },
+      // {
+      //   headerName: "Actions",
+      //   cellRenderer: actionCellRenderer,
+      //   minWidth: 100,
+      //   field: "action",
+      //   filter: true,
+      //   sortable: false,
+
+      // },
     ];
 
     const currentIndex = ref(0);
@@ -358,14 +381,14 @@ export default {
         isSelected: false,
         isRowSelected: false,
         isModified: false,
+        sid: 0,
         action: "alert",
+        msg: "",
         protocol: "",
         source_ip: "",
         direction: "",
         destination_ip: "",
-        msg: "",
         rev: 0,
-        sid: 0,
         activate_rule: false,
       };
 
@@ -403,18 +426,19 @@ export default {
       gridApi.value.refreshCells({
         columns: [
           "id",
+          "sid",
           "action",
+          "msg",
           "protocol",
           "source_ip",
           "direction",
           "destination_ip",
-          "msg",
           "rev",
-          "sid",
           "activate_rule",
         ],
       });
     };
+    
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== "") {
@@ -432,13 +456,14 @@ export default {
         return cookieValue;
       }
       const reloadData = async() => {
+  
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken; 
         state.loading = true;
         state.isLoadingDialogue = true;
         try {
         const response = await axios.post(
-          "addDefaultRulesToDatabase/" + props.configInfo
+          "activerSuricataUpdate/" + props.configInfo
         );
         if (response.status === 200 ) {
           state.loading = false;
@@ -455,13 +480,16 @@ export default {
           state.snackbar = true;
               showMessage({
                 color: "error",
-                text: "Failed to save rule!",
+                text: "Failed to update rule!",
               });
             }
       } catch (error) {
+        state.loading = false;
+          state.isLoadingDialogue = false;
+          state.snackbar = true;
         showMessage({
           color: "error",
-          text: "Failed to consomme api!".concat(error),
+          text: error,
         });
       }
     };
@@ -555,7 +583,7 @@ export default {
         state.messages = [];
         currentIndex.value = 0;
         setTimeout(() => {
-          location.reload();
+          // location.reload();
         },3000)
        
       } else {
@@ -699,6 +727,7 @@ export default {
       showMessage,
       updateIndex,
       reloadData,
+
     };
   },
 };

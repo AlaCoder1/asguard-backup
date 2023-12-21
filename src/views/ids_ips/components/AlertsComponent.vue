@@ -141,64 +141,87 @@ export default {
     const currentIndex = ref(0);
     const columnRules = [
       {
-        headerName: "Timestamp",
+        width: 50,
+        minWidth: 50,
+        maxWidth: 50,
+        rowDrag: true,
+        editable: false,
+      },
+      {
+        headerCheckboxSelection: false,
+        checkboxSelection: true,
+        editable: false,
+        width: 50,
+        minWidth: 50,
+        maxWidth: 50,
+        sortable: false,
+      },
+      {
+        headerName: "Horodatage LINUX",
         field: "timestamp",
         sortable: true,
-        filter: true,
-        checkboxSelection: true,
+        sort: "desc",
         minWidth: 250,
       },
       {
         headerName: "Sid",
         field: "sid",
-        sortable: true,
-        filter: true,
         minWidth: 150,
-
-      },
-      {
-        headerName: "Priority",
-        field: "priority",
-        sortable: true,
-        filter: true,        minWidth: 150,
-
-      },
-      {
-        headerName: "Protocol",
-        field: "protocol",
-        sortable: true,
-        filter: true,        minWidth: 150,
-
-      },
-      {
-        headerName: "Source address",
-        field: "src_addr",
-        sortable: true,
-        filter: true,        minWidth: 150,
+        sortable: false,
 
       },
       {
         headerName: "Message",
         field: "message",
-        sortable: true,
-        filter: true,        minWidth: 450,
+        minWidth: 420,
+        autoHeight: true,
+        cellStyle: { whiteSpace: 'pre-wrap' , lineHeight: '2'},
+        sortable: false,
+      },
+      {
+        headerName: "Severity",
+        field: "priority",
+        minWidth: 120,
+        sortable: false,
+
+      },
+      {
+        headerName: "Protocol",
+        field: "protocol",
+         minWidth: 120,
+         sortable: false,
+
+      },
+      {
+        headerName: "Source",
+        field: "src_addr",
+        minWidth: 150,
+        sortable: false,
 
       },
       {
     
-        headerName: "Source port",
+        headerName: "Port",
         field: "src_port",
-        sortable: true,
-        filter: true,        minWidth: 150,
+        minWidth: 100,
+        sortable: false,
 
       },
       {
-        headerName: "Destination address",
+        headerName: "Destination",
         field: "dst_addr",
-        sortable: true,
-        filter: true,        minWidth: 250,
+        minWidth: 150,
+        sortable: false,
 
       },
+      {
+    
+    headerName: "Port",
+    field: "dst_port",
+    minWidth: 100,
+    sortable: false,
+
+  },
 
 
     ];
@@ -273,7 +296,7 @@ export default {
         currentIndex.value = 0;
         setTimeout(() => {
           location.reload();
-        },5000)
+        },1000)
        
       } else {
         // Increment the index if not all messages are read
@@ -327,9 +350,12 @@ export default {
               });
             }
       } catch (error) {
+          state.loading = false;
+          state.isLoadingDialogue = false;
+          state.snackbar = true;
         showMessage({
           color: "error",
-          text: "Failed to consomme api!".concat(error),
+          text: error,
         });
       }
     };
@@ -344,16 +370,6 @@ export default {
           .replace(/None/g, "null");
         let parsedArray3 = JSON.parse(validJsonString3);
         rowDataAlerts.value = parsedArray3;
-        console.log(rowDataAlerts.value)
-        // const processedData = parsedArray.map((server) => ({
-        //   name: server.name,
-        //   proto: server.proto,
-        //   ipv4_tunnel_network: server.ipv4_tunnel_network,
-        //   description: server.description,
-        //   published: server.type_of_service,
-        // }));
-
-        // rowDataRules.value = processedData;
 
       } catch (error) {
         console.error("Error setting rowDataAlerts:", error);

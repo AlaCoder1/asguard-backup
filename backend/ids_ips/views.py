@@ -21,83 +21,49 @@ from django.db.models import Q
 #Ajouter les régles par défaut dans la BD//
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
-def addDefaultRulesToDatabase(request, id):
+def activerSuricataUpdate(request, id):
     if request.method=="POST":
-        rules = get_suricata_default_rules()
-        added_rule_ids = []  # Pour stocker les IDs des règles ajoutées avec succès
-        # Recherche du fichier SuricataFile par ID
-        try:
-            suricatafile_obj = suricatafile.objects.get(pk=id)
-        except suricatafile.DoesNotExist:
-            return Response({"message": "SuricataFile non trouvé"}, status=400)
-        # Parcourez les règles récupérées et ajoutez-les à la base de données
-        for rule in rules:
-            rule = rule.strip()  # Supprimez les espaces inutiles
-            action=None
-            protocol=None
-            sid=None
-            src_ip=None
-            direction=None
-            dest_ip=None
-            msg=None
-            rev=None
-            if rule.startswith("#") is True:
-                active=False
-                action=rule.split(" ")[0].strip()+rule.split(" ")[1]
-                protocol=rule.split(" ")[2].strip()
-            else:
-                active=True
-                action=rule.split(" ")[0].strip()
-                protocol=rule.split(" ")[1].strip()
-            if rule.find("sid")!=-1:
-                rule_inter=rule[rule.find("sid:"):]
-                sid=int(rule_inter[rule_inter.find("sid:")+len("sid:"):rule_inter.find(";")])
-            if rule[1:].find("->")!=-1:
-                src_ip=rule[rule.find(protocol)+len(protocol):rule.find("->")].strip()
-                direction="->"
-                dest_ip=rule[rule.find("->")+len("->"):rule.find("(msg")].strip()
-            if rule.find("msg:")!=-1:
-                msg=rule[rule.find("msg:")+len("msg:"): rule.find('";')].strip()
-            if rule.find("rev:")!=-1:
-                rev=rule[rule.find("rev:")+len("rev:"): rule.find(";sid")].strip(";")
-                if rev.isdigit():
-                    rev=int(rev)
-                else:
-                    rev=None
-            action=action if action!="" else None    
-            protocol=protocol if protocol!="" else None  
-            src_ip=src_ip if src_ip!="" else None    
-            direction=direction if direction!="" else None  
-            dest_ip=dest_ip if dest_ip!="" else None    
-            msg=msg if msg!="" else None  
-            protocol=protocol if protocol!="" else None  
-            data = {
-                "sid":sid,
-                "action":action,
-                "protocol":protocol,
-                "source_ip":src_ip,
-                "direction":direction,
-                "destination_ip":dest_ip,
-                "msg":msg,
-                "rev":rev,
-                "rule": rule,
-                "suricatafile": suricatafile_obj.id,
-                "activate_rule":active,
-                "default_rule":True
-                }
-            if ids_ips_rule.objects.filter(sid=sid).exists():
-                pass
-            else:
-                InboundSerializer = RuleIdsIpsSerializer(data=data)
-                if InboundSerializer.is_valid():
-                    InboundSerializer.save()
-                    added_rule_ids.append(data)  # Ajoutez l'ID de la règle ajoutée à la liste
-                else:
-                    message = InboundSerializer.errors
-                    pass
-    return JsonResponse({"message": "Les règles par défaut ont été ajoutées.", "added_rule_ids": added_rule_ids})
-
-
+        cmd="sudo suricata-update"
+        output,error=execute_cmd(cmd)
+        if error.strip()=="":
+            rules_DB = ids_ips_rule.objects.all()  # Récupérer toutes les alertes de la base de données
+            rules_sys = get_suricata_default_rules()
+            rules_add=[]
+            rules_delete=[]
+            rules_list=[]
+            serializer = RuleIdsIpsSerializer(rules_DB, many=True)
+            rules_list=serializer.data
+            rules_list=[l['sid'] for l in rules_list]
+            rules_sys_list=[l['sid'] for l in prepare_rule_attribut(rules_sys)]
+            if len(list(set(rules_list)-set(rules_sys_list)))!=0:
+                rules_add = [log for log in rules_sys if log not in rules_list]
+                rules_delete = [log for log in rules_list if log not in rules_sys]   
+                if len(rules_add)!=0:
+                    rules_add=prepare_rule_attribut(rules_add)
+                    # Parcourir les logs récupérés et ajoutez-les à la base de données
+                    for rule in rules_add:
+                        print("data to add ==>",rule['rule'])
+                        rule['suricatafile']=int(id)
+                        if not ids_ips_rule.objects.filter(sid=rule['sid']).exists():
+                            serializerAlert = RuleIdsIpsSerializer(data=rule)
+                            if serializerAlert.is_valid():
+                                serializerAlert.save()
+                            else:
+                                return JsonResponse({"message": str(serializerAlert.errors)},status=400)
+                        else:
+                            pass
+                if len(rules_delete)!=0:
+                    rules_delete=prepare_rule_attribut(rules_delete)
+                    for l in rules_delete:
+                        if ids_ips_rule.objects.filter(sid=l['sid']).exists():
+                            rule = ids_ips_rule.objects.get(sid=l['sid'])
+                            rule.delete()
+                        else:
+                            return JsonResponse({"message": "Rule not found!"},status=400)
+            return JsonResponse({"message": "Rules updated successfully!"},status=200)
+        else:
+            return JsonResponse({"message":error},status=400)
+            
 #//Récupérer les règles de la base de données //
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -131,7 +97,7 @@ def getRulesFromDatabase(request):
 def save_rules_suricata(request, id):
     # Initialisation d'une chaîne vide pour stocker les messages de réponse
     message = ""
-    file_path = '/var/lib/suricata/rules/suricataTest.rules'
+    file_path = '/var/lib/suricata/rules/suricata.rules'
     list_msg=[]
     if request.method == 'POST':
         # Analyse des données JSON de la requête POST
@@ -244,7 +210,7 @@ def deleteRule(request, sid):
                 rule_text = rule.rule
                 if rule.default_rule==False:
                     # Chemin du fichier à rechercher
-                    file_path_to_search = "/var/lib/suricata/rules/suricataTest.rules"  # Replace with the actual path
+                    file_path_to_search = "/var/lib/suricata/rules/suricata.rules"  # Replace with the actual path
                     sid_to_search = str(sid)  # Convert the rule's sid to string
                     # Obtention de la ligne à supprimer en utilisant la fonction get_line_by_sid
                     l = get_line_by_sid(file_path_to_search, sid_to_search)
@@ -284,7 +250,7 @@ def deleteRule(request, sid):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_status_rule(request, sid):
-    file_path = '/var/lib/suricata/rules/suricataTest.rules'
+    file_path = '/var/lib/suricata/rules/suricata.rules'
     try:
         # Récupération de la valeur de l'activation de la règle à partir de la requête PUT
         data = request.data
@@ -444,7 +410,7 @@ def addGeneralConfig(request):
 def update_suricata_configuration(request, id):
     if request.method=="PUT":
         try: 
-            suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+            suricata_yaml_path = "/etc/suricata/suricata.yaml"
             data = request.data
             new_promisc = data.get("promisc", "false")
             new_promisc=str(new_promisc)
@@ -569,7 +535,7 @@ def get_suricata_configuration(request, id):
         home_net_value = ' , '.join(address_home_net_final)
         home_net_value = f'[{home_net_value}]'
         interfaces_ids_value = str(interface_ids_final)
-        suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+        suricata_yaml_path = "/etc/suricata/suricata.yaml"
         # Exécutez la commande 'sudo cat' pour lire le contenu du fichier
         output, error = execute_cmd("sudo cat " + suricata_yaml_path)
         # Mettez à jour la configuration dans le système
@@ -651,7 +617,7 @@ def addalertsToDatabase(request,id):
                     alert.delete()
                 else:
                     return JsonResponse({"message": "Alert not found!!"},status=400)
-        return JsonResponse({"message":"Tous les alerts ont été mis à jour avec succès!!"},status=200)           
+        return JsonResponse({"message":"Alerts updated successfully!!"},status=200)           
 
     
 #Afficher les alertes de la BD//

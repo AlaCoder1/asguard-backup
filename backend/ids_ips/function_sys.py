@@ -13,7 +13,7 @@ def execute_cmd(command):
 #Lire le fichier de configuration suricata.yaml//
 def read_suricata_config():
     # Chemin vers le fichier suricata.yaml
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+    suricata_yaml_path = "/etc/suricata/suricata.yaml"
     try:
         output, error = execute_cmd("cat " + suricata_yaml_path)
         return output
@@ -24,7 +24,7 @@ def read_suricata_config():
     
 #Lire le fichier de configuration suricata.yaml//
 def read_config():
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+    suricata_yaml_path = "/etc/suricata/suricata.yaml"
     syslog_enabled = None
     mpm_algo = None
     try:
@@ -73,7 +73,7 @@ def read_config():
    
 # Fonction pour lire la première occurrence de "syslog" et "enabled"//
 def read_first_syslog_enabled(suricata_yaml_path):
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml" 
+    suricata_yaml_path = "/etc/suricata/suricata.yaml" 
     syslog_enabled = None
     try:
         output,error= execute_cmd("cat "+suricata_yaml_path)
@@ -96,7 +96,7 @@ def read_first_syslog_enabled(suricata_yaml_path):
 
 #Update fichier de configuration suricata.yaml//
 def update_suricata_config( status_enabled,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode):    
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+    suricata_yaml_path = "/etc/suricata/suricata.yaml"
     try:
         cmd_read = f"sudo cat {suricata_yaml_path}"
         output ,error = execute_cmd(cmd_read)
@@ -297,7 +297,7 @@ def delete_line_in_remote_file(file_path, line_to_delete):
 
 #Afficher les rules par défaut //
 def get_suricata_default_rules():
-    file_path = '/var/lib/suricata/rules/suricataTest.rules'
+    file_path = '/var/lib/suricata/rules/suricata.rules'
     try:
         # Utilisez la commande 'cat' pour lire le contenu du fichier
         cmd_read = f"cat {file_path}"
@@ -313,9 +313,73 @@ def get_suricata_default_rules():
         # print(f"Erreur : {str(e)}")
         return []
 
+###prepare rules attributs
+def prepare_rule_attribut(rules):
+    list_attributs_rules=[]
+    for rule in rules:
+        rule = rule.strip()  # Supprimez les espaces inutiles
+        if len(rule)!=0:
+            action=None
+            protocol=None
+            # Vérifiez si la règle n'est pas vide
+            if rule.startswith("#") is True:
+                active=False
+                action=rule.split(" ")[0].strip()+rule.split(" ")[1]
+                protocol=rule.split(" ")[2].strip()
+                
+            else:
+                active=True
+                action=rule.split(" ")[0].strip()
+                protocol=rule.split(" ")[1].strip()
+        
+            sid=None
+            if rule.find("sid")!=-1:
+                rule_inter=rule[rule.find("sid:"):]
+                sid=int(rule_inter[rule_inter.find("sid:")+len("sid:"):rule_inter.find(";")])
+            src_ip=None
+            direction=None
+            dest_ip=None
+            if rule[1:].find("->")!=-1:
+                src_ip=rule[rule.find(protocol)+len(protocol):rule.find("->")].strip()
+                direction="->"
+                dest_ip=rule[rule.find("->")+len("->"):rule.find("(msg")].strip()
+            msg=None
+            if rule.find("msg:")!=-1:
+                msg=rule[rule.find('msg:"')+len('msg:"'): rule.find('";')].strip()
+            rev=None
+            if rule.find("rev:")!=-1:
+                rev=rule[rule.find("rev:")+len("rev:"): rule.find(";sid")].strip(";")
+                if rev.isdigit():
+                    rev=int(rev)
+                else:
+                    rev=None
+            action=action if action!="" else None    
+            protocol=protocol if protocol!="" else None  
+            src_ip=src_ip if src_ip!="" else None    
+            direction=direction if direction!="" else None  
+            dest_ip=dest_ip if dest_ip!="" else None    
+            msg=msg if msg!="" else None  
+            protocol=protocol if protocol!="" else None  
+            data = {
+                "sid":sid,
+                "action":action.strip("#"),
+                "protocol":protocol,
+                "source_ip":src_ip,
+                "direction":direction,
+                "destination_ip":dest_ip,
+                "msg":msg.strip('"'),
+                "rev":rev,
+                "rule": rule,
+                "suricatafile":id,
+                "activate_rule":active,
+                    "default_rule":True
+                }
+            list_attributs_rules.append(data)
+    return list_attributs_rules
+                    
 #*********** Les alertes ****************//
 def read_suricata_log():
-    suricata_log_path = "/var/log/suricata/fastlogrotate.log"
+    suricata_log_path = "/var/log/suricata/fast.log"
     logs = []
     try:
         cmd_read = f"cat {suricata_log_path}"

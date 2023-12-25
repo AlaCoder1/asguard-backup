@@ -1,3 +1,4 @@
+import subprocess
 from django.shortcuts import render
 from django.core import serializers
 from django.contrib.auth.decorators import login_required
@@ -18,10 +19,106 @@ from backend.managementKeypairs.list_key_pairs import get_list_all_private_key, 
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_status_ipsec
 from backend.ids_ips.function_BD import get_home_net_de_la_base_de_donnees, get_ip_addresses
 from backend.ids_ips.function_sys import execute_cmd
-from backend.ids_ips.models import suricatafile, ids_ips_rule, Alert
+from backend.ids_ips.models import *
+from backend.ids_ips.serializers import AlertSerializer
+import ast
+from backend.proxy.views import *
+from backend.proxy.models import *
 
+def get_squid_status():
+    try:
+        result = subprocess.run(['systemctl', 'status', 'squid.service'], capture_output=True, text=True, check=True)
+        for line in result.stdout.split('\n'):
+            if 'Active:' in line:
+                status = line.split(':')[1].strip()
+                return status
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return None
+def getGeneraleInfo(request):
+    if (request.method == 'GET'):
+        squid_conf_path = '/etc/squid/squid.conf'
+        command = "cat "+squid_conf_path
+        stdout, stderr = run_command(command)
+        resultat=stdout.split('\n')
+        print({"resultat":resultat})
+        for line in resultat:
+            line = line.strip()
+            if line.startswith('http_port'):
+                parts = line.split()
+                if len(parts) >= 2:
+                    port = parts[1].split(':')[0]
+                    
+        squid_status = get_squid_status()
+        if squid_status:
+            if 'active' in squid_status:
+                return {"Port":port,"status":True}
+        else:
+            return {"Port":port,"status":False}
+def get_all_proxy_rules(request):
+    if (request.method == 'GET'):
+        list_proxyRules =[]
+        data = ProxyRules.objects.all()
+        proxyRulesDict = serializers.serialize("json", data)
+        res = json.loads(proxyRulesDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_proxyRules.append(res[i]['fields'])
+        return list_proxyRules
 
-def get_users(request):
+def statusEnableAuth(request):
+    if (request.method == 'GET'):
+        list_line = []
+        config_file_path = '/etc/squid/squid.conf'
+        lines_to_check = [
+            "#http_access allow allowed_subnet_by_auth authenticated_users\n",
+            "#http_access allow allowed_ip_by_auth authenticated_users\n",
+            "#http_access allow allowed_domain_by_auth authenticated_users\n"
+        ]
+        with open(config_file_path, 'r') as file:
+                content = file.readlines()
+        for line in content:
+            if line.strip().startswith('#'):
+                list_line.append(line)
+        for i in lines_to_check:
+            if i in list_line:
+                enable = False
+            else:
+                enable =True
+        return enable
+def allProxyUsers(request):
+    if (request.method == 'GET'):
+        list_proxyUsers =[]
+        data = ProxyUser.objects.all()
+        proxyUsersDict = serializers.serialize("json", data)
+        res = json.loads(proxyUsersDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_proxyUsers.append(res[i]['fields'])
+        return list_proxyUsers
+def allGProxyroups(request):
+    if (request.method == 'GET'):
+        list_line = []
+        config_file_path = '/etc/squid/squid.conf'
+        with open(config_file_path, 'r') as file:
+                    content = file.readlines()
+        for line in content:
+            if "squid/acl/" in line:
+                list_line.append(line)
+                
+        # Define a regular expression pattern to extract keywords
+        pattern = re.compile(r'acl (\w+) url_regex')
+
+        groups = [pattern.findall(line)[0] for line in list_line if pattern.findall(line)]
+        
+        return groups
+def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
         users = User.objects.all()

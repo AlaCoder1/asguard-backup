@@ -17,6 +17,20 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
+                    label="Email"
+                    v-model="state.formData.email"
+                  ></v-text-field>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.email.$error"
+                  >
+                    {{ v$.formData.email.$errors[0].$message }}
+                  </p>
+                </v-col>
+              </v-row>
+              <v-row>
+                <v-col cols="12" class="mb-n6">
+                  <v-text-field
                     label="Username"
                     v-model="state.formData.userName"
                   ></v-text-field>
@@ -105,9 +119,16 @@
 </template>
 
 <script>
+import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { sameAs, helpers, requiredIf } from "@vuelidate/validators";
-import { reactive, computed, toRefs, watch,inject  } from "vue";
+import {
+  sameAs,
+  helpers,
+  requiredIf,
+  email,
+  required,
+} from "@vuelidate/validators";
+import { reactive, computed, toRefs, watch, inject } from "vue";
 import VButton from "@/components/VButton.vue";
 export default {
   name: "Modal_User_Squid",
@@ -136,6 +157,7 @@ export default {
     const emitter = inject("emitter");
     const state = reactive({
       formData: {
+        email: "",
         password: "",
         confirm_password: "",
         userName: null,
@@ -186,6 +208,7 @@ export default {
               requiredIf(() => modalMode.value === "create")
             ),
           },
+          email: { required, email },
         },
       };
     });
@@ -212,14 +235,54 @@ export default {
       }
     );
     const closeModal = () => {
-      emitter.emit('closeSquidUserModal')
+      emitter.emit("closeSquidUserModal");
+    };
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
     };
     const submitForm = async () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const result = await v$.value.$validate();
       console.log("result", result);
 
       if (result) {
         console.log("state", state);
+
+        let payload = {
+          email: state.formData.email,
+          username: state.formData.userName,
+          password: state.formData.password,
+        };
+
+        axios
+          .post("/proxy/add_user_squid", payload)
+          .then((response) => {
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          });
       } else {
         console.log("error", v$.value);
       }

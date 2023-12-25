@@ -64,7 +64,7 @@ urlpatterns = [
     path('openvpn/', include('backend.openvpn.urls')),
     path('ipsec/', include('backend.ipsec.urls')),
     path('ipsec/', ipsec_page),
-    path('proxy-web/', squid_proxy),
+    path('proxy/', squid_proxy),
     path('clamaV/', clamav_page),
     path('clamaV/', include('backend.clamav.urls')),
     path('rules/', include('backend.rules.urls')),

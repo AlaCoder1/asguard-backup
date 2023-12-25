@@ -362,7 +362,7 @@ def disable_auth(request):
 @authentication_classes([SessionAuthentication])
 def change_auth_status(request):
     config_file_path = '/etc/squid/squid.conf'
-    data = json.loads(request.body)
+    data = request.data
     if data['status'] ==True:
         lines_to_comment = [
         'http_access allow allowed_subnet_by_auth authenticated_users',
@@ -451,9 +451,9 @@ def status_enable_auth(request):
             list_line.append(line)
     for i in lines_to_check:
         if i in list_line:
-            enable = False
+            enable = True
         else:
-            enable =True
+            enable =False
     return JsonResponse({"status_enable": enable}, status=200)
 
 @swagger_auto_schema(

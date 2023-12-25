@@ -208,7 +208,12 @@ export default {
               requiredIf(() => modalMode.value === "create")
             ),
           },
-          email: { required, email },
+          email: {
+            required: helpers.withMessage(
+              "Value is required",
+              requiredIf(() => modalMode.value === "create")
+            ),email
+          },
         },
       };
     });

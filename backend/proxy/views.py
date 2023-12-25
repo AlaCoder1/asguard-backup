@@ -60,6 +60,40 @@ def allRuleSquid(request):
         list_proxyRules.append(res[i]['fields'])
     return JsonResponse({"data":list_proxyRules})
 
+
+def add_line_after_pattern(file_path, pattern, new_line):
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    found = False
+    for i, line in enumerate(lines):
+        if pattern in line:
+            found = True
+            lines.insert(i + 1, new_line)
+            break
+
+    if not found:
+        print(f"Pattern '{pattern}' not found in the file.")
+
+    with open(file_path, 'w') as file:
+        file.writelines(lines)
+
+
+def enable_by_time():
+    config_file_path = '/etc/squid/squid.conf'
+    with open(config_file_path, 'r') as file:
+        config_lines = file.readlines()
+
+    # Uncomment the desired lines
+    for i, line in enumerate(config_lines):
+        if line.strip().startswith('#http_access deny blocked_domain_by_time time_block') :
+            config_lines[i] = line.replace('#', '')
+
+    # Write the changes back to the file
+    with open(config_file_path, 'w') as file:
+        file.writelines(config_lines)
+
+    return JsonResponse({"msg": "Lines uncommented successfully."}, status=200)
 @swagger_auto_schema(
     method='POST',
     responses={200: 'Success', 400: 'Bad Request'},
@@ -70,42 +104,77 @@ def allRuleSquid(request):
 @authentication_classes([SessionAuthentication])
 def addRuleSquid(request):
     msg = ''
-    data = json.loads(request.body)
-    # if data['allow_by_auth'] == False:
-    #     if data['type'] == "ip":
-    #         file_path = '/etc/squid/blocked_ip.acl'
-    #     elif data['type'] == "domain":
-    #         file_path = '/etc/squid/blocked_domain.acl'
-    #     else:
-    #         file_path = '/etc/squid/blocked_subnet.acl'
-    # else:
-    #     if data['type'] == "ip":
-    #         file_path = '/etc/squid/allowed_ip_by_auth.acl'
-    #     elif data['type'] == "domain":
-    #         file_path = '/etc/squid/allowed_domain_by_auth.acl'
-    #     else:
-    #         file_path = '/etc/squid/allowed_subnet_by_auth.acl'
-    file_path = file_selected(data['allow_by_auth'],data['type'])
-    if  data['status'] == False:
-        value = '#'+data['value']
-    else:
-        value = data['value']
-    try:
-        with open(file_path, 'a') as file:
-            file.write(value + '\n')
-        serializerProxyRules = ProxyRulesSerializer(data=data)
-        if (serializerProxyRules.is_valid()):
-            serializerProxyRules.save()
-            msg = f"{data['type']} blocked successfully."
-            status=200
-            return JsonResponse({"msg": msg}, status=status)
+    line = ''
+    if (request.method == 'POST'):
+        data = request.data
+        # data = json.loads(request.body)
+        print({"data":data})
+        # time_from = data.get('time_from','')
+        # time_to = data.get('time_to','')
+        # days = data.get('days','')
+        if data['allow_by_auth'] == False:
+            if data['type'] == "ip":
+                file_path = '/etc/squid/blocked_ip.acl'
+            elif data['type'] == "domain":
+                if data['time_from'] != '':
+                # if time_from != '' or time_to !='':
+                    print('alialiali')
+                    squid_path = '/etc/squid/squid.conf'
+                    name_rule = 'block_'+data['value']
+                    time_block_rule = 'time_'+name_rule
+                    line1='acl '+name_rule+' url_regex '+data['value']+'\n'
+                    add_line_after_pattern(squid_path,'acl localnet src fe80::/10',line1)
+                    line2='acl '+time_block_rule+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
+                    # line1='acl '+data['value']+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
+                    add_line_after_pattern(squid_path,line1,line2)
+                    line3='\nhttp_access deny '+name_rule+' '+time_block_rule+'\n'
+                    add_line_after_pattern(squid_path,line2,line3)
+                    write_in_file = False
+                    # line+='acl time_block time '+data['days']+' '+data['time_from']+'-'+data['time_to']
+                    # add_line_after_pattern(file_path,'acl localnet src fe80::/10',line)
+                    # enable_by_time()
+                else:
+                    file_path = '/etc/squid/blocked_domain.acl'
+            else:
+                file_path = '/etc/squid/blocked_subnet.acl'
         else:
-            return JsonResponse(serializerProxyRules.errors, status=404 )
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        msg = e
-        status=404 
-        return JsonResponse({"msg": msg}, status=status)
+            if data['type'] == "ip":
+                file_path = '/etc/squid/allowed_ip_by_auth.acl'
+            elif data['type'] == "domain":
+                file_path = '/etc/squid/allowed_domain_by_auth.acl'
+            else:
+                file_path = '/etc/squid/allowed_subnet_by_auth.acl'
+        # file_path = file_selected(data['allow_by_auth'],data['type'])
+        if  data['status'] == False:
+            value = '#'+data['value']
+        else:
+            value = data['value']
+        if write_in_file == True:
+            try:
+                with open(file_path, 'a') as file:
+                    file.write(value + '\n')
+                serializerProxyRules = ProxyRulesSerializer(data=data)
+                if (serializerProxyRules.is_valid()):
+                    serializerProxyRules.save()
+                    msg = f"{data['type']} blocked successfully."
+                    status=200
+                    return JsonResponse({"msg": msg}, status=status)
+                else:
+                    return JsonResponse(serializerProxyRules.errors, status=404 )
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                msg = e
+                status=404 
+                return JsonResponse({"msg": msg}, status=status)
+        else:
+            serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
+            if (serializerProxyRules.is_valid()):
+                serializerProxyRules.save()
+                msg = f"{data['type']} blocked successfully."
+                status=200
+                return JsonResponse({"msg": msg}, status=status)
+            else:
+                return JsonResponse(serializerProxyRules.errors, status=404 )
 
 @swagger_auto_schema(
     method='DELETE',
@@ -118,21 +187,35 @@ def addRuleSquid(request):
 def deleteRuleSquid(request,id):
     msg=''
     data = ProxyRules.objects.get(id=id)
-    # if data.allow_by_auth == False:
-    #     if data.type == "ip":
-    #         file_path = '/etc/squid/blocked_ip.acl'
-    #     elif data.type == "domain":
-    #         file_path = '/etc/squid/blocked_domain.acl'
-    #     else:
-    #         file_path = '/etc/squid/blocked_subnet.acl'
-    # else:
-    #     if data.type == "ip":
-    #         file_path = '/etc/squid/allowed_ip_by_auth.acl'
-    #     elif data.type == "domain":
-    #         file_path = '/etc/squid/allowed_domain_by_auth.acl'
-    #     else:
-    #         file_path = '/etc/squid/allowed_subnet_by_auth.acl'
-    file_path = file_selected(data.allow_by_auth, data.type)
+    if data.allow_by_auth == False:
+        if data.type == "ip":
+            file_path = '/etc/squid/blocked_ip.acl'
+        elif data.type == "domain":
+            if data.time_from != '':
+                squid_path = '/etc/squid/squid.conf'
+                command = "sed -i '/"+data.value+"/d' "+squid_path
+                print({"<command":command})
+                stdout, stderr = run_command(command)
+                if stderr =="":
+                    data.delete()
+                    msg = f"{data.type} address {data.value} unblocked successfully"
+                    status =200
+                else:
+                    msg =stderr
+                    status = 404 
+                return JsonResponse({"msg": msg}, status=status)
+            else:
+                file_path = '/etc/squid/blocked_domain.acl'
+        else:
+            file_path = '/etc/squid/blocked_subnet.acl'
+    else:
+        if data.type == "ip":
+            file_path = '/etc/squid/allowed_ip_by_auth.acl'
+        elif data.type == "domain":
+            file_path = '/etc/squid/allowed_domain_by_auth.acl'
+        else:
+            file_path = '/etc/squid/allowed_subnet_by_auth.acl'
+    # file_path = file_selected(data.allow_by_auth, data.type)
     new_content = []
     command = "cat " + file_path
     stdout, stderr = run_command(command)

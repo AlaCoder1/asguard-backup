@@ -9,6 +9,9 @@ class ProxyRules(models.Model):
     type = models.CharField(max_length=20, null = False)
     value = models.CharField(max_length=200, null=True, unique=True)
     status = models.BooleanField(default=False)
+    days = models.CharField(max_length=200, null=True)
+    time_from = models.TimeField(null=True) 
+    time_to = models.TimeField(null=True)
     allow_by_auth = models.BooleanField(default=False)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
@@ -23,6 +26,7 @@ class ProxyRules(models.Model):
 
 class ProxyUser(models.Model):
     username = models.CharField(max_length=200, null=True, unique=True)
+    email = models.CharField(max_length=200, null=True, unique=True)
 
     class Meta:
         db_table = 'proxy_user'  

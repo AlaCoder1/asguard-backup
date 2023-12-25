@@ -455,19 +455,29 @@ def update_suricata_configuration(request, id):
                 return JsonResponse({"msg": "La valeur du syslog n'est pas valide. Utilisation de la valeur par défaut."},
                                         status=status.HTTP_400_BAD_REQUEST)
             
+            interface_names=Interface.objects.filter(id__in=interface_ids).values('ifname')
+            print(interface_names)
+             
             # Utilisez la fonction get_ip_addresses pour obtenir les adresses IP
-            ip_addresses = get_ip_addresses(interface_ids)
+            ip_addresses =get_ip_addresses(interface_ids)
+            home_net_value_sys = f'[{", ".join(list(set(ip_addresses)))}]'
             home_net_value = f'[{", ".join(ip_addresses)}]'
+            
             output,error= execute_cmd("cat " + suricata_yaml_path)
             if output:
                 lines = output.split('\n')
                 updated_lines = []
+                print(lines)
                 for line in lines:
                     stripped_line = line.strip()
+                    if "af-packet:" in stripped_line:
+                        print("af-packet:" in stripped_line)
                     if stripped_line.startswith("#"):
                         updated_lines.append(line + '\n')
                     elif "HOME_NET:" in stripped_line:
-                        updated_lines.append(f'    HOME_NET: "{home_net_value}"' + '\n')
+                        updated_lines.append(f'    HOME_NET: "{home_net_value_sys}"' + '\n')
+                    
+                        # print({"interface":interface})
                     else:
                         updated_lines.append(line + '\n')
                 with open(suricata_yaml_path, 'w') as local_file:

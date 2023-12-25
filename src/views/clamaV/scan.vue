@@ -1,5 +1,24 @@
 <template>
   <div class="mt-3">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            Please Wait...
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
     <v-row>
       <v-col cols="12">
         <h4>Virus Scan</h4>
@@ -100,17 +119,29 @@
 
     <v-row class="mb-10" id="newRow">
       <v-col cols="12">
-        <!-- <updateFreshclam /> -->
+        <scanUpdate />
       </v-col>
     </v-row>
 
     <ModalScanResult :isOpen="state.isModalOpen" :rowData="state.rowData" />
+
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
+      {{ state.textAlert }}
+
+      <template v-slot:actions> </template>
+    </v-snackbar>
   </div>
 </template>
 <script>
-import { reactive, onMounted,inject } from "vue";
+import axios from "axios";
+import { reactive, onMounted, inject } from "vue";
 import VButton from "@/components/VButton.vue";
-import updateFreshclam from "./component/updateFreshclam.vue";
+import scanUpdate from "./component/scanUpdate.vue";
 import generalInfoPartie1 from "./component/generalInfoPartie1.vue";
 import generalInfoPartie2 from "./component/generalInfoPartie2.vue";
 import ModalScanResult from "@/components/modals/ModalScanResult.vue";
@@ -118,7 +149,7 @@ export default {
   components: {
     generalInfoPartie1,
     generalInfoPartie2,
-    updateFreshclam,
+    scanUpdate,
     ModalScanResult,
     VButton,
   },
@@ -129,10 +160,53 @@ export default {
     const state = reactive({
       rowData: {},
       isModalOpen: false,
+      snackbar: false,
+      color: "",
+      textAlert: "",
+      loading: false,
+      isLoadingDialogue: false,
     });
+
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    };
+
     const save = () => {
-      // state.rowData = response.data;
-      state.isModalOpen = true;
+      state.loading = true;
+      state.isLoadingDialogue = true;
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios
+        .get("/clamaV/Fullscan")
+        .then((response) => {
+          if (response.status == "200") {
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.message;
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            // state.rowData = response.data;
+            // state.isModalOpen = true;
+          }
+        })
+        .catch((i) => {
+          state.snackbar = true;
+          state.loading = false;
+          state.isLoadingDialogue = false;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
+        });
     };
     onMounted(() => {
       emitter.on("closeModalScan", () => {

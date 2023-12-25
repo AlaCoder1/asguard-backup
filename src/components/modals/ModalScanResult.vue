@@ -24,10 +24,10 @@
               >
                 <v-col cols="6" style="background-color: #213e9f">
                   <span class="resultTitle" style="color: #fff"
-                    >Known viruses </span
+                    >known viruses </span
                   ><br />
                   <span class="resultTitle" style="color: #fff"
-                    >Engine version</span
+                    >engine version</span
                   ><br />
                   <span class="resultTitle" style="color: #fff"
                     >Scanned directories</span
@@ -50,25 +50,45 @@
                   <span class="resultTitle" style="color: #fff">End date</span>
                 </v-col>
                 <v-col cols="6" style="background-color: #fff">
-                  <span class="resultTitle" style="color: #213e9f">Test</span
+                  <span class="resultTitle" style="color: #213e9f">{{
+                    state.known
+                  }}</span
                   ><br />
-                  <span class="resultTitle" style="color: #213e9f">Test</span
+                  <span class="resultTitle" style="color: #213e9f">{{
+                    state.engine
+                  }}</span
                   ><br />
-                  <span class="resultTitle" style="color: #213e9f">Test</span
+                  <span class="resultTitle" style="color: #213e9f">{{
+                    state.directories
+                  }}</span
                   ><br />
-                  <span class="resultTitle" style="color: #213e9f">Test</span
+                  <span class="resultTitle" style="color: #213e9f">{{
+                    state.scannedFiles
+                  }}</span
                   ><br />
-                  <span class="resultTitle" style="color: #213e9f">Test</span
+                  <span class="resultTitle" style="color: #213e9f">{{
+                    state.infectedFiles
+                  }}</span
                   ><br />
-                  <span class="resultTitle" style="color: #213e9f">Test</span
+                  <span class="resultTitle" style="color: #213e9f">{{
+                    state.dataScanned
+                  }}</span
                   ><br />
-                  <span class="resultTitle" style="color: #213e9f">Test</span
+                  <span class="resultTitle" style="color: #213e9f">{{
+                    state.dataRead
+                  }}</span
                   ><br />
-                  <span class="resultTitle" style="color: #213e9f">Test</span
+                  <span class="resultTitle" style="color: #213e9f">{{
+                    state.time
+                  }}</span
                   ><br />
-                  <span class="resultTitle" style="color: #213e9f">Test</span
+                  <span class="resultTitle" style="color: #213e9f">{{
+                    state.startDate
+                  }}</span
                   ><br />
-                  <span class="resultTitle" style="color: #213e9f">Test</span>
+                  <span class="resultTitle" style="color: #213e9f">{{
+                    state.endDate
+                  }}</span>
                 </v-col>
               </v-row>
             </v-container>
@@ -109,16 +129,29 @@ export default {
       type: Boolean,
       required: true,
     },
-    //   rowData: {
-    //     type: Object,
-    //     required: true,
-    //   },
+    // rowData: {
+    //   type: Object,
+    //   required: true,
+    // },
   },
 
   setup(props) {
+    // const { isOpen, rowData } = toRefs(props);
     const { isOpen } = toRefs(props);
     const emitter = inject("emitter");
-    const state = reactive({ openModalResult: false });
+    const state = reactive({
+      openModalResult: false,
+      known: "",
+      engine: "",
+      directories: "",
+      scannedFiles: "",
+      infectedFiles: "",
+      dataScanned: "",
+      dataRead: "",
+      time: "",
+      startDate: "",
+      endDate: "",
+    });
 
     watch(
       () => isOpen.value,
@@ -126,6 +159,23 @@ export default {
         state.openModalResult = val;
       }
     );
+    // watch(
+    //   () => rowData.value,
+    //   (val) => {
+    //     console.log("valRowData", val);
+    //     // state.known= "",
+    //     // state.engine= "",
+    //     // state.directories= "",
+    //     // state.scannedFiles= "",
+    //     // state.infectedFiles= "",
+    //     // state.dataScanned= "",
+    //     // state.dataRead= "",
+    //     // state.time= "",
+    //     // state.startDate= "",
+    //     // state.endDate= "",
+    //   }
+    // );
+
     const closeModal = () => {
       emitter.emit("closeModalScan");
     };

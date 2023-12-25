@@ -9,7 +9,7 @@ from backend.ipsec.constant_variables import IPV4_CONFIG
 from backend.ipsec.utils import json_to_str_server_ipsec
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
-from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec, install_server_ipsec, update_server_ipsec
+from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec, install_server_ipsec, up_ipsec_conn, update_server_ipsec
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
@@ -64,7 +64,7 @@ def getServerIPsec(request, id):
                                                                                                           'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA"),
                                                                                                           'remote_distingushed_name': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
-                                                             'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256"]),
+                                                             'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256", "aes128", "aes192", "aes256"]),
                                                              'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like sha256 or sha384. Example: [sha256,sha512]",
                                                                                                   items=openapi.Schema(type=openapi.TYPE_STRING)),
                                                              'dh_key_group': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072. Example: [15:3072,20:384]",
@@ -98,7 +98,7 @@ def getServerIPsec(request, id):
                                                                                                           'mask': openapi.Schema(type=openapi.TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
                                                              'sa_key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'], 
                                                                                                properties={'protocol': openapi.Schema(type=openapi.TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
-                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like 256. Example: [128,256]"),
+                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one. Example: [128,256,sha192]"),
                                                                                                            'hash_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like sha256. Example: [sha256,sha384]"),
                                                                                                            'pfs_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="If not off should be group:key like 15:3072. Example: 15:3072")}),
                                                              'lifetime_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
@@ -289,7 +289,11 @@ def createServerIPsec(request):
 
                 # Add the server to the database
                 serializer_server.save()
-                return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(conn_name, 'done')}, status=201)
+                up_ipsec_status = up_ipsec_conn(conn_name)
+                if up_ipsec_status:
+                    return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(conn_name, 'updated')}, status=201)
+                else:
+                    return JsonResponse({"error": "Error in up ipsec"}, status=400)
             else:
                 return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
         except CommandExecutionError:
@@ -359,7 +363,7 @@ def deleteServerIPsec(request, id):
                                                                                                           'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA"),
                                                                                                           'remote_distingushed_name': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
-                                                             'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256"]),
+                                                             'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256", "aes128", "aes192", "aes256"]),
                                                              'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like sha256 or sha384. Example: [sha256,sha512]",
                                                                                                   items=openapi.Schema(type=openapi.TYPE_STRING)),
                                                              'dh_key_group': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072. Example: [15:3072,20:384]",
@@ -393,7 +397,7 @@ def deleteServerIPsec(request, id):
                                                                                                           'mask': openapi.Schema(type=openapi.TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
                                                              'sa_key_exchange': openapi.Schema(type=openapi.TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'], 
                                                                                                properties={'protocol': openapi.Schema(type=openapi.TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
-                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like 256. Example: [128,256]"),
+                                                                                                           'encryption_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one. Example: [128,256,sha192]"),
                                                                                                            'hash_algorithm_ph2': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like sha256. Example: [sha256,sha384]"),
                                                                                                            'pfs_key_group': openapi.Schema(type=openapi.TYPE_STRING, description="If not off should be group:key like 15:3072. Example: 15:3072")}),
                                                              'lifetime_ph2': openapi.Schema(type=openapi.TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
@@ -557,7 +561,11 @@ def updateServerIPsec(request, id):
 
                 # Add the server to the database
                 serializer_server.save()
-                return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(server.conn_name, 'updated')}, status=201)
+                up_ipsec_status = up_ipsec_conn(server.conn_name)
+                if up_ipsec_status:
+                    return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(server.conn_name, 'updated')}, status=201)
+                else:
+                    return JsonResponse({"error": "Error in up ipsec"}, status=400)
             else:
                 return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 

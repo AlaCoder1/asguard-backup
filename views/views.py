@@ -1,22 +1,28 @@
+import subprocess
 from django.shortcuts import render
-from backend.managementUsers.views import *
-from backend.managementUsers.models import User
+from django.core import serializers
 from django.contrib.auth.decorators import login_required
-from backend.managementServers.models import * 
-from backend.network.models import *
-from backend.rules.models import *
-from backend.gateway.models import *
-from backend.dashboard.functions import get_system_infomations
 from django.db.models import Q
+import json
+import ast
+from backend.managementGroup.models import Group
+from backend.managementUsers.models import User
+from backend.managementServers.models import Type, Server
+from backend.managementUsers.views import getAllUsers
+from backend.network.models import GenericConfig, IP4Config, IP6Config, Interface 
+from backend.rules.models import Rule
+from backend.gateway.models import Gateway, GatewayInterface
+from backend.dashboard.functions import get_system_infomations
+from backend.clamav.list_configurations import getclamavconfigurations
 from backend.openvpn.list_servers_clients import get_list_all_client_openvpn,  get_list_all_server_openvpn
 from backend.managementKeypairs.list_key_pairs import get_list_all_private_key, get_list_all_public_key
-from backend.ipsec.list_ipsec import get_list_all_server_ipsec
+from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_status_ipsec
 from backend.ids_ips.function_BD import get_home_net_de_la_base_de_donnees, get_ip_addresses
 from backend.ids_ips.function_sys import execute_cmd
 from backend.ids_ips.models import *
 from backend.ids_ips.serializers import AlertSerializer
 import ast
-from backend.proxy import *
+from backend.proxy.views import *
 from backend.proxy.models import *
 
 def get_squid_status():
@@ -116,10 +122,10 @@ def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
         users = User.objects.all()
-        userDict = serializers.serialize("json", users)
-        res = json.loads(userDict)
-        for i in range(0, len(res)):
-            groupDict = []
+        user_dict = serializers.serialize("json", users)
+        res = json.loads(user_dict)
+        for i in range(len(res)):
+            group_dict = []
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
@@ -130,17 +136,19 @@ def getUsers(request):
             if len(res[i]['fields']['group'])!=0:
                 for k in res[i]['fields']['group']:
                     group=Group.objects.get(id=k)
-                    groupDict.append({"name":group.groupname,"id":group.id})
-                res[i]['fields']['group']=groupDict
+                    group_dict.append({"name":group.groupname,"id":group.id})
+                res[i]['fields']['group']=group_dict
             list_users.append(res[i]['fields'])
         return list_users
-def getGroups(request):
+
+
+def get_groups(request):
     list_group = []
     if (request.method == 'GET'):
         groups = Group.objects.filter(created_by_system=0)
-        groupDict = serializers.serialize("json", groups)
-        res = json.loads(groupDict)
-        for i in range(0, len(res)):
+        group_dict = serializers.serialize("json", groups)
+        res = json.loads(group_dict)
+        for i in range(len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
@@ -151,14 +159,16 @@ def getGroups(request):
             else:
                 res[i]['fields']['sudoers']=True
             list_group.append(res[i]['fields'])
-        return list_group 
-def getServers(request):
+        return list_group
+
+
+def get_servers(request):
     list_servers = []
     if (request.method == 'GET'):
         servers = Server.objects.all()
-        serverDict = serializers.serialize("json", servers)
-        res = json.loads(serverDict)
-        for i in range(0, len(res)):
+        server_dict = serializers.serialize("json", servers)
+        res = json.loads(server_dict)
+        for i in range(len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
@@ -167,30 +177,32 @@ def getServers(request):
             res[i]['fields']['type_name'] = type.type_name
             list_servers.append(res[i]['fields'])
         return list_servers
-def GetAllRules(request):
+
+
+def get_all_rules(request):
     if (request.method == 'GET'):
         all_rules={}
         set_type=[]
         allinterfaces=Interface.objects.all()
-        interfaceDict = serializers.serialize("json", allinterfaces)
-        resInterface = json.loads(interfaceDict)
+        interface_dict = serializers.serialize("json", allinterfaces)
+        res_interface = json.loads(interface_dict)
         ########## get all types 
         rules= Rule.objects.all()
-        ruleDict = serializers.serialize("json", rules)
-        resRules = json.loads(ruleDict)
-        for j in range(0, len(resRules)):
-            set_type.append(resRules[j]['fields']['type_rule'])
-        for x in range(0, len(resInterface)):
-          idInterface=resInterface[x]['pk']
-          rules_type={}
-          # rules= Rule.objects.get(interface=idInterface)
+        rule_dict = serializers.serialize("json", rules)
+        res_rules = json.loads(rule_dict)
+        for j in range(len(res_rules)):
+            set_type.append(res_rules[j]['fields']['type_rule'])
+        for x in range(len(res_interface)):
+          id_interface = res_interface[x]['pk']
+          rules_type = {}
+          # rules= Rule.objects.get(interface=id_interface)
           for elem in list(set(set_type)): 
-            rules= Rule.objects.filter(interface=idInterface,type_rule=elem)
-            ruleDict = serializers.serialize("json", rules)
-            res = json.loads(ruleDict)
+            rules= Rule.objects.filter(interface=id_interface,type_rule=elem)
+            rule_dict = serializers.serialize("json", rules)
+            res = json.loads(rule_dict)
             list_rules=[]
-            for i in range(0, len(res)):
-                interfaceDict=[]
+            for i in range(len(res)):
+                interface_dict=[]
                 res[i].pop('model')
                 id = res[i]['pk']
                 res[i].pop('pk')
@@ -206,15 +218,17 @@ def GetAllRules(request):
                 list_rules.append(res[i]['fields'])
              ########## 
             rules_type[elem]=list_rules
-          all_rules[resInterface[x]['fields']['name_interface']]=rules_type
+          all_rules[res_interface[x]['fields']['name_interface']]=rules_type
         return all_rules
-def getAllGateways(request):
+
+
+def get_all_gateways(request):
     if (request.method == 'GET'):
         gateways = Gateway.objects.all()
-        gatewaysDict = serializers.serialize("json", gateways)
-        res = json.loads(gatewaysDict)
+        gateways_dict = serializers.serialize("json", gateways)
+        res = json.loads(gateways_dict)
         list_gateways=[]
-        for i in range(0, len(res)):
+        for i in range(len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
@@ -224,13 +238,15 @@ def getAllGateways(request):
                 "gwaddress":res[i]['fields']['gwaddress'],
                 })
     return list_gateways
-def getAllStaticGateways(request,ipv4_gw):
+
+
+def get_all_static_gateways(request,ipv4_gw):
     if (request.method == 'GET'):
         gateways= Gateway.objects.filter(Q(staticgw=True)&Q(ipv4_gw=ipv4_gw))
-        gatewaysDict = serializers.serialize("json", gateways)
-        res = json.loads(gatewaysDict)
+        gateways_dict = serializers.serialize("json", gateways)
+        res = json.loads(gateways_dict)
         list_gateways=[]
-        for i in range(0, len(res)):
+        for i in range(len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
@@ -238,14 +254,15 @@ def getAllStaticGateways(request,ipv4_gw):
             list_gateways.append(res[i]['fields'])
     return  list_gateways
 
-def AllInterfaces(request):
+
+def get_all_interfaces(request):
     list_interface = []
     if (request.method == 'GET'):
         interfaces = Interface.objects.all()
-        interfaceDict=serializers.serialize("json",interfaces)
-        # interfaceDict = serializers.serialize("json", interfaces)
-        res = json.loads(interfaceDict)
-        for i in range(0, len(res)):
+        interface_dict=serializers.serialize("json",interfaces)
+        # interface_dict = serializers.serialize("json", interfaces)
+        res = json.loads(interface_dict)
+        for i in range(len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
@@ -253,15 +270,16 @@ def AllInterfaces(request):
             # if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")):
             list_interface.append(res[i]['fields'])
         return list_interface
-####
-def AllInterfacesVersion2(request):
+
+
+def get_all_interfaces_version2(request):
     list_interface = []
     if (request.method == 'GET'):
         interfaces = Interface.objects.all()
-        interfaceDict=serializers.serialize("json",interfaces)
-        # interfaceDict = serializers.serialize("json", interfaces)
-        res = json.loads(interfaceDict)
-        for i in range(0, len(res)):
+        interface_dict = serializers.serialize("json",interfaces)
+        # interface_dict = serializers.serialize("json", interfaces)
+        res = json.loads(interface_dict)
+        for i in range(len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
@@ -269,24 +287,24 @@ def AllInterfacesVersion2(request):
             if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")):
                 list_interface.append(res[i]['fields'])
         return list_interface    
-    
-def GetInformationsByInterface(request,name_interface):
+
+
+def get_informations_by_interface(request,name_interface):
     info={}
     interface={}
     if (request.method == 'GET'):
-        interfaceObject = Interface.objects.get(name_interface=name_interface)
-        interface['id']=interfaceObject.id
-        interface['ifname']=interfaceObject.ifname
-        interface['private_aux']=interfaceObject.private_aux
-        interface['bogon_aux']=interfaceObject.bogon_aux
-        interface['service_status']=interfaceObject.service_status
-        interface['name_interface']=interfaceObject.name_interface
-        interface['description']=interfaceObject.description
+        interface_object = Interface.objects.get(name_interface=name_interface)
+        interface['id']=interface_object.id
+        interface['ifname']=interface_object.ifname
+        interface['private_aux']=interface_object.private_aux
+        interface['bogon_aux']=interface_object.bogon_aux
+        interface['service_status']=interface_object.service_status
+        interface['name_interface']=interface_object.name_interface
+        interface['description']=interface_object.description
         info['interface']=interface
-        genericConfigObject = GenericConfig.objects.filter(interface_id=interfaceObject.id)
-        genericConfigDict = serializers.serialize("json", genericConfigObject)
-        res = json.loads(genericConfigDict)
-        genericConfigList = list(genericConfigDict)
+        generic_config_object = GenericConfig.objects.filter(interface_id=interface_object.id)
+        generic_config_dict = serializers.serialize("json", generic_config_object)
+        res = json.loads(generic_config_dict)
         if res != []:
             id = res[0]['pk']
             res[0]['fields']['id'] = id
@@ -296,10 +314,10 @@ def GetInformationsByInterface(request,name_interface):
             info['genericConfig']=res[0]['fields']
         else:
             info['genericConfig']=[]
-        IPV4ConfigObject = IP4Config.objects.filter(interface_id=interfaceObject.id)
+        ipv4_config_object = IP4Config.objects.filter(interface_id=interface_object.id)
         ###
-        IPV4ConfigObjectDict = serializers.serialize("json", IPV4ConfigObject)
-        resultat = json.loads(IPV4ConfigObjectDict)
+        ipv4_config_object_dict = serializers.serialize("json", ipv4_config_object)
+        resultat = json.loads(ipv4_config_object_dict)
        
         if resultat != []:
             id = resultat[0]['pk']
@@ -309,8 +327,8 @@ def GetInformationsByInterface(request,name_interface):
             resultat[0]['fields'].pop('interface')
             resultat[0]['fields']['addrgw']=""
             ### get gateway4 from table intermediaire
-            if GatewayInterface.objects.filter(Q(interface=interfaceObject.id)& Q(ipv4_gw_interface=True)).exists():
-                GatewayInterfaceObject=GatewayInterface.objects.get(Q(interface=interfaceObject.id)& Q(ipv4_gw_interface=True))
+            if GatewayInterface.objects.filter(Q(interface=interface_object.id)& Q(ipv4_gw_interface=True)).exists():
+                GatewayInterfaceObject=GatewayInterface.objects.get(Q(interface=interface_object.id)& Q(ipv4_gw_interface=True))
                 gateway_id=GatewayInterfaceObject.gateway_id
                 addrgw4=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=True)).gwaddress
                 resultat[0]['fields']['addrgw']=addrgw4
@@ -319,10 +337,10 @@ def GetInformationsByInterface(request,name_interface):
             info['IPV4Config']=[]
         
         ##############ipv6    
-        IPV6ConfigObject = IP6Config.objects.filter(interface_id=interfaceObject.id)
+        ipv6_config_object = IP6Config.objects.filter(interface_id=interface_object.id)
         ###
-        IPV6ConfigObjectDict = serializers.serialize("json", IPV6ConfigObject)
-        resultat6 = json.loads(IPV6ConfigObjectDict)
+        ipv6_config_object_dict = serializers.serialize("json", ipv6_config_object)
+        resultat6 = json.loads(ipv6_config_object_dict)
        
         if resultat6 != []:
             id = resultat6[0]['pk']
@@ -332,8 +350,8 @@ def GetInformationsByInterface(request,name_interface):
             resultat6[0]['fields'].pop('interface')
             resultat6[0]['fields']['addrgw6']=""
             ### get gateway4 from table intermediaire
-            if GatewayInterface.objects.filter(Q(interface=interfaceObject.id)& Q(ipv4_gw_interface=False)).exists():
-                GatewayInterfaceObject=GatewayInterface.objects.get(Q(interface=interfaceObject.id)& Q(ipv4_gw_interface=False))
+            if GatewayInterface.objects.filter(Q(interface=interface_object.id)& Q(ipv4_gw_interface=False)).exists():
+                GatewayInterfaceObject=GatewayInterface.objects.get(Q(interface=interface_object.id)& Q(ipv4_gw_interface=False))
                 gateway_id=GatewayInterfaceObject.gateway_id
                 print(gateway_id)
                 if Gateway.objects.filter(Q(id=gateway_id) & Q(ipv4_gw=False)).exists():
@@ -344,6 +362,8 @@ def GetInformationsByInterface(request,name_interface):
             info['IPV6Config']=[]
         print({"info":info})
     return info
+
+
 ################################################ IDS-IPS #######################################################
 ############### General configuration suricata #################
 ## function to get suricata configuration
@@ -377,13 +397,12 @@ def general_suricata_configuration(request, id):
                         address = interfaces_address_ip4config[interfaces_ids_ip4config.index(i)]
                     address_home_net_final.append(address)
                     interface_ids_final.append(i)
-                else:
-                    pass
+
         # Créez une chaîne avec les adresses HOME_NET finales
         home_net_value = ' , '.join(address_home_net_final)
         home_net_value = f'[{home_net_value}]'
         interfaces_ids_value = str(interface_ids_final)
-        suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+        suricata_yaml_path = "/etc/suricata/suricata.yaml"
         # Exécutez la commande 'sudo cat' pour lire le contenu du fichier
         output, error = execute_cmd("sudo cat " + suricata_yaml_path)
         # Mettez à jour la configuration dans le système
@@ -421,36 +440,41 @@ def general_suricata_configuration(request, id):
             "status_enabled":suricata_instance.status_enabled
             }
     return json.dumps({"configuration": current_configuration, "interface_ids": interface_ids_final, "address_home_net": address_home_net_final})
+
+
 ############### End General configuration suricata #################
 ############### Rules suricata #################
-def getRulesFromDatabase(request):
+def get_rules_from_database(request):
     if request.method=="GET":
         rules_list = []
         # Récupérer toutes les règles de la base de données
         rules_from_db = ids_ips_rule.objects.all()
         rule_suricata = serializers.serialize("json", rules_from_db)
         res = json.loads(rule_suricata)
-        for i in range(0, len(res)):
+        for i in range(len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
             res[i]['fields'].pop("rule")
             # res[i]['fields'].pop("msg")
-            # res[i]['fields']['msg']=res[i]['fields']['msg'].strip("'")
+            res[i]['fields']['msg']=res[i]['fields']['msg'].strip('"')
+            res[i]['fields']['action']=res[i]['fields']['action'].strip('#')
             rules_list.append(res[i]['fields'])
     # Renvoyer la liste des règles au format JSON
     return json.dumps(rules_list)
 ############### End Rules suricata #################
 ############### Alerts suricata #################
-def GetAlertsFromDatabase(request):
+
+
+def get_alerts_from_database(request):
     if request.method=="GET":
         alert_list=[]
-        # alerts_object = alert.objects.all()  # Récupérer toutes les alertes de la base de données
-        alerts_object = Alert.objects.all().order_by('-id')[:10] 
+        alerts_object = Alert.objects.all()  # Récupérer toutes les alertes de la base de données
+        # alerts_object = Alert.objects.all().order_by('-id')[:10] 
         alerts = serializers.serialize("json", alerts_object)
         res = json.loads(alerts)
-        for i in range(0, len(res)):
+        for i in range(len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
@@ -458,37 +482,41 @@ def GetAlertsFromDatabase(request):
             # res[i]['fields'].pop("alert")
             alert_list.append(res[i]['fields'])
     return json.dumps(alert_list)
+
+
 @login_required(login_url='/')
 def user_certificate_managment_page(request):
-    usr=getUsers(request)
-    grp=getGroups(request)
-    srv=getServers(request)
+    usr=get_users(request)
+    grp=get_groups(request)
+    srv=get_servers(request)
     context = {'users':usr,"groups":grp,"servers":srv}
     return render(request, 'user_certificate_managment.html',context)
 
+
 @login_required(login_url='/')
 def interface_page(request):
-    interfaces=AllInterfacesVersion2(request)
+    interfaces=get_all_interfaces_version2(request)
     config={}
-    allStaticGateways={}
+    all_static_gateways={}
     for i in range(len(interfaces)):
-        IPV4Config=GetInformationsByInterface(request, interfaces[i]['name_interface'])
-        config[interfaces[i]['name_interface']]=IPV4Config
-    # IPV4Config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
-    allStaticGatewaysIPV4=getAllStaticGateways(request,ipv4_gw=True)
-    allStaticGatewaysIPV6=getAllStaticGateways(request,ipv4_gw=False)
-    allStaticGateways['ipv4_gw']=allStaticGatewaysIPV4
-    allStaticGateways['ipv6_gw']=allStaticGatewaysIPV6
+        ipv4_config=get_informations_by_interface(request, interfaces[i]['name_interface'])
+        config[interfaces[i]['name_interface']]=ipv4_config
+    # ipv4_config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
+    all_static_gateways_ipv4=get_all_static_gateways(request,ipv4_gw=True)
+    all_static_gateways_ipv6=get_all_static_gateways(request,ipv4_gw=False)
+    all_static_gateways['ipv4_gw']=all_static_gateways_ipv4
+    all_static_gateways['ipv6_gw']=all_static_gateways_ipv6
     ##pour le moment on ajoute ce ligne
-    allStaticGateways=allStaticGatewaysIPV4
+    all_static_gateways=all_static_gateways_ipv4
     ###
-    context = {'interfaces':interfaces,'IPV4Config':config,'allStaticGateways':allStaticGateways}
+    context = {'interfaces':interfaces,'IPV4Config':config,'allStaticGateways':all_static_gateways}
     return render(request, 'interface_page.html',context)
+
 
 @login_required(login_url='/')
 def firewall_page(request):
-    rules=GetAllRules(request)
-    interfaces=AllInterfaces(request)
+    rules=get_all_rules(request)
+    interfaces=get_all_interfaces(request)
     context = {'rules':rules, 'interfaces':interfaces}
     return render(request, 'firewall_page.html',context)
 
@@ -496,37 +524,51 @@ def firewall_page(request):
 def settings_page(request):
     return render(request, 'settings_page.html')
 
+
 @login_required(login_url='/')
 def openvpn_page(request):
     servers=get_list_all_server_openvpn()
     clients=get_list_all_client_openvpn()
     context = {'servers':servers,'clients':clients}
     return render(request, 'openvpn_page.html', context)
+
+
 @login_required(login_url='/')
 def ipsec_page(request):
     servers=get_list_all_server_ipsec()
-    publicKey =get_list_all_public_key()
-    context = {'servers':servers,'publicKey':publicKey}
+    public_key =get_list_all_public_key()
+    status = get_status_ipsec()
+    print('status:', status)
+    context = {'servers': servers, 'publicKey': public_key, 'status': status}
     return render(request, 'ipsec_page.html', context)
 
+
 @login_required(login_url='/')
-def keyPair_page(request):
-    privateKey =get_list_all_private_key()
-    publicKey =get_list_all_public_key()
-    context = {'privateKey':privateKey,'publicKey':publicKey}
+def key_pair_page(request):
+    private_key = get_list_all_private_key()
+    public_key = get_list_all_public_key()
+    context = {'privateKey': private_key,'publicKey': public_key}
     return render(request, 'keyPair_page.html',context)
+
 
 @login_required(login_url='/')
 def squid_proxy(request):
     return render(request, 'squid_proxy.html')
+
+
 @login_required(login_url='/')
-def clamaV_page(request):
-    return render(request, 'clamaV_page.html')
+def clamav_page(request):
+    config= getclamavconfigurations()
+    context = {'config':config}
+    print('******************** :',context)
+    return render(request, 'clamaV_page.html',context)
+
 
 @login_required(login_url='/')
 def subscription_page(request):
     context = {}
     return render(request, 'subscription_page.html', context)
+
 
 def login(request):
     usr=getAllUsers(request)
@@ -540,19 +582,19 @@ def login(request):
 @login_required(login_url='/')
 def index_page(request):
     info=get_system_infomations()
-    gateways=getAllGateways(request)
-    interfaces=AllInterfacesVersion2(request)
+    gateways=get_all_gateways(request)
+    interfaces=get_all_interfaces_version2(request)
     config=[]
     for i in range(len(interfaces)):
-        info_interface={}
-        IPV4Config=GetInformationsByInterface(request, interfaces[i]['name_interface'])
-        speed_duplex=""
-        ip_address=""
-        if "speed_duplex" in IPV4Config['genericConfig'] :
-            speed_duplex=IPV4Config['genericConfig']['speed_duplex']
-        if "ip_address" in IPV4Config['IPV4Config'] :
-            ip_address=IPV4Config['IPV4Config']['ip_address']
-        info_interface={
+        info_interface = {}
+        ipv4_config = get_informations_by_interface(request, interfaces[i]['name_interface'])
+        speed_duplex = ""
+        ip_address = ""
+        if "speed_duplex" in ipv4_config['genericConfig'] :
+            speed_duplex = ipv4_config['genericConfig']['speed_duplex']
+        if "ip_address" in ipv4_config['IPV4Config'] :
+            ip_address = ipv4_config['IPV4Config']['ip_address']
+        info_interface = {
             "name_interface":interfaces[i]['name_interface'],
             "speed_duplex":speed_duplex,
             "ip_address":ip_address}
@@ -561,18 +603,19 @@ def index_page(request):
     print(context)
     return render(request, 'index_page.html',context)
 
+
 def error_404_view(request, exception):
     return render(request,'404.html',status=404)
 
 @login_required(login_url='/')
 def suricata(request):
-    objectSuricata=suricatafile.objects.all()
-    suricata = serializers.serialize("json", objectSuricata)
+    object_suricata=suricatafile.objects.all()
+    suricata = serializers.serialize("json", object_suricata)
     res = json.loads(suricata)
     id=res[0]['pk']
     general_config_suricata=general_suricata_configuration(request, id)
-    rules_suricata=getRulesFromDatabase(request)
-    alerts_suricata=GetAlertsFromDatabase(request)
-    interfaces=AllInterfacesVersion2(request)
+    rules_suricata=get_rules_from_database(request)
+    alerts_suricata=get_alerts_from_database(request)
+    interfaces=get_all_interfaces_version2(request)
     context={"general_config_suricata":general_config_suricata,"rules_suricata":rules_suricata,"alerts_suricata":alerts_suricata,"all_interfaces":interfaces}
     return render(request, 'ids_ips.html',context)

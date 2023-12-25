@@ -3,7 +3,6 @@ from django.db import models
 class ClamAV(models.Model):
    
     logverbose = models.BooleanField()
-    databasedirectory = models.CharField(max_length=255)
     tcpsocket = models.CharField(max_length=200)
     tcpport= models.BooleanField()
     maxthreads = models.CharField(max_length=200)
@@ -29,7 +28,6 @@ class ClamAV(models.Model):
     maxfilesize = models.CharField(max_length=200)
     maxrecursion = models.CharField(max_length=200)
     maxfiles = models.CharField(max_length=200)
-    maxpartitions = models.CharField(max_length=200)
     freshclamdatabasemirror = models.CharField(max_length=200)
     frechclamconnectiontimeout = models.CharField(max_length=200)
     proxyport = models.CharField(max_length=200)
@@ -50,4 +48,7 @@ class FreshclamDatabase(models.Model):
 
     class Meta:
         db_table = 'clamav_freshclamDatabase'
+
+
+
 

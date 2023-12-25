@@ -1,6 +1,10 @@
 import subprocess
+from backend.clamav.constant_variables import CLAMAV_CONF_PATH,FRESHCLAM_CONF_PATH 
+
+
 
 def execute_cmd(command):
+    """function to excecute system commands"""
     command = "sudo " + command
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
     output = completed_process.stdout
@@ -9,11 +13,9 @@ def execute_cmd(command):
 
 def read_and_extract_clamav_config():
     """Reads the ClamAV config file and extracts commented parameters"""
-
-    clamav_conf_path = "/etc/clamav/clamd.conf"
     
     try:
-        output, error = execute_cmd("cat " + clamav_conf_path)
+        output, error = execute_cmd("cat " + CLAMAV_CONF_PATH)
         if output:
             config_content = output.splitlines()
             extracted_data = {}
@@ -33,17 +35,16 @@ def read_and_extract_clamav_config():
             return None
 
     except FileNotFoundError:
-        print(f"The file {clamav_conf_path} was not found.")
+        print(f"The file {CLAMAV_CONF_PATH} was not found.")
         return None
     
 
 def read_and_extract_freshclam_config():
     """Reads the freshclam config file and extracts specific parameters"""
 
-    freshclam_conf_path = "/etc/clamav/freshclam.conf"
     keys_to_extract = ['DatabaseMirror', 'ConnectTimeout', 'HTTPProxyPort']
     try:
-        output, error = execute_cmd("cat " + freshclam_conf_path)
+        output, error = execute_cmd("cat " + FRESHCLAM_CONF_PATH)
         if output:
             config_content = output.splitlines()
             extracted_data = {key: None for key in keys_to_extract}
@@ -66,21 +67,20 @@ def read_and_extract_freshclam_config():
             return None
 
     except FileNotFoundError:
-        print(f"The file {freshclam_conf_path} was not found.")
+        print(f"The file {FRESHCLAM_CONF_PATH} was not found.")
         return None
 
 
-######################### Function update the configuration data of Clamav #########################
+######################### Function update the configuration data of Clamav and Frechclam #########################
 
 
-def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,scanhtml=None,scanarchive=None,scanxmldocs=None,scanmail=None,scanhwp3=None,scanpdf=None,scanole2=None,disablecache=None,scanelf=None,scanpe=None,alertole2macros=None,alertencryptedarchive=None,alertbrokenexecutables=None,followdirectorysymlinks=None,followfilesymlinks=None,freshclamdatabasemirror=None,freshclamconnectiontimeout=None,tcpport=None,maxpartitions=None,tcpsocket=None,maxqueue=None,maxrecursion=None,proxyport=None,maxscansize=None,maxdirectoryrecursion=None,idletimeout=None,clamd_enabled=None,freshclam_enabled=None,logverbose=None, maxthreads=None):
+def update_clamav_config(maxfiles=None,maxfilesize=None,scanhtml=None,scanarchive=None,scanxmldocs=None,scanmail=None,scanhwp3=None,scanpdf=None,scanole2=None,disablecache=None,scanelf=None,scanpe=None,alertole2macros=None,alertencryptedarchive=None,alertbrokenexecutables=None,followdirectorysymlinks=None,followfilesymlinks=None,freshclamdatabasemirror=None,freshclamconnectiontimeout=None,tcpport=None,tcpsocket=None,maxqueue=None,maxrecursion=None,proxyport=None,maxscansize=None,maxdirectoryrecursion=None,idletimeout=None,clamd_enabled=None,freshclam_enabled=None,logverbose=None, maxthreads=None):
     
-    clamav_path = "/etc/clamav/clamd.conf"
-    freshclam_path= "/etc/clamav/freshclam.conf"
+    """ Update the configurations data of clamav and freshclam"""
+    
     try:
-        ################################## Update the clamav config file ###################################################
-    
-        cmd_read = f"sudo cat {clamav_path}"
+       
+        cmd_read = f"sudo cat {CLAMAV_CONF_PATH}"
         output, error = execute_cmd(cmd_read)
 
         if not error:
@@ -92,13 +92,8 @@ def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,s
             for line in lines:
                 stripped_line = line.strip()
 
-                # Test and update DatabaseDirectory
-                if stripped_line.startswith('#DatabaseDirectory ') or stripped_line.startswith('DatabaseDirectory '):
-                    if databasedirectory:
-                        line = f'DatabaseDirectory {databasedirectory}'
-
                 # Test and update LogVerbose
-                elif stripped_line.startswith('#LogVerbose ') or stripped_line.startswith('LogVerbose '):
+                if stripped_line.startswith('#LogVerbose ') or stripped_line.startswith('LogVerbose '):
                     if logverbose is not None:
                         line = f'LogVerbose {"yes" if logverbose else "no"}'
 
@@ -136,11 +131,6 @@ def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,s
                 elif stripped_line.startswith('#MaxFiles ') or stripped_line.startswith('MaxFiles '):
                     if maxfiles is not None:
                         line = f'MaxFiles {maxfiles}'
-
-                elif stripped_line.startswith('#MaxPartitions ') or stripped_line.startswith('MaxPartitions '):
-                    if maxpartitions is not None:
-                        line = f'MaxPartitions {maxpartitions}'
-
 
                 elif stripped_line.startswith('#FollowDirectorySymlinks ') or stripped_line.startswith('FollowDirectorySymlinks '):
                     if followdirectorysymlinks is not None:
@@ -207,7 +197,7 @@ def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,s
                 updated_lines.append(line)
 
             # Write the updated config back to the file
-            with open(clamav_path, 'w') as file:
+            with open(CLAMAV_CONF_PATH, 'w') as file:
                 file.write('\n'.join(updated_lines))
 
             print("ClamAV config updated successfully!")
@@ -224,8 +214,8 @@ def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,s
 
             
              
-             ##################### Update the Freshclam config file ######################################
-            cmd_read_freshclam = f"sudo cat {freshclam_path}"
+   ################################# Update the Freshclam config file ############################################
+            cmd_read_freshclam = f"sudo cat {FRESHCLAM_CONF_PATH}"
             output_freshclam, error_freshclam = execute_cmd(cmd_read_freshclam)
 
             if not error_freshclam:
@@ -253,7 +243,7 @@ def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,s
                     updated_lines_freshclam.append(line_freshclam)
 
                
-                with open(freshclam_path, 'w') as file_freshclam:
+                with open(FRESHCLAM_CONF_PATH, 'w') as file_freshclam:
                     file_freshclam.write('\n'.join(updated_lines_freshclam))
    
 
@@ -272,8 +262,8 @@ def update_clamav_config(databasedirectory=None,maxfiles=None,maxfilesize=None,s
  
     except Exception as e:
         
-        print(f"Erreur lors de la mise à jour du fichier {freshclam_path}: {e}")
-        print(f"Erreur lors de la mise à jour du fichier {clamav_path}: {e}")
+        print(f"Erreur lors de la mise à jour du fichier {FRESHCLAM_CONF_PATH}: {e}")
+        print(f"Erreur lors de la mise à jour du fichier {CLAMAV_CONF_PATH}: {e}")
 
         return False
 

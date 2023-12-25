@@ -13,27 +13,42 @@ class Command(BaseCommand):
         # Optional argument
         parser.add_argument('-id', '--id', type=str, help='Defineid suricata file')
     def handle(self, *args, **kwargs):
-        # Your code to add data to the database here
+         # Your code to add data to the database here
         try:
             id=kwargs['id']
             logs = read_suricata_log()
-            if logs:
-                added_logs = []  # Pour stocker les logs ajoutés avec succès en base de données
+            alerts = Alert.objects.all()  # Récupérer toutes les alertes de la base de données
+            logs_add=[]
+            logs_delete=[]
+            alert_list=[]
+            serializer = AlertSerializer(alerts, many=True)
+            alert_list=serializer.data
+            alert_list=[l['alert'] for l in alert_list]
+            logs_add = [log for log in logs if log not in alert_list]
+            logs_add=prepare_alert_attribut(logs_add)
+            logs_delete = [log for log in alert_list if log not in logs]   
+            if len(logs_add)!=0:
                 # Parcourir les logs récupérés et ajoutez-les à la base de données
-                for log in logs:
+                for log in logs_add:
+                    print("data to add ==>",log['alert'])
                     suricatafile_obj = suricatafile.objects.get(pk=id)  
                     log['suricatafile']=int(suricatafile_obj.id)
                     if not Alert.objects.filter(alert=log['alert']).exists():
                         serializerAlert = AlertSerializer(data=log)
                         if serializerAlert.is_valid():
                             serializerAlert.save()
-                            added_logs.append(serializerAlert.data)
                         else:
                             return str(serializerAlert.errors)
                     else:
                         pass
-                return "Les alerts ont été ajoutées avec succès."
-            else:
-                return "Aucun log n'a été trouvé pour ajouter."
+            if len(logs_delete)!=0:
+                for l in logs_delete:
+                    print("data to delete ==>",l)
+                    if Alert.objects.filter(alert=l).exists():
+                        alert = Alert.objects.get(alert=l)
+                        alert.delete()
+                    else:
+                        return "Alert not found!!"
+            return "All alerts updated successfully!!"
         except IntegrityError as e:
             return "Error: " + str(e)

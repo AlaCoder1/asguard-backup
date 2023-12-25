@@ -13,7 +13,7 @@ def execute_cmd(command):
 #Lire le fichier de configuration suricata.yaml//
 def read_suricata_config():
     # Chemin vers le fichier suricata.yaml
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+    suricata_yaml_path = "/etc/suricata/suricata.yaml"
     try:
         output, error = execute_cmd("cat " + suricata_yaml_path)
         return output
@@ -24,7 +24,7 @@ def read_suricata_config():
     
 #Lire le fichier de configuration suricata.yaml//
 def read_config():
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+    suricata_yaml_path = "/etc/suricata/suricata.yaml"
     syslog_enabled = None
     mpm_algo = None
     try:
@@ -73,7 +73,7 @@ def read_config():
    
 # Fonction pour lire la première occurrence de "syslog" et "enabled"//
 def read_first_syslog_enabled(suricata_yaml_path):
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml" 
+    suricata_yaml_path = "/etc/suricata/suricata.yaml" 
     syslog_enabled = None
     try:
         output,error= execute_cmd("cat "+suricata_yaml_path)
@@ -96,7 +96,7 @@ def read_first_syslog_enabled(suricata_yaml_path):
 
 #Update fichier de configuration suricata.yaml//
 def update_suricata_config( status_enabled,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode):    
-    suricata_yaml_path = "/etc/suricata/suricataTest.yaml"
+    suricata_yaml_path = "/etc/suricata/suricata.yaml"
     try:
         cmd_read = f"sudo cat {suricata_yaml_path}"
         output ,error = execute_cmd(cmd_read)
@@ -167,13 +167,14 @@ def update_suricata_config( status_enabled,new_promisc, new_eve_log, new_syslog,
 #*********** Les régles ****************
 
 
-def return_rule(sid,action,protocol,source_ip,direction,destination_ip,msg,content,flowbit,rev):
-   rule={sid:{"action":action,"protocol":protocol,"source_ip":source_ip,"direction":direction,"destination_ip":destination_ip,"msg":msg,"content":content,"flowbit":flowbit,"rev":rev,"sid":sid}}
+def return_rule(sid,action,protocol,source_ip,direction,destination_ip,msg,rev):
+   rule={sid:{"action":action,"protocol":protocol,"source_ip":source_ip,"direction":direction,"destination_ip":destination_ip,"msg":msg,"rev":rev,"sid":sid}}
    return rule
+
 
 #Format des régles    
 def format_dict_as_suricata_rules(content):    
-    rule_template = "{action} {protocol} {source_ip} {direction} {destination_ip} (msg:\"{msg}\"; content:\"{content}\"; flowbit:\"{flowbit}\"; rev:{rev};sid:{sid};)"
+    rule_template = "{action} {protocol} {source_ip} {direction} {destination_ip} (msg:\"{msg}\"; rev:{rev};sid:{sid};)"
     rule_str = rule_template.format(
         action=content['action'],
         protocol=content['protocol'],
@@ -181,20 +182,9 @@ def format_dict_as_suricata_rules(content):
         direction=content['direction'],
         destination_ip=content['destination_ip'],
         msg=content['msg'],
-        content=content['content'],
-        flowbit=content['flowbit'],
         rev=content['rev'],
         sid=content['sid']
     )
-    # if content['msg'] is None:
-    #     rule_str=rule_str[:rule_str.find('msg:"None";')]+rule_str[rule_str.find('msg:"None";')+len('msg:"None";'):]
-    # if content['content'] is None:
-    #     rule_str=rule_str[:rule_str.find('content:"None";')]+rule_str[rule_str.find('content:"None";')+len('content:"None";'):]
-    # if content['rev'] is None:
-    #     rule_str=rule_str[:rule_str.find('rev:"None";')]+rule_str[rule_str.find('rev:"None";')+len('rev:"None";'):]
-    # if content['flowbit'] is None:
-    #     rule_str=rule_str[:rule_str.find('flowbit:"None";')]+rule_str[rule_str.find('flowbit:"None";')+len('flowbit:"None";'):]
-    # print({"rule_str":rule_str})
     return rule_str
 
 # Ajouter une régle
@@ -218,8 +208,6 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     direction=None
     dest_ip=None
     msg=None
-    content=None
-    flowbit=None
     rev=None
     if rule.startswith("#") is True:
         action=rule.split(" ")[0].strip()
@@ -237,12 +225,6 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
         dest_ip=rule[rule.find("->")+len("->"):rule.find("(msg")].strip()
     if rule.find("msg:")!=-1:
         msg=rule[rule.find("msg:")+len("msg:"): rule.find('";')].strip()
-    if rule.find("content:")!=-1:
-        rule_content=rule[rule.find("content:")+len("content:"):].strip()
-        content=rule_content[:rule_content.find('";')]
-    if rule.find("flowbit:")!=-1:
-        rule_flowbit=rule[rule.find("flowbit:")+len("flowbit:"):]
-        flowbit=rule_flowbit[:rule_flowbit.find(";")].strip()
     if rule.find("rev:")!=-1:
         rev=rule[rule.find("rev:")+len("rev:"): rule.find(";sid")].strip(";")
         if rev.isdigit():
@@ -254,10 +236,9 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     src_ip=src_ip if src_ip!="" else None    
     direction=direction if direction!="" else None  
     dest_ip=dest_ip if dest_ip!="" else None    
-    msg=msg if msg!="" else None  
-    content=content if content!="" else None    
+    msg=msg if msg!="" else None   
     protocol=protocol if protocol!="" else None
-    flowbit=flowbit if flowbit!="" else None  
+    print({"action":action,"protocol":protocol})
     if contenu['action'] is not None:
         if contenu["activate_rule"] is False:
             contenu['action']="#"+contenu['action']
@@ -278,27 +259,16 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     if  contenu['msg'] is not None and rule.find("msg")!=-1:
         rule=rule.replace(msg,contenu['msg'])   
     
-    if  contenu['content'] is not None and rule.find("msg")!=-1:
-        rule=rule.replace(content,contenu['content'])   
-            
-    if  contenu['flowbit'] is not None:
-        if rule.find("flowbit")!=-1:
-            rule=rule.replace(flowbit,contenu['flowbit'])   
-        # elif rule.find("msg")!=-1:
-        #     rule=rule[:rule.find(contenu['msg'])+len(contenu['msg']+";")+1]+'content: '+content+";"+rule[rule.find(contenu['msg'])+len(contenu['msg']+";"):]
-            
-    
     if  contenu['rev'] is not None and rule.find("rev")!=-1:
         rule=rule.replace(str(rev),str(contenu['rev']))    
         
     if  contenu['sid'] is not None:
         rule=rule.replace(str(sid),str(contenu['sid']))   
         
-    # cmd = "sed -i '/sid:{}/ s/{}/{}/' {}".format(sid,line_to_update,formatted_content,file_path)
     cmd = "sed -i '/sid:{}/ s/{}/{}/' {}".format(sid, line_to_update.strip(), rule.strip(), file_path)
     output, error = execute_cmd(cmd)
-    
     return output,rule, error
+
 # //
 def get_line_by_sid(file_path, sid):
     try:
@@ -327,7 +297,7 @@ def delete_line_in_remote_file(file_path, line_to_delete):
 
 #Afficher les rules par défaut //
 def get_suricata_default_rules():
-    file_path = '/var/lib/suricata/rules/suricataTest.rules'
+    file_path = '/var/lib/suricata/rules/suricata.rules'
     try:
         # Utilisez la commande 'cat' pour lire le contenu du fichier
         cmd_read = f"cat {file_path}"
@@ -343,9 +313,73 @@ def get_suricata_default_rules():
         # print(f"Erreur : {str(e)}")
         return []
 
+###prepare rules attributs
+def prepare_rule_attribut(rules):
+    list_attributs_rules=[]
+    for rule in rules:
+        rule = rule.strip()  # Supprimez les espaces inutiles
+        if len(rule)!=0:
+            action=None
+            protocol=None
+            # Vérifiez si la règle n'est pas vide
+            if rule.startswith("#") is True:
+                active=False
+                action=rule.split(" ")[0].strip()+rule.split(" ")[1]
+                protocol=rule.split(" ")[2].strip()
+                
+            else:
+                active=True
+                action=rule.split(" ")[0].strip()
+                protocol=rule.split(" ")[1].strip()
+        
+            sid=None
+            if rule.find("sid")!=-1:
+                rule_inter=rule[rule.find("sid:"):]
+                sid=int(rule_inter[rule_inter.find("sid:")+len("sid:"):rule_inter.find(";")])
+            src_ip=None
+            direction=None
+            dest_ip=None
+            if rule[1:].find("->")!=-1:
+                src_ip=rule[rule.find(protocol)+len(protocol):rule.find("->")].strip()
+                direction="->"
+                dest_ip=rule[rule.find("->")+len("->"):rule.find("(msg")].strip()
+            msg=None
+            if rule.find("msg:")!=-1:
+                msg=rule[rule.find('msg:"')+len('msg:"'): rule.find('";')].strip()
+            rev=None
+            if rule.find("rev:")!=-1:
+                rev=rule[rule.find("rev:")+len("rev:"): rule.find(";sid")].strip(";")
+                if rev.isdigit():
+                    rev=int(rev)
+                else:
+                    rev=None
+            action=action if action!="" else None    
+            protocol=protocol if protocol!="" else None  
+            src_ip=src_ip if src_ip!="" else None    
+            direction=direction if direction!="" else None  
+            dest_ip=dest_ip if dest_ip!="" else None    
+            msg=msg if msg!="" else None  
+            protocol=protocol if protocol!="" else None  
+            data = {
+                "sid":sid,
+                "action":action.strip("#"),
+                "protocol":protocol,
+                "source_ip":src_ip,
+                "direction":direction,
+                "destination_ip":dest_ip,
+                "msg":msg.strip('"'),
+                "rev":rev,
+                "rule": rule,
+                "suricatafile":id,
+                "activate_rule":active,
+                    "default_rule":True
+                }
+            list_attributs_rules.append(data)
+    return list_attributs_rules
+                    
 #*********** Les alertes ****************//
 def read_suricata_log():
-    suricata_log_path = "/var/log/suricata/fastcopie.log"
+    suricata_log_path = "/var/log/suricata/fast.log"
     logs = []
     try:
         cmd_read = f"cat {suricata_log_path}"
@@ -353,32 +387,40 @@ def read_suricata_log():
         # print (stderr.read().decode())
         if not error:
             lines = output.split('\n')
-            for line in lines:
-                # Votre code de traitement ici
-                attributes = line.split()
-                if len(attributes)!=0:
-                    timestamp = attributes[0] + ' ' + attributes[1].replace("[**]", "",2)
-                    priority=attributes[-5][:1]
-                    protocol = attributes[-4][1:-1]
-                    src_addr=attributes[-3].split(":")[0]
-                    src_port=attributes[-3].split(":")[1]
-                    dst_addr=attributes[-1].split(":")[0]
-                    dst_port=attributes[-1].split(":")[1]
-                    sid=attributes[2].split(":")[1]
-                    # Afficher les attributs
-                    logs.append({
-                        "timestamp": timestamp,
-                        "sid":sid,
-                        "priority": int(priority),
-                        "protocol": protocol,
-                        "src_addr": src_addr,
-                        "src_port": int(src_port),
-                        "dst_addr": dst_addr,
-                        "dst_port": int(dst_port),
-                        "alert":line.strip(),
-                          })      
+            logs=lines
         # Utilisation d'une expression régulière pour extraire le protocole
     except Exception as e:
         # print("Une exception s'est produite:", str(e))
         return None
+    return logs
+
+# function to split informations
+def prepare_alert_attribut(lines):
+    logs = []
+    for line in lines:
+        # Votre code de traitement ici
+        attributes = line.split()
+        if len(attributes)!=0:
+            timestamp = attributes[0] + ' ' + attributes[1].replace("[**]", "",2)
+            priority=attributes[-5][:1]
+            protocol = attributes[-4][1:-1]
+            src_addr=attributes[-3].split(":")[0]
+            src_port=attributes[-3].split(":")[1]
+            dst_addr=attributes[-1].split(":")[0]
+            dst_port=attributes[-1].split(":")[1]
+            sid=attributes[2].split(":")[1]
+            message = ' '.join(attributes[3:-11]).replace("[**]", "").strip()
+            # Afficher les attributs
+            logs.append({
+                "timestamp": timestamp,
+                "sid":sid,
+                "message": message,
+                "priority": int(priority),
+                "protocol": protocol,
+                "src_addr": src_addr,
+                "src_port": int(src_port),
+                "dst_addr": dst_addr,
+                "dst_port": int(dst_port),
+                "alert":line.strip(),
+                    })  
     return logs

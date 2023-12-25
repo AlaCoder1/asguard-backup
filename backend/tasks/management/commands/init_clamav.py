@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
-from backend.clamav.models import *
+from backend.clamav.models import ClamAV
 from backend.authentification.views import *
-from backend.clamav.serializers import *
-from backend.clamav.functions_sys import *
+from backend.clamav.serializers import ClamavSerializer
+from backend.clamav.functions_sys import read_and_extract_clamav_config,read_and_extract_freshclam_config,execute_cmd
 from django.db import IntegrityError
 import hashlib
 
@@ -17,7 +17,6 @@ class Command(BaseCommand):
 
             if config_data:
                 MaxThreads=config_data.get("MaxThreads") 
-                DatabaseDirectory = config_data.get("DatabaseDirectory")
                 TCPSocket = config_data.get("TCPSocket")
                 MaxQueue = config_data.get("MaxQueue")
                 IdleTimeout = config_data.get("IdleTimeout")
@@ -26,7 +25,6 @@ class Command(BaseCommand):
                 MaxFileSize = config_data.get("MaxFileSize")
                 MaxRecursion  = config_data.get("MaxRecursion")
                 MaxFiles = config_data.get("MaxFiles")
-                MaxPartitions = config_data.get("MaxPartitions")
                 FreshclamDataBaseMirror = freschlam_data.get("DatabaseMirror")
                 FrechclamconnectionTimeout = freschlam_data.get("ConnectTimeout")
                 ProxyPort =freschlam_data.get("HTTPProxyPort")
@@ -152,11 +150,7 @@ class Command(BaseCommand):
 
                 # Check if the init configuration already exists
                 clamav_config = ClamAV.objects.first()
-                if not clamav_config:
-                    clamav_config = ClamAV(databasedirectory=DatabaseDirectory)
-
                 clamav_config.maxthreads = MaxThreads
-                clamav_config.databasedirectory = DatabaseDirectory
                 clamav_config.maxqueue = MaxQueue
                 clamav_config.idletimeout = IdleTimeout
                 clamav_config.tcpsocket = TCPSocket
@@ -165,7 +159,6 @@ class Command(BaseCommand):
                 clamav_config.maxfilesize = MaxFileSize
                 clamav_config.maxrecursion = MaxRecursion
                 clamav_config.maxfiles = MaxFiles
-                clamav_config.maxpartitions = MaxPartitions
                 clamav_config.freshclamdatabasemirror = FreshclamDataBaseMirror
                 clamav_config.frechclamconnectiontimeout =  FrechclamconnectionTimeout
                 clamav_config.proxyport = ProxyPort

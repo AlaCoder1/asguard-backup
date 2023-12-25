@@ -1,157 +1,188 @@
 <template>
   <v-row justify="center">
-    <v-dialog v-model="state.openModalRule" persistent width="600">
+    <el-dialog
+      :close-on-click-modal="false"
+      :show-close="false"
+      :title="modalModeRule === 'create' ? 'Create New Rule' : 'Edit Rule'"
+      v-model="state.openModalRule"
+      persistent
+      width="600"
+    >
       <form ref="myForm" @submit.prevent="submitForm">
-        <v-card>
-          <v-card-title>
-            <span class="text-h5"
-              >{{
-                modalModeRule === "create" ? "Create New Rule" : "Edit Rule"
-              }}
-            </span>
-          </v-card-title>
-          <v-card-text>
-            <v-container>
-              <template v-if="modalModeRule === 'create'">
+        <template v-if="modalModeRule === 'create'">
+          <v-row>
+            <v-col cols="12" class="mb-n6">
+              <v-text-field
+                label="Enter Rule Name"
+                v-model="state.formData.ruleName"
+              ></v-text-field>
+              <p class="error-feedback mb-5" v-if="v$.formData.ruleName.$error">
+                {{ v$.formData.ruleName.$errors[0].$message }}
+              </p>
+            </v-col>
+          </v-row>
+          <v-row>
+            <v-col cols="12" class="mb-n6">
+              <v-select
+                label="Enter Routage Type"
+                v-model="state.formData.routageType"
+                item-title="name"
+                item-value="slug"
+                :items="routagType"
+                return-object
+              ></v-select>
+
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.formData.routageType.$error"
+              >
+                {{ v$.formData.routageType.$errors[0].$message }}
+              </p>
+            </v-col>
+            <template v-if="state.formData.routageType.slug === 'subnet'">
+              <v-col cols="12" class="mb-n6">
                 <v-row>
-                  <v-col cols="12" class="mb-n6">
+                  <v-col cols="7">
                     <v-text-field
-                      label="Enter Rule Name"
-                      v-model="state.formData.ruleName"
+                      label="Value"
+                      v-model="state.formData.value"
+                    ></v-text-field>
+
+                    <p
+                      class="error-feedback mb-5"
+                      v-if="v$.formData.value.$errors.length"
+                    >
+                      {{ v$.formData.value.$errors?.[0].$message }}
+                    </p>
+                  </v-col>
+                  <v-col cols="1">
+                    <div class="ml-1 mt-5">/</div>
+                  </v-col>
+                  <v-col cols="4">
+                    <v-text-field
+                      label="Prefix"
+                      v-model="state.formData.prefix"
                     ></v-text-field>
                     <p
                       class="error-feedback mb-5"
-                      v-if="v$.formData.ruleName.$error"
+                      v-if="v$.formData.prefix.$errors.length"
                     >
-                      {{ v$.formData.ruleName.$errors[0].$message }}
+                      {{ v$.formData.prefix.$errors?.[0].$message }}
                     </p>
                   </v-col>
                 </v-row>
-                <v-row>
-                  <v-col cols="12" class="mb-n6">
-                    <v-select
-                      label="Enter Routage Type"
-                      v-model="state.formData.routageType"
-                      item-title="name"
-                      item-value="slug"
-                      :items="routagType"
-                      return-object
-                    ></v-select>
+              </v-col>
+            </template>
 
-                    <p
-                      class="error-feedback mb-5"
-                      v-if="v$.formData.routageType.$error"
-                    >
-                      {{ v$.formData.routageType.$errors[0].$message }}
-                    </p>
-                  </v-col>
-                  <template v-if="state.formData.routageType.slug === 'subnet'">
-                    <v-col cols="12" class="mb-n6">
-                      <v-row>
-                        <v-col cols="7">
-                          <v-text-field
-                            label="Value"
-                            v-model="state.formData.value"
-                          ></v-text-field>
+            <template v-if="isIps || isDomains">
+              <v-col cols="12" class="mb-n6">
+                <v-text-field
+                  label="Value"
+                  v-model="state.formData.value2"
+                ></v-text-field>
 
-                          <p
-                            class="error-feedback mb-5"
-                            v-if="v$.formData.value.$errors.length"
-                          >
-                            {{ v$.formData.value.$errors?.[0].$message }}
-                          </p>
-                        </v-col>
-                        <v-col cols="1">
-                          <div class="ml-1 mt-5">/</div>
-                        </v-col>
-                        <v-col cols="4">
-                          <v-text-field
-                            label="Prefix"
-                            v-model="state.formData.prefix"
-                          ></v-text-field>
-                          <p
-                            class="error-feedback mb-5"
-                            v-if="v$.formData.prefix.$errors.length"
-                          >
-                            {{ v$.formData.prefix.$errors?.[0].$message }}
-                          </p>
-                        </v-col>
-                      </v-row>
-                    </v-col>
-                  </template>
+                <p
+                  class="error-feedback mb-5"
+                  v-if="v$.formData.value2.$errors.length"
+                >
+                  {{ v$.formData.value2.$errors?.[0].$message }}
+                </p>
+              </v-col>
+            </template>
+          </v-row>
+        </template>
 
-                  <template v-if="isIps || isDomains">
-                    <v-col cols="12" class="mb-n6">
-                      <v-text-field
-                        label="Value"
-                        v-model="state.formData.value2"
-                      ></v-text-field>
+        <v-row>
+          <template v-if="!state.formData.time">
+            <v-col cols="6">
+              <label>Allowed by authentification</label>
+            </v-col>
+            <v-col cols="6" class="mb-n6">
+              <input type="checkbox" v-model="state.formData.allodwedAuth" />
+              <label class="ml-2">Activate Allowed by authentification</label>
+            </v-col>
+            <v-col cols="6">
+              <label>Status</label>
+            </v-col>
+            <v-col cols="6" class="mb-n6">
+              <input type="checkbox" v-model="state.formData.status" />
+              <label class="ml-2">Activate rule</label>
+            </v-col>
+          </template>
+          <v-col cols="6">
+            <label>By time</label>
+          </v-col>
+          <v-col cols="6" class="mb-n6">
+            <input type="checkbox" v-model="state.formData.time" />
+            <label class="ml-2">block by time</label>
+          </v-col>
 
-                      <p
-                        class="error-feedback mb-5"
-                        v-if="v$.formData.value2.$errors.length"
-                      >
-                        {{ v$.formData.value2.$errors?.[0].$message }}
-                      </p>
-                    </v-col>
-                  </template>
-                </v-row>
-              </template>
-
-              <v-row>
-                <v-col cols="4">
-                  <label>Allowed by authentification</label>
-                </v-col>
-                <v-col cols="8" class="mb-n6">
-                  <input type="checkbox" v-model="allodwedAuth" />
-                  <label class="ml-2"
-                    >Activate Allowed by authentification</label
-                  >
-                </v-col>
-                <v-col cols="4">
-                  <label>Status</label>
-                </v-col>
-                <v-col cols="8" class="mb-n6">
-                  <input type="checkbox" v-model="status" />
-                  <label class="ml-2">Activate rule</label>
-                </v-col>
-              </v-row>
-            </v-container>
-          </v-card-text>
-          <v-card-actions class="mt-3 actionBtn">
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              @click="closeModal"
-              class="mt-3 btn-add"
-            >
-              <span class="text-white pr-3 pl-3">Close</span>
-            </v-btn>
-
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              type="submit"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 btn-add"
-            >
-              <span class="text-white pr-3 pl-3">{{
-                modalModeRule === "create" ? "Create" : "Edit"
-              }}</span>
-            </v-btn>
-          </v-card-actions>
-        </v-card>
+          <template v-if="state.formData.time">
+            <v-col cols="4">
+              <v-select
+                label="Days"
+                v-model="state.formData.days"
+                item-title="name"
+                item-value="slug"
+                return-object
+              ></v-select>
+            </v-col>
+            <v-col cols="4">
+              <el-time-picker
+                style="height: 55px"
+                class="w-100"
+                size="large"
+                v-model="state.formData.from"
+                placeholder="From"
+              />
+            </v-col>
+            <v-col cols="4">
+              <el-time-picker
+                style="height: 55px"
+                class="w-100"
+                size="large"
+                v-model="state.formData.to"
+                placeholder="To"
+              />
+            </v-col>
+          </template>
+        </v-row>
       </form>
-    </v-dialog>
+      <template #footer>
+        <span class="dialog-footer">
+          <v-btn
+            color="indigo-darken-3"
+            :rounded="true"
+            large
+            rounded
+            outlined
+            label-color="#213E9F"
+            variant="flat"
+            @click="closeModal"
+            class="mt-3 btn-add"
+          >
+            <span class="text-white pr-3 pl-3">Close</span>
+          </v-btn>
+
+          <v-btn
+            large
+            rounded
+            outlined
+            label-color="#213E9F"
+            type="submit"
+            color="indigo-darken-3"
+            :rounded="true"
+            variant="flat"
+            class="mt-3 ml-2 btn-add"
+          >
+            <span class="text-white pr-3 pl-3">{{
+              modalModeRule === "create" ? "Create" : "Edit"
+            }}</span>
+          </v-btn>
+        </span>
+      </template>
+    </el-dialog>
+
     <v-snackbar
       :timeout="2000"
       v-model="state.snackbar"
@@ -195,6 +226,10 @@ export default {
     const emitter = inject("emitter");
     const state = reactive({
       formData: {
+        days: null,
+        time: null,
+        from: null,
+        to: null,
         routageType: "",
         value: "",
         value2: "",
@@ -349,5 +384,12 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
+}
+.btnAction {
+  display: flex !important;
+  justify-content: end !important;
+}
+.dialog-footer button:first-child {
+  margin-right: 10px;
 }
 </style>

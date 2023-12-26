@@ -1,11 +1,20 @@
 <template>
   <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
     <v-overlay v-model="state.loading">
-      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
         <v-card color="#193286">
           <v-card-text>
             Please Wait...
-            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -27,7 +36,10 @@
             <label>Proxy port</label>
           </v-col>
           <v-col cols="5" class="mt-3">
-            <v-text-field label="Proxy Port" v-model="state.proxyPort"></v-text-field>
+            <v-text-field
+              label="Proxy Port"
+              v-model="state.proxyPort"
+            ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.proxyPort.$error">
               {{ v$.proxyPort.$errors[0].$message }}
             </p>
@@ -35,14 +47,27 @@
         </v-row>
         <v-row class="mt-5">
           <div>
-            <VButton rounded outlined color="#213E9F" label-color="#ffffff" label="Save" :isLarge="true" class="ml-2"
-              @click="saveGeneralInfo" />
+            <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              label="Save"
+              :isLarge="true"
+              class="ml-2"
+              @click="saveGeneralInfo"
+            />
           </div>
         </v-row>
       </v-col>
 
       <squid_auth />
-      <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+      <v-snackbar
+        :timeout="2000"
+        v-model="state.snackbar"
+        location="bottom right"
+        :color="state.color"
+      >
         {{ state.textAlert }}
 
         <template v-slot:actions> </template>
@@ -94,7 +119,6 @@ export default {
     const v$ = useValidate(rules, state);
 
     const saveGeneralInfo = async () => {
-
       const result = await v$.value.$validate();
       console.log("result", result);
 
@@ -151,20 +175,11 @@ export default {
     };
 
     const populate = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios
-        .get("/proxy/get_generale_info")
-        .then((response) => {
-          if (response.status == "200") {
-            console.log("response", response.data);
-            state.enableState = response.data.status;
-            state.proxyPort = response.data.Port;
-          }
-        })
-        .catch((i) => {
-          console.log("error", i);
-        });
+      const generalInfoAttribute =
+        document.getElementById("app").attributes["generalInfo"].value;
+      const generalInfo = JSON.parse(generalInfoAttribute);
+      state.enableState = generalInfo.status;
+      state.proxyPort = generalInfo.Port;
     };
     onMounted(() => {
       populate();

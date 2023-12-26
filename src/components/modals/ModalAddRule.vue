@@ -1,11 +1,10 @@
 <template>
   <v-row justify="center">
     <el-dialog
+      v-model="state.openModalRule"
       :close-on-click-modal="false"
       :show-close="false"
       :title="modalModeRule === 'create' ? 'Create New Rule' : 'Edit Rule'"
-      v-model="state.openModalRule"
-      persistent
       width="600"
     >
       <form ref="myForm" @submit.prevent="submitForm">
@@ -95,7 +94,7 @@
               </v-col>
             </template>
 
-            <template v-if="isIps || isDomains">
+            <template v-if="isDomains">
               <v-col cols="12" class="mb-n6">
                 <v-text-field
                   label="Value"
@@ -110,7 +109,22 @@
                 </p>
               </v-col>
             </template>
-            <template v-if="isTimeAndDomains">
+            <template v-if="isIps">
+              <v-col cols="12" class="mb-n6">
+                <v-text-field
+                  label="Value"
+                  v-model="state.formData.valueIp"
+                ></v-text-field>
+
+                <p
+                  class="error-feedback mb-5"
+                  v-if="v$.formData.valueIp.$errors.length"
+                >
+                  {{ v$.formData.valueIp.$errors?.[0].$message }}
+                </p>
+              </v-col>
+            </template>
+            <template v-if="isTimeAndDomains && state.formData.time">
               <v-col cols="12" class="mb-n6">
                 <v-text-field
                   label="Value"
@@ -145,7 +159,9 @@
               <label class="ml-2">Activate rule</label>
             </v-col>
           </template>
-          <template v-if="!state.formData.allodwedAuth">
+          <template
+            v-if="!state.formData.allodwedAuth && modalModeRule === 'create'"
+          >
             <v-col cols="6">
               <label>By time</label>
             </v-col>
@@ -237,6 +253,7 @@
 </template>
 
 <script>
+import axios from "axios";
 import dayjs from "dayjs";
 import useValidate from "@vuelidate/core";
 import { helpers, requiredIf, required } from "@vuelidate/validators";
@@ -277,6 +294,7 @@ export default {
         routageTypeDomain: "",
         value: "",
         value2: "",
+        valueIp: "",
         prefix: "",
         valueDomainTime: "",
         ruleName: null,
@@ -287,14 +305,15 @@ export default {
       textAlert: "",
       color: "",
       snackbar: false,
+      rowEdit: null,
     });
 
     const routagType = ref([
       { name: "subnet", slug: "subnet" },
-      { name: "ips", slug: "ips" },
-      { name: "domains", slug: "domains" },
+      { name: "ips", slug: "ip" },
+      { name: "domains", slug: "domain" },
     ]);
-    const routagTypeDomain = ref([{ name: "domains", slug: "domains" }]);
+    const routagTypeDomain = ref([{ name: "domains", slug: "domain" }]);
 
     const daysArray = ref([
       { name: "Monday", slug: "M" },
@@ -337,10 +356,24 @@ export default {
               "Value is required",
               requiredIf(
                 () =>
-                  (modalModeRule.value === "create" &&
-                    state.formData.routageType.slug === "ips") ||
-                  state.formData.routageType.slug === "domains"
+                  modalModeRule.value === "create" &&
+                  state.formData.routageType.slug === "domain"
               )
+            ),
+          },
+          valueIp: {
+            required: helpers.withMessage(
+              "Value is required",
+              requiredIf(
+                () =>
+                  modalModeRule.value === "create" &&
+                  state.formData.routageType.slug === "ip"
+              )
+            ),
+            isValidValueIp: helpers.withMessage(
+              `Format must be like adresse IP : X.X.X.X`,
+
+              helpers.regex(/^[0-9.]+$/)
             ),
           },
           valueDomainTime: {
@@ -349,14 +382,16 @@ export default {
               requiredIf(
                 () =>
                   modalModeRule.value === "create" &&
-                  state.formData.routageTypeDomain.slug === "domains"
+                  state.formData.routageTypeDomain.slug === "domain"
               )
             ),
           },
           routageType: {
             required: helpers.withMessage(
               "Value is required",
-              requiredIf(() => modalModeRule.value === "create")
+              requiredIf(
+                () => modalModeRule.value === "create" && !state.formData.time
+              )
             ),
           },
           routageTypeDomain: {
@@ -392,32 +427,25 @@ export default {
       return state.formData.routageType.slug === "subnet";
     });
     const isIps = computed(() => {
-      return state.formData.routageType.slug === "ips";
+      return state.formData.routageType.slug === "ip";
     });
     const isDomains = computed(() => {
-      return state.formData.routageType.slug === "domains";
+      return state.formData.routageType.slug === "domain";
     });
     const isTimeAndDomains = computed(() => {
-      return state.formData.routageTypeDomain.slug === "domains";
+      return state.formData.routageTypeDomain.slug === "domain";
     });
 
     watch(
       state,
       () => {
-        console.log("stat", state);
         if (state.formData.time) {
           state.formData.routageType = "";
           state.formData.status = false;
           state.formData.value = "";
           state.formData.value2 = "";
+          state.formData.valueIp = "";
           state.formData.prefix = "";
-        }
-        if (!state.formData.time) {
-          state.formData.routageTypeDomain = "";
-          state.formData.days = [];
-          state.formData.from = false;
-          state.formData.to = false;
-          state.formData.valueDomainTime = "";
         }
       },
       { immediate: true }
@@ -444,7 +472,6 @@ export default {
     watch(
       () => isOpenModal.value,
       (val) => {
-        console.log("val", val);
         state.openModalRule = val;
         v$.value.$reset();
       }
@@ -452,7 +479,10 @@ export default {
     watch(
       () => editRowRule.value,
       (val) => {
-        console.log("val", val);
+        state.rowEdit = val;
+        state.formData.status = val.status === "Disable" ? false : true;
+        state.formData.allodwedAuth =
+          val.allow_by_auth === "Denied" ? false : true;
       }
     );
     watch(
@@ -470,26 +500,133 @@ export default {
       state.formData.from = null;
       state.formData.to = null;
       state.formData.routageType = "";
+      state.formData.routageTypeDomain = "";
       state.formData.value = "";
       state.formData.value2 = "";
+      state.formData.valueIp = "";
       state.formData.ruleName = null;
       state.formData.prefix = "";
       state.formData.allodwedAuth = false;
       state.formData.status = false;
     };
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    };
+
     const submitForm = async () => {
-      let from = dayjs(state.formData.from).format("HH:mm");
-      let to = dayjs(state.formData.to).format("HH:mm");
-      console.log("from", from);
-      console.log("to", to);
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const result = await v$.value.$validate();
       console.log("result", result);
 
       if (result) {
-        console.log("state", state);
+        if (modalModeRule.value === "edit") {
+          console.log("oui");
+          let payload = {
+            status: state.formData.status,
+            allow_by_auth: state.formData.allodwedAuth,
+          };
+
+          axios
+            .put(`/proxy/updateStatusRule/${state.rowEdit.id}`, payload)
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          let payload = {};
+          if (state.formData.routageType.slug == "subnet") {
+            payload = {
+              rule_name: state.formData.ruleName,
+              type: state.formData.routageType.slug,
+              value: `${state.formData.value}/${state.formData.prefix}`,
+              status: state.formData.status,
+              allow_by_auth: state.formData.allodwedAuth,
+            };
+          }
+          if (state.formData.routageType.slug == "ip") {
+            payload = {
+              rule_name: state.formData.ruleName,
+              type: state.formData.routageType.slug,
+              value: state.formData.valueIp,
+              status: state.formData.status,
+              allow_by_auth: state.formData.allodwedAuth,
+            };
+          }
+          if (state.formData.routageType.slug == "domain") {
+            payload = {
+              rule_name: state.formData.ruleName,
+              type: state.formData.routageType.slug,
+              value: state.formData.value2,
+              status: state.formData.status,
+              allow_by_auth: state.formData.allodwedAuth,
+              days: "",
+              time_from: "",
+              time_to: "",
+            };
+          }
+
+          if (state.formData.routageTypeDomain.slug == "domain") {
+            let from = dayjs(state.formData.from).format("HH:mm");
+            let to = dayjs(state.formData.to).format("HH:mm");
+
+            let mappedDays = state.formData.days.map((e) => e.slug);
+            let resultString = mappedDays.join("");
+
+            payload = {
+              rule_name: state.formData.ruleName,
+              type: state.formData.routageTypeDomain.slug,
+              value: state.formData.valueDomainTime,
+              status: true,
+              allow_by_auth: state.formData.allodwedAuth,
+              days: resultString,
+              time_from: from,
+              time_to: to,
+            };
+          }
+          console.log("pay", payload);
+          axios
+            .post("/proxy/addRuleSquid", payload)
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        }
       } else {
         console.log("error", v$.value);
-        console.log("stateaa", state.formData);
       }
     };
 

@@ -174,37 +174,22 @@ export default {
     };
 
     const populateSquid = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios
-        .get("/proxy/status_enable_auth")
-        .then((response) => {
-          if (response.status == "200") {
-            console.log("response", response.data);
-            state.enable = response.data.status_enable;
-          }
-        })
-        .catch((i) => {
-          console.log("error", i);
-        });
+      const statusEnableAttribute =
+        document.getElementById("app").attributes["statusEnable"].value;
+      const statusEnable = JSON.parse(statusEnableAttribute);
+      console.log("statusEnable", statusEnable);
+      state.enable = statusEnable;
     };
     const populateSquidUser = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      axios
-        .get("/proxy/all_proxy_users")
-        .then((response) => {
-          if (response.status == "200") {
-            console.log("response", response.data);
-            if (!rowDataUser.value) {
-              rowDataUser.value = [];
-            }
-            rowDataUser.value = response.data.data;
-          }
-        })
-        .catch((i) => {
-          console.log("error", i);
-        });
+      const proxyUserAttribute =
+        document.getElementById("app").attributes["proxyUser"].value;
+      const proxyUser = JSON.parse(proxyUserAttribute);
+      
+
+      if (!rowDataUser.value) {
+        rowDataUser.value = [];
+      }
+      rowDataUser.value = proxyUser;
     };
 
     onMounted(() => {

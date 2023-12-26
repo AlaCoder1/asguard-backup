@@ -467,24 +467,19 @@ def update_suricata_configuration(request, id):
             if output:
                 lines = output.split('\n')
                 updated_lines = []
-                print(lines)
                 for line in lines:
                     stripped_line = line.strip()
-                    if "af-packet:" in stripped_line:
-                        print("af-packet:" in stripped_line)
                     if stripped_line.startswith("#"):
                         updated_lines.append(line + '\n')
                     elif "HOME_NET:" in stripped_line:
                         updated_lines.append(f'    HOME_NET: "{home_net_value_sys}"' + '\n')
-                    
-                        # print({"interface":interface})
                     else:
                         updated_lines.append(line + '\n')
                 with open(suricata_yaml_path, 'w') as local_file:
                     for string in updated_lines:
                         local_file.write(string)
                 # Appelez d'abord la fonction update_suricata_config pour mettre à jour le système
-                aux_update=update_suricata_config(status_enabled,str(new_promisc).lower(), new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode)
+                aux_update=update_suricata_config(interface_names[0]['ifname'],status_enabled,str(new_promisc).lower(), new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode)
                 if aux_update is True:
                     cmd="sudo systemctl restart suricata "
                     output,error=execute_cmd(cmd)

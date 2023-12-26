@@ -20,6 +20,7 @@ urlpatterns = [
     path('add_user_squid', views.add_user_squid, name='add_user_squid'),#
     path('delete_user_squid/<int:id>', views.delete_user_squid, name='delete_user_squid'),#
     path('all_proxy_users', views.allProxyUsers, name='all_proxy_users'),#
+    path('change_pwd', views.change_pwd, name='change_pwd'),#
     
     
     path('allGroups', views.allGroups, name='allGroups'), 

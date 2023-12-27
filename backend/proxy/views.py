@@ -705,7 +705,7 @@ def changeStausElementsInGroup(request):
         for i, line in enumerate(lines):
             if line.lstrip('#').split('\n')[0] == target_url:
             # if target_url in line:
-                if uncomment:
+                if uncomment == False:
                     lines[i] = line.lstrip('#')
                 else:
                     lines[i] = '#' + line

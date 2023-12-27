@@ -36,6 +36,7 @@ EOF""".format(ifname,rules),
 "sudo nft add chain inet filter_{} outbound {{ type filter hook input priority 0 \; }}".format(ifname),
 "sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 \; }}".format(ifname),
 "sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}".format(ifname),
+'sudo nft list table inet filter_{} > /etc/rules/{}/nftables.conf'.format(ifname,ifname),
 "grep -q '{}' /etc/nftables.conf || echo '{}' | sudo tee -a /etc/nftables.conf".format(include_rules,include_rules)
 ]
 
@@ -54,12 +55,19 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
    rule=''
    #concatener tous les addresses à bloquer
    ##cas inbound
-   if type_rule=='inbound':
-      rule='iifname "{}" ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(ifname,saddr,daddr,protocol,sport,protocol,dport,policy)
+   if type_rule=='inbound' :
+      if not protocol.upper()=="ALL":
+         rule='ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(saddr,daddr,protocol,sport,protocol,dport,policy)
+      else:
+         rule='ip saddr {} ip daddr {}  {}'.format(saddr,daddr,policy)
+         
     ##cas outbound
-   elif type_rule=='outbound':
-      rule='oifname "{}" ip daddr {} ip saddr {} {} sport {} {} dport {} {}'.format(ifname,daddr,saddr,protocol,sport,protocol,dport,policy)
-   
+   elif type_rule=='outbound' :
+      if not protocol.upper()=="ALL":
+         rule='ip daddr {} ip saddr {} {} sport {} {} dport {} {}'.format(daddr,saddr,protocol,sport,protocol,dport,policy)
+      else:
+         rule='ip daddr {} ip saddr {}  {}'.format(daddr,saddr,policy)
+         
    #####cas saddr is None
    if saddr is None:
       rule=rule[:rule.find('ip saddr None')]+rule[rule.find('ip saddr None')+len(('ip saddr None'))+1:].strip()
@@ -67,52 +75,47 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
    if daddr is None:
       rule=rule[:rule.find('ip daddr None')]+rule[rule.find('ip daddr None')+len(('ip daddr None'))+1:].strip()
      ####### cas protocol icmp sans port
-   if protocol.startswith("icmp type") :
+   if protocol.startswith("icmp type")  :
       rule=rule[:rule.find(protocol)+len(protocol)]+" "+rule[rule.find('{}'.format(policy)):]
    #####cas sport is None
-   if sport is None and not protocol.startswith("icmp type") :
+   if sport is None and not protocol.startswith("icmp type") and protocol.upper()!="ALL" :
       rule=rule[:rule.find(('{} sport {}').format(protocol,sport))]+rule[rule.find(('{} sport {}').format(protocol,sport))+len(('{} sport {}').format(protocol,sport)):].strip()
    #####cas dport is None
-   if dport is None and not protocol.startswith("icmp type") :
+   if dport is None and not protocol.startswith("icmp type") and protocol.upper()!="ALL":
       rule=rule[:rule.find(('{} dport {}').format(protocol,dport))]+rule[rule.find(('{} dport {}').format(protocol,dport))+len(('{} dport {}').format(protocol,dport)):].strip()
    ############ 
-   if sport is None and dport is None and not protocol.startswith("icmp type") :
+   if sport is None and dport is None and not protocol.startswith("icmp type") and protocol.upper()!="ALL" :
       rule=rule[:rule.find(policy)]+"ip protocol {} ".format(protocol)+rule[rule.find(policy):]
    return rule
 
+
+#### function to get file config contenu
+def get_config_file(ifname):
+   cmd="cat /etc/rules/{}/nftables.conf".format(ifname)
+   output,error=run_command("sudo "+cmd)
+   if error!='': 
+      return error
+   return output.splitlines()
+   
 ###function to add rule
-def add_rule_remote(rule,ifname,type_rule):
+def add_rule_remote(rule,ifname,type_rule,config,description):
    ##initialiser les commanndes pour ajouter une règle et l'entregistrer 
-      commandes=[
-         "sudo nft add rule inet filter_{} {} {}".format(ifname,type_rule,rule),
-        'sudo nft list table inet filter_{} > /etc/rules/{}/nftables.conf'.format(ifname,ifname)
+      for r in config:
+         if r.strip()=="chain "+type_rule+" {":
+            index_chain=config.index(r)
+      config=config[:index_chain+2]+["                "+rule+" #"+description]+config[index_chain+2:]
+      commandes=["""cat <<EOF > /etc/rules/{}/nftables.conf
+{} 
+EOF""".format(ifname, '\n'.join(config)),
+         "nft flush ruleset",
+         "nft -f /etc/nftables.conf"
    ]
       ###executer ces commandes
       for cmd in commandes:
-         output,error=run_command(cmd)
+         output,error=run_command("sudo "+cmd)
          if error!='': 
             return error
       return True
-###function to get handle rule   
-# def get_handle_rule(ifname,type_rule,rule):
-#    # if not(rule.find('sport')==-1 and rule.find('dport')==-1):
-#    if 'sport' not in rule and 'dport' not in rule:
-#       rule=rule.replace("icmp","1")
-#       rule=rule.replace("echo-request","8")
-#       rule=rule.replace("echo-reply","0")
-#       rule=rule.replace("tcp","6")
-#       rule=rule.replace("udp","17")
-      
-
-#    ##cmd pour obtenir handle number pour supprimer rule 
-#    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
-#    ##executer cette commande
-#    output,error=run_command(cmd)
-#    output = output.split('#')
-#    if len(output)<2:
-#       return None
-#    else:
-#       return output[1].strip().split("\n")[0]
 ###function to get handle rule   
 def get_handle_rule(ifname,type_rule,rule):
    # if not(rule.find('sport')==-1 and rule.find('dport')==-1):
@@ -158,3 +161,15 @@ def get_protocol_number(protocol_name):
         return protocol_number
     except socket.error:
         return None  # Protocol name not found
+     
+def update_rule_remote(old_rule,new_rule,file_path):
+   commandes=[
+      "sed -i '/{}/ s/{}/{}/' {}".format(old_rule, old_rule.strip(), new_rule.strip(), file_path),
+      "nft flush ruleset",
+      "nft -f /etc/nftables.conf"
+      ]
+   for cmd in commandes:
+      output,error=run_command("sudo "+cmd)
+      if error !="":
+         return error  
+   return True

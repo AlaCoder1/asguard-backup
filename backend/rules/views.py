@@ -10,6 +10,7 @@ from backend.authentification.views import *
 from backend.network.address import *
 # Version without SSh connection
 from .functions import *
+from django.db.models import Q
 # end Version without SSh connection
 # Version SSh connection
 # from .remoteFunctions import *
@@ -68,6 +69,7 @@ def deleteRule(request,id):
             rules = Rule.objects.get(id=id)
             rule=rules.rule
             type_rules=rules.type_rule
+            description=rules.rule_description
              #get object of interface type
             interfaceObject= Interface.objects.get(id=rules.interface_id)
             #get interface name to execute command systeme
@@ -151,18 +153,13 @@ def saveRules(request,name_interface):
           rulesObject = Rule.objects.get(id=id)
           rule=rulesObject.rule
           type_rules=rulesObject.type_rule
+          description=rulesObject.rule_description
+          file_path="/etc/rules/{}/nftables.conf".format(ifname)
           #appel la fonction pour retourner rule à ajouter 
           ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
           ruleMsg=ruleupdate
-          #appel la fonction pour retrouver handle rule à supprimer
-          handle=get_handle_rule(ifname,type_rules,rule)
-          if handle is not None:
-            #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
-            return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
-            if return_delete_rule_remote is True:
-              #appel la fonction pour ajouter rule dans le système
-              return_add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
-              if  return_add_rule is True:
+          update_remote=update_rule_remote(rule+" #"+description,ruleupdate+" #"+rule_description,file_path)
+          if  update_remote is True:
                   #appel la fonction pour update rule dans la base de données 
                   data={key: value for key, value in data.items() if value is not None}
                   data['interface']=rulesObject.interface_id
@@ -176,15 +173,10 @@ def saveRules(request,name_interface):
                   else:
                     msg= InboundSerializer.errors
                     status=400
-              else:
-                add_rule_remote(rule,ifname,type_rules)
-                msg= return_add_rule
-                status=400
-            else:
-              msg = return_delete_rule_remote
           else:
-            msg="Rule doesn't exist in system !!"
-            status=400
+              msg =update_remote
+              status=400
+
         else:
           #appel la fonction pour initialiser les fichies nftables.conf
           return_init_file_nftables = init_file_nftables(ifname)
@@ -192,9 +184,10 @@ def saveRules(request,name_interface):
             #appel la fonction pour retourner rule à ajouter 
             rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
             ruleMsg=rule
-            if not Rule.objects.filter(rule=rule).exists():
+            if not Rule.objects.filter(Q(rule=rule)& Q(rule_description=rule_description)).exists():
+              config=get_config_file(ifname)
             #appel la fonction pour ajouter rule dans le système
-              return_add_rule=add_rule_remote(rule,ifname,type_rule)
+              return_add_rule=add_rule_remote(rule,ifname,type_rule,config,rule_description)
               if return_add_rule is True:
                 data['interface']=interfaceObject.id
                 #appel la fonction pour ajouter rule dans la base de données 

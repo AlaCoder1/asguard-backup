@@ -13,7 +13,6 @@
 </template>
 
 <script>
-import { reactive, onMounted } from "vue";
 import BaseLayout from "@/layouts/layout.vue";
 import general_info from "./component/general_info.vue";
 import list from "./component/list.vue";
@@ -26,31 +25,6 @@ export default {
     general_info,
     acl_list,
     list,
-  },
-  setup() {
-    const state = reactive({});
-
-    onMounted(() => {});
-
-    const getCookie = (name) => {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === name + "=") {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
-    };
-
-    return {
-      state,
-      getCookie,
-    };
   },
 };
 </script>

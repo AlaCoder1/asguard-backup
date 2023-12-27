@@ -41,7 +41,6 @@ def getGeneraleInfo(request):
         command = "cat "+squid_conf_path
         stdout, stderr = run_command(command)
         resultat=stdout.split('\n')
-        print({"resultat":resultat})
         for line in resultat:
             line = line.strip()
             if line.startswith('http_port'):
@@ -553,7 +552,12 @@ def key_pair_page(request):
 
 @login_required(login_url='/')
 def squid_proxy(request):
-    return render(request, 'squid_proxy.html')
+    proxyUser = allProxyUsers(request)
+    generalInfo = getGeneraleInfo(request)
+    statusEnable = statusEnableAuth(request)
+    proxyRule = get_all_proxy_rules(request)
+    context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule)}
+    return render(request, 'squid_proxy.html',context)
 
 
 @login_required(login_url='/')

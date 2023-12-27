@@ -95,7 +95,7 @@ def read_first_syslog_enabled(suricata_yaml_path):
     return syslog_enabled  
 
 #Update fichier de configuration suricata.yaml//
-def update_suricata_config( status_enabled,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode):    
+def update_suricata_config(ifname, status_enabled,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode):    
     suricata_yaml_path = "/etc/suricata/suricata.yaml"
     try:
         cmd_read = f"sudo cat {suricata_yaml_path}"
@@ -107,6 +107,7 @@ def update_suricata_config( status_enabled,new_promisc, new_eve_log, new_syslog,
             next_eve_log = False
             next_syslog = False
             syslog_enabled = None
+            af_packet=False
             # Ajout de la logique de testa() ici
             for line in lines:
                 stripped_line = line.strip()
@@ -115,6 +116,13 @@ def update_suricata_config( status_enabled,new_promisc, new_eve_log, new_syslog,
                 elif "promisc:" in stripped_line:
                     # Met à jour la ligne promisc avec la nouvelle valeur
                     updated_lines.append(f'      promisc: {new_promisc}\n')
+                elif "af-packet:" in stripped_line:
+                    af_packet=True
+                    updated_lines.append(line + '\n')  # Conserve la ligne "af-packet:" telle quelle
+                elif af_packet:
+                    if "interface:" in stripped_line:
+                        updated_lines.append(f'      - interface: {ifname}\n')
+                        af_packet = False
                 elif "eve-log:" in stripped_line:
                     next_eve_log = True  # Activer la lecture de la ligne suivante sous "eve-log"
                     updated_lines.append(line + '\n')  # Conserve la ligne "eve-log" telle quelle
@@ -161,7 +169,7 @@ def update_suricata_config( status_enabled,new_promisc, new_eve_log, new_syslog,
             return None
     except Exception as e:
         # Capture toute autre exception et affiche un message d'erreur
-        # print(f"Erreur lors de la mise à jour du fichier {suricata_yaml_path}: {e}")
+        print(f"Erreur lors de la mise à jour du fichier {suricata_yaml_path}: {e}")
         return None
 
 #*********** Les régles ****************

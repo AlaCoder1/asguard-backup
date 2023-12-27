@@ -107,11 +107,12 @@ def addRuleSquid(request):
     line = ''
     if (request.method == 'POST'):
         data = request.data
-        # data = json.loads(request.body)
+        # data = request.data
         print({"data":data})
         # time_from = data.get('time_from','')
         # time_to = data.get('time_to','')
         # days = data.get('days','')
+        write_in_file = True
         if data['allow_by_auth'] == False:
             if data['type'] == "ip":
                 file_path = '/etc/squid/blocked_ip.acl'
@@ -149,6 +150,7 @@ def addRuleSquid(request):
             value = '#'+data['value']
         else:
             value = data['value']
+        print({"write_in_file":write_in_file})
         if write_in_file == True:
             try:
                 with open(file_path, 'a') as file:
@@ -293,7 +295,7 @@ def get_generale_info(request):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_generale_info(request):
-    data = json.loads(request.body)
+    data = request.data
     squid_conf_path = '/etc/squid/squid.conf'
     with open(squid_conf_path, 'r') as f:
         lines = f.readlines()
@@ -487,7 +489,7 @@ def allProxyUsers(request):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def change_pwd(request):
-    data = json.loads(request.body)
+    data = request.data
     data_to_convert = datetime.strptime(data['time'], "%H:%M")
     script_path = "/home/vagrant/g_pwd.py"
     if data['period'] == "every days":
@@ -531,7 +533,7 @@ def change_pwd(request):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_user_squid(request):
-    data = json.loads(request.body)
+    data = request.data
     squid_conf_path = '/etc/squid/squid_passwd'
     username_squid = data.get('username')
     password_squid = data.get('password')
@@ -589,6 +591,17 @@ def delete_user_squid(request,id):
     else:
         return JsonResponse({"msg":"Erreur."},status = 404 )
 
+
+def get_line_from_file(file_path, target_line):
+    with open(file_path, 'r') as file:
+        for line_number, line in enumerate(file, start=1):
+            if target_line in line:
+                if line.strip().startswith("#"):
+                    return(False)
+                else:
+                    return(True)
+
+    return None
 @swagger_auto_schema(
     method='GET',
     responses={200: 'Success', 400: 'Bad Request'},
@@ -599,6 +612,7 @@ def delete_user_squid(request,id):
 @authentication_classes([SessionAuthentication])
 def allGroups(request):
     list_line = []
+    list_groups = []
     config_file_path = '/etc/squid/squid.conf'
     with open(config_file_path, 'r') as file:
                 content = file.readlines()
@@ -610,7 +624,11 @@ def allGroups(request):
     pattern = re.compile(r'acl (\w+) url_regex')
 
     groups = [pattern.findall(line)[0] for line in list_line if pattern.findall(line)]
-    
+    for i in groups:
+        target_line = 'http_access deny '+i
+        rslt = get_line_from_file(config_file_path,target_line)
+        list_groups.append({"name":i,"status":rslt})
+    return JsonResponse({"groups":list_groups},status = 200)
     return JsonResponse({"groups":groups},status = 200)
 
 @swagger_auto_schema(
@@ -622,7 +640,7 @@ def allGroups(request):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def changeStausGroup(request):
-    data = json.loads(request.body)
+    data = request.data
     group = data['group']
     status = data['status']
     squid_config_path = '/etc/squid/squid.conf'
@@ -639,16 +657,16 @@ def changeStausGroup(request):
     return JsonResponse({"msg": "done"}, status=200)
 
 @swagger_auto_schema(
-    method='GET',
+    method='POST',
     responses={200: 'Success', 400: 'Bad Request'},
-    operation_summary="API GET STATUS OF ELEMENTS IN GROUPS",
+    operation_summary="API POST STATUS OF ELEMENTS IN GROUPS",
     operation_description="This API to get status of elements of groups",
 )
-@api_view(['GET'])
+@api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def readFromFile(request):
     content= []
-    data = json.loads(request.body)
+    data = request.data
     squid_config_path = '/etc/squid/acl/'+data['file_name']+'.acl'
 
     try:
@@ -674,7 +692,7 @@ def readFromFile(request):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def changeStausElementsInGroup(request):
-    data = json.loads(request.body)
+    data = request.data
     print({"data":data})
     list_elements = data['list_elements']
     print({"list_elements":list_elements})
@@ -687,7 +705,7 @@ def changeStausElementsInGroup(request):
         for i, line in enumerate(lines):
             if line.lstrip('#').split('\n')[0] == target_url:
             # if target_url in line:
-                if uncomment:
+                if uncomment == False:
                     lines[i] = line.lstrip('#')
                 else:
                     lines[i] = '#' + line
@@ -789,7 +807,7 @@ def addElement(type,allow_by_auth,status,value):
 @authentication_classes([SessionAuthentication])
 def updateStatusRule(request,id):
     proxy_rule = ProxyRules.objects.get(id=id)
-    data = json.loads(request.body)
+    data = request.data
     # if proxy_rule.allow_by_auth == False:
     #     if proxy_rule.type == "ip":
     #         file_path = '/etc/squid/blocked_ip.acl'

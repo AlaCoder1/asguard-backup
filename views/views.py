@@ -104,19 +104,23 @@ def allProxyUsers(request):
 def allGProxyroups(request):
     if (request.method == 'GET'):
         list_line = []
-        config_file_path = '/etc/squid/squid.conf'
-        with open(config_file_path, 'r') as file:
-                    content = file.readlines()
-        for line in content:
-            if "squid/acl/" in line:
-                list_line.append(line)
-                
-        # Define a regular expression pattern to extract keywords
-        pattern = re.compile(r'acl (\w+) url_regex')
+    list_groups = []
+    config_file_path = '/etc/squid/squid.conf'
+    with open(config_file_path, 'r') as file:
+                content = file.readlines()
+    for line in content:
+        if "squid/acl/" in line:
+            list_line.append(line)
+            
 
-        groups = [pattern.findall(line)[0] for line in list_line if pattern.findall(line)]
-        
-        return groups
+    pattern = re.compile(r'acl (\w+) url_regex')
+
+    groups = [pattern.findall(line)[0] for line in list_line if pattern.findall(line)]
+    for i in groups:
+        target_line = 'http_access deny '+i
+        rslt = get_line_from_file(config_file_path,target_line)
+        list_groups.append({"name":i,"status":rslt})
+    return list_groups
 def getUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -556,7 +560,9 @@ def squid_proxy(request):
     generalInfo = getGeneraleInfo(request)
     statusEnable = statusEnableAuth(request)
     proxyRule = get_all_proxy_rules(request)
-    context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule)}
+    proxyGroups = allGProxyroups(request)
+    context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule),'proxyGroups' : json.dumps(proxyGroups)}
+    print('-------------:',proxyGroups)
     return render(request, 'squid_proxy.html',context)
 
 

@@ -10,7 +10,7 @@
         <v-row class="mt-5">
           <v-col cols="12" md="6">
             <v-text-field
-              id="filter-text-box"
+              id="filter-text-box-acl"
               density="compact"
               class="w-25"
               variant="solo"
@@ -19,7 +19,7 @@
               append-inner-icon="mdi-magnify"
               single-line
               hide-details
-              @input="onFilterTextBoxChanged"
+              @input="onFilterAclChanged"
             ></v-text-field>
           </v-col>
         </v-row>
@@ -88,28 +88,12 @@ export default {
     const columnAclList = [
       {
         headerName: "List name",
-        field: "list_name",
-        sortable: true,
+        field: "name",
         autoHeight: true,
-        filter: true,
-      },
-      {
-        headerName: "Category",
-        field: "category",
-        sortable: true,
-        filter: true,
-      },
-      {
-        headerName: "List Count",
-        field: "list_count",
-        sortable: true,
-        filter: true,
       },
       {
         headerName: "Status",
         field: "status",
-        sortable: true,
-        filter: true,
       },
       {
         headerName: "Actions",
@@ -135,9 +119,9 @@ export default {
       }
     };
 
-    const onFilterTextBoxChanged = () => {
+    const onFilterAclChanged = () => {
       gridApi.value.setQuickFilter(
-        document.getElementById("filter-text-box").value
+        document.getElementById("filter-text-box-acl").value
       );
     };
 
@@ -163,18 +147,18 @@ export default {
     </button>
     `;
       } else {
-        eGui.innerHTML = `
+        if (params.data.name === "adult") {
+          eGui.innerHTML = `No Adult For Instance`;
+        } else {
+          eGui.innerHTML = `
     <button 
       class="action-button edit"  
       data-action="edit">
          <i class="far fa-edit" style="color: #086eae;"></i> 
       </button>
-    <button 
-      class="action-button delete"
-      data-action="delete">
-        <i class="fas fa-times" style="color: #086eae;"></i>
-    </button>
+  
     `;
+        }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -206,15 +190,23 @@ export default {
       emitter.on("closeAclListModal", () => {
         state.isModalOpen = false;
       });
+
+      const proxyGroupsAttribute =
+        document.getElementById("app").attributes["proxyGroups"].value;
+      const proxyGroups = JSON.parse(proxyGroupsAttribute);
+
+      let mapedGroups = proxyGroups.map((i) => {
+        return {
+          name: i.name,
+          status: i.status === true ? 'Enable' : 'Disable'
+        };
+      });
+
       if (!rowDataAclList.value) {
         rowDataAclList.value = [];
       }
-      const newRow = {
-        list_name: "souhail",
-        category: "category",
-        list_count: "list_count",
-      };
-      rowDataAclList.value.push(newRow);
+
+      rowDataAclList.value = mapedGroups;
     });
 
     return {
@@ -226,8 +218,8 @@ export default {
       onGridReady,
       actionCellRenderer,
       defaultColDef,
-      onFilterTextBoxChanged,
       handleAction,
+      onFilterAclChanged,
     };
   },
 };

@@ -177,7 +177,6 @@ export default {
       const statusEnableAttribute =
         document.getElementById("app").attributes["statusEnable"].value;
       const statusEnable = JSON.parse(statusEnableAttribute);
-      console.log("statusEnable", statusEnable);
       state.enable = statusEnable;
     };
     const populateSquidUser = () => {

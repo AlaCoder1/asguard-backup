@@ -65,7 +65,7 @@ INSTALLED_APPS = [
     "backend.clamav",
     'backend.proxy',
     'channels',
-    'drf_yasg'
+    'drf_yasg',
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {

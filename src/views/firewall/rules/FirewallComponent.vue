@@ -170,6 +170,7 @@ export default defineComponent({
             "udp",
             "icmp type echo-request",
             "icmp type echo-reply",
+            "all"
           ],
           cellEditor: "CustomRichSelect",
           cellHeight: 20,

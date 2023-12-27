@@ -78,4 +78,5 @@ python manage.py init_clamav
 
 // commande to init squid 
 
-python manage.py create_files_squid.py
+python manage.py create_files_squid
+python manage.py  init_conf_squid

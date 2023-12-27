@@ -28,7 +28,7 @@ class Command(BaseCommand):
                 rules_list=serializer.data
                 rules_list=[l['sid'] for l in rules_list]
                 rules_sys_list=[l['sid'] for l in prepare_rule_attribut(rules_sys)]
-                if len(list(set(rules_list)-set(rules_sys_list)))!=0:
+                if len(list(set(rules_sys_list)-set(rules_list)))!=0:
                     rules_add = [log for log in rules_sys if log not in rules_list]
                     rules_delete = [log for log in rules_list if log not in rules_sys]   
                     if len(rules_add)!=0:

@@ -73,7 +73,7 @@
       :editRowRule="state.editRowRule"
       :modalModeRule="state.modalModeRule"
     />
-    
+
     <v-snackbar
       :timeout="2000"
       v-model="state.snackbar"
@@ -254,7 +254,6 @@ export default {
       const proxyRuleAttribute =
         document.getElementById("app").attributes["proxyRule"].value;
       const proxyRule = JSON.parse(proxyRuleAttribute);
-      console.log("proxyRule", proxyRule);
 
       let mapedRule = proxyRule.map((i) => {
         return {
@@ -269,7 +268,6 @@ export default {
           value: i.value,
         };
       });
-      console.log("mapedRule", mapedRule);
 
       if (!rowDataRules.value) {
         rowDataRules.value = [];

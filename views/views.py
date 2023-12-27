@@ -84,9 +84,9 @@ def statusEnableAuth(request):
                 list_line.append(line)
         for i in lines_to_check:
             if i in list_line:
-                enable = False
+                enable = True
             else:
-                enable =True
+                enable =False
         return enable
 def allProxyUsers(request):
     if (request.method == 'GET'):

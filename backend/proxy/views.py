@@ -657,12 +657,12 @@ def changeStausGroup(request):
     return JsonResponse({"msg": "done"}, status=200)
 
 @swagger_auto_schema(
-    method='GET',
+    method='POST',
     responses={200: 'Success', 400: 'Bad Request'},
-    operation_summary="API GET STATUS OF ELEMENTS IN GROUPS",
+    operation_summary="API POST STATUS OF ELEMENTS IN GROUPS",
     operation_description="This API to get status of elements of groups",
 )
-@api_view(['GET'])
+@api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def readFromFile(request):
     content= []

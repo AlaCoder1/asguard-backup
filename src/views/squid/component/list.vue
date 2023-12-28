@@ -279,7 +279,7 @@ export default {
           rule_name: i.rule_name,
           days: i.days,
           status: i.status === false ? "Disable" : "Enable",
-          allow_by_auth: i.allow_by_auth === false ? "Denied" : "Allow",
+          allow_by_auth: i.allow_by_auth === false ? "Disable" : "Enable",
           time_from: i.time_from ?? "--",
           time_to: i.time_to ?? "--",
           type: i.type,
@@ -322,7 +322,7 @@ export default {
             state.textAlert = response.data.msg;
 
             setTimeout(() => {
-              location.reload();
+              // location.reload();
             }, 1000);
           }
         })

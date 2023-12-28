@@ -175,13 +175,6 @@ export default {
               "Value is required",
               requiredIf(() => modalMode.value === "create")
             ),
-            isValidPassword: helpers.withMessage(
-              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
-
-              helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-              )
-            ),
           },
           confirm_password: {
             sameAsPassword: helpers.withMessage(
@@ -192,14 +185,6 @@ export default {
             required: helpers.withMessage(
               "Value is required",
               requiredIf(() => modalMode.value === "create")
-            ),
-
-            isValidPassword: helpers.withMessage(
-              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
-
-              helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-              )
             ),
           },
           userName: {
@@ -212,7 +197,8 @@ export default {
             required: helpers.withMessage(
               "Value is required",
               requiredIf(() => modalMode.value === "create")
-            ),email
+            ),
+            email,
           },
         },
       };
@@ -286,7 +272,7 @@ export default {
           .catch((i) => {
             state.snackbar = true;
             state.color = "red";
-            state.textAlert = i.response.data.error;
+            state.textAlert = i.response.data.msg;
           });
       } else {
         console.log("error", v$.value);

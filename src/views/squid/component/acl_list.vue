@@ -69,12 +69,14 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalSquidBlackList from "@/components/modals/ModalSquidBlackList.vue";
 import CertStatusRenderVue from "../agGridCustomRender/CertStatusRenderVue.vue";
+import CertAclStatus from "../agGridCustomRender/CertAclStatus.vue";
 export default {
   components: {
     AgGridVue,
     VButton,
     ModalSquidBlackList,
-    CertStatusRenderVue
+    CertStatusRenderVue,
+    CertAclStatus
   },
   setup() {
     const emitter = inject("emitter");
@@ -112,7 +114,7 @@ export default {
         field: "status",
         cellRendererSelector: function (params) {
           const status = {
-            component: "CertStatusRenderVue",
+            component: "CertAclStatus",
             params: params.data.status,
           };
           return status;
@@ -173,7 +175,7 @@ export default {
         if (params.data.name === "adult") {
           eGui.innerHTML = `No Adult For Instance`;
         } else {
-          if (params.data.status === "Enable") {
+          if (params.data.status === "Blocked") {
             eGui.innerHTML = `
             <button
               class="action-button edit"
@@ -189,14 +191,9 @@ export default {
             
 
     `;
-          }
-          else  {
+          } else {
             eGui.innerHTML = `
-            <button
-              class="action-button edit"
-              data-action="edit" >
-                <i class="far fa-edit" style="color: #086eae;"></i>
-              </button>
+          
             <button
               class="action-button enable"
               data-action="enable" title="Change Group Status">
@@ -235,7 +232,7 @@ export default {
 
           let payload = {
             group: rowData.name,
-            status: rowData.status === "Enable" ? true : false,
+            status: rowData.status === "Blocked" ? true : false,
           };
 
           axios
@@ -292,7 +289,7 @@ export default {
       let mapedGroups = proxyGroups.map((i) => {
         return {
           name: i.name,
-          status: i.status === true ? "Enable" : "Disable",
+          status: i.status === true ? "Blocked" : "Unblocked",
         };
       });
 

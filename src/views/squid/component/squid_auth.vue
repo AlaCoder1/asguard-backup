@@ -9,7 +9,7 @@
         </v-col>
         <v-col cols="8" class="mb-n6">
           <input type="checkbox" v-model="state.enable" />
-          <label class="ml-2">Enable</label>
+          <label class="ml-2">Disable</label>
         </v-col>
       </v-row>
       <v-row class="d-flex justify-end mt-5 mb-2">
@@ -123,7 +123,7 @@ export default {
     const columnUser = [
       {
         headerName: "Username",
-        field: "username",
+        cellRenderer: formatedUsername,
         sortable: true,
         autoHeight: true,
         filter: true,
@@ -183,13 +183,23 @@ export default {
       const proxyUserAttribute =
         document.getElementById("app").attributes["proxyUser"].value;
       const proxyUser = JSON.parse(proxyUserAttribute);
-      
 
       if (!rowDataUser.value) {
         rowDataUser.value = [];
       }
       rowDataUser.value = proxyUser;
     };
+
+    function formatedUsername(data) {
+   
+      let eGui = document.createElement("div");
+
+      eGui.innerHTML = `
+         ${data.data.username} ( ${data.data.email ?? '--'}  )
+        `;
+
+      return eGui;
+    }
 
     onMounted(() => {
       populateSquid();
@@ -314,6 +324,7 @@ export default {
       columnUser,
       rowDataUser,
       onGridReady,
+      formatedUsername,
       confirmDelete,
       cancelDelete,
       openModalAdd,

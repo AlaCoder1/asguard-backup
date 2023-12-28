@@ -40,6 +40,16 @@
             </ag-grid-vue>
           </div>
         </v-row>
+        <v-snackbar
+          :timeout="2000"
+          v-model="state.snackbar"
+          location="bottom right"
+          :color="state.color"
+        >
+          {{ state.textAlert }}
+
+          <template v-slot:actions> </template>
+        </v-snackbar>
 
         <ModalSquidBlackList
           :isOpen="state.isModalOpen"
@@ -51,6 +61,7 @@
 </template>
 
 <script>
+import axios from "axios";
 import { reactive, ref, onMounted, inject } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
@@ -66,6 +77,9 @@ export default {
   setup() {
     const emitter = inject("emitter");
     const state = reactive({
+      snackbar: false,
+      color: "",
+      textAlert: "",
       off: false,
       on: false,
       proxyPort: "",
@@ -135,29 +149,51 @@ export default {
 
       if (isCurrentRowEditing) {
         eGui.innerHTML = `
-    <button  
-      class="action-button update"
-      data-action="update">
-           update  
-    </button>
-    <button  
-      class="action-button cancel"
-      data-action="cancel">
-           cancel
-    </button>
+          <button
+            class="action-button update"
+            data-action="update">
+                update
+          </button>
+          <button
+            class="action-button cancel"
+            data-action="cancel">
+                cancel
+          </button>
     `;
       } else {
         if (params.data.name === "adult") {
           eGui.innerHTML = `No Adult For Instance`;
         } else {
-          eGui.innerHTML = `
-    <button 
-      class="action-button edit"  
-      data-action="edit">
-         <i class="far fa-edit" style="color: #086eae;"></i> 
-      </button>
-  
+          if (params.data.status === "Enable") {
+            eGui.innerHTML = `
+            <button
+              class="action-button edit"
+              data-action="edit" >
+                <i class="far fa-edit" style="color: #086eae;"></i>
+              </button>
+            <button
+              class="action-button enable"
+              data-action="enable" title="Change Group Status">
+                <i class="mdi mdi-eye-outline fa-lg"" style="color: #086eae; font-size:24px;"></i>
+              </button>
+
     `;
+          }
+          else  {
+            eGui.innerHTML = `
+            <button
+              class="action-button edit"
+              data-action="edit" >
+                <i class="far fa-edit" style="color: #086eae;"></i>
+              </button>
+            <button
+              class="action-button enable"
+              data-action="enable" title="Change Group Status">
+                <i class="mdi mdi-eye-off-outline fa-lg"" style="color: #086eae; font-size:24px;"></i>
+              </button>
+
+    `;
+          }
         }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
@@ -181,9 +217,56 @@ export default {
           state.isModalOpen = true;
 
           break;
+        case "enable":
+          console.log("rowData", rowData);
+          const csrfToken = getCookie("csrftoken");
+          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+          let payload = {
+            group: rowData.name,
+            status: rowData.status === "Enable" ? true : false,
+          };
+
+          axios
+            .post("/proxy/changeStausGroup", payload)
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+
+          break;
         default:
           break;
       }
+    };
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
     };
 
     onMounted(() => {
@@ -198,7 +281,7 @@ export default {
       let mapedGroups = proxyGroups.map((i) => {
         return {
           name: i.name,
-          status: i.status === true ? 'Enable' : 'Disable'
+          status: i.status === true ? "Enable" : "Disable",
         };
       });
 

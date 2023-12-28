@@ -104,14 +104,8 @@ def enable_by_time():
 @authentication_classes([SessionAuthentication])
 def addRuleSquid(request):
     msg = ''
-    line = ''
     if (request.method == 'POST'):
         data = request.data
-        # data = request.data
-        print({"data":data})
-        # time_from = data.get('time_from','')
-        # time_to = data.get('time_to','')
-        # days = data.get('days','')
         write_in_file = True
         if data['allow_by_auth'] == False:
             if data['type'] == "ip":
@@ -119,7 +113,6 @@ def addRuleSquid(request):
             elif data['type'] == "domain":
                 if data['time_from'] != '':
                 # if time_from != '' or time_to !='':
-                    print('alialiali')
                     squid_path = '/etc/squid/squid.conf'
                     name_rule = 'block_'+data['value']
                     time_block_rule = 'time_'+name_rule
@@ -150,7 +143,6 @@ def addRuleSquid(request):
             value = '#'+data['value']
         else:
             value = data['value']
-        print({"write_in_file":write_in_file})
         if write_in_file == True:
             try:
                 with open(file_path, 'a') as file:
@@ -193,15 +185,15 @@ def deleteRuleSquid(request,id):
         if data.type == "ip":
             file_path = '/etc/squid/blocked_ip.acl'
         elif data.type == "domain":
-            if data.time_from != '':
+            if data.time_from != None:
                 squid_path = '/etc/squid/squid.conf'
                 command = "sed -i '/"+data.value+"/d' "+squid_path
-                print({"<command":command})
                 stdout, stderr = run_command(command)
                 if stderr =="":
                     data.delete()
                     msg = f"{data.type} address {data.value} unblocked successfully"
                     status =200
+                    return JsonResponse({"msg": msg}, status=status)
                 else:
                     msg =stderr
                     status = 404 

@@ -322,7 +322,7 @@ export default {
             state.textAlert = response.data.msg;
 
             setTimeout(() => {
-              // location.reload();
+              location.reload();
             }, 1000);
           }
         })

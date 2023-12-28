@@ -68,11 +68,13 @@ import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalSquidBlackList from "@/components/modals/ModalSquidBlackList.vue";
+import CertStatusRenderVue from "../agGridCustomRender/CertStatusRenderVue.vue";
 export default {
   components: {
     AgGridVue,
     VButton,
     ModalSquidBlackList,
+    CertStatusRenderVue
   },
   setup() {
     const emitter = inject("emitter");
@@ -108,6 +110,13 @@ export default {
       {
         headerName: "Status",
         field: "status",
+        cellRendererSelector: function (params) {
+          const status = {
+            component: "CertStatusRenderVue",
+            params: params.data.status,
+          };
+          return status;
+        },
       },
       {
         headerName: "Actions",
@@ -174,8 +183,10 @@ export default {
             <button
               class="action-button enable"
               data-action="enable" title="Change Group Status">
-                <i class="mdi mdi-eye-outline fa-lg"" style="color: #086eae; font-size:24px;"></i>
+                <i class="mdi mdi-lock-open-outline fa-lg"" style="color: #086eae; font-size:24px;"></i>
               </button>
+
+            
 
     `;
           }
@@ -189,7 +200,7 @@ export default {
             <button
               class="action-button enable"
               data-action="enable" title="Change Group Status">
-                <i class="mdi mdi-eye-off-outline fa-lg"" style="color: #086eae; font-size:24px;"></i>
+                <i class="mdi mdi-lock fa-lg"" style="color: #086eae; font-size:24px;"></i>
               </button>
 
     `;

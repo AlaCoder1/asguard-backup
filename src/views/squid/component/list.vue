@@ -93,12 +93,16 @@ import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalAddRule from "@/components/modals/ModalAddRule.vue";
+import CertStatusRenderVue from "../agGridCustomRender/CertStatusRenderVue.vue";
+import CertAllowStatus from "../agGridCustomRender/CertAllowStatus.vue";
 
 export default {
   components: {
     AgGridVue,
     VButton,
     ModalAddRule,
+    CertStatusRenderVue,
+    CertAllowStatus,
   },
   setup() {
     const emitter = inject("emitter");
@@ -140,6 +144,13 @@ export default {
       {
         headerName: "Allowed by auth",
         field: "allow_by_auth",
+        cellRendererSelector: function (params) {
+          const allow_by_auth = {
+            component: "CertAllowStatus",
+            params: params.data.allow_by_auth,
+          };
+          return allow_by_auth;
+        },
       },
       {
         headerName: "Start",
@@ -152,6 +163,13 @@ export default {
       {
         headerName: "Status",
         field: "status",
+        cellRendererSelector: function (params) {
+          const status = {
+            component: "CertStatusRenderVue",
+            params: params.data.status,
+          };
+          return status;
+        },
       },
       {
         headerName: "Actions",

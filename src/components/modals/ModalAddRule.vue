@@ -479,16 +479,21 @@ export default {
     watch(
       () => editRowRule.value,
       (val) => {
+        console.log("val", val);
         state.rowEdit = val;
         state.formData.status = val.status === "Disable" ? false : true;
         state.formData.allodwedAuth =
-          val.allow_by_auth === "Denied" ? false : true;
+          val.allow_by_auth === "Disable" ? false : true;
       }
     );
     watch(
       () => modalModeRule.value,
       (val) => {
         console.log("modalModeRule", val);
+        if (val === "create") {
+          state.formData.allodwedAuth = false;
+          state.formData.status = false;
+        }
       }
     );
     const closeModal = () => {
@@ -506,8 +511,6 @@ export default {
       state.formData.valueIp = "";
       state.formData.ruleName = null;
       state.formData.prefix = "";
-      state.formData.allodwedAuth = false;
-      state.formData.status = false;
     };
     const getCookie = (name) => {
       let cookieValue = null;

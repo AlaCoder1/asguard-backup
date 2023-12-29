@@ -3,18 +3,18 @@
       <v-chip
         color="green"
         text-color="white"
-        v-if="params.data.allow_by_auth === 'Enable'"
-        >{{ params.data.allow_by_auth }}</v-chip
+        v-if="params.data.status === 'Unblocked'"
+        >{{ params.data.status }}</v-chip
       >
       <v-chip color="red" text-color="white" v-else>
-        {{ params.data.allow_by_auth }}</v-chip
+        {{ params.data.status }}</v-chip
       >
     </div>
   </template>
   
   <script>
   export default {
-    name: "CertAllowStatus",
+    name: "CertAclStatus",
     props: {
       params: Object,
     },
@@ -23,7 +23,7 @@
   
   <style scoped>
   .cert-status-render {
-    margin-left: 10px;
+    margin-left: -10px;
     justify-content: center;
     align-items: center;
     height: 100%;

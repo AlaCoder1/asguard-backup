@@ -22,12 +22,12 @@ def run_command(command):
 
 
 @swagger_auto_schema(
-    method='GET',
+    method='POST',
     responses={200: 'Success', 400: 'Bad Request'},
     operation_summary="API RESTAR SQUID",
     operation_description="This API to restart the squid",
 )
-@api_view(['GET'])
+@api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def restart(request):
     process = subprocess.run(['systemctl', 'restart', 'squid'], capture_output=True, text=True)
@@ -724,14 +724,7 @@ def changeStausElement(target_url,uncomment,file_path):
         
     return JsonResponse({"msg": "done"}, status=200)
 
-@swagger_auto_schema(
-    method='DELETE',
-    responses={200: 'Success', 400: 'Bad Request'},
-    operation_summary="API DELETE ELEMENT FROM GROUPS",
-    operation_description="This API to delete element from groups",
-)
-@api_view(['DELETE'])
-@authentication_classes([SessionAuthentication])
+
 def deleteElement(type,value,file_path):
     new_content = []
     command = "cat " + file_path

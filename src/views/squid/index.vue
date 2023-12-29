@@ -113,9 +113,10 @@ export default {
           // }, 1000);
         })
         .catch((i) => {
+          console.log('i.response.data.msg',i.response.data.msg)
           state.snackbar = true;
           state.color = "red";
-          state.textAlert = i.response.data.error;
+          state.textAlert = i.response.data.msg;
           state.loading = false;
           state.isLoadingDialogue = false;
         });

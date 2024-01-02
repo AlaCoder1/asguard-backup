@@ -198,7 +198,7 @@ export default {
         email: "",
         role: null,
         groups: null,
-        deactivateUser: false,
+        deactivateUser: true,
       },
       userRole: null,
       userId: null,
@@ -318,7 +318,7 @@ export default {
         (this.state.formData.email = ""),
         (this.state.formData.role = null),
         (this.state.formData.groups = null),
-        (this.state.formData.deactivateUser = false);
+        (this.state.formData.deactivateUser = true);
     },
     getCookie(name) {
       let cookieValue = null;

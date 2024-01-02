@@ -2,8 +2,12 @@ from django.db import models
 from django.utils import timezone
 # Create your models here.
 
+class ServerSatus(models.Model):
+    status_server = models.BooleanField(default=False)
 
-
+    class Meta:
+        db_table = 'squid_conf'
+        
 class ProxyRules(models.Model):
     rule_name = models.CharField(max_length=200, null=True)
     type = models.CharField(max_length=20, null = False)
@@ -13,6 +17,8 @@ class ProxyRules(models.Model):
     time_from = models.TimeField(null=True) 
     time_to = models.TimeField(null=True)
     allow_by_auth = models.BooleanField(default=False)
+    squid_conf = models.ForeignKey(
+        ServerSatus, on_delete=models.CASCADE, null=True,default = 1)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
 
     def save(self, *args, **kwargs):
@@ -27,6 +33,8 @@ class ProxyRules(models.Model):
 class ProxyUser(models.Model):
     username = models.CharField(max_length=200, null=True, unique=True)
     email = models.CharField(max_length=200, null=True, unique=True)
-
+    squid_conf = models.ForeignKey(
+        ServerSatus, on_delete=models.CASCADE, null=True,default = 1)
+    
     class Meta:
         db_table = 'proxy_user'  

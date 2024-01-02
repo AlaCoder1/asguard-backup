@@ -319,7 +319,7 @@ def get_generale_info(request):
     method='PUT',
     responses={200: 'Success', 400: 'Bad Request'},
     operation_summary="API PUT GENERAL INFORMATION",
-    operation_description="This API to update general information",
+    operation_description="This API to update the port in general information",
 )
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])

@@ -489,7 +489,7 @@ def get_alerts_from_database(request):
 
 @login_required(login_url='/')
 def user_certificate_managment_page(request):
-    usr=get_users(request)
+    usr=getUsers(request)
     grp=get_groups(request)
     srv=get_servers(request)
     context = {'users':usr,"groups":grp,"servers":srv}

@@ -9,7 +9,7 @@
         </div>
       </template>
     </base-layout>
-    <v-overlay v-model="state.loading">
+    <!-- <v-overlay v-model="state.loading">
       <v-dialog
         v-model="state.isLoadingDialogue"
         :scrim="false"
@@ -27,8 +27,8 @@
           </v-card-text>
         </v-card>
       </v-dialog>
-    </v-overlay>
-    <v-snackbar
+    </v-overlay> -->
+    <!-- <v-snackbar
       location="top"
       v-model="state.snackbarServer"
       vertical
@@ -49,16 +49,16 @@
           Close
         </v-btn>
       </template>
-    </v-snackbar>
+    </v-snackbar> -->
 
-    <v-snackbar
+    <!-- <v-snackbar
       :timeout="2000"
       v-model="state.snackbar"
       location="bottom right"
       :color="state.color"
     >
       {{ state.textAlert }}
-    </v-snackbar>
+    </v-snackbar> -->
   </v-app>
 </template>
 
@@ -80,65 +80,65 @@ export default {
   },
 
   setup() {
-    const state = reactive({
-      textAlert: "",
-      color: "",
-      snackbarServer: false,
-      snackbar: false,
-      loading: false,
-      isLoadingDialogue: false,
-    });
-    onMounted(() => {
-      state.snackbarServer = true;
-    });
-    const restart = () => {
-      console.log("oui");
-      state.loading = true;
-      state.isLoadingDialogue = true;
+    // const state = reactive({
+    //   textAlert: "",
+    //   color: "",
+    //   snackbarServer: false,
+    //   snackbar: false,
+    //   loading: false,
+    //   isLoadingDialogue: false,
+    // });
+    // onMounted(() => {
+    //   state.snackbarServer = true;
+    // });
+    // const restart = () => {
+    //   console.log("oui");
+    //   state.loading = true;
+    //   state.isLoadingDialogue = true;
 
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    //   const csrfToken = getCookie("csrftoken");
+    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios
-        .post("/proxy/restart")
-        .then((response) => {
-          state.snackbar = true;
-          state.color = "success";
-          state.textAlert = response.data.msg;
-          state.loading = false;
-          state.isLoadingDialogue = false;
+    //   axios
+    //     .post("/proxy/restart")
+    //     .then((response) => {
+    //       state.snackbar = true;
+    //       state.color = "success";
+    //       state.textAlert = response.data.msg;
+    //       state.loading = false;
+    //       state.isLoadingDialogue = false;
 
-          // setTimeout(() => {
-          //   location.reload();
-          // }, 1000);
-        })
-        .catch((i) => {
-          console.log('i.response.data.msg',i.response.data.msg)
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.msg;
-          state.loading = false;
-          state.isLoadingDialogue = false;
-        });
-    };
-    const getCookie = (name) => {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === name + "=") {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
-    };
-    return {
-      state,
-      restart,
-    };
+    //       // setTimeout(() => {
+    //       //   location.reload();
+    //       // }, 1000);
+    //     })
+    //     .catch((i) => {
+    //       console.log('i.response.data.msg',i.response.data.msg)
+    //       state.snackbar = true;
+    //       state.color = "red";
+    //       state.textAlert = i.response.data.msg;
+    //       state.loading = false;
+    //       state.isLoadingDialogue = false;
+    //     });
+    // };
+    // const getCookie = (name) => {
+    //   let cookieValue = null;
+    //   if (document.cookie && document.cookie !== "") {
+    //     const cookies = document.cookie.split(";");
+    //     for (let i = 0; i < cookies.length; i++) {
+    //       const cookie = cookies[i].trim();
+    //       if (cookie.substring(0, name.length + 1) === name + "=") {
+    //         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+    //         break;
+    //       }
+    //     }
+    //   }
+    //   return cookieValue;
+    // };
+    // return {
+    //   state,
+    //   restart,
+    // };
   },
 };
 </script>

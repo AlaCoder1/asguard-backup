@@ -336,16 +336,7 @@ def update_generale_info(request):
         
     with open(squid_conf_path, 'w') as f:
         f.writelines(lines)
-    if data['enable'] == True:
-        cmd = "systemctl start squid"
-    else:
-        cmd = "systemctl stop squid"
-    
-    output,error = run_command(cmd)
-    if error == '':
-        return JsonResponse({"msg":"Port updated successfully."},status=200)
-    else:
-        return JsonResponse({"msg":error},status=404 )
+    return JsonResponse({"msg":"Port updated successfully."},status=200)
 
 @swagger_auto_schema(
     method='POST',

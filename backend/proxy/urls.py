@@ -29,5 +29,7 @@ urlpatterns = [
     path('changeStausElementsInGroup', views.changeStausElementsInGroup, name='changeStausElementsInGroup'), 
 
     path('restart', views.restart, name='restart'), 
+    path('start', views.start, name='start'), 
+    path('stop', views.stop, name='stop'), 
     
 ]

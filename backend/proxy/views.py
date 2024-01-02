@@ -40,6 +40,43 @@ def restart(request):
     return JsonResponse({"msg": msg}, status=status)
 
 @swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API START SQUID",
+    operation_description="This API to start the squid",
+)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+def start(request):
+    process = subprocess.run(['systemctl', 'start', 'squid'], capture_output=True, text=True)
+    if process.returncode == 0:
+        msg = "Squid start successfully"
+        status = 200
+    else:
+        msg = "Squid start failed"
+        status =404 
+    return JsonResponse({"msg": msg}, status=status)
+
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API Stop SQUID",
+    operation_description="This API to stop the squid",
+)
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+def stop(request):
+    process = subprocess.run(['systemctl', 'stop', 'squid'], capture_output=True, text=True)
+    if process.returncode == 0:
+        msg = "Squid stoped successfully"
+        status = 200
+    else:
+        msg = "Squid stoped failed"
+        status =404 
+    return JsonResponse({"msg": msg}, status=status)
+
+@swagger_auto_schema(
     method='GET',
     responses={200: 'Success', 400: 'Bad Request'},
     operation_summary="API GET ALL PROXY's RULES",
@@ -299,16 +336,7 @@ def update_generale_info(request):
         
     with open(squid_conf_path, 'w') as f:
         f.writelines(lines)
-    if data['enable'] == True:
-        cmd = "systemctl start squid"
-    else:
-        cmd = "systemctl stop squid"
-    
-    output,error = run_command(cmd)
-    if error == '':
-        return JsonResponse({"msg":"Port updated successfully."},status=200)
-    else:
-        return JsonResponse({"msg":error},status=404 )
+    return JsonResponse({"msg":"Port updated successfully."},status=200)
 
 @swagger_auto_schema(
     method='POST',

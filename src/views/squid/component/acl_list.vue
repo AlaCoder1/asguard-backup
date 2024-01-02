@@ -24,7 +24,7 @@
           </v-col>
         </v-row>
         <v-row>
-          <div style="overflow: hidden; flex-grow: 1">
+          <div class="mb-10" style="overflow: hidden; flex-grow: 1">
             <ag-grid-vue
               id="grid-wrapper"
               domLayout="autoHeight"
@@ -180,7 +180,7 @@ export default {
             <button
               class="action-button edit"
               data-action="edit" >
-                <i class="far fa-edit" style="color: #086eae;"></i>
+                <i class="mdi mdi-square-edit-outline fa-lg" style="color: #086eae; font-size:24px;"></i>
               </button>
             <button
               class="action-button enable"

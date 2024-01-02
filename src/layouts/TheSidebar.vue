@@ -3,6 +3,7 @@
     v-model="drawer"
     :rail="rail"
     hover
+    permanent
     foating
     :rail-width="67"
     class="global-drawer"

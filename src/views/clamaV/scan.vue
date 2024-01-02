@@ -25,17 +25,17 @@
         <v-divider></v-divider>
       </v-col>
     </v-row>
-
+ 
     <div id="boxes" class="mt-10">
       <div id="leftbox">
         <!-- <img
           src="../../assets/images/Fichier 2icone-Sasyx-supp 1.svg"
           style="margin-bottom: -7px"
-          
+         
         />
         <h5 class="title mr-2">Full virus scan</h5>
         <span class="mb-5 subtitle">Scan your entire device</span><br />
-
+ 
         <v-btn
           rounded
           outlined
@@ -48,7 +48,7 @@
           <span>Scan now</span>
         </v-btn> -->
       </div>
-
+ 
       <div id="middlebox" class="mb-5">
         <!-- <img
           src="../../assets/images/Fichier 1icone-Asguard-scanFolder 1.svg"
@@ -75,14 +75,14 @@
             </template>
           </v-text-field>
         </div> -->
-
+ 
         <img
           src="../../assets/images/Fichier 2icone-Sasyx-supp 1.svg"
           style="margin-bottom: -7px"
         />
         <h5 class="title mr-2">Full virus scan</h5>
         <span class="mb-5 subtitle">Scan your entire device</span><br />
-
+ 
         <v-btn
           rounded
           outlined
@@ -95,7 +95,7 @@
           <span>Scan now</span>
         </v-btn>
       </div>
-
+ 
       <div id="rightbox">
         <!-- <img src="../../assets/images/Group 182.svg" />
         <h5 class="title mr-2">Full virus scan</h5>
@@ -116,15 +116,15 @@
         </v-btn> -->
       </div>
     </div>
-
+ 
     <v-row class="mb-10" id="newRow">
       <v-col cols="12">
-        <scanUpdate />
+        <scanUpdate :rowDataLog="state.rowDataLog"/>
       </v-col>
     </v-row>
-
+ 
     <ModalScanResult :isOpen="state.isModalOpen" :rowData="state.rowData" />
-
+ 
     <v-snackbar
       :timeout="2000"
       v-model="state.snackbar"
@@ -132,7 +132,7 @@
       :color="state.color"
     >
       {{ state.textAlert }}
-
+ 
       <template v-slot:actions> </template>
     </v-snackbar>
   </div>
@@ -153,12 +153,13 @@ export default {
     ModalScanResult,
     VButton,
   },
-
+ 
   setup() {
     const emitter = inject("emitter");
-
+ 
     const state = reactive({
       rowData: {},
+      rowDataLog: {},
       isModalOpen: false,
       snackbar: false,
       color: "",
@@ -166,7 +167,7 @@ export default {
       loading: false,
       isLoadingDialogue: false,
     });
-
+ 
     const getCookie = (name) => {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {
@@ -181,7 +182,7 @@ export default {
       }
       return cookieValue;
     };
-
+ 
     const save = () => {
       state.loading = true;
       state.isLoadingDialogue = true;
@@ -194,10 +195,11 @@ export default {
             console.log('response',response)
             state.snackbar = true;
             state.color = "success";
-            state.textAlert = response.data.message;
+            state.textAlert = 'Success Scan';
             state.loading = false;
             state.isLoadingDialogue = false;
             state.rowData = response.data.result;
+            state.rowDataLog = response.data.log_files;
             state.isModalOpen = true;
           }
         })
@@ -206,7 +208,7 @@ export default {
           state.loading = false;
           state.isLoadingDialogue = false;
           state.color = "red";
-          state.textAlert = i.response.data.error;
+          state.textAlert = 'Error';
         });
     };
     onMounted(() => {
@@ -240,21 +242,21 @@ export default {
   text-align: center;
   color: #213e9f;
 }
-
+ 
 #leftbox {
   float: left;
   width: 25%;
   text-align: center;
   height: 280px;
 }
-
+ 
 #middlebox {
   float: left;
   width: 50%;
   height: 280px;
   text-align: center;
 }
-
+ 
 #rightbox {
   float: right;
   width: 25%;

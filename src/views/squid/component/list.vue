@@ -2,7 +2,7 @@
   <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
     <v-row>
       <v-col cols="12">
-        <h4>List</h4>
+        <h4>Rules</h4>
         <v-divider class="mt-2"></v-divider>
         <v-row class="mt-5">
           <v-col cols="12" md="6">

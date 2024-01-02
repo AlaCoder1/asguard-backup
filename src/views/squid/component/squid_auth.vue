@@ -1,7 +1,7 @@
 <template>
   <v-col cols="6">
     <h4>Squid authentification</h4>
-    <v-divider class="mt-2"></v-divider>
+    <v-divider style="margin-top: 14px;" ></v-divider>
     <v-card class="mt-3">
       <v-row class="mt-1 ml-1">
         <v-col cols="4">

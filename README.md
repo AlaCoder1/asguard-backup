@@ -75,3 +75,8 @@ python manage.py init_alerts_suricata -id id_suricata
 // commande to init default values clamav
 
 python manage.py init_clamav
+
+// commande to init squid 
+
+python manage.py create_files_squid
+python manage.py  init_conf_squid

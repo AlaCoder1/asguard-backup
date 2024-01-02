@@ -129,15 +129,15 @@ export default {
       type: Boolean,
       required: true,
     },
-    // rowData: {
-    //   type: Object,
-    //   required: true,
-    // },
+    rowData: {
+      type: Object,
+      required: true,
+    },
   },
 
   setup(props) {
-    // const { isOpen, rowData } = toRefs(props);
-    const { isOpen } = toRefs(props);
+    const { isOpen, rowData } = toRefs(props);
+    // const { isOpen } = toRefs(props);
     const emitter = inject("emitter");
     const state = reactive({
       openModalResult: false,
@@ -159,22 +159,22 @@ export default {
         state.openModalResult = val;
       }
     );
-    // watch(
-    //   () => rowData.value,
-    //   (val) => {
-    //     console.log("valRowData", val);
-    //     // state.known= "",
-    //     // state.engine= "",
-    //     // state.directories= "",
-    //     // state.scannedFiles= "",
-    //     // state.infectedFiles= "",
-    //     // state.dataScanned= "",
-    //     // state.dataRead= "",
-    //     // state.time= "",
-    //     // state.startDate= "",
-    //     // state.endDate= "",
-    //   }
-    // );
+    watch(
+      () => rowData.value,
+      (val) => {
+        console.log("valRowData", val);
+        state.known= val.known_viruses;
+        state.engine= val.engine_version;
+        state.directories= val.scanned_directories;
+        state.scannedFiles= val.scanned_files;
+        state.infectedFiles= val.infected_files;
+        state.dataScanned= `${val.data_scanned.value} ${val.data_scanned.unit}`;
+        state.dataRead= val.known_viruses;
+        state.time= `${val.scan_time.value} ${val.scan_time.unit}`;
+        state.startDate= val.start_date;
+        state.endDate= val.end_date;
+      }
+    );
 
     const closeModal = () => {
       emitter.emit("closeModalScan");

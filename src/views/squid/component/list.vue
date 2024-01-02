@@ -73,7 +73,7 @@
       :editRowRule="state.editRowRule"
       :modalModeRule="state.modalModeRule"
     />
-    
+
     <v-snackbar
       :timeout="2000"
       v-model="state.snackbar"
@@ -93,12 +93,16 @@ import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalAddRule from "@/components/modals/ModalAddRule.vue";
+import CertStatusRenderVue from "../agGridCustomRender/CertStatusRenderVue.vue";
+import CertAllowStatus from "../agGridCustomRender/CertAllowStatus.vue";
 
 export default {
   components: {
     AgGridVue,
     VButton,
     ModalAddRule,
+    CertStatusRenderVue,
+    CertAllowStatus,
   },
   setup() {
     const emitter = inject("emitter");
@@ -140,6 +144,13 @@ export default {
       {
         headerName: "Allowed by auth",
         field: "allow_by_auth",
+        cellRendererSelector: function (params) {
+          const allow_by_auth = {
+            component: "CertAllowStatus",
+            params: params.data.allow_by_auth,
+          };
+          return allow_by_auth;
+        },
       },
       {
         headerName: "Start",
@@ -152,6 +163,13 @@ export default {
       {
         headerName: "Status",
         field: "status",
+        cellRendererSelector: function (params) {
+          const status = {
+            component: "CertStatusRenderVue",
+            params: params.data.status,
+          };
+          return status;
+        },
       },
       {
         headerName: "Actions",
@@ -254,7 +272,6 @@ export default {
       const proxyRuleAttribute =
         document.getElementById("app").attributes["proxyRule"].value;
       const proxyRule = JSON.parse(proxyRuleAttribute);
-      console.log("proxyRule", proxyRule);
 
       let mapedRule = proxyRule.map((i) => {
         return {
@@ -262,14 +279,13 @@ export default {
           rule_name: i.rule_name,
           days: i.days,
           status: i.status === false ? "Disable" : "Enable",
-          allow_by_auth: i.allow_by_auth === false ? "Denied" : "Allow",
+          allow_by_auth: i.allow_by_auth === false ? "Disable" : "Enable",
           time_from: i.time_from ?? "--",
           time_to: i.time_to ?? "--",
           type: i.type,
           value: i.value,
         };
       });
-      console.log("mapedRule", mapedRule);
 
       if (!rowDataRules.value) {
         rowDataRules.value = [];

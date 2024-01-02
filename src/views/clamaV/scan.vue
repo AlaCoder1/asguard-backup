@@ -191,13 +191,14 @@ export default {
         .get("/clamaV/Fullscan")
         .then((response) => {
           if (response.status == "200") {
+            console.log('response',response)
             state.snackbar = true;
             state.color = "success";
             state.textAlert = response.data.message;
             state.loading = false;
             state.isLoadingDialogue = false;
-            // state.rowData = response.data;
-            // state.isModalOpen = true;
+            state.rowData = response.data.result;
+            state.isModalOpen = true;
           }
         })
         .catch((i) => {

@@ -21,47 +21,84 @@
     </v-overlay>
     <v-row>
       <v-col cols="6">
-        <h4>General information</h4>
+        <h4>
+          General information
+          <i
+            class="mdi mdi-play-circle"
+            style="color: #4caf50; font-size: 20px; cursor: pointer"
+            title="Start Server"
+            @click="startStopRestartServer('Start')"
+          ></i>
+          <i
+            class="mdi mdi-stop-circle"
+            title="Stop Server"
+            style="color: #b00020; font-size: 20px; cursor: pointer"
+            @click="startStopRestartServer('Stop')"
+          ></i>
+          <i
+            class="mdi mdi-reload"
+            title="Restart Server"
+            style="color: #4caf50; font-size: 20px; cursor: pointer"
+            @click="startStopRestartServer('Restart')"
+          ></i>
+        </h4>
         <v-divider class="mt-2"></v-divider>
-
-        <v-row class="mt-1">
-          <v-col cols="4" class="mt-4">
-            <label>Enable</label>
-          </v-col>
-          <v-col cols="8" class="mb-n6">
-            <v-switch color="indigo" v-model="state.enableState"></v-switch>
-          </v-col>
-
-          <v-col cols="4" class="mt-7">
-            <label>Proxy port</label>
-          </v-col>
-          <v-col cols="5" class="mt-3">
-            <v-text-field
-              label="Proxy Port"
-              v-model="state.proxyPort"
-            ></v-text-field>
-            <p class="error-feedback mb-5" v-if="v$.proxyPort.$error">
-              {{ v$.proxyPort.$errors[0].$message }}
-            </p>
-          </v-col>
-        </v-row>
-        <v-row class="mt-5">
-          <div>
-            <VButton
-              rounded
-              outlined
-              color="#213E9F"
-              label-color="#ffffff"
-              label="Save"
-              :isLarge="true"
-              class="ml-2"
-              @click="saveGeneralInfo"
-            />
-          </div>
-        </v-row>
+        <v-card class="mt-3">
+          <v-row class="mt-1 ml-1">
+            <v-col cols="4" class="mt-7">
+              <label>Proxy port</label>
+            </v-col>
+            <v-col cols="5" class="mt-3">
+              <v-text-field
+                label="Proxy Port"
+                v-model="state.proxyPort"
+              ></v-text-field>
+              <p class="error-feedback mb-5" v-if="v$.proxyPort.$error">
+                {{ v$.proxyPort.$errors[0].$message }}
+              </p>
+            </v-col>
+          </v-row>
+          <v-row class="d-flex justify-end mt-1 mb-2">
+            <div>
+              <VButton
+                rounded
+                outlined
+                color="#213E9F"
+                label-color="#ffffff"
+                label="Save"
+                :isLarge="true"
+                class="mr-4"
+                @click="saveGeneralInfo"
+              />
+            </div>
+          </v-row>
+        </v-card>
       </v-col>
 
       <squid_auth />
+      <v-dialog v-model="state.dialogServer" max-width="500px">
+        <v-card>
+          <v-card-title class="headline"
+            >{{ state.statusServer }} Confirmation</v-card-title
+          >
+          <v-card-text
+            >Are you sure you want to {{ state.statusServer }} this rule
+            ?</v-card-text
+          >
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              color="blue darken-1"
+              text
+              @click="state.dialogServer = false"
+              >Cancel</v-btn
+            >
+            <v-btn color="blue darken-1" text @click="confirmationServerState"
+              >{{ state.statusServer }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
       <v-snackbar
         :timeout="2000"
         v-model="state.snackbar"
@@ -77,15 +114,15 @@
 </template>
 
 <script>
-import { reactive, ref, computed, onMounted, inject } from "vue";
+import { reactive, computed, onMounted } from "vue";
+import axios from "axios";
+import squid_auth from "./squid_auth.vue";
 import useValidate from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
 import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import squid_auth from "./squid_auth.vue";
-import axios from "axios";
 
 export default {
   components: {
@@ -95,6 +132,8 @@ export default {
   },
   setup() {
     const state = reactive({
+      dialogServer: false,
+      statusServer: null,
       snackbar: false,
       color: "",
       textAlert: "",
@@ -130,7 +169,6 @@ export default {
         state.isLoadingDialogue = true;
 
         let payload = {
-          enable: state.enableState,
           port: state.proxyPort,
         };
 
@@ -173,7 +211,42 @@ export default {
       }
       return cookieValue;
     };
+    const confirmationServerState = () => {
+      let status = state.statusServer.toLowerCase();
+      state.dialogServer = false;
+      state.loading = true;
+      state.isLoadingDialogue = true;
 
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios
+        .post(`/proxy/${status}`)
+        .then((response) => {
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.msg;
+          state.loading = false;
+          state.isLoadingDialogue = false;
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          console.log("i.response.data.msg", i.response);
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.msg;
+          state.loading = false;
+          state.isLoadingDialogue = false;
+        });
+    };
+
+    const startStopRestartServer = (item) => {
+      state.dialogServer = true;
+      state.statusServer = item;
+    };
     const populate = () => {
       const generalInfoAttribute =
         document.getElementById("app").attributes["generalInfo"].value;
@@ -189,6 +262,8 @@ export default {
       v$,
       state,
       saveGeneralInfo,
+      startStopRestartServer,
+      confirmationServerState,
     };
   },
 };

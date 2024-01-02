@@ -11,12 +11,7 @@ from backend.network.address import *
 # Version without SSh connection
 from .functions import *
 from django.db.models import Q
-# end Version without SSh connection
-# Version SSh connection
-# from .remoteFunctions import *
-# end Version SSh connection
 from django.core import serializers
-from django.views.decorators.csrf import csrf_exempt
 # Create your views here.
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -69,7 +64,6 @@ def deleteRule(request,id):
             rules = Rule.objects.get(id=id)
             rule=rules.rule
             type_rules=rules.type_rule
-            description=rules.rule_description
              #get object of interface type
             interfaceObject= Interface.objects.get(id=rules.interface_id)
             #get interface name to execute command systeme
@@ -178,14 +172,14 @@ def saveRules(request,name_interface):
               status=400
 
         else:
+          config=get_config_file(ifname)
           #appel la fonction pour initialiser les fichies nftables.conf
           return_init_file_nftables = init_file_nftables(ifname)
           if return_init_file_nftables:
             #appel la fonction pour retourner rule à ajouter 
             rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
             ruleMsg=rule
-            if not Rule.objects.filter(Q(rule=rule)& Q(rule_description=rule_description)).exists():
-              config=get_config_file(ifname)
+            if not Rule.objects.filter(Q(rule=rule) & Q(rule_description=rule_description)).exists():
             #appel la fonction pour ajouter rule dans le système
               return_add_rule=add_rule_remote(rule,ifname,type_rule,config,rule_description)
               if return_add_rule is True:

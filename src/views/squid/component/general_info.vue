@@ -24,18 +24,21 @@
         <h4>
           General information
           <i
+            v-if="!state.enableState"
             class="mdi mdi-play-circle"
             style="color: #4caf50; font-size: 20px; cursor: pointer"
             title="Start Server"
             @click="startStopRestartServer('Start')"
           ></i>
           <i
+            v-if="state.enableState"
             class="mdi mdi-stop-circle"
             title="Stop Server"
             style="color: #b00020; font-size: 20px; cursor: pointer"
             @click="startStopRestartServer('Stop')"
           ></i>
           <i
+            v-if="state.enableState"
             class="mdi mdi-reload"
             title="Restart Server"
             style="color: #4caf50; font-size: 20px; cursor: pointer"
@@ -252,6 +255,7 @@ export default {
         document.getElementById("app").attributes["generalInfo"].value;
       const generalInfo = JSON.parse(generalInfoAttribute);
       state.enableState = generalInfo.status;
+      console.log("generalInfo.status", generalInfo.status);
       state.proxyPort = generalInfo.Port;
     };
     onMounted(() => {

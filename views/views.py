@@ -28,8 +28,7 @@ from backend.proxy.models import *
 
 def get_squid_status_from_bd():
     server_status= ServerSatus.objects.get(id=1)
-    print({"server_status":server_status})
-    return server_status.status
+    return server_status.status_server
 
 def get_squid_status():
     try:

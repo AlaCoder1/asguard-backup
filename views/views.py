@@ -567,8 +567,8 @@ def squid_proxy(request):
     statusEnable = statusEnableAuth(request)
     proxyRule = get_all_proxy_rules(request)
     proxyGroups = allGProxyroups(request)
-    context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule),'proxyGroups' : json.dumps(proxyGroups)}
-    print('-------------:',proxyGroups)
+    statusServer = get_squid_status_from_bd()
+    context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule),'proxyGroups' : json.dumps(proxyGroups),'statusServer' : json.dumps(statusServer)}
     return render(request, 'squid_proxy.html',context)
 
 

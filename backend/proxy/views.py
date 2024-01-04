@@ -32,6 +32,9 @@ def run_command(command):
 def restart(request):
     process = subprocess.run(['systemctl', 'restart', 'squid'], capture_output=True, text=True)
     if process.returncode == 0:
+        server_satus = ServerSatus.objects.get(id=1)
+        server_satus.status_server = False
+        server_satus.save()
         msg = "Squid restart successfully"
         status = 200
     else:
@@ -187,6 +190,9 @@ def addRuleSquid(request):
                 serializerProxyRules = ProxyRulesSerializer(data=data)
                 if (serializerProxyRules.is_valid()):
                     serializerProxyRules.save()
+                    server_satus = ServerSatus.objects.get(id=1)
+                    server_satus.status_server = True
+                    server_satus.save()
                     msg = f"{data['type']} blocked successfully."
                     status=200
                     return JsonResponse({"msg": msg}, status=status)
@@ -228,6 +234,9 @@ def deleteRuleSquid(request,id):
                 stdout, stderr = run_command(command)
                 if stderr =="":
                     data.delete()
+                    server_satus = ServerSatus.objects.get(id=1)
+                    server_satus.status_server = True
+                    server_satus.save()
                     msg = f"{data.type} address {data.value} unblocked successfully"
                     status =200
                     return JsonResponse({"msg": msg}, status=status)
@@ -336,6 +345,9 @@ def update_generale_info(request):
         
     with open(squid_conf_path, 'w') as f:
         f.writelines(lines)
+    server_satus = ServerSatus.objects.get(id=1)
+    server_satus.status_server = True
+    server_satus.save() 
     return JsonResponse({"msg":"Port updated successfully."},status=200)
 
 @swagger_auto_schema(
@@ -401,7 +413,9 @@ def change_auth_status(request):
                         file.write('#' + line)  
                     else:
                         file.write(line)
-
+            server_satus = ServerSatus.objects.get(id=1)
+            server_satus.status_server = True
+            server_satus.save() 
             return JsonResponse({"msg": "Lines commented successfully."}, status=200)
         except FileNotFoundError:
             print(f"Error: File not found at path {config_file_path}. Please provide the correct path.")
@@ -421,7 +435,9 @@ def change_auth_status(request):
 
         with open(config_file_path, 'w') as file:
             file.writelines(config_lines)
-
+        server_satus = ServerSatus.objects.get(id=1)
+        server_satus.status = True
+        server_satus.save() 
         return JsonResponse({"msg": "Lines uncommented successfully."}, status=200)
 
 @swagger_auto_schema(
@@ -563,7 +579,10 @@ def add_user_squid(request):
         try:
             user_proxy = ProxyUser(username=username_squid,email=email_squid)
             user_proxy.save()
-            send_email_to_user(email_squid,password_squid,username_squid)
+            server_satus = ServerSatus.objects.get(id=1)
+            server_satus.status_server = True
+            server_satus.save() 
+            #send_email_to_user(email_squid,password_squid,username_squid)
             msg = f"User '{username_squid}' added successfully."
             status=200
             return JsonResponse({"msg": msg}, status=status)
@@ -607,6 +626,9 @@ def delete_user_squid(request,id):
     stdout, stderr = run_command(command)
     if stderr == '':
         user.delete()
+        server_satus = ServerSatus.objects.get(id=1)
+        server_satus.status_server = True
+        server_satus.save() 
         return JsonResponse({"msg":"User deleted successfully."},status=200)
     else:
         return JsonResponse({"msg":"Erreur."},status = 404 )
@@ -674,6 +696,9 @@ def changeStausGroup(request):
         
     with open(squid_config_path, 'w') as file:
         file.write(squid_config)
+    server_satus = ServerSatus.objects.get(id=1)
+    server_satus.status_server = True
+    server_satus.save() 
     return JsonResponse({"msg": "done"}, status=200)
 
 @swagger_auto_schema(
@@ -732,7 +757,9 @@ def changeStausElementsInGroup(request):
 
     with open(file_path, 'w') as file:
         file.writelines(lines)
-        
+    server_satus = ServerSatus.objects.get(id=1)
+    server_satus.status_server = True
+    server_satus.save() 
     return JsonResponse({"msg": "done"}, status=200)
 
 def changeStausElement(target_url,uncomment,file_path):
@@ -845,7 +872,10 @@ def updateStatusRule(request,id):
                 
     proxy_rule.status = data['status']
     proxy_rule.allow_by_auth = data['allow_by_auth']
-    proxy_rule.save()       
+    proxy_rule.save()      
+    server_satus = ServerSatus.objects.get(id=1)
+    server_satus.status_server = True
+    server_satus.save() 
     return JsonResponse({"msg": "updated succesfully"}, status=200)
 
 

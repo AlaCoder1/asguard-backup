@@ -25,6 +25,11 @@ import ast
 from backend.proxy.views import *
 from backend.proxy.models import *
 
+
+def get_squid_status_from_bd():
+    server_status= ServerSatus.objects.get(id=1)
+    return server_status.status_server
+
 def get_squid_status():
     try:
         result = subprocess.run(['systemctl', 'status', 'squid.service'], capture_output=True, text=True, check=True)
@@ -35,6 +40,7 @@ def get_squid_status():
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return None
+    
 def getGeneraleInfo(request):
     if (request.method == 'GET'):
         squid_conf_path = '/etc/squid/squid.conf'

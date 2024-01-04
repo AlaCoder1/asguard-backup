@@ -571,6 +571,9 @@ def squid_proxy(request):
     context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule),'proxyGroups' : json.dumps(proxyGroups),'statusServer' : json.dumps(statusServer)}
     return render(request, 'squid_proxy.html',context)
 
+@login_required(login_url='/')
+def sdwan_page(request):
+    return render(request, 'sdwan_page.html',)
 
 @login_required(login_url='/')
 def clamav_page(request):

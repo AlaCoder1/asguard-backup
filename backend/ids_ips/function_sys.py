@@ -121,7 +121,7 @@ def update_suricata_config(ifname, status_enabled,new_promisc, new_eve_log, new_
                     updated_lines.append(line + '\n')  # Conserve la ligne "af-packet:" telle quelle
                 elif af_packet:
                     if "interface:" in stripped_line:
-                        updated_lines.append(f'      - interface: {ifname}\n')
+                        updated_lines.append(f'  - interface: {ifname}\n')
                         af_packet = False
                 elif "eve-log:" in stripped_line:
                     next_eve_log = True  # Activer la lecture de la ligne suivante sous "eve-log"

@@ -59,14 +59,14 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
       if not protocol.upper()=="ALL":
          rule='ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(saddr,daddr,protocol,sport,protocol,dport,policy)
       else:
-         rule='ip saddr {} ip daddr {}  {}'.format(saddr,daddr,policy)
+         rule='ip saddr {} ip daddr {} {}'.format(saddr,daddr,policy)
          
     ##cas outbound
    elif type_rule=='outbound' :
       if not protocol.upper()=="ALL":
          rule='ip daddr {} ip saddr {} {} sport {} {} dport {} {}'.format(daddr,saddr,protocol,sport,protocol,dport,policy)
       else:
-         rule='ip daddr {} ip saddr {}  {}'.format(daddr,saddr,policy)
+         rule='ip daddr {} ip saddr {} {}'.format(daddr,saddr,policy)
          
    #####cas saddr is None
    if saddr is None:
@@ -93,6 +93,7 @@ def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
 def get_config_file(ifname):
    cmd="cat /etc/rules/{}/nftables.conf".format(ifname)
    output,error=run_command("sudo "+cmd)
+   # print(output)
    if error!='': 
       return error
    return output.splitlines()
@@ -103,6 +104,7 @@ def add_rule_remote(rule,ifname,type_rule,config,description):
       for r in config:
          if r.strip()=="chain "+type_rule+" {":
             index_chain=config.index(r)
+      
       config=config[:index_chain+2]+["                "+rule+" #"+description]+config[index_chain+2:]
       commandes=["""cat <<EOF > /etc/rules/{}/nftables.conf
 {} 
@@ -126,14 +128,12 @@ def get_handle_rule(ifname,type_rule,rule):
       rule=rule.replace("echo-reply","0")
       rule=rule.replace("tcp","6")
       rule=rule.replace("udp","17")
-         
-
    ##cmd pour obtenir handle number pour supprimer rule 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
    output,error=run_command(cmd)
    output = output.split('#')
-   print(cmd,output)
+   # print(cmd,output)
    if len(output)<2:
       return None
    else:

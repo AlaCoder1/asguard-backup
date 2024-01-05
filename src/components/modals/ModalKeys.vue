@@ -127,7 +127,7 @@
 <script>
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { toRefs, ref, watch, onMounted, reactive, computed } from "vue";
+import { toRefs, ref, watch, onMounted, reactive, computed,inject } from "vue";
 import { required, helpers, requiredIf } from "@vuelidate/validators";
 export default {
   props: {
@@ -138,6 +138,7 @@ export default {
   },
 
   setup(props) {
+    const emitter = inject("emitter");
     onMounted(() => {
       let privateKeyAttribute =
         document.getElementById("app").attributes["privateKey"].value;
@@ -210,8 +211,8 @@ export default {
 
     watch(
       () => isOpen.value,
-      () => {
-        state.openModal = true;
+      (val) => {
+        state.openModal = val;
       }
     );
 
@@ -326,8 +327,7 @@ export default {
     };
 
     const closeModal = () => {
-      state.openModal = false;
-      location.reload();
+      emitter.emit("closeKeyPairModal");
     };
 
     const rules = computed(() => {
@@ -384,6 +384,7 @@ export default {
       isPrivate,
       isPublic,
       isImport,
+      emitter,
       v$,
       closeModal,
       submitForm,

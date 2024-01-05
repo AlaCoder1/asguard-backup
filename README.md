@@ -80,3 +80,4 @@ python manage.py init_clamav
 
 python manage.py create_files_squid
 python manage.py  init_conf_squid
+python manage.py init_squid_conf_bd

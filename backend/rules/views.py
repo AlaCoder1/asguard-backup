@@ -168,7 +168,7 @@ def saveRules(request,name_interface):
           msg =update_remote
           status=400
 
-        else:
+    else:
           config=get_config_file(ifname)
           #appel la fonction pour initialiser les fichies nftables.conf
           return_init_file_nftables = init_file_nftables(ifname)
@@ -208,9 +208,9 @@ def saveRules(request,name_interface):
             msg = return_init_file_nftables
             status=400
             
-        response={"id":id,"rule":ruleMsg,"msg":msg,"status":status}
-        msgs.append(response)
-      return JsonResponse({"response": msgs})    
+          response={"id":id,"rule":ruleMsg,"msg":msg,"status":status}
+          msgs.append(response)
+    return JsonResponse({"response": msgs})    
     
     
 @api_view(['POST'])

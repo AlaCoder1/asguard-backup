@@ -242,6 +242,16 @@ def addRule(request,name_interface):
       #appel la fonction pour ajouter rule dans le système
         return_add_rule=add_rule_remote(rule,ifname,type_rule,config,rule_description)
         if return_add_rule is True:
+          data = {
+              'policy': policy,
+              'saddr':saddr,
+              'daddr': daddr,
+              'sport': sport,
+              'dport': dport,
+              'protocol': protocol,
+              'type_rule': type_rule,
+              'rule_description': rule_description
+              }
           data['interface']=interfaceObject.id
           #appel la fonction pour ajouter rule dans la base de données 
           data={key: value for key, value in data.items() if value is not None}
@@ -295,6 +305,16 @@ def updateRule(request,name_interface):
       ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
       update_remote=update_rule_remote(rule+" #"+description,ruleupdate+" #"+rule_description,file_path)
       if  update_remote is True:
+              data = {
+              "id":id,
+              'policy': policy,
+              'saddr':saddr,
+              'daddr': daddr,
+              'sport': sport,
+              'dport': dport,
+              'protocol': protocol,
+              'rule_description': rule_description
+              }
               #appel la fonction pour update rule dans la base de données 
               data={key: value for key, value in data.items() if value is not None}
               data['interface']=rulesObject.interface_id

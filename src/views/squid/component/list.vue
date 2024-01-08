@@ -240,8 +240,6 @@ export default {
     const handleAction = (action, rowData) => {
       switch (action) {
         case "edit":
-          console.log("rowData", rowData);
-
           state.modalDataRule = {};
           state.modalModeRule = "edit";
           state.isModalOpenRule = true;
@@ -249,7 +247,6 @@ export default {
 
           break;
         case "delete":
-          console.log("delete", rowData);
           state.deleteDialogRule = true;
           state.deletedRow = rowData;
           break;

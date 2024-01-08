@@ -6,10 +6,11 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from backend.ipsec.constant_variables import IPV4_CONFIG
 
-from backend.ipsec.utils import json_to_str_server_ipsec
+from backend.ipsec.utils import json_to_str_server_ipsec, up_ipsec_conn
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
-from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec, install_server_ipsec, up_ipsec_conn, update_server_ipsec
+from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec_in_system, install_server_ipsec_in_system, update_server_ipsec_in_system
+from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_KEY
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
@@ -26,7 +27,7 @@ from .models import ServerIPsec
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def getAllServerIPsec(request):
+def get_all_server_ipsec(request):
     if (request.method == 'GET'):
         list_ipsec = get_list_all_server_ipsec()
         return JsonResponse(list_ipsec, safe=False)
@@ -37,7 +38,7 @@ def getAllServerIPsec(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def getServerIPsec(request, id):
+def get_server_ipsec(request, id):
     """Getting server by id from database"""
     if (request.method == 'GET'):
         server_ipsec = get_one_server_ipsec(id)
@@ -107,7 +108,7 @@ def getServerIPsec(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def createServerIPsec(request):
+def create_server_ipsec(request):
     """Creating a new server in system and adding it to the database"""
     if request.method == 'POST':
         try:
@@ -283,9 +284,9 @@ def createServerIPsec(request):
 
                 # Install the server in system
                 if interface_name != 'Any':
-                    install_server_ipsec(conn_name, server_conf, authentication, interface_address.ip_address, remote_gateway, ca)
+                    install_server_ipsec_in_system(server_conf, authentication, interface_address.ip_address, remote_gateway, ca)
                 else:
-                    install_server_ipsec(conn_name, server_conf, authentication, 'any', remote_gateway, ca)
+                    install_server_ipsec_in_system(server_conf, authentication, 'any', remote_gateway, ca)
 
                 # Add the server to the database
                 serializer_server.save()
@@ -313,7 +314,7 @@ def createServerIPsec(request):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def deleteServerIPsec(request, id):
+def delete_server_ipsec(request, id):
     """Deleting a server from system and then from database"""
     try:
         if (request.method == 'DELETE'):
@@ -328,12 +329,12 @@ def deleteServerIPsec(request, id):
             if server.authentication_method == CONSTANT_METHOD_PSK:
                 deleted_line_in_secrets_file = f"""{interface_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
             elif server.authentication_method == CONSTANT_METHOD_RSA:
-                deleted_line_in_secrets_file = f""" : RSA {server.cert}Key.pem """
+                deleted_line_in_secrets_file = f""" : RSA {PATH_SERVER_CERT_KEY.format(server.cert)}"""
             else:
                 private_key = PublicKey.objects.get(name=server.local_key_pair).private_key
                 deleted_line_in_secrets_file = f""" : RSA {private_key.name}.pem """
             
-            delete_server_ipsec(server.conn_name, deleted_line_in_secrets_file)
+            delete_server_ipsec_in_system(server.conn_name, deleted_line_in_secrets_file)
             # delete from database
             server.delete()
             return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(server.conn_name)}, status=201)
@@ -406,7 +407,7 @@ def deleteServerIPsec(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def updateServerIPsec(request, id):
+def update_server_ipsec(request, id):
     """Updating a server from system and database"""
     if (request.method == 'PUT'):
         try:
@@ -420,7 +421,7 @@ def updateServerIPsec(request, id):
                 else:
                     updated_line_in_secrets_file = f"""any {server.remote_gateway} : PSK '{server.pre_shared_key}' """
             elif server.authentication_method == CONSTANT_METHOD_RSA:
-                updated_line_in_secrets_file = f""" : RSA {server.cert}Key.pem """
+                updated_line_in_secrets_file = f""" : RSA {PATH_SERVER_CERT_KEY.format(server.cert)}"""
             else:
                 private_key = PublicKey.objects.get(name=server.local_key_pair).private_key
                 updated_line_in_secrets_file = f""" : RSA {private_key.name}.pem """
@@ -553,10 +554,10 @@ def updateServerIPsec(request, id):
                 server_conf = json_to_str_server_ipsec(data)
                 # Install the server in system
                 if server.interface == "Any":
-                    update_server_ipsec(server.conn_name, updated_line_in_secrets_file, server_conf, 
+                    update_server_ipsec_in_system(server.conn_name, updated_line_in_secrets_file, server_conf, 
                                         authentication, "any", server.remote_gateway, ca)
                 else:
-                    update_server_ipsec(server.conn_name, updated_line_in_secrets_file, server_conf, 
+                    update_server_ipsec_in_system(server.conn_name, updated_line_in_secrets_file, server_conf, 
                                         authentication, interface_address.ip_address, server.remote_gateway, ca)
 
                 # Add the server to the database
@@ -582,7 +583,7 @@ def updateServerIPsec(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def statusServerIPsec(request, id):
+def status_server_ipsec(request, id):
     """Change status of a server config from system and then from database"""
     try:
         if (request.method == 'PUT'):
@@ -610,7 +611,7 @@ def statusServerIPsec(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def statusIPsec(request):
+def status_ipsec(request):
     """Change status of a server config from system and then from database"""
     try:
         if (request.method == 'POST'):

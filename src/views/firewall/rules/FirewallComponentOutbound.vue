@@ -1,7 +1,7 @@
 <template>
-  <div>
+  <div class="mt-5">
     <div class="container">
-      <h4>Inbound rules</h4>
+      <h4>Outbound rules</h4>
       <v-divider></v-divider>
       <v-dialog v-model="deleteDialog" max-width="500px">
         <v-card>
@@ -22,13 +22,13 @@
         </v-card>
       </v-dialog>
       <!-- Modal -->
-      <ModalFirewallRule
+      <ModalFirewallRuleOutbound
         :isOpen="state.isModalOpen"
         :editRow="state.editRow"
         :modalMode="state.modalMode"
       />
       <!-- <v-card class="mt-10">
-        <v-card-title> -->
+          <v-card-title> -->
       <v-row class="mt-8 mb-6">
         <v-col cols="12" md="6">
           <v-text-field
@@ -57,7 +57,7 @@
       <ag-grid-vue
         id="grid-wrapper"
         domLayout="autoHeight"
-        class="ag-theme-alpine"
+        class="ag-theme-alpine mb-15"
         :columnDefs="columnDefs"
         :rowData="rowData.value"
         @grid-ready="onGridReady"
@@ -84,7 +84,7 @@
         {{ state.textAlert }}
       </v-snackbar>
       <!-- </v-card-text>
-      </v-card> -->
+        </v-card> -->
     </div>
   </div>
 </template>
@@ -96,14 +96,14 @@ import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
 import { onMounted, reactive, ref, watch, defineComponent,inject } from "vue";
 import VButton from "../../../components/VButton.vue";
-import ModalFirewallRule from "../../../components/modals/ModalFirewallRule.vue";
+import ModalFirewallRuleOutbound from "../../../components/modals/ModalFirewallRuleOutbound.vue";
 
 export default defineComponent({
-  name: "FirewallComponent",
+  name: "FirewallComponentRuleOutbound",
   components: {
     AgGridVue,
     VButton,
-    ModalFirewallRule,
+    ModalFirewallRuleOutbound,
   },
   props: {
     id: String,
@@ -252,33 +252,33 @@ export default defineComponent({
       });
       if (isCurrentRowEditing) {
         eGui.innerHTML = `
-         <button 
-          class="action-button update"
-          data-action="update"
-          >
-            <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
-        </button>
-        <button 
-          class="action-button delete"
-          data-action="delete"
-          >
-             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
-        </button>
-        `;
+           <button 
+            class="action-button update"
+            data-action="update"
+            >
+              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          <button 
+            class="action-button delete"
+            data-action="delete"
+            >
+               <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          `;
       } else {
         eGui.innerHTML = `
-        <button 
-          class="action-button update"
-          data-action="update"
-          >
-            <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
-        </button>
-        <button 
-          class="action-button delete"
-          data-action="delete">
-                       <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
-        </button>
-        `;
+          <button 
+            class="action-button update"
+            data-action="update"
+            >
+              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          <button 
+            class="action-button delete"
+            data-action="delete">
+                         <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>
+          `;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -403,11 +403,9 @@ export default defineComponent({
     };
 
     onMounted(() => {
-      emitter.on("closFirewallInboundModal", () => {
-       
-        state.isModalOpen = false;
-      });
-
+      emitter.on("closFirewallOutboundModal", () => {
+       state.isModalOpen = false;
+     });
       const rulesAttribute =
         document.getElementById("app").attributes["rules"].value;
       let validJsonString = rulesAttribute
@@ -423,7 +421,7 @@ export default defineComponent({
       () => rules.value,
       (newValue, oldValue) => {
         if (newValue) {
-          rowData.value = rules.value[props.activeTab]["inbound"];
+          rowData.value = rules.value[props.activeTab]["outbound"];
         } else {
           rowData.value = [];
         }
@@ -449,8 +447,8 @@ export default defineComponent({
 
     return {
       openModalAdd,
-      emitter,
       columnDefs,
+      emitter,
       state,
       gridApi,
       gridColumnApi,

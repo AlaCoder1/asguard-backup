@@ -1,3 +1,4 @@
+import math
 from django.shortcuts import render
 # Create your views here.
 import ast
@@ -16,7 +17,8 @@ from backend.ids_ips.function_BD import *
 from backend.ids_ips.function_sys import *
 from django.core import serializers
 from django.db.models import Q
-
+from django.core.paginator import Paginator, EmptyPage
+from django.core.serializers import serialize
 #################################### LES REGLES ############################################################
 #Ajouter les régles par défaut dans la BD//
 @api_view(['POST'])
@@ -67,21 +69,31 @@ def activerSuricataUpdate(request, id):
 #//Récupérer les règles de la base de données //
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-def getRulesFromDatabase(request):
-    if request.method=="GET":
-        rules_list = []
+def getRulesFromDatabase(request, num):
+    if request.method == "GET":
         # Récupérer toutes les règles de la base de données
         rules_from_db = ids_ips_rule.objects.all()
-        rule_suricata = serializers.serialize("json", rules_from_db)
+
+        # Paginer les règles
+        paginator = Paginator(rules_from_db, 10)
+        try:
+            rules_page = paginator.page(num)
+        except EmptyPage:
+            return JsonResponse({"error": "Page not found"}, status=404)
+
+        # Sérialiser les règles de la page actuelle
+        rule_suricata = serialize("json", rules_page, use_natural_primary_keys=True)
         res = json.loads(rule_suricata)
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            rules_list.append(res[i]['fields'])
-    # Renvoyer la liste des règles au format JSON
-    return JsonResponse({"rules": rules_list})
+
+        rules_list = []
+        for i in range(len(res)):
+            fields = res[i]['fields']
+            fields['id'] = res[i]['pk']
+            rules_list.append(fields)
+        nbpage=len(rules_from_db)/10
+        # Renvoyer la liste des règles au format JSON
+        return JsonResponse({"rules": rules_list,"nombrePageRules":math.ceil(nbpage)},status=200)
+
 
 ## fonction pour sauvegarder une règle (ajout ou mise à jour )
 @swagger_auto_schema(
@@ -634,13 +646,29 @@ def addalertsToDatabase(request,id):
 #Afficher les alertes de la BD//
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-def GetAlertsFromDatabase(request):
-    if request.method=="GET":
-        alert_list=[]
-        alerts = Alert.objects.all()  # Récupérer toutes les alertes de la base de données
-        if alerts:
-            serializer = AlertSerializer(alerts, many=True)
-            alert_list=serializer.data
-        return JsonResponse({"alerts": alert_list})
+def GetAlertsFromDatabase(request,num):
+    if request.method == "GET":
+        # Récupérer toutes les règles de la base de données
+        alerts_from_db = Alert.objects.all() 
+
+        # Paginer les règles
+        paginator = Paginator(alerts_from_db, 10)
+        try:
+           alerts_page = paginator.page(num)
+        except EmptyPage:
+            return JsonResponse({"error": "Page not found"}, status=404)
+
+        # Sérialiser les règles de la page actuelle
+        rule_suricata = serialize("json", alerts_page, use_natural_primary_keys=True)
+        res = json.loads(rule_suricata)
+
+        alerts_list = []
+        for i in range(len(res)):
+            fields = res[i]['fields']
+            fields['id'] = res[i]['pk']
+            alerts_list.append(fields)
+        nbpage=math.ceil(len(alerts_from_db)/10)
+        # Renvoyer la liste des règles au format JSON
+        return JsonResponse({"alerts": alerts_list,"nombrePageAlerts":nbpage},status=200)
        
 #################################### Fin LES ALERTES  ############################################################

@@ -265,7 +265,7 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
         rule=rule.replace(dest_ip,contenu['destination_ip'])  
 
     if  contenu['msg'] is not None and rule.find("msg")!=-1:
-        rule=rule.replace(msg,contenu['msg'])   
+        rule=rule.replace(msg,'"'+contenu['msg'])    
     
     if  contenu['rev'] is not None and rule.find("rev")!=-1:
         rule=rule.replace(str(rev),str(contenu['rev']))    
@@ -409,6 +409,8 @@ def prepare_alert_attribut(lines):
         # Votre code de traitement ici
         attributes = line.split()
         if len(attributes)!=0:
+            if  attributes[1]!="[**]" and attributes[1].startswith("["):
+                attributes.remove(attributes[1])
             timestamp = attributes[0] + ' ' + attributes[1].replace("[**]", "",2)
             priority=attributes[-5][:1]
             protocol = attributes[-4][1:-1]
@@ -417,7 +419,8 @@ def prepare_alert_attribut(lines):
             dst_addr=attributes[-1].split(":")[0]
             dst_port=attributes[-1].split(":")[1]
             sid=attributes[2].split(":")[1]
-            message = ' '.join(attributes[3:-11]).replace("[**]", "").strip()
+            attributes2=attributes[3:]
+            message = ' '.join(attributes2[:attributes2.index("[**]")]).strip()
             # Afficher les attributs
             logs.append({
                 "timestamp": timestamp,

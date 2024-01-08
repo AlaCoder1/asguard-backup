@@ -15,8 +15,8 @@ urlpatterns = [
     path('saveRulesSuricata/<int:id>', views.save_rules_suricata, name="saveRulesSuricata"),
     # path('addDefaultRulesToDatabase/<int:id>', views.addDefaultRulesToDatabase, name='addDefaultRulesToDatabase'),
     path('activerSuricataUpdate/<int:id>', views.activerSuricataUpdate, name='activerSuricataUpdate'),
-    path('getRulesFromDatabase', views.getRulesFromDatabase, name='getRulesFromDatabase'),
+    path('getRulesFromDatabase/<int:num>', views.getRulesFromDatabase, name='getRulesFromDatabase'),
     path('addalertsToDatabase/<int:id>', views.addalertsToDatabase, name='addalertsToDatabase'),
-    path('GetAlertsFromDatabase', views.GetAlertsFromDatabase, name='GetAlertsFromDatabase'),
+    path('GetAlertsFromDatabase/<int:num>', views.GetAlertsFromDatabase, name='GetAlertsFromDatabase'),
     path('addGeneralConfig', views.addGeneralConfig, name='addGeneralConfig'),
 ] 

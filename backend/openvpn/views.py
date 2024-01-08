@@ -17,7 +17,7 @@ from .servers_status import change_status_server_openvpn
 from .models import ServerOpenvpn, ClientOpenvpn
 from .serializers import ServerOpenvpnSerializer, ClientOpenvpnSerializer
 from .utils import json_to_str_client, json_to_str_server
-from .server_openvpn import install_server_openvpn, delete_server_openvpn, update_server_openvpn
+from .server_openvpn import install_server_openvpn_in_system, delete_server_openvpn_in_system, update_server_openvpn_in_system
 from .client_openvpn import delete_client_openvpn, export_client_in_system, install_client_openvpn, update_client_openvpn
 
 # Create your views here.
@@ -31,7 +31,7 @@ from .client_openvpn import delete_client_openvpn, export_client_in_system, inst
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def getAllServerOpenvpn(request):
+def get_all_server_openvpn(request):
     """Getting all servers from database"""
     list_server_openvpn = []
     if (request.method == 'GET'):
@@ -44,7 +44,7 @@ def getAllServerOpenvpn(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def getServerOpenvpn(request, id):
+def get_server_openvpn(request, id):
     """Getting server by id from database"""
     if (request.method == 'GET'):
         server = get_one_server_openvpn(id)
@@ -108,7 +108,7 @@ def getServerOpenvpn(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def createServerOpenvpn(request):
+def create_server_openvpn(request):
     """Creating a new server in system and adding it to the database"""
     try:
         data = request.data
@@ -221,8 +221,8 @@ def createServerOpenvpn(request):
             server_conf = json_to_str_server(data)
 
             # Install the server in system
-            install_server_openvpn(server_name=data["name"], ca_name=ca_name, tls_auth=tls_auth, dh_length=dh, 
-                                    server_conf=server_conf)
+            install_server_openvpn_in_system(server_name=data["name"], ca_name=ca_name, tls_auth=tls_auth, dh_length=dh, 
+                                             server_conf=server_conf)
 
             # Add the server to the database
             serializer_server.save()
@@ -242,7 +242,7 @@ def createServerOpenvpn(request):
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def deleteServerOpenvpn(request, id):
+def delete_server_openvpn(request, id):
     """Deleting a server from system and then from database"""
     try:
         if (request.method == 'DELETE'):
@@ -256,7 +256,7 @@ def deleteServerOpenvpn(request, id):
                     interface.delete()
 
             # delete from system
-            delete_server_openvpn(server.name)
+            delete_server_openvpn_in_system(server.name)
 
             # delete from database
             server.delete()
@@ -324,7 +324,7 @@ def deleteServerOpenvpn(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def updateServerOpenVPN(request, id):
+def update_server_openvpn(request, id):
     """Updating a server from system and database"""
     try:
         # parse the incoming information
@@ -417,7 +417,8 @@ def updateServerOpenVPN(request, id):
             server_conf = json_to_str_server(data)
         
             #updating the server in system
-            update_server_openvpn(previous_server_name=previous_name, server_name=server.name, tls_auth=tls_auth, dh_length=server.dh, server_conf=server_conf)
+            update_server_openvpn_in_system(previous_server_name=previous_name, server_name=server.name, tls_auth=tls_auth, 
+                                            dh_length=server.dh, server_conf=server_conf, server_status=server.server_status)
 
             #updating the server in database
             serializer_server.save()
@@ -437,7 +438,7 @@ def updateServerOpenVPN(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def startServerOpenvpn(request, id):
+def start_server_openvpn(request, id):
     """Starting a server and opening a tunnel. The system open a new interface and this interface is added to the database"""
     if request.method == 'POST':
         try:
@@ -457,7 +458,7 @@ def startServerOpenvpn(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def restartServerOpenvpn(request, id):
+def restart_server_openvpn(request, id):
     """Retarting a server and reopening a tunnel."""
     if request.method == 'PUT':
         try:
@@ -479,7 +480,7 @@ def restartServerOpenvpn(request, id):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def stopServerOpenvpn(request, id):
+def stop_server_openvpn(request, id):
     """Stoping a server and closing a tunnel. The system delete an interface and this interface is deleted from the database"""
     if request.method == 'DELETE':
         try:
@@ -505,7 +506,7 @@ def stopServerOpenvpn(request, id):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def getAllClientOpenvpn(request):
+def get_all_client_openvpn(request):
     """Getting all clients from database"""
     if (request.method == 'GET'):
         list_client_openvpn = get_list_all_client_openvpn()
@@ -517,7 +518,7 @@ def getAllClientOpenvpn(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def getClientOpenvpn(request, id):
+def get_client_openvpn(request, id):
     """Getting client by id from database"""
     if (request.method == 'GET'):
         client = get_one_client_openvpn(id)
@@ -569,7 +570,7 @@ def getClientOpenvpn(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def createClientOpenvpn(request):
+def create_client_openvpn(request):
     """Creating a new client in system and adding it to the database"""
     if request.method == 'POST':
         try:
@@ -673,7 +674,7 @@ def createClientOpenvpn(request):
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def deleteClientOpenvpn(request, id):
+def delete_client_openvpn(request, id):
     """Deleting a client from system and then from database"""
     if (request.method == 'DELETE'):
         try:
@@ -736,7 +737,7 @@ def deleteClientOpenvpn(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def updateClientOpenvpn(request, id):
+def update_client_openvpn(request, id):
     """Updating a client from system and database"""
     if (request.method == 'PUT'):
         try:
@@ -819,7 +820,7 @@ def updateClientOpenvpn(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def exportClientOpenvpn(request, id):
+def export_client_openvpn(request, id):
     """Exporting a Client openvpn"""
     if request.method == 'POST':
         try:
@@ -845,7 +846,7 @@ def exportClientOpenvpn(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def generateClientOpenvpn(request, id):
+def generate_client_openvpn(request, id):
     """Generating a new client from a server in system and adding it to the database"""
     if request.method == 'POST':
         try:

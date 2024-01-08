@@ -1,5 +1,8 @@
+"""This file is for working on Server OpenVPN in system"""
+
 import shutil
-from backend.managementCertificates.constant_variables import PATH_CA
+import time
+from backend.managementCertificates.constant_variables import PATH_CERT, PATH_KEY
 from backend.managementCertificates.utils import initialize_ca
 from backend.openvpn.constant_variables import PATH_DH_FILES, PATH_LOG_OPENVPN, PATH_OPENVPN, PATH_SERVER_CONF, PATH_SERVER_DH, PATH_SERVER_LOG, PATH_SERVER_STATIC, PATH_STATUS_LOG
 from backend.openvpn.utils import create_tls_file
@@ -7,7 +10,7 @@ from backend.openvpn.servers_status import change_status_server_openvpn
 from utils.commands_utils import execute_command_without_arguments, execute_list_commands_without_arguments, get_current_directory
 
 
-def install_server_openvpn(server_name, ca_name, tls_auth, dh_length, server_conf:str):
+def install_server_openvpn_in_system(server_name, ca_name, tls_auth, dh_length, server_conf:str):
     """Function to install an openvpn server in system using easyrsa package to generate keys and certificates"""
     current_dir = get_current_directory()
     
@@ -27,14 +30,15 @@ def install_server_openvpn(server_name, ca_name, tls_auth, dh_length, server_con
 
     # Add permissions to use certificates and other files
     shutil.chown('/etc/openvpn/', user='openvpn', group='network')
-    shutil.chown(f'/etc/certificates_{ca_name}/', user='openvpn', group='openvpn')
+
     commands_list_without_arguments = [['sudo', 'chown', '-R', 'openvpn:network', PATH_OPENVPN],
-                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', PATH_CA.format(ca_name)],
+                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', PATH_CERT],
+                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', PATH_KEY],
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
-def delete_server_openvpn(server_name):
+def delete_server_openvpn_in_system(server_name):
     """Function to delete an openvpn server in system and his keys and certificates"""
     commands_list_without_arguments = [['sudo', 'systemctl', 'stop', f'openvpn-server@server_{server_name}'],
                                        ['sudo', 'rm', '-f', PATH_SERVER_CONF.format(server_name)],
@@ -45,7 +49,7 @@ def delete_server_openvpn(server_name):
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
-def update_server_openvpn(previous_server_name, server_name, tls_auth, dh_length, server_conf):
+def update_server_openvpn_in_system(previous_server_name, server_name, tls_auth, dh_length, server_conf, server_status):
     """Function to update an openvpn server in system"""
     # Change files name related to the server openvpn
     change_status_server_openvpn(previous_server_name, 'stop')
@@ -66,5 +70,7 @@ def update_server_openvpn(previous_server_name, server_name, tls_auth, dh_length
     
     execute_command_without_arguments(['cp', PATH_DH_FILES.format(dh_length), PATH_SERVER_DH.format(server_name)])
     
-    #Restart server in system
-    change_status_server_openvpn(server_name, 'start')
+    #Restart server in system if the system was started before the changes7
+    if server_status:
+        change_status_server_openvpn(server_name, 'start')
+        time.sleep(1)

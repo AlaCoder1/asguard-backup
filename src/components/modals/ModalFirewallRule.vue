@@ -9,22 +9,23 @@
         </v-card-title>
         <v-card-text>
           <v-select
-            :items="['accept', 'drop', 'reject']"
+            :items="policyList"
             label="Policy"
             v-model="state.formData.policy"
           ></v-select>
           <p class="error-feedback mb-5" v-if="v$.formData.policy.$error">
             {{ v$.formData.policy.$errors[0].$message }}
           </p>
+
           <v-textarea
-            variant="filled"
-            auto-grow
-            rows="2"
-            row-height="20"
-            label="Rule Description"
+            rows="1"
+            row-height="15"
+            class="mt-3"
             v-model="state.formData.rule_description"
-            outlined
+            label="Rule Description"
+            variant="outlined"
           ></v-textarea>
+
           <p
             class="error-feedback mb-5"
             v-if="v$.formData.rule_description.$error"
@@ -32,14 +33,7 @@
             {{ v$.formData.rule_description.$errors[0].$message }}
           </p>
           <v-select
-            :items="[
-              'tcp',
-              'udp',
-              'icmp',
-              'icmp type echo-request',
-              'icmp type echo-reply',
-              'all',
-            ]"
+            :items="protocolList"
             v-model="state.formData.protocol"
             label="Protocol"
             outlined
@@ -145,7 +139,7 @@ import {
   email,
   required,
 } from "@vuelidate/validators";
-import { reactive, computed, toRefs, watch, inject, onMounted } from "vue";
+import { reactive, computed, toRefs, watch, inject, onMounted, ref } from "vue";
 import VButton from "@/components/VButton.vue";
 export default {
   name: "Modal_User_Squid",
@@ -172,8 +166,19 @@ export default {
   setup(props) {
     const { isOpen, editRow, modalMode } = toRefs(props);
     const emitter = inject("emitter");
+
+    const policyList = ref(["accept", "drop", "reject"]);
+    const protocolList = ref([
+      "tcp",
+      "udp",
+      "icmp",
+      "icmp type echo-request",
+      "icmp type echo-reply",
+      "all",
+    ]);
     const state = reactive({
       isAll: false,
+      id: "",
       nameInter: "",
       formData: {
         policy: "",
@@ -245,8 +250,7 @@ export default {
     const v$ = useValidate(rules, state);
     watch(
       state,
-      (val) => {
-        console.log("valState", val);
+      () => {
         if (state.formData.protocol === "all") {
           state.isAll = true;
           state.formData.sport = "";
@@ -261,7 +265,7 @@ export default {
     watch(
       () => editRow.value,
       (val) => {
-        console.log("val", val);
+        populate(val);
       }
     );
     watch(
@@ -284,6 +288,21 @@ export default {
     });
     const closeModal = () => {
       emitter.emit("closeSquidUserModal");
+    };
+    const populate = (data) => {
+      state.id = data.id;
+      let filtredPolicy = policyList.value.filter((i) => i === data?.policy);
+      let filtredProtocol = protocolList.value.filter(
+        (i) => i === data?.protocol[0]
+      );
+
+      state.formData.policy = filtredPolicy[0];
+      state.formData.rule_description = data.rule_description;
+      state.formData.protocol = filtredProtocol[0];
+      state.formData.saddr = data.saddr;
+      state.formData.sport = data.sport;
+      state.formData.daddr = data.daddr;
+      state.formData.dport = data.dport;
     };
     const getCookie = (name) => {
       let cookieValue = null;
@@ -315,6 +334,7 @@ export default {
             protocol: state.formData.protocol,
             saddr: state.formData.saddr,
             daddr: state.formData.daddr,
+            id: modalMode.value === "edit" ? state.id : "",
           };
         } else {
           payload = {
@@ -326,27 +346,50 @@ export default {
             sport: state.formData.sport,
             daddr: state.formData.daddr,
             dport: state.formData.dport,
+            id: modalMode.value === "edit" ? state.id : "",
           };
         }
-        axios
-          .post(`/rules/addRule/${state.nameInter}`, payload)
-          .then((response) => {
-            console.log("re", response);
-            if (response.status == "200") {
+        if (modalMode.value === "edit") {
+          axios
+            .put(`/rules/updateRule/${state.nameInter}`, payload)
+            .then((response) => {
+              console.log("re", response);
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.response;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              console.log("res", i.response);
               state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.response;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            console.log("res", i.response);
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.response;
-          });
+              state.color = "red";
+              state.textAlert = i.response.data.response;
+            });
+        } else if (modalMode.value === "create") {
+          axios
+            .post(`/rules/addRule/${state.nameInter}`, payload)
+            .then((response) => {
+              console.log("re", response);
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.response;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              console.log("res", i.response);
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.response;
+            });
+        }
       } else {
         console.log("error", v$.value);
       }
@@ -354,6 +397,8 @@ export default {
 
     return {
       state,
+      policyList,
+      protocolList,
       v$,
       emitter,
       closeModal,

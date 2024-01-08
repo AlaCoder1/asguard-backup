@@ -300,14 +300,18 @@ export default defineComponent({
           break;
         case "update":
           mode.value = "update";
-          showAddModal.value = true;
-          policy.value = rowData.policy;
-          rule_description.value = rowData.rule_description;
-          protocol.value = rowData.protocol;
-          saddr.value = rowData.saddr;
-          sport.value = rowData.sport;
-          daddr.value = rowData.daddr;
-          dport.value = rowData.dport;
+          state.modalData = {};
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+          state.editRow = rowData;
+          // showAddModal.value = true;
+          // policy.value = rowData.policy;
+          // rule_description.value = rowData.rule_description;
+          // protocol.value = rowData.protocol;
+          // saddr.value = rowData.saddr;
+          // sport.value = rowData.sport;
+          // daddr.value = rowData.daddr;
+          // dport.value = rowData.dport;
           break;
         default:
           break;

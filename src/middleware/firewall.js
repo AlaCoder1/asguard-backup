@@ -54,7 +54,12 @@ import * as components from 'vuetify/components'
 import * as directives from 'vuetify/directives'
 import firewall from '../views/firewall/firewall.vue';
 import axios from 'axios'
+import mitt from 'mitt'
 const app = createApp(firewall);
+
+const emitter = mitt()
+app.provide('emitter', emitter)
+
 const vuetify = createVuetify({
     components,
     directives

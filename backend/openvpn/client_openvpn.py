@@ -1,3 +1,5 @@
+"""This file is for working on Client OpenVPN in system"""
+
 from pathlib import Path
 from backend.openvpn.constant_variables import PATH_CLIENT_OVPN, PATH_CLIENT_PAS, PATH_CLIENT_STATIC, PATH_CLIENT_UP
 from backend.openvpn.utils import create_tls_file

@@ -1,4 +1,6 @@
+import subprocess
 from backend.ipsec.models import ServerIPsec
+from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_CRT
 from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
 
@@ -109,6 +111,16 @@ def set_key_group_config(key_group:str):
     return f"curve{dh_byte[1]}"
 
 
+def up_ipsec_conn(conn_name):
+    """Up IPsec config"""
+    process = subprocess.run(['sudo', 'ipsec', 'up', conn_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    print('error: ', process.stderr.decode())
+    error_up_command = process.stderr.decode()
+    if len(error_up_command) != 0:
+        return False
+    return True
+
+
 def json_to_str_server_ipsec(json_object):
     """Function to convert a json object to an input of ipsec server config file"""
     
@@ -118,12 +130,11 @@ conn {json_object["conn_name"]}
     authby=secret
     type=transport
     left=%any
-    #leftid=10.1.12.155
     #leftsubnet
     #leftcert=path_cert
     #leftrsasigkey=path_public_key
     right={json_object["remote_gateway"]}
-    #rightid=distingushed_name
+    #rightcert=path_cert
     #rightrsasigkey=path_public_key
     #rightsubnet
     #rightallowany=yes
@@ -168,9 +179,9 @@ conn {json_object["conn_name"]}
     if json_object["authentication"]["authentication_method"] == "Mutual RSA":
         config_input = config_input.replace("authby=secret", "authby=rsasig")
         config_input = config_input.replace("#leftcert=path_cert", 
-                                            f"""leftcert={json_object["authentication"]["cert"]}Cert.pem""")
-        config_input = config_input.replace("#rightid=distingushed_name", 
-                                            f"""rightid="{json_object["authentication"]["remote_distingushed_name"]}" """)
+                                            f"""leftcert={PATH_SERVER_CERT_CRT.format(json_object["authentication"]["cert"])}""")
+        config_input = config_input.replace("#rightcert=path_cert", 
+                                            f"""rightcert={PATH_SERVER_CERT_CRT.format(json_object["authentication"]["remote_distingushed_name"])}""")
     elif json_object["authentication"]["authentication_method"] == "Mutual Public key":
         config_input = config_input.replace("authby=secret", "authby=pubkey")
         config_input = config_input.replace("#leftrsasigkey=path_public_key", 

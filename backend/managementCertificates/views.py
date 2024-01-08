@@ -6,10 +6,11 @@ from rest_framework.authentication import SessionAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from backend.ipsec.models import ServerIPsec
+from backend.managementCertificates.certificate import create_certificate_in_system, delete_certificate_in_system, export_certificate_in_system, import_certificate_in_system, revoke_certificates_in_system, unrevoke_certificates_in_system
 
-from backend.managementCertificates.certificate import create_ca_in_system, create_certificate_in_system, delete_ca_in_system, delete_certificate_in_system, export_ca_in_system, export_ca_list_rev_in_system, export_certificate_in_system, import_ca_in_system, import_certificate_in_system, revoke_certificates_in_system, unrevoke_certificates_in_system
+from backend.managementCertificates.certificate_authority import create_ca_in_system, delete_ca_in_system, export_ca_in_system, export_ca_list_rev_in_system, import_ca_in_system
 from backend.managementCertificates.constant_variables import PATH_CA_CRT, PATH_CA_KEY
 from utils.constant_variables import ERROR_MESSAGES_DELETE_USED_CA, ERROR_MESSAGES_DELETE_USED_ITEM, ERROR_MESSAGES_EXPORTING, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_DELETE
 from backend.managementCertificates.list_certificates import get_list_all_cert_auth, get_list_all_certificates, get_one_cert_auth, get_one_certificate
@@ -30,7 +31,7 @@ from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def getAllCertAuth(request):
+def get_all_cert_auth(request):
     """Getting all Certificates Authority from database"""
     if (request.method == 'GET'):
         list_ca = get_list_all_cert_auth()
@@ -42,7 +43,7 @@ def getAllCertAuth(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def getCertAuth(request, id):
+def get_cert_auth(request, id):
     """Getting a Certificates Authority by id from database"""
     if (request.method == 'GET'):
         cert = get_one_cert_auth(id)
@@ -74,108 +75,110 @@ def getCertAuth(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def createCertAuth(request):
+def create_cert_auth(request):
     """Creating a new Certificates Authority in system and adding it to the database"""
-    if request.method == 'POST':
-        try:
-            data = request.data
+    try:
+        data = request.data
 
-            # parse the incoming information
-            data = request.data
-            name = data.get('name', '')
-            method = data.get('method', '')
-            if method.get("name_method", "") == 'create':
-                
-                # Creating CA
-                lifetime = method.get('lifetime', '')
-                valid_from = datetime.now()
-                valid_until = valid_from + timedelta(days=lifetime)
-                key_type = method.get('key_type', '')
-                key_length = method.get('key_length', '')
-                digest_algorithm = method.get('digest_algorithm', '')
-                country_code = method.get('country_code', '')
-                state = method.get('state', '')
-                city = method.get('city', '')
-                organization = method.get('organization', '')
-                email = method.get('email', '')
-                common_name = method.get('common_name', '')
-                ca_data = {"name": name,
-                           "valid_from": valid_from,
-                           "valid_until": valid_until,
-                           "key_type": key_type,
-                           "key_length": key_length,
-                           "digest_algorithm": digest_algorithm,
-                           "lifetime": lifetime,
-                           "country_code": country_code,
-                           "state": state,
-                           "city": city,
-                           "organization": organization,
-                           "email": email,
-                           "common_name": common_name,
-                           }
-                serializer_ca = CertificateAuthoritySerializer(data=ca_data)
-                if serializer_ca.is_valid():
-                    updated_fields_vars = {"KEY_SIZE": key_length,
-                                           "ALGO": key_type,
-                                           "CERT_EXPIRE": lifetime,
-                                           "REQ_COUNTRY": country_code,
-                                           "REQ_PROVINCE": state,
-                                           "REQ_CITY": city,
-                                           "REQ_ORG": organization,
-                                           "REQ_EMAIL": email,
-                                           "DIGEST": digest_algorithm,
-                                        #    "DN": "\"org\"",
-                                           }
-                    # Install the server in system
-                    serial = create_ca_in_system(ca_name=name, common_name=common_name, updated_fields_vars=updated_fields_vars)
-                    ca_data['serial'] = serial
-                    serializer_ca = CertificateAuthoritySerializer(data=ca_data)
-                    if serializer_ca.is_valid():
-                        # Add the server to the database
-                        serializer_ca.save()
-                        return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('CA', name)}, status=201)
-                    
-                    else:
-                        return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
-                    
-                else:
-                    return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
+        # parse the incoming information
+        data = request.data
+        name = data.get('name', '')
+        method = data.get('method', '')
+        method_name = method.get("name_method", "")
+        if method_name == 'create':
             
-            elif method.get("name_method", "") == 'import':
-
-                # Importing an existing CA
-                certificate_data = method.get("certificate_data", "")
-                certificate_private_key = method.get("certificate_key", "")
-                serial = method.get("serial", "")
-                ca_data = {"name": name,
-                           "serial": serial}
+            # Creating CA
+            lifetime = method.get('lifetime', '')
+            valid_from = datetime.now()
+            valid_until = valid_from + timedelta(days=lifetime)
+            key_type = method.get('key_type', '')
+            key_length = method.get('key_length', '')
+            digest_algorithm = method.get('digest_algorithm', '')
+            country_code = method.get('country_code', '')
+            state = method.get('state', '')
+            city = method.get('city', '')
+            organization = method.get('organization', '')
+            email = method.get('email', '')
+            common_name = method.get('common_name', '')
+            ca_data = {"name": name,
+                       "method_name": method_name,
+                       "valid_from": valid_from,
+                       "valid_until": valid_until,
+                       "key_type": key_type,
+                       "key_length": key_length,
+                       "digest_algorithm": digest_algorithm,
+                       "lifetime": lifetime,
+                       "country_code": country_code,
+                       "state": state,
+                       "city": city,
+                       "organization": organization,
+                       "email": email,
+                       "common_name": common_name,
+                       }
+            serializer_ca = CertificateAuthoritySerializer(data=ca_data)
+            if serializer_ca.is_valid():
+                updated_fields_vars = {"KEY_SIZE": key_length,
+                                       "ALGO": key_type,
+                                       "CERT_EXPIRE": lifetime,
+                                       "REQ_COUNTRY": country_code,
+                                       "REQ_PROVINCE": state,
+                                       "REQ_CITY": city,
+                                       "REQ_ORG": organization,
+                                       "REQ_EMAIL": email,
+                                       "DIGEST": digest_algorithm,
+                                    #    "DN": "\"org\"",
+                                        }
+                # Install the server in system
+                serial = create_ca_in_system(ca_name=name, common_name=common_name, updated_fields_vars=updated_fields_vars)
+                ca_data['serial'] = serial
                 serializer_ca = CertificateAuthoritySerializer(data=ca_data)
                 if serializer_ca.is_valid():
-                    input_ca = {"certificate_data": certificate_data,
-                                "certificate_private_key": certificate_private_key,
-                                "serial": serial
-                                }
-                    serial, start_date, end_date, lifetime, distingushed_name = import_ca_in_system(name, input_ca)
-                    ca_data["valid_from"] = start_date
-                    ca_data["valid_until"] = end_date
-                    ca_data["lifetime"] = lifetime
-                    for dn_item, dn_data in distingushed_name.items():
-                        ca_data[dn_item] = dn_data
-                    serializer_ca = CertificateAuthoritySerializer(data=ca_data)
-                    if serializer_ca.is_valid():
-                        
-                        serializer_ca.save()
-                        return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('CA', name)}, status=201)
-                    else:
-                        return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
+                    # Add the server to the database
+                    serializer_ca.save()
+                    return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('CA', name)}, status=201)
+                
                 else:
                     return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
+                
+            else:
+                return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
+        
+        elif method_name == 'import':
+
+            # Importing an existing CA
+            certificate_data = method.get("certificate_data", "")
+            certificate_private_key = method.get("certificate_key", "")
+            serial = method.get("serial", "")
+            ca_data = {"name": name,
+                       "method_name": method_name,
+                       "serial": serial}
+            serializer_ca = CertificateAuthoritySerializer(data=ca_data)
+            if serializer_ca.is_valid():
+                input_ca = {"certificate_data": certificate_data,
+                            "certificate_private_key": certificate_private_key,
+                            "serial": serial
+                            }
+                serial, start_date, end_date, lifetime, distingushed_name = import_ca_in_system(name, input_ca)
+                ca_data["valid_from"] = start_date
+                ca_data["valid_until"] = end_date
+                ca_data["lifetime"] = lifetime
+                for dn_item, dn_data in distingushed_name.items():
+                    ca_data[dn_item] = dn_data
+                serializer_ca = CertificateAuthoritySerializer(data=ca_data)
+                if serializer_ca.is_valid():
+                    
+                    serializer_ca.save()
+                    return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('CA', name)}, status=201)
+                else:
+                    return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
+            else:
+                return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
 
 
-        except CommandExecutionError:
-            return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('CA')}, status=400)
-        except ValueError as error:
-            return JsonResponse({"error": error.__str__()}, status=400)
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('CA')}, status=400)
+    except ValueError as error:
+        return JsonResponse({"error": error.__str__()}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -183,7 +186,7 @@ def createCertAuth(request):
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def deleteCertAuth(request, id):
+def delete_cert_auth(request, id):
     """Deleting a Certificates Authority from system and then from database"""
     try:
         if (request.method == 'DELETE'):
@@ -211,7 +214,7 @@ def deleteCertAuth(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def exportCertAuth(request, id):
+def export_cert_auth(request, id):
     """Exporting a Certificate Authority"""
     if request.method == 'POST':
         try:
@@ -235,7 +238,7 @@ def exportCertAuth(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def exportCertAuthListRev(request, id):
+def export_cert_auth_list_rev(request, id):
     """Exporting a Certificate Authority"""
     if request.method == 'POST':
         try:
@@ -258,7 +261,7 @@ def exportCertAuthListRev(request, id):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def getAllCertificates(request):
+def get_all_certificates(request):
     """Getting all Certificates from database"""
     if (request.method == 'GET'):
         list_cert = get_list_all_certificates()
@@ -270,7 +273,7 @@ def getAllCertificates(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def getCertificate(request, id):
+def get_certificate(request, id):
     """Getting a Certificate by id from database"""
     if (request.method == 'GET'):
         cert = get_one_certificate(id)
@@ -306,15 +309,16 @@ def getCertificate(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def createCertificate(request):
+def create_certificate(request):
     """Creating a new Certificates in system and adding it to the database"""
     try:
         # parse the incoming information
         data = request.data
         name = data.get('name', '')
         method = data.get('method', '')
+        method_name = method.get("method_name", "")
         activation = data.get('activation', '')
-        if method.get("method_name", "") == 'create':
+        if method_name == 'create':
             certificate_type = method.get('certificate_type', '')
             lifetime = method.get('lifetime', '')
             valid_from = datetime.now()
@@ -379,7 +383,7 @@ def createCertificate(request):
                         return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('Certificate', name)}, status=201)
             else:
                 return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
-        elif method.get("method_name", "") == 'import':
+        elif method_name == 'import':
             certificate_data = method.get("certificate_data", "")
             certificate_key = method.get("certificate_key", "")
             serial = method.get("serial", "")
@@ -395,8 +399,6 @@ def createCertificate(request):
                               "serial": serial
                               }
                 serial, start_date, end_date, lifetime, distingushed_name, certificate_type = import_certificate_in_system(name, input_cert)
-                # if serial != cert_data["serial"]:
-                #     return JsonResponse({"error": "Serial number input are not correct"}, status=400)
 
                 cert_data["valid_from"] = start_date
                 cert_data["valid_until"] = end_date
@@ -424,7 +426,7 @@ def createCertificate(request):
 @api_view(['Delete'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def deleteCertificate(request, id):
+def delete_certificate(request, id):
     """Deleting a Certificates from system and then from database"""
     if (request.method == 'DELETE'):
         try:
@@ -458,7 +460,7 @@ def deleteCertificate(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def revokeCertificate(request, id):
+def revoke_certificate(request, id):
     if request.method == 'PUT':
         try:
             data = request.data
@@ -490,7 +492,7 @@ def revokeCertificate(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def unrevokeCertificate(request, id):
+def unrevoke_certificate(request, id):
     if request.method == 'PUT':
         try:
             cert = Certificate.objects.get(id=id)
@@ -515,7 +517,7 @@ def unrevokeCertificate(request, id):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def exportCert(request, id):
+def export_cert(request, id):
     """Creating a new Certificates Authority in system and adding it to the database"""
     if request.method == 'POST':
         try:

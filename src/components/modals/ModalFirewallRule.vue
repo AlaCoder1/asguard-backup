@@ -251,7 +251,12 @@ export default {
     watch(
       state,
       () => {
-        if (state.formData.protocol === "all") {
+        if (
+          state.formData.protocol === "all" ||
+          state.formData.protocol === "icmp" ||
+          state.formData.protocol === "icmp type echo-request" ||
+          state.formData.protocol === "icmp type echo-reply"
+        ) {
           state.isAll = true;
           state.formData.sport = "";
           state.formData.dport = "";
@@ -272,6 +277,15 @@ export default {
       () => modalMode.value,
       (val) => {
         console.log("modalMode", val);
+        if (val === "create") {
+          state.formData.policy = "";
+          state.formData.rule_description = "";
+          state.formData.protocol = "";
+          state.formData.saddr = "";
+          state.formData.sport = "";
+          state.formData.daddr = "";
+          state.formData.dport = "";
+        }
       }
     );
     watch(
@@ -288,6 +302,15 @@ export default {
     });
     const closeModal = () => {
       emitter.emit("closFirewallInboundModal");
+      if (modalMode.value === "create") {
+        state.formData.policy = "";
+        state.formData.rule_description = "";
+        state.formData.protocol = "";
+        state.formData.saddr = "";
+        state.formData.sport = "";
+        state.formData.daddr = "";
+        state.formData.dport = "";
+      }
     };
     const populate = (data) => {
       state.id = data.id;
@@ -326,7 +349,12 @@ export default {
 
       if (result) {
         let payload = {};
-        if (state.formData.protocol === "all") {
+        if (
+          state.formData.protocol === "all" ||
+          state.formData.protocol === "icmp" ||
+          state.formData.protocol === "icmp type echo-request" ||
+          state.formData.protocol === "icmp type echo-reply"
+        ) {
           payload = {
             type_rule: "inbound",
             policy: state.formData.policy,

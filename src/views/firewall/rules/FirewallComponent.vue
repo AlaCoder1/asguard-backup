@@ -70,7 +70,7 @@
         @firstDataRendered="onFirstDataRendered"
         @row-drag-end="onRowDragEnd"
         :pagination="true"
-        :paginationPageSize="10"
+        :paginationPageSize="4"
         :rowSelection="'multiple'"
       >
       </ag-grid-vue>

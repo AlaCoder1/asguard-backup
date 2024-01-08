@@ -47,7 +47,7 @@ export default {
       {
         title: "Base",
         prices: [
-          { label: "Annual", amount: 1000 },
+          { label: "Annual", amount: 1200 },
           { label: "Monthly", amount: 100 },
         ],
         communservices: ["Firewall", "ZTNA", "LDAP"],
@@ -74,7 +74,7 @@ export default {
       {
         title: "Premium",
         prices: [
-          { label: "Annual", amount: 1500 },
+          { label: "Annual", amount: 1700 },
           { label: "Monthly", amount: 150 },
         ],
         communservices: ["Firewall", "ZTNA", "LDAP"],
@@ -86,12 +86,8 @@ export default {
 
     onMounted(() => {
       emitter.on("changePrice", (data) => {
-        if (data > 0) {
-          let price = data + 1200;
-          subscriptionCards.value[1].prices[0].amount = price;
-        } else if (data == 0) {
-          subscriptionCards.value[1].prices[0].amount = 1200;
-        }
+        let price = data + 1200;
+        subscriptionCards.value[1].prices[0].amount = price;
       });
     });
 

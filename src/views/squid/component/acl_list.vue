@@ -10,7 +10,7 @@
         <v-row class="mt-5">
           <v-col cols="12" md="6">
             <v-text-field
-              id="filter-text-box"
+              id="filter-text-box-acl"
               density="compact"
               class="w-25"
               variant="solo"
@@ -19,12 +19,12 @@
               append-inner-icon="mdi-magnify"
               single-line
               hide-details
-              @input="onFilterTextBoxChanged"
+              @input="onFilterAclChanged"
             ></v-text-field>
           </v-col>
         </v-row>
         <v-row>
-          <div style="overflow: hidden; flex-grow: 1">
+          <div class="mb-10" style="overflow: hidden; flex-grow: 1">
             <ag-grid-vue
               id="grid-wrapper"
               domLayout="autoHeight"
@@ -40,6 +40,16 @@
             </ag-grid-vue>
           </div>
         </v-row>
+        <v-snackbar
+          :timeout="2000"
+          v-model="state.snackbar"
+          location="bottom right"
+          :color="state.color"
+        >
+          {{ state.textAlert }}
+
+          <template v-slot:actions> </template>
+        </v-snackbar>
 
         <ModalSquidBlackList
           :isOpen="state.isModalOpen"
@@ -51,21 +61,29 @@
 </template>
 
 <script>
+import axios from "axios";
 import { reactive, ref, onMounted, inject } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalSquidBlackList from "@/components/modals/ModalSquidBlackList.vue";
+import CertStatusRenderVue from "../agGridCustomRender/CertStatusRenderVue.vue";
+import CertAclStatus from "../agGridCustomRender/CertAclStatus.vue";
 export default {
   components: {
     AgGridVue,
     VButton,
     ModalSquidBlackList,
+    CertStatusRenderVue,
+    CertAclStatus
   },
   setup() {
     const emitter = inject("emitter");
     const state = reactive({
+      snackbar: false,
+      color: "",
+      textAlert: "",
       off: false,
       on: false,
       proxyPort: "",
@@ -88,28 +106,19 @@ export default {
     const columnAclList = [
       {
         headerName: "List name",
-        field: "list_name",
-        sortable: true,
+        field: "name",
         autoHeight: true,
-        filter: true,
-      },
-      {
-        headerName: "Category",
-        field: "category",
-        sortable: true,
-        filter: true,
-      },
-      {
-        headerName: "List Count",
-        field: "list_count",
-        sortable: true,
-        filter: true,
       },
       {
         headerName: "Status",
         field: "status",
-        sortable: true,
-        filter: true,
+        cellRendererSelector: function (params) {
+          const status = {
+            component: "CertAclStatus",
+            params: params.data.status,
+          };
+          return status;
+        },
       },
       {
         headerName: "Actions",
@@ -135,9 +144,9 @@ export default {
       }
     };
 
-    const onFilterTextBoxChanged = () => {
+    const onFilterAclChanged = () => {
       gridApi.value.setQuickFilter(
-        document.getElementById("filter-text-box").value
+        document.getElementById("filter-text-box-acl").value
       );
     };
 
@@ -151,30 +160,49 @@ export default {
 
       if (isCurrentRowEditing) {
         eGui.innerHTML = `
-    <button  
-      class="action-button update"
-      data-action="update">
-           update  
-    </button>
-    <button  
-      class="action-button cancel"
-      data-action="cancel">
-           cancel
-    </button>
+          <button
+            class="action-button update"
+            data-action="update">
+                update
+          </button>
+          <button
+            class="action-button cancel"
+            data-action="cancel">
+                cancel
+          </button>
     `;
       } else {
-        eGui.innerHTML = `
-    <button 
-      class="action-button edit"  
-      data-action="edit">
-         <i class="far fa-edit" style="color: #086eae;"></i> 
-      </button>
-    <button 
-      class="action-button delete"
-      data-action="delete">
-        <i class="fas fa-times" style="color: #086eae;"></i>
-    </button>
+        if (params.data.name === "adult") {
+          eGui.innerHTML = `No Adult For Instance`;
+        } else {
+          if (params.data.status === "Blocked") {
+            eGui.innerHTML = `
+            <button
+              class="action-button edit"
+              data-action="edit" >
+                <i class="mdi mdi-square-edit-outline fa-lg" style="color: #086eae; font-size:24px;"></i>
+              </button>
+            <button
+              class="action-button enable"
+              data-action="enable" title="Change Group Status">
+                <i class="mdi mdi-lock-open-outline fa-lg"" style="color: #086eae; font-size:24px;"></i>
+              </button>
+
+            
+
     `;
+          } else {
+            eGui.innerHTML = `
+          
+            <button
+              class="action-button enable"
+              data-action="enable" title="Change Group Status">
+                <i class="mdi mdi-lock fa-lg"" style="color: #086eae; font-size:24px;"></i>
+              </button>
+
+    `;
+          }
+        }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -197,24 +225,79 @@ export default {
           state.isModalOpen = true;
 
           break;
+        case "enable":
+          console.log("rowData", rowData);
+          const csrfToken = getCookie("csrftoken");
+          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+          let payload = {
+            group: rowData.name,
+            status: rowData.status === "Blocked" ? true : false,
+          };
+
+          axios
+            .post("/proxy/changeStausGroup", payload)
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+
+          break;
         default:
           break;
       }
+    };
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
     };
 
     onMounted(() => {
       emitter.on("closeAclListModal", () => {
         state.isModalOpen = false;
       });
+
+      const proxyGroupsAttribute =
+        document.getElementById("app").attributes["proxyGroups"].value;
+      const proxyGroups = JSON.parse(proxyGroupsAttribute);
+
+      let mapedGroups = proxyGroups.map((i) => {
+        return {
+          name: i.name,
+          status: i.status === true ? "Blocked" : "Unblocked",
+        };
+      });
+
       if (!rowDataAclList.value) {
         rowDataAclList.value = [];
       }
-      const newRow = {
-        list_name: "souhail",
-        category: "category",
-        list_count: "list_count",
-      };
-      rowDataAclList.value.push(newRow);
+
+      rowDataAclList.value = mapedGroups;
     });
 
     return {
@@ -226,8 +309,8 @@ export default {
       onGridReady,
       actionCellRenderer,
       defaultColDef,
-      onFilterTextBoxChanged,
       handleAction,
+      onFilterAclChanged,
     };
   },
 };

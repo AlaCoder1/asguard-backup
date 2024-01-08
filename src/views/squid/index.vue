@@ -2,6 +2,12 @@
   <v-app id="inspire">
     <base-layout title="Proxy" active-menu="Key_Pair">
       <template #content>
+        <v-alert
+          v-model="state.serverStatus"
+          density="compact"
+          type="warning"
+          title="Please restart the service for the modifications to take effect."
+        ></v-alert>
         <div class="mr-6 ml-3">
           <general_info />
           <list />
@@ -13,7 +19,7 @@
 </template>
 
 <script>
-import { reactive, onMounted } from "vue";
+import { onMounted, reactive } from "vue";
 import BaseLayout from "@/layouts/layout.vue";
 import general_info from "./component/general_info.vue";
 import list from "./component/list.vue";
@@ -27,29 +33,20 @@ export default {
     acl_list,
     list,
   },
+
   setup() {
-    const state = reactive({});
-
-    onMounted(() => {});
-
-    const getCookie = (name) => {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === name + "=") {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
-    };
+    const state = reactive({
+      serverStatus: true,
+    });
+    onMounted(() => {
+      const statusServerAttribute =
+        document.getElementById("app").attributes["statusServer"].value;
+      const statusServer = JSON.parse(statusServerAttribute);
+      state.serverStatus = statusServer;
+    });
 
     return {
       state,
-      getCookie,
     };
   },
 };

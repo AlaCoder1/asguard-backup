@@ -13,8 +13,16 @@ import re
 from django.utils import timezone
 import os
 from backend.clamav.functions_sys import execute_cmd
+from backend.clamav.constant_variables import SCAN_PATHS
+
+
+
+###################################### Function to display list of clamav and freshclam configurations ##########################
+
 
 def getclamavconfigurations():
+        """list of congifurations of clamav and freshclam"""
+
         clamd_list = []
         # Get all configurations from database
         clamavconfig_from_db = ClamAV.objects.all()
@@ -31,9 +39,11 @@ def getclamavconfigurations():
         # Return the list in json form 
         return json.dumps(clamd_list)
     
-PREDEFINED_PATHS = ['-i /etc', '/home']
+
+###################################### Function display the result of clamav scan ################################
 
 def clamav_full_scan_result():
+    """ result of scan and list of logs get it after the clamavscan"""
     try:
 
         aggregated_summary = {
@@ -51,7 +61,7 @@ def clamav_full_scan_result():
 
         log_files = []
 
-        for path in PREDEFINED_PATHS:
+        for path in SCAN_PATHS:
             command_to_execute = f'clamscan -r  {path}'
 
             
@@ -90,7 +100,13 @@ def clamav_full_scan_result():
         return JsonResponse({'error': 'An error occurred while processing the request.'}, status=500)
     
 
+
+######################################### Function used by  clamav_full_scan_result function to calculate the somme of the results the scan of each paths ####################################################################
+
+
 def aggregate_scan_results(aggregated_summary,scan_summary):
+
+    """Calcul the result of scan of all paths"""
 
     known_viruses = int(re.search(r'Known viruses: (\d+)', scan_summary).group(1))
     engine_version = re.search(r'Engine version: (.+?)Scanned', scan_summary).group(1)

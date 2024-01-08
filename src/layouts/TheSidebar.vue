@@ -3,6 +3,7 @@
     v-model="drawer"
     :rail="rail"
     hover
+    permanent
     foating
     :rail-width="67"
     class="global-drawer"
@@ -289,8 +290,14 @@ export default {
             {
               title: "Proxy Web",
               icon: "",
-              href: "/proxy-web",
+              href: "/proxy",
               active: "Proxy Web",
+            },
+            {
+              title: "SDWAN",
+              icon: "",
+              href: "/sdwan",
+              active: "SDWAN",
             },
           ],
           subMenuVisible: false,

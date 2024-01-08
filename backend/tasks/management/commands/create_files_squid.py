@@ -1,6 +1,6 @@
 import subprocess
 from django.core.management.base import BaseCommand
-from proxy.views import run_command
+from backend.proxy.views import run_command
 
 def run_command(command):
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)

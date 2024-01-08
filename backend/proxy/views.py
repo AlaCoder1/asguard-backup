@@ -7,6 +7,11 @@ from .serializers import *
 from backend.proxy.models import *
 # from django.views.decorators.csrf import csrf_exempt
 from django.core import serializers
+from .function import *
+from datetime import datetime
+from drf_yasg.utils import swagger_auto_schema
+from rest_framework.decorators import api_view, authentication_classes
+from rest_framework.authentication import SessionAuthentication
 # Create your views here.
 
 def run_command(command):
@@ -15,11 +20,21 @@ def run_command(command):
     error = completed_process.stderr
     return output, error
 
-# @api_view(['GET'])
-# @authentication_classes([SessionAuthentication])
+
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API RESTAR SQUID",
+    operation_description="This API to restart the squid",
+)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
 def restart(request):
     process = subprocess.run(['systemctl', 'restart', 'squid'], capture_output=True, text=True)
     if process.returncode == 0:
+        server_satus = ServerSatus.objects.get(id=1)
+        server_satus.status_server = False
+        server_satus.save()
         msg = "Squid restart successfully"
         status = 200
     else:
@@ -27,6 +42,51 @@ def restart(request):
         status =404 
     return JsonResponse({"msg": msg}, status=status)
 
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API START SQUID",
+    operation_description="This API to start the squid",
+)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+def start(request):
+    process = subprocess.run(['systemctl', 'start', 'squid'], capture_output=True, text=True)
+    if process.returncode == 0:
+        msg = "Squid start successfully"
+        status = 200
+    else:
+        msg = "Squid start failed"
+        status =404 
+    return JsonResponse({"msg": msg}, status=status)
+
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API Stop SQUID",
+    operation_description="This API to stop the squid",
+)
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+def stop(request):
+    process = subprocess.run(['systemctl', 'stop', 'squid'], capture_output=True, text=True)
+    if process.returncode == 0:
+        msg = "Squid stoped successfully"
+        status = 200
+    else:
+        msg = "Squid stoped failed"
+        status =404 
+    return JsonResponse({"msg": msg}, status=status)
+
+@swagger_auto_schema(
+    method='GET',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API GET ALL PROXY's RULES",
+    operation_description="This API to get all proxy's rules",
+)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
 def allRuleSquid(request):
     list_proxyRules =[]
     data = ProxyRules.objects.all()
@@ -40,63 +100,162 @@ def allRuleSquid(request):
         list_proxyRules.append(res[i]['fields'])
     return JsonResponse({"data":list_proxyRules})
 
+
+def add_line_after_pattern(file_path, pattern, new_line):
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    found = False
+    for i, line in enumerate(lines):
+        if pattern in line:
+            found = True
+            lines.insert(i + 1, new_line)
+            break
+
+    if not found:
+        print(f"Pattern '{pattern}' not found in the file.")
+
+    with open(file_path, 'w') as file:
+        file.writelines(lines)
+
+
+def enable_by_time():
+    config_file_path = '/etc/squid/squid.conf'
+    with open(config_file_path, 'r') as file:
+        config_lines = file.readlines()
+
+    # Uncomment the desired lines
+    for i, line in enumerate(config_lines):
+        if line.strip().startswith('#http_access deny blocked_domain_by_time time_block') :
+            config_lines[i] = line.replace('#', '')
+
+    # Write the changes back to the file
+    with open(config_file_path, 'w') as file:
+        file.writelines(config_lines)
+
+    return JsonResponse({"msg": "Lines uncommented successfully."}, status=200)
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API CREATE SQUID RULE",
+    operation_description="This API to create squid rule",
+)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
 def addRuleSquid(request):
     msg = ''
-    data = json.loads(request.body)
-    # if data['allow_by_auth'] == False:
-    #     if data['type'] == "ip":
-    #         file_path = '/etc/squid/blocked_ip.acl'
-    #     elif data['type'] == "domain":
-    #         file_path = '/etc/squid/blocked_domain.acl'
-    #     else:
-    #         file_path = '/etc/squid/blocked_subnet.acl'
-    # else:
-    #     if data['type'] == "ip":
-    #         file_path = '/etc/squid/allowed_ip_by_auth.acl'
-    #     elif data['type'] == "domain":
-    #         file_path = '/etc/squid/allowed_domain_by_auth.acl'
-    #     else:
-    #         file_path = '/etc/squid/allowed_subnet_by_auth.acl'
-    file_path = file_selected(data['allow_by_auth'],data['type'])
-    if  data['status'] == False:
-        value = '#'+data['value']
-    else:
-        value = data['value']
-    try:
-        with open(file_path, 'a') as file:
-            file.write(value + '\n')
-        serializerProxyRules = ProxyRulesSerializer(data=data)
-        if (serializerProxyRules.is_valid()):
-            serializerProxyRules.save()
-            msg = f"{data['type']} blocked successfully."
-            status=200
-            return JsonResponse({"msg": msg}, status=status)
+    if (request.method == 'POST'):
+        data = request.data
+        write_in_file = True
+        if data['allow_by_auth'] == False:
+            if data['type'] == "ip":
+                file_path = '/etc/squid/blocked_ip.acl'
+            elif data['type'] == "domain":
+                if data['time_from'] != '':
+                # if time_from != '' or time_to !='':
+                    squid_path = '/etc/squid/squid.conf'
+                    name_rule = 'block_'+data['value']
+                    time_block_rule = 'time_'+name_rule
+                    line1='acl '+name_rule+' url_regex '+data['value']+'\n'
+                    add_line_after_pattern(squid_path,'acl localnet src fe80::/10',line1)
+                    line2='acl '+time_block_rule+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
+                    # line1='acl '+data['value']+' time '+data['days']+' '+data['time_from']+'-'+data['time_to']+'\n'
+                    add_line_after_pattern(squid_path,line1,line2)
+                    line3='\nhttp_access deny '+name_rule+' '+time_block_rule+'\n'
+                    add_line_after_pattern(squid_path,line2,line3)
+                    write_in_file = False
+                    # line+='acl time_block time '+data['days']+' '+data['time_from']+'-'+data['time_to']
+                    # add_line_after_pattern(file_path,'acl localnet src fe80::/10',line)
+                    # enable_by_time()
+                else:
+                    file_path = '/etc/squid/blocked_domain.acl'
+            else:
+                file_path = '/etc/squid/blocked_subnet.acl'
         else:
-            return JsonResponse(serializerProxyRules.errors, status=404 )
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        msg = e
-        status=404 
-        return JsonResponse({"msg": msg}, status=status)
-    
+            if data['type'] == "ip":
+                file_path = '/etc/squid/allowed_ip_by_auth.acl'
+            elif data['type'] == "domain":
+                file_path = '/etc/squid/allowed_domain_by_auth.acl'
+            else:
+                file_path = '/etc/squid/allowed_subnet_by_auth.acl'
+        # file_path = file_selected(data['allow_by_auth'],data['type'])
+        if  data['status'] == False:
+            value = '#'+data['value']
+        else:
+            value = data['value']
+        if write_in_file == True:
+            try:
+                with open(file_path, 'a') as file:
+                    file.write(value + '\n')
+                serializerProxyRules = ProxyRulesSerializer(data=data)
+                if (serializerProxyRules.is_valid()):
+                    serializerProxyRules.save()
+                    server_satus = ServerSatus.objects.get(id=1)
+                    server_satus.status_server = True
+                    server_satus.save()
+                    msg = f"{data['type']} blocked successfully."
+                    status=200
+                    return JsonResponse({"msg": msg}, status=status)
+                else:
+                    return JsonResponse(serializerProxyRules.errors, status=404 )
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                msg = e
+                status=404 
+                return JsonResponse({"msg": msg}, status=status)
+        else:
+            serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
+            if (serializerProxyRules.is_valid()):
+                serializerProxyRules.save()
+                msg = f"{data['type']} blocked successfully."
+                status=200
+                return JsonResponse({"msg": msg}, status=status)
+            else:
+                return JsonResponse(serializerProxyRules.errors, status=404 )
+
+@swagger_auto_schema(
+    method='DELETE',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API DELETE SQUID RULE",
+    operation_description="This API to delete squid rule",
+)    
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
 def deleteRuleSquid(request,id):
     msg=''
     data = ProxyRules.objects.get(id=id)
-    # if data.allow_by_auth == False:
-    #     if data.type == "ip":
-    #         file_path = '/etc/squid/blocked_ip.acl'
-    #     elif data.type == "domain":
-    #         file_path = '/etc/squid/blocked_domain.acl'
-    #     else:
-    #         file_path = '/etc/squid/blocked_subnet.acl'
-    # else:
-    #     if data.type == "ip":
-    #         file_path = '/etc/squid/allowed_ip_by_auth.acl'
-    #     elif data.type == "domain":
-    #         file_path = '/etc/squid/allowed_domain_by_auth.acl'
-    #     else:
-    #         file_path = '/etc/squid/allowed_subnet_by_auth.acl'
-    file_path = file_selected(data.allow_by_auth, data.type)
+    if data.allow_by_auth == False:
+        if data.type == "ip":
+            file_path = '/etc/squid/blocked_ip.acl'
+        elif data.type == "domain":
+            if data.time_from != None:
+                squid_path = '/etc/squid/squid.conf'
+                command = "sed -i '/"+data.value+"/d' "+squid_path
+                stdout, stderr = run_command(command)
+                if stderr =="":
+                    data.delete()
+                    server_satus = ServerSatus.objects.get(id=1)
+                    server_satus.status_server = True
+                    server_satus.save()
+                    msg = f"{data.type} address {data.value} unblocked successfully"
+                    status =200
+                    return JsonResponse({"msg": msg}, status=status)
+                else:
+                    msg =stderr
+                    status = 404 
+                return JsonResponse({"msg": msg}, status=status)
+            else:
+                file_path = '/etc/squid/blocked_domain.acl'
+        else:
+            file_path = '/etc/squid/blocked_subnet.acl'
+    else:
+        if data.type == "ip":
+            file_path = '/etc/squid/allowed_ip_by_auth.acl'
+        elif data.type == "domain":
+            file_path = '/etc/squid/allowed_domain_by_auth.acl'
+        else:
+            file_path = '/etc/squid/allowed_subnet_by_auth.acl'
+    # file_path = file_selected(data.allow_by_auth, data.type)
     new_content = []
     command = "cat " + file_path
     stdout, stderr = run_command(command)
@@ -118,6 +277,14 @@ def deleteRuleSquid(request,id):
         status = 404 
     return JsonResponse({"msg": msg}, status=status)
 
+# @swagger_auto_schema(
+#     method='GET',
+#     responses={200: 'Success', 400: 'Bad Request'},
+#     operation_summary="API GET SQUID STATUS",
+#     operation_description="This API to get squid status",
+# )
+# @api_view(['GET'])
+# @authentication_classes([SessionAuthentication])
 def get_squid_status():
     try:
         result = subprocess.run(['systemctl', 'status', 'squid.service'], capture_output=True, text=True, check=True)
@@ -128,7 +295,15 @@ def get_squid_status():
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return None
-    
+
+@swagger_auto_schema(
+    method='GET',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API GET GENERAL INFORMATION",
+    operation_description="This API to get general information",
+)    
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
 def get_generale_info(request):
     squid_conf_path = '/etc/squid/squid.conf'
     command = "cat "+squid_conf_path
@@ -149,9 +324,16 @@ def get_generale_info(request):
     else:
         return JsonResponse({"Port":port,"status":False})
 
-
+@swagger_auto_schema(
+    method='PUT',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API PUT GENERAL INFORMATION",
+    operation_description="This API to update the port in general information",
+)
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
 def update_generale_info(request):
-    data = json.loads(request.body)
+    data = request.data
     squid_conf_path = '/etc/squid/squid.conf'
     with open(squid_conf_path, 'r') as f:
         lines = f.readlines()
@@ -163,17 +345,19 @@ def update_generale_info(request):
         
     with open(squid_conf_path, 'w') as f:
         f.writelines(lines)
-    if data['enable'] == True:
-        cmd = "systemctl start squid"
-    else:
-        cmd = "systemctl stop squid"
-    
-    output,error = run_command(cmd)
-    if error == '':
-        return JsonResponse({"msg":"Port updated successfully."},status=200)
-    else:
-        return JsonResponse({"msg":error},status=404 )
-    
+    server_satus = ServerSatus.objects.get(id=1)
+    server_satus.status_server = True
+    server_satus.save() 
+    return JsonResponse({"msg":"Port updated successfully."},status=200)
+
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API POST DISABLE AUTHENTIFICATE",
+    operation_description="This API to disable authentificate",
+)   
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
 def disable_auth(request):
     config_file_path = '/etc/squid/squid.conf'
     lines_to_comment = [
@@ -201,10 +385,18 @@ def disable_auth(request):
     except Exception as e:
         print(f"An error occurred: {e}")
         return JsonResponse({"msg": f"An error occurred: {e}"}, status=404 )
-    
+
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API POST STATUS AUTHENTIFICATE",
+    operation_description="This API to change authentificate",
+)     
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
 def change_auth_status(request):
     config_file_path = '/etc/squid/squid.conf'
-    data = json.loads(request.body)
+    data = request.data
     if data['status'] ==True:
         lines_to_comment = [
         'http_access allow allowed_subnet_by_auth authenticated_users',
@@ -221,7 +413,9 @@ def change_auth_status(request):
                         file.write('#' + line)  
                     else:
                         file.write(line)
-
+            server_satus = ServerSatus.objects.get(id=1)
+            server_satus.status_server = True
+            server_satus.save() 
             return JsonResponse({"msg": "Lines commented successfully."}, status=200)
         except FileNotFoundError:
             print(f"Error: File not found at path {config_file_path}. Please provide the correct path.")
@@ -241,9 +435,19 @@ def change_auth_status(request):
 
         with open(config_file_path, 'w') as file:
             file.writelines(config_lines)
-
+        server_satus = ServerSatus.objects.get(id=1)
+        server_satus.status = True
+        server_satus.save() 
         return JsonResponse({"msg": "Lines uncommented successfully."}, status=200)
-    
+
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API POST ENABLE AUTHENTIFICATE",
+    operation_description="This API to enable authentificate",
+)   
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
 def enable_auth(request):
     config_file_path = '/etc/squid/squid.conf'
     with open(config_file_path, 'r') as file:
@@ -262,6 +466,14 @@ def enable_auth(request):
 
     return JsonResponse({"msg": "Lines uncommented successfully."}, status=200)
 
+@swagger_auto_schema(
+    method='GET',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API GET STATUS AUTHENTIFICATE",
+    operation_description="This API to get status authentificate",
+)  
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
 def status_enable_auth(request):
     list_line = []
     config_file_path = '/etc/squid/squid.conf'
@@ -277,11 +489,19 @@ def status_enable_auth(request):
             list_line.append(line)
     for i in lines_to_check:
         if i in list_line:
-            enable = False
+            enable = True
         else:
-            enable =True
+            enable =False
     return JsonResponse({"status_enable": enable}, status=200)
 
+@swagger_auto_schema(
+    method='GET',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API GET ALL PROXY's USERS",
+    operation_description="This API to get all proxy's users",
+)  
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
 def allProxyUsers(request):
     list_proxyUsers =[]
     data = ProxyUser.objects.all()
@@ -295,16 +515,74 @@ def allProxyUsers(request):
         list_proxyUsers.append(res[i]['fields'])
     return JsonResponse({"data":list_proxyUsers})
 
+
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API POST CRON TO CHANGE PASSWORD OF USERS PROXY",
+    operation_description="This API to change password of users proxy",
+)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+def change_pwd(request):
+    data = request.data
+    data_to_convert = datetime.strptime(data['time'], "%H:%M")
+    script_path = "/home/vagrant/g_pwd.py"
+    if data['period'] == "every days":
+        cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * * python {script_path}" 
+    elif data['period'] == "MON -> FRI":
+        cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * 1-5 python {script_path}" 
+    elif data['period'] == "every week":
+        cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * 0 python {script_path}" 
+    elif data['period'] == "every month":
+        month_expression = [ "$(date +\%m -d 'last monday')" != "$(date +\%m)" ]
+        cron_job = f"{data_to_convert.minute} {data_to_convert.hour} * * {month_expression} python {script_path}" 
+
+    try:
+        # Use subprocess to execute the crontab -l command and capture the current crontab content
+        current_crontab = subprocess.check_output(["crontab", "-l"], universal_newlines=True)
+        print({"current_crontab":current_crontab})
+        ## reset our cron with a empty str
+        current_crontab = ''
+        # Add the new cron job to the existing crontab content  
+        # new_crontab = f"{current_crontab.strip()}\n{cron_job}\n"
+        new_crontab = f"{current_crontab.strip()}{cron_job}\n"
+        print({"new_crontab":new_crontab})
+        print({"cron_job":cron_job})
+
+        # Use subprocess to set the new crontab content
+        subprocess.run(["echo", new_crontab], stdout=subprocess.PIPE, input=new_crontab, universal_newlines=True)
+        subprocess.run(["crontab", "-"], input=new_crontab, universal_newlines=True)
+
+        print("Cron job added successfully.")
+        return JsonResponse({"msg": "Cron job added successfully."}, status=200)
+    except subprocess.CalledProcessError as e:
+        print(f"Error: {e}")
+        return JsonResponse({"msg": e}, status=404)
+
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API POST PROXY'S USER",
+    operation_description="This API to add proxy's user",
+)   
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
 def add_user_squid(request):
-    data = json.loads(request.body)
+    data = request.data
     squid_conf_path = '/etc/squid/squid_passwd'
     username_squid = data.get('username')
     password_squid = data.get('password')
+    email_squid = data.get('email')
     try:
         subprocess.run(['htpasswd', '-b', squid_conf_path, username_squid, password_squid], check=True)
         try:
-            user_proxy = ProxyUser(username=username_squid)
+            user_proxy = ProxyUser(username=username_squid,email=email_squid)
             user_proxy.save()
+            server_satus = ServerSatus.objects.get(id=1)
+            server_satus.status_server = True
+            server_satus.save() 
+            #send_email_to_user(email_squid,password_squid,username_squid)
             msg = f"User '{username_squid}' added successfully."
             status=200
             return JsonResponse({"msg": msg}, status=status)
@@ -322,7 +600,14 @@ def add_user_squid(request):
         print(f"Error adding user: {e}")
         return JsonResponse({"msg": f"Error adding user: {e}"}, status=404 )
 
-
+@swagger_auto_schema(
+    method='DELETE',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API DELETE PROXY'S USER",
+    operation_description="This API to delete proxy's user",
+)  
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
 def delete_user_squid(request,id):
     user = ProxyUser.objects.get(id=id)
     file_path = '/etc/squid/squid_passwd'
@@ -341,12 +626,35 @@ def delete_user_squid(request,id):
     stdout, stderr = run_command(command)
     if stderr == '':
         user.delete()
+        server_satus = ServerSatus.objects.get(id=1)
+        server_satus.status_server = True
+        server_satus.save() 
         return JsonResponse({"msg":"User deleted successfully."},status=200)
     else:
         return JsonResponse({"msg":"Erreur."},status = 404 )
 
+
+def get_line_from_file(file_path, target_line):
+    with open(file_path, 'r') as file:
+        for line_number, line in enumerate(file, start=1):
+            if target_line in line:
+                if line.strip().startswith("#"):
+                    return(False)
+                else:
+                    return(True)
+
+    return None
+@swagger_auto_schema(
+    method='GET',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API GET ALL GROUPS",
+    operation_description="This API to get all groups",
+)  
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
 def allGroups(request):
     list_line = []
+    list_groups = []
     config_file_path = '/etc/squid/squid.conf'
     with open(config_file_path, 'r') as file:
                 content = file.readlines()
@@ -358,11 +666,23 @@ def allGroups(request):
     pattern = re.compile(r'acl (\w+) url_regex')
 
     groups = [pattern.findall(line)[0] for line in list_line if pattern.findall(line)]
-    
+    for i in groups:
+        target_line = 'http_access deny '+i
+        rslt = get_line_from_file(config_file_path,target_line)
+        list_groups.append({"name":i,"status":rslt})
+    return JsonResponse({"groups":list_groups},status = 200)
     return JsonResponse({"groups":groups},status = 200)
 
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API POST CHANGE STATUS OF GROUPS",
+    operation_description="This API to change status of groups",
+)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
 def changeStausGroup(request):
-    data = json.loads(request.body)
+    data = request.data
     group = data['group']
     status = data['status']
     squid_config_path = '/etc/squid/squid.conf'
@@ -376,11 +696,22 @@ def changeStausGroup(request):
         
     with open(squid_config_path, 'w') as file:
         file.write(squid_config)
+    server_satus = ServerSatus.objects.get(id=1)
+    server_satus.status_server = True
+    server_satus.save() 
     return JsonResponse({"msg": "done"}, status=200)
 
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API POST STATUS OF ELEMENTS IN GROUPS",
+    operation_description="This API to get status of elements of groups",
+)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
 def readFromFile(request):
     content= []
-    data = json.loads(request.body)
+    data = request.data
     squid_config_path = '/etc/squid/acl/'+data['file_name']+'.acl'
 
     try:
@@ -397,9 +728,16 @@ def readFromFile(request):
                 
     return JsonResponse({"content": content}, status=200)   
 
-
+@swagger_auto_schema(
+    method='POST',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API POST STATUS OF ELEMENTS IN GROUPS",
+    operation_description="This API to change status of elements of groups",
+)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
 def changeStausElementsInGroup(request):
-    data = json.loads(request.body)
+    data = request.data
     print({"data":data})
     list_elements = data['list_elements']
     print({"list_elements":list_elements})
@@ -412,14 +750,16 @@ def changeStausElementsInGroup(request):
         for i, line in enumerate(lines):
             if line.lstrip('#').split('\n')[0] == target_url:
             # if target_url in line:
-                if uncomment:
+                if uncomment == False:
                     lines[i] = line.lstrip('#')
                 else:
                     lines[i] = '#' + line
 
     with open(file_path, 'w') as file:
         file.writelines(lines)
-        
+    server_satus = ServerSatus.objects.get(id=1)
+    server_satus.status_server = True
+    server_satus.save() 
     return JsonResponse({"msg": "done"}, status=200)
 
 def changeStausElement(target_url,uncomment,file_path):
@@ -438,6 +778,7 @@ def changeStausElement(target_url,uncomment,file_path):
         file.writelines(lines)
         
     return JsonResponse({"msg": "done"}, status=200)
+
 
 def deleteElement(type,value,file_path):
     new_content = []
@@ -458,6 +799,7 @@ def deleteElement(type,value,file_path):
         msg =stderr
         status = 404 
     return JsonResponse({"msg": msg}, status=status)
+
 
 def addElement(type,allow_by_auth,status,value):
     # if allow_by_auth == False:
@@ -495,9 +837,17 @@ def addElement(type,allow_by_auth,status,value):
 #     else:
 #         return HttpResponse("erreur.")
 
+@swagger_auto_schema(
+    method='PUT',
+    responses={200: 'Success', 400: 'Bad Request'},
+    operation_summary="API PUT STATUS OF RULE",
+    operation_description="This API to update status of rule",
+)
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
 def updateStatusRule(request,id):
     proxy_rule = ProxyRules.objects.get(id=id)
-    data = json.loads(request.body)
+    data = request.data
     # if proxy_rule.allow_by_auth == False:
     #     if proxy_rule.type == "ip":
     #         file_path = '/etc/squid/blocked_ip.acl'
@@ -522,7 +872,10 @@ def updateStatusRule(request,id):
                 
     proxy_rule.status = data['status']
     proxy_rule.allow_by_auth = data['allow_by_auth']
-    proxy_rule.save()       
+    proxy_rule.save()      
+    server_satus = ServerSatus.objects.get(id=1)
+    server_satus.status_server = True
+    server_satus.save() 
     return JsonResponse({"msg": "updated succesfully"}, status=200)
 
 

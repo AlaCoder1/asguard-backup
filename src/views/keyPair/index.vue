@@ -72,7 +72,7 @@
 
 <script>
 import axios from "axios";
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, onMounted, inject } from "vue";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -88,6 +88,7 @@ export default {
     VButton,
   },
   setup() {
+    const emitter = inject("emitter");
     const state = reactive({
       deleteDialog: false,
       deletedRow: null,
@@ -101,6 +102,10 @@ export default {
     });
 
     onMounted(() => {
+      emitter.on("closeKeyPairModal", () => {
+        state.isModalOpen = false;
+      });
+
       let privateKeyAttribute =
         document.getElementById("app").attributes["privateKey"].value;
 
@@ -238,7 +243,7 @@ export default {
         `;
       } else {
         if (params.data.utility === "Public") {
-          eGui.innerHTML = `     
+          eGui.innerHTML = `
           <button
            class="action-button copy"
            data-action="copy"  title="Copy Public Key">
@@ -376,6 +381,7 @@ export default {
       columnKeys,
       rowDataKeys,
       defaultColDef,
+      emitter,
       actionCellRendererKeys,
       openModalAdd,
       onGridReady,

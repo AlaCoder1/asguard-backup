@@ -2,7 +2,7 @@
   <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
     <v-row>
       <v-col cols="12">
-        <h4>List</h4>
+        <h4>Rules</h4>
         <v-divider class="mt-2"></v-divider>
         <v-row class="mt-5">
           <v-col cols="12" md="6">
@@ -55,36 +55,68 @@
         />
       </div>
     </v-row>
+    <v-dialog v-model="state.deleteDialogRule" max-width="500px">
+      <v-card>
+        <v-card-title class="headline">Delete Confirmation</v-card-title>
+        <v-card-text>Are you sure you want to delete this rule ?</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete"
+            >Delete</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
     <ModalAddRule
       :isOpenModal="state.isModalOpenRule"
       :editRowRule="state.editRowRule"
       :modalModeRule="state.modalModeRule"
     />
+
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
+      {{ state.textAlert }}
+    </v-snackbar>
   </div>
 </template>
 
 <script>
+import axios from "axios";
 import { reactive, ref, onMounted, inject } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalAddRule from "@/components/modals/ModalAddRule.vue";
+import CertStatusRenderVue from "../agGridCustomRender/CertStatusRenderVue.vue";
+import CertAllowStatus from "../agGridCustomRender/CertAllowStatus.vue";
 
 export default {
   components: {
     AgGridVue,
     VButton,
     ModalAddRule,
+    CertStatusRenderVue,
+    CertAllowStatus,
   },
   setup() {
     const emitter = inject("emitter");
     const state = reactive({
+      deleteDialogRule: false,
+      deletedRow: null,
       modalDataRule: {},
       isOpenModal: null,
       modalModeRule: "",
       isModalOpenRule: false,
       editRowRule: {},
+      textAlert: "",
+      color: "",
+      snackbar: false,
     });
     const rowDataRules = reactive({});
     const gridColumnApi = ref(null);
@@ -98,31 +130,46 @@ export default {
       {
         headerName: "Rule name",
         field: "rule_name",
-        sortable: true,
-        filter: true,
       },
 
       {
-        field: "routage_type",
         headerName: "Routage Type",
+        field: "type",
       },
       {
         headerName: "Value",
         field: "value",
-        sortable: true,
-        filter: true,
+      },
+
+      {
+        headerName: "Allowed by auth",
+        field: "allow_by_auth",
+        cellRendererSelector: function (params) {
+          const allow_by_auth = {
+            component: "CertAllowStatus",
+            params: params.data.allow_by_auth,
+          };
+          return allow_by_auth;
+        },
       },
       {
-        headerName: "Allowed by authentification",
-        field: "allowed",
-        sortable: true,
-        filter: true,
+        headerName: "Start",
+        field: "time_from",
+      },
+      {
+        headerName: "End",
+        field: "time_to",
       },
       {
         headerName: "Status",
         field: "status",
-        sortable: true,
-        filter: true,
+        cellRendererSelector: function (params) {
+          const status = {
+            component: "CertStatusRenderVue",
+            params: params.data.status,
+          };
+          return status;
+        },
       },
       {
         headerName: "Actions",
@@ -156,19 +203,30 @@ export default {
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
 
-      eGui.innerHTML = `
-      <button
+      if (params.data.time_from === "--") {
+        eGui.innerHTML = `
+        <button
       class="action-button edit"
       data-action="edit">
          <i class="far fa-edit" style="color: #086eae;"></i>
       </button>
-
+  
       <button
         class="action-button delete"
         data-action="delete">
           <i class="fas fa-times" style="color: #086eae;"></i>
       </button>
       `;
+      } else {
+        eGui.innerHTML = `
+      <button
+        class="action-button delete"
+        data-action="delete">
+          <i class="fas fa-times" style="color: #086eae;"></i>
+      </button>
+      `;
+      }
+
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
@@ -190,6 +248,11 @@ export default {
           state.editRowRule = rowData;
 
           break;
+        case "delete":
+          console.log("delete", rowData);
+          state.deleteDialogRule = true;
+          state.deletedRow = rowData;
+          break;
         default:
           break;
       }
@@ -206,21 +269,73 @@ export default {
         state.isModalOpenRule = false;
       });
 
+      const proxyRuleAttribute =
+        document.getElementById("app").attributes["proxyRule"].value;
+      const proxyRule = JSON.parse(proxyRuleAttribute);
+
+      let mapedRule = proxyRule.map((i) => {
+        return {
+          id: i.id,
+          rule_name: i.rule_name,
+          days: i.days,
+          status: i.status === false ? "Disable" : "Enable",
+          allow_by_auth: i.allow_by_auth === false ? "Disable" : "Enable",
+          time_from: i.time_from ?? "--",
+          time_to: i.time_to ?? "--",
+          type: i.type,
+          value: i.value,
+        };
+      });
+
       if (!rowDataRules.value) {
         rowDataRules.value = [];
       }
-      let obj = {
-        rule_name: "rule name",
-        value: "test",
-        routage_type: "test",
-        allowed: "test",
-        status: "test",
-      };
-      rowDataRules.value.push(obj);
+      rowDataRules.value = mapedRule;
     });
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    };
+    const cancelDelete = () => {
+      state.deleteDialogRule = false;
+    };
+    const confirmDelete = () => {
+      const csrfTok = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfTok;
 
+      axios
+        .delete(`/proxy/deleteRuleSquid/${state.deletedRow.id}`)
+        .then((response) => {
+          if (response.status == 200) {
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
+
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          }
+        })
+        .catch((i) => {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
+        });
+    };
     return {
       state,
+      cancelDelete,
+      confirmDelete,
       textAlert,
       columnRules,
       gridColumnApi,

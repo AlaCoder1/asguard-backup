@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
-from backend.clamav.models import *
+from backend.clamav.models import ClamAV
 from backend.authentification.views import *
-from backend.clamav.serializers import *
-from backend.clamav.functions_sys import *
+from backend.clamav.serializers import ClamavSerializer
+from backend.clamav.functions_sys import read_and_extract_clamav_config,read_and_extract_freshclam_config,execute_cmd
 from django.db import IntegrityError
 import hashlib
 

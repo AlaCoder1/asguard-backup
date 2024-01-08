@@ -90,7 +90,7 @@ export default {
           let price = data + 1200;
           subscriptionCards.value[1].prices[0].amount = price;
         } else if (data == 0) {
-          subscriptionCards.value[1].prices[0].amount = 1000;
+          subscriptionCards.value[1].prices[0].amount = 1200;
         }
       });
     });

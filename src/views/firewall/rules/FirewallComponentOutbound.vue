@@ -94,7 +94,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
-import { onMounted, reactive, ref, watch, defineComponent } from "vue";
+import { onMounted, reactive, ref, watch, defineComponent,inject } from "vue";
 import VButton from "../../../components/VButton.vue";
 import ModalFirewallRuleOutbound from "../../../components/modals/ModalFirewallRuleOutbound.vue";
 
@@ -110,6 +110,7 @@ export default defineComponent({
     activeTab: String,
   },
   setup(props) {
+    const emitter = inject("emitter");
     const state = reactive({
       // deleteDialogSquid: false,
       // deletedRow: null,
@@ -402,6 +403,9 @@ export default defineComponent({
     };
 
     onMounted(() => {
+      emitter.on("closFirewallOutboundModal", () => {
+       state.isModalOpen = false;
+     });
       const rulesAttribute =
         document.getElementById("app").attributes["rules"].value;
       let validJsonString = rulesAttribute
@@ -444,6 +448,7 @@ export default defineComponent({
     return {
       openModalAdd,
       columnDefs,
+      emitter,
       state,
       gridApi,
       gridColumnApi,

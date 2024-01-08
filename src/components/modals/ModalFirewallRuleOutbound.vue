@@ -100,7 +100,7 @@
                   label-color="#213E9F"
                   label="cancel"
                   :isLarge="true"
-                  @click="cancel"
+                  @click="closeModal"
                 />
                 <VButton
                   rounded
@@ -287,7 +287,7 @@
         state.nameInter = nameInterface;
       });
       const closeModal = () => {
-        emitter.emit("closeSquidUserModal");
+        emitter.emit("closFirewallOutboundModal");
       };
       const populate = (data) => {
         state.id = data.id;

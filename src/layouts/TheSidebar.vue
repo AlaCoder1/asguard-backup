@@ -293,6 +293,12 @@ export default {
               href: "/proxy",
               active: "Proxy Web",
             },
+            {
+              title: "SDWAN",
+              icon: "",
+              href: "/sdwan",
+              active: "SDWAN",
+            },
           ],
           subMenuVisible: false,
         },

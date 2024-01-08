@@ -1,23 +1,21 @@
 import { createApp } from "vue";
 import store from "../store/index.js";
 import "vuetify/styles";
+import mitt from 'mitt'
 import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
-import keyPair from "../views/keyPair/index.vue";
+import sdwan from "../views/sdwan/index.vue";
+import ElementPlus from "element-plus";
+import "element-plus/dist/index.css";
 import axios from "axios";
-
-import mitt from "mitt";
-
-const emitter = mitt();
-
-const app = createApp(keyPair);
+const app = createApp(sdwan);
 const vuetify = createVuetify({
   components,
   directives,
 });
-
-app.provide("emitter", emitter);
+const emitter = mitt()
+app.provide('emitter', emitter)
 
 axios.interceptors.response.use(
   (response) => {
@@ -31,4 +29,4 @@ axios.interceptors.response.use(
   }
 );
 
-app.use(store).use(vuetify).mount("#app");
+app.use(ElementPlus).use(store).use(vuetify).mount("#app");

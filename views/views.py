@@ -25,6 +25,11 @@ import ast
 from backend.proxy.views import *
 from backend.proxy.models import *
 
+
+def get_squid_status_from_bd():
+    server_status= ServerSatus.objects.get(id=1)
+    return server_status.status_server
+
 def get_squid_status():
     try:
         result = subprocess.run(['systemctl', 'status', 'squid.service'], capture_output=True, text=True, check=True)
@@ -35,6 +40,7 @@ def get_squid_status():
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return None
+    
 def getGeneraleInfo(request):
     if (request.method == 'GET'):
         squid_conf_path = '/etc/squid/squid.conf'
@@ -561,10 +567,13 @@ def squid_proxy(request):
     statusEnable = statusEnableAuth(request)
     proxyRule = get_all_proxy_rules(request)
     proxyGroups = allGProxyroups(request)
-    context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule),'proxyGroups' : json.dumps(proxyGroups)}
-    print('-------------:',proxyGroups)
+    statusServer = get_squid_status_from_bd()
+    context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule),'proxyGroups' : json.dumps(proxyGroups),'statusServer' : json.dumps(statusServer)}
     return render(request, 'squid_proxy.html',context)
 
+@login_required(login_url='/')
+def sdwan_page(request):
+    return render(request, 'sdwan_page.html',)
 
 @login_required(login_url='/')
 def clamav_page(request):

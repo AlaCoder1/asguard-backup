@@ -98,78 +98,75 @@ def saveRules(request,name_interface):
   ruleMsg=''
   if (request.method == 'POST'):
     # parse the incoming information
-    data_list =request.data
+    data =request.data
     #get object of interface type
     interfaceObject= Interface.objects.get(name_interface=name_interface)
     #get interface name to execute command systeme
     ifname=interfaceObject.ifname
-    if len(data_list)==0:
-       return JsonResponse({"response": "No data to save !!"},status=400)    
-    else:
-      for data in data_list:
-        id=data.get('id', None)
-        policy = data.get('policy', None)
-        saddr = None if data.get('saddr', None) == "" else data.get('saddr', None)
-        daddr = None if data.get('daddr', None) == "" else data.get('daddr', None)
-        sport = None if data.get('sport', None) == "" else data.get('sport', None)
-        dport = None if data.get('dport', None) == "" else data.get('dport', None)
-        protocols = None if data.get('protocol', None) == "" else data.get('protocol', None)
-        type_rule = data.get('type_rule', None)
-        rule_description=data.get('rule_description', None)
-        #####
-        protocol=''
-        if protocols is not None :
-            if len(protocols)>1:
-             # Sort the protocols based on their protocol numbers
-              protocols = sorted(protocols, key=get_protocol_number)
-              for i in range(len(protocols)-1):
-                  protocol+=protocols[i]+', '
-              protocol+=protocols[-1]
-              protocol='{ '+protocol+' }'
-            else:
-              protocol=protocols[0]
+  # for data in data_list:
+    id=data.get('id', None)
+    policy = data.get('policy', None)
+    saddr = None if data.get('saddr', None) == "" else data.get('saddr', None)
+    daddr = None if data.get('daddr', None) == "" else data.get('daddr', None)
+    sport = None if data.get('sport', None) == "" else data.get('sport', None)
+    dport = None if data.get('dport', None) == "" else data.get('dport', None)
+    protocols = None if data.get('protocol', None) == "" else data.get('protocol', None)
+    type_rule = data.get('type_rule', None)
+    rule_description=data.get('rule_description', None)
+    #####
+    protocol=''
+    if protocols is not None :
+        if len(protocols)>1:
+          # Sort the protocols based on their protocol numbers
+          protocols = sorted(protocols, key=get_protocol_number)
+          for i in range(len(protocols)-1):
+              protocol+=protocols[i]+', '
+          protocol+=protocols[-1]
+          protocol='{ '+protocol+' }'
         else:
-            protocol=protocols
-        #####
-        data = {
-          "id":id,
-          'policy': policy,
-          'saddr':saddr,
-          'daddr': daddr,
-          'sport': sport,
-          'dport': dport,
-          'protocol': protocol,
-          'type_rule': type_rule,
-          'rule_description': rule_description
-          }
-        #test if rule exist or not with id 
-        if (id is not None and Rule.objects.filter(id=id).exists()):
-          rulesObject = Rule.objects.get(id=id)
-          rule=rulesObject.rule
-          type_rules=rulesObject.type_rule
-          description=rulesObject.rule_description
-          file_path="/etc/rules/{}/nftables.conf".format(ifname)
-          #appel la fonction pour retourner rule à ajouter 
-          ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
-          ruleMsg=ruleupdate
-          update_remote=update_rule_remote(rule+" #"+description,ruleupdate+" #"+rule_description,file_path)
-          if  update_remote is True:
-                  #appel la fonction pour update rule dans la base de données 
-                  data={key: value for key, value in data.items() if value is not None}
-                  data['interface']=rulesObject.interface_id
-                  data['rule']=ruleupdate
-                  InboundSerializer = RuleSerializer(rulesObject,data=data)
-                  InboundSerializer.is_valid(raise_exception=True)
-                  if InboundSerializer.is_valid():
-                    InboundSerializer.save()
-                    msg = "Rule updated Successfully!!"
-                    status=200
-                  else:
-                    msg= InboundSerializer.errors
-                    status=400
-          else:
-              msg =update_remote
-              status=400
+          protocol=protocols[0]
+    else:
+        protocol=protocols
+    #####
+    data = {
+      "id":id,
+      'policy': policy,
+      'saddr':saddr,
+      'daddr': daddr,
+      'sport': sport,
+      'dport': dport,
+      'protocol': protocol,
+      'type_rule': type_rule,
+      'rule_description': rule_description
+      }
+    #test if rule exist or not with id 
+    if (id is not None and Rule.objects.filter(id=id).exists()):
+      rulesObject = Rule.objects.get(id=id)
+      rule=rulesObject.rule
+      type_rules=rulesObject.type_rule
+      description=rulesObject.rule_description
+      file_path="/etc/rules/{}/nftables.conf".format(ifname)
+      #appel la fonction pour retourner rule à ajouter 
+      ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
+      ruleMsg=ruleupdate
+      update_remote=update_rule_remote(rule+" #"+description,ruleupdate+" #"+rule_description,file_path)
+      if  update_remote is True:
+              #appel la fonction pour update rule dans la base de données 
+              data={key: value for key, value in data.items() if value is not None}
+              data['interface']=rulesObject.interface_id
+              data['rule']=ruleupdate
+              InboundSerializer = RuleSerializer(rulesObject,data=data)
+              InboundSerializer.is_valid(raise_exception=True)
+              if InboundSerializer.is_valid():
+                InboundSerializer.save()
+                msg = "Rule updated Successfully!!"
+                status=200
+              else:
+                msg= InboundSerializer.errors
+                status=400
+      else:
+          msg =update_remote
+          status=400
 
         else:
           config=get_config_file(ifname)

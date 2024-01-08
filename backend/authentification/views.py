@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -12,6 +13,8 @@ from django.http import JsonResponse
 import paramiko
 from .models import *
 from drf_yasg.utils import swagger_auto_schema
+import stripe
+
 # Create your views here.
 
 
@@ -80,3 +83,49 @@ def logout_view(request):
     logout(request)
     return JsonResponse({"msg": 'User Logged out successfully'})
 
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+def create_checkout_session(request):
+    if request.method == 'POST':
+        data = request.data
+        subscription_id = data['subscription_id']
+        status = data['status']
+        price = data['price']
+        # card_type = data['card_type']  # Assuming card_type is provided in the request data
+        card_type = 'card'
+        print('********************',price)
+
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        try:
+            checkout_session = stripe.checkout.Session.create(
+                payment_method_types=[card_type],  # Specify the payment method type (e.g., card)
+                line_items=[
+                    {
+                        'price_data': {
+                            'currency': 'eur',
+                            'unit_amount': int(price * 100),  # Convert price to cents
+                            'product_data': {
+                                'name': 'Asguard Subscription',
+                                'images': ['https://www.numeryx.fr/sites/default/files/gallery/ASGUARD%20bannirere%20site.png'],
+                                'description': 'Asguard Subscription',
+                                'metadata': {
+                                    'subscription_id': subscription_id,
+                                    'status': status,
+                                }
+                            },
+                        },
+                        'quantity': 1,
+                    },
+                ],
+                mode='payment',
+                success_url=settings.STRIPE_SUCCESS_URL,
+                cancel_url=settings.STRIPE_CANCEL_URL,
+            )
+            print({
+                'checkout_session': checkout_session
+            })
+            return Response(checkout_session)
+        except Exception as e:
+            return JsonResponse({'error': str(e)})
+    else:
+        return JsonResponse({'error': 'Invalid request'})

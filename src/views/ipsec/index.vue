@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Site to site VPN" active-menu="activeTab">
+    <base-layout title="Site to Site VPN" active-menu="activeTab">
       <template #content>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">
@@ -18,13 +18,15 @@
               <v-card-text><ipsecAdvancedParams :dataServer="dataServer" /></v-card-text>
             </v-card>
           </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="LISTING">
+          <v-window-item v-for="tab in tabs" :key="tab.id" value="IPSEC PEERS">
             <v-card>
               <v-card-text><ConfigurationList /></v-card-text>
             </v-card>
           </v-window-item>
           <v-window-item v-for="tab in tabs" :key="tab.id" value="MONITORING">
-            <v-card> </v-card>
+            <v-card> 
+              <v-card-text><Monotoring /></v-card-text>
+            </v-card>
           </v-window-item>
         </v-window>
       </template>
@@ -36,12 +38,15 @@
 import BaseLayout from "@/layouts/layout.vue";
 import ipsecAdvancedParams from "./ipsecAdvancedParams.vue";
 import ConfigurationList from "./component/configurationList.vue";
+import Monotoring from "./component/monotoring.vue";
+
 export default {
   name: "IpsecComponent",
   components: {
     BaseLayout,
     ipsecAdvancedParams,
     ConfigurationList,
+    Monotoring,
   },
   inject: ["emitter"],
   data() {
@@ -49,7 +54,7 @@ export default {
       activeTab: "TUNNEL CONFIGURATION",
       tabs: [
         { id: 1, label: "TUNNEL CONFIGURATION" },
-        { id: 2, label: "LISTING" },
+        { id: 2, label: "IPSEC PEERS" },
         { id: 3, label: "MONITORING" },
       ],
       rowDataServers: [],
@@ -73,7 +78,7 @@ export default {
       this.activeTab = "TUNNEL CONFIGURATION";
     });
     this.emitter.on("open-listingIpsec", () => {
-      this.activeTab = "LISTING";
+      this.activeTab = "IPSEC PEERS";
     });
 
     this.rowDataServers =

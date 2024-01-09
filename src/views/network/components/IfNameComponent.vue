@@ -281,31 +281,29 @@
       </div>
       <br /><br /><br />
       <v-alert
-        type="success"
-        variant="outlined"
-        elevation="2"
-        class="ml-3"
-        icon="mdi-check-circle-outline"
-        style="width: 20%"
-        border="top"
-        v-if="showAlertGateway"
-        :style="alertStyle"
-      >
-        Gateway added successfully
-      </v-alert>
-      <v-alert
-        type="success"
-        variant="outlined"
-        elevation="2"
-        class="ml-3"
-        icon="mdi-check-circle-outline"
-        style="width: 20%"
-        border="top"
-        v-if="showAlert"
-        :style="alertStyle"
-      >
-        Configuration saved successfully
-      </v-alert>
+        type="success" 
+        class="d-flex mt-3" 
+        style="align-self: flex-end;"
+          elevation="2"
+          icon="mdi-check-circle-outline"
+          border="top"
+          v-if="showAlertGateway"
+          :style="alertStyle"
+        >
+          Gateway added successfully
+        </v-alert>
+        <v-alert
+          type="success" 
+        class="d-flex mt-3" 
+        style="align-self: flex-end;"
+          elevation="2"
+          icon="mdi-check-circle-outline"
+          border="top"
+          v-if="showAlert"
+          :style="alertStyle"
+        >
+          Configuration saved successfully
+        </v-alert>
       <v-dialog
         v-model="showGatewayDialog"
         max-width="600px"
@@ -479,7 +477,7 @@ export default {
     alertStyle() {
       return {
         position: "fixed",
-        top: "20px",
+        top: "60px",
         right: "20px",
         width: "20%",
       };

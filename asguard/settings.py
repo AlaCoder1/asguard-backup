@@ -10,6 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
+STRIPE_PUBLIC_KEY = "pk_test_51OVDcYKi3nwJjULPxfS2d6c6mbWGwOpsEeTADyLi8w8ZW7mMmcvcHZDYNgckyMXTnfGCER4grlGRc2KQzcK5jQJF004gmPOXWn"
+STRIPE_SECRET_KEY = "sk_test_51OVDcYKi3nwJjULPyERGkOtF6VzVPDuxNsSD6jQVMmPNzBTOxOeT0v06MBlYRuQk7MVVxaKtyQEYTfLMbDIyGIbt00lLStOBqB"
+STRIPE_SUCCESS_URL = 'http://localhost:8000/asguard/subscription/'
+STRIPE_CANCEL_URL = 'http://localhost:8000/asguard/subscription/'
+
 from dotenv import load_dotenv
 from pathlib import Path
 import os
@@ -61,8 +66,11 @@ INSTALLED_APPS = [
     "backend.rules",
     "backend.gateway",
     "backend.dashboard",
+    "backend.ids_ips",
+    "backend.clamav",
+    'backend.proxy',
     'channels',
-    'drf_yasg'
+    'drf_yasg',
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {
@@ -227,3 +235,8 @@ ASGUARD_VERSION = os.getenv('ASGUARD_VERSION')
 
 USERNAME=None
 PASSWORD=None
+
+EMAIL_HOST = 'smtp.office365.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'mh.benelghali@numeryx.fr'  
+EMAIL_HOST_PASSWORD = 'Ess4live***'  

@@ -192,10 +192,6 @@ const authDigestList = ref([
     slug: "sha224",
   },
   {
-    name: "SHA244",
-    slug: "SHA244",
-  },
-  {
     name: "SHA256",
     slug: "SHA256",
   },

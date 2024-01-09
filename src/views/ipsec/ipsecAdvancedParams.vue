@@ -1,76 +1,170 @@
 <template>
   <div class="mt-3">
     <v-overlay v-model="state.loading">
-      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
         <v-card color="#193286">
           <v-card-text>
             Please Wait...
-            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
     </v-overlay>
     <v-row>
       <v-col cols="6">
-        <generalInfoPhaseOne v-model:tunnelSettings="state.tunnelSettings"
-          v-model:connectionMethod="state.connectionMethod" v-model:keyExchange="state.keyExchange"
-          v-model:internetProtocol="state.internetProtocol" v-model:remoteGateway="state.remoteGateway"
-          v-model:generalinterface="state.generalinterface" v-model:remoteConnect="state.remoteConnect"
-          v-model:description="state.description" :mapedInterface="state.mapedInterface"
-          :connectionMethodList="connectionMethodList" :exchangeList="exchangeList" :protocolList="protocolList"
-          :errors="v$" />
-        <phaseAuth v-model:authMethod="state.authMethod" v-model:negotiationMode="state.negotiationMode"
-          v-model:sharedKey="state.sharedKey" v-model:certificate="state.certificate" v-model:keyPair="state.keyPair"
-          v-model:localKey="state.localKey" v-model:peerIdentifier="state.peerIdentifier" :keyExchange="state.keyExchange"
-          :authMethodItem="state.authMethod" :authenticationMethodList="authenticationMethodList"
-          :negotiationList="negotiationList" :CertificateList="CertificateList" :mapedKeyPublic="mapedKeyPublic"
-          :errors="v$" />
+        <generalInfoPhaseOne
+          v-model:tunnelSettings="state.tunnelSettings"
+          v-model:connectionMethod="state.connectionMethod"
+          v-model:keyExchange="state.keyExchange"
+          v-model:internetProtocol="state.internetProtocol"
+          v-model:remoteGateway="state.remoteGateway"
+          v-model:generalinterface="state.generalinterface"
+          v-model:remoteConnect="state.remoteConnect"
+          v-model:description="state.description"
+          :mapedInterface="state.mapedInterface"
+          :connectionMethodList="connectionMethodList"
+          :exchangeList="exchangeList"
+          :protocolList="protocolList"
+          :errors="v$"
+        />
+        <phaseAuth
+          v-model:authMethod="state.authMethod"
+          v-model:negotiationMode="state.negotiationMode"
+          v-model:sharedKey="state.sharedKey"
+          v-model:certificate="state.certificate"
+          v-model:keyPair="state.keyPair"
+          v-model:localKey="state.localKey"
+          v-model:peerIdentifier="state.peerIdentifier"
+          :keyExchange="state.keyExchange"
+          :authMethodItem="state.authMethod"
+          :authenticationMethodList="authenticationMethodList"
+          :negotiationList="negotiationList"
+          :CertificateList="CertificateList"
+          :mapedKeyPublic="mapedKeyPublic"
+          :errors="v$"
+        />
 
-        <phaseAlgo v-model:encryptAlgo="state.encryptAlgo" v-model:hashAlgo="state.hashAlgo" v-model:dhKey="state.dhKey"
-          v-model:lifetime="state.lifetime" v-model:encryptAlgoV1="state.encryptAlgoV1" :dhKeyList="dhKeyList"
-          :encryptAlgoList="encryptAlgoList" :hashAlgoList="hashAlgoList" :keyExchange="state.keyExchange"
-          :filteredEncryptAlgoListV1="filteredEncryptAlgoListV1" :errors="v$" />
-        <advancedOption v-model:policy="state.policy" v-model:rekey="state.rekey" v-model:reauth="state.reauth"
-          v-model:natTraversal="state.natTraversal" v-model:deadPeer="state.deadPeer" v-model:retries="state.retries"
-          v-model:mobike="state.mobike" v-model:selectDear="state.selectDear"
+        <phaseAlgo
+          v-model:encryptAlgo="state.encryptAlgo"
+          v-model:hashAlgo="state.hashAlgo"
+          v-model:dhKey="state.dhKey"
+          v-model:lifetime="state.lifetime"
+          v-model:encryptAlgoV1="state.encryptAlgoV1"
+          :dhKeyList="dhKeyList"
+          :encryptAlgoList="encryptAlgoList"
+          :hashAlgoList="hashAlgoList"
+          :keyExchange="state.keyExchange"
+          :filteredEncryptAlgoListV1="filteredEncryptAlgoListV1"
+          :errors="v$"
+        />
+        <advancedOption
+          v-model:policy="state.policy"
+          v-model:rekey="state.rekey"
+          v-model:reauth="state.reauth"
+          v-model:natTraversal="state.natTraversal"
+          v-model:deadPeer="state.deadPeer"
+          v-model:retries="state.retries"
+          v-model:mobike="state.mobike"
+          v-model:selectDear="state.selectDear"
           v-model:interactivityTimout="state.interactivityTimout"
-          v-model:interactivityTimout2="state.interactivityTimout2" v-model:seconds="state.seconds"
-          v-model:rekeyFuzz="state.rekeyFuzz" v-model:marginTime="state.marginTime" :isdeadPeer="state.deadPeer"
-          :traversalList="traversalList" :deadPeerList="deadPeerList" :errors="v$" />
+          v-model:interactivityTimout2="state.interactivityTimout2"
+          v-model:seconds="state.seconds"
+          v-model:rekeyFuzz="state.rekeyFuzz"
+          v-model:marginTime="state.marginTime"
+          :isdeadPeer="state.deadPeer"
+          :traversalList="traversalList"
+          :deadPeerList="deadPeerList"
+          :errors="v$"
+        />
       </v-col>
       <v-col cols="6">
-        <generalInfoPhaseTwo v-model:mode="state.mode" v-model:remoteTunnelAddress="state.remoteTunnelAddress"
-          v-model:type="state.type" v-model:remoteNetworkAddress="state.remoteNetworkAddress"
-          v-model:selectAddressNetwork="state.selectAddressNetwork" v-model:description="state.descriptionPh2"
-          v-model:localAddress="state.localAddress" v-model:localNetworkAddress="state.localNetworkAddress"
+        <generalInfoPhaseTwo
+          v-model:mode="state.mode"
+          v-model:remoteTunnelAddress="state.remoteTunnelAddress"
+          v-model:type="state.type"
+          v-model:remoteNetworkAddress="state.remoteNetworkAddress"
+          v-model:selectAddressNetwork="state.selectAddressNetwork"
+          v-model:description="state.descriptionPh2"
+          v-model:localAddress="state.localAddress"
+          v-model:localNetworkAddress="state.localNetworkAddress"
           v-model:selectRemoteAddressNetwork="state.selectRemoteAddressNetwork"
-          v-model:typeRemoteNetwork="state.typeRemoteNetwork" :isMode="state.mode" :isTypeWAn="state.isTypeWAn"
-          :defaultValue="state.defaultValue" :isDefault="state.isDefault" :isDefaultRemote="state.isDefaultRemote"
-          :defaultValueRemote="state.defaultValueRemote" :modeList="modeList" :mapedInterfaceType="mapedInterfaceType"
-          :numberList="numberList" :remoteTypeList="remoteTypeList" :errors="v$" />
-        <phaseTwoExchange v-model:protocol="state.protocol" v-model:encryptAlgoExchange="state.encryptAlgoExchange"
-          v-model:hashAlgoExchange="state.hashAlgoExchange" v-model:pfsKey="state.pfsKey"
-          v-model:lifetimeExchange="state.lifetimeExchange" v-model:pingHost="state.pingHost"
-          v-model:spdEntries="state.spdEntries" v-model:encryptAlgoExch2="state.encryptAlgoExch2" :isMode="state.mode"
-          :isProtocol="state.protocol" :hashAlgoList="hashAlgoList" :protocolListph2="protocolListph2" :pfsList="pfsList"
-          :encryptAlgoListExchange="encryptAlgoListExchange" :filteredAlgoListExchangeV1="filteredAlgoListExchangeV1"
-          :keyExchange="state.keyExchange" :errors="v$" />
+          v-model:typeRemoteNetwork="state.typeRemoteNetwork"
+          :isMode="state.mode"
+          :isTypeWAn="state.isTypeWAn"
+          :defaultValue="state.defaultValue"
+          :isDefault="state.isDefault"
+          :isDefaultRemote="state.isDefaultRemote"
+          :defaultValueRemote="state.defaultValueRemote"
+          :modeList="modeList"
+          :mapedInterfaceType="mapedInterfaceType"
+          :numberList="numberList"
+          :remoteTypeList="remoteTypeList"
+          :errors="v$"
+        />
+        <phaseTwoExchange
+          v-model:protocol="state.protocol"
+          v-model:encryptAlgoExchange="state.encryptAlgoExchange"
+          v-model:hashAlgoExchange="state.hashAlgoExchange"
+          v-model:pfsKey="state.pfsKey"
+          v-model:lifetimeExchange="state.lifetimeExchange"
+          v-model:pingHost="state.pingHost"
+          v-model:spdEntries="state.spdEntries"
+          v-model:encryptAlgoExch2="state.encryptAlgoExch2"
+          :isMode="state.mode"
+          :isProtocol="state.protocol"
+          :hashAlgoList="hashAlgoList"
+          :protocolListph2="protocolListph2"
+          :pfsList="pfsList"
+          :encryptAlgoListExchange="encryptAlgoListExchange"
+          :filteredAlgoListExchangeV1="filteredAlgoListExchangeV1"
+          :keyExchange="state.keyExchange"
+          :errors="v$"
+        />
       </v-col>
     </v-row>
     <v-row class="flex py-8 mb-5">
       <v-col cols="4"> </v-col>
       <v-col>
         <div class="mr-3 flex center">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="cancel" :isLarge="true"
-            @click="cancel" />
-          <VButton rounded outlined color="#213E9F" label-color="#ffffff"
-            :label="state.isEditState === 'edit' ? 'Edit' : 'Create'" :isLarge="true" class="ml-2" @click="save" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            label="cancel"
+            :isLarge="true"
+            @click="cancel"
+          />
+          <VButton
+            rounded
+            outlined
+            color="#213E9F"
+            label-color="#ffffff"
+            :label="state.isEditState === 'edit' ? 'Edit' : 'Create'"
+            :isLarge="true"
+            class="ml-2"
+            @click="save"
+          />
         </div>
       </v-col>
     </v-row>
     <!-- return json.dumps(list_ipsec) -->
 
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
 
       <template v-slot:actions> </template>
@@ -929,7 +1023,12 @@ export default {
         state.certificate = filtredCertList[0];
         state.keyPair = filtredKeyPairList[0];
         state.localKey = filtredPublicLocalList[0];
-        state.peerIdentifier = data?.remote_distingushed_name ?? "";
+
+        let filtredRemoteCertificate = CertificateList.value.filter(
+          (i) => i.name === data?.remote_cert
+        );
+
+        state.peerIdentifier = filtredRemoteCertificate[0];
 
         // Phase 1 proposal (Algorithms)
 
@@ -1212,7 +1311,7 @@ export default {
           authen = {
             authentication_method: state.authMethod?.slug,
             cert: state.certificate.name,
-            remote_distingushed_name: state.peerIdentifier,
+            remote_cert: state.peerIdentifier.name,
           };
         }
 
@@ -1270,7 +1369,9 @@ export default {
           isKeyExchange = {
             protocol: state.protocol.slug,
             encryption_algorithm_ph2:
-              state.keyExchange.slug === "V1" ? mappedencryptAlgoExch2 : mappedencryptAlgoExchange,
+              state.keyExchange.slug === "V1"
+                ? mappedencryptAlgoExch2
+                : mappedencryptAlgoExchange,
             hash_algorithm_ph2: mappedhashAlgoExchange,
             pfs_key_group: state.pfsKey.slug,
           };
@@ -1344,7 +1445,7 @@ export default {
         state.loading = true;
         state.isLoadingDialogue = true;
         if (state.isEditState === "edit") {
-          console.log('payload', payload)
+          console.log("payload", payload);
           axios
             .put(`/ipsec/updateServerIPsec/${state.id}`, payload)
             .then((response) => {

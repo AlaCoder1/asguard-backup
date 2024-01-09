@@ -323,7 +323,6 @@ def updateRule(request,name_interface):
               # data={key: value for key, value in data.items() if value is not None}
               data['interface']=rulesObject.interface_id
               data['rule']=ruleupdate
-              print({"data":data})
               InboundSerializer = RuleSerializer(rulesObject,data=data)
               InboundSerializer.is_valid(raise_exception=True)
               if InboundSerializer.is_valid():

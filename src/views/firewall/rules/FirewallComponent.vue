@@ -35,7 +35,6 @@
             id="filter-text-box"
             v-model="filterText"
             placeholder="Search"
-            clearable
             density="compact"
             rounded
             variant="solo"

@@ -3,8 +3,11 @@
     <v-dialog v-model="state.openModal" persistent max-width="600px">
       <v-card>
         <v-card-title>
-          <span class="headline"
-            >{{ modalMode === "create" ? "Add new" : "Update" }} Rule</span
+          <span class="headline" v-if="modalMode === 'create'">
+            Add new Rule</span
+          >
+          <span class="headline" v-if="modalMode === 'edit'">
+            Update new Rule</span
           >
         </v-card-title>
         <v-card-text>

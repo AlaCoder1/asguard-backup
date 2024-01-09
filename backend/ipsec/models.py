@@ -23,7 +23,7 @@ class ServerIPsec(models.Model):
     negotiation_mode = models.CharField(max_length=100, default=None, blank=True, null=True)
     pre_shared_key = models.CharField(max_length=100, default=None, blank=True, null=True)
     cert = models.CharField(max_length=300, default=None, null=True, blank=True)
-    remote_distingushed_name = models.CharField(max_length=1000, default=None, blank=True, null=True)
+    remote_cert = models.CharField(max_length=1000, default=None, blank=True, null=True)
     local_key_pair = models.CharField(max_length=100, default=None, blank=True, null=True)
     peer_key_pair = models.CharField(max_length=100, default=None, blank=True, null=True)
 
@@ -37,15 +37,15 @@ class ServerIPsec(models.Model):
     policy = models.BooleanField(default=True, blank=True, null=True)
     rekey = models.BooleanField(default=False, blank=True, null=True)
     reauth = models.BooleanField(default=False, blank=True, null=True)
-    nat_traversal = models.CharField(max_length=100, default='disable', blank=True, null=True)
+    nat_traversal = models.CharField(max_length=100, default=None, blank=True, null=True)
     mobike = models.BooleanField(default=False, blank=True, null=True)
     deed_peer_detection = models.BooleanField(default=False, blank=True, null=True)
     deed_peer_delay = models.CharField(max_length=100, default=None, blank=True, null=True)
     deed_peer_timeout = models.CharField(max_length=100, default=None, blank=True, null=True)
     deed_peer_action = models.CharField(max_length=100, default=None, blank=True, null=True)
     inactivity_timeout = models.CharField(max_length=100, default=None, blank=True, null=True)
-    margin_time = models.CharField(max_length=100, default='default', blank=True, null=True)
-    rekey_fuzz = models.CharField(max_length=100, default='default', blank=True, null=True)
+    margin_time = models.CharField(max_length=100, default=None, blank=True, null=True)
+    rekey_fuzz = models.CharField(max_length=100, default=None, blank=True, null=True)
 
     #######################################
     ############### Phase 2 ###############
@@ -60,23 +60,26 @@ class ServerIPsec(models.Model):
     remote_address = models.CharField(max_length=300, default=None, null=True, blank=True)
 
     # Local Network
-    type_local_network = models.CharField(max_length=100, default='Adress', blank=True, null=True)
+    type_local_network = models.CharField(max_length=100, default=None, blank=True, null=True)
     address_local_network = models.CharField(max_length=300, default=None, null=True, blank=True)
 
     # Remote Network
-    type_remote_network = models.CharField(max_length=100, default='Adress', blank=True, null=True)
+    type_remote_network = models.CharField(max_length=100, default=None, blank=True, null=True)
     address_remote_network = models.CharField(max_length=300, default=None, null=True, blank=True)
 
     # Proposal (Algorithms)
-    protocol = models.CharField(max_length=100, default='ESP', blank=True, null=True)
-    encryption_algorithm_ph2 = models.CharField(max_length=100, default='128', blank=True, null=True)
-    hash_algorithm_ph2 = models.CharField(max_length=100, default='sha256', blank=True, null=True)
-    pfs_key_group = models.CharField(max_length=100, default='off', blank=True, null=True)
-    lifetime_ph2 = models.CharField(max_length=100, default='3600', blank=True, null=True)
+    protocol = models.CharField(max_length=100, default=None, blank=True, null=True)
+    encryption_algorithm_ph2 = models.CharField(max_length=100, default=None, blank=True, null=True)
+    hash_algorithm_ph2 = models.CharField(max_length=100, default=None, blank=True, null=True)
+    pfs_key_group = models.CharField(max_length=100, default=None, blank=True, null=True)
+    lifetime_ph2 = models.CharField(max_length=100, default=None, blank=True, null=True)
 
     # Advanced Options
     auto_ping_host = models.CharField(max_length=300, default=None, null=True, blank=True)
     manual_spd_entries = models.CharField(max_length=300, default=None, null=True, blank=True)
+
+    # Config status (Enable or Disable)
+    server_status = models.BooleanField(default=True, null=True, blank=True)
 
     class Meta:
         db_table = 'server_ipsec'

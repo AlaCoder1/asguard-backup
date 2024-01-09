@@ -48,6 +48,7 @@ urlpatterns = [
     path('firewall/rules', firewall_page),
     path('settings/', settings_page),
     path('openvpn/', openvpn_page),
+    path('asguard/subscription/', subscription_page),
     path('', include('backend.tasks.urls')),
     path('auth/', include('backend.authentification.urls')),
     path('network/', include('backend.network.urls')),
@@ -55,7 +56,7 @@ urlpatterns = [
     path('users/', include('backend.managementUsers.urls')),
     path('groups/', include('backend.managementGroup.urls')),
     path('key_pairs/', include('backend.managementKeypairs.urls')),
-    path('key_pairs/', keyPair_page),
+    path('key_pairs/', key_pair_page),
     path('servers/', include('backend.managementServers.urls')),
     path('certificates/', include('backend.managementCertificates.urls')),
     path('settings/', include('backend.settings.urls')),
@@ -63,9 +64,16 @@ urlpatterns = [
     path('openvpn/', include('backend.openvpn.urls')),
     path('ipsec/', include('backend.ipsec.urls')),
     path('ipsec/', ipsec_page),
+    path('proxy/', squid_proxy),
+    path('sdwan/', sdwan_page),
+    path('clamaV/', clamav_page),
+    path('clamaV/', include('backend.clamav.urls')),
     path('rules/', include('backend.rules.urls')),
     path('gateway/', include('backend.gateway.urls')),
-    path("monitoring/",include("backend.dashboard.urls"))
+    path("monitoring/",include("backend.dashboard.urls")),
+    path("ids-ips/",include("backend.ids_ips.urls")),
+    path('proxy/', include('backend.proxy.urls')),
+    path("ids-ips/",suricata)
 ]
 
 # ws/wss url patterns

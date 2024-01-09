@@ -241,7 +241,7 @@
       </v-col>
     </v-row>
     <v-snackbar
-      :timeout="2000"
+      :timeout="1000"
       v-model="state.snackbar"
       location="bottom right"
       :color="state.color"
@@ -431,10 +431,6 @@ export default {
       {
         name: "SHA224",
         slug: "sha224",
-      },
-      {
-        name: "SHA244",
-        slug: "SHA244",
       },
       {
         name: "SHA256",

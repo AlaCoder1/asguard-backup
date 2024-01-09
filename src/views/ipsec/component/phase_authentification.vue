@@ -4,7 +4,7 @@
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-5">
-        <label>Authentication method</label>
+        <label>Authentication method*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
@@ -24,7 +24,7 @@
       </v-col>
       <template v-if="props.keyExchange?.slug === 'V1'">
         <v-col cols="4" class="mt-5">
-          <label>Negotiation mode</label>
+          <label>Negotiation mode*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select
@@ -45,7 +45,7 @@
       </template>
       <template v-if="props.authMethodItem?.slug === 'Mutual PSK'">
         <v-col cols="4" class="mt-6">
-          <label>Pre-Shared Key</label>
+          <label>Pre-Shared Key*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-textarea
@@ -66,7 +66,7 @@
       </template>
       <template v-if="props.authMethodItem?.slug === 'Mutual RSA'">
         <v-col cols="4" class="mt-5">
-          <label>My Certificate</label>
+          <label>My Certificate*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select
@@ -86,13 +86,18 @@
         </v-col>
 
         <v-col cols="4" class="mt-5">
-          <label>Peer identifier <br /> </label>
+          <label>Remote Certificate* <br /> </label>
         </v-col>
         <v-col cols="8" class="mb-n6">
-          <v-text-field
-            label="ex: CN=, O=,C=,L=, ST="
+          <v-select
             v-model="peerIdentifier"
-          ></v-text-field>
+            label="Remote Certificate"
+            item-title="name"
+            item-value="id"
+            :items="props.CertificateList"
+            return-object
+          ></v-select>
+
           <p
             class="error-feedback mb-5"
             v-if="props.errors.peerIdentifier.$errors.length"
@@ -103,7 +108,7 @@
       </template>
       <template v-if="props.authMethodItem?.slug === 'Mutual Public key'">
         <v-col cols="4" class="mt-5">
-          <label>Local Key Pair</label>
+          <label>Local Key Pair*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select
@@ -122,7 +127,7 @@
           </p>
         </v-col>
         <v-col cols="4" class="mt-5">
-          <label>Peer Key Pair</label>
+          <label>Peer Key Pair*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select

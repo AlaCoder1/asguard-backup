@@ -1,5 +1,5 @@
 import re
-import time
+
 from backend.network.models import Interface
 from backend.network.serializers import IP4ConfigSerializer, InterfaceOpenVPNSerializer
 from utils.commands_utils import execute_command_without_arguments
@@ -7,6 +7,7 @@ from backend.openvpn.models import ServerOpenvpn
 
 
 def synchronize_server_openvpn():
+    """Synchronize the openvpn interfaces and the running servers with database"""
     # Initialization
     initialize_server_status()
 
@@ -30,10 +31,9 @@ def change_status_server_openvpn(server_name, server_status):
 
 def initialize_server_status():
     """Initialize openvpn servers and interfaces. 
-    This function set all server_status of all servers to False and delete all openvpn interfaces and ip4config"""
+    This function set all server_status of all servers to False and delete all openvpn interfaces and ip4config from database"""
 
     # Delete previous openvpn interfaces and ip4config
-    # list_ip4_config = IP4Config.objects.filter()
     list_interfaces = Interface.objects.filter(ifname__startswith='tun_') | Interface.objects.filter(ifname__startswith='tap_')
     print("list_interfaces: ", list_interfaces)
     for interface in list_interfaces:
@@ -61,29 +61,32 @@ def synchronize_server_table(list_vpn_interfaces):
     """Synchronize server table with system. 
     This function take list of opening openvpn interfaces and change server_status of running severs to True"""
     for vpn_interface_tun in list_vpn_interfaces:
-        vpn_server = ServerOpenvpn.objects.get(name=vpn_interface_tun)
+        vpn_server = ServerOpenvpn.objects.get(name__startswith=vpn_interface_tun)
         vpn_server.server_status = True
         vpn_server.save()
 
 
 def synchronize_interface_table(list_interfaces, device_mode):
     for interface in list_interfaces:
+        server = ServerOpenvpn.objects.get(name__startswith=interface)
         interface_data = {"ifname": f'{device_mode}_{interface}',
-                          "name_interface": interface}
-        server = ServerOpenvpn.objects.get(name=interface)
+                          "name_interface": server.name}
         interface_serializer = InterfaceOpenVPNSerializer(data=interface_data)
         if interface_serializer.is_valid():
             interface_serializer.save()
             new_interface = Interface.objects.get(name_interface=server.name)
             ipv4_data = {"typeip4": "static",
-                         "ip_address": server.ipv4_tunnel_network[:server.ipv4_tunnel_network.find('/')],
-                         "netmask": server.ipv4_tunnel_network[server.ipv4_tunnel_network.find('/')+1:],
                          "interface": new_interface.pk
                          }
+            if server.ipv4_tunnel_network:
+                ipv4_data['ip_address'] = server.ipv4_tunnel_network[:server.ipv4_tunnel_network.find('/')]
+                ipv4_data['netmask'] = server.ipv4_tunnel_network[server.ipv4_tunnel_network.find('/')+1:]
             ipv4_serializer = IP4ConfigSerializer(data=ipv4_data)
             if ipv4_serializer.is_valid():
                 ipv4_serializer.save()
             else:
                 print('error ip4config')
+                print(ipv4_serializer.errors)
         else:
             print('error interface')
+            print(interface_serializer.errors)

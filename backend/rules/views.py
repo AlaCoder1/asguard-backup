@@ -238,7 +238,7 @@ def addRule(request,name_interface):
     if return_init_file_nftables:
       #appel la fonction pour retourner rule à ajouter 
       rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
-      if not Rule.objects.filter(Q(rule=rule) & Q(rule_description=rule_description)).exists():
+      if not Rule.objects.filter(Q(rule=rule) | Q(rule_description=rule_description)).exists():
       #appel la fonction pour ajouter rule dans le système
         return_add_rule=add_rule_remote(rule,ifname,type_rule,config,rule_description)
         if return_add_rule is True:
@@ -271,6 +271,9 @@ def addRule(request,name_interface):
         else:
           msg = return_add_rule
           status=400
+      else:
+        msg="Rule already exist!"
+        status=400
     else:
       msg = return_init_file_nftables
       status=400
@@ -315,10 +318,12 @@ def updateRule(request,name_interface):
               'protocol': protocol,
               'rule_description': rule_description
               }
+              
               #appel la fonction pour update rule dans la base de données 
-              data={key: value for key, value in data.items() if value is not None}
+              # data={key: value for key, value in data.items() if value is not None}
               data['interface']=rulesObject.interface_id
               data['rule']=ruleupdate
+              print({"data":data})
               InboundSerializer = RuleSerializer(rulesObject,data=data)
               InboundSerializer.is_valid(raise_exception=True)
               if InboundSerializer.is_valid():

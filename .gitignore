@@ -11,6 +11,9 @@ yarn-error.log
 /backend/managementKeypairs/migrations/__pycache__/
 /backend/managementKeypairs/__pycache__/
 
+/backend/proxy/migrations/__pycache__/
+/backend/proxy/__pycache__/
+
 /backend/managementUsers/__pycache__/
 /backend/managementUsers/migrations/__pycache__/
 
@@ -46,6 +49,8 @@ yarn-error.log
 
 /asguard/__pycache__/
 
+/utils/__pycache__/
+
 /pki/
 
 /views/__pycache__/
@@ -55,3 +60,10 @@ yarn-error.log
 
 /backend/dashboard/__pycache__/
 /backend/dashboard/migrations/__pycache__/
+
+
+/backend/ids_ips/migrations/__pycache__/
+/backend/ids_ips/__pycache__/
+
+/backend/clamav/migrations/__pycache__/
+/backend/clamav/__pycache__/

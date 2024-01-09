@@ -3,14 +3,6 @@
     <div class="container">
       <h4>Inbound rules</h4>
       <v-divider></v-divider>
-      <v-alert type="success" class="d-flex mt-3" v-if="alert">
-        <span class="c-o ml-3">
-          <strong>Success!</strong> Rules saved successfully.
-        </span>
-        <span class="ml-16" style="margin-top: 20px !important">
-          <i class="fas fa-times justify-end cursor" @click="handleRemove"></i>
-        </span>
-      </v-alert>
       <v-dialog v-model="deleteDialog" max-width="500px">
         <v-card>
           <v-card-title class="headline">Delete Confirmation</v-card-title>
@@ -29,82 +21,69 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <v-card class="mt-3">
-        <v-card-title>
-          <v-row>
-            <v-col cols="12" md="6">
-              <v-text-field
-                id="filter-text-box"
-                v-model="filterText"
-                placeholder="Search"
-                clearable
-                hide-details
-                dense
-                prepend-inner-icon="mdi-magnify"
-                variant="outlined"
-                @input="onFilterTextBoxChanged"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12" md="6" class="d-flex justify-end">
-              <v-btn class="ml-3 mt-2" @click="addRow">
-                <i class="fas fa-plus" style="color: #086eae"></i>
-                <span class="ml-2" style="color: #086eae">Add</span>
-              </v-btn>
-            </v-col>
-          </v-row>
-        </v-card-title>
-        <v-card-text>
-          <ag-grid-vue
-            id="grid-wrapper"
-            domLayout="autoHeight"
-            class="ag-theme-alpine"
-            :columnDefs="columnDefs"
-            :rowData="rowData.value"
-            @grid-ready="onGridReady"
-            :rowDrag="true"
-            :defaultColDef="defaultColDef"
-            :editType="editType"
-            style="width: 100%"
-            :animateRows="true"
-            @cell-value-changed="onCellValueChanged"
-            @column-row-group-changed="onColumnRowGroupChanged"
-            @column-row-drag-end="onColumnRowDragEnd"
-            @firstDataRendered="onFirstDataRendered"
-            @row-drag-end="onRowDragEnd"
-            :pagination="true"
-            :paginationPageSize="10"
-            :rowSelection="'multiple'"
-          >
-          </ag-grid-vue>
-        </v-card-text>
-      </v-card>
-    </div>
-    <div class="container">
-      <div class="row justify-content-center">
-        <br />
-        <div class="col-12 d-flex justify-end">
-          <VButton
+      <!-- Modal -->
+      <ModalFirewallRule
+        :isOpen="state.isModalOpen"
+        :editRow="state.editRow"
+        :modalMode="state.modalMode"
+      />
+      <!-- <v-card class="mt-10">
+        <v-card-title> -->
+      <v-row class="mt-8 mb-6">
+        <v-col cols="12" md="6">
+          <v-text-field
+            id="filter-text-box"
+            v-model="filterText"
+            placeholder="Search"
+            density="compact"
             rounded
-            outlined
-            border-color="'#213E9F'"
-            color="#ffffff"
-            label-color="#213E9F"
-            label="cancel"
-            :isLarge="true"
-            @click="cancel"
-          />
-          <VButton
-            rounded
-            outlined
-            color="#213E9F"
-            label-color="#ffffff"
-            label="save"
-            :isLarge="true"
-            class="ml-2"
-            @click="save"
-          />
-        </div>
-      </div>
+            variant="solo"
+            hide-details
+            dense
+            prepend-inner-icon="mdi-magnify"
+            @input="onFilterTextBoxChanged"
+          ></v-text-field>
+        </v-col>
+        <v-col cols="12" md="6" class="d-flex justify-end">
+          <v-btn class="ml-3 mt-2" @click="openModalAdd">
+            <i class="fas fa-plus" style="color: #086eae"></i>
+            <span class="ml-2" style="color: #086eae">Add</span>
+          </v-btn>
+        </v-col>
+      </v-row>
+      <!-- </v-card-title> -->
+      <!-- <v-card-text> -->
+      <ag-grid-vue
+        id="grid-wrapper"
+        domLayout="autoHeight"
+        class="ag-theme-alpine"
+        :columnDefs="columnDefs"
+        :rowData="rowData.value"
+        @grid-ready="onGridReady"
+        :rowDrag="true"
+        :defaultColDef="defaultColDef"
+        style="width: 100%"
+        :animateRows="true"
+        @column-row-group-changed="onColumnRowGroupChanged"
+        @column-row-drag-end="onColumnRowDragEnd"
+        @firstDataRendered="onFirstDataRendered"
+        @row-drag-end="onRowDragEnd"
+        :pagination="true"
+        :paginationPageSize="4"
+        :rowSelection="'multiple'"
+      >
+      </ag-grid-vue>
+
+      <v-snackbar
+        :timeout="2000"
+        v-model="state.snackbar"
+        location="bottom right"
+        :color="state.color"
+      >
+        {{ state.textAlert }}
+      </v-snackbar>
+      <!-- </v-card-text>
+      </v-card> -->
     </div>
   </div>
 </template>
@@ -114,24 +93,40 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
-import { onMounted, reactive, ref, watch, defineComponent } from "vue";
+import { onMounted, reactive, ref, watch, defineComponent,inject } from "vue";
 import VButton from "../../../components/VButton.vue";
-import MultiSelectRenderVue from "../../firewall/rules/agGridCustomRender/MultiSelectRenderVuer.vue";
+import ModalFirewallRule from "../../../components/modals/ModalFirewallRule.vue";
 
 export default defineComponent({
   name: "FirewallComponent",
   components: {
     AgGridVue,
-    MultiSelectRenderVue,
     VButton,
+    ModalFirewallRule,
   },
   props: {
     id: String,
     activeTab: String,
   },
   setup(props) {
-    // Variables
-    const columnDefs = reactive([
+    const emitter = inject("emitter");
+    const state = reactive({
+      // deleteDialogSquid: false,
+      // deletedRow: null,
+      snackbar: false,
+      color: "",
+      textAlert: "",
+      enable: false,
+      modalData: {},
+      isOpen: null,
+      modalMode: "",
+      isModalOpen: false,
+      editRow: {},
+    });
+
+    const alert = ref(false);
+    const mode = ref("create");
+    const columnDefs = [
       {
         width: 50,
         minWidth: 50,
@@ -154,92 +149,61 @@ export default defineComponent({
         cellEditorParams: {
           values: ["accept", "drop"],
         },
-        editable: (params) => params.node.data.isRowSelected,
       },
       {
         field: "rule_description",
         headerName: "Rule Description",
-        editable: true,
         headerName: "Rule Description",
+        sortable: true,
+        filter: true,
       },
       {
         field: "protocol",
         headerName: "Protocol",
-        editable: true,
-        cellEditor: "MultiSelectRenderVue",
+        cellEditor: "agSelectCellEditor",
         cellEditorParams: {
           values: [
             "tcp",
             "udp",
             "icmp type echo-request",
             "icmp type echo-reply",
+            "all",
           ],
-          cellEditor: "CustomRichSelect",
-          cellHeight: 20,
-          formatValue: (value) => value.toUpperCase(),
-          cellRenderer: (params) => params.value.toUpperCase(),
-          searchDebounceDelay: 200,
-          // Add a custom event listener to the cell editor
-          onProtocolsSelected: (event) => {
-            // Update the cell value with the selected values
-            params.setValue(event);
-          },
         },
-        cellRenderer: "CustomRichSelect",
+        sortable: true,
+        filter: true,
       },
 
       {
         field: "saddr",
         headerName: "Src Address",
-        editable: true,
+        sortable: true,
+        filter: true,
       },
       {
         field: "sport",
         headerName: "Src Port",
-        editable: true,
-        cellStyle: (params) => {
-          if (
-            params.data.protocol === "icmp request" ||
-            params.data.protocol === "icmp reply"
-          ) {
-            return {
-              "pointer-events": "none",
-              "background-color": "#eee",
-              opacity: "0.6",
-            };
-          }
-          return null;
-        },
+        sortable: true,
+        filter: true,
       },
       {
         headerName: "Dst Address",
         field: "daddr",
-        editable: true,
+        sortable: true,
+        filter: true,
       },
       {
         field: "dport",
         headerName: "Dst Port",
-        editable: true,
-        cellStyle: (params) => {
-          if (
-            params.data.protocol === "icmp request" ||
-            params.data.protocol === "icmp reply"
-          ) {
-            return {
-              "pointer-events": "none",
-              "background-color": "#eee",
-              opacity: "0.6",
-            };
-          }
-          return null;
-        },
+        sortable: true,
+        filter: true,
       },
       {
         headerName: "Action",
+        field: "action",
         cellRenderer: actionCellRenderer,
-        editable: false,
       },
-    ]);
+    ];
     const gridApi = ref(null);
     const gridColumnApi = ref(null);
     const defaultColDef = ref({
@@ -247,20 +211,19 @@ export default defineComponent({
       editable: false,
       cellDataType: false,
     });
-    const editType = ref("fullRow");
     const rowData = reactive([]);
+    const rules = reactive([]);
     const filterText = ref(null);
     const columnOrder = ref([]);
-    const rules = reactive([]);
-    const alert = ref(false);
-    const isSaveDisabled = ref(true);
+
     const deleteDialog = ref(false);
+    const showAddModal = ref(false);
     const rowDataToDelete = ref(null);
 
-    // Methods
-    const onCellValueChanged = (event) => {
-      const row = event.data;
-      row.isModified = true;
+    const openModalAdd = () => {
+      state.modalData = {};
+      state.modalMode = "create";
+      state.isModalOpen = true;
     };
 
     const onGridReady = (params) => {
@@ -273,26 +236,6 @@ export default defineComponent({
         );
       }
     };
-    const onSelectionChanged = () => {
-      const selectedNodes = gridApi.value.getSelectedNodes();
-      rowData.value.forEach((row) => {
-        row.isSelected = selectedNodes.some((node) => node.data === row);
-        row.isRowSelected = row.isSelected;
-      });
-
-      gridApi.value.refreshCells({
-        columns: [
-          "Policy",
-          "rule_description",
-          "protocol",
-          "saddr",
-          "sport",
-          "daddr",
-          "dport",
-          "Action",
-        ],
-      });
-    };
 
     const setGridApi = (api) => {
       gridApi.value = api;
@@ -300,7 +243,7 @@ export default defineComponent({
     const onFirstDataRendered = (params) => {
       params.api.sizeColumnsToFit();
     };
-    const actionCellRenderer = (params) => {
+    function actionCellRenderer(params) {
       let eGui = document.createElement("div");
       let editingCells = params.api.getEditingCells();
       let isCurrentRowEditing = editingCells.some((cell) => {
@@ -308,19 +251,31 @@ export default defineComponent({
       });
       if (isCurrentRowEditing) {
         eGui.innerHTML = `
+         <button 
+          class="action-button update"
+          data-action="update"
+          >
+            <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
         <button 
           class="action-button delete"
           data-action="delete"
           >
-            <i class="fas fa-times" style="color: #086eae;"></i>
+             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         `;
       } else {
         eGui.innerHTML = `
         <button 
+          class="action-button update"
+          data-action="update"
+          >
+            <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+        <button 
           class="action-button delete"
           data-action="delete">
-            <i class="fas fa-times" style="color: #086eae;"></i>
+                       <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         `;
       }
@@ -331,7 +286,7 @@ export default defineComponent({
         });
       });
       return eGui;
-    };
+    }
     const onFilterTextBoxChanged = () => {
       gridApi.value.setQuickFilter(
         document.getElementById("filter-text-box").value
@@ -343,35 +298,23 @@ export default defineComponent({
           rowDataToDelete.value = rowData;
           deleteDialog.value = true;
           break;
+        case "update":
+          mode.value = "update";
+          state.modalData = {};
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+          state.editRow = rowData;
+          // showAddModal.value = true;
+          // policy.value = rowData.policy;
+          // rule_description.value = rowData.rule_description;
+          // protocol.value = rowData.protocol;
+          // saddr.value = rowData.saddr;
+          // sport.value = rowData.sport;
+          // daddr.value = rowData.daddr;
+          // dport.value = rowData.dport;
+          break;
         default:
           break;
-      }
-    };
-    const addRow = () => {
-      const newRow = {
-        isSelected: false,
-        isRowSelected: false,
-        isModified: false,
-        policy: "accept",
-        rule_description: "",
-        protocol: [],
-        saddr: "",
-        sport: "",
-        daddr: "",
-        dport: "",
-        Action: "",
-      };
-
-      if (!rowData.value) {
-        rowData.value = [];
-      }
-
-      rowData.value.push(newRow);
-      // Check if gridApi is available before using it
-      if (gridApi.value) {
-        gridApi.value.setRowData(rowData.value);
-      } else {
-        console.error("gridApi is not available");
       }
     };
 
@@ -404,144 +347,66 @@ export default defineComponent({
         console.log("event.columns is undefined or null");
       }
     };
-    const cancel = () => {
-      rowData.value = rules.value[props.activeTab]["inbound"].filter(
-        (row) => row.id
-      );
-      // cancel the changes of modfied rows
-      rowData.value.forEach((row) => {
-        if (row.isModified) {
-          row.isModified = false;
-        }
-      });
-    };
-    const save = async () => {
-      let modifiedRows = rowData.value.filter((row) => row.isModified);
-      console.log("Modified rows:", modifiedRows);
-      modifiedRows?.map((row) => {
-        if (
-          row.protocol.includes("icmp type echo-request") ||
-          row.protocol.includes("icmp type echo-reply")
-        ) {
-          const newRowProtocol = row.protocol.filter(
-            (item) =>
-              item !== "icmp type echo-request" &&
-              item !== "icmp type echo-reply"
-          );
-          row.protocol = newRowProtocol;
-        }
-      });
-      const dataToSend = modifiedRows.map((row) => {
-        return {
-          policy: row.policy,
-          rule_description: row.rule_description,
-          protocol: row.protocol,
-          saddr: row.saddr,
-          daddr: row.daddr,
-          sport: row.sport,
-          dport: row.dport,
-          type_rule: "inbound",
-          id: row.id,
-        };
-      });
-      function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-          const cookies = document.cookie.split(";");
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === name + "=") {
-              cookieValue = decodeURIComponent(
-                cookie.substring(name.length + 1)
-              );
-              break;
-            }
-          }
-        }
-        return cookieValue;
-      }
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-      try {
-        const response = await axios.post(
-          "/rules/saveRules/" + props.activeTab,
-          dataToSend
-        );
-        if (response.status === 200 && modifiedRows.length > 0) {
-          modifiedRows.forEach((row) => (row.isModified = false));
-          alert.value = true;
-          setTimeout(() => {
-            alert.value = false;
-          }, 5000);
-        } else {
-          console.error("Failed to save data");
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    };
     const handleRemove = () => {
       alert.value = false;
     };
     const showDeleteModal = () => {
       deleteDialog.value = true;
     };
+
+    function getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    }
     const cancelDelete = () => {
       rowDataToDelete.value = null;
       deleteDialog.value = false;
     };
     const confirmDelete = () => {
-      if (rowDataToDelete.value) {
-        const rowData = rowDataToDelete.value;
-        if (rowData.id) {
-          function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== "") {
-              const cookies = document.cookie.split(";");
-              for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === name + "=") {
-                  cookieValue = decodeURIComponent(
-                    cookie.substring(name.length + 1)
-                  );
-                  break;
-                }
-              }
-            }
-            return cookieValue;
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios
+        .delete(`/rules/deleteRule/${rowDataToDelete.value.id}`)
+        .then((response) => {
+          if (response.status == "200") {
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
           }
-          const csrfToken = getCookie("csrftoken");
-          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-          axios
-            .delete("/rules/deleteRule/" + rowData.id)
-            .then((response) => {
-              const responseData = response.data;
-              if (responseData.msg === "delete rule Successfully!!") {
-                const index = rowData.value.indexOf(rowData);
-                if (index > -1) {
-                  rowData.value.splice(index, 1);
-                }
-              } else {
-                console.error("Failed to delete row");
-              }
-            })
-            .catch((error) => {
-              console.error(error);
-            });
-        } else {
-          const index = rowData.value.indexOf(rowData);
-          if (index > -1) {
-            rowData.value.splice(index, 1);
-          }
-        }
-        rowDataToDelete.value = null;
-        deleteDialog.value = false;
-      }
+        })
+        .catch((i) => {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.response;
+        });
+    };
+    const saveModal = () => {
+      showAddModal.value = false;
+    };
+    const cancel = () => {
+      showAddModal.value = false;
     };
 
-    // Lifecycle hooks
     onMounted(() => {
+      emitter.on("closFirewallInboundModal", () => {
+       
+        state.isModalOpen = false;
+      });
+
       const rulesAttribute =
         document.getElementById("app").attributes["rules"].value;
       let validJsonString = rulesAttribute
@@ -562,43 +427,58 @@ export default defineComponent({
           rowData.value = [];
         }
       },
-      { immediate: true }
+      { immediate: true },
+
+      (newValue, oldValue) => {
+        if (newValue) {
+          if (mode.value === "create") {
+            rowData.value.push(newValue);
+            gridApi.value.forEachNode((node) =>
+              node.setSelected(node.rowIndex === rowData.value.length - 1)
+            );
+          } else {
+            const selectedNode = gridApi.value.getSelectedNodes()[0];
+            if (selectedNode) {
+              selectedNode.setData(newValue);
+            }
+          }
+        }
+      }
     );
 
-    // Return values/methods to be used in the template
     return {
+      openModalAdd,
+      emitter,
       columnDefs,
+      state,
       gridApi,
       gridColumnApi,
       defaultColDef,
-      editType,
       rowData,
       filterText,
       columnOrder,
       rules,
-      alert,
-      isSaveDisabled,
       deleteDialog,
       rowDataToDelete,
+      showAddModal,
+      alert,
+      mode,
       onGridReady,
-      onCellValueChanged,
-      onSelectionChanged,
       setGridApi,
       onFirstDataRendered,
       actionCellRenderer,
       onFilterTextBoxChanged,
-      addRow,
       arrayMove,
       onRowDragEnd,
       onColumnRowGroupChanged,
       onColumnRowDragEnd,
-      cancel,
-      save,
       handleRemove,
       showDeleteModal,
       handleAction,
       cancelDelete,
       confirmDelete,
+      saveModal,
+      cancel,
     };
   },
 });
@@ -629,8 +509,23 @@ export default defineComponent({
   background-color: #f5f5f5;
 }
 
-.v-alert.d-flex.mt-3.v-sheet.theme--dark.success {
-  width: 28%;
-  margin-left: auto;
+.actionBtn {
+  justify-content: center;
+}
+
+.button-bg-color {
+  background-color: #213e9f;
+}
+
+.v-alert.v-theme--light.bg-success.v-alert--density-default.v-alert--variant-flat.d-flex.mt-3.alert-style {
+  width: 350px;
+  right: -78%;
+  /* Default value for small and medium screens */
+
+  /* Media query for large screens */
+  @media screen and (min-width: 1080px) {
+    right: -70%;
+    /* Value for larger screens */
+  }
 }
 </style>

@@ -29,7 +29,13 @@
                 <FirewallComponent
                   :id="tab.name_interface"
                   :activeTab="activeTab"
-              /></v-card-text>
+              />
+                <FirewallComponentOutbound
+                  :id="tab.name_interface"
+                  :activeTab="activeTab"
+              />
+            
+            </v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -41,11 +47,13 @@
 <script>
 import BaseLayout from "../../layouts/layout.vue";
 import FirewallComponent from "../../views/firewall/rules/FirewallComponent.vue";
+import FirewallComponentOutbound from "../../views/firewall/rules/FirewallComponentOutbound.vue";
 
 export default {
   components: {
     BaseLayout,
     FirewallComponent,
+    FirewallComponentOutbound
   },
   data() {
     return {

@@ -1,0 +1,284 @@
+<template>
+  <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            Please Wait...
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
+    <v-row>
+      <v-col cols="6">
+        <h4>
+          General information
+          <i
+            v-if="!state.enableState"
+            class="mdi mdi-play-circle"
+            style="color: #4caf50; font-size: 20px; cursor: pointer"
+            title="Start Server"
+            @click="startStopRestartServer('Start')"
+          ></i>
+          <i
+            v-if="state.enableState"
+            class="mdi mdi-stop-circle"
+            title="Stop Server"
+            style="color: #b00020; font-size: 20px; cursor: pointer"
+            @click="startStopRestartServer('Stop')"
+          ></i>
+          <i
+            v-if="state.enableState"
+            class="mdi mdi-reload"
+            title="Restart Server"
+            style="color: #4caf50; font-size: 20px; cursor: pointer"
+            @click="startStopRestartServer('Restart')"
+          ></i>
+        </h4>
+        <v-divider class="mt-2"></v-divider>
+        <v-card class="mt-3">
+          <v-row class="mt-1 ml-1">
+            <v-col cols="4" class="mt-7">
+              <label>Proxy port</label>
+            </v-col>
+            <v-col cols="5" class="mt-3">
+              <v-text-field
+                label="Proxy Port"
+                v-model="state.proxyPort"
+              ></v-text-field>
+              <p class="error-feedback mb-5" v-if="v$.proxyPort.$error">
+                {{ v$.proxyPort.$errors[0].$message }}
+              </p>
+            </v-col>
+          </v-row>
+          <v-row class="d-flex justify-end mt-1 mb-2">
+            <div>
+              <VButton
+                rounded
+                outlined
+                color="#213E9F"
+                label-color="#ffffff"
+                label="Save"
+                :isLarge="true"
+                class="mr-4"
+                @click="saveGeneralInfo"
+              />
+            </div>
+          </v-row>
+        </v-card>
+      </v-col>
+
+      <squid_auth />
+      <v-dialog v-model="state.dialogServer" max-width="500px">
+        <v-card>
+          <v-card-title class="headline"
+            >{{ state.statusServer }} Confirmation</v-card-title
+          >
+          <v-card-text
+            >Are you sure you want to {{ state.statusServer }} this rule
+            ?</v-card-text
+          >
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              color="blue darken-1"
+              text
+              @click="state.dialogServer = false"
+              >Cancel</v-btn
+            >
+            <v-btn color="blue darken-1" text @click="confirmationServerState"
+              >{{ state.statusServer }}
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+      <v-snackbar
+        :timeout="2000"
+        v-model="state.snackbar"
+        location="bottom right"
+        :color="state.color"
+      >
+        {{ state.textAlert }}
+
+        <template v-slot:actions> </template>
+      </v-snackbar>
+    </v-row>
+  </div>
+</template>
+
+<script>
+import { reactive, computed, onMounted } from "vue";
+import axios from "axios";
+import squid_auth from "./squid_auth.vue";
+import useValidate from "@vuelidate/core";
+import { required } from "@vuelidate/validators";
+import { AgGridVue } from "ag-grid-vue3";
+import VButton from "@/components/VButton.vue";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
+
+export default {
+  components: {
+    AgGridVue,
+    VButton,
+    squid_auth,
+  },
+  setup() {
+    const state = reactive({
+      dialogServer: false,
+      statusServer: null,
+      snackbar: false,
+      color: "",
+      textAlert: "",
+      enableState: false,
+      proxyPort: "",
+      enable: false,
+      modalData: {},
+      isOpen: null,
+      modalMode: "",
+      isModalOpen: false,
+      editRow: null,
+      loading: false,
+      isLoadingDialogue: false,
+    });
+
+    const rules = computed(() => {
+      return {
+        proxyPort: { required },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
+
+    const saveGeneralInfo = async () => {
+      const result = await v$.value.$validate();
+      console.log("result", result);
+
+      if (result) {
+        console.log("state", state);
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        state.loading = true;
+        state.isLoadingDialogue = true;
+
+        let payload = {
+          port: state.proxyPort,
+        };
+
+        axios
+          .put("/proxy/update_generale_info", payload)
+          .then((response) => {
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            state.snackbar = true;
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          });
+      } else {
+        console.log("error", v$.value);
+      }
+    };
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    };
+    const confirmationServerState = () => {
+      let status = state.statusServer.toLowerCase();
+      state.dialogServer = false;
+      state.loading = true;
+      state.isLoadingDialogue = true;
+
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios
+        .post(`/proxy/${status}`)
+        .then((response) => {
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.msg;
+          state.loading = false;
+          state.isLoadingDialogue = false;
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          console.log("i.response.data.msg", i.response);
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.msg;
+          state.loading = false;
+          state.isLoadingDialogue = false;
+        });
+    };
+
+    const startStopRestartServer = (item) => {
+      state.dialogServer = true;
+      state.statusServer = item;
+    };
+    const populate = () => {
+      const generalInfoAttribute =
+        document.getElementById("app").attributes["generalInfo"].value;
+      const generalInfo = JSON.parse(generalInfoAttribute);
+      state.enableState = generalInfo.status;
+      console.log("generalInfo.status", generalInfo.status);
+      state.proxyPort = generalInfo.Port;
+    };
+    onMounted(() => {
+      populate();
+    });
+
+    return {
+      v$,
+      state,
+      saveGeneralInfo,
+      startStopRestartServer,
+      confirmationServerState,
+    };
+  },
+};
+</script>
+<style>
+.actionBtn {
+  justify-content: end;
+}
+
+.error-feedback {
+  color: red;
+  font-size: 0.85em;
+}
+</style>

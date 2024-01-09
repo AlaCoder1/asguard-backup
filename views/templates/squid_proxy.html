@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load encore %}
+
+{% block stylesheets %}
+    {{ block.super }}
+
+    {% encore_entry_link_tags 'squid' %}
+{% endblock %}
+
+{% block javascripts %}
+    {% encore_entry_script_tags 'squid' %}
+{% endblock %}
+
+{% block body %}
+
+    <div id='app'  
+    proxyUser ='{{ proxyUser }}'
+    generalInfo ='{{ generalInfo }}'
+    statusEnable ='{{ statusEnable }}'
+    proxyRule ='{{ proxyRule }}'
+    proxyGroups ='{{ proxyGroups }}'
+    statusServer ='{{ statusServer }}'
+    >
+</div>
+
+{% endblock %}

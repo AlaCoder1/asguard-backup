@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Certificat Name "
+                    label="Certificat Name"
                     v-model="state.formData.certifName"
                   ></v-text-field>
                   <p
@@ -36,7 +36,7 @@
                     return-object
                     :items="[
                       {
-                        name: 'Import an existing Certificat',
+                        name: 'Import an existing Certificate',
                         slug: 'import',
                         id: '1',
                       },
@@ -74,12 +74,6 @@
                     label="Private key certificate (facultatif)"
                     variant="outlined"
                   ></v-textarea>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.formData.privateKey.$error"
-                  >
-                    {{ v$.formData.privateKey.$errors[0].$message }}
-                  </p>
 
                   <v-text-field
                     label="Serial number certificate"
@@ -412,17 +406,6 @@ export default {
               )
             ),
           },
-          privateKey: {
-            requiredIfFuction: helpers.withMessage(
-              "Value is required",
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                  "Import an existing Certificate"
-              )
-            ),
-          },
-
           autorityCertif: {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
@@ -607,6 +590,10 @@ export default {
               countryID: element.ccn3,
             };
           });
+          countryList.sort((a, b) =>
+            a.countryName.localeCompare(b.countryName)
+          );
+
           this.countriesList = countryList;
         })
         .catch(() => {

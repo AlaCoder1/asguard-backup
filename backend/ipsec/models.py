@@ -23,7 +23,7 @@ class ServerIPsec(models.Model):
     negotiation_mode = models.CharField(max_length=100, default=None, blank=True, null=True)
     pre_shared_key = models.CharField(max_length=100, default=None, blank=True, null=True)
     cert = models.CharField(max_length=300, default=None, null=True, blank=True)
-    remote_distingushed_name = models.CharField(max_length=1000, default=None, blank=True, null=True)
+    remote_cert = models.CharField(max_length=1000, default=None, blank=True, null=True)
     local_key_pair = models.CharField(max_length=100, default=None, blank=True, null=True)
     peer_key_pair = models.CharField(max_length=100, default=None, blank=True, null=True)
 

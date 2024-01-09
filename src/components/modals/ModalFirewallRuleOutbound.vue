@@ -3,8 +3,11 @@
     <v-dialog v-model="state.openModal" persistent max-width="600px">
       <v-card>
         <v-card-title>
-          <span class="headline"
-            >{{ modalMode === "create" ? "Add new" : "Update" }} Rule</span
+          <span class="headline" v-if="modalMode === 'create'">
+            Add new Rule</span
+          >
+          <span class="headline" v-if="modalMode === 'edit'">
+            Update new Rule</span
           >
         </v-card-title>
         <v-card-text>
@@ -314,19 +317,21 @@ export default {
       }
     };
     const populate = (data) => {
-      state.id = data.id;
-      let filtredPolicy = policyList.value.filter((i) => i === data?.policy);
-      let filtredProtocol = protocolList.value.filter(
-        (i) => i === data?.protocol[0]
-      );
+      if (modalMode.value === "edit") {
+        state.id = data.id;
+        let filtredPolicy = policyList.value.filter((i) => i === data?.policy);
+        let filtredProtocol = protocolList.value.filter(
+          (i) => i === data?.protocol[0]
+        );
 
-      state.formData.policy = filtredPolicy[0];
-      state.formData.rule_description = data.rule_description;
-      state.formData.protocol = filtredProtocol[0];
-      state.formData.saddr = data.saddr;
-      state.formData.sport = data.sport;
-      state.formData.daddr = data.daddr;
-      state.formData.dport = data.dport;
+        state.formData.policy = filtredPolicy[0];
+        state.formData.rule_description = data.rule_description;
+        state.formData.protocol = filtredProtocol[0];
+        state.formData.saddr = data.saddr;
+        state.formData.sport = data.sport;
+        state.formData.daddr = data.daddr;
+        state.formData.dport = data.dport;
+      }
     };
     const getCookie = (name) => {
       let cookieValue = null;

@@ -93,7 +93,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
-import { onMounted, reactive, ref, watch, defineComponent,inject } from "vue";
+import { onMounted, reactive, ref, watch, defineComponent, inject } from "vue";
 import VButton from "../../../components/VButton.vue";
 import ModalFirewallRule from "../../../components/modals/ModalFirewallRule.vue";
 
@@ -403,8 +403,10 @@ export default defineComponent({
 
     onMounted(() => {
       emitter.on("closFirewallInboundModal", () => {
-       
         state.isModalOpen = false;
+        state.isOpen = false;
+        state.modalMode = "";
+        state.editRow = {};
       });
 
       const rulesAttribute =

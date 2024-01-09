@@ -86,13 +86,18 @@
         </v-col>
 
         <v-col cols="4" class="mt-5">
-          <label>Peer identifier* <br /> </label>
+          <label>Remote Certificate* <br /> </label>
         </v-col>
         <v-col cols="8" class="mb-n6">
-          <v-text-field
-            label="ex: CN=, O=,C=,L=, ST="
+          <v-select
             v-model="peerIdentifier"
-          ></v-text-field>
+            label="Remote Certificate"
+            item-title="name"
+            item-value="id"
+            :items="props.CertificateList"
+            return-object
+          ></v-select>
+
           <p
             class="error-feedback mb-5"
             v-if="props.errors.peerIdentifier.$errors.length"

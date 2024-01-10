@@ -223,9 +223,9 @@ def create_server_ipsec(request):
             else:
                 cert = authentication.get("cert")
                 certificate = Certificate.objects.get(name=cert)
-                remote_distingushed_name = authentication.get("remote_distingushed_name", "")
+                remote_cert = authentication.get("remote_cert", "")
                 server_data["cert"] = cert
-                server_data["remote_distingushed_name"] = remote_distingushed_name
+                server_data["remote_cert"] = remote_cert
 
                 # if the certificate dosen't have a CA (imported cert) ca will be null
                 ca = certificate.certificate_authority
@@ -488,7 +488,7 @@ def update_server_ipsec(request, id):
             server.local_key_pair = None
             server.peer_key_pair = None
             server.cert = None
-            server.remote_distingushed_name = None
+            server.remote_cert = None
             if server.authentication_method == CONSTANT_METHOD_PSK:
                 server.pre_shared_key = authentication.get("pre_shared_key", "")
             elif server.authentication_method == CONSTANT_METHOD_PUBLIC_KEY:
@@ -500,7 +500,7 @@ def update_server_ipsec(request, id):
                 ca = certificate.certificate_authority
                 if ca:
                     ca = ca.name
-                server.remote_distingushed_name = authentication.get("remote_distingushed_name", "")
+                server.remote_cert = authentication.get("remote_cert", "")
                 
             if server.deed_peer_detection:
                 server.deed_peer_delay = deed_peer.get("deed_peer_delay", "")

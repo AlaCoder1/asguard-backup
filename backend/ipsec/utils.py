@@ -114,9 +114,9 @@ def set_key_group_config(key_group:str):
 def up_ipsec_conn(conn_name):
     """Up IPsec config"""
     process = subprocess.run(['sudo', 'ipsec', 'up', conn_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print('error: ', process.stderr.decode())
     error_up_command = process.stderr.decode()
     if len(error_up_command) != 0:
+        print('error up command: ', error_up_command)
         return False
     return True
 
@@ -181,7 +181,7 @@ conn {json_object["conn_name"]}
         config_input = config_input.replace("#leftcert=path_cert", 
                                             f"""leftcert={PATH_SERVER_CERT_CRT.format(json_object["authentication"]["cert"])}""")
         config_input = config_input.replace("#rightcert=path_cert", 
-                                            f"""rightcert={PATH_SERVER_CERT_CRT.format(json_object["authentication"]["remote_distingushed_name"])}""")
+                                            f"""rightcert={PATH_SERVER_CERT_CRT.format(json_object["authentication"]["remote_cert"])}""")
     elif json_object["authentication"]["authentication_method"] == "Mutual Public key":
         config_input = config_input.replace("authby=secret", "authby=pubkey")
         config_input = config_input.replace("#leftrsasigkey=path_public_key", 

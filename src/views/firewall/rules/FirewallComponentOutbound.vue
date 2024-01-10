@@ -177,24 +177,28 @@ export default defineComponent({
       {
         field: "saddr",
         headerName: "Src Address",
+        cellRenderer: formatedLineSadd,
         sortable: true,
         filter: true,
       },
       {
         field: "sport",
         headerName: "Src Port",
+        cellRenderer: formatedLineSport,
         sortable: true,
         filter: true,
       },
       {
         headerName: "Dst Address",
         field: "daddr",
+        cellRenderer: formatedLineDaddr,
         sortable: true,
         filter: true,
       },
       {
         field: "dport",
         headerName: "Dst Port",
+        cellRenderer: formatedLineDport,
         sortable: true,
         filter: true,
       },
@@ -204,6 +208,40 @@ export default defineComponent({
         cellRenderer: actionCellRenderer,
       },
     ];
+
+    function formatedLineSport(data) {
+      const rslt = data.data.sport ? data.data.sport : "--";
+      let eGui = document.createElement("div");
+      eGui.innerHTML = `${rslt}
+        `;
+      eGui.style.lineHeight = "2";
+      return eGui;
+    }
+    function formatedLineSadd(data) {
+      const rslt = data.data.saddr ? data.data.saddr : "--";
+      let eGui = document.createElement("div");
+      eGui.innerHTML = `${rslt}
+        `;
+      eGui.style.lineHeight = "2";
+      return eGui;
+    }
+    function formatedLineDaddr(data) {
+      const rslt = data.data.daddr ? data.data.daddr : "--";
+      let eGui = document.createElement("div");
+      eGui.innerHTML = `${rslt}
+        `;
+      eGui.style.lineHeight = "2";
+      return eGui;
+    }
+    function formatedLineDport(data) {
+      const rslt = data.data.dport ? data.data.dport : "--";
+      let eGui = document.createElement("div");
+      eGui.innerHTML = `${rslt}
+        `;
+      eGui.style.lineHeight = "2";
+      return eGui;
+    }
+
     const gridApi = ref(null);
     const gridColumnApi = ref(null);
     const defaultColDef = ref({

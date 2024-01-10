@@ -9,18 +9,6 @@ def execute_cmd(command):
     return output, error
 
 #*********** Fichier de configuration suricata.yaml ****************
-
-#Lire le fichier de configuration suricata.yaml//
-def read_suricata_config():
-    # Chemin vers le fichier suricata.yaml
-    suricata_yaml_path = "/etc/suricata/suricata.yaml"
-    try:
-        output, error = execute_cmd("cat " + suricata_yaml_path)
-        return output
-    except FileNotFoundError:
-        # print(f"Le fichier {suricata_yaml_path} n'a pas été trouvé.")
-        return None
-
     
 #Lire le fichier de configuration suricata.yaml//
 def read_config():
@@ -95,91 +83,87 @@ def read_first_syslog_enabled(suricata_yaml_path):
     return syslog_enabled  
 
 #Update fichier de configuration suricata.yaml//
-def update_suricata_config(ifname, status_enabled,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode):    
-    suricata_yaml_path = "/etc/suricata/suricata.yaml"
+def update_suricata_config(suricata_yaml_path,lines,home_net_value_sys,ifname, status_enabled,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode):    
     try:
-        cmd_read = f"sudo cat {suricata_yaml_path}"
-        output ,error = execute_cmd(cmd_read)
-        if not error:
-            # Lit les lignes du fichier
-            lines = output.split('\n')
-            updated_lines = []
-            next_eve_log = False
-            next_syslog = False
-            syslog_enabled = None
-            af_packet=False
-            # Ajout de la logique de testa() ici
-            for line in lines:
-                stripped_line = line.strip()
-                if stripped_line.startswith("#"):
-                    updated_lines.append(line + '\n')
-                elif "promisc:" in stripped_line:
-                    # Met à jour la ligne promisc avec la nouvelle valeur
-                    updated_lines.append(f'      promisc: {new_promisc}\n')
-                elif "af-packet:" in stripped_line:
-                    af_packet=True
-                    updated_lines.append(line + '\n')  # Conserve la ligne "af-packet:" telle quelle
-                elif af_packet:
-                    if "interface:" in stripped_line:
-                        updated_lines.append(f'  - interface: {ifname}\n')
-                        af_packet = False
-                elif "eve-log:" in stripped_line:
-                    next_eve_log = True  # Activer la lecture de la ligne suivante sous "eve-log"
-                    updated_lines.append(line + '\n')  # Conserve la ligne "eve-log" telle quelle
-                elif next_eve_log:
-                    if "enabled:" in stripped_line:
-                        # Met à jour la ligne "enabled" sous "eve-log" avec la nouvelle valeur
-                        updated_lines.append(f'      enabled: {new_eve_log}\n')
-                        next_eve_log = False
-                elif "syslog:" in stripped_line and  syslog_enabled is None:
-                    syslog_enabled = read_first_syslog_enabled(suricata_yaml_path)
-                    next_syslog = True  # Activer la lecture de la ligne suivante sous "syslog"
-                    updated_lines.append(line + '\n')  # Conserve la ligne "syslog" telle quelle
-                elif next_syslog:
-                    if "enabled:" in stripped_line:
-                        # Met à jour la ligne "enabled" sous "syslog" avec la nouvelle valeur
-                        updated_lines.append(f'      enabled: {new_syslog}\n')
-                        next_syslog = False
-                elif "mpm-algo:" in stripped_line:
-                    # Met à jour la ligne mpm-algo avec la nouvelle valeur
-                    updated_lines.append(f'mpm-algo: {new_mpm_algo}\n')
-                elif "profile:" in stripped_line:
-                    # Met à jour la ligne profile avec la nouvelle valeur
-                    updated_lines.append(f'  profile: {new_profile}\n')
-                elif "copy-mode:" in stripped_line:
-    # Met à jour la ligne copy-mode avec la nouvelle valeur
-                    updated_lines.append(f'      copy-mode: {new_copy_mode}\n')
-                else:
-                    # Conserve les autres lignes telles quelles
-                    updated_lines.append(line + '\n')
-             # Ouvre le fichier en écriture sur le serveur distant
-            with open(suricata_yaml_path, 'w') as local_file:
-                for string in updated_lines:
-                    local_file.write(string)
-                     
-            if status_enabled is True:
-                aux_enable="enable"
+        updated_lines = []
+        next_eve_log = False
+        next_syslog = False
+        syslog_enabled = None
+        af_packet=False
+        # Ajout de la logique de testa() ici
+        for line in lines:
+            stripped_line = line.strip()
+            if stripped_line.startswith("#"):
+                updated_lines.append(line + '\n')
+            elif "HOME_NET:" in stripped_line:
+                updated_lines.append(f'    HOME_NET: "{home_net_value_sys}"' + '\n')
+            elif "promisc:" in stripped_line:
+                # Met à jour la ligne promisc avec la nouvelle valeur
+                updated_lines.append(f'      promisc: {new_promisc}\n')
+            elif "af-packet:" in stripped_line:
+                af_packet=True
+                updated_lines.append(line + '\n')  # Conserve la ligne "af-packet:" telle quelle
+            elif af_packet:
+                if "interface:" in stripped_line:
+                    updated_lines.append(f'  - interface: {ifname}\n')
+                    af_packet = False
+            elif "eve-log:" in stripped_line:
+                next_eve_log = True  # Activer la lecture de la ligne suivante sous "eve-log"
+                updated_lines.append(line + '\n')  # Conserve la ligne "eve-log" telle quelle
+            elif next_eve_log:
+                if "enabled:" in stripped_line:
+                    # Met à jour la ligne "enabled" sous "eve-log" avec la nouvelle valeur
+                    updated_lines.append(f'      enabled: {new_eve_log}\n')
+                    next_eve_log = False
+            elif "syslog:" in stripped_line:
+               next_syslog = True  # Activer la lecture de la ligne suivante
+               updated_lines.append(line + '\n') 
+            elif next_syslog:
+                if "enabled:" in stripped_line:
+                    # Met à jour la ligne "enabled" sous "syslog" avec la nouvelle valeur
+                    updated_lines.append(f'      enabled: {new_syslog}\n')
+                    next_syslog = False
+            elif "mpm-algo:" in stripped_line:
+                # Met à jour la ligne mpm-algo avec la nouvelle valeur
+                updated_lines.append(f'mpm-algo: {new_mpm_algo}\n')
+            elif "profile:" in stripped_line:
+                # Met à jour la ligne profile avec la nouvelle valeur
+                updated_lines.append(f'  profile: {new_profile}\n')
+            elif "copy-mode:" in stripped_line:
+            # Met à jour la ligne copy-mode avec la nouvelle valeur
+                updated_lines.append(f'      copy-mode: {new_copy_mode}\n')
             else:
-                aux_enable="disable"
-            enable_command = "systemctl {} --quiet suricata.service ".format(aux_enable)
-            output, error=execute_cmd(enable_command)
-            if error=="":
-                return True
-        else:    
-            return None
+                # Conserve les autres lignes telles quelles
+                updated_lines.append(line + '\n')
+        with open(suricata_yaml_path, 'w') as local_file:
+            for string in updated_lines:
+                local_file.write(string)
+
+        if status_enabled is True:
+            aux_enable="enable"
+            aux_action="restart"
+        else:
+            aux_enable="disable"
+            aux_action="stop"
+        commands = [
+#         """sudo cat <<EOF > {}
+# {}
+# EOF""".format(suricata_yaml_path,updated_lines),
+        "sudo systemctl {} --quiet suricata.service && sudo systemctl {} suricata.service ".format(aux_enable,aux_action)
+        ]
+        for cmd in commands:
+            output, error=execute_cmd(cmd)
+            if error!="":
+                print({"errot":error,"cmd":cmd})
+                return error
+            
+        return True
     except Exception as e:
         # Capture toute autre exception et affiche un message d'erreur
-        print(f"Erreur lors de la mise à jour du fichier {suricata_yaml_path}: {e}")
+        print("exception",e)
         return None
 
 #*********** Les régles ****************
-
-
-def return_rule(sid,action,protocol,source_ip,direction,destination_ip,msg,rev):
-   rule={sid:{"action":action,"protocol":protocol,"source_ip":source_ip,"direction":direction,"destination_ip":destination_ip,"msg":msg,"rev":rev,"sid":sid}}
-   return rule
-
-
 #Format des régles    
 def format_dict_as_suricata_rules(content):    
     rule_template = "{action} {protocol} {source_ip} {direction} {destination_ip} (msg:\"{msg}\"; rev:{rev};sid:{sid};)"
@@ -196,7 +180,7 @@ def format_dict_as_suricata_rules(content):
     return rule_str
 
 # Ajouter une régle
-def add_rule_remote10(comment, content,file_path):
+def add_rule_remote(comment, content,file_path):
     formatted_content = format_dict_as_suricata_rules(content)
     if comment:
         formatted_content = "#" + formatted_content
@@ -218,8 +202,8 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     msg=None
     rev=None
     if rule.startswith("#") is True:
-        action=rule.split(" ")[0].strip()
-        protocol=rule.split(" ")[1].strip()
+        action=rule.split(" ")[0].strip()+rule.split(" ")[1]
+        protocol=rule.split(" ")[2].strip()
     else:
         action=rule.split(" ")[0].strip()
         protocol=rule.split(" ")[1].strip()
@@ -246,7 +230,7 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     dest_ip=dest_ip if dest_ip!="" else None    
     msg=msg if msg!="" else None   
     protocol=protocol if protocol!="" else None
-    print({"action":action,"protocol":protocol})
+    # print({"action":action,"protocol":protocol})
     if contenu['action'] is not None:
         if contenu["activate_rule"] is False:
             contenu['action']="#"+contenu['action']
@@ -273,7 +257,7 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     if  contenu['sid'] is not None:
         rule=rule.replace(str(sid),str(contenu['sid']))   
         
-    cmd = "sed -i '/sid:{}/ s/{}/{}/' {}".format(sid, line_to_update.strip(), rule.strip(), file_path)
+    cmd = "sudo sed -i '/sid:{}/ s/{}/{}/' {}".format(sid, line_to_update.strip(), rule.strip(), file_path)
     output, error = execute_cmd(cmd)
     return output,rule, error
 
@@ -281,7 +265,7 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
 def get_line_by_sid(file_path, sid):
     try:
         # Utilisez la commande grep pour rechercher la ligne avec le SID dans le fichier
-        cmd = f'grep -E "sid:{sid};" {file_path}'
+        cmd = f'sudo grep -E "sid:{sid};" {file_path}'
         output, error = execute_cmd(cmd)
         if not error:
             # La sortie de la commande contient la ligne avec le SID
@@ -329,32 +313,32 @@ def prepare_rule_attribut(rules):
         if len(rule)!=0:
             action=None
             protocol=None
+            sid=None
+            src_ip=None
+            direction=None
+            dest_ip=None
+            msg=None
+            rev=None
+            
             # Vérifiez si la règle n'est pas vide
             if rule.startswith("#") is True:
                 active=False
                 action=rule.split(" ")[0].strip()+rule.split(" ")[1]
                 protocol=rule.split(" ")[2].strip()
-                
             else:
                 active=True
                 action=rule.split(" ")[0].strip()
                 protocol=rule.split(" ")[1].strip()
         
-            sid=None
             if rule.find("sid")!=-1:
                 rule_inter=rule[rule.find("sid:"):]
                 sid=int(rule_inter[rule_inter.find("sid:")+len("sid:"):rule_inter.find(";")])
-            src_ip=None
-            direction=None
-            dest_ip=None
             if rule[1:].find("->")!=-1:
                 src_ip=rule[rule.find(protocol)+len(protocol):rule.find("->")].strip()
                 direction="->"
                 dest_ip=rule[rule.find("->")+len("->"):rule.find("(msg")].strip()
-            msg=None
             if rule.find("msg:")!=-1:
                 msg=rule[rule.find('msg:"')+len('msg:"'): rule.find('";')].strip()
-            rev=None
             if rule.find("rev:")!=-1:
                 rev=rule[rule.find("rev:")+len("rev:"): rule.find(";sid")].strip(";")
                 if rev.isdigit():
@@ -390,7 +374,7 @@ def read_suricata_log():
     suricata_log_path = "/var/log/suricata/fast.log"
     logs = []
     try:
-        cmd_read = f"cat {suricata_log_path}"
+        cmd_read = f"sudo cat {suricata_log_path}"
         output, error = execute_cmd(cmd_read)
         # print (stderr.read().decode())
         if not error:

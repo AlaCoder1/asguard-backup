@@ -1,5 +1,5 @@
 import subprocess
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from django.core import serializers
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -594,8 +594,13 @@ def login(request):
     print (usr)
 
     context = {'users':usr}
-    print (context)
-    return render(request, 'login.html',context)
+    if request.user.is_authenticated:
+        next_url = request
+        # index_page(request)
+        print('path+***********: ',request.path)
+        return redirect('/dashboard/')
+    else:
+        return render(request, 'login.html',context)
 
 
 @login_required(login_url='/')
@@ -625,6 +630,9 @@ def index_page(request):
 
 def error_404_view(request, exception):
     return render(request,'404.html',status=404)
+
+def success(request):
+    return render(request,'success.html')
 
 @login_required(login_url='/')
 def suricata(request):

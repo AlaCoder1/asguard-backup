@@ -38,8 +38,8 @@ export const useAuthStore = defineStore("auth", {
           this.messageStore = message;
         }, 1000);
 
-        window.location.href = "/dashboard";
-        console.log("dashboard");
+        let hrefPath = localStorage.getItem("href-path") ?? "/dashboard";
+        window.location.href = hrefPath;
       } catch (error) {
         let message = "Invalid credentiels";
 

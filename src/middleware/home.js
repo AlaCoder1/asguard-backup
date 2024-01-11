@@ -87,6 +87,14 @@ const vuetify = createVuetify({
       return Promise.reject(error);
     }
   );
+
+  
+const currentPath = window.location.pathname;
+function hrefPath(){
+  localStorage.setItem('href-path', currentPath)
+}
+
+hrefPath()
 app
 .use(VueApexCharts)
 .use(store)

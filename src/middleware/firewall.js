@@ -78,6 +78,14 @@ const vuetify = createVuetify({
     }
   );
 
+  
+const currentPath = window.location.pathname;
+function hrefPath(){
+  localStorage.setItem('href-path', currentPath)
+}
+
+hrefPath()
+
 app
 .use(store)
 .use(vuetify)

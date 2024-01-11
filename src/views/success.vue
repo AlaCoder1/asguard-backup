@@ -14,7 +14,7 @@
         <h1 class="mb-3 title">Success :)</h1>
         <p class="text" style="margin-top: 5px">Success Payment.</p>
         <p class="text" style="margin-top: 10px">
-          "Success! Your payment has been processed and confirmed. Thank you for
+          Success! Your payment has been processed and confirmed. Thank you for
           your purchase.
 
           <!-- <span

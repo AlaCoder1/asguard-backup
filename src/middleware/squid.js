@@ -29,4 +29,11 @@ axios.interceptors.response.use(
   }
 );
 
+const currentPath = window.location.pathname;
+function hrefPath(){
+  localStorage.setItem('href-path', currentPath)
+}
+
+hrefPath()
+
 app.use(ElementPlus).use(store).use(vuetify).mount("#app");

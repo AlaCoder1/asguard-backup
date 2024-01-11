@@ -31,6 +31,12 @@ axios.interceptors.response.use(
   }
 );
 
+const currentPath = window.location.pathname;
+function hrefPath(){
+  localStorage.setItem('href-path', currentPath)
+}
+
+hrefPath()
 const vuetify = createVuetify({
     components,
     directives

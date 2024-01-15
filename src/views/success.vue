@@ -47,6 +47,7 @@
 </template>
 
 <script>
+import axios from "axios";
 import Footer from "../layouts/TheFooter.vue";
 export default {
   name: "Success",
@@ -54,14 +55,49 @@ export default {
     Footer,
   },
   mounted() {
-    setTimeout(() => {
-      window.location.href = "/dashboard/";
-    }, 3000);
+
+    const searchParams = new URLSearchParams(window.location.search);
+
+    let subId = searchParams.get("subscription_id");
+
+    const csrfToken = this.getCookie("csrftoken");
+    axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    if (subId) {
+      let payload = {
+        status: true,
+        subscription_id: +subId,
+      };
+
+      axios
+        .post("/subscription/payment", payload)
+        .then((response) => {
+          if (response.status == 200) {
+            setTimeout(() => {
+              window.location.href = "/dashboard/";
+            }, 3000);
+          }
+        })
+        .catch((i) => {
+          console.log("error : ", i);
+        });
+    }
   },
+
   methods: {
-    // navigateUrl() {
-    //   window.location.href = "/dashboard/";
-    // },
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
   },
 };
 </script>

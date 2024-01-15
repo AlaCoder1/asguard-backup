@@ -126,7 +126,7 @@ def create_cert_auth(request):
                                        "REQ_ORG": organization,
                                        "REQ_EMAIL": email,
                                        "DIGEST": digest_algorithm,
-                                    #    "DN": "\"org\"",
+                                       "DN": "\"org\"",
                                         }
                 # Install the server in system
                 serial = create_ca_in_system(ca_name=name, common_name=common_name, updated_fields_vars=updated_fields_vars)

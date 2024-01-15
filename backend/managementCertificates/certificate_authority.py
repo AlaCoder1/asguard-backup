@@ -18,7 +18,7 @@ def create_ca_in_system(ca_name, common_name, updated_fields_vars):
         time_sleep += 12
     elif updated_fields_vars["KEY_SIZE"] > 2048:
         time_sleep += 2
-    execute_command_with_arguments(['sudo', 'easyrsa', 'build-ca', 'nopass'], f'{common_name}\n', time_sleep)
+    execute_command_with_arguments(['sudo', 'easyrsa', 'build-ca', 'nopass'], f'\n\n\n\n\n{common_name}\n\n\n', time_sleep)
     save_certificate_in_text_format(PATH_PKI_CA.format(current_dir))
 
     commands_list_without_arguments = [['cp', PATH_PKI_VARS.format(current_dir), PATH_VARS.format(ca_name)],

@@ -117,12 +117,17 @@ def create_checkout_session(request):
                         'quantity': 1,
                     },
                 ],
+                 metadata = {
+                  'subscription_id': subscription_id,
+                  'status': status,
+                },
                 mode='payment',
-                success_url=settings.STRIPE_SUCCESS_URL,
+                success_url = f'{settings.STRIPE_SUCCESS_URL}?subscription_id={subscription_id}' ,
                 cancel_url=settings.STRIPE_CANCEL_URL,
+               
             )
             print({
-                'checkout_session': checkout_session
+                'checkout_session': checkout_session.metadata.subscription_id
             })
             return Response(checkout_session)
         except Exception as e:

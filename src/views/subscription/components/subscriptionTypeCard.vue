@@ -61,7 +61,7 @@
               <input
                 type="checkbox"
                 :id="'checkbox_'"
-                :value="service"
+                :value="service.slug"
                 v-model="selectedServices"
               />
             </template>
@@ -79,7 +79,7 @@
                 />
               </svg>
             </v-icon>
-            <span class="ml-2">{{ service }}</span>
+            <span class="ml-2">{{ service.name }}</span>
           </v-row>
         </v-card-text>
         <v-divider class="mx-4 mb-1"></v-divider>
@@ -102,15 +102,21 @@
           <v-col cols="4"></v-col>
         </v-row>
       </v-card>
+      <v-snackbar
+        :timeout="2000"
+        v-model="state.snackbar"
+        location="bottom right"
+        :color="state.color"
+      >
+        {{ state.textAlert }}
+      </v-snackbar>
     </v-row>
-    <!-- <stripe-checkout ref="checkoutRef" mode="subscription" :pk="publishableKey" :line-items="lineItems"
-            :success-url="successURL" :cancel-url="cancelURL" @loading="v => loading = v" /> -->
   </v-container>
 </template>
 
 <script>
 import VButton from "@/components/VButton.vue";
-import { ref, watch, inject } from "vue";
+import { ref, watch, inject, reactive } from "vue";
 import axios from "axios";
 
 export default {
@@ -127,31 +133,15 @@ export default {
     buttonColor: String,
   },
 
-  data() {
-    return {
-      publishableKey:
-        "pk_test_51OVDcYKi3nwJjULPxfS2d6c6mbWGwOpsEeTADyLi8w8ZW7mMmcvcHZDYNgckyMXTnfGCER4grlGRc2KQzcK5jQJF004gmPOXWn",
-      successURL: "http://localhost:8080/success",
-      cancelURL: "http://localhost:8080/cancel",
-      loading: false,
-      lineItems: [
-        {
-          price: "price_1OP597BfboFCPudKhHU0RFpY",
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-    };
-  },
-  methods: {
-    // submitForm() {
-    //   // You will be redirected to Stripe's secure checkout page
-    //   this.$refs.checkoutRef.redirectToCheckout();
-    // },
-  },
   setup(props) {
     const emitter = inject("emitter");
     const selectedServices = ref([]);
+
+    const state = reactive({
+      textAlert: "",
+      color: "",
+      snackbar: false,
+    });
     const getCookie = (name) => {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {
@@ -188,101 +178,117 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      const subscriptionId = getSubscriptionId();
-      if (subscriptionId === "You have to choose at least one service") {
-        alert(subscriptionId);
-        return;
-      }
-      try {
-        const response = await axios.post("/auth/create_checkout_session", {
-          status: "true",
-          subscription_id: subscriptionId,
-          price: props.prices[0].amount,
-        });
-        if (response.status === 200) {
-          window.open(response.data.url, "_blank");
-        } else {
-          console.log("error");
-        }
-      } catch (error) {
-        console.log(error);
-      }
+      const subscriptionId = getPackId();
+      console.log('subscriptionId',subscriptionId)
+
+      // if (!subscriptionId) {
+      //   state.snackbar = true;
+      //   state.color = "red";
+      //   state.textAlert = "You have to choose at least one service";
+      //   return;
+      // }
+      // try {
+      //   const response = await axios.post("/auth/create_checkout_session", {
+      //     status: "true",
+      //     subscription_id: subscriptionId,
+      //     price: props.prices[0].amount,
+      //   });
+      //   if (response.status === 200) {
+      //     window.open(response.data.url, "_blank");
+      //   } else {
+      //     console.log("error");
+      //   }
+      // } catch (error) {
+      //   console.log(error);
+      // }
     };
 
-    const getSubscriptionId = () => {
-      switch (props.title) {
-        case "Base":
-          return 1;
-        case "Premium":
-          return 2;
-        case "Custom":
-          let selectedServicesArray = selectedServices.value;
-          if (selectedServicesArray.length === 0) {
-            return "You have to choose at least one service";
-          }
-          if (selectedServicesArray.includes("Double Mask 150 €/Annual")) {
-            if (selectedServicesArray.includes("CASB 150 €/Annual​")) {
-              if (selectedServicesArray.includes("SWG 100 €/Annual​")) {
-                if (selectedServicesArray.includes("Anti-virus 100 €/Annual")) {
-                  return 17;
-                } else {
-                  return 13;
-                }
-              } else if (
-                selectedServicesArray.includes("Anti-virus 100 €/Annual")
-              ) {
-                return 14;
-              } else {
-                return 7;
-              }
-            } else if (selectedServicesArray.includes("SWG 100 €/Annual​")) {
-              if (selectedServicesArray.includes("Anti-virus 100 €/Annual")) {
-                return 15;
-              } else {
-                return 8;
-              }
-            } else if (
-              selectedServicesArray.includes("Anti-virus 100 €/Annual")
-            ) {
-              return 9;
-            }
-          } else if (selectedServicesArray.includes("CASB 150 €/Annual​")) {
-            if (selectedServicesArray.includes("SWG 100 €/Annual​")) {
-              if (selectedServicesArray.includes("Anti-virus 100 €/Annual")) {
-                return 16;
-              } else {
-                return 10;
-              }
-            } else if (
-              selectedServicesArray.includes("Anti-virus 100 €/Annual")
-            ) {
-              return 11;
-            } else {
-              return 7;
-            }
-          } else if (selectedServicesArray.includes("SWG 100 €/Annual​")) {
-            if (selectedServicesArray.includes("Anti-virus 100 €/Annual")) {
-              return 12;
-            } else {
-              return 5;
-            }
-          } else if (
-            selectedServicesArray.includes("Anti-virus 100 €/Annual")
-          ) {
-            return 6;
-          } else {
-            return 4;
-          }
-        default:
-          return "You have to choose at least one service";
+    const getPackId = () => {
+      if (props.title === "Base") return 1;
+      if (props.title === "Premium") return 2;
+
+      if (selectedServices.value.length === 4) {
+        return 17;
       }
+      const double = selectedServices.value.includes("double 150");
+      if (double && selectedServices.value.length === 1) return 3;
+      const casb = selectedServices.value.includes("casb 150");
+      if (casb && selectedServices.value.length === 1) return 4;
+      const swg = selectedServices.value.includes("swg 100");
+      if (swg && selectedServices.value.length === 1) return 5;
+      const anti = selectedServices.value.includes("anti 100");
+      if (anti && selectedServices.value.length === 1) return 6;
+
+      const dC =
+        selectedServices.value.includes("double 150") &&
+        selectedServices.value.includes("casb 150");
+
+      if (dC && selectedServices.value.length === 2) return 7;
+
+      const dS =
+        selectedServices.value.includes("double 150") &&
+        selectedServices.value.includes("swg 100");
+
+      if (dS && selectedServices.value.length === 2) return 8;
+
+      const dA =
+        selectedServices.value.includes("double 150") &&
+        selectedServices.value.includes("anti 100");
+
+      if (dA && selectedServices.value.length === 2) return 9;
+
+      const DCS =
+        selectedServices.value.includes("double 150") &&
+        selectedServices.value.includes("casb 150") &&
+        selectedServices.value.includes("swg 100");
+
+      if (DCS && selectedServices.value.length === 3) return 10;
+
+      const DCA =
+        selectedServices.value.includes("double 150") &&
+        selectedServices.value.includes("casb 150") &&
+        selectedServices.value.includes("anti 100");
+
+      if (DCA && selectedServices.value.length === 3) return 11;
+
+      const DSA =
+        selectedServices.value.includes("double 150") &&
+        selectedServices.value.includes("swg 100") &&
+        selectedServices.value.includes("anti 100");
+
+      if (DSA && selectedServices.value.length === 3) return 12;
+
+      const CS =
+        selectedServices.value.includes("casb 150") &&
+        selectedServices.value.includes("swg 100");
+
+      if (CS && selectedServices.value.length === 2) return 13;
+
+      const CSA =
+        selectedServices.value.includes("casb 150") &&
+        selectedServices.value.includes("swg 100") &&
+        selectedServices.value.includes("anti 100");
+
+      if (CSA && selectedServices.value.length === 3) return 14;
+
+      const SA =
+        selectedServices.value.includes("swg 100") &&
+        selectedServices.value.includes("anti 100");
+
+      if (SA && selectedServices.value.length === 2) return 15;
+
+      const CA =
+        selectedServices.value.includes("casb 150") &&
+        selectedServices.value.includes("anti 100");
+
+      if (CA && selectedServices.value.length === 2) return 16;
     };
 
     return {
       selectedServices,
       emitter,
+      state,
       getCookie,
-      getSubscriptionId,
       submitForm,
     };
   },
@@ -313,3 +319,68 @@ export default {
   font-weight: 400;
 }
 </style>
+<!-- let selectedServicesArray = selectedServices.value;
+if (selectedServicesArray.length === 0) {
+  return "You have to choose at least one service";
+}
+if (selectedServicesArray.includes("Double Mask 150 €/Annual")) {
+  if (selectedServicesArray.includes("CASB 150 €/Annual​")) {
+    if (selectedServicesArray.includes("SWG 100 €/Annual​")) {
+      if (selectedServicesArray.includes("Anti-virus 100 €/Annual")) {
+        return 17;
+      } else {
+        return 13;
+      }
+    } else if (
+      selectedServicesArray.includes("Anti-virus 100 €/Annual")
+    ) {
+      return 14;
+    } else {
+      return 7;
+    }
+  } else if (selectedServicesArray.includes("SWG 100 €/Annual​")) {
+    if (selectedServicesArray.includes("Anti-virus 100 €/Annual")) {
+      return 15;
+    } else {
+      return 8;
+    }
+  } else if (
+    selectedServicesArray.includes("Anti-virus 100 €/Annual")
+  ) {
+    return 9;
+  }
+} else if (selectedServicesArray.includes("CASB 150 €/Annual​")) {
+  if (selectedServicesArray.includes("SWG 100 €/Annual​")) {
+    if (selectedServicesArray.includes("Anti-virus 100 €/Annual")) {
+      return 14;
+      // return 16;
+    } else {
+      return 13;
+      // return 10;
+    }
+  } else if (
+    selectedServicesArray.includes("Anti-virus 100 €/Annual")
+  ) {
+    return 16;
+    // return 11;
+  } else {
+    return 4;
+    // return 7;
+  }
+} else if (selectedServicesArray.includes("SWG 100 €/Annual​")) {
+  if (selectedServicesArray.includes("Anti-virus 100 €/Annual")) {
+    return 15;
+    // return 12;
+  } else {
+    return 8;
+    // return 5;
+  }
+} else if (
+  selectedServicesArray.includes("Anti-virus 100 €/Annual")
+) {
+  return 9;
+  // return 6;
+} else {
+  return 3;
+  // return 4;
+} -->

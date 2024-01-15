@@ -3,32 +3,22 @@
     <v-row style="margin: 10%">
       <v-col cols="6">
         <v-img
-        class="mt-5"
+          class="mt-5"
           :width="500"
           aspect-ratio="16/9"
           cover
           src="https://www.numeryx.fr/sites/default/files/gallery/ASGUARD%20bannirere%20site.png"
         ></v-img>
       </v-col>
-      <v-col cols="6">
+      <v-col cols="6" class="mt-6">
         <h1 class="mb-3 title">Success :)</h1>
         <p class="text" style="margin-top: 5px">Success Payment.</p>
         <p class="text" style="margin-top: 10px">
           Success! Your payment has been processed and confirmed. Thank you for
           your purchase.
-
-          <!-- <span
-            style="
-              color: #f8b724;
-              cursor: pointer;
-              text-decoration-line: underline;
-            "
-            @click="navigateUrl"
-            >homepage.</span
-          > -->
         </p>
 
-        <v-row style="margin-top: 5%">
+        <!-- <v-row style="margin-top: 5%">
           <v-col cols="8">
             <p class="smallText">Redirect To Dashboard Page.</p>
           </v-col>
@@ -49,7 +39,7 @@
               Redirect
             </v-btn>
           </v-col>
-        </v-row>
+        </v-row> -->
       </v-col>
     </v-row>
     <Footer />
@@ -57,31 +47,21 @@
 </template>
 
 <script>
-//   import { mapState } from "pinia";
-
-import { useAuthStore } from "../store/modules/auth.js";
-const storeAuth = useAuthStore();
 import Footer from "../layouts/TheFooter.vue";
 export default {
-  name: "BaseLayout",
+  name: "Success",
   components: {
     Footer,
   },
-  computed: {
-    //   ...mapState(storeAuth, ["user"]),
-  },
   mounted() {
-    // let test = this.$el.attributes['users'] ? this.$el.attributes['users'].value : '';
-    //   console.log('isd',document.getElementById('app').attributes['users'].value)
+    setTimeout(() => {
+      window.location.href = "/dashboard/";
+    }, 3000);
   },
   methods: {
-    navigateUrl() {
-      // if (!this.user) {
-      //   window.location.href = "/";
-      // } else {
-      window.location.href = "/dashboard/";
-      // }
-    },
+    // navigateUrl() {
+    //   window.location.href = "/dashboard/";
+    // },
   },
 };
 </script>

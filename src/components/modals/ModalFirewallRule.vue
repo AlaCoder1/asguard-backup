@@ -45,7 +45,7 @@
             {{ v$.formData.protocol.$errors[0].$message }}
           </p>
           <v-row>
-            <v-col cols="6">
+            <v-col :cols="state.isAll ? 12 : 6" class="mb-n6">
               <v-text-field
                 label="Src Address"
                 v-model="state.formData.saddr"
@@ -55,8 +55,9 @@
                 {{ v$.formData.saddr.$errors[0].$message }}
               </p>
             </v-col>
-            <v-col cols="6">
+            <v-col cols="6" class="mb-n6">
               <v-text-field
+                v-if="!state.isAll"
                 :readonly="state.isAll"
                 label="Src Port"
                 v-model="state.formData.sport"
@@ -68,7 +69,7 @@
             </v-col>
           </v-row>
           <v-row>
-            <v-col cols="6">
+            <v-col :cols="state.isAll ? 12 : 6">
               <v-text-field
                 label="Dst Address"
                 v-model="state.formData.daddr"
@@ -80,6 +81,7 @@
             </v-col>
             <v-col cols="6">
               <v-text-field
+                v-if="!state.isAll"
                 :readonly="state.isAll"
                 label="Dst Port"
                 v-model="state.formData.dport"

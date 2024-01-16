@@ -1,7 +1,7 @@
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.authentication import SessionAuthentication
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from backend.ipsec.constant_variables import IPV4_CONFIG
@@ -10,9 +10,7 @@ from backend.ipsec.utils import json_to_str_server_ipsec, up_ipsec_conn
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
 from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec_in_system, install_server_ipsec_in_system, update_server_ipsec_in_system
-from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_KEY
 from backend.managementCertificates.models import Certificate, CertificateAuthority
-from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
 from backend.openvpn.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA
 from utils.commands_utils import execute_command_without_arguments
@@ -64,7 +62,7 @@ def get_server_ipsec(request, id):
                                                                                                           'local_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA"),
-                                                                                                          'remote_distingushed_name': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
+                                                                                                          'remote_cert': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
                                                              'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256", "aes128", "aes192", "aes256"]),
                                                              'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like sha256 or sha384. Example: [sha256,sha512]",
                                                                                                   items=openapi.Schema(type=openapi.TYPE_STRING)),
@@ -110,203 +108,200 @@ def get_server_ipsec(request, id):
 @permission_classes([IsAuthenticated])
 def create_server_ipsec(request):
     """Creating a new server in system and adding it to the database"""
-    if request.method == 'POST':
-        try:
-            data = request.data
+    try:
+        data = request.data
 
-            conn_name = data.get("conn_name", "")
-            connection_method = data.get("connection_method", "")
-            key_exchange = data.get("key_exchange", "")
-            key_exchange_version = key_exchange.get("key_exchange_version", "")
-            internet_protocol = data.get("internet_protocol", "")
-            interface_name = data.get("interface_name", "")
-            remote_gateway = data.get("remote_gateway", "")
-            dynamic_gateway = data.get("dynamic_gateway", "")
-            description_ph1 = data.get("description_ph1", "")
+        conn_name = data.get("conn_name", "")
+        connection_method = data.get("connection_method", "")
+        key_exchange = data.get("key_exchange", "")
+        key_exchange_version = key_exchange.get("key_exchange_version", "")
+        internet_protocol = data.get("internet_protocol", "")
+        interface_name = data.get("interface_name", "")
+        remote_gateway = data.get("remote_gateway", "")
+        dynamic_gateway = data.get("dynamic_gateway", "")
+        description_ph1 = data.get("description_ph1", "")
 
-            authentication = data.get("authentication", "")
-            authentication_method = authentication.get("authentication_method", "")
+        authentication = data.get("authentication", "")
+        authentication_method = authentication.get("authentication_method", "")
 
-            encryption_algorithm_ph1 = data.get("encryption_algorithm_ph1", "")
-            hash_algorithm_ph1_list = data.get("hash_algorithm_ph1", "")
-            hash_algorithm_ph1 = ",".join(hash_algorithm_ph1_list)
-            dh_key_group_list = data.get("dh_key_group", "")
-            dh_key_group = ",".join(dh_key_group_list)
-            lifetime_ph1 = data.get("lifetime_ph1", "")
+        encryption_algorithm_ph1 = data.get("encryption_algorithm_ph1", "")
+        hash_algorithm_ph1_list = data.get("hash_algorithm_ph1", "")
+        hash_algorithm_ph1 = ",".join(hash_algorithm_ph1_list)
+        dh_key_group_list = data.get("dh_key_group", "")
+        dh_key_group = ",".join(dh_key_group_list)
+        lifetime_ph1 = data.get("lifetime_ph1", "")
 
-            policy = data.get("policy", "")
-            rekey = data.get("rekey", "")
-            reauth = data.get("reauth", "")
-            nat_traversal = data.get("nat_traversal", "")
-            mobike = data.get("mobike", "")
+        policy = data.get("policy", "")
+        rekey = data.get("rekey", "")
+        reauth = data.get("reauth", "")
+        nat_traversal = data.get("nat_traversal", "")
+        mobike = data.get("mobike", "")
 
-            deed_peer = data.get("deed_peer", "")
-            deed_peer_detection = deed_peer.get("disable", "")
+        deed_peer = data.get("deed_peer", "")
+        deed_peer_detection = deed_peer.get("disable", "")
 
-            inactivity_timeout = data.get("inactivity_timeout", "")
-            margin_time = data.get("margin_time", "")
-            rekey_fuzz = data.get("rekey_fuzz", "")
+        inactivity_timeout = data.get("inactivity_timeout", "")
+        margin_time = data.get("margin_time", "")
+        rekey_fuzz = data.get("rekey_fuzz", "")
 
-            mode_ph2 = data.get("mode_ph2", "")
-            mode = mode_ph2.get("mode", "")
+        mode_ph2 = data.get("mode_ph2", "")
+        mode = mode_ph2.get("mode", "")
 
-            description_ph2 = data.get("description_ph2", "")
+        description_ph2 = data.get("description_ph2", "")
 
-            sa_key_exchange = data.get("sa_key_exchange", "")
-            protocol = sa_key_exchange.get("protocol", "")
-            hash_algorithm_ph2_list = sa_key_exchange.get("hash_algorithm_ph2", "")
-            hash_algorithm_ph2 = ",".join(hash_algorithm_ph2_list)
-            pfs_key_group = sa_key_exchange.get("pfs_key_group", "")
-            lifetime_ph2 = data.get("lifetime_ph2", "")
+        sa_key_exchange = data.get("sa_key_exchange", "")
+        protocol = sa_key_exchange.get("protocol", "")
+        hash_algorithm_ph2_list = sa_key_exchange.get("hash_algorithm_ph2", "")
+        hash_algorithm_ph2 = ",".join(hash_algorithm_ph2_list)
+        pfs_key_group = sa_key_exchange.get("pfs_key_group", "")
+        lifetime_ph2 = data.get("lifetime_ph2", "")
 
-            # auto_ping_host = data.get("auto_ping_host", "")
-            # manual_spd_entries = data.get("manual_spd_entries", "")
+        if interface_name != 'Any':
+            interface = Interface.objects.get(name_interface=interface_name)
+            interface = interface.pk
+            interface_address = IP4Config.objects.get(interface_id=interface)
+            data["interface_address"] = f'{interface_address.ip_address}'
+        else:
+            interface = 'Any'
+
+        server_data = {"conn_name": conn_name,
+                        "connection_method": connection_method,
+                        "key_exchange_version": key_exchange_version,
+                        "internet_protocol": internet_protocol,
+                        "interface": interface_name,
+                        "remote_gateway": remote_gateway,
+                        "dynamic_gateway": dynamic_gateway,
+                        "description_ph1": description_ph1,
+
+                        "authentication_method": authentication_method,
+                        
+                        "encryption_algorithm_ph1": encryption_algorithm_ph1,
+                        "hash_algorithm_ph1": hash_algorithm_ph1,
+                        "dh_key_group": dh_key_group,
+                        "lifetime_ph1": lifetime_ph1,
+                        
+                        "policy": policy,
+                        "rekey": rekey,
+                        "reauth": reauth,
+                        "nat_traversal": nat_traversal,
+                        "mobike": mobike,
+                        "deed_peer_detection": deed_peer_detection,
+                        "inactivity_timeout": inactivity_timeout,
+                        "margin_time": margin_time,
+                        "rekey_fuzz": rekey_fuzz,
+                        
+                        "mode": mode,
+                        "description_ph2": description_ph2,
+                        
+                        "protocol": protocol,
+                        "hash_algorithm_ph2": hash_algorithm_ph2,
+                        "pfs_key_group": pfs_key_group,
+                        "lifetime_ph2": lifetime_ph2,
+                        
+                        # auto_ping_host": auto_ping_host,
+                        # manual_spd_entries": manual_spd_entries,
+                        }
+        
+        if key_exchange_version == "V1":
+            negotiation_mode = key_exchange.get("negotiation_mode", "")
+            server_data["negotiation_mode"] = negotiation_mode
+
+        ca = ''
+        if authentication_method == CONSTANT_METHOD_PSK:
+            pre_shared_key = authentication.get("pre_shared_key", "")
+            server_data["pre_shared_key"] = pre_shared_key
+        elif authentication_method == CONSTANT_METHOD_PUBLIC_KEY:
+            local_key_pair = authentication.get("local_key_pair", "")
+            peer_key_pair = authentication.get("peer_key_pair", "")
+            server_data["local_key_pair"] = local_key_pair
+            server_data["peer_key_pair"] = peer_key_pair
+        else:
+            cert = authentication.get("cert")
+            certificate = Certificate.objects.get(name=cert)
+            remote_cert = authentication.get("remote_cert", "")
+            server_data["cert"] = cert
+            server_data["remote_cert"] = remote_cert
+
+            # if the certificate dosen't have a CA (imported cert) ca will be null
+            ca = certificate.certificate_authority
+            if ca:
+                ca = CertificateAuthority.objects.get(id=ca.pk).name
+            
+        if deed_peer_detection:
+            deed_peer_delay = deed_peer.get("deed_peer_delay", "")
+            deed_peer_timeout = deed_peer.get("deed_peer_timeout", "")
+            deed_peer_action = deed_peer.get("deed_peer_action")
+            server_data["deed_peer_delay"] = deed_peer_delay
+            server_data["deed_peer_timeout"] = deed_peer_timeout
+            server_data["deed_peer_action"] = deed_peer_action
+        
+        if mode == "Tunnel IPv4":
+            # Local Network
+            local_network = mode_ph2.get("local_network", "")
+            type_local_network = local_network.get("type_local_network", "")
+            if type_local_network == "Address":
+                address_local_network = local_network.get("address_local_network", "")
+            elif type_local_network == "Network":
+                address_local_network = f'{local_network.get("address_local_network", "")}/{local_network.get("mask", "")}'
+            else:
+                interface_local = Interface.objects.get(name_interface=type_local_network).pk
+                address_local_network = IP4Config.objects.get(interface_id=interface_local).ip_address
+            server_data["type_local_network"] = type_local_network
+            server_data["address_local_network"] = address_local_network
+            data["address_local_network"] = address_local_network
+
+            # Remote Network
+            remote_network = mode_ph2.get("remote_network", "")
+            type_remote_network = remote_network.get("type_remote_network", "")
+            address_remote_network = remote_network.get("address_remote_network", "")
+            if type_remote_network == "Network":
+                address_remote_network += f'/{remote_network.get("mask", "")}'
+            server_data["type_remote_network"] = type_remote_network
+            server_data["address_remote_network"] = address_remote_network
+            data["address_remote_network"] = address_remote_network
+            
+        elif mode == "Route-based":
+            local_address = mode_ph2.get("local_address", "")
+            remote_address = mode_ph2.get("remote_address", "")
+            server_data["local_address"] = local_address
+            server_data["remote_address"] = remote_address
+
+        if protocol == "ESP":
+            encryption_algorithm_ph2_list = sa_key_exchange.get("encryption_algorithm_ph2", "")
+            encryption_algorithm_ph2 = ",".join(encryption_algorithm_ph2_list)
+            server_data["encryption_algorithm_ph2"] = encryption_algorithm_ph2
+
+        serializer_server = ServerIPsecSerializer(data=server_data)
+        if serializer_server.is_valid():
+        
+            # Update the server config
+            server_conf = json_to_str_server_ipsec(data)
+
+            # Install the server in system
             if interface_name != 'Any':
-                interface = Interface.objects.get(name_interface=interface_name)
-                interface = interface.pk
-                interface_address = IP4Config.objects.get(interface_id=interface)
-                data["interface_address"] = f'{interface_address.ip_address}'
+                install_server_ipsec_in_system(server_conf, authentication, interface_address.ip_address, remote_gateway)
             else:
-                interface = 'Any'
+                install_server_ipsec_in_system(server_conf, authentication, 'any', remote_gateway)
 
-            server_data = {"conn_name": conn_name,
-                           "connection_method": connection_method,
-                           "key_exchange_version": key_exchange_version,
-                           "internet_protocol": internet_protocol,
-                           "interface": interface_name,
-                           "remote_gateway": remote_gateway,
-                           "dynamic_gateway": dynamic_gateway,
-                           "description_ph1": description_ph1,
-
-                           "authentication_method": authentication_method,
-                           
-                           "encryption_algorithm_ph1": encryption_algorithm_ph1,
-                           "hash_algorithm_ph1": hash_algorithm_ph1,
-                           "dh_key_group": dh_key_group,
-                           "lifetime_ph1": lifetime_ph1,
-                           
-                           "policy": policy,
-                           "rekey": rekey,
-                           "reauth": reauth,
-                           "nat_traversal": nat_traversal,
-                           "mobike": mobike,
-                           "deed_peer_detection": deed_peer_detection,
-                           "inactivity_timeout": inactivity_timeout,
-                           "margin_time": margin_time,
-                           "rekey_fuzz": rekey_fuzz,
-                           
-                           "mode": mode,
-                           "description_ph2": description_ph2,
-                           
-                           "protocol": protocol,
-                           "hash_algorithm_ph2": hash_algorithm_ph2,
-                           "pfs_key_group": pfs_key_group,
-                           "lifetime_ph2": lifetime_ph2,
-                           
-                           # auto_ping_host": auto_ping_host,
-                           # manual_spd_entries": manual_spd_entries,
-                           }
-            
-            if key_exchange_version == "V1":
-                negotiation_mode = key_exchange.get("negotiation_mode", "")
-                server_data["negotiation_mode"] = negotiation_mode
-
-            ca = ''
-            if authentication_method == CONSTANT_METHOD_PSK:
-                pre_shared_key = authentication.get("pre_shared_key", "")
-                server_data["pre_shared_key"] = pre_shared_key
-            elif authentication_method == CONSTANT_METHOD_PUBLIC_KEY:
-                local_key_pair = authentication.get("local_key_pair", "")
-                peer_key_pair = authentication.get("peer_key_pair", "")
-                server_data["local_key_pair"] = local_key_pair
-                server_data["peer_key_pair"] = peer_key_pair
+            # Add the server to the database
+            serializer_server.save()
+            up_ipsec_status = up_ipsec_conn(conn_name)
+            if up_ipsec_status:
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(conn_name, 'updated')}, status=201)
             else:
-                cert = authentication.get("cert")
-                certificate = Certificate.objects.get(name=cert)
-                remote_cert = authentication.get("remote_cert", "")
-                server_data["cert"] = cert
-                server_data["remote_cert"] = remote_cert
-
-                # if the certificate dosen't have a CA (imported cert) ca will be null
-                ca = certificate.certificate_authority
-                if ca:
-                    ca = CertificateAuthority.objects.get(id=ca.pk).name
-                
-            if deed_peer_detection:
-                deed_peer_delay = deed_peer.get("deed_peer_delay", "")
-                deed_peer_timeout = deed_peer.get("deed_peer_timeout", "")
-                deed_peer_action = deed_peer.get("deed_peer_action")
-                server_data["deed_peer_delay"] = deed_peer_delay
-                server_data["deed_peer_timeout"] = deed_peer_timeout
-                server_data["deed_peer_action"] = deed_peer_action
-            
-            if mode == "Tunnel IPv4":
-                # Local Network
-                local_network = mode_ph2.get("local_network", "")
-                type_local_network = local_network.get("type_local_network", "")
-                if type_local_network == "Address":
-                    address_local_network = local_network.get("address_local_network", "")
-                elif type_local_network == "Network":
-                    address_local_network = f'{local_network.get("address_local_network", "")}/{local_network.get("mask", "")}'
-                else:
-                    interface_local = Interface.objects.get(name_interface=type_local_network).pk
-                    address_local_network = IP4Config.objects.get(interface_id=interface_local).ip_address
-                server_data["type_local_network"] = type_local_network
-                server_data["address_local_network"] = address_local_network
-                data["address_local_network"] = address_local_network
-
-                # Remote Network
-                remote_network = mode_ph2.get("remote_network", "")
-                type_remote_network = remote_network.get("type_remote_network", "")
-                address_remote_network = remote_network.get("address_remote_network", "")
-                if type_remote_network == "Network":
-                    address_remote_network += f'/{remote_network.get("mask", "")}'
-                server_data["type_remote_network"] = type_remote_network
-                server_data["address_remote_network"] = address_remote_network
-                data["address_remote_network"] = address_remote_network
-                
-            elif mode == "Route-based":
-                local_address = mode_ph2.get("local_address", "")
-                remote_address = mode_ph2.get("remote_address", "")
-                server_data["local_address"] = local_address
-                server_data["remote_address"] = remote_address
-
-            if protocol == "ESP":
-                encryption_algorithm_ph2_list = sa_key_exchange.get("encryption_algorithm_ph2", "")
-                encryption_algorithm_ph2 = ",".join(encryption_algorithm_ph2_list)
-                server_data["encryption_algorithm_ph2"] = encryption_algorithm_ph2
-
-            serializer_server = ServerIPsecSerializer(data=server_data)
-            if serializer_server.is_valid():
-            
-                # Update the server config
-                server_conf = json_to_str_server_ipsec(data)
-
-                # Install the server in system
-                if interface_name != 'Any':
-                    install_server_ipsec_in_system(server_conf, authentication, interface_address.ip_address, remote_gateway, ca)
-                else:
-                    install_server_ipsec_in_system(server_conf, authentication, 'any', remote_gateway, ca)
-
-                # Add the server to the database
-                serializer_server.save()
-                up_ipsec_status = up_ipsec_conn(conn_name)
-                if up_ipsec_status:
-                    return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(conn_name, 'updated')}, status=201)
-                else:
-                    return JsonResponse({"error": "Error in up ipsec"}, status=400)
-            else:
-                return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
-        except CommandExecutionError:
-            return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('ipsec server')}, status=400)
-        except Interface.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('interface')}, status=400)
-        except IP4Config.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
-        except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
-        except Certificate.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
+                return JsonResponse({"error": "Error in up ipsec"}, status=400)
+        else:
+            return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('ipsec server')}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('interface')}, status=400)
+    except IP4Config.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
+    except CertificateAuthority.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
+    except Certificate.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -317,27 +312,12 @@ def create_server_ipsec(request):
 def delete_server_ipsec(request, id):
     """Deleting a server from system and then from database"""
     try:
-        if (request.method == 'DELETE'):
-            server = ServerIPsec.objects.get(id=id)
-            # delete from system
-            if server.interface != "Any":
-                interface = Interface.objects.get(name_interface=server.interface)
-                interface_address = IP4Config.objects.get(interface_id=interface.pk).ip_address
-            else:
-                interface_address = "any"
-            
-            if server.authentication_method == CONSTANT_METHOD_PSK:
-                deleted_line_in_secrets_file = f"""{interface_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
-            elif server.authentication_method == CONSTANT_METHOD_RSA:
-                deleted_line_in_secrets_file = f""" : RSA {PATH_SERVER_CERT_KEY.format(server.cert)}"""
-            else:
-                private_key = PublicKey.objects.get(name=server.local_key_pair).private_key
-                deleted_line_in_secrets_file = f""" : RSA {private_key.name}.pem """
-            
-            delete_server_ipsec_in_system(server.conn_name, deleted_line_in_secrets_file)
-            # delete from database
-            server.delete()
-            return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(server.conn_name)}, status=201)
+        server = ServerIPsec.objects.get(id=id)
+        
+        delete_server_ipsec_in_system(server)
+        # delete from database
+        server.delete()
+        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(server.conn_name)}, status=201)
     except ServerIPsec.DoesNotExist:
         return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
     except IP4Config.DoesNotExist:
@@ -363,7 +343,7 @@ def delete_server_ipsec(request, id):
                                                                                                           'local_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'peer_key_pair': openapi.Schema(type=openapi.TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
                                                                                                           'cert': openapi.Schema(type=openapi.TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA"),
-                                                                                                          'remote_distingushed_name': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
+                                                                                                          'remote_cert': openapi.Schema(type=openapi.TYPE_STRING, description="all distingushed name of the remote server, required when authentication_method is Mutual RSA. Example:C=CH, ST=IPsec, L=Tunis, O=strongSwan, OU=My Organizational Unit, CN=device1, E=bak.akram94@gmail.com")}),
                                                              'encryption_algorithm_ph1': openapi.Schema(type=openapi.TYPE_STRING, enum=["128", "192", "256", "aes128", "aes192", "aes256"]),
                                                              'hash_algorithm_ph1': openapi.Schema(type=openapi.TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like sha256 or sha384. Example: [sha256,sha512]",
                                                                                                   items=openapi.Schema(type=openapi.TYPE_STRING)),
@@ -409,173 +389,155 @@ def delete_server_ipsec(request, id):
 @permission_classes([IsAuthenticated])
 def update_server_ipsec(request, id):
     """Updating a server from system and database"""
-    if (request.method == 'PUT'):
-        try:
-            # parse the incoming information
-            data = request.data
-            server = ServerIPsec.objects.get(id=id)
-            if server.authentication_method == CONSTANT_METHOD_PSK:
-                if server.interface != "Any":
-                    previous_interface_address = IP4Config.objects.get(interface_id=Interface.objects.get(name_interface=server.interface).pk)
-                    updated_line_in_secrets_file = f"""{previous_interface_address.ip_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
-                else:
-                    updated_line_in_secrets_file = f"""any {server.remote_gateway} : PSK '{server.pre_shared_key}' """
-            elif server.authentication_method == CONSTANT_METHOD_RSA:
-                updated_line_in_secrets_file = f""" : RSA {PATH_SERVER_CERT_KEY.format(server.cert)}"""
-            else:
-                private_key = PublicKey.objects.get(name=server.local_key_pair).private_key
-                updated_line_in_secrets_file = f""" : RSA {private_key.name}.pem """
+    try:
+        # parse the incoming information
+        data = request.data
+        previous_server = ServerIPsec.objects.get(id=id)
+        server = ServerIPsec.objects.get(id=id)
+        
+        server.conn_name = data.get("conn_name", "")
+        server.connection_method = data.get("connection_method", "")
+        key_exchange = data.get("key_exchange", "")
+        server.key_exchange_version = key_exchange.get("key_exchange_version", "")
+        server.internet_protocol = data.get("internet_protocol", "")
+        server.interface = data.get("interface_name", "")
+        server.remote_gateway = data.get("remote_gateway", "")
+        server.dynamic_gateway = data.get("dynamic_gateway", "")
+        server.description_ph1 = data.get("description_ph1", "")
+
+        authentication = data.get("authentication", "")
+        server.authentication_method = authentication.get("authentication_method", "")
+
+        server.encryption_algorithm_ph1 = data.get("encryption_algorithm_ph1", "")
+        
+        hash_algorithm_ph1_list = data.get("hash_algorithm_ph1", "")
+        server.hash_algorithm_ph1 = ",".join(hash_algorithm_ph1_list)
+        dh_key_group_list = data.get("dh_key_group", "")
+        server.dh_key_group = ",".join(dh_key_group_list)
+        server.lifetime_ph1 = data.get("lifetime_ph1", "")
+
+        server.policy = data.get("policy", "")
+        server.rekey = data.get("rekey", "")
+        server.reauth = data.get("reauth", "")
+        server.nat_traversal = data.get("nat_traversal", "")
+        server.mobike = data.get("mobike", "")
+
+        deed_peer = data.get("deed_peer", "")
+        server.deed_peer_detection = deed_peer.get("disable", "")
+
+        server.inactivity_timeout = data.get("inactivity_timeout", "")
+        server.margin_time = data.get("margin_time", "")
+        server.rekey_fuzz = data.get("rekey_fuzz", "")
+
+        mode_ph2 = data.get("mode_ph2", "")
+        server.mode = mode_ph2.get("mode", "")
+        server.description_ph2 = data.get("description_ph2", "")
+
+        sa_key_exchange = data.get("sa_key_exchange", "")
+        server.protocol = sa_key_exchange.get("protocol", "")
+        hash_algorithm_ph2_list = sa_key_exchange.get("hash_algorithm_ph2", "")
+        server.hash_algorithm_ph2 = ",".join(hash_algorithm_ph2_list)
+        server.pfs_key_group = sa_key_exchange.get("pfs_key_group", "")
+        server.lifetime_ph2 = data.get("lifetime_ph2", "")
+
+        if server.interface != "Any":
+            interface = Interface.objects.get(name_interface=server.interface)
+            interface_address = IP4Config.objects.get(interface_id=interface)
+            data["interface_address"] = interface_address.ip_address
+
+        server.negotiation_mode = None
+        if server.key_exchange_version == "V1":
+            server.negotiation_mode = key_exchange.get("negotiation_mode", "")
             
-            server.conn_name = data.get("conn_name", "")
-            server.connection_method = data.get("connection_method", "")
-            key_exchange = data.get("key_exchange", "")
-            server.key_exchange_version = key_exchange.get("key_exchange_version", "")
-            server.internet_protocol = data.get("internet_protocol", "")
-            server.interface = data.get("interface_name", "")
-            server.remote_gateway = data.get("remote_gateway", "")
-            server.dynamic_gateway = data.get("dynamic_gateway", "")
-            server.description_ph1 = data.get("description_ph1", "")
 
-            authentication = data.get("authentication", "")
-            server.authentication_method = authentication.get("authentication_method", "")
+        ca = ''
+        server.pre_shared_key = None
+        server.local_key_pair = None
+        server.peer_key_pair = None
+        server.cert = None
+        server.remote_cert = None
+        if server.authentication_method == CONSTANT_METHOD_PSK:
+            server.pre_shared_key = authentication.get("pre_shared_key", "")
+        elif server.authentication_method == CONSTANT_METHOD_PUBLIC_KEY:
+            server.local_key_pair = authentication.get("local_key_pair", "")
+            server.peer_key_pair = authentication.get("peer_key_pair")
+        else:
+            server.cert = authentication.get("cert")
+            certificate = Certificate.objects.get(name=server.cert)
+            ca = certificate.certificate_authority
+            if ca:
+                ca = ca.name
+            server.remote_cert = authentication.get("remote_cert", "")
+        
+        server.deed_peer_delay = None
+        server.deed_peer_timeout = None
+        server.deed_peer_action = None
+        if server.deed_peer_detection:
+            server.deed_peer_delay = deed_peer.get("deed_peer_delay", "")
+            server.deed_peer_timeout = deed_peer.get("deed_peer_timeout", "")
+            server.deed_peer_action = deed_peer.get("deed_peer_action")
 
-            server.encryption_algorithm_ph1 = data.get("encryption_algorithm_ph1", "")
+        if server.mode == "Tunnel IPv4":
+            # Local Network
+            local_network = mode_ph2.get("local_network", "")
+            server.type_local_network = local_network.get("type_local_network", "")
+            if server.type_local_network == "Address":
+                server.address_local_network = local_network.get("address_local_network", "")
+            elif server.type_local_network == "Network":
+                server.address_local_network = f'{local_network.get("address_local_network", "")}/{local_network.get("mask", "")}'
+            else:
+                interface_local = Interface.objects.get(name_interface=server.type_local_network).pk
+                server.address_local_network = IP4Config.objects.get(interface_id=interface_local).ip_address
+            data["address_local_network"] = server.address_local_network
+
+            # Remote Network
+            remote_network = mode_ph2.get("remote_network", "")
+            server.type_remote_network = remote_network.get("type_remote_network", "")
+            server.address_remote_network = remote_network.get("address_remote_network", "")
+            if server.type_remote_network == "Network":
+                server.address_remote_network += f'/{remote_network.get("mask", "")}'
+            data["address_remote_network"] = server.address_remote_network
+
+        elif server.mode == "Route-based":
+            server.local_address = mode_ph2.get("local_address", "")
+            server.remote_address = mode_ph2.get("remote_address", "")
+
+        server.encryption_algorithm_ph2 = None
+        if server.protocol == "ESP":
+            encryption_algorithm_ph2_list = sa_key_exchange.get("encryption_algorithm_ph2", "")
+            server.encryption_algorithm_ph2 = ",".join(encryption_algorithm_ph2_list)
+            data["encryption_algorithm_ph2"] = server.encryption_algorithm_ph2
+
+        serializer_server = ServerIPsecSerializer(server, data=data)
+        data["hash_algorithm_ph1"] = server.hash_algorithm_ph1
+        data["dh_key_group"] = server.dh_key_group
+        if serializer_server.is_valid():
+        
+            data["hash_algorithm_ph1"] = hash_algorithm_ph1_list
+            data["dh_key_group"] = dh_key_group_list
+
+            # Update the server config and secrets
+            server_conf = json_to_str_server_ipsec(data)
             
-            hash_algorithm_ph1_list = data.get("hash_algorithm_ph1", "")
-            server.hash_algorithm_ph1 = ",".join(hash_algorithm_ph1_list)
-            dh_key_group_list = data.get("dh_key_group", "")
-            server.dh_key_group = ",".join(dh_key_group_list)
-            server.lifetime_ph1 = data.get("lifetime_ph1", "")
+            # Install the server in system
+            update_server_ipsec_in_system(previous_server, server, server_conf)
 
-            server.policy = data.get("policy", "")
-            server.rekey = data.get("rekey", "")
-            server.reauth = data.get("reauth", "")
-            server.nat_traversal = data.get("nat_traversal", "")
-            server.mobike = data.get("mobike", "")
-
-            deed_peer = data.get("deed_peer", "")
-            server.deed_peer_detection = deed_peer.get("disable", "")
-
-            server.inactivity_timeout = data.get("inactivity_timeout", "")
-            server.margin_time = data.get("margin_time", "")
-            server.rekey_fuzz = data.get("rekey_fuzz", "")
-
-            mode_ph2 = data.get("mode_ph2", "")
-            server.mode = mode_ph2.get("mode", "")
-            server.description_ph2 = data.get("description_ph2", "")
-
-            sa_key_exchange = data.get("sa_key_exchange", "")
-            server.protocol = sa_key_exchange.get("protocol", "")
-            hash_algorithm_ph2_list = sa_key_exchange.get("hash_algorithm_ph2", "")
-            server.hash_algorithm_ph2 = ",".join(hash_algorithm_ph2_list)
-            server.pfs_key_group = sa_key_exchange.get("pfs_key_group", "")
-            server.lifetime_ph2 = data.get("lifetime_ph2", "")
-
-            # auto_ping_host = data.get("auto_ping_host", "")
-            # manual_spd_entries = data.get("manual_spd_entries", "")
-            if server.interface != "Any":
-                interface = Interface.objects.get(name_interface=server.interface)
-                interface_address = IP4Config.objects.get(interface_id=interface)
-                data["interface_address"] = interface_address.ip_address
-
-            if server.key_exchange_version == "V1":
-                server.negotiation_mode = key_exchange.get("negotiation_mode", "")
+            # Add the server to the database
+            serializer_server.save()
+            up_ipsec_status = up_ipsec_conn(server.conn_name)
+            if up_ipsec_status:
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(server.conn_name, 'updated')}, status=201)
             else:
-                server.negotiation_mode = None
+                return JsonResponse({"error": "Error in up ipsec"}, status=400)
+        else:
+            return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 
-            ca = ''
-            server.pre_shared_key = None
-            server.local_key_pair = None
-            server.peer_key_pair = None
-            server.cert = None
-            server.remote_cert = None
-            if server.authentication_method == CONSTANT_METHOD_PSK:
-                server.pre_shared_key = authentication.get("pre_shared_key", "")
-            elif server.authentication_method == CONSTANT_METHOD_PUBLIC_KEY:
-                server.local_key_pair = authentication.get("local_key_pair", "")
-                server.peer_key_pair = authentication.get("peer_key_pair")
-            else:
-                server.cert = authentication.get("cert")
-                certificate = Certificate.objects.get(name=server.cert)
-                ca = certificate.certificate_authority
-                if ca:
-                    ca = ca.name
-                server.remote_cert = authentication.get("remote_cert", "")
-                
-            if server.deed_peer_detection:
-                server.deed_peer_delay = deed_peer.get("deed_peer_delay", "")
-                server.deed_peer_timeout = deed_peer.get("deed_peer_timeout", "")
-                server.deed_peer_action = deed_peer.get("deed_peer_action")
-            else:
-                server.deed_peer_delay = None
-                server.deed_peer_timeout = None
-                server.deed_peer_action = None
-
-            if server.mode == "Tunnel IPv4":
-                # Local Network
-                local_network = mode_ph2.get("local_network", "")
-                server.type_local_network = local_network.get("type_local_network", "")
-                if server.type_local_network == "Address":
-                    server.address_local_network = local_network.get("address_local_network", "")
-                elif server.type_local_network == "Network":
-                    server.address_local_network = f'{local_network.get("address_local_network", "")}/{local_network.get("mask", "")}'
-                else:
-                    interface_local = Interface.objects.get(name_interface=server.type_local_network).pk
-                    server.address_local_network = IP4Config.objects.get(interface_id=interface_local).ip_address
-                data["address_local_network"] = server.address_local_network
-
-                # Remote Network
-                remote_network = mode_ph2.get("remote_network", "")
-                server.type_remote_network = remote_network.get("type_remote_network", "")
-                server.address_remote_network = remote_network.get("address_remote_network", "")
-                if server.type_remote_network == "Network":
-                    server.address_remote_network += f'/{remote_network.get("mask", "")}'
-                data["address_remote_network"] = server.address_remote_network
-
-            elif server.mode == "Route-based":
-                server.local_address = mode_ph2.get("local_address", "")
-                server.remote_address = mode_ph2.get("remote_address", "")
-
-            if server.protocol == "ESP":
-                encryption_algorithm_ph2_list = sa_key_exchange.get("encryption_algorithm_ph2", "")
-                server.encryption_algorithm_ph2 = ",".join(encryption_algorithm_ph2_list)
-                data["encryption_algorithm_ph2"] = server.encryption_algorithm_ph2
-            else:
-                server.encryption_algorithm_ph2 = None
-
-            serializer_server = ServerIPsecSerializer(server, data=data)
-            data["hash_algorithm_ph1"] = server.hash_algorithm_ph1
-            data["dh_key_group"] = server.dh_key_group
-            if serializer_server.is_valid():
-            
-                # Update the server config
-                data["hash_algorithm_ph1"] = hash_algorithm_ph1_list
-                data["dh_key_group"] = dh_key_group_list
-                server_conf = json_to_str_server_ipsec(data)
-                # Install the server in system
-                if server.interface == "Any":
-                    update_server_ipsec_in_system(server.conn_name, updated_line_in_secrets_file, server_conf, 
-                                        authentication, "any", server.remote_gateway, ca)
-                else:
-                    update_server_ipsec_in_system(server.conn_name, updated_line_in_secrets_file, server_conf, 
-                                        authentication, interface_address.ip_address, server.remote_gateway, ca)
-
-                # Add the server to the database
-                serializer_server.save()
-                up_ipsec_status = up_ipsec_conn(server.conn_name)
-                if up_ipsec_status:
-                    return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(server.conn_name, 'updated')}, status=201)
-                else:
-                    return JsonResponse({"error": "Error in up ipsec"}, status=400)
-            else:
-                return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
-
-        except ServerIPsec.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
-        except Interface.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('interface')}, status=400)
-        except IP4Config.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
+    except ServerIPsec.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
+    except Interface.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('interface')}, status=400)
+    except IP4Config.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -591,7 +553,7 @@ def status_server_ipsec(request, id):
             enable = data.get("enable", "")
 
             server = ServerIPsec.objects.get(id=id)
-            change_status_conn(server.conn_name, enable, server)
+            change_status_conn(enable, server)
             server.server_status = enable
             server.save()
 

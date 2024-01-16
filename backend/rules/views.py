@@ -324,7 +324,7 @@ def updateRule(request,name_interface):
               data['interface']=rulesObject.interface_id
               data['rule']=ruleupdate
               InboundSerializer = RuleSerializer(rulesObject,data=data)
-              InboundSerializer.is_valid(raise_exception=True)
+              # InboundSerializer.is_valid(raise_exception=True)
               if InboundSerializer.is_valid():
                 InboundSerializer.save()
                 msg = "Rule updated Successfully!!"

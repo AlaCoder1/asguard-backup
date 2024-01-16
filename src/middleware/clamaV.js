@@ -17,6 +17,14 @@ const vuetify = createVuetify({
 const emitter = mitt()
 app.provide('emitter', emitter)
 
+
+const currentPath = window.location.pathname;
+function hrefPath(){
+  localStorage.setItem('href-path', currentPath)
+}
+
+hrefPath()
+
 axios.interceptors.response.use(
   (response) => {
     return response;

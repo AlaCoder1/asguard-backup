@@ -1,3 +1,4 @@
+import math
 from django.shortcuts import render
 # Create your views here.
 import ast
@@ -16,6 +17,167 @@ from backend.ids_ips.function_BD import *
 from backend.ids_ips.function_sys import *
 from django.core import serializers
 from django.db.models import Q
+from django.core.paginator import Paginator, EmptyPage
+from django.core.serializers import serialize
+#################################### SURICATA.YAML CONFIGURATION GENERALE ############################################################
+@swagger_auto_schema(
+    method='PUT',
+    request_body=SuricataFileSerializer,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO update_suricata_configuration  ",
+    operation_description="API TO update_suricata_configuration  ",
+)  
+#Modifier le fichier de configuration du suricata  
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+def update_suricata_configuration(request, id):
+    if request.method=="PUT":
+        try: 
+            suricata_yaml_path = "/etc/suricata/suricata.yaml"
+            data = request.data
+            ##status suricata
+            status_enabled = data.get('status_enabled', None)
+            ##promisc
+            new_promisc = data.get("promisc", "false")
+            new_promisc=str(new_promisc).lower()
+            ##eve_log
+            new_eve_log = data.get("eve_log", False)
+            new_eve_log = "yes" if new_eve_log else "no"
+            ##syslog
+            new_syslog = data.get("syslog", False)
+            new_syslog = "yes" if new_syslog else "no"
+            ##mpm_algo
+            new_mpm_algo = data.get("mpm_algo", "ac")
+            ##detect profile
+            new_profile = data.get("profile", "low")
+            ##copy_mode
+            new_copy_mode = data.get("copy_mode", "none")
+            if new_copy_mode is True:
+                new_copy_mode="ips"
+            else:
+                new_copy_mode="tap"
+            ##interfaces
+            interface_ids_input = data.get("interface", [])
+            interface_ids = [x["id"] for x in interface_ids_input]
+            interface_names=Interface.objects.filter(id__in=interface_ids).values('ifname')
+            # Utilisez la fonction get_ip_addresses pour obtenir les adresses IP
+            ip_addresses =get_ip_addresses(interface_ids)
+            home_net_value_sys = f'[{", ".join(list(set(ip_addresses)))}]'
+            home_net_value = f'[{", ".join(ip_addresses)}]'
+            ##taritement système
+            output,error= execute_cmd("sudo cat " + suricata_yaml_path)
+            if output:
+                lines = output.split('\n')
+                # Appelez d'abord la fonction update_suricata_config pour mettre à jour le système
+                aux_update=update_suricata_config(suricata_yaml_path,lines,home_net_value_sys,interface_names[0]['ifname'],status_enabled,str(new_promisc).lower(), new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode)
+                if aux_update is True:
+                        # Ensuite, mettez à jour les enregistrements dans la base de données
+                        suricata_instance = suricatafile.objects.get(id=id)
+                        data_updated={
+                            "status_enabled":status_enabled,
+                            "promisc" : new_promisc,
+                            "eve_log" : new_eve_log,
+                            "syslog" : new_syslog,
+                            "mpm_algo" : new_mpm_algo,
+                            "profile": new_profile,
+                            "copy_mode" : new_copy_mode,
+                            "interface_ids" : str(interface_ids),
+                            "home_net" : home_net_value
+                        }
+                        suricataSerializer=SuricataFileSerializer(suricata_instance,data=data_updated)
+                        if suricataSerializer.is_valid():
+                            suricataSerializer.save()
+                            msg = "Configuration updated Successfully!!"
+                            status=200
+                        else:
+                            msg= "Failed to save configuration in database !"
+                            status=400
+                else:
+                    msg=aux_update
+                    status=400
+            else:
+                msg="Failed to open config file!"
+                status=404
+            return JsonResponse({'msg': msg}, status=status) 
+        except Exception as e:
+            return JsonResponse({'success': False, 'msg': str(e)}, status=500) 
+
+
+#Aficher le fichier de configuration suricata.yaml//
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+def get_suricata_configuration(request, id):
+    if request.method=="GET":
+        # Obtenez le champ HOME_NET du système et de la base de données
+        home_net_database, interface_ids = get_home_net_de_la_base_de_donnees(id)
+        interface_ids = ast.literal_eval(interface_ids)
+        address_home_net = home_net_database.strip("[]").split(",")
+        # Récupérez les adresses IP à partir de la configuration IP4Config
+        ip4config_object = IP4Config.objects.all()
+        ip4config_dict = serializers.serialize("json", ip4config_object)
+        res = json.loads(ip4config_dict)
+        interfaces_ids_ip4config = []
+        interfaces_address_ip4config = []
+        # Parcourez les enregistrements IP4Config pour obtenir les interfaces et leurs adresses
+        for i in range(len(res)):
+            interfaces_ids_ip4config.append(res[i]['fields']['interface'])
+            interfaces_address_ip4config = get_ip_addresses(interfaces_ids_ip4config)
+        # Initialisez des listes pour stocker les valeurs finales
+        address_home_net_final = []
+        interface_ids_final = []
+        # Comparez les interfaces et leurs adresses pour déterminer la configuration finale
+        for i in interface_ids:
+            if i in interfaces_ids_ip4config:
+                if address_home_net[interface_ids.index(i)] == interfaces_address_ip4config[interfaces_ids_ip4config.index(i)]:
+                    address = address_home_net[interface_ids.index(i)]
+                else:
+                    address = interfaces_address_ip4config[interfaces_ids_ip4config.index(i)]
+                address_home_net_final.append(address)
+                interface_ids_final.append(i)
+            else:
+                pass
+        # Créez une chaîne avec les adresses HOME_NET finales
+        home_net_value = ' , '.join(address_home_net_final)
+        home_net_value = f'[{home_net_value}]'
+        interfaces_ids_value = str(interface_ids_final)
+        suricata_yaml_path = "/etc/suricata/suricata.yaml"
+        # Exécutez la commande 'sudo cat' pour lire le contenu du fichier
+        output, error = execute_cmd("sudo cat " + suricata_yaml_path)
+        # Mettez à jour la configuration dans le système
+        if output:
+            # Lit les lignes du fichier
+            lines = output.split('\n')
+            updated_lines = []
+            for line in lines:
+                stripped_line = line.strip()
+                if stripped_line.startswith("#"):
+                    updated_lines.append(line + '\n')
+                    # Conserve les lignes de commentaire telles quelles
+                elif "HOME_NET:" in stripped_line:
+                    # Met à jour la ligne HOME_NET avec la nouvelle valeur
+                    updated_lines.append(f'    HOME_NET: "{home_net_value}"'+'\n')
+                else:
+                    # Conserve les autres lignes telles quelles
+                    updated_lines.append(line + '\n')
+                    with open(suricata_yaml_path, 'w') as local_file:
+                        for string in updated_lines:
+                            local_file.write(string)
+        # Mettez à jour la configuration dans la base de données
+        suricata_instance = suricatafile.objects.get(id=id)
+        suricata_instance.interface_ids = interfaces_ids_value
+        suricata_instance.home_net = home_net_value
+        suricata_instance.save()
+        current_configuration = {
+            "promisc": suricata_instance.promisc,
+            "eve_log": suricata_instance.eve_log,
+            "syslog": suricata_instance.syslog,
+            "mpm_algo": suricata_instance.mpm_algo,
+            "profile": suricata_instance.profile,
+            "copy_mode": suricata_instance.copy_mode,
+            "status_enabled":suricata_instance.status_enabled
+            }
+    return JsonResponse({"configuration": current_configuration, "interface_ids": interface_ids_final, "address_home_net": address_home_net_final})
+#################################### FIN SURICATA.YAML CONFIGURATION GENERALE ############################################################
 
 #################################### LES REGLES ############################################################
 #Ajouter les régles par défaut dans la BD//
@@ -67,21 +229,31 @@ def activerSuricataUpdate(request, id):
 #//Récupérer les règles de la base de données //
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-def getRulesFromDatabase(request):
-    if request.method=="GET":
-        rules_list = []
+def getRulesFromDatabase(request, num):
+    if request.method == "GET":
         # Récupérer toutes les règles de la base de données
         rules_from_db = ids_ips_rule.objects.all()
-        rule_suricata = serializers.serialize("json", rules_from_db)
+
+        # Paginer les règles
+        paginator = Paginator(rules_from_db, 10)
+        try:
+            rules_page = paginator.page(num)
+        except EmptyPage:
+            return JsonResponse({"error": "Page not found"}, status=404)
+
+        # Sérialiser les règles de la page actuelle
+        rule_suricata = serialize("json", rules_page, use_natural_primary_keys=True)
         res = json.loads(rule_suricata)
-        for i in range(0, len(res)):
-            res[i].pop('model')
-            id = res[i]['pk']
-            res[i].pop('pk')
-            res[i]['fields']['id'] = id
-            rules_list.append(res[i]['fields'])
-    # Renvoyer la liste des règles au format JSON
-    return JsonResponse({"rules": rules_list})
+
+        rules_list = []
+        for i in range(len(res)):
+            fields = res[i]['fields']
+            fields['id'] = res[i]['pk']
+            rules_list.append(fields)
+        nbpage=len(rules_from_db)/10
+        # Renvoyer la liste des règles au format JSON
+        return JsonResponse({"rules": rules_list,"nombrePageRules":math.ceil(nbpage)},status=200)
+
 
 ## fonction pour sauvegarder une règle (ajout ou mise à jour )
 @swagger_auto_schema(
@@ -144,7 +316,7 @@ def save_rules_suricata(request, id):
                     message="Règle existe déjà "
                     status=400
                 else:
-                    output, rule,error = add_rule_remote10(must_be_comment, contenu,file_path)
+                    output, rule,error = add_rule_remote(must_be_comment, contenu,file_path)
                     data['suricatafile'] = suricatafile_obj.id
                     data['rule']=rule
                     if error=="":
@@ -239,351 +411,12 @@ def deleteRule(request, sid):
         except Exception as e:
             return JsonResponse({"error": str(e)},status=400)
         
-@swagger_auto_schema(
-    method='PUT',
-    request_body=RuleSerializerForSwagger(many=True),
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO update_status_rule suricata ",
-    operation_description="API TO update_status_rule suricata ",
-)
-#Activer/Désactiver une régle//
-@api_view(['PUT'])
-@authentication_classes([SessionAuthentication])
-def update_status_rule(request, sid):
-    file_path = '/var/lib/suricata/rules/suricata.rules'
-    try:
-        # Récupération de la valeur de l'activation de la règle à partir de la requête PUT
-        data = request.data
-        activate_rule = data.get('activate_rule', None)
-        if request.method == 'PUT':
-            # Récupérez l'objet depuis la base de données
-            old_content = ids_ips_rule.objects.get(sid=sid)
-            # Mettez à jour le champ 'activate_rule' de l'objet
-            old_content.activate_rule = activate_rule
-            # Enregistrez les modifications dans la base de données
-            old_content.save()
-            contenu = {
-                sid: {
-                    "action": old_content.action,
-                    "protocol": old_content.protocol,
-                    "source_ip": old_content.source_ip,
-                    "direction": old_content.direction,
-                    "destination_ip": old_content.destination_ip,
-                    "msg": old_content.msg,
-                    "content": old_content.content,
-                    "flowbit": old_content.flowbit,
-                    "rev": old_content.rev,
-                    "sid": sid,
-                    "activate_rule": activate_rule}}
-            # Obtenir la ligne à supprimer en utilisant la fonction get_line_by_sid
-            line_to_delete = get_line_by_sid(file_path, sid)
-            error, output = delete_line_in_remote_file(file_path, line_to_delete.rstrip())
-            # Déterminer s'il faut ajouter "#" à la règle en fonction de la valeur de activate_rule
-            must_be_comment = not activate_rule
-            error, output = add_rule_remote10(must_be_comment, contenu)
-            if output == '':
-                message = "Règle activée avec succès" if activate_rule else "Règle désactivée avec succès"
-                status=200
-            else:
-                message = "Échec de la mise à jour de la règle sur le système distant."
-                status=400
-        else:
-            message = "Le champ 'activate_rule' est requis."
-            status=400
-        return Response({"message": message},status=status)
-    except ids_ips_rule.DoesNotExist:
-        return Response({"message": "Règle non trouvée."}, status=404)
+
+
 
 #################################### Fin LES REGLES ############################################################
 
-#################################### SURICATA.YAML CONFIGURATION GENERALE ############################################################
 
-#//Lire le fichier de configuration suricata.yaml
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
-def getSuricataFile(request):
-    file = read_suricata_config() 
-    return JsonResponse({"file:":file.split('\n')})     
-  
-#Modifier la status du suricata (enable/disable)  //  
-@api_view(['PUT'])
-@authentication_classes([SessionAuthentication])
-def update_suricata_status(request,id):
-        try:
-            data =request.data
-            status_enabled = data.get('status_enabled', None)
-            if status_enabled is not None:
-                suricatafile_instance = suricatafile.objects.get(id=id)
-                if status_enabled is True or status_enabled.lower() == 'true':
-                   enable_command = "systemctl enable suricata.service"
-                   execute_cmd(enable_command)
-                   suricatafile_instance.status_enabled = True
-                   suricatafile_instance.save()
-                #    print("Suricata a été activé.")
-                   return JsonResponse({'message': 'Suricata a été activé.'})
-                elif status_enabled is False or status_enabled.lower() == 'false':
-                    disable_command = "systemctl disable suricata.service"
-                    execute_cmd(disable_command)
-                    suricatafile_instance.status_enabled = False
-                    suricatafile_instance.save()
-                    return JsonResponse({'message': 'Suricata a été désactivé.'},status=200)
-                else:
-                    return JsonResponse({'message': 'Paramètre "status" invalide.'}, status=400)
-            else:
-                return JsonResponse({'message': 'Paramètre "status" manquant.'}, status=400)
-        except json.JSONDecodeError:
-            return JsonResponse({'message': 'Erreur de décodage JSON.'}, status=400)
-
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
-def get_suricata_status(request, id):
-    try:
-        suricatafile_instance = suricatafile.objects.get(id=id)
-        # Exécutez une commande pour obtenir l'état de Suricata (activé ou désactivé)
-        status_command = "systemctl is-enabled suricata.service"
-        output, error = execute_cmd(status_command)
-        final = output
-        index = final.find('\n')
-        if index != -1:
-            result = final[:index]
-        if result == 'enabled':
-            status_enabled = True
-            suricatafile_instance.status_enabled = True
-            suricatafile_instance.save()
-        else:
-            status_enabled = False
-            suricatafile_instance.status_enabled = False
-            suricatafile_instance.save()
-        return JsonResponse({'status_enabled': status_enabled})
-    except suricatafile.DoesNotExist:
-        return JsonResponse({'message': 'SuricataFile non trouvé.'}, status=404)
-    except Exception as e:
-        return JsonResponse({'message': f'Erreur : {str(e)}'}, status=500)
-
-#Ajouter le fichier de configuration suricata.yaml dans la BD //      
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def addGeneralConfig(request):
-    if request.method=="POST":
-        file = read_config()
-        if file:
-            home_net = file.get("HOME_NET")
-            promisc = file.get("promisc")
-            if promisc is not None:
-                promisc = promisc.lower() == "true"
-            else:
-                promisc = False
-            syslog= file.get("syslog-enabled")
-            eve_log= file.get("eve-log-enabled")
-            mpm_algo = file.get("mpm-algo")
-            profile = file.get("profile")
-            copy_mode = file.get("copy-mode")
-            status_command = "systemctl is-enabled suricata.service"
-            output, error = execute_cmd(status_command)
-            if output == 'enabled':
-                status_enabled = True
-            else:
-                status_enabled = False
-            # print({"HOME_NET": home_net,  "promisc": promisc, "eve_log_enabled": eve_log, "syslog-enabled": syslog, "mpm-algo": mpm_algo, "profile": profile,"copy-mode": copy_mode})
-            if not suricatafile.objects.filter(home_net=home_net).exists():
-                # Créer une instance du modèle suricatafile
-                suricata_config = suricatafile(home_net=home_net, promisc=promisc, eve_log=eve_log, syslog=syslog, mpm_algo=mpm_algo, profile=profile,copy_mode=copy_mode,status_enabled=status_enabled)
-                suricata_config.save()
-                id_conf=suricata_config.id
-            else:
-                return JsonResponse({"message": "configuration déjà exist!"},status=400)
-                
-            return JsonResponse({"message": "Valeurs enregistrées avec succès dans la base de données.","id_conf":id_conf})
-        else:
-            return JsonResponse({"message": "Erreur lors de la lecture du fichier de configuration."})
-
-@swagger_auto_schema(
-    method='PUT',
-    request_body=SuricataFileSerializer,
-    responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO update_suricata_configuration  ",
-    operation_description="API TO update_suricata_configuration  ",
-)  
-#Modifier le fichier de configuration du suricata  
-@api_view(['PUT'])
-@authentication_classes([SessionAuthentication])
-def update_suricata_configuration(request, id):
-    if request.method=="PUT":
-        try: 
-            suricata_yaml_path = "/etc/suricata/suricata.yaml"
-            data = request.data
-            new_promisc = data.get("promisc", "false")
-            new_promisc=str(new_promisc)
-            if new_promisc is not None:
-                new_promisc = new_promisc.lower() == "true"
-            else:
-                new_promisc = new_promisc.lower() == "false"
-            new_eve_log = data.get("eve_log", False)
-            new_eve_log = "yes" if new_eve_log else "no"
-            new_syslog = data.get("syslog", False)
-            new_syslog = "yes" if new_syslog else "no"
-            new_mpm_algo = data.get("mpm_algo", "ac")
-            new_profile = data.get("profile", "low")
-            new_copy_mode = data.get("copy_mode", "none")
-            interface_ids_input = data.get("interface", [])
-            interface_ids=[]
-            interface_ids = [x["id"] for x in interface_ids_input]
-            allowed_profiles = ["medium", "high", "low"]
-            allowed_ips = ["none", "tap", "ips"]
-            allowed_mpm_algo = ["auto", "ac", "ac-bs", "ac-ks", "hs"]
-            allowed_syslog = ["yes", "no"]
-            allowed_evelog =["yes", "no"]
-            status_enabled = data.get('status_enabled', None)
-            if new_profile not in allowed_profiles:
-                new_profile = "medium"
-                return JsonResponse({"error": "La valeur du profil n'est pas valide. Utilisation de la valeur par défaut."},
-                                        status=status.HTTP_400_BAD_REQUEST)
-            if new_copy_mode is True:
-                new_copy_mode="ips"
-            else:
-                new_copy_mode="tap"
-            if new_mpm_algo not in allowed_mpm_algo:
-                new_mpm_algo = "auto"
-                return JsonResponse({"msg": "La valeur du mpm algo n'est pas valide. Utilisation de la valeur par défaut."},
-                                        status=status.HTTP_400_BAD_REQUEST)
-            if new_eve_log not in allowed_evelog:
-                allowed_evelog = "yes"
-                return JsonResponse({"msg": "La valeur du eve-log n'est pas valide. Utilisation de la valeur par défaut."},
-                                        status=status.HTTP_400_BAD_REQUEST)
-            if new_syslog not in allowed_syslog:
-                allowed_syslog = "no"
-                return JsonResponse({"msg": "La valeur du syslog n'est pas valide. Utilisation de la valeur par défaut."},
-                                        status=status.HTTP_400_BAD_REQUEST)
-            
-            interface_names=Interface.objects.filter(id__in=interface_ids).values('ifname')
-            print(interface_names)
-             
-            # Utilisez la fonction get_ip_addresses pour obtenir les adresses IP
-            ip_addresses =get_ip_addresses(interface_ids)
-            home_net_value_sys = f'[{", ".join(list(set(ip_addresses)))}]'
-            home_net_value = f'[{", ".join(ip_addresses)}]'
-            
-            output,error= execute_cmd("cat " + suricata_yaml_path)
-            if output:
-                lines = output.split('\n')
-                updated_lines = []
-                for line in lines:
-                    stripped_line = line.strip()
-                    if stripped_line.startswith("#"):
-                        updated_lines.append(line + '\n')
-                    elif "HOME_NET:" in stripped_line:
-                        updated_lines.append(f'    HOME_NET: "{home_net_value_sys}"' + '\n')
-                    else:
-                        updated_lines.append(line + '\n')
-                with open(suricata_yaml_path, 'w') as local_file:
-                    for string in updated_lines:
-                        local_file.write(string)
-                # Appelez d'abord la fonction update_suricata_config pour mettre à jour le système
-                aux_update=update_suricata_config(interface_names[0]['ifname'],status_enabled,str(new_promisc).lower(), new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode)
-                if aux_update is True:
-                    cmd="sudo systemctl restart suricata "
-                    output,error=execute_cmd(cmd)
-                    # Ensuite, mettez à jour les enregistrements dans la base de données
-                    suricata_instance = suricatafile.objects.get(id=id)
-                    suricata_instance.status_enabled=status_enabled
-                    suricata_instance.promisc = new_promisc
-                    suricata_instance.eve_log = new_eve_log
-                    suricata_instance.syslog = new_syslog
-                    suricata_instance.mpm_algo = new_mpm_algo
-                    suricata_instance.profile = new_profile
-                    suricata_instance.copy_mode = new_copy_mode
-                    suricata_instance.interface_ids = interface_ids
-                    suricata_instance.home_net = home_net_value
-                    if error=="":
-                        suricata_instance.save()
-                        return JsonResponse({'success': True, 'msg': 'Mise à jour du fichier réussie !!!'},status=200)
-                    else:
-                        return JsonResponse({'success': False, 'msg': error},status=400)
-                        
-                else:
-                    return JsonResponse({'success': False, 'msg': 'Lecture du fichier échouée.'}, status=500)
-            
-            else:
-                return JsonResponse({'success': False, 'msg': 'Lecture du fichier échouée.'}, status=500)
-        except Exception as e:
-            return JsonResponse({'success': False, 'msg': str(e)}, status=500) 
-
-
-#Aficher le fichier de configuration suricata.yaml//
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
-def get_suricata_configuration(request, id):
-    if request.method=="GET":
-        # Obtenez le champ HOME_NET du système et de la base de données
-        home_net_database, interface_ids = get_home_net_de_la_base_de_donnees(id)
-        interface_ids = ast.literal_eval(interface_ids)
-        address_home_net = home_net_database.strip("[]").split(",")
-        # Récupérez les adresses IP à partir de la configuration IP4Config
-        ip4config_object = IP4Config.objects.all()
-        ip4config_dict = serializers.serialize("json", ip4config_object)
-        res = json.loads(ip4config_dict)
-        interfaces_ids_ip4config = []
-        interfaces_address_ip4config = []
-        # Parcourez les enregistrements IP4Config pour obtenir les interfaces et leurs adresses
-        for i in range(len(res)):
-            interfaces_ids_ip4config.append(res[i]['fields']['interface'])
-            interfaces_address_ip4config = get_ip_addresses(interfaces_ids_ip4config)
-        # Initialisez des listes pour stocker les valeurs finales
-        address_home_net_final = []
-        interface_ids_final = []
-        # Comparez les interfaces et leurs adresses pour déterminer la configuration finale
-        for i in interface_ids:
-            if i in interfaces_ids_ip4config:
-                if address_home_net[interface_ids.index(i)] == interfaces_address_ip4config[interfaces_ids_ip4config.index(i)]:
-                    address = address_home_net[interface_ids.index(i)]
-                else:
-                    address = interfaces_address_ip4config[interfaces_ids_ip4config.index(i)]
-                address_home_net_final.append(address)
-                interface_ids_final.append(i)
-            else:
-                pass
-        # Créez une chaîne avec les adresses HOME_NET finales
-        home_net_value = ' , '.join(address_home_net_final)
-        home_net_value = f'[{home_net_value}]'
-        interfaces_ids_value = str(interface_ids_final)
-        suricata_yaml_path = "/etc/suricata/suricata.yaml"
-        # Exécutez la commande 'sudo cat' pour lire le contenu du fichier
-        output, error = execute_cmd("sudo cat " + suricata_yaml_path)
-        # Mettez à jour la configuration dans le système
-        if output:
-            # Lit les lignes du fichier
-            lines = output.split('\n')
-            updated_lines = []
-            for line in lines:
-                stripped_line = line.strip()
-                if stripped_line.startswith("#"):
-                    updated_lines.append(line + '\n')
-                    # Conserve les lignes de commentaire telles quelles
-                elif "HOME_NET:" in stripped_line:
-                    # Met à jour la ligne HOME_NET avec la nouvelle valeur
-                    updated_lines.append(f'    HOME_NET: "{home_net_value}"'+'\n')
-                else:
-                    # Conserve les autres lignes telles quelles
-                    updated_lines.append(line + '\n')
-                    with open(suricata_yaml_path, 'w') as local_file:
-                        for string in updated_lines:
-                            local_file.write(string)
-        # Mettez à jour la configuration dans la base de données
-        suricata_instance = suricatafile.objects.get(id=id)
-        suricata_instance.interface_ids = interfaces_ids_value
-        suricata_instance.home_net = home_net_value
-        suricata_instance.save()
-        current_configuration = {
-            "promisc": suricata_instance.promisc,
-            "eve_log": suricata_instance.eve_log,
-            "syslog": suricata_instance.syslog,
-            "mpm_algo": suricata_instance.mpm_algo,
-            "profile": suricata_instance.profile,
-            "copy_mode": suricata_instance.copy_mode,
-            "status_enabled":suricata_instance.status_enabled
-            }
-    return JsonResponse({"configuration": current_configuration, "interface_ids": interface_ids_final, "address_home_net": address_home_net_final})
-#################################### FIN SURICATA.YAML CONFIGURATION GENERALE ############################################################
 
 #################################### LES ALERTES  ############################################################
 
@@ -610,7 +443,7 @@ def addalertsToDatabase(request,id):
         if len(logs_add)!=0:
             # Parcourir les logs récupérés et ajoutez-les à la base de données
             for log in logs_add:
-                print("data to add ==>",log['alert'])
+                # print("data to add ==>",log['alert'])
                 suricatafile_obj = suricatafile.objects.get(pk=id)  
                 log['suricatafile']=int(suricatafile_obj.id)
                 if not Alert.objects.filter(alert=log['alert']).exists():
@@ -631,16 +464,32 @@ def addalertsToDatabase(request,id):
         return JsonResponse({"message":"Alerts updated successfully!!"},status=200)           
 
     
-#Afficher les alertes de la BD//
+#Afficher les alertes de la BD avec la pagination//
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-def GetAlertsFromDatabase(request):
-    if request.method=="GET":
-        alert_list=[]
-        alerts = Alert.objects.all()  # Récupérer toutes les alertes de la base de données
-        if alerts:
-            serializer = AlertSerializer(alerts, many=True)
-            alert_list=serializer.data
-        return JsonResponse({"alerts": alert_list})
+def GetAlertsFromDatabase(request,num):
+    if request.method == "GET":
+        # Récupérer toutes les règles de la base de données
+        alerts_from_db = Alert.objects.all() 
+
+        # Paginer les règles
+        paginator = Paginator(alerts_from_db, 10)
+        try:
+           alerts_page = paginator.page(num)
+        except EmptyPage:
+            return JsonResponse({"error": "Page not found"}, status=404)
+
+        # Sérialiser les règles de la page actuelle
+        rule_suricata = serialize("json", alerts_page, use_natural_primary_keys=True)
+        res = json.loads(rule_suricata)
+
+        alerts_list = []
+        for i in range(len(res)):
+            fields = res[i]['fields']
+            fields['id'] = res[i]['pk']
+            alerts_list.append(fields)
+        nbpage=math.ceil(len(alerts_from_db)/10)
+        # Renvoyer la liste des règles au format JSON
+        return JsonResponse({"alerts": alerts_list,"nombrePageAlerts":nbpage},status=200)
        
 #################################### Fin LES ALERTES  ############################################################

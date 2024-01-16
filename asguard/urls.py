@@ -73,7 +73,8 @@ urlpatterns = [
     path("monitoring/",include("backend.dashboard.urls")),
     path("ids-ips/",include("backend.ids_ips.urls")),
     path('proxy/', include('backend.proxy.urls')),
-    path("ids-ips/",suricata)
+    path("ids-ips/",suricata),
+    path("success/",success)
 ]
 
 # ws/wss url patterns

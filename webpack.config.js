@@ -27,6 +27,7 @@ Encore.setOutputPath("static/")
   .addEntry("keyPair", "./src/middleware/keyPair.js")
   .addEntry("UserAndCertificateManagement", "./src/middleware/userManagment.js")
   .addEntry("404", "./src/middleware/404.js")
+  .addEntry("success", "./src/middleware/success.js")
   .enableVueLoader(() => {}, {
     version: 3,
   })

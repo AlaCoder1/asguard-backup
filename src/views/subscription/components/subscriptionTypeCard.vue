@@ -181,26 +181,26 @@ export default {
       const subscriptionId = getPackId();
       console.log('subscriptionId',subscriptionId)
 
-      // if (!subscriptionId) {
-      //   state.snackbar = true;
-      //   state.color = "red";
-      //   state.textAlert = "You have to choose at least one service";
-      //   return;
-      // }
-      // try {
-      //   const response = await axios.post("/auth/create_checkout_session", {
-      //     status: "true",
-      //     subscription_id: subscriptionId,
-      //     price: props.prices[0].amount,
-      //   });
-      //   if (response.status === 200) {
-      //     window.open(response.data.url, "_blank");
-      //   } else {
-      //     console.log("error");
-      //   }
-      // } catch (error) {
-      //   console.log(error);
-      // }
+      if (!subscriptionId) {
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = "You have to choose at least one service";
+        return;
+      }
+      try {
+        const response = await axios.post("/auth/create_checkout_session", {
+          status: "true",
+          subscription_id: subscriptionId,
+          price: props.prices[0].amount,
+        });
+        if (response.status === 200) {
+          window.open(response.data.url, "_blank");
+        } else {
+          console.log("error");
+        }
+      } catch (error) {
+        console.log(error);
+      }
     };
 
     const getPackId = () => {

@@ -24,6 +24,7 @@ from backend.ids_ips.serializers import AlertSerializer
 import ast
 from backend.proxy.views import *
 from backend.proxy.models import *
+from backend.subscription.models import plansSubscription,plansFeatures
 
 
 def get_squid_status_from_bd():
@@ -646,3 +647,19 @@ def suricata(request):
     interfaces=get_all_interfaces_version2(request)
     context={"general_config_suricata":general_config_suricata,"rules_suricata":rules_suricata,"alerts_suricata":alerts_suricata,"all_interfaces":interfaces}
     return render(request, 'ids_ips.html',context)
+
+
+def list_features_about_last_subscription(request):
+    list_features = []
+    if request.method == 'GET':
+        last_subscription = plansSubscription.objects.order_by('start_at').last()
+        last_subscription_dict = last_subscription.__dict__
+        if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+            plan_features= plansFeatures.objects.filter(plan = last_subscription.plan.pk)
+            plan_features_dict = serializers.serialize("json", plan_features)
+            res = json.loads(plan_features_dict)
+            for i in res:
+                for key, value in i.items():
+                    if key == 'fields':
+                        list_features.append(i['fields']['description'])
+        return list_features

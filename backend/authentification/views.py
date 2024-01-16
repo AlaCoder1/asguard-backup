@@ -7,6 +7,8 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate, login, logout
 from datetime import datetime, timedelta
 from django.conf import settings
+
+from backend.authentification.constant_variables import STRIPE_CANCEL_URL, STRIPE_SECRET_KEY, STRIPE_SUCCESS_URL
 from .serializers import *
 import json
 from django.http import JsonResponse
@@ -20,7 +22,7 @@ import stripe
 
 User = get_user_model()
 ssh = paramiko.SSHClient()
-from django.shortcuts import redirect
+from django.shortcuts import redirect, render
 from django.conf import settings
 
 @swagger_auto_schema(
@@ -83,6 +85,18 @@ def logout_view(request):
     logout(request)
     return JsonResponse({"msg": 'User Logged out successfully'})
 
+
+def show_url(request):
+    host = request.get_host()
+    if host.startswith("127"):
+        url="http://"+host
+    else:
+        url="https://"+host
+    print('url',url)
+    return url
+
+
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def create_checkout_session(request):
@@ -94,9 +108,12 @@ def create_checkout_session(request):
         # card_type = data['card_type']  # Assuming card_type is provided in the request data
         card_type = 'card'
         print('********************',price)
+       
 
-        stripe.api_key = settings.STRIPE_SECRET_KEY
+        stripe.api_key = STRIPE_SECRET_KEY
         try:
+            url=show_url(request)
+            print({"url":url})
             checkout_session = stripe.checkout.Session.create(
                 payment_method_types=[card_type],  # Specify the payment method type (e.g., card)
                 line_items=[
@@ -122,8 +139,8 @@ def create_checkout_session(request):
                   'status': status,
                 },
                 mode='payment',
-                success_url = f'{settings.STRIPE_SUCCESS_URL}?subscription_id={subscription_id}' ,
-                cancel_url=settings.STRIPE_CANCEL_URL,
+                success_url = f'{url}/success/?subscription_id={subscription_id}',
+                cancel_url= f'{url}/asguard/subscription/'
                
             )
             print({

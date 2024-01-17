@@ -88,7 +88,7 @@ def createGroup(request):
 # API to delete group
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def deleteGroup(request, id):
     msg = ''
     if (request.method == 'DELETE'):
@@ -113,7 +113,7 @@ def updateGroup(request, id):
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
+# @permission_classes([IsAuthenticated])
 def changeGroupname(request, id):
     msg = ''
     if (request.method == 'PUT'):

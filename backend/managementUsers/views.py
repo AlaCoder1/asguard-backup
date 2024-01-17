@@ -28,9 +28,8 @@ from django.views.decorators.csrf import csrf_exempt
 
 # API to get all users
 
-
-@csrf_exempt
-#@authentication_classes([SessionAuthentication])
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getAllUsers(request):
     list_users = []
@@ -172,8 +171,7 @@ def createUser(request):
 
 # API to delete group
 @api_view(['DELETE'])
-# @authentication_classes([AllowAny])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
 def delete_user(request, id):
     msg = ""
     if (request.method == 'DELETE'):

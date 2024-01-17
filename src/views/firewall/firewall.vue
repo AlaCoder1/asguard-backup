@@ -2,6 +2,17 @@
   <v-app id="inspire">
     <base-layout title="Rules">
       <template #content>
+        <v-alert v-model="isFirewallSubscribe" density="compact" type="warning"
+          ><span style="font-size: 19px"
+            >You are currently in Free Mode, unlocking this feature requires
+            payment. Go to
+          </span>
+          <span
+            style="cursor: pointer; text-decoration: underline; font-size: 19px"
+            @click="goToSub"
+            >subscription page</span
+          >
+        </v-alert>
         <v-tabs
           v-model="activeTab"
           background-color="#f5f5f5"
@@ -29,13 +40,12 @@
                 <FirewallComponent
                   :id="tab.name_interface"
                   :activeTab="activeTab"
-              />
+                />
                 <FirewallComponentOutbound
                   :id="tab.name_interface"
                   :activeTab="activeTab"
-              />
-            
-            </v-card-text>
+                />
+              </v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -53,10 +63,12 @@ export default {
   components: {
     BaseLayout,
     FirewallComponent,
-    FirewallComponentOutbound
+    FirewallComponentOutbound,
   },
+  inject: ["emitter"],
   data() {
     return {
+      isFirewallSubscribe: false,
       activeTab: "",
       interfaces: [],
     };
@@ -74,6 +86,13 @@ export default {
     },
   },
   mounted() {
+    this.emitter.on("firewal-subscription", () => {
+      this.isFirewallSubscribe = true;
+      setTimeout(() => {
+        this.isFirewallSubscribe = false;
+      }, 6000);
+    });
+
     this.interfaces =
       document.getElementById("app").attributes["interfaces"].value;
     let validJsonString = this.interfaces
@@ -90,6 +109,11 @@ export default {
     } else {
       this.activeTab = this.tabs[0].name_interface;
     }
+  },
+  methods: {
+    goToSub() {
+      window.location.href = "/asguard/subscription/";
+    },
   },
 };
 </script>

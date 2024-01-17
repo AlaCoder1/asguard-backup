@@ -253,7 +253,7 @@ export default {
 
         let payload = {
           email: state.formData.email,
-          username: state.formData.userName,
+          username: state.formData.userName.toLowerCase(),
           password: state.formData.password,
         };
 

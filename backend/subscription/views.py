@@ -214,17 +214,15 @@ def list_features_about_last_subscription(request):
 def subscription_info(request):
     subscription_info = {}
     if request.method == 'GET':
-        if last_subscription ==None:
-            last_subscription = plansSubscription.objects.order_by('start_at').last()
+        last_subscription = plansSubscription.objects.order_by('start_at').last()
+        if last_subscription != None:
             last_subscription_dict = last_subscription.__dict__
             if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
                 plan_info = plan.objects.get(id = last_subscription_dict['id'])
-                print({"slug":plan_info.slug})
-                print({"date_start":last_subscription_dict['start_at']})
-                print({"end_at":last_subscription_dict['end_at']})
                 subscription_info['type_pack'] =plan_info.slug
-                subscription_info['date_start'] =last_subscription_dict['start_at']
-                subscription_info['type_pack'] =last_subscription_dict['start_at']
+                subscription_info['date_start'] =last_subscription_dict['start_at'].strftime('%Y-%m-%d %H:%M:%S')
+                subscription_info['end_at'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
+                subscription_info['expiration_date'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
         else:
             subscription_info = {}
-        return JsonResponse({"msg": subscription_info}, status=400)
+        return JsonResponse({"msg": "subscription_info"}, status=400)

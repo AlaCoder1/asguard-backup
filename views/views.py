@@ -24,7 +24,7 @@ from backend.ids_ips.serializers import AlertSerializer
 import ast
 from backend.proxy.views import *
 from backend.proxy.models import *
-from backend.subscription.models import plansSubscription,plansFeatures
+from backend.subscription.models import plan, plansSubscription,plansFeatures
 
 
 def get_squid_status_from_bd():
@@ -667,3 +667,20 @@ def list_features_about_last_subscription(request):
         else:
             list_features = []
         return list_features
+    
+    
+def subscription_info(request):
+    subscription_info = {}
+    if request.method == 'GET':
+        last_subscription = plansSubscription.objects.order_by('start_at').last()
+        if last_subscription != None:
+            last_subscription_dict = last_subscription.__dict__
+            if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+                plan_info = plan.objects.get(id = last_subscription_dict['id'])
+                subscription_info['type_pack'] =plan_info.slug
+                subscription_info['date_start'] =last_subscription_dict['start_at'].strftime('%Y-%m-%d %H:%M:%S')
+                subscription_info['end_at'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
+                subscription_info['expiration_date'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            subscription_info = {}
+        return JsonResponse({"msg": "subscription_info"}, status=400)

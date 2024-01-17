@@ -10,11 +10,6 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-STRIPE_PUBLIC_KEY = "pk_test_51OVDcYKi3nwJjULPxfS2d6c6mbWGwOpsEeTADyLi8w8ZW7mMmcvcHZDYNgckyMXTnfGCER4grlGRc2KQzcK5jQJF004gmPOXWn"
-STRIPE_SECRET_KEY = "sk_test_51OVDcYKi3nwJjULPyERGkOtF6VzVPDuxNsSD6jQVMmPNzBTOxOeT0v06MBlYRuQk7MVVxaKtyQEYTfLMbDIyGIbt00lLStOBqB"
-STRIPE_SUCCESS_URL = 'http://localhost:8000/success/'
-STRIPE_CANCEL_URL = 'http://localhost:8000/asguard/subscription/'
-
 from dotenv import load_dotenv
 from pathlib import Path
 import os
@@ -37,6 +32,7 @@ ALLOWED_HOSTS = ['*']
 
 ##appel function to update CSRF_TRUSTED_ORIGINS
 CORS_ALLOWED_ORIGINS = ['https://*']
+GLOBAL_PATH = f'http://{ALLOWED_HOSTS[0]}:8000/'
 # Application definition
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 # Application definition

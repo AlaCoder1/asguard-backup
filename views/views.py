@@ -527,7 +527,8 @@ def interface_page(request):
 def firewall_page(request):
     rules=get_all_rules(request)
     interfaces=get_all_interfaces(request)
-    context = {'rules':rules, 'interfaces':interfaces}
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'rules':rules, 'interfaces':interfaces,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'firewall_page.html',context)
 
 @login_required(login_url='/')
@@ -653,13 +654,16 @@ def list_features_about_last_subscription(request):
     list_features = []
     if request.method == 'GET':
         last_subscription = plansSubscription.objects.order_by('start_at').last()
-        last_subscription_dict = last_subscription.__dict__
-        if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
-            plan_features= plansFeatures.objects.filter(plan = last_subscription.plan.pk)
-            plan_features_dict = serializers.serialize("json", plan_features)
-            res = json.loads(plan_features_dict)
-            for i in res:
-                for key, value in i.items():
-                    if key == 'fields':
-                        list_features.append(i['fields']['description'])
+        if last_subscription !=None:
+            last_subscription_dict = last_subscription.__dict__
+            if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+                plan_features= plansFeatures.objects.filter(plan = last_subscription.plan.pk)
+                plan_features_dict = serializers.serialize("json", plan_features)
+                res = json.loads(plan_features_dict)
+                for i in res:
+                    for key, value in i.items():
+                        if key == 'fields':
+                            list_features.append(i['fields']['description'])
+        else:
+            list_features = []
         return list_features

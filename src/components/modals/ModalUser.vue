@@ -3,7 +3,7 @@
     <!-- <v-dialog v-model="isOpen" persistent width="600">
        -->
     <v-dialog v-model="openModal" persistent width="600">
-      <form ref="myForm" @submit.prevent="submitForm">
+      <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
           <v-card-title>
             <span class="text-h5"
@@ -439,5 +439,8 @@ export default {
   color: red;
   font-size: 0.85em;
   display: flex;
+}
+.scroller {
+  overflow: auto;
 }
 </style>

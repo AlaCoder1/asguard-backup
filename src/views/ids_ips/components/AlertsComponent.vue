@@ -362,18 +362,18 @@ export default {
   
 
     onMounted(async () => {
-      try {
-        rowDataAlerts.value=document.getElementById("app").attributes["alerts_suricata"].value;
-        let validJsonString3 =  rowDataAlerts.value
-          .replace(/True/g, "true")
-          .replace(/False/g, "false")
-          .replace(/None/g, "null");
-        let parsedArray3 = JSON.parse(validJsonString3);
-        rowDataAlerts.value = parsedArray3;
+      // try {
+      //   rowDataAlerts.value=document.getElementById("app").attributes["alerts_suricata"].value;
+      //   let validJsonString3 =  rowDataAlerts.value
+      //     .replace(/True/g, "true")
+      //     .replace(/False/g, "false")
+      //     .replace(/None/g, "null");
+      //   let parsedArray3 = JSON.parse(validJsonString3);
+      //   rowDataAlerts.value = parsedArray3;
 
-      } catch (error) {
-        console.error("Error setting rowDataAlerts:", error);
-      }
+      // } catch (error) {
+      //   console.error("Error setting rowDataAlerts:", error);
+      // }
     });
 
     return {

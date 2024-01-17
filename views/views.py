@@ -641,8 +641,8 @@ def suricata(request):
     res = json.loads(suricata)
     id=res[0]['pk']
     general_config_suricata=general_suricata_configuration(request, id)
-    rules_suricata=get_rules_from_database(request)
-    alerts_suricata=get_alerts_from_database(request)
+    # rules_suricata=get_rules_from_database(request)
+    # alerts_suricata=get_alerts_from_database(request)
     interfaces=get_all_interfaces_version2(request)
-    context={"general_config_suricata":general_config_suricata,"rules_suricata":rules_suricata,"alerts_suricata":alerts_suricata,"all_interfaces":interfaces}
+    context={"general_config_suricata":general_config_suricata,"all_interfaces":interfaces}
     return render(request, 'ids_ips.html',context)

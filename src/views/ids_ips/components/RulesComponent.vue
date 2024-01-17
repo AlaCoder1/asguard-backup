@@ -23,7 +23,7 @@
       <v-col cols="12">
         <h4>Services Intrusion Detection</h4>
         <v-divider></v-divider>
-        <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; flex-direction: column" class="mt-3">
           <div v-for="(message, index) in state.messages" :key="index">
             <v-alert
               v-model="message.snackbar"
@@ -41,7 +41,7 @@
               <span class="c-o ml-3">
                 <strong>{{ message.color }} </strong> {{ message.text }}
               </span>
-              <span class="ml-16" style="margin-top: 20px !important;">
+              <span class="ml-16" style="margin-top: 20px !important">
                 <i
                   class="fas fa-times justify-end cursor"
                   @click="handleRemove(index)"
@@ -73,17 +73,19 @@
                 <v-col cols="12" md="6">
                   <v-text-field
                     id="filter-text-box"
+                    class="mb-3"
                     v-model="filterText"
                     placeholder="Search"
-                    clearable
+                    density="compact"
+                    rounded
+                    variant="solo"
                     hide-details
                     dense
                     prepend-inner-icon="mdi-magnify"
-                    variant="outlined"
                     @input="onFilterTextBoxChanged"
                   ></v-text-field>
                 </v-col>
-              
+
                 <!-- <v-col cols="12" md="6" class="d-flex justify-end">
                   <v-btn class="ml-3 mt-2" @click="addRow">
                     <i class="fas fa-plus" style="color: #086eae;"></i>
@@ -103,21 +105,26 @@
                 :rowDrag="true"
                 :defaultColDef="defaultColDef"
                 :editType="editType"
-                style="width: 100%;"
+                style="width: 100%"
                 :animateRows="true"
                 @cell-value-changed="onCellValueChanged"
                 @column-row-group-changed="onColumnRowGroupChanged"
                 @column-row-drag-end="onColumnRowDragEnd"
                 @firstDataRendered="onFirstDataRendered"
                 @row-drag-end="onRowDragEnd"
-                :pagination="true"
-                :paginationPageSize="10"
                 :rowSelection="'multiple'"
               >
               </ag-grid-vue>
+              <v-pagination
+                class="mt-5"
+                v-model="state.page"
+                :length="state.nombrePageRules"
+                @update:model-value="getData"
+              ></v-pagination>
             </v-card-text>
           </v-card>
-          <div class="d-flex justify-end mt-3">
+
+          <div class="d-flex justify-end mt-5 mb-10">
             <div class="mr-3 flex center">
               <VButton
                 rounded
@@ -136,9 +143,8 @@
                 label="save"
                 :isLarge="true"
                 class="ml-2"
-                @click="save" />
-  
-    
+                @click="save"
+              />
             </div>
           </div>
         </div>
@@ -169,11 +175,11 @@ export default {
   },
   setup(props) {
     const emitter = inject("emitter");
-    
     const state = reactive({
+      nombrePageRules: null,
+      page: 1,
       loading: false,
       isLoadingDialogue: false,
-
       snackbar: false,
       color: "",
       textAlert: "",
@@ -209,7 +215,6 @@ export default {
         // editable: true,
         minWidth: 100,
         sortable: false,
-
       },
       {
         headerName: "Action",
@@ -229,7 +234,6 @@ export default {
         editable: true,
         minWidth: 120,
         sortable: false,
-
       },
       {
         headerName: "Message",
@@ -237,9 +241,8 @@ export default {
         editable: true,
         minWidth: 400,
         autoHeight: true,
-        cellStyle: { whiteSpace: 'pre-wrap' , lineHeight: '2'},
+        cellStyle: { whiteSpace: "pre-wrap", lineHeight: "2" },
         sortable: false,
-       
       },
       {
         headerName: "Protocol",
@@ -288,7 +291,7 @@ export default {
         // editable: true,
         minWidth: 300,
         autoHeight: true,
-        cellStyle: {  whiteSpace: 'pre-wrap' , lineHeight: '2' },
+        cellStyle: { whiteSpace: "pre-wrap", lineHeight: "2" },
         sortable: false,
       },
       {
@@ -297,7 +300,6 @@ export default {
         // editable: true,
         minWidth: 125,
         sortable: false,
-
       },
       {
         headerName: "Destination",
@@ -305,27 +307,24 @@ export default {
         // editable: true,
         minWidth: 300,
         autoHeight: true,
-        cellStyle: { whiteSpace: 'pre-wrap' , lineHeight: '2'},
+        cellStyle: { whiteSpace: "pre-wrap", lineHeight: "2" },
         sortable: false,
-
       },
-      
+
       {
         headerName: "Revision",
         field: "rev",
         // editable: true,
         minWidth: 125,
         sortable: false,
-
       },
-      
+
       {
         headerName: "Status",
         field: "activate_rule",
         editable: true,
         minWidth: 100,
         sortable: false,
-
       },
 
       // {
@@ -350,6 +349,7 @@ export default {
       const row = event.data;
       row.isModified = true;
     };
+
     const onGridReady = (params) => {
       gridApi.value = params.api;
       gridColumnApi.value = params.columnApi;
@@ -359,6 +359,7 @@ export default {
           node.setSelected(node.rowIndex === 0)
         );
       }
+      
     };
     // DefaultColDef sets props common to all Columns
     const defaultColDef = {
@@ -438,62 +439,59 @@ export default {
         ],
       });
     };
-    
+
     function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-          const cookies = document.cookie.split(";");
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === name + "=") {
-              cookieValue = decodeURIComponent(
-                cookie.substring(name.length + 1)
-              );
-              break;
-            }
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
           }
         }
-        return cookieValue;
       }
-      const reloadData = async() => {
-  
-        const csrfToken = getCookie("csrftoken");
-        axios.defaults.headers.common["X-CSRFToken"] = csrfToken; 
-        state.loading = true;
-        state.isLoadingDialogue = true;
-        try {
+      return cookieValue;
+    }
+    const reloadData = async () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      state.loading = true;
+      state.isLoadingDialogue = true;
+      try {
         const response = await axios.post(
           "activerSuricataUpdate/" + props.configInfo
         );
-        if (response.status === 200 ) {
+        if (response.status === 200) {
           state.loading = false;
           state.isLoadingDialogue = false;
           state.snackbar = true;
           // state.messages=response.data.message
           showMessage({
-                color: "success",
-                text: "All rules saved successfully!!",
-              });
-            } else {
+            color: "success",
+            text: "All rules saved successfully!!",
+          });
+        } else {
           state.loading = false;
           state.isLoadingDialogue = false;
           state.snackbar = true;
-              showMessage({
-                color: "error",
-                text: "Failed to update rule!",
-              });
-            }
+          showMessage({
+            color: "error",
+            text: "Failed to update rule!",
+          });
+        }
       } catch (error) {
         state.loading = false;
-          state.isLoadingDialogue = false;
-          state.snackbar = true;
+        state.isLoadingDialogue = false;
+        state.snackbar = true;
         showMessage({
           color: "error",
           text: error,
         });
       }
     };
-  
+
     const save = async () => {
       let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
       const dataToSend = modifiedRows.map((row) => {
@@ -510,7 +508,7 @@ export default {
           id: row.id,
         };
       });
-    
+
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       try {
@@ -546,7 +544,6 @@ export default {
         });
       }
     };
-    
 
     const cancel = () => {
       rowDataRules.value = rowDataRules.value.filter((row) => row.id);
@@ -562,7 +559,7 @@ export default {
     };
     const showMessage = (message) => {
       // Show a new message in the alert
-      state.messages.push({ 
+      state.messages.push({
         color: message.color,
         text: message.text,
         snackbar: true,
@@ -584,8 +581,7 @@ export default {
         currentIndex.value = 0;
         setTimeout(() => {
           // location.reload();
-        },3000)
-       
+        }, 3000);
       } else {
         // Increment the index if not all messages are read
         currentIndex.value += 1;
@@ -623,7 +619,6 @@ export default {
                   color: "success",
                   text: "Delete rule Successfully!",
                 });
-               
               } else {
                 showMessage({
                   color: "error",
@@ -677,22 +672,38 @@ export default {
       });
       return eGui;
     }
+    const getData = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-    onMounted(async () => {
-      try {
-        rowDataRules.value = document.getElementById("app").attributes[
-          "rules_suricata"
-        ].value;
-        
-        let validJsonString2 = rowDataRules.value
-          .replace(/True/g, "true")
-          .replace(/False/g, "false")
-          .replace(/None/g, "null");
-        let parsedArray2 = JSON.parse(validJsonString2);
-        rowDataRules.value = parsedArray2;
-      } catch (error) {
-        console.error("Error setting rowDataRules:", error);
-      }
+      axios
+        .get(`/ids-ips/getRulesFromDatabase/${state.page}`)
+        .then((response) => {
+          console.log("response", response);
+          rowDataRules.value = response.data.rules;
+          state.nombrePageRules = response.data.nombrePageRules;
+        })
+        .catch((e) => {
+          console.log("e", e.response);
+        });
+    };
+    onMounted(() => {
+      getData();
+
+      // try {
+      //   rowDataRules.value = document.getElementById("app").attributes[
+      //     "rules_suricata"
+      //   ].value;
+
+      //   let validJsonString2 = rowDataRules.value
+      //     .replace(/True/g, "true")
+      //     .replace(/False/g, "false")
+      //     .replace(/None/g, "null");
+      //   let parsedArray2 = JSON.parse(validJsonString2);
+      //   rowDataRules.value = parsedArray2;
+      // } catch (error) {
+      //   console.error("Error setting rowDataRules:", error);
+      // }
     });
 
     return {
@@ -727,7 +738,7 @@ export default {
       showMessage,
       updateIndex,
       reloadData,
-
+      getData,
     };
   },
 };

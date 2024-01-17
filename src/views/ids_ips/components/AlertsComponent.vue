@@ -23,7 +23,7 @@
       <v-col cols="12">
         <h4>List of alerts</h4>
         <v-divider></v-divider>
-        <div style="display: flex; flex-direction: column;">
+        <div style="display: flex; flex-direction: column" class="mb-10">
           <div v-for="(message, index) in state.messages" :key="index">
             <v-alert
               v-model="message.snackbar"
@@ -41,7 +41,7 @@
               <span class="c-o ml-3">
                 <strong>{{ message.color }} </strong> {{ message.text }}
               </span>
-              <span class="ml-16" style="margin-top: 20px !important;">
+              <span class="ml-16" style="margin-top: 20px !important">
                 <i
                   class="fas fa-times justify-end cursor"
                   @click="handleRemove(index)"
@@ -49,17 +49,22 @@
               </span>
             </v-alert>
           </div>
-        <v-row>
+          <v-card class="mt-3">
+            <v-card-title>
+
+          <v-row>
             <v-col cols="12" md="6">
               <v-text-field
                 id="filter-text-box"
+                class="mb-3"
                 v-model="filterText"
                 placeholder="Search"
-                clearable
+                density="compact"
+                rounded
+                variant="solo"
                 hide-details
                 dense
                 prepend-inner-icon="mdi-magnify"
-                variant="outlined"
                 @input="onFilterTextBoxChanged"
               ></v-text-field>
             </v-col>
@@ -69,10 +74,11 @@
               </v-btn>
             </v-col>
           </v-row>
+        </v-card-title>
+        <v-card-text>
 
           <div>
             <ag-grid-vue
-              
               id="grid-wrapper"
               domLayout="autoHeight"
               class="ag-theme-alpine mt-3"
@@ -84,32 +90,24 @@
               :rowGroupPanelShow="rowGroupPanelShow"
               @cell-clicked="cellWasClicked"
               @grid-ready="onGridReady"
-              :pagination="true"
-              :paginationPageSize="10"
+         
             />
-          
-        
-    </div>
-  </div>
+          </div>
+          <v-pagination
+                class="mt-5"
+                v-model="state.page"
+                :length="state.nombrePageAlerts"
+                @update:model-value="getData"
+              ></v-pagination>
+            </v-card-text>
+          </v-card>
+        </div>
       </v-col>
     </v-row>
   </div>
 </template>
 
-<style scoped>
-.grid-container {
-  height: 400px;
-  max-height: 100%; /* Ajustez cette valeur en fonction de vos besoins */
-  overflow-y: auto;
-  overflow-x: auto; /* Ajoutez cette ligne pour la défilement horizontal */
-}
 
-</style>
-<style lang="scss">
-.small-refresh-icon {
-  font-size: 16px; /* Ajustez la taille selon vos besoins */
-}
-</style>
 <script>
 import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -131,6 +129,8 @@ export default {
   setup(props) {
     const emitter = inject("emitter");
     const state = reactive({
+      nombrePageAlerts: null,
+      page: 1,
       loading: false,
       isLoadingDialogue: false,
       snackbar: false,
@@ -168,14 +168,13 @@ export default {
         field: "sid",
         minWidth: 150,
         sortable: false,
-
       },
       {
         headerName: "Message",
         field: "message",
         minWidth: 420,
         autoHeight: true,
-        cellStyle: { whiteSpace: 'pre-wrap' , lineHeight: '2'},
+        cellStyle: { whiteSpace: "pre-wrap", lineHeight: "2" },
         sortable: false,
       },
       {
@@ -183,47 +182,37 @@ export default {
         field: "priority",
         minWidth: 120,
         sortable: false,
-
       },
       {
         headerName: "Protocol",
         field: "protocol",
-         minWidth: 120,
-         sortable: false,
-
+        minWidth: 120,
+        sortable: false,
       },
       {
         headerName: "Source",
         field: "src_addr",
         minWidth: 150,
         sortable: false,
-
       },
       {
-    
         headerName: "Port",
         field: "src_port",
         minWidth: 100,
         sortable: false,
-
       },
       {
         headerName: "Destination",
         field: "dst_addr",
         minWidth: 150,
         sortable: false,
-
       },
       {
-    
-    headerName: "Port",
-    field: "dst_port",
-    minWidth: 100,
-    sortable: false,
-
-  },
-
-
+        headerName: "Port",
+        field: "dst_port",
+        minWidth: 100,
+        sortable: false,
+      },
     ];
     const onFilterTextBoxChanged = () => {
       gridApi.value.setQuickFilter(
@@ -236,9 +225,7 @@ export default {
     };
     const gridApi = ref(null); // Optional - for accessing Grid's API
     const gridOptions = ref({
-      pagination: true,
-        paginationPageSize: 5,
-        rowSelection: "single",  
+      rowSelection: "single",
     });
     // Obtain API from grid's onGridReady event
     const onGridReady = (params) => {
@@ -250,7 +237,7 @@ export default {
       sortable: true,
       filter: true,
       flex: 1,
-    };                            
+    };
     const autoGroupColumnDef = {
       headerName: "Server Name",
       field: "serverNname",
@@ -261,9 +248,6 @@ export default {
     };
     const rowGroupPanelShow = ref("always");
 
-    
-
-    
     const publishServer = () => {
       console.log("publishServer");
     };
@@ -279,14 +263,14 @@ export default {
         snackbar: true,
       });
       // Automatically close the alert after a specified delay
-     const lastIndex = state.messages.length - 1;
+      const lastIndex = state.messages.length - 1;
       setTimeout(() => {
         state.messages[lastIndex].snackbar = false;
         state.messages[lastIndex].read = true; // Mark the message as read
         updateIndex(); // Update the index after setting a message as read
       }, 2000 * (lastIndex + 1));
     };
-     
+
     const updateIndex = () => {
       // Check if all messages are read
       const allRead = state.messages.every((message) => message.read);
@@ -296,8 +280,7 @@ export default {
         currentIndex.value = 0;
         setTimeout(() => {
           location.reload();
-        },1000)
-       
+        }, 1000);
       } else {
         // Increment the index if not all messages are read
         currentIndex.value += 1;
@@ -307,61 +290,74 @@ export default {
       console.log("publishClient");
     };
     function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-          const cookies = document.cookie.split(";");
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === name + "=") {
-              cookieValue = decodeURIComponent(
-                cookie.substring(name.length + 1)
-              );
-              break;
-            }
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
           }
         }
-        return cookieValue;
       }
-    const reloadData = async() => {
-        const csrfToken = getCookie("csrftoken");
-        axios.defaults.headers.common["X-CSRFToken"] = csrfToken; 
-        state.loading = true;
-        state.isLoadingDialogue = true;
-        try {
+      return cookieValue;
+    }
+    const reloadData = async () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      state.loading = true;
+      state.isLoadingDialogue = true;
+      try {
         const response = await axios.post(
           "/ids-ips/addalertsToDatabase/" + props.configInfo
         );
-        if (response.status === 200 ) {
+        if (response.status === 200) {
           state.loading = false;
           state.isLoadingDialogue = false;
           state.snackbar = true;
           // state.messages=response.data.message
           showMessage({
-                color: "success",
-                text: "All alerts saved successfully!!",
-              });
-            } else {
+            color: "success",
+            text: "All alerts saved successfully!!",
+          });
+        } else {
           state.loading = false;
           state.isLoadingDialogue = false;
           state.snackbar = true;
-              showMessage({
-                color: "error",
-                text: "Failed to save rule!",
-              });
-            }
+          showMessage({
+            color: "error",
+            text: "Failed to save rule!",
+          });
+        }
       } catch (error) {
-          state.loading = false;
-          state.isLoadingDialogue = false;
-          state.snackbar = true;
+        state.loading = false;
+        state.isLoadingDialogue = false;
+        state.snackbar = true;
         showMessage({
           color: "error",
           text: error,
         });
       }
     };
-  
+    const getData = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios
+        .get(`/ids-ips/GetAlertsFromDatabase/${state.page}`)
+        .then((response) => {
+          console.log("response", response);
+          rowDataAlerts.value = response.data.alerts;
+          state.nombrePageAlerts = response.data.nombrePageAlerts;
+        })
+        .catch((e) => {
+          console.log("e", e.response);
+        });
+    };
 
     onMounted(async () => {
+      getData();
       // try {
       //   rowDataAlerts.value=document.getElementById("app").attributes["alerts_suricata"].value;
       //   let validJsonString3 =  rowDataAlerts.value
@@ -370,7 +366,6 @@ export default {
       //     .replace(/None/g, "null");
       //   let parsedArray3 = JSON.parse(validJsonString3);
       //   rowDataAlerts.value = parsedArray3;
-
       // } catch (error) {
       //   console.error("Error setting rowDataAlerts:", error);
       // }
@@ -385,8 +380,7 @@ export default {
       emitter,
       gridOptions,
       state,
-      
-      
+
       cellWasClicked: (event) => {
         // Example of consuming Grid Event
         console.log("cell was clicked", event);
@@ -403,11 +397,22 @@ export default {
       showMessage,
       handleRemove,
       updateIndex,
-     
+      getData
     };
   },
 };
 </script>
 
-<style lang="scss"></style>
-
+<style scoped>
+.grid-container {
+  height: 400px;
+  max-height: 100%; /* Ajustez cette valeur en fonction de vos besoins */
+  overflow-y: auto;
+  overflow-x: auto; /* Ajoutez cette ligne pour la défilement horizontal */
+}
+</style>
+<style lang="scss">
+.small-refresh-icon {
+  font-size: 16px; /* Ajustez la taille selon vos besoins */
+}
+</style>

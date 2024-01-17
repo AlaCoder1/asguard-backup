@@ -28,10 +28,9 @@ from django.views.decorators.csrf import csrf_exempt
 
 # API to get all users
 
-
-@csrf_exempt
-#@authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def getAllUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -53,7 +52,7 @@ def getAllUsers(request):
 # API to get one user
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def getUser(request, id):
     if (request.method == 'GET'):
         user = User.objects.filter(id=id)
@@ -74,7 +73,7 @@ def getUser(request, id):
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def createUser(request):
     msg = ''
     if (request.method == 'POST'):
@@ -172,8 +171,7 @@ def createUser(request):
 
 # API to delete group
 @api_view(['DELETE'])
-# @authentication_classes([AllowAny])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
 def delete_user(request, id):
     msg = ""
     if (request.method == 'DELETE'):
@@ -196,7 +194,7 @@ def delete_user(request, id):
 # API to update user
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def modifyUser(request, id):
     if (request.method == 'PUT'):
         userById = User.objects.filter(id=id)

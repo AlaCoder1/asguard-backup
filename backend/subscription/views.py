@@ -193,19 +193,38 @@ def if_subscribed(indexs_plans_feature):
 def list_features_about_last_subscription(request):
     list_features = []
     if request.method == 'GET':
-        last_subscription = plansSubscription.objects.order_by('start_at').last()
-        last_subscription_dict = last_subscription.__dict__
-        if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
-            print({"plan_id_from_last_subscription":last_subscription.plan.pk})
-            plan_features= plansFeatures.objects.filter(plan = last_subscription.plan.pk)
-            plan_features_dict = serializers.serialize("json", plan_features)
-            res = json.loads(plan_features_dict)
-            print({"plan_features":res[0]})
-            for i in res:
-                for key, value in i.items():
-                    print(f"Key: {key}, Value: {value}")
-                    if key == 'fields':
-                        list_features.append(i['fields']['description'])
-            print({"list_features":list_features})
-        
+        if last_subscription ==None:
+            last_subscription = plansSubscription.objects.order_by('start_at').last()
+            last_subscription_dict = last_subscription.__dict__
+            if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+                print({"plan_id_from_last_subscription":last_subscription.plan.pk})
+                plan_features= plansFeatures.objects.filter(plan = last_subscription.plan.pk)
+                plan_features_dict = serializers.serialize("json", plan_features)
+                res = json.loads(plan_features_dict)
+                print({"plan_features":res[0]})
+                for i in res:
+                    for key, value in i.items():
+                        print(f"Key: {key}, Value: {value}")
+                        if key == 'fields':
+                            list_features.append(i['fields']['description'])
+        else:
+            list_features = []
         return JsonResponse({"msg": list_features}, status=400)
+    
+def subscription_info(request):
+    subscription_info = {}
+    if request.method == 'GET':
+        if last_subscription ==None:
+            last_subscription = plansSubscription.objects.order_by('start_at').last()
+            last_subscription_dict = last_subscription.__dict__
+            if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+                plan_info = plan.objects.get(id = last_subscription_dict['id'])
+                print({"slug":plan_info.slug})
+                print({"date_start":last_subscription_dict['start_at']})
+                print({"end_at":last_subscription_dict['end_at']})
+                subscription_info['type_pack'] =plan_info.slug
+                subscription_info['date_start'] =last_subscription_dict['start_at']
+                subscription_info['type_pack'] =last_subscription_dict['start_at']
+        else:
+            subscription_info = {}
+        return JsonResponse({"msg": subscription_info}, status=400)

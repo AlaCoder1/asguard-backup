@@ -208,4 +208,4 @@ def list_features_about_last_subscription(request):
                         list_features.append(i['fields']['description'])
             print({"list_features":list_features})
         
-        return JsonResponse({"msg": "you subscribed declined"}, status=400)
+        return JsonResponse({"msg": list_features}, status=400)

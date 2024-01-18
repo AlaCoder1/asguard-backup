@@ -192,6 +192,10 @@ export default {
               "Value is required",
               requiredIf(() => modalMode.value === "create")
             ),
+            isValiduserName: helpers.withMessage(
+              `Champs can include only letters in lowerCase & Numbers & underscores & hyphens without space.`,
+              helpers.regex(/^[^A-Z\s]+$/)
+            ),
           },
           email: {
             required: helpers.withMessage(
@@ -253,7 +257,7 @@ export default {
 
         let payload = {
           email: state.formData.email,
-          username: state.formData.userName.toLowerCase(),
+          username: state.formData.userName,
           password: state.formData.password,
         };
 

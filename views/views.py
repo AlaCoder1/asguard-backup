@@ -584,10 +584,11 @@ def clamav_page(request):
     print('******************** :',context)
     return render(request, 'clamaV_page.html',context)
 
-
 @login_required(login_url='/')
 def subscription_page(request):
-    context = {}
+    subscription_information=subscription_info(request)
+    print('subscription_information',subscription_information)
+    context = {'subscription_information':json.dumps(subscription_information)}
     return render(request, 'subscription_page.html', context)
 
 
@@ -675,12 +676,12 @@ def subscription_info(request):
         last_subscription = plansSubscription.objects.order_by('start_at').last()
         if last_subscription != None:
             last_subscription_dict = last_subscription.__dict__
-            if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
-                plan_info = plan.objects.get(id = last_subscription_dict['id'])
-                subscription_info['type_pack'] =plan_info.slug
-                subscription_info['date_start'] =last_subscription_dict['start_at'].strftime('%Y-%m-%d %H:%M:%S')
-                subscription_info['end_at'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
-                subscription_info['expiration_date'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
+            # if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+            plan_info = plan.objects.get(id = last_subscription_dict['plan_id'])
+            subscription_info['type_pack'] =plan_info.slug
+            subscription_info['date_start'] =last_subscription_dict['start_at'].strftime('%Y-%m-%d %H:%M:%S')
+            subscription_info['end_at'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
+            subscription_info['expiration_date'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
         else:
             subscription_info = {}
-        return JsonResponse({"msg": "subscription_info"}, status=400)
+        return subscription_info

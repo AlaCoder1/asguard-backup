@@ -28,7 +28,7 @@ SECRET_KEY = 'mmj@uz23n!%6u4#$b1&%f(7l*rr(9qx%am)wyk@s4ugeuam52m'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 ##appel function to update CSRF_TRUSTED_ORIGINS
 CORS_ALLOWED_ORIGINS = ['https://*']

@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     "backend.ids_ips",
     "backend.clamav",
     'backend.proxy',
+    'backend.sdwan',
     'channels',
     'drf_yasg',
 ]
@@ -235,4 +236,12 @@ PASSWORD=None
 EMAIL_HOST = 'smtp.office365.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'mh.benelghali@numeryx.fr'  
-EMAIL_HOST_PASSWORD = 'Ess4live***'  
+EMAIL_HOST_PASSWORD = 'Ess4live***'
+
+# Celery configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'

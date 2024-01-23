@@ -252,9 +252,11 @@ const getAllCertAuth = () => {
         return {
           id: i.id,
           name: i.name,
+          is_private_key: i.is_private_key,
         };
       });
-      mapedCertifAuth.value = mapedList;
+
+      mapedCertifAuth.value = mapedList.filter((i) => i.is_private_key);
     },
     (error) => {
       console.log(error);
@@ -272,12 +274,17 @@ const getAllClientCertif = () => {
         (i) => i.certificate_type === "client"
       );
 
-      clientCertificateList.value = mapedListCertif.map((i) => {
+      let clientCerticateList = mapedListCertif.map((i) => {
         return {
           id: i.id,
           name: i.name,
+          is_private_key: i.is_private_key,
         };
       });
+
+      clientCertificateList.value = clientCerticateList.filter(
+        (i) => i.is_private_key
+      );
     },
     (error) => {
       console.log(error);

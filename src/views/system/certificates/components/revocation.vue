@@ -76,17 +76,18 @@ export default {
       isModalOpen: false,
 
       columnRevocation: [
-        { headerName: "nom", field: "nom" },
+        { headerName: "nom", field: "nom",width: 300 },
         {
           headerName: "list of authority certificate",
           field: "list_revoc",
+          width: 400
         },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,
           editable: false,
           sortable: false,
-          filter: false,
+          filter: false
         },
       ],
       rowDataRevocation: null,

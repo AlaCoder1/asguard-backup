@@ -88,17 +88,16 @@ export default {
       rowEdit: {},
       isModalOpen: false,
       columnAuthority: [
-        { headerName: "nom", field: "nom", minWidth: 150 },
-        { headerName: "certificats", field: "certificats", minWidth: 150 },
+        { headerName: "nom", field: "nom",width: 200 },
+        { headerName: "certificats", field: "certificats",width: 200 },
         {
           headerName: "distingushed name",
           cellRenderer: this.formatedDn,
-          minWidth: 100,
+          width: 400
         },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,
-          minWidth: 150,
           editable: false,
           sortable: false,
           filter: false,

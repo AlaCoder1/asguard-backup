@@ -215,8 +215,8 @@ export default {
       modalData: {},
       isModalOpen: false,
       columnCertificats: [
-        { headerName: "nom", field: "nom" },
-        { headerName: "distingushed name", cellRenderer: this.formatedDn },
+        { headerName: "nom", field: "nom",width: 300 },
+        { headerName: "distingushed name", cellRenderer: this.formatedDn,width: 400 },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,

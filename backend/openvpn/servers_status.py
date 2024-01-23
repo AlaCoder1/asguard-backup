@@ -61,14 +61,26 @@ def synchronize_server_table(list_vpn_interfaces):
     """Synchronize server table with system. 
     This function take list of opening openvpn interfaces and change server_status of running severs to True"""
     for vpn_interface_tun in list_vpn_interfaces:
-        vpn_server = ServerOpenvpn.objects.get(name__startswith=vpn_interface_tun)
+        # In case of existing another servers there names starts with this server name we take the server with this name
+        # Example: 2 servers "server" and "server_copy" we take "server"
+        list_vpn_server = ServerOpenvpn.objects.filter(name__startswith=vpn_interface_tun)
+        if len(list_vpn_server) > 1:
+            vpn_server = ServerOpenvpn.objects.get(name=vpn_interface_tun)
+        else:
+            vpn_server = list_vpn_server[0]
         vpn_server.server_status = True
         vpn_server.save()
 
 
 def synchronize_interface_table(list_interfaces, device_mode):
     for interface in list_interfaces:
-        server = ServerOpenvpn.objects.get(name__startswith=interface)
+        # In case of existing another servers there names starts with this server name we take the server with this name
+        # Example: 2 servers "server" and "server_copy" we take "server"
+        list_vpn_server = ServerOpenvpn.objects.filter(name__startswith=interface)
+        if len(list_vpn_server) > 1:
+            server = ServerOpenvpn.objects.get(name=interface)
+        else:
+            server = list_vpn_server[0]
         interface_data = {"ifname": f'{device_mode}_{interface}',
                           "name_interface": server.name}
         interface_serializer = InterfaceOpenVPNSerializer(data=interface_data)

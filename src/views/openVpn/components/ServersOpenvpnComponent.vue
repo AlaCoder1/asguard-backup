@@ -325,7 +325,7 @@ export default {
       concurrentConnections: "",
       compression: { name: "No preference", slug: "no_preference" },
       typefService: false,
-      Connections: false,
+      Connections: true,
       IPv6: false,
       interClients: false,
       //clientSettings
@@ -590,6 +590,8 @@ export default {
         if (!newValue) {
           state.startAddressPool = "";
           state.endAddressPool = "";
+        } else {
+          state.topology = false;
         }
       }
     );
@@ -626,6 +628,15 @@ export default {
           state.endDHCPBridge = "";
         }
       }
+    );
+    watch(
+      () => state.topology,
+      (newValue) => {
+        if (newValue) {
+          state.adressPool = false;
+        }
+      },
+      { deep: true }
     );
 
     onMounted(() => {
@@ -948,7 +959,7 @@ export default {
       state.concurrentConnections = "";
       state.compression = { name: "No preference", slug: "no_preference" };
       state.typefService = false;
-      state.Connections = false;
+      state.Connections = true;
       state.IPv6 = false;
       state.interClients = false;
       //clientSettings

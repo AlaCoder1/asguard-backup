@@ -18,7 +18,7 @@ from .models import ServerOpenvpn, ClientOpenvpn
 from .serializers import ServerOpenvpnSerializer, ClientOpenvpnSerializer
 from .utils import json_to_str_client, json_to_str_server
 from .server_openvpn import install_server_openvpn_in_system, delete_server_openvpn_in_system, update_server_openvpn_in_system
-from .client_openvpn import delete_client_openvpn, export_client_in_system, install_client_openvpn, update_client_openvpn
+from .client_openvpn import delete_client_openvpn_in_system, export_client_in_system, install_client_openvpn_in_system, update_client_openvpn_in_system
 
 # Create your views here.
 
@@ -159,7 +159,7 @@ def create_server_openvpn(request):
                         "server_mode": server_mode,
                         "proto": proto,
                         "dev": dev,
-                        "interface": interface,
+                        "interface": interface_name,
                         "port": port,
                         "ca_name": ca_name,
                         "cert_name": server_cert_name,
@@ -654,7 +654,7 @@ def create_client_openvpn(request):
                 client_conf = json_to_str_client(data)
                 
                 # Install the client in system
-                install_client_openvpn(client_name=data["name"], client_conf=client_conf, tls_auth=tls_auth)
+                install_client_openvpn_in_system(client_name=data["name"], client_conf=client_conf, tls_auth=tls_auth)
 
                 # Add the client to the database
                 client_serializer.save()
@@ -682,7 +682,7 @@ def delete_client_openvpn(request, id):
             client = ClientOpenvpn.objects.get(id=id)
 
             # Delete the client from system
-            delete_client_openvpn(client.name)
+            delete_client_openvpn_in_system(client.name)
 
             # Delete the client from database
             client.delete()
@@ -798,7 +798,7 @@ def update_client_openvpn(request, id):
                 client_conf = json_to_str_client(data)
 
                 # Updating the client in system
-                update_client_openvpn(previous_client_name=previous_name, client_name=client.name, client_conf=client_conf, 
+                update_client_openvpn_in_system(previous_client_name=previous_name, client_name=client.name, client_conf=client_conf, 
                                       tls_auth=tls_auth)
 
                 # Updating the client in database
@@ -888,13 +888,16 @@ def generate_client_openvpn(request, id):
             data['pull_routes'] = False
             data['add_remove_routes'] = False
             data['verbosity_level'] = '3'
+            data['server_remote'] = [{"port": server.port}]
 
             if server.interface != "Any":
                 server_interface = Interface.objects.get(name_interface=server.interface)
                 interface_address = IP4Config.objects.get(interface_id=server_interface)
                 server_remote = f'{interface_address.ip_address}:{server.port}'
-                data['server_remote'] = [{"host": interface_address.ip_address,
-                                          "port": server.port}]
+                data['server_remote'][0]["host"] = interface_address.ip_address
+            else:
+                server_remote = f"{data['interface_address']}:{server.port}"
+                data['server_remote'][0]["host"] = data['interface_address']
 
             client_data = {"name": name,
                            "description": f"Client generate from server {server.name}",
@@ -932,7 +935,7 @@ def generate_client_openvpn(request, id):
                 client_conf = json_to_str_client(data)
                 
                 # Install the client in system
-                install_client_openvpn(client_name=name, client_conf=client_conf, tls_auth=tls_auth)
+                install_client_openvpn_in_system(client_name=name, client_conf=client_conf, tls_auth=tls_auth)
 
                 # Add the client to the database
                 client_serializer.save()

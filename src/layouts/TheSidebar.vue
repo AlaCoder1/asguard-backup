@@ -23,7 +23,7 @@
 
           <div class="ml-5 mt-5 mr-5">
             <v-icon v-if="!rail"
-              ><i class="mdi mdi-menu icon-custom"></i
+              ><i class="mdi mdi-close icon-custom"></i
             ></v-icon>
           </div>
         </div>
@@ -81,7 +81,7 @@
         class="ml-5 mt-5 mr-5 row-pointer asguard_primary_dark"
         @click="closeSidebar"
       >
-        <v-icon v-if="rail"><i class="mdi mdi-close icon-custom"></i></v-icon>
+        <v-icon v-if="rail"><i class="mdi mdi-menu icon-custom"></i></v-icon>
       </div>
 
       <v-list>

@@ -390,10 +390,27 @@ export default {
           requiredIfFuction: requiredIf(
             () => !state.isBridge && !state.adressPool
           ),
+          isValidIp4Tunnel: helpers.withMessage(
+            `Format must be like : X.X.X.X/X`,
+
+            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+          ),
         },
         iPv4Local: {
           requiredIfFuction: requiredIf(
             () => !state.isBridge && !state.adressPool
+          ),
+          isValidIPv4Local: helpers.withMessage(
+            `Format must be like : X.X.X.X/X`,
+
+            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+          ),
+        },
+        iPv4Remote: {
+          isValidIPv4Remote: helpers.withMessage(
+            `Format must be like : X.X.X.X/X`,
+
+            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
         interfaceBridge: {
@@ -409,18 +426,60 @@ export default {
         },
         startDHCPBridge: {
           requiredIfFuction: requiredIf(() => state.isBridge),
+          isValidStartDHCPBridge: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
         endDHCPBridge: {
           requiredIfFuction: requiredIf(() => state.isBridge),
+
+          isValidEndDHCPBridge: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
         activeDnsDefault: {
           requiredIfFuction: requiredIf(() => state.dnsDefaultDomain),
+          isValidActiveDnsDefault: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
         activeDnsServer1: {
           requiredIfFuction: requiredIf(() => state.dnsServers),
+
+          isValidActiveDnsServer1: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+        activeDnsServer2: {
+          isValidActiveDnsServer2: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+        activeNtpServer2: {
+          isValidActiveNtpServer2: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
         activeNtpServer1: {
           requiredIfFuction: requiredIf(() => state.ntpServers),
+
+          isValidActiveNtpServer1: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
       };
     });

@@ -34,7 +34,7 @@
       v-model="peerCertif"
       item-title="name"
       item-value="id"
-      :items="state.mapedCertifAuth"
+      :items="props.mapedCertifAuth"
       return-object
     ></v-select>
     <p
@@ -53,7 +53,7 @@
       v-model="serverCertif"
       item-title="name"
       item-value="id"
-      :items="state.mapedCertifServer"
+      :items="props.mapedCertifServer"
       return-object
     ></v-select>
     <p
@@ -145,6 +145,8 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 
 const props = defineProps([
   "errors",
+  "mapedCertifServer",
+  "mapedCertifAuth",
   "tlsGenerate",
   "isEnableAuth",
   "peerCertif",
@@ -175,16 +177,9 @@ const {
   tlsGenerate,
 } = useVModels(props, emit);
 
-onBeforeMount(() => {
-  getCertif();
-  getAllCertAuth();
-});
-
 const state = reactive({
   authoritesData: null,
   certifData: null,
-  mapedCertifAuth: [],
-  mapedCertifServer: [],
 });
 const authDigestList = ref([
   {
@@ -221,65 +216,6 @@ const authDigestList = ref([
     slug: "SHA3-512",
   },
 ]);
-
-const getCookie = (name) => {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === name + "=") {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-};
-
-const getCertif = () => {
-  const csrfToken = getCookie("csrftoken");
-  axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-  axios.get("/certificates/getAllCertificates").then(
-    (response) => {
-      let mapedListCertif = response.data.filter(
-        (i) => i.certificate_type === "server"
-      );
-      let mapedCertServer = mapedListCertif.map((i) => {
-        return {
-          id: i.id,
-          name: i.name,
-          is_private_key: i.is_private_key,
-        };
-      });
-      state.mapedCertifServer = mapedCertServer.filter((i) => i.is_private_key);
-    },
-    (error) => {
-      console.log(error);
-    }
-  );
-};
-const getAllCertAuth = () => {
-  const csrfToken = getCookie("csrftoken");
-  axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-  axios.get("/certificates/getAllCertAuth").then(
-    (response) => {
-      let mapedList = response.data.map((i) => {
-        return {
-          id: i.id,
-          name: i.name,
-          is_private_key: i.is_private_key,
-        };
-      });
-      state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
-    },
-    (error) => {
-      console.log(error);
-    }
-  );
-};
 </script>
 
 <style lang="scss"></style>

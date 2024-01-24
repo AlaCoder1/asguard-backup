@@ -156,6 +156,8 @@
                   v-model:encryptAlgo="state.encryptAlgo"
                   v-model:authDigest="state.authDigest"
                   v-model:hardwareCrypto="state.hardwareCrypto"
+                  :mapedCertifServer="state.mapedCertifServer"
+                  :mapedCertifAuth="state.mapedCertifAuth"
                   :errors="v$"
                 />
               </v-row>
@@ -285,6 +287,8 @@ export default {
       isLoadingDialogue: false,
 
       mapedCertifServer: [],
+      mapedCertifAuth: [],
+      filtredMapCertif: [],
       snackbar: false,
       color: "",
       textAlert: "",
@@ -564,6 +568,47 @@ export default {
       );
     };
 
+    // const getCertif = () => {
+    //   const csrfToken = getCookie("csrftoken");
+    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+    //   axios.get("/certificates/getAllCertificates").then(
+    //     (response) => {
+    //       let mapedListCertif = response.data.filter(
+    //         (i) => i.certificate_type === "server"
+    //       );
+    //       state.mapedCertifServer = mapedListCertif.map((i) => {
+    //         return {
+    //           id: i.id,
+    //           name: i.name,
+    //         };
+    //       });
+    //     },
+    //     (error) => {
+    //       console.log(error);
+    //     }
+    //   );
+    // };
+    // const getAllCertAuth = () => {
+    //   const csrfToken = getCookie("csrftoken");
+    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+    //   axios.get("/certificates/getAllCertAuth").then(
+    //     (response) => {
+    //       let mapedList = response.data.map((i) => {
+    //         return {
+    //           id: i.id,
+    //           name: i.name,
+    //         };
+    //       });
+    //       state.mapedCertifAuth = mapedList;
+    //     },
+    //     (error) => {
+    //       console.log(error);
+    //     }
+    //   );
+    // };
+
     const getCertif = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -573,12 +618,17 @@ export default {
           let mapedListCertif = response.data.filter(
             (i) => i.certificate_type === "server"
           );
-          state.mapedCertifServer = mapedListCertif.map((i) => {
+          let mapedCertServer = mapedListCertif.map((i) => {
             return {
               id: i.id,
               name: i.name,
+              is_private_key: i.is_private_key,
+              certificate_authority: i.certificate_authority,
             };
           });
+          state.filtredMapCertif = mapedCertServer.filter(
+            (i) => i.is_private_key
+          );
         },
         (error) => {
           console.log(error);
@@ -595,9 +645,10 @@ export default {
             return {
               id: i.id,
               name: i.name,
+              is_private_key: i.is_private_key,
             };
           });
-          state.mapedCertifAuth = mapedList;
+          state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
         },
         (error) => {
           console.log(error);
@@ -697,6 +748,19 @@ export default {
       },
       { deep: true }
     );
+    watch(
+      () => state.peerCertif,
+      (newValue) => {
+        let serverCert = state.filtredMapCertif.filter(
+          (e) => e.certificate_authority === newValue.id
+        );
+        if (serverCert.length == 0) {
+          state.serverCertif = "";
+          state.mapedCertifServer = serverCert;
+        } else state.mapedCertifServer = serverCert;
+      },
+      { deep: true }
+    );
 
     onMounted(() => {
       getInterface();
@@ -720,7 +784,7 @@ export default {
         let filtredCertifAuth = state.mapedCertifAuth.filter(
           (i) => i.name === data.ca_name
         );
-        let filtredCertiServer = state.mapedCertifServer.filter(
+        let filtredCertiServer = state.filtredMapCertif.filter(
           (i) => i.name === data.cert_name
         );
         state.protocol = filtredProtocol[0];

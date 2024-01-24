@@ -219,6 +219,8 @@
                   v-model:encryptionAlgorithm="state.encryptionAlgorithm"
                   v-model:authDigestAlgorithm="state.authDigestAlgorithm"
                   v-model:hardwareCrypto="state.hardwareCrypto"
+                  :clientCertificateList="state.clientCertificateList"
+                  :mapedCertifAuth="state.mapedCertifAuth"
                   :errors="v$"
                 />
               </v-row>
@@ -416,6 +418,9 @@ export default {
     ]);
 
     const state = reactive({
+      clientCertificateList: [],
+      mapedCertifAuth: [],
+      filtredMapCertif: [],
       id: "",
       isEditState: "",
       //general information
@@ -538,7 +543,7 @@ export default {
         );
         state.peerCertificateAuthority = filtredCert[0];
 
-        let filtredCertiClient = clientCertificateList.value.filter(
+        let filtredCertiClient = state.filtredMapCertif.filter(
           (i) => i.name === data.cert_name
         );
         state.clientCertificate = filtredCertiClient[0];
@@ -676,6 +681,20 @@ export default {
           cancel();
         }
       }
+    );
+
+    watch(
+      () => state.peerCertificateAuthority,
+      (newValue) => {
+        let clientCert = state.filtredMapCertif.filter(
+          (e) => e.certificate_authority === newValue.id
+        );
+        if (clientCert.length == 0) {
+          state.clientCertificate = "";
+          state.clientCertificateList = clientCert;
+        } else state.clientCertificateList = clientCert;
+      },
+      { deep: true }
     );
 
     const getCookie = (name) => {
@@ -855,6 +874,8 @@ export default {
         invalidPortChars
       );
     };
+
+    // const clientCertificateList = ref([]);
     const getAllCertAuth = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -865,16 +886,18 @@ export default {
             return {
               id: i.id,
               name: i.name,
+              is_private_key: i.is_private_key,
             };
           });
-          state.mapedCertifAuth = mapedList;
+
+          state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
         },
         (error) => {
           console.log(error);
         }
       );
     };
-    const clientCertificateList = ref([]);
+
     const getAllClientCertif = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -885,12 +908,18 @@ export default {
             (i) => i.certificate_type === "client"
           );
 
-          clientCertificateList.value = mapedListCertif.map((i) => {
+          let clientCerticateList = mapedListCertif.map((i) => {
             return {
               id: i.id,
               name: i.name,
+              is_private_key: i.is_private_key,
+              certificate_authority: i.certificate_authority,
             };
           });
+
+          state.filtredMapCertif = clientCerticateList.filter(
+            (i) => i.is_private_key
+          );
         },
         (error) => {
           console.log(error);
@@ -1208,7 +1237,7 @@ export default {
       getAllClientCertif,
       getAllCertAuth,
       rowDataCertificats,
-      clientCertificateList,
+      // clientCertificateList,
       Listprotocols,
       addNewRow,
       snackbar,

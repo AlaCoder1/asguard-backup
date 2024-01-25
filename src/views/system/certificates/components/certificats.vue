@@ -52,6 +52,9 @@
         <v-card>
           <v-card-title class="headline">Download Validation</v-card-title>
           <v-card-text>
+            <div>
+              <a :href="imagePath" download="import_cert_p12.p12"> </a>
+            </div>
             <v-container>
               <v-row>
                 <v-col cols="6">
@@ -60,11 +63,6 @@
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
-                  <!-- <span
-                    class="error-feedback"
-                    v-if="v$.formData.password.$error"
-                    >{{ v$.formData.password.$errors[0].$message }}</span
-                  > -->
                 </v-col>
 
                 <v-col cols="6">
@@ -73,13 +71,6 @@
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
-                  <!-- <span
-                    class="error-feedback"
-                    v-if="v$.formData.confirm_password.$error"
-                    >{{
-                      v$.formData.confirm_password.$errors[0].$message
-                    }}</span
-                  > -->
                 </v-col>
               </v-row>
             </v-container>
@@ -127,9 +118,9 @@
 <script>
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { required, sameAs, helpers } from "@vuelidate/validators";
 import { reactive, computed } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
+import FileP12 from "../../../../downloads/import_cert_p12.p12";
 import ModalAddEditCertif from "@/components/modals/ModalAddEditCertif.vue";
 import ModalRevocation from "@/components/modals/ModalRevocation.vue";
 export default {
@@ -149,7 +140,6 @@ export default {
     ModalRevocation,
   },
   setup() {
-    //data
     const state = reactive({
       formData: {
         password: "",
@@ -201,6 +191,7 @@ export default {
   },
   data() {
     return {
+      imagePath: FileP12,
       textAlert: "",
       color: "",
       snackbar: false,
@@ -291,6 +282,13 @@ export default {
     },
   },
   methods: {
+    downloadImage() {
+      const link = document.createElement("a");
+      link.href = this.imagePath;
+      link.download = "import_cert_p12.p12";
+      link.click();
+    },
+
     formatedDn(data) {
       let eGui = document.createElement("div");
 
@@ -319,8 +317,6 @@ export default {
       return cookieValue;
     },
     confirmDownload() {
-      // this.v$.$validate();
-      // if (!this.v$.$error) {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -331,22 +327,13 @@ export default {
       axios
         .post(`/certificates/exportCert/${this.rowId}`, payload)
         .then((response) => {
-          const text = response.data.cert;
-          const blob = new Blob([text], {
-            type: "blob",
-          });
+          setTimeout(() => {
+            this.downloadImage();
+            this.deleteDialog = false;
 
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = "p12.p12";
-
-          document.body.appendChild(a);
-          a.click();
-
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+            this.state.formData.password = "";
+            this.state.formData.confirm_password = "";
+          }, 1000);
         })
         .catch((i) => {
           this.snackbar = true;
@@ -385,7 +372,6 @@ export default {
       this.isModalOpen = false;
       this.isModalOpenRevoce = false;
       this.deleteDialogCertif = false;
-      // location.reload()
     },
     actionCellRenderer(params) {
       let eGui = document.createElement("div");

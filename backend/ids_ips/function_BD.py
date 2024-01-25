@@ -3,7 +3,7 @@ from.models import *
 
 # Fonction pour obtenir les adresses IP en fonction des interfaces
 def get_ip_addresses(interface_ids):
-    list_ipAddress = []
+    list_ipaddress = []
     try:
         # Récupérez les adresses IP de la base de données pour les interfaces spécifiées
         ip_configs = IP4Config.objects.filter(interface_id__in=interface_ids).values('ip_address', 'netmask')
@@ -13,13 +13,12 @@ def get_ip_addresses(interface_ids):
         ip_address = config['ip_address']
         prefix_length = config['netmask']
         if prefix_length == 16:
-            list_ipAddress.append(ip_address.split('.')[0] + "." + ip_address.split('.')[1] + ".0.0/16")
+            list_ipaddress.append(ip_address.split('.')[0] + "." + ip_address.split('.')[1] + ".0.0/16")
         elif prefix_length == 24:
-            list_ipAddress.append(ip_address.split('.')[0] + "." + ip_address.split('.')[1] + "." + ip_address.split('.')[2] + ".0/24")
+            list_ipaddress.append(ip_address.split('.')[0] + "." + ip_address.split('.')[1] + "." + ip_address.split('.')[2] + ".0/24")
         elif prefix_length == 8:
-            list_ipAddress.append(ip_address.split('.')[0] + ".0.0.0/8")
-    print({"list_ipAddress": list_ipAddress})
-    return list_ipAddress
+            list_ipaddress.append(ip_address.split('.')[0] + ".0.0.0/8")
+    return list_ipaddress
 
 
 

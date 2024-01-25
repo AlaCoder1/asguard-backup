@@ -10,7 +10,7 @@
         <input type="checkbox" v-model="dynamicIP" />
         <label class="ml-2">Active Dynamic IP</label>
       </v-col>
-      <v-col v-if="props.deviceMode === 'tun'" cols="4" >
+      <v-col v-if="props.deviceMode === 'tun'" cols="4">
         <label>Adress Pool </label>
       </v-col>
       <v-col v-if="props.deviceMode === 'tun'" cols="8" class="mb-n6">
@@ -91,6 +91,12 @@
           v-model="activeDnsServer2"
           v-if="dnsServers"
         ></v-text-field>
+        <p
+          class="error-feedback mb-5 mt-3"
+          v-if="props.errors.activeDnsServer2.$errors.length"
+        >
+          {{ props.errors.activeDnsServer2.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" align-self="center">
         <label>Force DNS cache update</label>
@@ -123,6 +129,12 @@
           v-model="activeNtpServer2"
           v-if="ntpServers"
         ></v-text-field>
+        <p
+          class="error-feedback mb-5 mt-3"
+          v-if="props.errors.activeNtpServer2.$errors.length"
+        >
+          {{ props.errors.activeNtpServer2.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" align-self="center">
         <label>Client Management Port</label>

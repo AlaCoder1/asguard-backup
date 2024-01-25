@@ -591,7 +591,7 @@ def subscription_page(request):
     context = {'subscription_information':json.dumps(subscription_information)}
     return render(request, 'subscription_page.html', context)
  
-
+#comment to test git command
 def login(request):
     if request.user.is_authenticated:
         return redirect('/dashboard/')

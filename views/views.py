@@ -590,7 +590,7 @@ def subscription_page(request):
     print('subscription_information',subscription_information)
     context = {'subscription_information':json.dumps(subscription_information)}
     return render(request, 'subscription_page.html', context)
-
+ 
 
 def login(request):
     usr=getAllUsers(request)

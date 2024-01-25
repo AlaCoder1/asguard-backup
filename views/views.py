@@ -590,20 +590,13 @@ def subscription_page(request):
     print('subscription_information',subscription_information)
     context = {'subscription_information':json.dumps(subscription_information)}
     return render(request, 'subscription_page.html', context)
-
+ 
 
 def login(request):
-    usr=getAllUsers(request)
-    print (usr)
-
-    context = {'users':usr}
     if request.user.is_authenticated:
-        next_url = request
-        # index_page(request)
-        print('path+***********: ',request.path)
         return redirect('/dashboard/')
     else:
-        return render(request, 'login.html',context)
+        return render(request, 'login.html')
 
 
 @login_required(login_url='/')

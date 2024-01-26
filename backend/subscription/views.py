@@ -1,3 +1,4 @@
+import json
 from django.shortcuts import render
 from .form import *
 from .models import *
@@ -6,7 +7,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.parsers import JSONParser
 from django.http import JsonResponse
 from rest_framework.authentication import SessionAuthentication
-
+from django.core import serializers
 # Create your views here.
 
 
@@ -187,3 +188,41 @@ def if_subscribed(indexs_plans_feature):
             return False
     except ValueError:
         return False
+    
+
+def list_features_about_last_subscription(request):
+    list_features = []
+    if request.method == 'GET':
+        if last_subscription ==None:
+            last_subscription = plansSubscription.objects.order_by('start_at').last()
+            last_subscription_dict = last_subscription.__dict__
+            if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+                print({"plan_id_from_last_subscription":last_subscription.plan.pk})
+                plan_features= plansFeatures.objects.filter(plan = last_subscription.plan.pk)
+                plan_features_dict = serializers.serialize("json", plan_features)
+                res = json.loads(plan_features_dict)
+                print({"plan_features":res[0]})
+                for i in res:
+                    for key, value in i.items():
+                        print(f"Key: {key}, Value: {value}")
+                        if key == 'fields':
+                            list_features.append(i['fields']['description'])
+        else:
+            list_features = []
+        return JsonResponse({"msg": list_features}, status=400)
+    
+def subscription_info(request):
+    subscription_info = {}
+    if request.method == 'GET':
+        last_subscription = plansSubscription.objects.order_by('start_at').last()
+        if last_subscription != None:
+            last_subscription_dict = last_subscription.__dict__
+            if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+                plan_info = plan.objects.get(id = last_subscription_dict['id'])
+                subscription_info['type_pack'] =plan_info.slug
+                subscription_info['date_start'] =last_subscription_dict['start_at'].strftime('%Y-%m-%d %H:%M:%S')
+                subscription_info['end_at'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
+                subscription_info['expiration_date'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            subscription_info = {}
+        return JsonResponse({"msg": "subscription_info"}, status=400)

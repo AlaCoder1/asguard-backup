@@ -64,7 +64,7 @@
           <span class="field-login"> {{ $t("buttons.login") }} </span>
         </v-btn>
         <div class="text-center mt-6 text-asguard_secondary">
-          {{piniaStore.messageStore}}
+          {{ message }}
         </div>
       </v-form>
     </v-card>
@@ -84,9 +84,9 @@ export default {
   components: {
     Footer,
   },
+
   data() {
     return {
-      piniaStore:useAuthStore(),
       lang: "en",
       users: "",
       show1: false,
@@ -95,6 +95,17 @@ export default {
       invalid: false,
       message: "",
     };
+  },
+  mounted() {
+    let error = localStorage.getItem("response-info");
+    if (error) {
+      let response = JSON.parse(error);
+      this.message = response.message;
+      setTimeout(() => {
+        localStorage.removeItem("response-info");
+        this.message = "";
+      }, 1000);
+    }
   },
   methods: {
     changeLang(item) {

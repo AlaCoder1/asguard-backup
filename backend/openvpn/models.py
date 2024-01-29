@@ -31,7 +31,6 @@ class ServerOpenvpn(models.Model):
     dynamic_ip = models.BooleanField(default=False, null=True, blank=True)
     address_pool_start = models.CharField(max_length=100, default=None, null=True, blank=True)
     address_pool_end = models.CharField(max_length=100, default=None, null=True, blank=True)
-    topology = models.BooleanField(default=True, null=True, blank=True)
     dns_default_domain_server = models.CharField(max_length=100, default=None, null=True, blank=True)
     dns_server1 = models.CharField(max_length=300, default=None, null=True, blank=True)
     dns_server2 = models.CharField(max_length=300, default=None, null=True, blank=True)

@@ -57,7 +57,7 @@ def get_server_openvpn(request, id):
                                                    'tls_auth', 'ca_name', 'server_cert', 'dh_params_length', 'encryption_algorithm',
                                                    'auth_digest_algorithm', 'gateway', 'bridge', 'compression', 'type_of_service',
                                                    'duplicate_connections', 'ipv6', 'inter_clients', 'address_pool', 'dynamic_ip',
-                                                   'topology', 'dns_default_domain', 'dns_servers', 'force_dns', 'ntp_servers'],
+                                                   'dns_default_domain', 'dns_servers', 'force_dns', 'ntp_servers'],
                                                    properties={'name': Schema(type=TYPE_STRING),
                                                                'description': Schema(type=TYPE_STRING),
                                                                'server_mode': Schema(type=TYPE_OBJECT, required=['mode'], properties={'mode': Schema(type=TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
@@ -93,7 +93,6 @@ def get_server_openvpn(request, id):
                                                                                                   'address_pool_start': Schema(type=TYPE_STRING, description="Address pool start like 10.8.0.2, required when selecting address pool"),
                                                                                                   'address_pool_end': Schema(type=TYPE_STRING, description="Address pool end like 10.8.0.250, required when selecting address pool"),}),
                                                                'dynamic_ip': Schema(type=TYPE_BOOLEAN, default=False),
-                                                               'topology': Schema(type=TYPE_BOOLEAN, default=True),
                                                                'dns_default_domain': Schema(type=TYPE_OBJECT, description="DNS default domain block", required=['dns_default_domain_select'],
                                                                                             properties={'dns_default_domain_select': Schema(type=TYPE_BOOLEAN, default=False),
                                                                                                         'dns_default_domain_server': Schema(type=TYPE_STRING, description="Address default domain server like 8.8.8.8, required when selecting DNS default domain")}),
@@ -144,7 +143,6 @@ def create_server_openvpn(request):
         inter_clients = data.get('inter_clients', '')
         dynamic_ip = data.get('dynamic_ip', '')
         address_pool = data.get('address_pool', '')
-        topology = data.get('topology', '')
         dns_default_domain = data.get('dns_default_domain', '')
         dns_servers = data.get('dns_servers', '')
         force_dns_cache_update = data.get('force_dns_cache_update', '')
@@ -181,7 +179,6 @@ def create_server_openvpn(request):
                         "ipv6": ipv6,
                         "inter_clients": inter_clients,
                         "dynamic_ip": dynamic_ip,
-                        "topology": topology,
                         "force_dns_cache_update": force_dns_cache_update,
                         "verb": verb,
                         }
@@ -272,7 +269,7 @@ def delete_server_openvpn(request, id):
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN OPENVPN SERVER (same as creation API)",
-                     request_body=Schema(type=TYPE_OBJECT,  required=['name', 'server_mode', 'protocol', 'device_mode', 'interface', 'local_port', 'tls_auth', 'ca_name', 'server_cert', 'dh_params_length', 'encryption_algorithm', 'auth_digest_algorithm', 'gateway', 'bridge', 'compression', 'type_of_service', 'duplicate_connections', 'ipv6', 'inter_clients', 'address_pool', 'dynamic_ip', 'topology', 'dns_default_domain', 'dns_servers', 'force_dns', 'ntp_servers'],
+                     request_body=Schema(type=TYPE_OBJECT,  required=['name', 'server_mode', 'protocol', 'device_mode', 'interface', 'local_port', 'tls_auth', 'ca_name', 'server_cert', 'dh_params_length', 'encryption_algorithm', 'auth_digest_algorithm', 'gateway', 'bridge', 'compression', 'type_of_service', 'duplicate_connections', 'ipv6', 'inter_clients', 'address_pool', 'dynamic_ip', 'dns_default_domain', 'dns_servers', 'force_dns', 'ntp_servers'],
                                                  properties={'name': Schema(type=TYPE_STRING),
                                                              'description': Schema(type=TYPE_STRING),
                                                              'server_mode': Schema(type=TYPE_OBJECT, required=['mode'], properties={'mode': Schema(type=TYPE_STRING, enum=["remote_access", "peer_to_peer"])}),
@@ -308,7 +305,6 @@ def delete_server_openvpn(request, id):
                                                                                                 'address_pool_start': Schema(type=TYPE_STRING, description="Address pool start like 10.8.0.2, required when selecting address pool"),
                                                                                                 'address_pool_end': Schema(type=TYPE_STRING, description="Address pool end like 10.8.0.250, required when selecting address pool"),}),
                                                              'dynamic_ip': Schema(type=TYPE_BOOLEAN, default=False),
-                                                             'topology': Schema(type=TYPE_BOOLEAN, default=True),
                                                              'dns_default_domain': Schema(type=TYPE_OBJECT, description="DNS default domain block", required=['dns_default_domain_select'],
                                                                                           properties={'dns_default_domain_select': Schema(type=TYPE_BOOLEAN, default=False),
                                                                                                       'dns_default_domain_server': Schema(type=TYPE_STRING, description="Address default domain server like 8.8.8.8, required when selecting DNS default domain")}),
@@ -360,7 +356,6 @@ def update_server_openvpn(request, id):
         server.inter_clients = data.get('inter_clients', '')
         address_pool = data.get('address_pool', '')
         server.dynamic_ip = data.get('dynamic_ip', '')
-        server.topology = data.get('topology', '')
         dns_default_domain = data.get('dns_default_domain', '')
         server.force_dns_cache_update = data.get('force_dns_cache_update', '')
         dns_servers = data.get('dns_servers', '')

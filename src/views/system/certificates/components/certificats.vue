@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="loading">
+    <v-dialog
+      v-model="isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          Please Wait...
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div
     class="certificats-management"
     style="display: flex; flex-direction: column; height: 100%"
@@ -53,7 +72,7 @@
           <v-card-title class="headline">Download Validation</v-card-title>
           <v-card-text>
             <div>
-              <a :href="imagePath" download="import_cert_p12.p12"> </a>
+              <a> </a>
             </div>
             <v-container>
               <v-row>
@@ -80,7 +99,11 @@
             <v-btn color="blue darken-1" text @click="cancelDelete"
               >Cancel</v-btn
             >
-            <v-btn color="blue darken-1" text @click="confirmDownload"
+            <v-btn
+              color="blue darken-1"
+              text
+              @click="confirmDownload"
+              :disabled="!isPassword || !isSame"
               >Download</v-btn
             >
           </v-card-actions>
@@ -118,11 +141,12 @@
 <script>
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { reactive, computed } from "vue";
+import { helpers, sameAs } from "@vuelidate/validators";
+import { reactive, computed, defineAsyncComponent } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
-import FileP12 from "../../../../downloads/import_cert_p12.p12";
 import ModalAddEditCertif from "@/components/modals/ModalAddEditCertif.vue";
 import ModalRevocation from "@/components/modals/ModalRevocation.vue";
+// import FileP12 from `../../../../downloads/${this.rowName}.p12`
 export default {
   props: {
     certifData: {
@@ -148,50 +172,38 @@ export default {
       userRole: null,
       userName: null,
     });
-    const rules = computed(() => {
-      return {
-        formData: {
-          // password: {
-          //   required: helpers.withMessage(
-          //     "This field must be indicated",
-          //     required
-          //   ),
-          //   isValidPassword: helpers.withMessage(
-          //     `There must be at least 12 characters, including at least one uppercase, one number, and one special character.`,
-          //     helpers.regex(
-          //       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{12,}$/
-          //     )
-          //   ),
-          // },
-          // confirm_password: {
-          //   sameAsPassword: helpers.withMessage(
-          //     "Your password does not match",
-          //     sameAs(state.formData.password)
-          //   ), // can be a reference to a field or computed property
-          //   required: helpers.withMessage(
-          //     "This field must be indicated",
-          //     required
-          //   ),
-          //   isValidPassword: helpers.withMessage(
-          //     `There must be at least 12 characters, including at least one uppercase, one number, and one special character.`,
-          //     helpers.regex(
-          //       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{12,}$/
-          //     )
-          //   ),
-          // },
-        },
-      };
+
+    const isSame = computed(() => {
+      return state.formData.confirm_password == state.formData.password;
     });
 
-    const v$ = useValidate(rules, state);
+    const isPassword = computed(() => {
+      let password =
+        state.formData.password && state.formData.confirm_password
+          ? true
+          : false;
+      return password;
+    });
+
     return {
       state,
-      v$,
+      isSame,
+      isPassword,
     };
+  },
+  async mounted() {
+    let downloadCert = localStorage.getItem("cert-name");
+    if (downloadCert) {
+      this.localName = downloadCert;
+      this.downloadCertificatP12();
+    }
   },
   data() {
     return {
-      imagePath: FileP12,
+      isLoadingDialogue: false,
+      loading: false,
+      localName: "",
+      rowName: "",
       textAlert: "",
       color: "",
       snackbar: false,
@@ -282,11 +294,18 @@ export default {
     },
   },
   methods: {
-    downloadImage() {
+    downloadCertificatP12() {
       const link = document.createElement("a");
-      link.href = this.imagePath;
-      link.download = "import_cert_p12.p12";
-      link.click();
+      import(`@/downloads/${this.localName}.p12`).then((module) => {
+        if (module.default) {
+          link.href = module.default;
+          link.download = `${this.localName}.p12`;
+          link.click();
+          localStorage.removeItem("cert-name");
+        } else {
+          console.log("error");
+        }
+      });
     },
 
     formatedDn(data) {
@@ -316,7 +335,7 @@ export default {
       }
       return cookieValue;
     },
-    confirmDownload() {
+    async confirmDownload() {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -327,20 +346,23 @@ export default {
       axios
         .post(`/certificates/exportCert/${this.rowId}`, payload)
         .then((response) => {
+          this.deleteDialog = false;
+          this.state.formData.password = "";
+          this.state.formData.confirm_password = "";
+          localStorage.setItem("cert-name", this.rowName);
+          this.isLoadingDialogue = true;
+          this.loading = true;
           setTimeout(() => {
-            this.downloadImage();
-            this.deleteDialog = false;
-
-            this.state.formData.password = "";
-            this.state.formData.confirm_password = "";
-          }, 1000);
+            this.isLoadingDialogue = false;
+            this.loading = false;
+            location.reload();
+          }, 2000);
         })
         .catch((i) => {
           this.snackbar = true;
           this.color = "red";
           this.textAlert = i.response.data.error;
         });
-      // }
     },
     cancelDeleteCertif() {
       this.deleteDialogCertif = false;
@@ -640,7 +662,7 @@ export default {
         case "exportP12":
           this.deleteDialog = true;
           this.rowId = rowData.id;
-          this.rowName = rowData.name;
+          this.rowName = rowData.nom;
 
           break;
 

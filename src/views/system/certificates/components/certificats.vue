@@ -52,6 +52,9 @@
         <v-card>
           <v-card-title class="headline">Download Validation</v-card-title>
           <v-card-text>
+            <div>
+              <a :href="imagePath" download="import_cert_p12.p12"> </a>
+            </div>
             <v-container>
               <v-row>
                 <v-col cols="6">
@@ -60,11 +63,6 @@
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
-                  <!-- <span
-                    class="error-feedback"
-                    v-if="v$.formData.password.$error"
-                    >{{ v$.formData.password.$errors[0].$message }}</span
-                  > -->
                 </v-col>
 
                 <v-col cols="6">
@@ -73,13 +71,6 @@
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
-                  <!-- <span
-                    class="error-feedback"
-                    v-if="v$.formData.confirm_password.$error"
-                    >{{
-                      v$.formData.confirm_password.$errors[0].$message
-                    }}</span
-                  > -->
                 </v-col>
               </v-row>
             </v-container>
@@ -127,9 +118,9 @@
 <script>
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { required, sameAs, helpers } from "@vuelidate/validators";
 import { reactive, computed } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
+import FileP12 from "../../../../downloads/import_cert_p12.p12";
 import ModalAddEditCertif from "@/components/modals/ModalAddEditCertif.vue";
 import ModalRevocation from "@/components/modals/ModalRevocation.vue";
 export default {
@@ -149,7 +140,6 @@ export default {
     ModalRevocation,
   },
   setup() {
-    //data
     const state = reactive({
       formData: {
         password: "",
@@ -201,6 +191,7 @@ export default {
   },
   data() {
     return {
+      imagePath: FileP12,
       textAlert: "",
       color: "",
       snackbar: false,
@@ -215,8 +206,12 @@ export default {
       modalData: {},
       isModalOpen: false,
       columnCertificats: [
-        { headerName: "nom", field: "nom" },
-        { headerName: "distingushed name", cellRenderer: this.formatedDn },
+        { headerName: "nom", field: "nom", width: 300 },
+        {
+          headerName: "distingushed name",
+          cellRenderer: this.formatedDn,
+          width: 400,
+        },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,
@@ -250,9 +245,13 @@ export default {
             city: element.city,
             organization: element.organization,
             email: element.email,
+            is_private_key: element.is_private_key,
           };
         });
-        this.allCertifAuth = infoAuth;
+
+        let mapedListCertifAuth = infoAuth.filter((i) => i.is_private_key);
+
+        this.allCertifAuth = mapedListCertifAuth;
       }
     },
     certifData(newValue) {
@@ -271,6 +270,7 @@ export default {
             valid_from: element.valid_from,
             valid_until: element.valid_until,
             certificate_authority: element.certificate_authority,
+            is_private_key: element.is_private_key,
           };
         });
 
@@ -282,6 +282,13 @@ export default {
     },
   },
   methods: {
+    downloadImage() {
+      const link = document.createElement("a");
+      link.href = this.imagePath;
+      link.download = "import_cert_p12.p12";
+      link.click();
+    },
+
     formatedDn(data) {
       let eGui = document.createElement("div");
 
@@ -310,8 +317,6 @@ export default {
       return cookieValue;
     },
     confirmDownload() {
-      // this.v$.$validate();
-      // if (!this.v$.$error) {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -322,22 +327,13 @@ export default {
       axios
         .post(`/certificates/exportCert/${this.rowId}`, payload)
         .then((response) => {
-          const text = response.data.cert;
-          const blob = new Blob([text], {
-            type: "blob",
-          });
+          setTimeout(() => {
+            this.downloadImage();
+            this.deleteDialog = false;
 
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = "p12.p12";
-
-          document.body.appendChild(a);
-          a.click();
-
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+            this.state.formData.password = "";
+            this.state.formData.confirm_password = "";
+          }, 1000);
         })
         .catch((i) => {
           this.snackbar = true;
@@ -376,7 +372,6 @@ export default {
       this.isModalOpen = false;
       this.isModalOpenRevoce = false;
       this.deleteDialogCertif = false;
-      // location.reload()
     },
     actionCellRenderer(params) {
       let eGui = document.createElement("div");
@@ -385,7 +380,11 @@ export default {
         return cell.rowIndex === params.node.rowIndex;
       });
 
-      if (params.data.activation && params.data.certificate_authority) {
+      if (
+        params.data.activation &&
+        params.data.certificate_authority &&
+        params.data.is_private_key
+      ) {
         eGui.innerHTML = `
 
 
@@ -394,8 +393,6 @@ export default {
            data-action="revoce">
            <i class="mdi mdi-skull-outline" style="color: #086eae;font-size: 20px;"></i>
            </button>
-
-
            <button
            class="action-button download"
            data-action="exportP12" title="download P12 file">
@@ -418,7 +415,39 @@ export default {
         </button>
 
          `;
-      } else if (!params.data.activation) {
+      } else if (
+        params.data.activation &&
+        params.data.certificate_authority &&
+        !params.data.is_private_key
+      ) {
+        eGui.innerHTML = `
+
+
+        <button
+            class="action-button revoce"
+            data-action="revoce">
+            <i class="mdi mdi-skull-outline" style="color: #086eae;font-size: 20px;"></i>
+            </button>
+            <button
+            class="action-button download"
+            data-action="exportP12" title="download P12 file">
+              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
+            </button>
+            <button
+            class="action-button download"
+            data-action="export" title="download CRT">
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+            </button>
+            <button
+          class="action-button delete"
+          data-action="delete">
+            <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
+        </button>
+
+          `;
+      }
+
+      if (!params.data.activation && params.data.is_private_key) {
         eGui.innerHTML = `  <button
          class="action-button lock"
          data-action="lock">
@@ -446,21 +475,72 @@ export default {
             <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
         </button>
          `;
-      } else if (params.data.activation && !params.data.certificate_authority) {
-        eGui.innerHTML = `
+      } else if (!params.data.activation && !params.data.is_private_key) {
+        eGui.innerHTML = `  <button
+         class="action-button lock"
+         data-action="lock">
+
+         <i class="fa fa-unlock-alt" aria-hidden="true" style="color: #086eae;font-size: 20px;"></i>
+         </button>
          <button
            class="action-button download"
-           data-action="exportP12">
+           data-action="exportP12"  title="download P12 file">
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="export">
+           data-action="export" title="download CRT">
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+           </button>
+           <button
+          class="action-button delete"
+          data-action="delete">
+            <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
+        </button>
+         `;
+      }
+
+      if (
+        params.data.activation &&
+        !params.data.certificate_authority &&
+        params.data.is_private_key
+      ) {
+        eGui.innerHTML = `
+         <button
+           class="action-button download"
+           data-action="exportP12" title="download P12 file">
+              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
+           </button>
+           <button
+           class="action-button download"
+           data-action="export" title="download CRT">
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="exportKey">
+           data-action="exportKey" title="download Private Key">
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+           </button>
+           <button
+          class="action-button delete"
+          data-action="delete">
+            <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
+        </button>
+         `;
+      } else if (
+        params.data.activation &&
+        !params.data.certificate_authority &&
+        !params.data.is_private_key
+      ) {
+        eGui.innerHTML = `
+         <button
+           class="action-button download"
+           data-action="exportP12" title="download P12 file">
+              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
+           </button>
+           <button
+           class="action-button download"
+           data-action="export" title="download CRT">
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button

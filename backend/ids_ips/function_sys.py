@@ -1,5 +1,7 @@
 import subprocess
-import yaml 
+import yaml
+
+from backend.ids_ips.models import ids_ips_rule 
 
 def execute_cmd(command):
     command="sudo "+command
@@ -16,7 +18,7 @@ def read_config():
     syslog_enabled = None
     mpm_algo = None
     try:
-        output,error = execute_cmd("cat " + suricata_yaml_path)
+        output,_ = execute_cmd("cat " + suricata_yaml_path)
         if output:
             lines = output.strip('\n').split('\n')
             home_net = None
@@ -50,21 +52,17 @@ def read_config():
                     copy_mode= stripped_line.split(":")[1].strip()  
             return {"HOME_NET": home_net, "promisc": promisc, "eve-log-enabled": eve_log_enabled, "syslog-enabled": syslog_enabled, "mpm-algo": mpm_algo, "profile": profile, "copy-mode": copy_mode }
         else:
-            # print(f"La commande a échoué : {error}")
             return None
     except FileNotFoundError:
-        # print(f"Le fichier {suricata_yaml_path} n'a pas été trouvé.")
         return None
-    except yaml.YAMLError as e:
-        # print(f"Erreur lors de la lecture du fichier {suricata_yaml_path}: {e}")
+    except yaml.YAMLError :
         return None
    
 # Fonction pour lire la première occurrence de "syslog" et "enabled"//
 def read_first_syslog_enabled(suricata_yaml_path):
-    suricata_yaml_path = "/etc/suricata/suricata.yaml" 
     syslog_enabled = None
     try:
-        output,error= execute_cmd("cat "+suricata_yaml_path)
+        output,_= execute_cmd("cat "+suricata_yaml_path)
         lines = output.split('\n')
         skip_next_line = False
         for line in lines:
@@ -77,7 +75,7 @@ def read_first_syslog_enabled(suricata_yaml_path):
                 # La ligne suivante après "syslog" est "enabled:"
                 syslog_enabled = stripped_line.split(":")[1].strip()
                 break  # Sortir de la boucle après avoir trouvé la première occurrence de "syslog:"
-    except Exception as e:
+    except Exception :
         return None
         # print(f"Erreur lors de la lecture du fichier {suricata_yaml_path}: {e}")
     return syslog_enabled  
@@ -146,21 +144,17 @@ def update_suricata_config(suricata_yaml_path,lines,home_net_value_sys,ifname, s
             aux_enable="disable"
             aux_action="stop"
         commands = [
-#         """sudo cat <<EOF > {}
-# {}
-# EOF""".format(suricata_yaml_path,updated_lines),
         "sudo systemctl {} --quiet suricata.service && sudo systemctl {} suricata.service ".format(aux_enable,aux_action)
         ]
         for cmd in commands:
-            output, error=execute_cmd(cmd)
+            _, error=execute_cmd(cmd)
             if error!="":
                 print({"errot":error,"cmd":cmd})
                 return error
             
         return True
-    except Exception as e:
+    except Exception:
         # Capture toute autre exception et affiche un message d'erreur
-        print("exception",e)
         return None
 
 #*********** Les régles ****************
@@ -201,13 +195,9 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     dest_ip=None
     msg=None
     rev=None
-    if rule.startswith("#") is True:
-        action=rule.split(" ")[0].strip()+rule.split(" ")[1]
-        protocol=rule.split(" ")[2].strip()
-    else:
-        action=rule.split(" ")[0].strip()
-        protocol=rule.split(" ")[1].strip()
-    
+    rule=rule.strip()
+    action=rule.split(" ")[0].strip()
+    protocol=rule.split(" ")[1].strip()
     if rule.find("sid")!=-1:
         rule_inter=rule[rule.find("sid:"):]
         sid=int(rule_inter[rule_inter.find("sid:")+len("sid:"):rule_inter.find(";")])
@@ -230,12 +220,12 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     dest_ip=dest_ip if dest_ip!="" else None    
     msg=msg if msg!="" else None   
     protocol=protocol if protocol!="" else None
-    # print({"action":action,"protocol":protocol})
     if contenu['action'] is not None:
         if contenu["activate_rule"] is False:
             contenu['action']="#"+contenu['action']
         else:
-            contenu['action'].strip("#")
+            rule=rule.strip("#")
+            contenu['action'].strip().strip("#")
         rule=rule.replace(action,contenu['action'])
     if contenu['protocol'] is not None:
         rule=rule.replace(protocol,contenu['protocol'])
@@ -257,24 +247,19 @@ def update_rule_remote(comment,contenu,line_to_update,file_path):
     if  contenu['sid'] is not None:
         rule=rule.replace(str(sid),str(contenu['sid']))   
         
-    cmd = "sudo sed -i '/sid:{}/ s/{}/{}/' {}".format(sid, line_to_update.strip(), rule.strip(), file_path)
+    cmd = "sudo sed -i '/sid:{}/ s|{}|{}|' {}".format(sid, line_to_update.strip(), rule.strip(), file_path)
     output, error = execute_cmd(cmd)
     return output,rule, error
 
 # //
-def get_line_by_sid(file_path, sid):
-    try:
-        # Utilisez la commande grep pour rechercher la ligne avec le SID dans le fichier
-        cmd = f'sudo grep -E "sid:{sid};" {file_path}'
-        output, error = execute_cmd(cmd)
-        if not error:
-            # La sortie de la commande contient la ligne avec le SID
-            return output
-        else:
-            return None
-    except Exception as e:
-        # print(f"Erreur : {str(e)}")
+def get_line_by_sid( sid):
+    if ids_ips_rule.objects.filter(sid=sid):
+        obj=ids_ips_rule.objects.get(sid=sid)
+        rule=obj.rule
+        return rule
+    else:
         return None
+
         
 
 def delete_line_in_remote_file(file_path, line_to_delete):
@@ -301,7 +286,7 @@ def get_suricata_default_rules():
         else:
             return None
             # print(f"Erreur lors de la lecture des règles : {error}")
-    except Exception as e:
+    except Exception :
         # print(f"Erreur : {str(e)}")
         return []
 
@@ -319,7 +304,7 @@ def prepare_rule_attribut(rules):
             dest_ip=None
             msg=None
             rev=None
-            
+            rule=rule.strip(" ")
             # Vérifiez si la règle n'est pas vide
             if rule.startswith("#") is True:
                 active=False
@@ -329,7 +314,6 @@ def prepare_rule_attribut(rules):
                 active=True
                 action=rule.split(" ")[0].strip()
                 protocol=rule.split(" ")[1].strip()
-        
             if rule.find("sid")!=-1:
                 rule_inter=rule[rule.find("sid:"):]
                 sid=int(rule_inter[rule_inter.find("sid:")+len("sid:"):rule_inter.find(";")])
@@ -353,13 +337,13 @@ def prepare_rule_attribut(rules):
             msg=msg if msg!="" else None  
             protocol=protocol if protocol!="" else None  
             data = {
-                "sid":sid,
-                "action":action.strip("#"),
+               "sid":sid,
+                "action":action.strip().strip("#"),
                 "protocol":protocol,
                 "source_ip":src_ip,
                 "direction":direction,
                 "destination_ip":dest_ip,
-                "msg":msg.strip('"'),
+                "msg":msg.strip().strip('"'),
                 "rev":rev,
                 "rule": rule,
                 "suricatafile":id,
@@ -376,7 +360,6 @@ def read_suricata_log():
     try:
         cmd_read = f"sudo cat {suricata_log_path}"
         output, error = execute_cmd(cmd_read)
-        # print (stderr.read().decode())
         if not error:
             lines = output.split('\n')
             logs=lines

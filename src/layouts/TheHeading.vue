@@ -52,6 +52,7 @@ export default {
       try {
         await axios.get("/auth/logout");
         window.location.href = "/";
+        localStorage.removeItem('href-path')
       } catch (error) {
         console.error("Error during logout:", error);
       }

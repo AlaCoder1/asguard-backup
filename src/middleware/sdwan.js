@@ -8,7 +8,8 @@ import * as directives from "vuetify/directives";
 import sdwan from "../views/sdwan/index.vue";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
-import axios from "axios";
+import { startTimer } from "../mixins/timer_token.js";
+
 const app = createApp(sdwan);
 const vuetify = createVuetify({
   components,
@@ -17,23 +18,12 @@ const vuetify = createVuetify({
 const emitter = mitt();
 app.provide("emitter", emitter);
 
-axios.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    if (error.response.status === 401 || error.response.status === 403) {
-      window.location.href = "/";
-    }
-    return Promise.reject(error);
-  }
-);
-
 const currentPath = window.location.pathname;
 function hrefPath() {
   localStorage.setItem("href-path", currentPath);
 }
 
 hrefPath();
+startTimer();
 
 app.use(ElementPlus).use(store).use(vuetify).mount("#app");

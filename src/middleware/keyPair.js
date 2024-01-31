@@ -5,7 +5,7 @@ import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import keyPair from "../views/keyPair/index.vue";
-import axios from "axios";
+import { startTimer } from "../mixins/timer_token.js";
 
 import mitt from "mitt";
 
@@ -19,23 +19,12 @@ const vuetify = createVuetify({
 
 app.provide("emitter", emitter);
 
-axios.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    if (error.response.status === 401 || error.response.status === 403) {
-      window.location.href = "/";
-    }
-    return Promise.reject(error);
-  }
-);
-
 const currentPath = window.location.pathname;
 function hrefPath() {
   localStorage.setItem("href-path", currentPath);
 }
 
 hrefPath();
+startTimer();
 
 app.use(store).use(vuetify).mount("#app");

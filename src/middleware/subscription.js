@@ -5,8 +5,8 @@ import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import subscription from "../views/subscription/index.vue";
-import axios from "axios";
 import mitt from "mitt";
+import { startTimer } from "../mixins/timer_token.js";
 
 const emitter = mitt();
 
@@ -19,23 +19,11 @@ const vuetify = createVuetify({
   directives,
 });
 
-axios.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    if (error.response.status === 401 || error.response.status === 403) {
-      console.log("Token expired or unauthorized. Redirecting to login.");
-      window.location.href = "/";
-    }
-    return Promise.reject(error);
-  }
-);
-
 const currentPath = window.location.pathname;
 function hrefPath() {
   localStorage.setItem("href-path", currentPath);
 }
 
 hrefPath();
+startTimer();
 app.use(store).use(vuetify).mount("#app");

@@ -6,8 +6,8 @@
 // // import VeeValidate from 'vee-validate';
 // import VueI18n from 'vue-i18n';
 // import dictionnary from './dictionnary';
-// import enJson from './translations/en.json'; 
-// import frJson from './translations/fr.json'; 
+// import enJson from './translations/en.json';
+// import frJson from './translations/fr.json';
 // import store from '@/store/index';
 
 // Vue.use(VueI18n);
@@ -15,8 +15,8 @@
 // const i18n = new VueI18n({
 //   locale: 'en',
 //   messages: {
-//     en: enJson, 
-//     fr: frJson, 
+//     en: enJson,
+//     fr: frJson,
 //   },
 // });
 
@@ -36,7 +36,6 @@
 //   },
 // });
 
-
 // new Vue({
 //   vuetify,
 //   store,
@@ -44,34 +43,18 @@
 //     data: {},
 //     render: (h) => h(App),
 // }).$mount('#app');
-import {createApp } from 'vue';
-import store from '../store/index.js'
-import 'vuetify/styles'
-import { createVuetify } from 'vuetify'
-import * as components from 'vuetify/components'
-import * as directives from 'vuetify/directives'
-import seetings from 'openvpn/settings/seetings';
-import axios from 'axios'
+import { createApp } from "vue";
+import store from "../store/index.js";
+import "vuetify/styles";
+import { createVuetify } from "vuetify";
+import * as components from "vuetify/components";
+import * as directives from "vuetify/directives";
+import seetings from "openvpn/settings/seetings";
 
 const app = createApp(seetings);
 const vuetify = createVuetify({
-    components,
-    directives
-  })
-  axios.interceptors.response.use(
-    (response) => {
-      return response;
-    },
-    (error) => {
-      
-      if ((error.response.status === 401 )||(error.response.status === 403)) {
-        window.location.href = '/';
-      }
-      return Promise.reject(error);
-    }
-  );
+  components,
+  directives,
+});
 
-app
-.use(store)
-.use(vuetify)
-.mount('#app');
+app.use(store).use(vuetify).mount("#app");

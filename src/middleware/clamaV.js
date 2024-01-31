@@ -8,7 +8,8 @@ import * as directives from "vuetify/directives";
 import clamaV from "../views/clamaV/index.vue";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
-import axios from "axios";
+import { startTimer } from "../mixins/timer_token.js";
+
 const app = createApp(clamaV);
 const vuetify = createVuetify({
   components,
@@ -24,17 +25,6 @@ function hrefPath(){
 }
 
 hrefPath()
-
-axios.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    if (error.response.status === 401 || error.response.status === 403) {
-      window.location.href = "/";
-    }
-    return Promise.reject(error);
-  }
-);
+startTimer();
 
 app.use(ElementPlus).use(store).use(vuetify).mount("#app");

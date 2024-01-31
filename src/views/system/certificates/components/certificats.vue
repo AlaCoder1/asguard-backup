@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="loading">
+    <v-dialog
+      v-model="isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          Please Wait...
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div
     class="certificats-management"
     style="display: flex; flex-direction: column; height: 100%"
@@ -52,6 +71,9 @@
         <v-card>
           <v-card-title class="headline">Download Validation</v-card-title>
           <v-card-text>
+            <div>
+              <a> </a>
+            </div>
             <v-container>
               <v-row>
                 <v-col cols="6">
@@ -60,11 +82,6 @@
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
-                  <!-- <span
-                    class="error-feedback"
-                    v-if="v$.formData.password.$error"
-                    >{{ v$.formData.password.$errors[0].$message }}</span
-                  > -->
                 </v-col>
 
                 <v-col cols="6">
@@ -73,13 +90,6 @@
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
-                  <!-- <span
-                    class="error-feedback"
-                    v-if="v$.formData.confirm_password.$error"
-                    >{{
-                      v$.formData.confirm_password.$errors[0].$message
-                    }}</span
-                  > -->
                 </v-col>
               </v-row>
             </v-container>
@@ -89,7 +99,11 @@
             <v-btn color="blue darken-1" text @click="cancelDelete"
               >Cancel</v-btn
             >
-            <v-btn color="blue darken-1" text @click="confirmDownload"
+            <v-btn
+              color="blue darken-1"
+              text
+              @click="confirmDownload"
+              :disabled="!isPassword || !isSame"
               >Download</v-btn
             >
           </v-card-actions>
@@ -127,11 +141,12 @@
 <script>
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { required, sameAs, helpers } from "@vuelidate/validators";
-import { reactive, computed } from "vue";
+import { helpers, sameAs } from "@vuelidate/validators";
+import { reactive, computed, defineAsyncComponent } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import ModalAddEditCertif from "@/components/modals/ModalAddEditCertif.vue";
 import ModalRevocation from "@/components/modals/ModalRevocation.vue";
+// import FileP12 from `../../../../downloads/${this.rowName}.p12`
 export default {
   props: {
     certifData: {
@@ -149,7 +164,6 @@ export default {
     ModalRevocation,
   },
   setup() {
-    //data
     const state = reactive({
       formData: {
         password: "",
@@ -158,49 +172,38 @@ export default {
       userRole: null,
       userName: null,
     });
-    const rules = computed(() => {
-      return {
-        formData: {
-          // password: {
-          //   required: helpers.withMessage(
-          //     "This field must be indicated",
-          //     required
-          //   ),
-          //   isValidPassword: helpers.withMessage(
-          //     `There must be at least 12 characters, including at least one uppercase, one number, and one special character.`,
-          //     helpers.regex(
-          //       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{12,}$/
-          //     )
-          //   ),
-          // },
-          // confirm_password: {
-          //   sameAsPassword: helpers.withMessage(
-          //     "Your password does not match",
-          //     sameAs(state.formData.password)
-          //   ), // can be a reference to a field or computed property
-          //   required: helpers.withMessage(
-          //     "This field must be indicated",
-          //     required
-          //   ),
-          //   isValidPassword: helpers.withMessage(
-          //     `There must be at least 12 characters, including at least one uppercase, one number, and one special character.`,
-          //     helpers.regex(
-          //       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{12,}$/
-          //     )
-          //   ),
-          // },
-        },
-      };
+
+    const isSame = computed(() => {
+      return state.formData.confirm_password == state.formData.password;
     });
 
-    const v$ = useValidate(rules, state);
+    const isPassword = computed(() => {
+      let password =
+        state.formData.password && state.formData.confirm_password
+          ? true
+          : false;
+      return password;
+    });
+
     return {
       state,
-      v$,
+      isSame,
+      isPassword,
     };
+  },
+  async mounted() {
+    let downloadCert = localStorage.getItem("cert-name");
+    if (downloadCert) {
+      this.localName = downloadCert;
+      this.downloadCertificatP12();
+    }
   },
   data() {
     return {
+      isLoadingDialogue: false,
+      loading: false,
+      localName: "",
+      rowName: "",
       textAlert: "",
       color: "",
       snackbar: false,
@@ -291,6 +294,20 @@ export default {
     },
   },
   methods: {
+    downloadCertificatP12() {
+      const link = document.createElement("a");
+      import(`@/downloads/${this.localName}.p12`).then((module) => {
+        if (module.default) {
+          link.href = module.default;
+          link.download = `${this.localName}.p12`;
+          link.click();
+          localStorage.removeItem("cert-name");
+        } else {
+          console.log("error");
+        }
+      });
+    },
+
     formatedDn(data) {
       let eGui = document.createElement("div");
 
@@ -318,9 +335,7 @@ export default {
       }
       return cookieValue;
     },
-    confirmDownload() {
-      // this.v$.$validate();
-      // if (!this.v$.$error) {
+    async confirmDownload() {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -331,29 +346,23 @@ export default {
       axios
         .post(`/certificates/exportCert/${this.rowId}`, payload)
         .then((response) => {
-          const text = response.data.cert;
-          const blob = new Blob([text], {
-            type: "blob",
-          });
-
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = "p12.p12";
-
-          document.body.appendChild(a);
-          a.click();
-
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+          this.deleteDialog = false;
+          this.state.formData.password = "";
+          this.state.formData.confirm_password = "";
+          localStorage.setItem("cert-name", this.rowName);
+          this.isLoadingDialogue = true;
+          this.loading = true;
+          setTimeout(() => {
+            this.isLoadingDialogue = false;
+            this.loading = false;
+            location.reload();
+          }, 2000);
         })
         .catch((i) => {
           this.snackbar = true;
           this.color = "red";
           this.textAlert = i.response.data.error;
         });
-      // }
     },
     cancelDeleteCertif() {
       this.deleteDialogCertif = false;
@@ -385,7 +394,6 @@ export default {
       this.isModalOpen = false;
       this.isModalOpenRevoce = false;
       this.deleteDialogCertif = false;
-      // location.reload()
     },
     actionCellRenderer(params) {
       let eGui = document.createElement("div");
@@ -654,7 +662,7 @@ export default {
         case "exportP12":
           this.deleteDialog = true;
           this.rowId = rowData.id;
-          this.rowName = rowData.name;
+          this.rowName = rowData.nom;
 
           break;
 

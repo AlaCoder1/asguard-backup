@@ -22,8 +22,8 @@
       </v-menu>
 
       <div class="userInfo">
-        <span class="white-color">{{ userName }}</span>
-        <span class="white-color">{{ email }}</span>
+        <span class="white-color">{{ state.currentInfo.username }}</span>
+        <span class="white-color">{{ state.currentInfo.email }}</span>
       </div>
 
       <br />
@@ -33,32 +33,35 @@
 
 <script>
 import axios from "axios";
+import { reactive, onMounted } from "vue";
 export default {
   name: "ToolbarComponent",
-  data() {
-    return {
-      userName: null,
-      email: null,
-    };
-  },
-  mounted() {
-    let retriveInfo = localStorage.getItem("userInfo");
-    this.user = JSON.parse(retriveInfo);
-    this.userName = this.user.username ?? "";
-    this.email = this.user.email ?? "";
-  },
-  methods: {
-    async logout() {
+
+  setup() {
+    onMounted(() => {
+      let retriveInfo = localStorage.getItem("user-info");
+      let userInfo = JSON.parse(retriveInfo);
+      let user = userInfo;
+      state.currentInfo = { ...user.currentUser };
+    });
+    const state = reactive({
+      currentInfo: {},
+    });
+
+    const logout = async () => {
       try {
         await axios.get("/auth/logout");
-
-        // this.loggedIn = false;
-        // this.user = null;
         window.location.href = "/";
+        localStorage.removeItem('href-path')
       } catch (error) {
         console.error("Error during logout:", error);
       }
-    },
+    };
+
+    return {
+      state,
+      logout,
+    };
   },
 };
 </script>

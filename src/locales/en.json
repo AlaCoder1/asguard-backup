@@ -1,17 +1,59 @@
 {
   "form":{
     
-    "username":"Nom d'utilisateur",
+    "username":"Username",
     "password":"Password"
   },
   "buttons":{
     "login":"login"
   },
+
   "placeholder":{
     "enterPassword":"Enter password",
     "enterUserName":"Enter user name"
   
   },
+  "sideBar":{
+    "dashboard":"Dashboard",
+    "system":"System",
+    "firewall":"Firewall",
+    "services":"Services",
+    "reports":"Reports"
+  },
+  "subtitle":{
+    "assistant":"Assistant",
+    "userCertificatemanagement":"users & certificate management",
+    "networkManagement":"Network Management",
+    "systemConfig":"System configuration",
+    "settings":"Settings",
+    "overview":"Overview",
+    "assignations":"Assignations",
+    "differentNetworks":"Different Networks",
+    "diagnostics":"Diagnostics",
+    "listOfInterface":"List of interfaces",
+    "rules":"Rules",
+    "nat":"Nat",
+    "advancedSettings":"Advanced settings",
+    "siteToSiteVpn":"Site to site VPN",
+    "rsaKeyPairs":"RSA Key Pairs",
+    "openVPN":"OPEN VPN",
+    "ipFilterDoubleMasque":"IP Filter double masque",
+    "clamAV":"Clam AV",
+    "DHCPV4":"DHCP V4",
+    "DHCPV6":"DHCP V6",
+    "intrusionDetection":"Intrusion Detection",
+    "proxyWeb":"Proxy Web",
+    "SDWAN":"SDWAN",
+    "health":"Health",
+    "insight":"Insight",
+    "traffic":"Traffic",
+    "eventLogs":"Event logs",
+    "subscription":"Subscription"
+
+
+  },
+
+
     "PageGeneral": {
       "NetworksServers": "Network Servers",
       "AddServer": "Add Server",

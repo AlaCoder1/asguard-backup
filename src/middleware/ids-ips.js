@@ -7,6 +7,9 @@ import * as directives from "vuetify/directives";
 import mitt from "mitt";
 import IdsIps from "../views/ids_ips/IdsIps";
 import { startTimer } from "../mixins/timer_token.js";
+import { createI18n } from "vue-i18n";
+import enJson from "../locales/en.json";
+import frJson from "../locales/fr.json";
 
 const emitter = mitt();
 
@@ -18,6 +21,13 @@ const vuetify = createVuetify({
   components,
   directives,
 });
+const i18n = new createI18n({
+  locale: "en",
+  messages: {
+    en: enJson,
+    fr: frJson,
+  },
+});
 
 const currentPath = window.location.pathname;
 function hrefPath() {
@@ -27,4 +37,4 @@ function hrefPath() {
 hrefPath();
 startTimer();
 
-app.use(store).use(vuetify).mount("#app");
+app.use(store).use(vuetify).use(i18n).mount("#app");

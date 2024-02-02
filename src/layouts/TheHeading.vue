@@ -53,7 +53,10 @@
 
 <script>
 import axios from "axios";
-import { reactive, onMounted, ref, watch } from "vue";
+import { createI18n } from "vue-i18n";
+import enJson from "../locales/en.json";
+import frJson from "../locales/fr.json";
+import { reactive, onMounted, ref } from "vue";
 export default {
   name: "ToolbarComponent",
 
@@ -63,9 +66,20 @@ export default {
       let userInfo = JSON.parse(retriveInfo);
       let user = userInfo;
       state.currentInfo = { ...user.currentUser };
+
+      let getLang = localStorage.getItem("lang");
+      if (getLang) selectedLang.value = JSON.parse(getLang);
     });
     const state = reactive({
       currentInfo: {},
+    });
+
+    const i18n = new createI18n({
+      locale: "fr",
+      messages: {
+        en: enJson,
+        fr: frJson,
+      },
     });
 
     const selectedLang = ref([
@@ -246,18 +260,7 @@ export default {
         console.error("Error during logout:", error);
       }
     };
-    watch(
-      () => selectedLang.value,
-      (val) => {
-        if (val.length) {
-          let lang = JSON.stringify(val);
-          localStorage.setItem("lang", lang);
-        } else {
-          let getLang = localStorage.getItem("lang");
-          selectedLang.value = JSON.parse(getLang);
-        }
-      }
-    );
+    console.log("i18n", i18n);
 
     return {
       state,
@@ -265,6 +268,26 @@ export default {
       selectedLang,
       logout,
     };
+  },
+
+  watch: {
+    selectedLang(val) {
+      if (val.length) {
+        let lang = JSON.stringify(val);
+        localStorage.setItem("lang", lang);
+        let choosedLang = val[0].lang;
+        this.changeLang(choosedLang);
+      } else {
+        let getLang = localStorage.getItem("lang");
+        if (getLang) this.selectedLang = JSON.parse(getLang);
+      }
+    },
+  },
+  methods: {
+    changeLang(lang) {
+      this.$i18n.locale = lang.toLowerCase();
+      console.log("locale : ", this.$i18n.locale);
+    },
   },
 };
 </script>

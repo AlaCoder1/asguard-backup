@@ -9,11 +9,21 @@ import squid from "../views/squid/index.vue";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
 import { startTimer } from "../mixins/timer_token.js";
+import { createI18n } from "vue-i18n";
+import enJson from "../locales/en.json";
+import frJson from "../locales/fr.json";
 
 const app = createApp(squid);
 const vuetify = createVuetify({
   components,
   directives,
+});
+const i18n = new createI18n({
+  locale: "en",
+  messages: {
+    en: enJson,
+    fr: frJson,
+  },
 });
 const emitter = mitt();
 app.provide("emitter", emitter);
@@ -26,4 +36,4 @@ function hrefPath() {
 hrefPath();
 startTimer();
 
-app.use(ElementPlus).use(store).use(vuetify).mount("#app");
+app.use(ElementPlus).use(store).use(i18n).use(vuetify).mount("#app");

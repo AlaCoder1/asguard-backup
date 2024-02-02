@@ -1,7 +1,7 @@
 {
   "form":{
   
-    "username":"User name",
+    "username":"Nom d'utilisateur",
     "password":"Mot de passe"
   },
   "buttons":{
@@ -11,6 +11,45 @@
     "enterPassword":"Saisir le mot de passe",
     "enterUserName":"Saisir le nom de l'utilisateur"
   
+  },
+
+  "sideBar":{
+    "dashboard":"Tableau de bord",
+    "system":"Système",
+    "firewall":"Pare-feu",
+    "services":"Services",
+    "reports":"Rapports"
+  },
+  "subtitle":{
+    "assistant":"Assistante",
+    "userCertificatemanagement":"utilisateurs & certificats",
+    "networkManagement":"Gestion du Réseau",
+    "systemConfig":"Configuration du système",
+    "settings":"Paramètres",
+    "overview":"Aperçu",
+    "assignations":"Affectations",
+    "differentNetworks":"Différents réseaux",
+    "diagnostics":"Diagnostiques",
+    "listOfInterface":"Liste des interfaces",
+    "rules":"Rules",
+    "nat":"Nat",
+    "advancedSettings":"Paramètres avancés",
+    "siteToSiteVpn":"site à site VPN",
+    "rsaKeyPairs":"Paires de clés RSA",
+    "openVPN":"OPEN VPN",
+    "ipFilterDoubleMasque":"Filtre IP double masque",
+    "clamAV":"Clam AV",
+    "DHCPV4":"DHCP V4",
+    "DHCPV6":"DHCP V6",
+    "intrusionDetection":"Détection des intrusions",
+    "proxyWeb":"Web proxy",
+    "SDWAN":"SDWAN",
+    "health":"Santé",
+    "insight":"Aperçu",
+    "traffic":"Trafic",
+    "eventLogs":"Journaux d'événements",
+    "subscription":"Abonnement"
+
   },
 
    

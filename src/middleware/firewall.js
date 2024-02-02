@@ -7,6 +7,9 @@ import * as directives from "vuetify/directives";
 import firewall from "../views/firewall/firewall.vue";
 import mitt from "mitt";
 import { startTimer } from "../mixins/timer_token.js";
+import { createI18n } from "vue-i18n";
+import enJson from "../locales/en.json";
+import frJson from "../locales/fr.json";
 
 const app = createApp(firewall);
 
@@ -22,8 +25,14 @@ const currentPath = window.location.pathname;
 function hrefPath() {
   localStorage.setItem("href-path", currentPath);
 }
-
+const i18n = new createI18n({
+  locale: "en",
+  messages: {
+    en: enJson,
+    fr: frJson,
+  },
+});
 hrefPath();
 startTimer();
 
-app.use(store).use(vuetify).mount("#app");
+app.use(store).use(vuetify).use(i18n).mount("#app");

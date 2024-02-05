@@ -1,13 +1,13 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Dashboard" active-menu="home">
+    <base-layout :title="t('sideBar.dashboard')" active-menu="home">
       <template #content>
         <div class="mr-3">
           <div
             class="certificats-management mt-6 ml-5"
             style="display: flex; flex-direction: column"
           >
-            <h4>System informations</h4>
+            <h4>{{ t("home.systemInformation") }}</h4>
             <v-divider></v-divider>
 
             <ag-grid-vue
@@ -19,6 +19,7 @@
               :alwaysShowVarticalScroll="false"
               :defaultColDef="defaultColDef"
               :rowData="rowData.value"
+              :overlayNoRowsTemplate="overlayTemplate"
               style="width: 100%; height: 100%"
               @grid-ready="onGridReady"
             />
@@ -43,11 +44,13 @@
                   domLayout="autoHeight"
                   class="ag-theme-alpine mt-3"
                   :columnDefs="columnsService"
+                  :defaultColDef="defaultColDef"
                   :alwaysShowHorizontalScroll="false"
                   :alwaysShowVerticalScroll="false"
                   :rowData="rowDataServices.value"
+                  :overlayNoRowsTemplate="overlayTemplate"
                   style="width: 100%; height: 100%"
-                  @grid-ready="onGridReadyService"
+                  @grid-ready="onGridReady"
                 />
               </v-col>
             </v-row>
@@ -61,10 +64,12 @@
                   domLayout="autoHeight"
                   class="ag-theme-alpine mt-3"
                   :columnDefs="columnInterfaces"
+                  :defaultColDef="defaultColDef"
                   :rowData="rowDataInterfaces.value"
-                  @grid-ready="onGridReadyInterfaces"
+                  @grid-ready="onGridReady"
                   :alwaysShowHorizontalScroll="false"
                   :alwaysShowVerticalScroll="false"
+                  :overlayNoRowsTemplate="overlayTemplate"
                   style="width: 100%; height: 100%"
                 />
               </v-col>
@@ -77,10 +82,12 @@
                   domLayout="autoHeight"
                   class="ag-theme-alpine mt-3"
                   :columnDefs="columnGateways"
+                  :defaultColDef="defaultColDef"
                   :rowData="rowDataGateways.value"
-                  @grid-ready="onGridReadyGateways"
+                  @grid-ready="onGridReady"
                   :alwaysShowHorizontalScroll="false"
                   :alwaysShowVerticalScroll="false"
+                  :overlayNoRowsTemplate="overlayTemplate"
                   style="width: 100%; height: 100%"
                 />
               </v-col>
@@ -93,12 +100,14 @@
 </template>
 
 <script>
-import { reactive, ref, onMounted } from "vue";
+import { useI18n } from "vue-i18n";
+import { reactive, ref, onMounted, computed, watch } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VueApexCharts from "vue3-apexcharts";
 import BaseLayout from "../../layouts/layout.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+
 export default {
   name: "HomeComponent",
   components: {
@@ -108,6 +117,8 @@ export default {
   },
 
   setup() {
+    const { t } = useI18n();
+    const overlayTemplate = ref("");
     const state = reactive({
       information: null,
       infoParser: null,
@@ -126,37 +137,64 @@ export default {
 
         series: [
           {
-            name: "CPU Percentage (%)",
+            name: "",
             data: [],
           },
           {
-            name: "Memory Percentage (%)",
+            name: "",
             data: [],
           },
         ],
       },
     });
+    const name = computed(() => {
+      return t("agGrid.name");
+    });
+    const cpuType = computed(() => {
+      return t("agGrid.cpuType");
+    });
+    const systemLoad = computed(() => {
+      return t("agGrid.systemLoad");
+    });
+    const lConfChange = computed(() => {
+      return t("agGrid.lConfChange");
+    });
+    const operatingTime = computed(() => {
+      return t("agGrid.operatingTime");
+    });
+    const speed = computed(() => {
+      return t("agGrid.speedUplex");
+    });
+    const address = computed(() => {
+      return t("agGrid.address");
+    });
+    const status = computed(() => {
+      return t("agGrid.status");
+    });
+    const NoRow = computed(() => {
+      return t("agGrid.noRowsToShow");
+    });
 
     const columns = ref([
-      { headerName: "Name", field: "nom", width: 150 },
+      { headerName: name, field: "nom", width: 150 },
       {
         headerName: "Version",
         autoHeight: true,
         cellRenderer: actionCellRenderer,
       },
       {
-        headerName: "CPU type",
+        headerName: cpuType,
         autoHeight: true,
         cellRenderer: actionCpuType,
       },
-      { headerName: "System load", field: "system_load", minWidth: 50 },
+      { headerName: systemLoad, field: "system_load", minWidth: 50 },
       {
-        headerName: "L.Conf Change",
+        headerName: lConfChange,
         field: "last_cong",
         maxWidth: 200,
       },
       {
-        headerName: "Operating time",
+        headerName: operatingTime,
         field: "operating",
         minWidth: 230,
         editable: false,
@@ -175,22 +213,22 @@ export default {
       },
     ]);
     const columnInterfaces = ref([
-      { headerName: "Name", field: "name", minWidth: 150 },
-      { headerName: "Speed and uplex", field: "speed_uplex", minWidth: 50 },
-      { headerName: "Address", field: "address", minWidth: 150 },
+      { headerName: name, field: "name" },
+      { headerName: speed, field: "speed_uplex" },
+      { headerName: address, field: "address" },
     ]);
     const columnGateways = ref([
-      { headerName: "Name", field: "name", minWidth: 150 },
-      { headerName: "Address", field: "address", minWidth: 50 },
-      { headerName: "Status", field: "status", minWidth: 150 },
+      { headerName: name, field: "name" },
+      { headerName: address, field: "address" },
+      { headerName: status, field: "status" },
     ]);
+    const gridApi = ref(null);
 
     const rowData = reactive([]);
     const rowDataServices = reactive([]);
     const rowDataInterfaces = reactive([]);
     const rowDataGateways = reactive([]);
 
-    const gridApi = ref(null);
     const gridOptions = ref({
       pagination: true,
       paginationPageSize: 5,
@@ -240,15 +278,8 @@ export default {
 
       return eGui;
     }
+
     const onGridReady = (params) => {
-      gridApi.value = params.api;
-      if (gridApi.value) {
-        gridApi.value.setRowData(rowData.value);
-      } else {
-        console.error("Grid API.");
-      }
-    };
-    const onGridReadyService = (params) => {
       gridApi.value = params.api;
 
       gridApi.value.sizeColumnsToFit();
@@ -267,9 +298,7 @@ export default {
       }
     };
     const defaultColDef = {
-      sortable: true,
-      filter: true,
-      flex: 1,
+      flex: 2,
     };
 
     const initializeWebSocket = () => {
@@ -298,6 +327,9 @@ export default {
           ];
 
           const timestamp = new Date(data.timestamp * 1000).getTime();
+
+          state.chartOptions.series[0].name = t("home.cpuPercentage");
+          state.chartOptions.series[1].name = t("home.memoryPercentage");
 
           state.chartOptions.series[0].data.push([
             timestamp,
@@ -341,44 +373,14 @@ export default {
       return cookieValue;
     };
 
-    const onGridReadyInterfaces = (params) => {
-      gridApi.value = params.api;
-
-      gridApi.value.sizeColumnsToFit();
-      window.addEventListener("resize", function () {
-        setTimeout(function () {
-          gridApi.value.sizeColumnsToFit();
-        });
-      });
-
-      gridApi.value.sizeColumnsToFit();
-
-      if (gridApi.value) {
-        gridApi.value.setRowData(rowDataInterfaces.value);
-      } else {
-        console.error("Grid API.");
-      }
-    };
-    const onGridReadyGateways = (params) => {
-      gridApi.value = params.api;
-
-      gridApi.value.sizeColumnsToFit();
-      window.addEventListener("resize", function () {
-        setTimeout(function () {
-          gridApi.value.sizeColumnsToFit();
-        });
-      });
-
-      gridApi.value.sizeColumnsToFit();
-
-      if (gridApi.value) {
-        gridApi.value.setRowData(rowDataGateways.value);
-      } else {
-        console.error("Grid API.");
-      }
-    };
-
     onMounted(async () => {
+      overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #000000"
+        data-name="Unbox"
+      />
+    </svg></span>`;
       let infoData =
         document.getElementById("app").attributes["informations"].value;
       let gateways =
@@ -424,14 +426,15 @@ export default {
     });
 
     return {
+      t,
+      overlayTemplate,
+      NoRow,
       state,
       columns,
       rowData,
       defaultColDef,
       columnsService,
       rowDataInterfaces,
-      onGridReadyService,
-      onGridReadyInterfaces,
       rowDataGateways,
       rowDataServices,
       columnGateways,
@@ -440,7 +443,6 @@ export default {
       apexChart,
       gridOptions,
       actionCellRenderer,
-      onGridReadyGateways,
       onGridReady,
       columnInterfaces,
       initializeWebSocket,

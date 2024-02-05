@@ -16,6 +16,7 @@
   "sideBar":{
     "dashboard":"Dashboard",
     "system":"System",
+    "interfaces":"Interfaces",
     "firewall":"Firewall",
     "services":"Services",
     "reports":"Reports"
@@ -52,7 +53,32 @@
 
 
   },
+  "header":{
+    "profile":"Profile",
+    "logout":"Logout"
+  },
 
+  "frensh":"Frensh",
+  "english":"English",
+
+     
+  "agGrid":{
+    "name":"Name",
+    "cpuType":"Type CPU",
+    "systemLoad":"System load",
+    "lConfChange":"L.Conf Change",
+    "operatingTime":"Operation Time",
+    "noRowsToShow":"No Rows To Show",
+    "speedUplex":"Speed and uplex",
+    "address":"Address",
+    "status":"Status"
+
+  },
+  "home":{
+    "systemInformation":"System information",
+    "cpuPercentage":"CPU Percentage (%)",
+    "memoryPercentage":"Memory Percentage (%)"
+  },
 
     "PageGeneral": {
       "NetworksServers": "Network Servers",

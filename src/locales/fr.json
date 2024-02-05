@@ -16,6 +16,7 @@
   "sideBar":{
     "dashboard":"Tableau de bord",
     "system":"Système",
+    "interfaces":"Interfaces",
     "firewall":"Pare-feu",
     "services":"Services",
     "reports":"Rapports"
@@ -51,8 +52,32 @@
     "subscription":"Abonnement"
 
   },
+  "header":{
+    "profile":"Profil",
+    "logout":"Déconnexion"
+  },
 
+  "frensh":"Français",
+  "english":"Anglais",
    
+  "agGrid":{
+    "name":"Nom",
+    "cpuType":"CPU Type",
+    "systemLoad":"Charge système",
+    "lConfChange":"D.Modification de Conf",
+    "operatingTime":"Temps d'utilisation",
+    "noRowsToShow":"Aucune ligne à afficher",
+    "speedUplex":"Vitesse et uplex",
+    "address":"Adresse",
+    "status":"Statut"
+
+  },
+  "home":{
+    "systemInformation":"Informations sur le système",
+    "cpuPercentage":"Pourcentage de CPU (%)",
+    "memoryPercentage":"Pourcentage de mémoire (%)"
+
+  },
    
     "PageGeneral": {
       "NetworksServers": "Serveurs de réseau",

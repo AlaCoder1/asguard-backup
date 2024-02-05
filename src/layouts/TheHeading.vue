@@ -12,14 +12,14 @@
       >
         <span v-html="selectedLang[0].icon" style="margin-top: 4px"></span>
 
-        <span>{{ selectedLang[0].lang }}</span>
+        <span>{{ $t(selectedLang[0].language) }}</span>
         <v-icon>mdi-chevron-down</v-icon>
 
         <v-menu activator="#language-btn">
           <v-list v-model:selected="selectedLang">
             <v-list-item v-for="lang in langs" :key="lang.lang" :value="lang">
-              <v-list-item-title class="d-flex align-center" style="gap: 15px">
-                <span v-html="lang.icon"></span> {{ lang.lang }}
+              <v-list-item-title class="d-flex align-center" style="gap: 10px">
+                <span v-html="lang.icon"></span> {{ $t(lang.language) }}
               </v-list-item-title>
             </v-list-item>
           </v-list>
@@ -34,10 +34,12 @@
           </v-avatar>
         </template>
         <v-list style="cursor: pointer; padding: 15px">
-          <v-list-item> Profile </v-list-item>
-          <v-list-item> Settings </v-list-item>
+          <v-list-item> {{ $t("header.profile") }} </v-list-item>
+          <v-list-item> {{ $t("subtitle.settings") }} </v-list-item>
 
-          <v-list-item> <span @click="logout">Logout</span> </v-list-item>
+          <v-list-item>
+            <span @click="logout">{{ $t("header.logout") }}</span>
+          </v-list-item>
         </v-list>
       </v-menu>
 
@@ -53,9 +55,6 @@
 
 <script>
 import axios from "axios";
-import { createI18n } from "vue-i18n";
-import enJson from "../locales/en.json";
-import frJson from "../locales/fr.json";
 import { reactive, onMounted, ref } from "vue";
 export default {
   name: "ToolbarComponent",
@@ -73,15 +72,6 @@ export default {
     const state = reactive({
       currentInfo: {},
     });
-
-    const i18n = new createI18n({
-      locale: "fr",
-      messages: {
-        en: enJson,
-        fr: frJson,
-      },
-    });
-
     const selectedLang = ref([
       {
         icon: ` <svg
@@ -158,6 +148,7 @@ export default {
                 </g></svg
             >`,
         lang: "En",
+        language: "english",
       },
     ]);
     const langs = ref([
@@ -236,6 +227,7 @@ export default {
                 </g></svg
             >`,
         lang: "En",
+        language: "english",
       },
       {
         icon: `<svg xmlns="http://www.w3.org/2000/svg" style="enable-background: new 0 0 512 512; width: 20px;height: 20px;margin-top:5px" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="256" height="256" viewBox="0 0 256 256" xml:space="preserve">
@@ -247,7 +239,8 @@ export default {
                 <path d="M 30 87.429 C 34.693 89.088 39.739 90 45 90 c 5.261 0 10.307 -0.911 15 -2.571 l 0 -84.859 C 55.307 0.911 50.261 0 45 0 c -5.261 0 -10.307 0.912 -15 2.571 L 30 87.429 z" style="stroke: none; stroke-width: 1; stroke-dasharray: none; stroke-linecap: butt; stroke-linejoin: miter; stroke-miterlimit: 10; fill: rgb(243,244,245); fill-rule: nonzero; opacity: 1;" transform=" matrix(1 0 0 1 0 0) " stroke-linecap="round" />
               </g>
               </svg>`,
-        lang: "FR",
+        lang: "Fr",
+        language: "frensh",
       },
     ]);
 
@@ -260,7 +253,6 @@ export default {
         console.error("Error during logout:", error);
       }
     };
-    console.log("i18n", i18n);
 
     return {
       state,
@@ -275,6 +267,7 @@ export default {
       if (val.length) {
         let lang = JSON.stringify(val);
         localStorage.setItem("lang", lang);
+        localStorage.setItem("lang-slug", val[0].lang);
         let choosedLang = val[0].lang;
         this.changeLang(choosedLang);
       } else {
@@ -286,7 +279,6 @@ export default {
   methods: {
     changeLang(lang) {
       this.$i18n.locale = lang.toLowerCase();
-      console.log("locale : ", this.$i18n.locale);
     },
   },
 };

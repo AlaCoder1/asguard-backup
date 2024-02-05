@@ -164,7 +164,7 @@ export default {
           subMenuVisible: false,
         },
         {
-          title: "Interfaces",
+          title: "sideBar.interfaces",
           icon: "mdi mdi-network",
           active: "interfaces",
           subItems: [

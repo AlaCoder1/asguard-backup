@@ -7,6 +7,7 @@ export const useAuthStore = defineStore("auth", {
     isAuthenticated: false,
     csrfToken: null,
     messageStore: null,
+    message:''
   }),
 
   actions: {
@@ -24,6 +25,8 @@ export const useAuthStore = defineStore("auth", {
             "response-info",
             JSON.stringify(error.response.data)
           );
+          console.log("error", error.response.data.message);
+          this.message = error.response.data.message;
         });
     },
 

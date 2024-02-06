@@ -58,6 +58,7 @@ import axios from "axios";
 import { reactive, onMounted, ref } from "vue";
 export default {
   name: "ToolbarComponent",
+  inject:["emitter"],
 
   setup() {
     onMounted(() => {
@@ -279,6 +280,7 @@ export default {
   methods: {
     changeLang(lang) {
       this.$i18n.locale = lang.toLowerCase();
+      this.emitter.emit('reload-tabs')
     },
   },
 };

@@ -18,8 +18,14 @@ const vuetify = createVuetify({
   directives,
 });
 
+let lang = localStorage.getItem("lang");
+if (lang) {
+  var langLocle = JSON.parse(lang);
+}
 const i18n = new createI18n({
-  locale: "en",
+  legacy: false,
+  locale: langLocle ? langLocle[0].lang.toLowerCase() : "en",
+  // locale: "en",
   messages: {
     en: enJson,
     fr: frJson,

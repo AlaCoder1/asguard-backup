@@ -23,7 +23,7 @@
   },
   "subtitle":{
     "assistant":"Assistant",
-    "userCertificatemanagement":"users & certificate management",
+    "userCertificatemanagement":"Users & Certificate Management",
     "networkManagement":"Network Management",
     "systemConfig":"System configuration",
     "settings":"Settings",
@@ -72,6 +72,12 @@
     "speedUplex":"Speed and uplex",
     "address":"Address",
     "status":"Status"
+
+  },
+
+  "tabs":{
+    "userManagement":"User Management",
+    "certificateManagement":"Certificate Management"
 
   },
   "home":{

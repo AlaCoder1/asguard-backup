@@ -46,22 +46,8 @@ def authentification(request):
             user = authenticate(request, username=username, password=password)
             if (user is not None):
                 login(request, user)
-                # Version SSH connection 
-                # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                # ssh.connect(settings.SSH_HOST, username=username,
-                #             password=password, port=settings.SSH_PORT)
-                # end Version SSH connection
                 settings.USERNAME = username
                 settings.PASSWORD = password
-                ## add this code so that logout work with jwt and timeleft
-                
-                # jwt_token = str(JWTAuthentication.create_jwt(user))
-                # userObject = User.objects.get(username=username)
-                # userObject.token_last_expired = datetime.now(
-                # )+timedelta(hours=settings.JWT_CONF['TOKEN_LIFETIME_HOURS'])
-                # userObject.save()
-                
-                ## end code
                 userObject = User.objects.get(username=username)
                 userDict = userObject.__dict__
                 CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
@@ -70,7 +56,7 @@ def authentification(request):
             else:
                 return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
         else:
-            return JsonResponse({'message': 'Invalid username or password'})
+            return JsonResponse({'message': 'Invalid username or password'},status=status.HTTP_401_UNAUTHORIZED)
 
 @swagger_auto_schema(
     method='GET',

@@ -1,11 +1,24 @@
 {
   "form":{
-  
     "username":"Nom d'utilisateur",
-    "password":"Mot de passe"
+    "password":"Mot de passe",
+    "confirmPassword":"Confirmer le mot de passe",
+    "fullname":"Nom Complet",
+    "emailForLdapAuth":"E-mail pour l'authentification Ldap",
+    "roleUser":"Rôle de l'utilisateur",
+    "assignToGroup":"Affecter à un groupe",
+    "desactivateUser":"Désactiver l'utilisateur"
   },
   "buttons":{
-    "login":"se connecter"
+    "login":"se connecter",
+    "save":"Sauvegarder",
+    "close":"Fermer"
+  },
+  "errors":{
+    "valueRequired":"champs est obligatoire",
+    "invalidPassword":"Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
+    "passwordConfirmation":"Votre mot de passe ne correspond pas"
+
   },
   "placeholder":{
     "enterPassword":"Saisir le mot de passe",
@@ -16,13 +29,14 @@
   "sideBar":{
     "dashboard":"Tableau de bord",
     "system":"Système",
+    "interfaces":"Interfaces",
     "firewall":"Pare-feu",
     "services":"Services",
     "reports":"Rapports"
   },
   "subtitle":{
     "assistant":"Assistante",
-    "userCertificatemanagement":"utilisateurs & certificats",
+    "userCertificatemanagement":"Utilisateurs & Certificats",
     "networkManagement":"Gestion du Réseau",
     "systemConfig":"Configuration du système",
     "settings":"Paramètres",
@@ -51,8 +65,54 @@
     "subscription":"Abonnement"
 
   },
+  "header":{
+    "profile":"Profil",
+    "logout":"Déconnexion"
+  },
 
+  "frensh":"Français",
+  "english":"Anglais",
+  "networkAdmins":"Administrateurs de réseaux",
+  "networksGroups":"Groupes de réseaux",
+
+  
    
+  "agGrid":{
+    "name":"Nom",
+    "cpuType":"CPU Type",
+    "systemLoad":"Charge système",
+    "lConfChange":"D.Modification de Conf",
+    "operatingTime":"Temps d'utilisation",
+    "noRowsToShow":"Aucune ligne à afficher",
+    "speedUplex":"Vitesse et uplex",
+    "address":"Adresse",
+    "status":"Statut",
+    "user":"Utilisateur",
+    "role":"Rôle"
+    
+
+  },
+  "tabs":{
+    "userManagement":"Gestion des utilisateurs",
+    "certificateManagement":"Gestion des certificats"
+
+  },
+  "home":{
+    "systemInformation":"Informations sur le système",
+    "cpuPercentage":"Pourcentage de CPU (%)",
+    "memoryPercentage":"Pourcentage de mémoire (%)"
+
+  },
+
+  "button":{
+    "addUser":"Ajouter Utilisateur"
+  },
+  "modal":{
+    "create":"Créer Un",
+    "update":"Modifier Un"
+
+
+  },
    
     "PageGeneral": {
       "NetworksServers": "Serveurs de réseau",

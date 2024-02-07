@@ -10,15 +10,25 @@ import { startTimer } from "../mixins/timer_token.js";
 import { createI18n } from "vue-i18n";
 import enJson from "../locales/en.json";
 import frJson from "../locales/fr.json";
+import mitt from "mitt";
+
+const emitter = mitt();
+
 
 const app = createApp(home);
 const vuetify = createVuetify({
   components,
   directives,
 });
-
+app.provide("emitter", emitter);
+let lang = localStorage.getItem("lang");
+if (lang) {
+  var langLocle = JSON.parse(lang);
+}
 const i18n = new createI18n({
-  locale: "en",
+  legacy: false,
+  locale: langLocle ? langLocle[0].lang.toLowerCase() : "en",
+  // locale: "en",
   messages: {
     en: enJson,
     fr: frJson,

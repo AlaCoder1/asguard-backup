@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h4>Networks groups</h4>
+    <h4>{{ $t("networksGroups") }}</h4>
 
     <div style="height: 100%">
       <div style="display: flex; flex-direction: row; height: 100%">

@@ -28,6 +28,7 @@ if (lang) {
 
 const i18n = new createI18n({
   // locale: "fr",
+  legacy: false,
   locale: langLocle ? langLocle[0].lang.toLowerCase() : "en",
   messages: {
     en: enJson,

@@ -1,11 +1,24 @@
 {
   "form":{
-  
     "username":"Nom d'utilisateur",
-    "password":"Mot de passe"
+    "password":"Mot de passe",
+    "confirmPassword":"Confirmer le mot de passe",
+    "fullname":"Nom Complet",
+    "emailForLdapAuth":"E-mail pour l'authentification Ldap",
+    "roleUser":"Rôle de l'utilisateur",
+    "assignToGroup":"Affecter à un groupe",
+    "desactivateUser":"Désactiver l'utilisateur"
   },
   "buttons":{
-    "login":"se connecter"
+    "login":"se connecter",
+    "save":"Sauvegarder",
+    "close":"Fermer"
+  },
+  "errors":{
+    "valueRequired":"champs est obligatoire",
+    "invalidPassword":"Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
+    "passwordConfirmation":"Votre mot de passe ne correspond pas"
+
   },
   "placeholder":{
     "enterPassword":"Saisir le mot de passe",
@@ -59,6 +72,10 @@
 
   "frensh":"Français",
   "english":"Anglais",
+  "networkAdmins":"Administrateurs de réseaux",
+  "networksGroups":"Groupes de réseaux",
+
+  
    
   "agGrid":{
     "name":"Nom",
@@ -69,7 +86,10 @@
     "noRowsToShow":"Aucune ligne à afficher",
     "speedUplex":"Vitesse et uplex",
     "address":"Adresse",
-    "status":"Statut"
+    "status":"Statut",
+    "user":"Utilisateur",
+    "role":"Rôle"
+    
 
   },
   "tabs":{
@@ -81,6 +101,16 @@
     "systemInformation":"Informations sur le système",
     "cpuPercentage":"Pourcentage de CPU (%)",
     "memoryPercentage":"Pourcentage de mémoire (%)"
+
+  },
+
+  "button":{
+    "addUser":"Ajouter Utilisateur"
+  },
+  "modal":{
+    "create":"Créer Un",
+    "update":"Modifier Un"
+
 
   },
    

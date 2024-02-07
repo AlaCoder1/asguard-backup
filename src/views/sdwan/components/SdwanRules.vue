@@ -16,7 +16,7 @@
               :rowData="rowDataRule.value"
             />
           </div>
-          <div class="d-flex justify-end mt-3">
+          <div class="d-flex justify-end mt-3 mb-15">
             <VButton
               rounded
               outlined
@@ -31,7 +31,7 @@
           </div>
         </v-col>
       </v-row>
-      <!-- <ModalKeys :isOpen="state.isModalOpen" /> -->
+      <ModalSdwanRule :isOpen="state.isModalOpen" />
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
@@ -59,22 +59,23 @@
 
 <script>
 import axios from "axios";
-import { reactive, ref, onMounted } from "vue";
+import { reactive, ref, onMounted, inject } from "vue";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-// import ModalKeys from "@/components/modals/ModalKeys.vue";
+import ModalSdwanRule from "@/components/modals/ModalSdwanRule.vue";
 export default {
   name: "Sdwan",
   components: {
-    // ModalKeys,
+    ModalSdwanRule,
     BaseLayout,
     AgGridVue,
     VButton,
   },
   setup() {
+    const emitter = inject("emitter");
     const state = reactive({
       deleteDialog: false,
       deletedRow: null,
@@ -217,6 +218,10 @@ export default {
     };
 
     onMounted(() => {
+      emitter.on("closeSdwanModalRule", () => {
+        state.isModalOpen = false;
+      });
+
       let objArea = {
         name: "test",
         members: "members",

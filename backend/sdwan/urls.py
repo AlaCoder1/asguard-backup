@@ -16,4 +16,5 @@ urlpatterns = [
     path('deleteSdwanRule/<int:id>', views.delete_sdwan_rule, name="deleteSdwanRule"),
     path('updateSdwanRule/<int:id>', views.update_sdwan_rule, name="updateSdwanRule"),
     path('startSdwanRule/<int:id>', views.start_sdwan_rule, name="startSdwanRule"),
+    path('stopSdwanRule/<int:id>', views.stop_sdwan_rule, name="stopSdwanRule"),
 ]

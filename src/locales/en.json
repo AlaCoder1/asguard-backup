@@ -2,10 +2,24 @@
   "form":{
     
     "username":"Username",
-    "password":"Password"
+    "password":"Password",
+    "confirmPassword":"Confirm password",
+    "fullname":"Fullname",
+    "emailForLdapAuth":"Email for Ldap auth",
+    "roleUser":"Role User",
+    "assignToGroup":"Assign to Group",
+    "desactivateUser":"Desactivate User"
   },
   "buttons":{
-    "login":"login"
+    "login":"login",
+    "save":"Save",
+    "close":"Close"
+  },
+  "errors":{
+    "valueRequired":"Value is required",
+    "invalidPassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
+    "passwordConfirmation":"Your password does not match"
+
   },
 
   "placeholder":{
@@ -60,6 +74,8 @@
 
   "frensh":"Frensh",
   "english":"English",
+  "networkAdmins":"Networks admins",
+  "networksGroups":"Networks admins",
 
      
   "agGrid":{
@@ -71,7 +87,9 @@
     "noRowsToShow":"No Rows To Show",
     "speedUplex":"Speed and uplex",
     "address":"Address",
-    "status":"Status"
+    "status":"Status",
+    "user":"User",
+    "role":"Role"
 
   },
 
@@ -84,6 +102,15 @@
     "systemInformation":"System information",
     "cpuPercentage":"CPU Percentage (%)",
     "memoryPercentage":"Memory Percentage (%)"
+  },
+
+  "button":{
+    "addUser":"Add User"
+  },
+  "modal":{
+    "create":"Create",
+    "update":"Update"
+
   },
 
     "PageGeneral": {

@@ -1,9 +1,12 @@
 from django.db import models
 
+from backend.network.models import Interface
+
 
 class Area(models.Model):
     name = models.CharField(max_length=200, unique=True)
-    members = models.CharField(max_length=1000, default=None, blank=True)
+    members = models.ManyToManyField(Interface, through="AreaInterface")
+
 
     class Meta:
         db_table = 'area'
@@ -23,3 +26,11 @@ class SdwanRules(models.Model):
 
     class Meta:
         db_table = 'sdwan_rules'
+
+
+class AreaInterface(models.Model):
+    area = models.ForeignKey(Area, on_delete=models.CASCADE)
+    interface = models.ForeignKey(Interface, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = 'area_interface'

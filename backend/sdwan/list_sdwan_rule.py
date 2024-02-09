@@ -18,6 +18,7 @@ def get_list_all_sdwan_rule():
         sdwan_rule_id = sdwan_rule['pk']
         sdwan_rule.pop('pk')
         sdwan_rule['fields']['id'] = sdwan_rule_id
+        sdwan_rule['fields']['area_name'] = SdwanRules.objects.get(id=sdwan_rule_id).area.name
         list_sdwan_rule.append(sdwan_rule['fields'])
     return list_sdwan_rule
 

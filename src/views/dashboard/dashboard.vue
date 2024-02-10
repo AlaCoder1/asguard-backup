@@ -176,30 +176,44 @@ export default {
     });
 
     const columns = ref([
-      { headerName: name, field: "nom", width: 150 },
+      { headerName: name, field: "nom", width: 90, minWidth: 50, flex: 1 },
       {
         headerName: "Version",
         autoHeight: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
         cellRenderer: actionCellRenderer,
       },
       {
         headerName: cpuType,
         autoHeight: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
         cellRenderer: actionCpuType,
       },
-      { headerName: systemLoad, field: "system_load", minWidth: 50 },
+      {
+        headerName: systemLoad,
+        field: "system_load",
+        width: 90,
+        minWidth: 50,
+        flex: 1,
+      },
       {
         headerName: lConfChange,
         field: "last_cong",
-        maxWidth: 200,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: operatingTime,
         field: "operating",
-        minWidth: 230,
         editable: false,
         sortable: false,
         filter: false,
+        width: 250,
       },
     ]);
     const columnsService = ref([
@@ -281,15 +295,14 @@ export default {
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
+      // gridApi.value.sizeColumnsToFit();
+      // window.addEventListener("resize", function () {
+      //   setTimeout(function () {
+      //     gridApi.value.sizeColumnsToFit();
+      //   });
+      // });
 
-      gridApi.value.sizeColumnsToFit();
-      window.addEventListener("resize", function () {
-        setTimeout(function () {
-          gridApi.value.sizeColumnsToFit();
-        });
-      });
-
-      gridApi.value.sizeColumnsToFit();
+      // gridApi.value.sizeColumnsToFit();
 
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataServices.value);
@@ -298,7 +311,7 @@ export default {
       }
     };
     const defaultColDef = {
-      flex: 2,
+      // flex: 2,
     };
 
     const initializeWebSocket = () => {
@@ -325,6 +338,7 @@ export default {
               operating: data.current_date,
             },
           ];
+         
 
           const timestamp = new Date(data.timestamp * 1000).getTime();
 

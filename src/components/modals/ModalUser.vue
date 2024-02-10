@@ -3,11 +3,14 @@
     <!-- <v-dialog v-model="isOpen" persistent width="600">
        -->
     <v-dialog v-model="openModal" persistent width="600">
-      <form ref="myForm" @submit.prevent="submitForm">
+      <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
           <v-card-title>
             <span class="text-h5"
-              >{{ mode === "create" ? "Create" : "Update" }} user</span
+              >{{
+                mode === "create" ? $t("modal.create") : $t("modal.update")
+              }}
+              {{ $t("agGrid.user") }}</span
             >
           </v-card-title>
           <v-card-text>
@@ -17,7 +20,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    label="Username "
+                    :label="$t('form.username')"
                     v-model="state.formData.username"
                   ></v-text-field>
                   <span
@@ -29,7 +32,7 @@
 
                 <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
                   <v-text-field
-                    label="Password"
+                    :label="$t('form.password')"
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
@@ -42,7 +45,7 @@
 
                 <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
                   <v-text-field
-                    label="Confirm password"
+                    :label="$t('form.confirmPassword')"
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
@@ -57,7 +60,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    label="Fullname "
+                    :label="$t('form.fullname')"
                     v-model="state.formData.fullname"
                   ></v-text-field>
                   <span
@@ -69,7 +72,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    label="Email for Ldap auth "
+                    :label="$t('form.emailForLdapAuth')"
                     v-model="state.formData.email"
                   ></v-text-field>
                   <span
@@ -82,7 +85,7 @@
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
                     :items="['root', 'admin', 'user']"
-                    label="Role user"
+                    :label="$t('form.roleUser')"
                     v-model="state.formData.role"
                   ></v-autocomplete>
                   <span class="error-feedback" v-if="v$.formData.role.$error">{{
@@ -93,7 +96,7 @@
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
                     :items="groups"
-                    label="Assign to Group"
+                    :label="$t('form.assignToGroup')"
                     multiple
                     item-title="groupname"
                     item-value="id"
@@ -104,9 +107,9 @@
                 </v-col>
 
                 <v-col cols="12" class="mt-5">
-                  <label for="Deactivate User" class="mr-1"
-                    >Desactivate User</label
-                  >
+                  <label for="Deactivate User" class="mr-3">{{
+                    $t("form.desactivateUser")
+                  }}</label>
                   <input
                     type="checkbox"
                     id="Deactivate User"
@@ -127,7 +130,7 @@
               :rounded="true"
               class="mt-3 btn-add"
             >
-              <span class="text-white">Save</span>
+              <span class="text-white">{{ $t("buttons.save") }}</span>
             </v-btn>
 
             <v-btn
@@ -136,7 +139,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white">Close</span>
+              <span class="text-white">{{ $t("buttons.close") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -154,6 +157,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import {
@@ -204,18 +208,28 @@ export default {
       userId: null,
       ModalMode: null,
     });
+    const { t } = useI18n();
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const invalidPassword = computed(() => {
+      return t("errors.invalidPassword");
+    });
+    const passwordConfirmation = computed(() => {
+      return t("errors.passwordConfirmation");
+    });
 
     const rules = computed(() => {
       return {
         formData: {
-          username: { required },
+          username: { required: helpers.withMessage(error, required) },
           password: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(() => state.ModalMode == "create")
             ),
             isValidPassword: helpers.withMessage(
-              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+              invalidPassword,
 
               helpers.regex(
                 /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
@@ -224,17 +238,17 @@ export default {
           },
           confirm_password: {
             sameAsPassword: helpers.withMessage(
-              "Your password does not match",
+              passwordConfirmation,
 
               sameAs(state.formData.password)
             ),
             requiredIf: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(() => state.ModalMode == "create")
             ),
 
             isValidPassword: helpers.withMessage(
-              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+              invalidPassword,
 
               helpers.regex(
                 /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
@@ -242,15 +256,16 @@ export default {
             ),
           },
 
-          email: { required, email },
-          fullname: { required },
-          role: { required },
+          email: { required: helpers.withMessage(error, required), email },
+          fullname: { required: helpers.withMessage(error, required) },
+          role: { required: helpers.withMessage(error, required) },
         },
       };
     });
 
     const v$ = useValidate(rules, state);
     return {
+      t,
       state,
       v$,
     };
@@ -439,5 +454,8 @@ export default {
   color: red;
   font-size: 0.85em;
   display: flex;
+}
+.scroller {
+  overflow: auto;
 }
 </style>

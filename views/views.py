@@ -24,6 +24,9 @@ from backend.ids_ips.serializers import AlertSerializer
 import ast
 from backend.proxy.views import *
 from backend.proxy.models import *
+from backend.sdwan.list_area import get_list_all_area
+from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
+from backend.subscription.models import plan, plansSubscription,plansFeatures
 
 
 def get_squid_status_from_bd():
@@ -526,7 +529,8 @@ def interface_page(request):
 def firewall_page(request):
     rules=get_all_rules(request)
     interfaces=get_all_interfaces(request)
-    context = {'rules':rules, 'interfaces':interfaces}
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'rules':rules, 'interfaces':interfaces,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'firewall_page.html',context)
 
 @login_required(login_url='/')
@@ -573,7 +577,11 @@ def squid_proxy(request):
 
 @login_required(login_url='/')
 def sdwan_page(request):
-    return render(request, 'sdwan_page.html',)
+    allArea = get_list_all_area()
+    allRule = get_list_all_sdwan_rule()
+    context = {'allArea': json.dumps(allArea),'allRule': json.dumps(allRule)}
+    print('context',context) 
+    return render(request, 'sdwan_page.html',context)
 
 @login_required(login_url='/')
 def clamav_page(request):
@@ -582,25 +590,19 @@ def clamav_page(request):
     print('******************** :',context)
     return render(request, 'clamaV_page.html',context)
 
-
 @login_required(login_url='/')
 def subscription_page(request):
-    context = {}
+    subscription_information=subscription_info(request)
+    print('subscription_information',subscription_information)
+    context = {'subscription_information':json.dumps(subscription_information)}
     return render(request, 'subscription_page.html', context)
-
+ 
 
 def login(request):
-    usr=getAllUsers(request)
-    print (usr)
-
-    context = {'users':usr}
     if request.user.is_authenticated:
-        next_url = request
-        # index_page(request)
-        print('path+***********: ',request.path)
         return redirect('/dashboard/')
     else:
-        return render(request, 'login.html',context)
+        return render(request, 'login.html')
 
 
 @login_required(login_url='/')
@@ -641,8 +643,44 @@ def suricata(request):
     res = json.loads(suricata)
     id=res[0]['pk']
     general_config_suricata=general_suricata_configuration(request, id)
-    rules_suricata=get_rules_from_database(request)
-    alerts_suricata=get_alerts_from_database(request)
+    # rules_suricata=get_rules_from_database(request)
+    # alerts_suricata=get_alerts_from_database(request)
     interfaces=get_all_interfaces_version2(request)
-    context={"general_config_suricata":general_config_suricata,"rules_suricata":rules_suricata,"alerts_suricata":alerts_suricata,"all_interfaces":interfaces}
+    context={"general_config_suricata":general_config_suricata,"all_interfaces":interfaces}
     return render(request, 'ids_ips.html',context)
+
+
+def list_features_about_last_subscription(request):
+    list_features = []
+    if request.method == 'GET':
+        last_subscription = plansSubscription.objects.order_by('start_at').last()
+        if last_subscription !=None:
+            last_subscription_dict = last_subscription.__dict__
+            if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+                plan_features= plansFeatures.objects.filter(plan = last_subscription.plan.pk)
+                plan_features_dict = serializers.serialize("json", plan_features)
+                res = json.loads(plan_features_dict)
+                for i in res:
+                    for key, value in i.items():
+                        if key == 'fields':
+                            list_features.append(i['fields']['description'])
+        else:
+            list_features = []
+        return list_features
+    
+    
+def subscription_info(request):
+    subscription_info = {}
+    if request.method == 'GET':
+        last_subscription = plansSubscription.objects.order_by('start_at').last()
+        if last_subscription != None:
+            last_subscription_dict = last_subscription.__dict__
+            # if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+            plan_info = plan.objects.get(id = last_subscription_dict['plan_id'])
+            subscription_info['type_pack'] =plan_info.slug
+            subscription_info['date_start'] =last_subscription_dict['start_at'].strftime('%Y-%m-%d %H:%M:%S')
+            subscription_info['end_at'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
+            subscription_info['expiration_date'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            subscription_info = {}
+        return subscription_info

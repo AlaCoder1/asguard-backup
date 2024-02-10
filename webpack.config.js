@@ -47,6 +47,21 @@ Encore.setOutputPath("static/")
     config.plugins.push("@babel/plugin-proposal-class-properties");
   })
 
+  .addRule({
+    test: /\.(p12)$/,
+    use: [
+      {
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+          outputPath: 'downloads/',  // Change the output path as needed
+        },
+      },
+    ],
+    
+  })
+
+
   .configureBabelPresetEnv((config) => {
     config.useBuiltIns = "usage";
     config.corejs = 3;

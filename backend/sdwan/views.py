@@ -5,13 +5,14 @@ from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_OBJECT, TYPE_STRING, TYPE_
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
+from backend.network.models import Interface
 
 from backend.sdwan.list_area import get_list_all_area, get_one_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule, get_one_sdwan_rule
-from backend.sdwan.models import Area, AreaInterface, SdwanRules
-from backend.sdwan.serializers import AreaInterfaceSerializer, AreaSerializer, SdwanRulesSerializer
-from backend.sdwan.utils import routing_table_id, rule_failover_requirements, rule_round_robin_requirements
-from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, kill_celery_process_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
+from backend.sdwan.models import Area, SdwanRules
+from backend.sdwan.serializers import AreaSerializer, SdwanRulesSerializer
+from backend.sdwan.utils import routing_table_id
+from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, stop_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
 from utils.constant_variables import CONSTANT_SDWAN_RULE, ERROR_MESSAGES_CREATING, ERROR_MESSAGES_DELETING, ERROR_MESSAGES_INEXISTANT, ERROR_MESSAGES_START, ERROR_MESSAGES_STOP, ERROR_MESSAGES_UPDATING, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_DELETE, SUCCESS_MESSAGES_START, SUCCESS_MESSAGES_STOP, SUCCESS_MESSAGES_UPDATE
 from utils.errors_utils import CommandExecutionError
 
@@ -45,10 +46,10 @@ def get_area(request, id):
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE AN AREA",
                      request_body=Schema(type=TYPE_OBJECT, required=['name', 'members'],
                                          properties={'name': Schema(type=TYPE_STRING),
-                                                     'members': Schema(type=TYPE_ARRAY, description="list of interfaces name like ['LAN', 'WAN']",
+                                                     'members': Schema(type=TYPE_ARRAY, description="list of interfaces ids", 
                                                                        items=Schema(type=TYPE_STRING)),
-                                                                       }
-                                                                       ))
+                                                     }
+                                                     ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -88,11 +89,10 @@ def delete_area(request, id):
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN AREA",
                      request_body=Schema(type=TYPE_OBJECT, required=['name', 'members'],
                                          properties={'name': Schema(type=TYPE_STRING),
-                                                     'members': Schema(type=TYPE_ARRAY, 
-                                                                       description="list of interfaces name like ['LAN', 'WAN']",
+                                                     'members': Schema(type=TYPE_ARRAY, description="list of interfaces ids", 
                                                                        items=Schema(type=TYPE_STRING)),
-                                                                       }
-                                                                       ))
+                                                     }
+                                                     ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -152,7 +152,7 @@ def get_sdwan_rule(request, id):
                                      'destination_address':Schema(type=TYPE_STRING, description="format of address/mask"),
                                      'health_check':Schema(type=TYPE_STRING),
                                      'health_check_target':Schema(type=TYPE_STRING),
-                                     'primary_interface':Schema(type=TYPE_STRING, description="This is used when choosing failover algorithm")
+                                     'primary_interface':Schema(type=TYPE_STRING, description="Name of the primary interface. This is used when choosing failover algorithm")
                                      }
                                      ))
 @api_view(['POST'])
@@ -163,6 +163,8 @@ def create_sdwan_rule(request):
     try:
         data = request.data
         data["table_id"] = routing_table_id()
+        if data["algorythme_type"] == "failover":
+            data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
         serializer_sdwan_rule = SdwanRulesSerializer(data=data)
         if serializer_sdwan_rule.is_valid():
 
@@ -223,6 +225,8 @@ def update_sdwan_rule(request, id):
     """Updating a new SDWAN rule"""
     try:
         data = request.data
+        if data["algorythme_type"] == "failover":
+            data["primary_interface"] = Interface.objects.get(name_interface=data["primary_interface"]).pk
         sdwan_rule = SdwanRules.objects.get(id=id)
 
         serializer_sdwan_rule = SdwanRulesSerializer(sdwan_rule, data=data)
@@ -230,6 +234,19 @@ def update_sdwan_rule(request, id):
 
             # Update the rule in system
             update_sdwan_rule_in_system(data["source_address"], str(sdwan_rule.table_id))
+
+            # If the rule is started before the update it must be stoped and started again
+            if sdwan_rule.rule_status:
+                # Stop the rule
+                sdwan_rule.rule_status = False
+                sdwan_rule.save()
+                stop_sdwan_rule_in_system()
+                
+                # Start the rule
+                sdwan_rule.rule_status = True
+                serializer_sdwan_rule.save()
+                start_sdwan_rule_in_system(id)
+                return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(data["name"])}, status=201)
 
             # Update the rule in the database
             serializer_sdwan_rule.save()
@@ -272,7 +289,7 @@ def stop_sdwan_rule(request, id):
         sdwan_rule = SdwanRules.objects.get(id=id)
         sdwan_rule.rule_status = False
         sdwan_rule.save()
-        kill_celery_process_in_system()
+        stop_sdwan_rule_in_system()
         
         return JsonResponse({"msg": SUCCESS_MESSAGES_STOP.format(CONSTANT_SDWAN_RULE, sdwan_rule.name)}, status=201)
         

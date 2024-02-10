@@ -2,9 +2,10 @@
 
 from datetime import datetime
 import subprocess
+from subprocess import PIPE, Popen
 import time
-
 from celery import shared_task
+
 from backend.sdwan.models import SdwanRules
 from backend.sdwan.utils import rule_failover_requirements, rule_round_robin_requirements
 from utils.commands_utils import execute_command_without_arguments
@@ -28,7 +29,7 @@ def update_sdwan_rule_in_system(source_address, table_id):
 
 def script_ping(interface, health_check_target):
     """Function to check the availability of the interface by testing the ping to a gateway associated with this interface"""
-    process = subprocess.run(["sudo", "ping", "-c", "1", "-w", "1", "-I", interface, health_check_target], stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE)
+    process = subprocess.run(["sudo", "ping", "-c", "1", "-w", "1", "-I", interface, health_check_target], stdout=PIPE, text=True, stderr=PIPE)
     if process.stdout.find("1 packets transmitted, 1 received") >= 0:
         return True
     return False
@@ -57,11 +58,9 @@ def script_failover(rule_id):
     while rule_status:
         # Test the availablility of the primary interface
         if script_ping(primary_ifname, sdwan_rule.health_check_target):
-            print(f"primary interface: {primary_gateway}")
             switch_gateway(backup_gateway, backup_ifname, primary_gateway, primary_ifname, str(sdwan_rule.table_id))
         else:
             # Switch to the backup interface
-            print(f"backup interface: {backup_gateway}")
             switch_gateway(primary_gateway, primary_ifname, backup_gateway, backup_ifname, str(sdwan_rule.table_id))
         time.sleep(sdwan_rule.health_check)
         rule_status = SdwanRules.objects.get(id=rule_id).rule_status
@@ -110,49 +109,63 @@ def script_round_robin(rule_id):
 
 
 def start_sdwan_rule_in_system(rule_id):
-    print('start background task')
+    """Function to start the SDwan rule in system"""
+    # Check if celery is runned by checking if there is another SDwan rule started before
     if len(SdwanRules.objects.filter(rule_status=True)) == 1:
-        process = subprocess.Popen("sudo celery -A asguard worker -l info 2>/dev/null &", 
-                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        # Run celery in background
+        process = Popen("sudo celery -A asguard worker -l info 2>/dev/null &", stdout=PIPE, stderr=PIPE, shell=True)
         time.sleep(5)
         process.terminate()
         process.wait()
+    
+    # Run the SDwan rule
     sdwan_rule = SdwanRules.objects.get(id=rule_id)
-
     if sdwan_rule.algorythme_type == 'failover':
         script_failover.delay(rule_id)
     else:
         script_round_robin.delay(rule_id)
 
 
-def kill_celery_process_in_system():
+def stop_sdwan_rule_in_system():
+    """Function to stop the SDwan rule in system"""
 
+    # Check if celery is runned by checking if there is no SDwan rule started
     if len(SdwanRules.objects.filter(rule_status=True)) == 0:
-    # display information about the currently running processes
+        # display information about the currently running processes
         process = execute_command_without_arguments(["sudo", "ps", "aux"])
         process = process.stdout.splitlines()
 
         # display information about the celery running processe
         celery_list = [line.split() for line in process if "celery" in line.split()[10]]
+
+        # Kill the celery process in system
         execute_command_without_arguments(["sudo", "kill", "-9", celery_list[0][1]])
 
 
 def synchronize_routing_table():
-    list_sdwan_rule = SdwanRules.objects.order_by("table_id")
-    print("list_sdwan_rule= ", list_sdwan_rule)
+    """Synchronize routing tables with database"""
+    # Get list of all routing tables from system
     list_routing_table_system = execute_command_without_arguments(["ip", "rule", "show"])
     list_routing_table_system = list_routing_table_system.stdout.splitlines()
+    
+    # Removing the three default routing table from list
     list_routing_table_system.remove('0:\tfrom all lookup local')
     list_routing_table_system.remove('32766:\tfrom all lookup main')
     list_routing_table_system.remove('32767:\tfrom all lookup default')
+
+    # Get list of SDwan rules
+    list_sdwan_rule = SdwanRules.objects.order_by("table_id")
+
+    # Add the missing table in system
     for sdwan_rule in list_sdwan_rule:
         if not find_routing_table(sdwan_rule, list_routing_table_system):
             create_sdwan_rule_in_system(sdwan_rule.source_address, str(sdwan_rule.table_id))
 
 
 def find_routing_table(sdwan_rule:SdwanRules, list_routing_table_system):
-    """Find routing table in list of rules"""
-    line_table_rule = f"from {sdwan_rule.source_address} lookup {sdwan_rule.table_id}"
+    """Find routing table in list of SDwan rules in system"""
+    # Remove the mask /32 of the source_address because system never set /32 in routing table
+    line_table_rule = f"""from {sdwan_rule.source_address.replace("/32", "")} lookup {sdwan_rule.table_id}"""
     for table in list_routing_table_system:
         if table.find(line_table_rule) > -1:
             return True

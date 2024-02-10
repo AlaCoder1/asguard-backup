@@ -1,7 +1,7 @@
 import json
 from django.core import serializers
 
-from backend.sdwan.models import Area
+from backend.sdwan.models import Area, AreaInterface
 
 
 def get_list_all_area():
@@ -16,7 +16,8 @@ def get_list_all_area():
         area_id = area['pk']
         area.pop('pk')
         area['fields']['id'] = area_id
-        area['fields']['members'] = list(area['fields']['members'].split(','))
+        area_interface = AreaInterface.objects.filter(area_id=area_id)
+        area['fields']['members'] = [interface.interface.name_interface for interface in area_interface]
         list_area.append(area['fields'])
     return list_area
 

@@ -22,11 +22,11 @@ def rule_failover_requirements(rule_id):
     area_interfaces = [area_interface.interface for area_interface in area_interfaces]
 
     # Remove the primary to get the backup interface
-    area_interfaces.remove(Interface.objects.get(name_interface=sdwan_rule.primary_interface))
+    area_interfaces.remove(sdwan_rule.primary_interface)
     backup_interface = area_interfaces[0]
 
     # Get primary and backup gateway and ifname
-    list_interfaces = get_interfaces_details(sdwan_rule.primary_interface, backup_interface.name_interface)
+    list_interfaces = get_interfaces_details(sdwan_rule.primary_interface.name_interface, backup_interface.name_interface)
     return (list_interfaces[0]["gateway"], list_interfaces[0]["ifname"], 
             list_interfaces[1]["gateway"], list_interfaces[1]["ifname"])
 

@@ -1,10 +1,15 @@
 <template>
   <v-row justify="center">
     <v-dialog v-model="state.openModal" persistent width="600">
-      <form ref="myForm" @submit.prevent="submitForm">
+      <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> Create new Rule</span>
+            <span class="headline" v-if="modalMode === 'create'">
+              Create New Rule</span
+            >
+            <span class="headline" v-if="modalMode === 'edit'">
+              Update Rule</span
+            >
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -24,6 +29,9 @@
                     label="Source"
                     v-model="state.source"
                   ></v-text-field>
+                  <p class="error-feedback mb-5" v-if="v$.source.$error">
+                    {{ v$.source.$errors[0].$message }}
+                  </p>
                 </v-col>
                 <v-col cols="1" class="mb-n6">
                   <div class="ml-1 mt-5">/</div>
@@ -34,6 +42,9 @@
                     v-model="state.sourcePrefix"
                     :items="numberList"
                   ></v-select>
+                  <p class="error-feedback mb-5" v-if="v$.sourcePrefix.$error">
+                    {{ v$.sourcePrefix.$errors[0].$message }}
+                  </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
@@ -48,36 +59,55 @@
                     {{ v$.algo.$errors[0].$message }}
                   </p>
                 </v-col>
-                <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.area"
-                    label="Area"
-                    item-title="name"
-                    item-value="slug"
-                    :items="listAlgo"
-                    return-object
-                  ></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.area.$error">
-                    {{ v$.area.$errors[0].$message }}
-                  </p>
-                </v-col>
+                <template v-if="state.algo.slug != 'failover'">
+                  <v-col cols="12" class="mb-n6">
+                    <v-select
+                      v-model="state.area"
+                      label="Area"
+                      item-title="name"
+                      item-value="slug"
+                      :items="state.mapeArea"
+                      return-object
+                    ></v-select>
+                    <p class="error-feedback mb-5" v-if="v$.area.$error">
+                      {{ v$.area.$errors[0].$message }}
+                    </p>
+                  </v-col>
+                </template>
+                <template v-else>
+                  <v-col cols="12" class="mb-n6">
+                    <v-select
+                      v-model="state.area"
+                      label="Area"
+                      item-title="name"
+                      item-value="slug"
+                      :items="state.KlonaArea"
+                      return-object
+                    ></v-select>
+                    <p class="error-feedback mb-5" v-if="v$.area.$error">
+                      {{ v$.area.$errors[0].$message }}
+                    </p>
+                  </v-col>
+                </template>
 
-                <v-col cols="7" class="mb-n6">
-                  <v-text-field
-                    label="Destination"
-                    v-model="state.destination"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="1" class="mb-n6">
-                  <div class="ml-1 mt-5">/</div>
-                </v-col>
-                <v-col cols="4" class="mb-n6">
-                  <v-select
-                    label="Prefix"
-                    v-model="state.destinationPrefix"
-                    :items="numberList"
-                  ></v-select>
-                </v-col>
+                <template v-if="false">
+                  <v-col cols="7" class="mb-n6">
+                    <v-text-field
+                      label="Destination"
+                      v-model="state.destination"
+                    ></v-text-field>
+                  </v-col>
+                  <v-col cols="1" class="mb-n6">
+                    <div class="ml-1 mt-5">/</div>
+                  </v-col>
+                  <v-col cols="4" class="mb-n6">
+                    <v-select
+                      label="Prefix"
+                      v-model="state.destinationPrefix"
+                      :items="numberList"
+                    ></v-select>
+                  </v-col>
+                </template>
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
@@ -105,15 +135,25 @@
                     {{ v$.checkTargetMilliseconds.$errors[0].$message }}
                   </p>
                 </v-col>
-                <v-container class="mx-0 pt-1">
-                  <v-radio-group v-model="state.inline" inline>
+                <v-container
+                  class="mx-0 pt-1"
+                  v-if="state.algo.slug === 'failover'"
+                >
+                  <v-radio-group v-model="state.checkInterface" inline>
                     <v-row>
-                      <v-col cols="6">
-                        <v-radio label="test1" value="radio-1"></v-radio
-                      ></v-col>
-                      <v-col cols="6">
-                        <v-radio label="test2" value="radio-2"></v-radio
-                      ></v-col>
+                      <v-col
+                        cols="6"
+                        v-for="area in isCombo.members"
+                        :key="isCombo.id"
+                      >
+                        <v-radio :label="area" :value="area"></v-radio>
+                      </v-col>
+                      <p
+                        class="error-feedback mb-5 ml-5"
+                        v-if="v$.checkInterface.$error"
+                      >
+                        {{ v$.checkInterface.$errors[0].$message }}
+                      </p>
                     </v-row>
                   </v-radio-group>
                 </v-container>
@@ -169,27 +209,51 @@ import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
 import { required, helpers, requiredIf } from "@vuelidate/validators";
+import { getCookie } from "@/mixins/csrftoken.js";
 export default {
   props: {
     isOpen: {
       type: Boolean,
       required: true,
     },
+    editRow: {
+      type: Object,
+      Array,
+      required: true,
+    },
+    modalMode: {
+      required: true,
+    },
   },
 
   setup(props) {
     const emitter = inject("emitter");
-    onMounted(() => {});
+    onMounted(() => {
+      let allArea = document.getElementById("app").attributes["allArea"].value;
+      let parsedArray = JSON.parse(allArea);
 
-    const { isOpen } = toRefs(props);
+      let mapedArea = parsedArray.map((element) => {
+        return {
+          id: element.id,
+          name: element.name,
+          members: element.members.map((i) => {
+            return i;
+          }),
+        };
+      });
+      state.mapeArea = mapedArea;
+      state.KlonaArea = mapedArea.filter((i) => i.members.length == 2);
+    });
+
+    const { isOpen, editRow, modalMode } = toRefs(props);
     const listAlgo = ref([
       {
         name: "Failover",
-        slug: "Failover",
+        slug: "failover",
       },
       {
         name: "Round-Robin",
-        slug: "Round-Robin",
+        slug: "round_robin",
       },
       {
         name: "Source IP",
@@ -208,19 +272,25 @@ export default {
     const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
 
     const state = reactive({
-      inline: "",
+      id: null,
+      mapeArea: [],
+      KlonaArea: [],
+
+      snackbar: false,
+      color: "",
+      textAlert: "",
+      openModal: false,
+
+      ruleName: "",
+      checkInterface: "",
       source: "",
-      sourcePrefix: "",
+      sourcePrefix: 32,
       destination: "",
       destinationPrefix: "",
       area: "",
       algo: "",
       checkMilliseconds: "",
-      checkTargetMilliseconds: "",
-      snackbar: false,
-      color: "",
-      textAlert: "",
-      openModal: false,
+      checkTargetMilliseconds: "8.8.8.8",
     });
 
     watch(
@@ -230,39 +300,110 @@ export default {
       }
     );
 
-    const getCookie = (name) => {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === name + "=") {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
+    watch(
+      state,
+      () => {
+        if (state.algo.slug === "failover") {
+          if (state.area && state.area.members.length > 2) state.area = "";
+        }
+      },
+      { immediate: true }
+    );
+
+    watch(
+      () => editRow.value,
+      (val) => {
+        populate(val);
+      }
+    );
+    watch(
+      () => modalMode.value,
+      () => {
+        if (modalMode.value === "create") {
+          state.ruleName = "";
+          state.checkInterface = "";
+          state.source = "";
+          state.sourcePrefix = 32;
+          state.destination = "";
+          state.destinationPrefix = "";
+          state.area = "";
+          state.algo = "";
+          state.checkMilliseconds = "";
+          state.checkTargetMilliseconds = "8.8.8.8";
         }
       }
-      return cookieValue;
+    );
+    const populate = (data) => {
+      if (modalMode.value === "edit") {
+        state.id = data.id;
+        let resultSource = data?.source_address?.split("/");
+        if (resultSource) {
+          resultSource[1] = parseInt(resultSource[1], 10);
+        }
+
+        let filtredArea = state.mapeArea.filter((i) => i.id === data?.area);
+        let filtredAlgo = listAlgo.value.filter(
+          (i) => i.slug === data?.algorythme_type
+        );
+
+        state.ruleName = data.name;
+        state.checkInterface = data?.primary_interface
+          ? data?.primary_interface
+          : "";
+        state.source = resultSource ? resultSource[0] : "";
+        state.sourcePrefix = resultSource ? resultSource[1] : "";
+        state.area = filtredArea[0];
+        state.algo = filtredAlgo[0];
+        state.checkMilliseconds = data.health_check;
+        state.checkTargetMilliseconds = data.health_check_target;
+      }
     };
+
+    const isCombo = computed(() => {
+      return state.algo.slug === "failover" && state.area;
+    });
 
     const submitForm = async () => {
       const result = await v$.value.$validate();
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
       if (result) {
-        let payload = {};
-        if (state.type.slug === "Create Private Key") {
-          payload = {
-            name: state.ruleName,
-            encryption_algorithm: "RSA",
-            key_size: state.key.slug,
-          };
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
+        let payload = {
+          name: state.ruleName,
+          source_address: `${state.source}/${state.sourcePrefix}`,
+          area: state.area.id,
+          algorythme_type: state.algo.slug,
+          health_check: state.checkMilliseconds,
+          health_check_target: state.checkTargetMilliseconds,
+        };
+
+        if (state.algo.slug === "failover") {
+          payload = { ...payload, primary_interface: state.checkInterface };
+        }
+
+        if (modalMode.value === "edit") {
           axios
-            .post("/key_pairs/createPrivateKey", payload)
+            .put(`/sdwan/updateSdwanRule/${state.id}`, payload)
             .then((response) => {
-              console.log("response", response);
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.response;
+            });
+        } else {
+          axios
+            .post("/sdwan/createSdwanRule", payload)
+            .then((response) => {
               if (response.status == "201") {
                 state.openModal = false;
                 state.snackbar = true;
@@ -279,26 +420,6 @@ export default {
               state.color = "red";
               state.textAlert = i.response.data.error;
             });
-        } else if (state.type.slug === "create") {
-          payload = {
-            name: state.ruleName,
-            method: {
-              method_name: state.type?.slug,
-              private_key: state.privateKey?.id,
-              encryption_algorithm: "RSA",
-            },
-          };
-
-          addPublicKey(payload);
-        } else if (state.type.slug === "import") {
-          payload = {
-            name: state.ruleName,
-            method: {
-              method_name: state.type?.slug,
-              public_key_value: state.checkMilliseconds,
-            },
-          };
-          addPublicKey(payload);
         }
       } else {
         console.log("v$", v$.value);
@@ -307,13 +428,41 @@ export default {
 
     const closeModal = () => {
       emitter.emit("closeSdwanModalRule");
+
+      if (modalMode.value === "create") {
+        state.ruleName = "";
+        state.checkInterface = "";
+        state.source = "";
+        state.sourcePrefix = 32;
+        state.destination = "";
+        state.destinationPrefix = "";
+        state.area = "";
+        state.algo = "";
+        state.checkMilliseconds = "";
+        state.checkTargetMilliseconds = "8.8.8.8";
+      }
     };
 
     const rules = computed(() => {
       return {
         area: { required },
         algo: { required },
-        checkTargetMilliseconds: { required },
+
+        checkInterface: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.algo.slug === "failover")
+          ),
+        },
+
+        checkTargetMilliseconds: {
+          required,
+          isValidCheckTargetMilliseconds: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
 
         ruleName: {
           required,
@@ -324,8 +473,24 @@ export default {
           ),
         },
 
+        source: {
+          required,
+          isValidSource: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+
+        sourcePrefix: { required },
+
         checkMilliseconds: {
-          required: helpers.withMessage("Value is required", required),
+          required,
+          isValidlifeTime: helpers.withMessage(
+            `champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
         },
       };
     });
@@ -333,6 +498,7 @@ export default {
     const v$ = useValidate(rules, state);
 
     return {
+      isCombo,
       numberList,
       state,
       listAlgo,
@@ -352,5 +518,8 @@ export default {
 }
 .actionBtn {
   justify-content: end;
+}
+.scroller {
+  overflow: auto;
 }
 </style>

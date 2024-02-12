@@ -4,7 +4,12 @@
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> Create new Area</span>
+            <span class="headline" v-if="modalMode === 'create'">
+              Create New Area</span
+            >
+            <span class="headline" v-if="modalMode === 'edit'">
+              Update Area</span
+            >
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -20,57 +25,28 @@
                 </v-col>
               </v-row>
 
-              <v-row class="mb-n6">
+              <v-row class="mt-3">
                 <v-col>
-                  <p class="ma-2">List WAN</p>
-                </v-col>
-                <v-col>
-                  <p class="ma-2">Gateway</p>
-                </v-col>
-                <v-col cols="4">
-                  <p class="ma-2">Weight</p>
-                </v-col>
-                <v-col cols="1">
-                  <v-icon
-                    title="Add Members"
-                    class="mx-auto"
-                    color="#213E9F"
-                    @click="addRow"
-                    icon="mdi mdi-plus-circle-outline"
-                  ></v-icon>
-                </v-col>
-              </v-row>
+                  <v-select
+                    v-model="state.interfaces"
+                    label="List WAN"
+                    item-title="name"
+                    item-value="id"
+                    multiple
+                    clearable
+                    return-object
+                    :items="state.mapedInterface"
+                  ></v-select>
 
-              <v-row
-                v-for="(row, index) in state.rows"
-                :key="row.id"
-                class="mt-0"
-              >
-                <v-col>
-                  <!-- item-title="name"
-                  item-value="id"
-                  return-object
-                  :items="props.mapedInterface" -->
-                  <v-select v-model="row.name" label="List WAN"></v-select>
-                </v-col>
-                <v-col>
-                  <v-text-field
-                    v-model="row.description"
-                    label="Gateway"
-                  ></v-text-field>
-                </v-col>
-                <v-col>
-                  <v-text-field
-                    v-model="row.value"
-                    label="Weight"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="1" class="mt-4">
-                  <v-icon
-                    color="red"
-                    @click="removeRow(index)"
-                    icon="mdi mdi-delete-circle"
-                  ></v-icon>
+                  <p class="error-feedback mb-5" v-if="v$.interfaces.$error">
+                    {{ v$.interfaces.$errors[0].$message }}
+                  </p>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="state.interfaces.length && !isMoreThanTwo"
+                  >
+                    Minimum Two Interfaces
+                  </p>
                 </v-col>
               </v-row>
             </v-container>
@@ -84,11 +60,11 @@
               rounded
               outlined
               label-color="#213E9F"
-              variant="flat"
+              variant="outlined"
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Close</span>
+              <span class="pr-3 pl-3" style="color: #213e9f">Cancel</span>
             </v-btn>
 
             <v-btn
@@ -121,25 +97,45 @@
 </template>
 
 <script>
+import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { toRefs, watch, reactive, computed, inject } from "vue";
+import { toRefs, watch, reactive, computed, inject, onMounted } from "vue";
 import { required, helpers } from "@vuelidate/validators";
+import { getCookie } from "@/mixins/csrftoken.js";
+
 export default {
   props: {
     isOpen: {
       type: Boolean,
       required: true,
     },
+    editRow: {
+      type: Object,
+      Array,
+      required: true,
+    },
+    modalMode: {
+      required: true,
+    },
   },
 
   setup(props) {
     const emitter = inject("emitter");
-    const { isOpen } = toRefs(props);
+    const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      id: null,
+      interfaces: [],
+      openModal: false,
+      snackbar: false,
+      color: "",
+      textAlert: "",
+      mapedInterface: [],
       areaName: "",
-      rows: [{ id: 1, name: "", description: "", value: "" }],
-      nextRowId: 2,
+    });
+
+    onMounted(() => {
+      getInterface();
     });
 
     watch(
@@ -148,33 +144,131 @@ export default {
         state.openModal = val;
       }
     );
+    watch(
+      () => editRow.value,
+      (val) => {
+        populate(val);
+      }
+    );
+    watch(
+      () => modalMode.value,
+      () => {
+        if (modalMode.value === "create") {
+          state.areaName = "";
+          state.interfaces = [];
+        }
+      }
+    );
+    const populate = (data) => {
+      if (modalMode.value === "edit") {
+        state.areaName = data.name;
+        state.id = data.id;
+
+        let filtredInterface = [];
+        data?.members.forEach((e) => {
+          filtredInterface = [
+            ...filtredInterface,
+            ...state.mapedInterface.filter((i) => i.name === e),
+          ];
+        });
+        state.interfaces = filtredInterface;
+      }
+    };
+
+    const getInterface = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/network/AllInterfaces").then(
+        (response) => {
+          let filtredInterface = response.data.filter(
+            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+          );
+
+          let interfaces = filtredInterface.map((i) => {
+            return {
+              id: i.id,
+              name: i.name_interface,
+            };
+          });
+
+          state.mapedInterface = interfaces;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
 
     const closeModal = () => {
       emitter.emit("closeSdwanAreaModal");
 
-      state.areaName = "";
-      state.rows = [{ id: 1, name: "", description: "", value: "" }];
-      state.nextRowId = 2;
+      if (modalMode.value === "create") {
+        state.areaName = "";
+        state.interfaces = [];
+      }
     };
-    const addRow = () => {
-      state.rows.push({
-        id: state.nextRowId++,
-        name: "",
-        description: "",
-        value: "",
-      });
-    };
-    const removeRow = (index) => {
-      state.rows.splice(index, 1);
-    };
-    const submitForm = () => {
-      console.log("state", state);
+
+    const submitForm = async () => {
+      const result = await v$.value.$validate();
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      if (result && isMoreThanTwo.value) {
+        let nameInterface = state.interfaces.map((e) => e.id);
+
+        let payload = {
+          name: state.areaName,
+          members: nameInterface,
+        };
+        console.log("payload", payload);
+
+        if (modalMode.value === "edit") {
+          axios
+            .put(`/sdwan/updateArea/${state.id}`, payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.response;
+            });
+        } else {
+          axios
+            .post("/sdwan/createArea", payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.openModal = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        }
+      } else {
+        console.log("v$", v$.value);
+      }
     };
 
     const rules = computed(() => {
       return {
-        type: { required },
-
+        interfaces: { required, isMoreThanTwo },
         areaName: {
           required,
           isValidkeyName: helpers.withMessage(
@@ -186,15 +280,18 @@ export default {
       };
     });
 
+    const isMoreThanTwo = computed(() => {
+      return state.interfaces.length >= 2 ? true : false;
+    });
+
     const v$ = useValidate(rules, state);
 
     return {
+      isMoreThanTwo,
       state,
       v$,
       emitter,
       submitForm,
-      removeRow,
-      addRow,
       closeModal,
     };
   },

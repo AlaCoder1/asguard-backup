@@ -1,5 +1,24 @@
 <template>
   <div class="mr-3">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            Please Wait...
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
     <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
       <h4>SDWAN Rules</h4>
       <v-divider></v-divider>
@@ -31,12 +50,16 @@
           </div>
         </v-col>
       </v-row>
-      <ModalSdwanRule :isOpen="state.isModalOpen" />
+      <ModalSdwanRule
+        :isOpen="state.isModalOpen"
+        :editRow="state.editRow"
+        :modalMode="state.modalMode"
+      />
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="headline">Delete Confirmation</v-card-title>
-        <v-card-text>Are you sure you want to delete this Key ?</v-card-text>
+        <v-card-text>Are you sure you want to delete this Rule ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
@@ -66,6 +89,7 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalSdwanRule from "@/components/modals/ModalSdwanRule.vue";
+import { getCookie } from "@/mixins/csrftoken.js";
 export default {
   name: "Sdwan",
   components: {
@@ -84,8 +108,11 @@ export default {
       textAlert: "",
       modalData: {},
       modalMode: "create",
+      editRow: {},
       isModalOpen: false,
       isOpen: null,
+      isLoadingDialogue: false,
+      loading: false,
     });
 
     const columnRules = [
@@ -95,38 +122,49 @@ export default {
         sortable: true,
         autoHeight: true,
         filter: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: "Source address",
-        field: "members",
+        field: "source_address",
         sortable: true,
         filter: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: "Area",
         autoHeight: true,
-        field: "weight",
+        field: "area_name",
         sortable: true,
         filter: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: "Algorythm type",
         autoHeight: true,
-        field: "weight",
+        field: "algorythme_type",
         sortable: true,
         filter: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
-      {
-        headerName: "Destination address",
-        autoHeight: true,
-        field: "weight",
-        sortable: true,
-        filter: true,
-      },
+      // {
+      //   headerName: "Destination address",
+      //   autoHeight: true,
+      //   field: "destination_address",
+      //   sortable: true,
+      //   filter: true,
+      // },
       {
         headerName: "Actions",
         cellRenderer: actionCellRendererArea,
-        minWidth: 150,
         field: "action",
         sortable: true,
         filter: true,
@@ -138,14 +176,14 @@ export default {
     const gridApi = ref(null);
 
     const onGridReady = (params) => {
-      gridApi.value = params.api;
+      // gridApi.value = params.api;
 
-      gridApi.value.sizeColumnsToFit();
-      window.addEventListener("resize", function () {
-        setTimeout(function () {
-          gridApi.value.sizeColumnsToFit();
-        });
-      });
+      // gridApi.value.sizeColumnsToFit();
+      // window.addEventListener("resize", function () {
+      //   setTimeout(function () {
+      //     gridApi.value.sizeColumnsToFit();
+      //   });
+      // });
     };
 
     const defaultColDef = {
@@ -174,19 +212,52 @@ export default {
           </button>
           `;
       } else {
-        eGui.innerHTML = `
-          <button
-            class="action-button edit"
-            data-action="edit" title="Edit Server">
-               <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
-            </button>
-            <button
-            class="action-button delete"
-            data-action="delete" title="Delete ">
-              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
-            </button>
-  
-            `;
+        console.log("params", params.data.rule_status);
+
+        if (!params.data.rule_status) {
+          eGui.innerHTML = `
+
+      <button
+        id="play"
+        class="action-button play"
+        data-action="play" title="Start Server">
+            <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
+        </button>
+        <button
+        class="action-button edit"
+        data-action="edit" title="Edit Server">
+            <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+        <button
+        class="action-button delete"
+        data-action="delete" title="Delete ">
+          <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+
+
+    `;
+        } else if (params.data.rule_status) {
+          eGui.innerHTML = `
+        <button
+        id="stop"
+        class="action-button stop"
+        data-action="stop" title="Stop Server">
+            <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
+        </button>
+        <button
+        class="action-button edit"
+        data-action="edit" title="Edit Server">
+            <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+        <button
+        class="action-button delete"
+        data-action="delete" title="Delete ">
+          <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+
+
+    `;
+        }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -199,11 +270,70 @@ export default {
 
     const handleActionClient = (action, rowData, index) => {
       switch (action) {
+        case "play":
+          console.log("play", rowData);
+
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          axios
+            .put(`/sdwan/startSdwanRule/${rowData.id}`)
+            .then((response) => {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+            });
+
+          break;
+        case "stop":
+          console.log("stop", rowData);
+
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          axios
+            .put(`/sdwan/stopSdwanRule/${rowData.id}`)
+            .then((response) => {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+            });
+          break;
         case "edit":
           console.log("edit", rowData);
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+          state.editRow = rowData;
+
           break;
         case "delete":
           console.log("delete", rowData);
+          state.deleteDialog = true;
+          state.deletedRow = rowData;
 
           break;
         default:
@@ -218,17 +348,19 @@ export default {
     };
 
     onMounted(() => {
+      console.log("**********", getCookie("csrftoken"));
       emitter.on("closeSdwanModalRule", () => {
         state.isModalOpen = false;
+        state.isOpen = false;
+        state.modalMode = "";
+        state.editRow = {};
       });
+      let allRule = document.getElementById("app").attributes["allRule"].value;
+      let parsedArray = JSON.parse(allRule);
+      console.log("parsedArray", parsedArray);
 
-      let objArea = {
-        name: "test",
-        members: "members",
-        weight: "weight",
-      };
       if (!rowDataRule.value) rowDataRule.value = [];
-      rowDataRule.value.push(objArea);
+      rowDataRule.value = parsedArray;
     });
 
     const cancelDelete = () => {
@@ -237,41 +369,23 @@ export default {
     const confirmDelete = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (state.deletedRow?.utility === "Private") {
-        axios
-          .delete(`/key_pairs/deletePrivateKey/${state.deletedRow.id}`)
-          .then((response) => {
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
 
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          })
-          .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
-          });
-      } else if (state.deletedRow?.utility === "Public") {
-        axios
-          .delete(`/key_pairs/deletePublicKey/${state.deletedRow.id}`)
-          .then((response) => {
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
+      axios
+        .delete(`/sdwan/deleteSdwanRule/${state.deletedRow.id}`)
+        .then((response) => {
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.msg;
 
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          })
-          .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
-          });
-      }
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
+        });
     };
     return {
       state,

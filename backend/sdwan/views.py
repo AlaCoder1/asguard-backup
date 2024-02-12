@@ -8,9 +8,9 @@ from rest_framework.permissions import IsAuthenticated
 
 from backend.sdwan.list_area import get_list_all_area, get_one_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule, get_one_sdwan_rule
-from backend.sdwan.models import Area, SdwanRules
-from backend.sdwan.serializers import AreaSerializer, SdwanRulesSerializer
-from backend.sdwan.utils import routing_table_id
+from backend.sdwan.models import Area, AreaInterface, SdwanRules
+from backend.sdwan.serializers import AreaInterfaceSerializer, AreaSerializer, SdwanRulesSerializer
+from backend.sdwan.utils import routing_table_id, rule_failover_requirements, rule_round_robin_requirements
 from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, kill_celery_process_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
 from utils.constant_variables import CONSTANT_SDWAN_RULE, ERROR_MESSAGES_CREATING, ERROR_MESSAGES_DELETING, ERROR_MESSAGES_INEXISTANT, ERROR_MESSAGES_START, ERROR_MESSAGES_STOP, ERROR_MESSAGES_UPDATING, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_DELETE, SUCCESS_MESSAGES_START, SUCCESS_MESSAGES_STOP, SUCCESS_MESSAGES_UPDATE
 from utils.errors_utils import CommandExecutionError
@@ -56,16 +56,15 @@ def create_area(request):
     """Creating a new area and adding it to the database"""
     data = request.data
 
-    data["members"] = ",".join(data["members"])
-
-    serializer_server = AreaSerializer(data=data)
-    if serializer_server.is_valid():
+    serializer_area = AreaSerializer(data=data)
+    if serializer_area.is_valid():
 
         # Add the server to the database
-        serializer_server.save()
+        serializer_area.save()
+
         return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('Area', data["name"])}, status=201)
-    else:
-        return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
+    
+    return JsonResponse({"error": list(serializer_area.errors.values())[0][0]}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -102,16 +101,15 @@ def update_area(request, id):
         """Updating area in database"""
         area = Area.objects.get(id=id)
         data = request.data
-        data["members"] = ",".join(data["members"])
 
-        serializer_server = AreaSerializer(area, data=data)
-        if serializer_server.is_valid():
+        serializer_area = AreaSerializer(area, data=data)
+        if serializer_area.is_valid():
 
             # Add the server to the database
-            serializer_server.save()
+            serializer_area.save()
             return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format('Area', area.name)}, status=201)
         else:
-            return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
+            return JsonResponse({"error": list(serializer_area.errors.values())[0][0]}, status=400)
     
     except Area.DoesNotExist:
         return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Area')}, status=400)
@@ -165,17 +163,17 @@ def create_sdwan_rule(request):
     try:
         data = request.data
         data["table_id"] = routing_table_id()
-        serializer_server = SdwanRulesSerializer(data=data)
-        if serializer_server.is_valid():
+        serializer_sdwan_rule = SdwanRulesSerializer(data=data)
+        if serializer_sdwan_rule.is_valid():
 
             # Add the rule in system
             create_sdwan_rule_in_system(data["source_address"], str(data["table_id"]))
 
             # Add the rule to the database
-            serializer_server.save()
+            serializer_sdwan_rule.save()
             return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_SDWAN_RULE, data["name"])}, status=201)
         
-        return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
+        return JsonResponse({"error": list(serializer_sdwan_rule.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
         return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_SDWAN_RULE)}, status=400)
@@ -227,17 +225,17 @@ def update_sdwan_rule(request, id):
         data = request.data
         sdwan_rule = SdwanRules.objects.get(id=id)
 
-        serializer_server = SdwanRulesSerializer(sdwan_rule, data=data)
-        if serializer_server.is_valid():
+        serializer_sdwan_rule = SdwanRulesSerializer(sdwan_rule, data=data)
+        if serializer_sdwan_rule.is_valid():
 
             # Update the rule in system
             update_sdwan_rule_in_system(data["source_address"], str(sdwan_rule.table_id))
 
             # Update the rule in the database
-            serializer_server.save()
+            serializer_sdwan_rule.save()
             return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(data["name"])}, status=201)
         
-        return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
+        return JsonResponse({"error": list(serializer_sdwan_rule.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
         return JsonResponse({"error": ERROR_MESSAGES_UPDATING.format(CONSTANT_SDWAN_RULE)}, status=400)
@@ -254,6 +252,7 @@ def start_sdwan_rule(request, id):
         sdwan_rule = SdwanRules.objects.get(id=id)
         sdwan_rule.rule_status = True
         sdwan_rule.save()
+        
         start_sdwan_rule_in_system(id)
         
         return JsonResponse({"msg": SUCCESS_MESSAGES_START.format(CONSTANT_SDWAN_RULE, sdwan_rule.name)}, status=201)

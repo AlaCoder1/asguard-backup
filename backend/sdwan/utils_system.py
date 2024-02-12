@@ -86,8 +86,6 @@ def script_round_robin(rule_id):
         # Reset the interface_index to 0 after completing the list of interfaces
         if interface_index == len(list_interfaces):
             interface_index = 0
-        print(f'''interface {interface_index}: {sdwan_rule.area.members.split(',')[interface_index]}''')
-        print(list_interfaces[interface_index])
 
         # Calculate traffic duration for each interface
         start_trafic = datetime.now()
@@ -98,8 +96,6 @@ def script_round_robin(rule_id):
         # 3. The interface is available
         while rule_status and (trafic_duration.seconds < 10) and script_ping(
             list_interfaces[interface_index]["ifname"], sdwan_rule.health_check_target):
-            print(f'''duration of interface {interface_index}: {sdwan_rule.area.members.split(',')[interface_index]} : {trafic_duration.seconds}''')
-            print("ping", script_ping(list_interfaces[interface_index]["ifname"], sdwan_rule.health_check_target))
             switch_gateway(
                 list_interfaces[interface_index-1]["gateway"], list_interfaces[interface_index-1]["ifname"],
                 list_interfaces[interface_index]["gateway"], list_interfaces[interface_index]["ifname"],
@@ -116,7 +112,8 @@ def script_round_robin(rule_id):
 def start_sdwan_rule_in_system(rule_id):
     print('start background task')
     if len(SdwanRules.objects.filter(rule_status=True)) == 1:
-        process = subprocess.Popen("sudo celery -A asguard worker -l info 2>/dev/null &", stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+        process = subprocess.Popen("sudo celery -A asguard worker -l info 2>/dev/null &", 
+                                   stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
         time.sleep(5)
         process.terminate()
         process.wait()

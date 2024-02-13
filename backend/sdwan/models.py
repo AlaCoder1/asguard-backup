@@ -20,7 +20,7 @@ class SdwanRules(models.Model):
     destination_address = models.CharField(max_length=200, default=None, blank=True, null=True)
     health_check = models.FloatField(default=5)
     health_check_target = models.CharField(max_length=200, default=None, blank=True)
-    primary_interface = models.CharField(max_length=200, default=None, blank=True, null=True)
+    primary_interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None, blank=True, null=True)
     table_id = models.IntegerField(default=1, unique=True)
     rule_status = models.BooleanField(default=False)
 

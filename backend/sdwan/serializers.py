@@ -1,8 +1,6 @@
 from rest_framework import serializers
+
 from backend.network.models import Interface
-
-from backend.network.serializers import InterfaceSerializer
-
 from .models import Area, AreaInterface, SdwanRules
 
 
@@ -24,6 +22,7 @@ class AreaSerializer(serializers.ModelSerializer):
 class SdwanRulesSerializer(serializers.ModelSerializer):
         
         area = serializers.PrimaryKeyRelatedField(queryset=Area.objects.all())
+        primary_interface = serializers.PrimaryKeyRelatedField(queryset=Interface.objects.all(), allow_null=True, required=False)
     
         class Meta:
             model = SdwanRules

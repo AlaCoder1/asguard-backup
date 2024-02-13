@@ -144,8 +144,8 @@ def export_certificate_in_system(cert_name, cert_type, download_type, password='
     elif download_type == 'private_key':
         cert_value = read_certificate_value(cert_key_path)
     else:  # .p12 file
-        execute_command_without_arguments(["sudo", "rm", "-f", PATH_DOWNLOADS_CERTS_P12])
-        execute_command_without_arguments(["openssl", "pkcs12", "-export", "-out", PATH_DOWNLOADS_CERTS_P12,
+        # execute_command_without_arguments(["sudo", "rm", "-f", PATH_DOWNLOADS_CERTS_P12.format(cert_name)])
+        execute_command_without_arguments(["openssl", "pkcs12", "-export", "-out", PATH_DOWNLOADS_CERTS_P12.format(cert_name),
                                            "-inkey", cert_key_path, "-in", cert_path,
                                            "-passout", f'pass:{password}'])
         cert_value = "Certificate p12"

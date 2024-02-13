@@ -2,7 +2,7 @@
 
 PATH_VARS_INITIALIZE = '/etc/easy-rsa/vars'
 
-PATH_DOWNLOADS_CERTS_P12 = '/asguard/newdms/src/downloads/import_cert_p12.p12'
+PATH_DOWNLOADS_CERTS_P12 = '/asguard/newdms/src/downloads/{}.p12'
 
 # Paths PKI
 PATH_PKI = '{}/pki/'

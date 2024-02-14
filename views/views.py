@@ -24,6 +24,8 @@ from backend.ids_ips.serializers import AlertSerializer
 import ast
 from backend.proxy.views import *
 from backend.proxy.models import *
+from backend.sdwan.list_area import get_list_all_area
+from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
 from backend.subscription.models import plan, plansSubscription,plansFeatures
 
 
@@ -575,7 +577,11 @@ def squid_proxy(request):
 
 @login_required(login_url='/')
 def sdwan_page(request):
-    return render(request, 'sdwan_page.html',)
+    allArea = get_list_all_area()
+    allRule = get_list_all_sdwan_rule()
+    context = {'allArea': json.dumps(allArea),'allRule': json.dumps(allRule)}
+    print('context',context) 
+    return render(request, 'sdwan_page.html',context)
 
 @login_required(login_url='/')
 def clamav_page(request):

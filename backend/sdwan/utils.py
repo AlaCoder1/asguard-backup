@@ -1,38 +1,63 @@
-import subprocess
-import time
-from datetime import datetime
-from celery import shared_task
-
-from utils.commands_utils import execute_command_without_arguments
+from backend.gateway.models import Gateway, GatewayInterface
+from backend.network.models import IP4Config, Interface
+from backend.sdwan.models import AreaInterface, SdwanRules
 
 
-@shared_task
-def script_failover(primary_interface_address='192.168.71.28', backup_interface_address='10.1.12.1'):
-    while True:
-        if script_ping(primary_interface_address):
-            switch_to_primary(primary_interface_address)
-        else:
-            switch_to_backup(backup_interface_address)
-        time.sleep(0.5)
+def routing_table_id():
+    """Return the first possible id that system can create a routing table with it"""
+    sdwan_rule_list = SdwanRules.objects.order_by("table_id").values("table_id")
+    sdwan_rule_list = [id['table_id'] for id in sdwan_rule_list]
+    first_unused_id = 1
+    while first_unused_id in sdwan_rule_list:
+        first_unused_id += 1
+    return first_unused_id
 
 
-def script_ping(primary_interface_address):
-    process = subprocess.run(['ping', '-c', '1', primary_interface_address], stdout=subprocess.PIPE, text=True, stderr=subprocess.PIPE)
-    print(f'ping at {str(datetime.now())}: ', process.stdout)
-    if process.stdout.find("1 packets transmitted, 1 received") >= 0:
-        return True
-    return False
-            
+def rule_failover_requirements(rule_id):
+    """Take the id of the rule and return its requirements to start it: primary and backup gateway and ifname"""
 
-def switch_to_primary(primary_interface_address):
-    print(f"primary interface: {primary_interface_address}")
+    # Get the list of interfaces 
+    sdwan_rule = SdwanRules.objects.get(id=rule_id)
+    area_interfaces = AreaInterface.objects.filter(area=sdwan_rule.area)
+    area_interfaces = [area_interface.interface for area_interface in area_interfaces]
+
+    # Remove the primary to get the backup interface
+    area_interfaces.remove(sdwan_rule.primary_interface)
+    backup_interface = area_interfaces[0]
+
+    # Get primary and backup gateway and ifname
+    list_interfaces = get_interfaces_details(sdwan_rule.primary_interface.name_interface, backup_interface.name_interface)
+    return (list_interfaces[0]["gateway"], list_interfaces[0]["ifname"], 
+            list_interfaces[1]["gateway"], list_interfaces[1]["ifname"])
 
 
-def switch_to_backup(backup_interface_address):
-    print(f"backup interface: {backup_interface_address}")
+def rule_round_robin_requirements(rule_id):
+    """Take the id of the rule and return the its requirements to start it: 
+    gateway and ifname of each interface of the area"""
+
+    sdwan_rule = SdwanRules.objects.get(id=rule_id)
+    area_interfaces = AreaInterface.objects.filter(area=sdwan_rule.area)
+    list_interfaces = [area_interface.interface.name_interface for area_interface in area_interfaces]
+
+    # Get primary and backup gateway and ifname
+    list_interfaces = get_interfaces_details(*list_interfaces)
+
+    return list_interfaces
 
 
-def start_sdwan_rule_system():
-    print('start background task')
-    list_ping = script_failover.delay()
-    print("list_ping: ", list_ping.id)
+def get_interfaces_details(*args):
+    """Take a list of name of interfaces and returns informations related to this interface"""
+    print(args)
+    list_interfaces = []
+    for interface_name in args:
+        print(interface_name)
+        interface = Interface.objects.get(name_interface=interface_name)
+        ipv4 = IP4Config.objects.get(interface=interface)
+        gateway_interface = GatewayInterface.objects.get(interface=interface)
+        gateway = Gateway.objects.get(id=gateway_interface.gateway.pk)
+        list_interfaces.append({"ifname": interface.ifname,
+                                "address": ipv4.ip_address,
+                                "mask": ipv4.netmask,
+                                "gateway": gateway.gwaddress})
+        print(list_interfaces)
+    return list_interfaces

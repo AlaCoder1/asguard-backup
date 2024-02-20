@@ -6,7 +6,7 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 from backend.dashboard.serializers import MonitoringDataSerializer
 from channels.db import database_sync_to_async 
-from functions_client import *
+from .functions_client import *
 import pyshark
 logger = logging.getLogger(__name__) 
 class OpenVpnConsumer(AsyncWebsocketConsumer):

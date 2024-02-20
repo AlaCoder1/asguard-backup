@@ -8,6 +8,8 @@ from backend.dashboard.serializers import MonitoringDataSerializer
 from channels.db import database_sync_to_async 
 from .functions_client import *
 import pyshark
+from django.core import serializers
+
 logger = logging.getLogger(__name__) 
 class OpenVpnConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -20,8 +22,10 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
+        print({"text_data":text_data})
         id_server = text_data_json['id']
         asyncio.create_task(self.start_data_loop_openvpn(id_server))
+        # self.start_data_loop_openvpn(id_server)
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
@@ -49,49 +53,61 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
     #         Dashboardserializer.save()
     
     ##function to convert bytes 
-    async def convert_bytes(self,capture_size):
+    def convert_bytes(self,capture_size):
             if capture_size >= 1073741824:
                 capture_info={
+                "initial_size":capture_size, 
                 "capture_size":capture_size/(1024*1024*1024),
                 "unit":"GB"
                 }
             elif capture_size >= 1048576:
                 capture_info={
+                "initial_size":capture_size, 
                 "capture_size":capture_size/(1024*1024),
                 "unit":"MB"
                 }
             elif capture_size >= 1024:
                 capture_info={
+                "initial_size":capture_size, 
                 "capture_size":capture_size/1024,
                 "unit":"KB"
                 }
             return capture_info
     
-    async def get_top_traffic(self,info_clients):
+    def get_top_traffic(self,info_clients):
         """function to get top traffic """
-        top_traffic = sorted(info_clients, key=lambda x: x['total_traffic'])
-        top_traffic = [{'username': obj['username'],"total_traffic":self.convert_bytes(obj['total_traffic'])} for obj in top_traffic[:10]]
+        top_traffic = sorted(info_clients, key=lambda x: x['total_traffic']['initial_size'])
+        top_traffic = [{'username': obj['username'],"total_traffic":obj['total_traffic']} for obj in top_traffic[:10]]
         return top_traffic
     
-    async def get_top_network(self,top_traffic):
+    def get_top_network(self,info_clients):
         """get network activity"""
-        top_traffic=top_traffic[:2]
+        top_traffic = sorted(info_clients, key=lambda x: x['total_traffic']['initial_size'])
+        top_traffic = [{'username': obj['username'],"total_traffic":obj['total_traffic']} for obj in top_traffic[:2]]
         current_time = time.strftime("%Y-%m-%d %H:%M:%S")
         # Convert the formatted timestamp to a Unix timestamp
         unix_timestamp = int(time.mktime(time.strptime(current_time, "%Y-%m-%d %H:%M:%S")))
-        top_network={
-            "timestamp": unix_timestamp,
-            "first_network":self.convert_bytes(top_traffic[0]['total_traffic']),
-            "second_network":self.convert_bytes(top_traffic[1]['total_traffic'])
-        }
+        # print(top_traffic[0])
+        if len(top_traffic)>=2:
+            top_network={
+                "timestamp": unix_timestamp,
+                "first_network":top_traffic[0]['total_traffic'],
+                "second_network":top_traffic[1]['total_traffic']
+            }
+        else:
+            top_network={
+                "timestamp": unix_timestamp,
+                "first_network":top_traffic[0]['total_traffic'],
+            }
         return top_network
     
-    async def get_top_logging(self,vpn,name_server):
+    def get_top_logging(self,vpn,name_server,address_server):
         """function to get top logging """
+        # print({"name_server":name_server})
         capture = pyshark.LiveCapture(interface=name_server)
           # Execute get openvpn client informations
         traffic_counts={}
-        for packet in capture.sniff_continuously(packet_count=5):
+        for packet in capture.sniff_continuously(packet_count=1):
             # Extract source and destination IPs
             src_ip = packet.ip.src
             if src_ip!=address_server:
@@ -105,19 +121,21 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
             top_logging[i] = {"username":username,"count":count}
         return top_logging
     
-       
-    async def start_data_loop_openvpn(self,id):
+    @database_sync_to_async   
+    def start_data_loop_openvpn(self,id):
         """function to get top logging """
-        vpn=ServerOpenvpn.objects.get(id=id)
-        name_server=vpn['dev']+"_"+vpn['name']
+        vpn_db=ServerOpenvpn.objects.get(pk=id)
+        name_server=vpn_db.dev+"_"+vpn_db.name
         all_client=ClientOpenvpn.objects.all().count()
         while True:
-            cfg=[{'host': 'localhost', 'port': vpn['port'], 'name':name_server, 'password': '', 'show_disconnect': False,"server_status":vpn["server_status"]} ]
+            cfg=[{'host': 'localhost', 'port': vpn_db.port, 'name':name_server, 'password': '', 'show_disconnect': False,"server_status":vpn_db.server_status} ]
             vpn = OpenvpnMgmtInterface(cfg).vpns
+            vpn=vpn[0]
             client_active=vpn['stats']['nclients'] if 'stats' in vpn and 'nbclients' in vpn['stats'] else 0
             capacity_server_in=int(vpn['stats']['bytesin'])   if 'stats'in vpn and 'bytesin' in vpn['stats'] else 0
             capacity_server_out=int(vpn['stats']['bytesout'])   if 'stats'in vpn and 'bytesout' in vpn['stats'] else 0
             address_server=str(vpn["state"]["local_ip"]) if "state" in vpn  and "local_ip" in vpn["state"]  else None
+            # print({"vpn":vpn})
             info_clients = [
                             {
                                 "username": session['username'],
@@ -125,16 +143,14 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
                                 "address": str(session['local_ip']),
                                 "bytes_recv":self.convert_bytes(int(session['bytes_recv'])),
                                 "bytes_sent":self.convert_bytes(int(session['bytes_sent'])),
-                                "total_traffic":int(session['bytes_recv'])+int(session['bytes_sent']),
+                                "total_traffic":self.convert_bytes(int(session['bytes_recv'])+int(session['bytes_sent'])),
                                 "location":session['location'],
                                 "traffic_distr":(capacity_server_in+capacity_server_out/int(session['bytes_recv'])+int(session['bytes_sent']))*100
                             }
                         for session in vpn['sessions'].values()
                         if 'sessions' in vpn
                         ]
-            top_traffic=self.get_top_traffic(info_clients)
-            top_logging=self.get_top_logging(vpn,name_server)
-            top_network=self.get_top_network(top_traffic)
+            # print({"info_client":info_clients})
             # Create a JSON object with the data
             data = {
                 "address_server":address_server,
@@ -143,16 +159,17 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
                 "capacity_client_in":self.convert_bytes(capacity_server_in),
                 "capacity_client_out":self.convert_bytes(capacity_server_out),
                 "info_clients":info_clients,
-                "top_traffic":top_traffic,
-                "top_logging":top_logging,
-                "top_network":top_network
+                "top_traffic":self.get_top_traffic(info_clients),
+                # "top_logging":self.get_top_logging(vpn,name_server,address_server),
+                "top_network":self.get_top_network(info_clients)
                
             }
            # Save the data to the database asynchronously
             # await self.save_system_usage(data)
             # Send the JSON data to the WebSocket client
-            await self.send(json.dumps(data))
+            print({"data":data})
+            self.send(data)
             # await self.delete_data()
             
             # Sleep for a while before sending the next data (adjust the interval as needed)
-            await asyncio.sleep(1)
+            asyncio.sleep(1)

@@ -15,6 +15,7 @@ import sys
 from datetime import datetime
 from collections import OrderedDict, deque
 from pprint import pformat
+import requests
 from semantic_version import Version as semver
 
 
@@ -165,6 +166,23 @@ class OpenvpnMgmtInterface(object):
         stats['bytesin'] = int(re.sub('bytesin=', '', parts[1]))
         stats['bytesout'] = int(re.sub('bytesout=', '', parts[2]).replace('\r\n', ''))
         return stats
+    
+    def get_location(self,address):
+        api_url = f"http://ipinfo.io/{address}/json"
+        try:
+            response = requests.get(api_url)
+            data = response.json()
+            
+            # Extract relevant information
+            city = data.get('city', '')
+            region = data.get('region', '')
+            country = data.get('country', '')
+            location = f"{city}, {region}, {country}"
+            
+            return location
+        except Exception as e:
+            print(f"Error fetching location: {e}")
+            return None
 
     def parse_status(self, data, version):
         client_section = False
@@ -233,6 +251,8 @@ class OpenvpnMgmtInterface(object):
                     session['location'] = 'RFC1918'
                 elif session['remote_ip'].is_loopback:
                     session['location'] = 'loopback'
+                else:
+                    session['location'] = self.get_location(session['remote_ip'])
                 local_ipv4 = parts.popleft()
                 if local_ipv4:
                     session['local_ip'] = ip_address(local_ipv4)
@@ -295,71 +315,35 @@ class OpenvpnMgmtInterface(object):
         else:
             return '{0!s}'.format(ip)
 
-
-cfg=[{'host': 'localhost', 'port': '17562', 'name': 'Staff VPN', 'password': '', 'show_disconnect': False},
-     {'host': 'localhost', 'port': '17568', 'name': 'Staff VPN', 'password': '', 'show_disconnect': False}]
-monitor = OpenvpnMgmtInterface(cfg).vpns
-print({"monitor":monitor})
-client_active=sum(vp['stats']['nclients'] for vp in monitor  if 'stats'in vp and 'nbclients' in vp['stats'])
-capacity_client_in=sum(vp['stats']['bytesin'] for vp in monitor  if 'stats'in vp and 'bytesin' in vp['stats'])/ (1024 ** 3)
-capacity_client_out=sum(vp['stats']['bytesout'] for vp in monitor  if 'stats'in vp and 'bytesout' in vp['stats'])/ (1024 ** 3)
-address_server=[str(vp["state"]["local_ip"]) for vp in monitor if "state" in vp]
-bytesin_server=int()
-info_clients = [
-            {
-                "username": session['username'],
-                "login_time": session['connected_since'],
-                "address": str(session['local_ip']),
-                "bytes_recv":session['bytes_recv']/ 1024,
-                "bytes_sent":session['bytes_sent']/ 1024,
-                "location":session['location'],
-            }
-            for vp in monitor if 'sessions' in vp
-            for session in vp['sessions'].values()
-        ]
-# Create a JSON object with the data
-data = {
-    # "all_client": all_client,
-    "address_server":address_server,
-    "client_active": client_active,
-    "capacity_client_in":capacity_client_in,
-    "capacity_client_out":capacity_client_out,
-    "info_clients":info_clients
-    
-}
-print(data)
-# for server in address_server:
-    
-# # for vp in monitor:
-# #     print(vp['stats'])
-# client_active=sum(vp['stats']['nclients'] for vp in monitor  if 'stats'in vp)
-# # client_key=[ k for k in list(vp['sessions'].keys()) for vp in monitor if 'sessions' in vp ]
-# # client_key = [{"username":vp['sessions'][k]['username'],"login_time":vp['sessions'][k]['connected_since'],"address":vp['sessions'][k]['local_ip']} for vp in monitor if 'sessions' in vp for k in vp['sessions'].keys()]
-# # client_key = []
-# # for vp in monitor:
-# #     if 'sessions' in vp:
-# #         client_key.extend([
-# #             {
-# #                 "username": session['username'],
-# #                 "login_time": session['connected_since'],
-# #                 "address": session['local_ip'][session['local_ip'].find("(")+1:session['local_ip'].find(")")-1]
-# #             }
-# #             for session in vp['sessions'].values()
-# #         ])
+# cfg=[{'host': 'localhost', 'port': '1191', 'name': 'Staff VPN', 'password': '', 'show_disconnect': False},
+#      {'host': 'localhost', 'port': '17568', 'name': 'Staff VPN', 'password': '', 'show_disconnect': False}]
+# monitor = OpenvpnMgmtInterface(cfg).vpns
+# print({"monitor":monitor})
+# client_active=sum(vp['stats']['nclients'] for vp in monitor  if 'stats'in vp and 'nbclients' in vp['stats'])
+# capacity_client_in=sum(vp['stats']['bytesin'] for vp in monitor  if 'stats'in vp and 'bytesin' in vp['stats'])/ (1024 ** 3)
+# capacity_client_out=sum(vp['stats']['bytesout'] for vp in monitor  if 'stats'in vp and 'bytesout' in vp['stats'])/ (1024 ** 3)
+# address_server=[str(vp["state"]["local_ip"]) for vp in monitor if "state" in vp]
+# bytesin_server=int()
 # info_clients = [
-#                         {
-#                             "username": session['username'],
-#                             "login_time": session['connected_since'],
-#                             "address": str(session['local_ip']),
-#                             "bytes_recv":session['bytes_recv'],
-#                             "bytes_sent":session['bytes_sent'],
-#                             "location":session['location'],
-                            
-                            
-                            
-#                         }
-#                         for vp in monitor if 'sessions' in vp
-#                         for session in vp['sessions'].values()
-#                     ]
-# print(info_clients)
-
+#             {
+#                 "username": session['username'],
+#                 "login_time": session['connected_since'],
+#                 "address": str(session['local_ip']),
+#                 "bytes_recv":session['bytes_recv']/ 1024,
+#                 "bytes_sent":session['bytes_sent']/ 1024,
+#                 "location":session['location'],
+#             }
+#             for vp in monitor if 'sessions' in vp
+#             for session in vp['sessions'].values()
+#         ]
+# # Create a JSON object with the data
+# data = {
+#     # "all_client": all_client,
+#     "address_server":address_server,
+#     "client_active": client_active,
+#     "capacity_client_in":capacity_client_in,
+#     "capacity_client_out":capacity_client_out,
+#     "info_clients":info_clients
+    
+# }
+# print(data)

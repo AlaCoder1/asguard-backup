@@ -4,11 +4,11 @@ import "vuetify/styles";
 import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
-import error from "../views/404.vue";
+import vpMonitoring from "../views/vpnmonitoring/vpnmonitoring.vue";
 import { createI18n } from "vue-i18n";
 import enJson from "../locales/en.json";
 import frJson from "../locales/fr.json";
-const app = createApp(error);
+const app = createApp(vpMonitoring);
 const vuetify = createVuetify({
   components,
   directives,

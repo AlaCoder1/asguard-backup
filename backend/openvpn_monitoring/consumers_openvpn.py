@@ -49,7 +49,7 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
     #         Dashboardserializer.save()
     
     ##function to convert bytes 
-    async def convert_bytes(capture_size):
+    async def convert_bytes(self,capture_size):
             if capture_size >= 1073741824:
                 capture_info={
                 "capture_size":capture_size/(1024*1024*1024),

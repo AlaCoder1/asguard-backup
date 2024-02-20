@@ -28,6 +28,7 @@ Encore.setOutputPath("static/")
   .addEntry("UserAndCertificateManagement", "./src/middleware/userManagment.js")
   .addEntry("404", "./src/middleware/404.js")
   .addEntry("success", "./src/middleware/success.js")
+  .addEntry("vpnmonitoring", "./src/middleware/vpnmonitoring.js")
   .enableVueLoader(() => {}, {
     version: 3,
   })

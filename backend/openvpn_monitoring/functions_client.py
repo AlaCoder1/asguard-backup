@@ -1,0 +1,365 @@
+try:
+    import ConfigParser as configparser
+except ImportError:
+    import configparser
+
+try:
+    from ipaddr import IPAddress as ip_address
+except ImportError:
+    from ipaddress import ip_address
+
+import re
+import socket
+import string
+import sys
+from datetime import datetime
+from collections import OrderedDict, deque
+from pprint import pformat
+from semantic_version import Version as semver
+
+
+def get_date(date_string, uts=False):
+    if not uts:
+        return datetime.strptime(date_string, "%a %b %d %H:%M:%S %Y")
+    else:
+        return datetime.fromtimestamp(float(date_string))
+
+class OpenvpnMgmtInterface(object):
+    def __init__(self, cfg, **kwargs):
+        self.vpns = cfg
+        if kwargs.get('vpn_id'):
+            vpn = self.vpns[kwargs['vpn_id']]
+            disconnection_allowed = vpn['show_disconnect']
+            if disconnection_allowed:
+                self._socket_connect(vpn)
+                if vpn['socket_connected']:
+                    release = self.send_command('version\n')
+                    version = semver(self.parse_version(release).split(' ')[1])
+                    command = False
+                    client_id = int(kwargs.get('client_id'))
+                    if version.major == 2 and \
+                            version.minor >= 4 and \
+                            client_id:
+                        command = 'client-kill {0!s}\n'.format(client_id)
+                    else:
+                        ip = ip_address(kwargs['ip'])
+                        port = int(kwargs['port'])
+                        if ip and port:
+                            command = 'kill {0!s}:{1!s}\n'.format(ip, port)
+                    if command:
+                        self.send_command(command)
+                    self._socket_disconnect()
+        for  vpn in list(self.vpns):
+            self._socket_connect(vpn)
+            if vpn['socket_connected']:
+                self.collect_data(vpn)
+                self._socket_disconnect()
+            
+
+    def collect_data(self, vpn):
+        ver = self.send_command('version\n')
+        vpn['release'] = self.parse_version(ver)
+        vpn['version'] = semver(vpn['release'].split(' ')[1])
+        state = self.send_command('state\n')
+        vpn['state'] = self.parse_state(state)
+        stats = self.send_command('load-stats\n')
+        vpn['stats'] = self.parse_stats(stats)
+        status = self.send_command('status 3\n')
+        vpn['sessions'] = self.parse_status(status, vpn['version'])
+
+
+    def _socket_send(self, command):
+        self.s.send(bytes(command, 'utf-8'))
+
+    def _socket_recv(self, length):
+         return self.s.recv(length).decode('utf-8')
+
+    def _socket_connect(self, vpn):
+        timeout = 3
+        self.s = False
+        try:
+            if vpn.get('socket'):
+                self.s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                self.s.connect(vpn['socket'])
+            else:
+                host = vpn['host']
+                port = int(vpn['port'])
+                self.s = socket.create_connection((host, port), timeout)
+            if self.s:
+                password = vpn.get('password')
+                if password:
+                    self.wait_for_data(password=password)
+                vpn['socket_connected'] = True
+        except socket.timeout as e:
+            vpn['error'] = '{0!s}'.format(e)
+            vpn['socket_connected'] = False
+            if self.s:
+                self.s.shutdown(socket.SHUT_RDWR)
+                self.s.close()
+        except socket.error as e:
+            vpn['error'] = '{0!s}'.format(e.strerror)
+            vpn['socket_connected'] = False
+        except Exception as e:
+            vpn['error'] = '{0!s}'.format(e)
+            vpn['socket_connected'] = False
+
+    def _socket_disconnect(self):
+        self._socket_send('quit\n')
+        self.s.shutdown(socket.SHUT_RDWR)
+        self.s.close()
+
+    def send_command(self, command):
+        self._socket_send(command)
+        if command.startswith('kill') or command.startswith('client-kill'):
+            return
+        return self.wait_for_data(command=command)
+
+    def wait_for_data(self, password=None, command=None):
+        data = ''
+        while 1:
+            socket_data = self._socket_recv(1024)
+            socket_data = re.sub('>INFO(.)*\r\n', '', socket_data)
+            data += socket_data
+            if data.endswith('ENTER PASSWORD:'):
+                if password:
+                    self._socket_send('{0!s}\n'.format(password))
+            if data.endswith('SUCCESS: password is correct\r\n'):
+                break
+            if command == 'load-stats\n' and data != '':
+                break
+            elif data.endswith("\nEND\r\n"):
+                break
+        return data
+
+    @staticmethod
+    def parse_state(data):
+        state = {}
+        for line in data.splitlines():
+            parts = line.split(',')
+            if parts[0].startswith('>INFO') or \
+               parts[0].startswith('END') or \
+               parts[0].startswith('>CLIENT'):
+                continue
+            else:
+                state['up_since'] = get_date(date_string=parts[0], uts=True)
+                state['connected'] = parts[1]
+                state['success'] = parts[2]
+                if parts[3]:
+                    state['local_ip'] = ip_address(parts[3])
+                else:
+                    state['local_ip'] = ''
+                if parts[4]:
+                    state['remote_ip'] = ip_address(parts[4])
+                    state['mode'] = 'Client'
+                else:
+                    state['remote_ip'] = ''
+                    state['mode'] = 'Server'
+        return state
+
+    @staticmethod
+    def parse_stats(data):
+        stats = {}
+        line = re.sub('SUCCESS: ', '', data)
+        parts = line.split(',')
+        stats['nclients'] = int(re.sub('nclients=', '', parts[0]))
+        stats['bytesin'] = int(re.sub('bytesin=', '', parts[1]))
+        stats['bytesout'] = int(re.sub('bytesout=', '', parts[2]).replace('\r\n', ''))
+        return stats
+
+    def parse_status(self, data, version):
+        client_section = False
+        routes_section = False
+        sessions = {}
+        client_session = {}
+
+        for line in data.splitlines():
+            parts = deque(line.split('\t'))
+            if parts[0].startswith('END'):
+                break
+            if parts[0].startswith('TITLE') or \
+               parts[0].startswith('GLOBAL') or \
+               parts[0].startswith('TIME'):
+                continue
+            if parts[0] == 'HEADER':
+                if parts[1] == 'CLIENT_LIST':
+                    client_section = True
+                    routes_section = False
+                if parts[1] == 'ROUTING_TABLE':
+                    client_section = False
+                    routes_section = True
+                continue
+
+            if parts[0].startswith('TUN') or \
+               parts[0].startswith('TCP') or \
+               parts[0].startswith('Auth'):
+                parts = parts[0].split(',')
+            if parts[0] == 'TUN/TAP read bytes':
+                client_session['tuntap_read'] = int(parts[1])
+                continue
+            if parts[0] == 'TUN/TAP write bytes':
+                client_session['tuntap_write'] = int(parts[1])
+                continue
+            if parts[0] == 'TCP/UDP read bytes':
+                client_session['tcpudp_read'] = int(parts[1])
+                continue
+            if parts[0] == 'TCP/UDP write bytes':
+                client_session['tcpudp_write'] = int(parts[1])
+                continue
+            if parts[0] == 'Auth read bytes':
+                client_session['auth_read'] = int(parts[1])
+                sessions['Client'] = client_session
+                continue
+
+            if client_section:
+                session = {}
+                parts.popleft()
+                common_name = parts.popleft()
+                remote_str = parts.popleft()
+                if remote_str.count(':') == 1:
+                    remote, port = remote_str.split(':')
+                elif '(' in remote_str:
+                    remote, port = remote_str.split('(')
+                    port = port[:-1]
+                else:
+                    remote = remote_str
+                    port = None
+                remote_ip = ip_address(remote)
+                session['remote_ip'] = remote_ip
+                if port:
+                    session['port'] = int(port)
+                else:
+                    session['port'] = ''
+                if session['remote_ip'].is_private:
+                    session['location'] = 'RFC1918'
+                elif session['remote_ip'].is_loopback:
+                    session['location'] = 'loopback'
+                local_ipv4 = parts.popleft()
+                if local_ipv4:
+                    session['local_ip'] = ip_address(local_ipv4)
+                else:
+                    session['local_ip'] = ''
+                if version.major >= 2 and version.minor >= 4:
+                    local_ipv6 = parts.popleft()
+                    if local_ipv6:
+                        session['local_ip'] = ip_address(local_ipv6)
+                session['bytes_recv'] = int(parts.popleft())
+                session['bytes_sent'] = int(parts.popleft())
+                parts.popleft()
+                session['connected_since'] = get_date(parts.popleft(), uts=True)
+                username = parts.popleft()
+                if username != 'UNDEF':
+                    session['username'] = username
+                else:
+                    session['username'] = common_name
+                if version.major == 2 and version.minor >= 4:
+                    session['client_id'] = parts.popleft()
+                    session['peer_id'] = parts.popleft()
+                sessions[str(session['local_ip'])] = session
+
+            if routes_section:
+                local_ip = parts[1]
+                remote_ip = parts[3]
+                last_seen = get_date(parts[5], uts=True)
+                if sessions.get(local_ip):
+                    sessions[local_ip]['last_seen'] = last_seen
+                elif self.is_mac_address(local_ip):
+                    matching_local_ips = [sessions[s]['local_ip']
+                                          for s in sessions if remote_ip ==
+                                          self.get_remote_address(sessions[s]['remote_ip'], sessions[s]['port'])]
+                    if len(matching_local_ips) == 1:
+                        local_ip = '{0!s}'.format(matching_local_ips[0])
+                        if sessions[local_ip].get('last_seen'):
+                            prev_last_seen = sessions[local_ip]['last_seen']
+                            if prev_last_seen < last_seen:
+                                sessions[local_ip]['last_seen'] = last_seen
+                        else:
+                            sessions[local_ip]['last_seen'] = last_seen
+        return sessions
+
+    @staticmethod
+    def parse_version(data):
+        for line in data.splitlines():
+            if line.startswith('OpenVPN'):
+                return line.replace('OpenVPN Version: ', '')
+
+    @staticmethod
+    def is_mac_address(s):
+        return len(s) == 17 and \
+            len(s.split(':')) == 6 and \
+            all(c in string.hexdigits for c in s.replace(':', ''))
+
+    @staticmethod
+    def get_remote_address(ip, port):
+        if port:
+            return '{0!s}:{1!s}'.format(ip, port)
+        else:
+            return '{0!s}'.format(ip)
+
+
+cfg=[{'host': 'localhost', 'port': '17562', 'name': 'Staff VPN', 'password': '', 'show_disconnect': False},
+     {'host': 'localhost', 'port': '17568', 'name': 'Staff VPN', 'password': '', 'show_disconnect': False}]
+monitor = OpenvpnMgmtInterface(cfg).vpns
+print({"monitor":monitor})
+client_active=sum(vp['stats']['nclients'] for vp in monitor  if 'stats'in vp and 'nbclients' in vp['stats'])
+capacity_client_in=sum(vp['stats']['bytesin'] for vp in monitor  if 'stats'in vp and 'bytesin' in vp['stats'])/ (1024 ** 3)
+capacity_client_out=sum(vp['stats']['bytesout'] for vp in monitor  if 'stats'in vp and 'bytesout' in vp['stats'])/ (1024 ** 3)
+address_server=[str(vp["state"]["local_ip"]) for vp in monitor if "state" in vp]
+bytesin_server=int()
+info_clients = [
+            {
+                "username": session['username'],
+                "login_time": session['connected_since'],
+                "address": str(session['local_ip']),
+                "bytes_recv":session['bytes_recv']/ 1024,
+                "bytes_sent":session['bytes_sent']/ 1024,
+                "location":session['location'],
+            }
+            for vp in monitor if 'sessions' in vp
+            for session in vp['sessions'].values()
+        ]
+# Create a JSON object with the data
+data = {
+    # "all_client": all_client,
+    "address_server":address_server,
+    "client_active": client_active,
+    "capacity_client_in":capacity_client_in,
+    "capacity_client_out":capacity_client_out,
+    "info_clients":info_clients
+    
+}
+print(data)
+# for server in address_server:
+    
+# # for vp in monitor:
+# #     print(vp['stats'])
+# client_active=sum(vp['stats']['nclients'] for vp in monitor  if 'stats'in vp)
+# # client_key=[ k for k in list(vp['sessions'].keys()) for vp in monitor if 'sessions' in vp ]
+# # client_key = [{"username":vp['sessions'][k]['username'],"login_time":vp['sessions'][k]['connected_since'],"address":vp['sessions'][k]['local_ip']} for vp in monitor if 'sessions' in vp for k in vp['sessions'].keys()]
+# # client_key = []
+# # for vp in monitor:
+# #     if 'sessions' in vp:
+# #         client_key.extend([
+# #             {
+# #                 "username": session['username'],
+# #                 "login_time": session['connected_since'],
+# #                 "address": session['local_ip'][session['local_ip'].find("(")+1:session['local_ip'].find(")")-1]
+# #             }
+# #             for session in vp['sessions'].values()
+# #         ])
+# info_clients = [
+#                         {
+#                             "username": session['username'],
+#                             "login_time": session['connected_since'],
+#                             "address": str(session['local_ip']),
+#                             "bytes_recv":session['bytes_recv'],
+#                             "bytes_sent":session['bytes_sent'],
+#                             "location":session['location'],
+                            
+                            
+                            
+#                         }
+#                         for vp in monitor if 'sessions' in vp
+#                         for session in vp['sessions'].values()
+#                     ]
+# print(info_clients)
+

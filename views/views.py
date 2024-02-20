@@ -684,3 +684,7 @@ def subscription_info(request):
         else:
             subscription_info = {}
         return subscription_info
+    
+@login_required(login_url='/')
+def openvpn_monitoring(request):
+    return render(request, 'vpnmonitoring.html')

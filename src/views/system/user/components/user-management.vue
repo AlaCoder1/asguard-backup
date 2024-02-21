@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h4>Networks admins</h4>
+    <h4>{{ $t("networkAdmins") }}</h4>
 
     <div style="height: 100%">
       <div style="display: flex; flex-direction: row; height: 100%">
@@ -24,7 +24,7 @@
         class="mt-3 btn-add"
         @click="openModalAdd"
       >
-        <span class="text-white">Add user</span>
+        <span class="text-white">{{ $t("button.addUser") }}</span>
       </v-btn>
     </div>
 
@@ -111,8 +111,8 @@ export default {
       modalData: {},
       modalMode: "",
       columnDefs: [
-        { headerName: "User", field: "username" },
-        { headerName: "Role", field: "role" },
+        { headerName: this.user, field: "username" },
+        { headerName: this.role, field: "role" },
         { headerName: "Actions", cellRenderer: this.actionCellRenderer },
       ],
       rowData: [], // Initialize rowData as an empty array
@@ -124,28 +124,39 @@ export default {
       },
     };
   },
+
   watch: {
     DataList: {
       handler(newData) {
-        console.log("row", newData);
         this.rowData = newData.users; // Update rowData with the new prop value
       },
-      immediate: true, // This will trigger the watcher when the component is created to initialize rowData
+      immediate: true,
+    },
+    user: {
+      handler(val) {
+        this.columnDefs[0].headerName = val;
+      },
+      immediate: true,
+    },
+    role: {
+      handler(val) {
+        this.columnDefs[1].headerName = val;
+      },
+      immediate: true,
+    },
+  },
+  computed: {
+    user() {
+      return this.$t("agGrid.user");
+    },
+    role() {
+      return this.$t("agGrid.role");
     },
   },
   methods: {
     onGridReady(params) {
       this.gridApi = params.api;
       this.gridColumnApi = params.columnApi;
-
-      // params.api.sizeColumnsToFit();
-      // window.addEventListener("resize", function () {
-      //   setTimeout(function () {
-      //     params.api.sizeColumnsToFit();
-      //   });
-      // });
-
-      // params.api.sizeColumnsToFit();
     },
     cancelDelete() {
       this.deleteDialog = false;
@@ -169,10 +180,10 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-              this.snackbar = true;
-              this.color = "red";
-              this.textAlert = i.response.data.error;
-            });
+          this.snackbar = true;
+          this.color = "red";
+          this.textAlert = i.response.data.error;
+        });
     },
     actionCellRenderer(params) {
       let eGui = document.createElement("div");
@@ -198,7 +209,7 @@ export default {
           <button class="action-button delete" data-action="delete">
              <i class="fas fa-times" style="color: #086eae;"></i>
            </button>
-         
+
 
           `;
       }

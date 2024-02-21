@@ -1,4 +1,4 @@
-from backend.managementCertificates.constant_variables import PATH_CLIENT_CERT_CRT, PATH_CLIENT_CERT_KEY, PATH_PKI_CERT, PATH_PKI_CERT_INLINE, PATH_PKI_CERT_KEY, PATH_PKI_CERT_REQ, PATH_PKI_CERT_REVOKED, PATH_PKI_VARS, PATH_REVOKED, PATH_REVOKED_CERT, PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY, PATH_VARS, PATH_VARS_INITIALIZE
+from backend.managementCertificates.constant_variables import PATH_CLIENT_CERT_CRT, PATH_CLIENT_CERT_KEY, PATH_DOWNLOADS_CERTS_P12, PATH_PKI_CERT, PATH_PKI_CERT_INLINE, PATH_PKI_CERT_KEY, PATH_PKI_CERT_REQ, PATH_PKI_CERT_REVOKED, PATH_PKI_VARS, PATH_REVOKED, PATH_REVOKED_CERT, PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY, PATH_VARS, PATH_VARS_INITIALIZE
 from backend.managementCertificates.get_data_from_certificate import extract_certificate_distingushed_name, extract_type_certificate, get_certifcate_dates, get_certifcate_serial_number, read_certificate_value
 from backend.managementCertificates.utils import change_vars, initialize_ca, revoke_list_certs, save_certificate_in_text_format
 from utils.commands_utils import execute_command_with_arguments, execute_command_without_arguments, execute_list_commands_without_arguments, get_current_directory
@@ -144,10 +144,9 @@ def export_certificate_in_system(cert_name, cert_type, download_type, password='
     elif download_type == 'private_key':
         cert_value = read_certificate_value(cert_key_path)
     else:  # .p12 file
-        cert_path_p12 = f'/asguard/newdms/src/downloads/{cert_name}.p12'
-        execute_command_without_arguments(["openssl", "pkcs12", "-export", "-out", cert_path_p12,
+        # execute_command_without_arguments(["sudo", "rm", "-f", PATH_DOWNLOADS_CERTS_P12.format(cert_name)])
+        execute_command_without_arguments(["openssl", "pkcs12", "-export", "-out", PATH_DOWNLOADS_CERTS_P12.format(cert_name),
                                            "-inkey", cert_key_path, "-in", cert_path,
                                            "-passout", f'pass:{password}'])
         cert_value = "Certificate p12"
-        # download_certificate(f'/asguard/newdms/src/downloads/{cert_name}.p12', cert_value)
     return cert_value

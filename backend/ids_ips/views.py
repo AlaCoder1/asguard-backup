@@ -57,9 +57,9 @@ def update_suricata_configuration(request, id):
             else:
                 new_copy_mode="tap"
             ##interfaces
-            interface_ids_input = data.get("interface", [])
+            interface_ids_input = data.get("list_interfaces", [])
             interface_ids = [x["id"] for x in interface_ids_input]
-            interface_names=Interface.objects.filter(id__in=interface_ids).values('ifname')
+            # interface_names=Interface.objects.filter(id__in=interface_ids).values('ifname')
             # Utilisez la fonction get_ip_addresses pour obtenir les adresses IP
             ip_addresses =get_ip_addresses(interface_ids)
             home_net_value_sys = f'[{", ".join(list(set(ip_addresses)))}]'
@@ -68,8 +68,11 @@ def update_suricata_configuration(request, id):
             output,_= execute_cmd("sudo cat " + suricata_yaml_path)
             if output:
                 lines = output.split('\n')
+                # print(lines)
+                updated_lines=update_packet_interface(interface_ids_input,lines)
                 # Appelez d'abord la fonction update_suricata_config pour mettre à jour le système
-                aux_update=update_suricata_config(suricata_yaml_path,lines,home_net_value_sys,interface_names[0]['ifname'],status_enabled,str(new_promisc).lower(), new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode)
+                updated_lines=update_suricata_config(updated_lines,home_net_value_sys,str(new_promisc).lower(), new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode)
+                aux_update=save_config(updated_lines,suricata_yaml_path,status_enabled)
                 if aux_update is True:
                         # Ensuite, mettez à jour les enregistrements dans la base de données
                         suricata_instance = suricatafile.objects.get(id=id)

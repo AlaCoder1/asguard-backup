@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     "backend.clamav",
     'backend.proxy',
     'backend.sdwan',
+    'backend.openvpn_monitoring',
     'channels',
     'drf_yasg',
 ]

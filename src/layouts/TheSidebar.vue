@@ -123,6 +123,15 @@ export default {
           mouseOverSubMenu: false,
           subMenuVisible: false,
         },
+        // {
+        //   title: "testMoni",
+        //   icon: "mdi mdi-view-dashboard",
+        //   href: "/vpnmonitoring",
+        //   active: "vpnmonitoring",
+        //   subItems: [],
+        //   mouseOverSubMenu: false,
+        //   subMenuVisible: false,
+        // },
         {
           title: "sideBar.system",
           icon: "mdi mdi-laptop",

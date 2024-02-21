@@ -597,7 +597,7 @@ def subscription_page(request):
     context = {'subscription_information':json.dumps(subscription_information)}
     return render(request, 'subscription_page.html', context)
  
-
+#comment to test git command
 def login(request):
     if request.user.is_authenticated:
         return redirect('/dashboard/')
@@ -684,3 +684,7 @@ def subscription_info(request):
         else:
             subscription_info = {}
         return subscription_info
+    
+@login_required(login_url='/')
+def openvpn_monitoring(request):
+    return render(request, 'vpnmonitoring.html')

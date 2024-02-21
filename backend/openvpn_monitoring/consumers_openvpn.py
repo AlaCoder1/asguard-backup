@@ -19,13 +19,16 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
             "chart_group_global",
             self.channel_name,
         )
+        # await self.send("hello i am connected from this !!!")
         
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
-        print({"text_data":text_data})
         id_server = text_data_json['id']
-        asyncio.create_task(self.start_data_loop_openvpn(id_server))
-        # self.start_data_loop_openvpn(id_server)
+        while True:
+            data =await self.start_data_loop_openvpn(id_server)
+            # print(data)
+            await self.send(json.dumps(data))
+            asyncio.sleep(2)
 
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
@@ -72,6 +75,12 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
                 "capture_size":capture_size/1024,
                 "unit":"KB"
                 }
+            else:
+                capture_info={
+                "initial_size":capture_size, 
+                "capture_size":capture_size,
+                "unit":"Bytes"
+                }
             return capture_info
     
     def get_top_traffic(self,info_clients):
@@ -87,18 +96,25 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         current_time = time.strftime("%Y-%m-%d %H:%M:%S")
         # Convert the formatted timestamp to a Unix timestamp
         unix_timestamp = int(time.mktime(time.strptime(current_time, "%Y-%m-%d %H:%M:%S")))
+        if len(top_traffic)!=0:
         # print(top_traffic[0])
-        if len(top_traffic)>=2:
-            top_network={
-                "timestamp": unix_timestamp,
-                "first_network":top_traffic[0]['total_traffic'],
-                "second_network":top_traffic[1]['total_traffic']
-            }
+            if len(top_traffic)>=2:
+                top_network={
+                    "timestamp": unix_timestamp,
+                    "first_network":top_traffic[0]['total_traffic'],
+                    "second_network":top_traffic[1]['total_traffic']
+                }
+            else:
+                top_network={
+                    "timestamp": unix_timestamp,
+                    "first_network":top_traffic[0]['total_traffic'],
+                }
         else:
             top_network={
-                "timestamp": unix_timestamp,
-                "first_network":top_traffic[0]['total_traffic'],
-            }
+                    "timestamp": unix_timestamp,
+                    "first_network":0,
+                }
+            
         return top_network
     
     def get_top_logging(self,vpn,name_server,address_server):
@@ -127,49 +143,49 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         vpn_db=ServerOpenvpn.objects.get(pk=id)
         name_server=vpn_db.dev+"_"+vpn_db.name
         all_client=ClientOpenvpn.objects.all().count()
-        while True:
-            cfg=[{'host': 'localhost', 'port': vpn_db.port, 'name':name_server, 'password': '', 'show_disconnect': False,"server_status":vpn_db.server_status} ]
-            vpn = OpenvpnMgmtInterface(cfg).vpns
-            vpn=vpn[0]
-            client_active=vpn['stats']['nclients'] if 'stats' in vpn and 'nbclients' in vpn['stats'] else 0
-            capacity_server_in=int(vpn['stats']['bytesin'])   if 'stats'in vpn and 'bytesin' in vpn['stats'] else 0
-            capacity_server_out=int(vpn['stats']['bytesout'])   if 'stats'in vpn and 'bytesout' in vpn['stats'] else 0
-            address_server=str(vpn["state"]["local_ip"]) if "state" in vpn  and "local_ip" in vpn["state"]  else None
-            # print({"vpn":vpn})
-            info_clients = [
-                            {
-                                "username": session['username'],
-                                "login_time": session['connected_since'],
-                                "address": str(session['local_ip']),
-                                "bytes_recv":self.convert_bytes(int(session['bytes_recv'])),
-                                "bytes_sent":self.convert_bytes(int(session['bytes_sent'])),
-                                "total_traffic":self.convert_bytes(int(session['bytes_recv'])+int(session['bytes_sent'])),
-                                "location":session['location'],
-                                "traffic_distr":(capacity_server_in+capacity_server_out/int(session['bytes_recv'])+int(session['bytes_sent']))*100
-                            }
-                        for session in vpn['sessions'].values()
-                        if 'sessions' in vpn
-                        ]
-            # print({"info_client":info_clients})
-            # Create a JSON object with the data
-            data = {
-                "address_server":address_server,
-                "all_client": all_client,
-                "client_active": client_active,
-                "capacity_client_in":self.convert_bytes(capacity_server_in),
-                "capacity_client_out":self.convert_bytes(capacity_server_out),
-                "info_clients":info_clients,
-                "top_traffic":self.get_top_traffic(info_clients),
-                # "top_logging":self.get_top_logging(vpn,name_server,address_server),
-                "top_network":self.get_top_network(info_clients)
-               
-            }
+        cfg=[{'host': 'localhost', 'port': vpn_db.port, 'name':name_server, 'password': '', 'show_disconnect': False,"server_status":vpn_db.server_status} ]
+        vpn = OpenvpnMgmtInterface(cfg).vpns
+        vpn=vpn[0]
+        client_active=vpn['stats']['nclients'] if 'stats' in vpn and 'nclients' in vpn['stats'] else 0
+        capacity_server_in=int(vpn['stats']['bytesin'])   if 'stats'in vpn and 'bytesin' in vpn['stats'] else 0
+        capacity_server_out=int(vpn['stats']['bytesout'])   if 'stats'in vpn and 'bytesout' in vpn['stats'] else 0
+        address_server=str(vpn["state"]["local_ip"]) if "state" in vpn  and "local_ip" in vpn["state"]  else None
+        # print({"vpn":vpn})
+        info_clients = [
+                        {
+                            "username": session['username'],
+                            "login_time": str(session['connected_since']),
+                            "address": str(session['local_ip']),
+                            "bytes_recv":self.convert_bytes(int(session['bytes_recv'])),
+                            "bytes_sent":self.convert_bytes(int(session['bytes_sent'])),
+                            "total_traffic":self.convert_bytes(int(session['bytes_recv'])+int(session['bytes_sent'])),
+                            "location":session['location'],
+                            "traffic_distr":(capacity_server_in+capacity_server_out/int(session['bytes_recv'])+int(session['bytes_sent']))*100
+                        }
+                    for session in vpn['sessions'].values()
+                    if 'sessions' in vpn
+                    ]
+        # print({"info_client":info_clients})
+        # Create a JSON object with the data
+        data = {
+            "address_server":address_server,
+            "all_client": all_client,
+            "client_active": client_active,
+            "capacity_client_in":self.convert_bytes(capacity_server_in),
+            "capacity_client_out":self.convert_bytes(capacity_server_out),
+            "info_clients":info_clients,
+            "top_traffic":self.get_top_traffic(info_clients),
+            # "top_logging":self.get_top_logging(vpn,name_server,address_server),
+            "top_network":self.get_top_network(info_clients)
+            
+        }
+        return data
            # Save the data to the database asynchronously
             # await self.save_system_usage(data)
             # Send the JSON data to the WebSocket client
-            print({"data":data})
-            self.send(data)
-            # await self.delete_data()
+            # print({"data":data})
+            # self.send("hellooooo i am connected ")
+            # # # await self.delete_data()
             
-            # Sleep for a while before sending the next data (adjust the interval as needed)
-            asyncio.sleep(1)
+            # # # Sleep for a while before sending the next data (adjust the interval as needed)
+            # asyncio.sleep(1)

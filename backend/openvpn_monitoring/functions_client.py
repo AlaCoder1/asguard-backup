@@ -314,36 +314,3 @@ class OpenvpnMgmtInterface(object):
             return '{0!s}:{1!s}'.format(ip, port)
         else:
             return '{0!s}'.format(ip)
-
-# cfg=[{'host': 'localhost', 'port': '1191', 'name': 'Staff VPN', 'password': '', 'show_disconnect': False},
-#      {'host': 'localhost', 'port': '17568', 'name': 'Staff VPN', 'password': '', 'show_disconnect': False}]
-# monitor = OpenvpnMgmtInterface(cfg).vpns
-# print({"monitor":monitor})
-# client_active=sum(vp['stats']['nclients'] for vp in monitor  if 'stats'in vp and 'nbclients' in vp['stats'])
-# capacity_client_in=sum(vp['stats']['bytesin'] for vp in monitor  if 'stats'in vp and 'bytesin' in vp['stats'])/ (1024 ** 3)
-# capacity_client_out=sum(vp['stats']['bytesout'] for vp in monitor  if 'stats'in vp and 'bytesout' in vp['stats'])/ (1024 ** 3)
-# address_server=[str(vp["state"]["local_ip"]) for vp in monitor if "state" in vp]
-# bytesin_server=int()
-# info_clients = [
-#             {
-#                 "username": session['username'],
-#                 "login_time": session['connected_since'],
-#                 "address": str(session['local_ip']),
-#                 "bytes_recv":session['bytes_recv']/ 1024,
-#                 "bytes_sent":session['bytes_sent']/ 1024,
-#                 "location":session['location'],
-#             }
-#             for vp in monitor if 'sessions' in vp
-#             for session in vp['sessions'].values()
-#         ]
-# # Create a JSON object with the data
-# data = {
-#     # "all_client": all_client,
-#     "address_server":address_server,
-#     "client_active": client_active,
-#     "capacity_client_in":capacity_client_in,
-#     "capacity_client_out":capacity_client_out,
-#     "info_clients":info_clients
-    
-# }
-# print(data)

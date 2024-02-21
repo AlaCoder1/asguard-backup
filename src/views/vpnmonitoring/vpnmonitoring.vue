@@ -38,17 +38,14 @@ export default {
                 this.socket.send(JSON.stringify({
                     'id': 1
                 }));
-                console.log('1', this.socket)
             };
-            console.log('2', this.socket)
             this.socket.onmessage = (event) => {
-                console.log('event', event)
-                // const data = JSON.parse(event.data);
-                // console.log(data)
+                // console.log('event', event.data)
+                const data = JSON.parse(event.data);
+                 console.log("aaaaaaaaaaaaaa",data)
 
 
             };
-            // console.log(event)
 
         }
 

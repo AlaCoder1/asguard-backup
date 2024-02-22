@@ -208,6 +208,7 @@
                   v-model:username="state.usernameUser"
                   v-model:password="state.passwordUser"
                   v-model:renegotiate_time="state.renegotiate_time"
+                  :errors="v$"
                 />
                 <cryptoSettings
                   v-model:tlsGenerate="state.tlsGenerate"
@@ -649,7 +650,25 @@ export default {
             () => state.proxyAuthenticationExtraOptions.slug === "basic"
           ),
         },
+        passwordUser: {
+          isValidPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
+        },
+
         password: {
+          isValidPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
+
           requiredIfFuction: requiredIf(
             () => state.proxyAuthenticationExtraOptions.slug === "basic"
           ),

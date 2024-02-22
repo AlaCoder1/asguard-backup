@@ -37,6 +37,8 @@ class ServerOpenvpn(models.Model):
     force_dns_cache_update = models.BooleanField(default=False, null=True, blank=True)
     ntp_server1 = models.CharField(max_length=300, default=None, null=True, blank=True)
     ntp_server2 = models.CharField(max_length=300, default=None, null=True, blank=True)
+    client_management_port = models.CharField(max_length=10, default=None, null=True, blank=True)
+    client_management_password = models.CharField(max_length=100, default=None, null=True, blank=True)
     verb = models.CharField(max_length=100, default="3", null=True, blank=True)
     server_status = models.BooleanField(default=False, null=True, blank=True)
 

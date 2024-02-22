@@ -156,6 +156,8 @@
                   v-model:encryptAlgo="state.encryptAlgo"
                   v-model:authDigest="state.authDigest"
                   v-model:hardwareCrypto="state.hardwareCrypto"
+                  :mapedCertifServer="state.mapedCertifServer"
+                  :mapedCertifAuth="state.mapedCertifAuth"
                   :errors="v$"
                 />
               </v-row>
@@ -285,6 +287,8 @@ export default {
       isLoadingDialogue: false,
 
       mapedCertifServer: [],
+      mapedCertifAuth: [],
+      filtredMapCertif: [],
       snackbar: false,
       color: "",
       textAlert: "",
@@ -325,7 +329,7 @@ export default {
       concurrentConnections: "",
       compression: { name: "No preference", slug: "no_preference" },
       typefService: false,
-      Connections: false,
+      Connections: true,
       IPv6: false,
       interClients: false,
       //clientSettings
@@ -390,10 +394,27 @@ export default {
           requiredIfFuction: requiredIf(
             () => !state.isBridge && !state.adressPool
           ),
+          isValidIp4Tunnel: helpers.withMessage(
+            `Format must be like : X.X.X.X/X`,
+
+            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+          ),
         },
         iPv4Local: {
           requiredIfFuction: requiredIf(
             () => !state.isBridge && !state.adressPool
+          ),
+          isValidIPv4Local: helpers.withMessage(
+            `Format must be like : X.X.X.X/X`,
+
+            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+          ),
+        },
+        iPv4Remote: {
+          isValidIPv4Remote: helpers.withMessage(
+            `Format must be like : X.X.X.X/X`,
+
+            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
         interfaceBridge: {
@@ -409,18 +430,60 @@ export default {
         },
         startDHCPBridge: {
           requiredIfFuction: requiredIf(() => state.isBridge),
+          isValidStartDHCPBridge: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
         endDHCPBridge: {
           requiredIfFuction: requiredIf(() => state.isBridge),
+
+          isValidEndDHCPBridge: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
         activeDnsDefault: {
           requiredIfFuction: requiredIf(() => state.dnsDefaultDomain),
+          isValidActiveDnsDefault: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
         activeDnsServer1: {
           requiredIfFuction: requiredIf(() => state.dnsServers),
+
+          isValidActiveDnsServer1: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+        activeDnsServer2: {
+          isValidActiveDnsServer2: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+        activeNtpServer2: {
+          isValidActiveNtpServer2: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
         activeNtpServer1: {
           requiredIfFuction: requiredIf(() => state.ntpServers),
+
+          isValidActiveNtpServer1: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
       };
     });
@@ -505,6 +568,47 @@ export default {
       );
     };
 
+    // const getCertif = () => {
+    //   const csrfToken = getCookie("csrftoken");
+    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+    //   axios.get("/certificates/getAllCertificates").then(
+    //     (response) => {
+    //       let mapedListCertif = response.data.filter(
+    //         (i) => i.certificate_type === "server"
+    //       );
+    //       state.mapedCertifServer = mapedListCertif.map((i) => {
+    //         return {
+    //           id: i.id,
+    //           name: i.name,
+    //         };
+    //       });
+    //     },
+    //     (error) => {
+    //       console.log(error);
+    //     }
+    //   );
+    // };
+    // const getAllCertAuth = () => {
+    //   const csrfToken = getCookie("csrftoken");
+    //   axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+    //   axios.get("/certificates/getAllCertAuth").then(
+    //     (response) => {
+    //       let mapedList = response.data.map((i) => {
+    //         return {
+    //           id: i.id,
+    //           name: i.name,
+    //         };
+    //       });
+    //       state.mapedCertifAuth = mapedList;
+    //     },
+    //     (error) => {
+    //       console.log(error);
+    //     }
+    //   );
+    // };
+
     const getCertif = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -514,12 +618,17 @@ export default {
           let mapedListCertif = response.data.filter(
             (i) => i.certificate_type === "server"
           );
-          state.mapedCertifServer = mapedListCertif.map((i) => {
+          let mapedCertServer = mapedListCertif.map((i) => {
             return {
               id: i.id,
               name: i.name,
+              is_private_key: i.is_private_key,
+              certificate_authority: i.certificate_authority,
             };
           });
+          state.filtredMapCertif = mapedCertServer.filter(
+            (i) => i.is_private_key
+          );
         },
         (error) => {
           console.log(error);
@@ -536,9 +645,10 @@ export default {
             return {
               id: i.id,
               name: i.name,
+              is_private_key: i.is_private_key,
             };
           });
-          state.mapedCertifAuth = mapedList;
+          state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
         },
         (error) => {
           console.log(error);
@@ -590,6 +700,8 @@ export default {
         if (!newValue) {
           state.startAddressPool = "";
           state.endAddressPool = "";
+        } else {
+          state.topology = false;
         }
       }
     );
@@ -627,6 +739,28 @@ export default {
         }
       }
     );
+    watch(
+      () => state.topology,
+      (newValue) => {
+        if (newValue) {
+          state.adressPool = false;
+        }
+      },
+      { deep: true }
+    );
+    watch(
+      () => state.peerCertif,
+      (newValue) => {
+        let serverCert = state.filtredMapCertif.filter(
+          (e) => e.certificate_authority === newValue.id
+        );
+        if (serverCert.length == 0) {
+          state.serverCertif = "";
+          state.mapedCertifServer = serverCert;
+        } else state.mapedCertifServer = serverCert;
+      },
+      { deep: true }
+    );
 
     onMounted(() => {
       getInterface();
@@ -650,7 +784,7 @@ export default {
         let filtredCertifAuth = state.mapedCertifAuth.filter(
           (i) => i.name === data.ca_name
         );
-        let filtredCertiServer = state.mapedCertifServer.filter(
+        let filtredCertiServer = state.filtredMapCertif.filter(
           (i) => i.name === data.cert_name
         );
         state.protocol = filtredProtocol[0];
@@ -948,7 +1082,7 @@ export default {
       state.concurrentConnections = "";
       state.compression = { name: "No preference", slug: "no_preference" };
       state.typefService = false;
-      state.Connections = false;
+      state.Connections = true;
       state.IPv6 = false;
       state.interClients = false;
       //clientSettings

@@ -168,9 +168,6 @@ log-append {PATH_LOG_OPENVPN_LOG}
     if json_object["dynamic_ip"]:
         config_input = config_input.replace("#float", "float")
 
-    if not json_object["topology"]:
-        config_input = config_input.replace("topology subnet", "#topology subnet")
-
     if json_object["dns_default_domain"]["dns_default_domain_select"]:
         config_input = config_input.replace("#push \"dhcp-option DOMAIN server\"", f"push \"dhcp-option DOMAIN {json_object['dns_default_domain']['dns_default_domain_server']}\"")
 

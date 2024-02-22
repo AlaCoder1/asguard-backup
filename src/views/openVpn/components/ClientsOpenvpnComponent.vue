@@ -114,6 +114,12 @@
                 label="Proxy host or address"
                 v-model="state.proxy_host"
               ></v-text-field>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.proxy_host.$errors.length"
+              >
+                {{ v$.proxy_host.$errors?.[0].$message }}
+              </p>
             </v-col>
             <v-col align-self="center" cols="4">
               <label>Proxy port</label>
@@ -123,6 +129,12 @@
                 label="Proxy port"
                 v-model="state.proxy_port"
               ></v-text-field>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.proxy_port.$errors.length"
+              >
+                {{ v$.proxy_port.$errors?.[0].$message }}
+              </p>
             </v-col>
 
             <v-col align-self="center" cols="4" class="mt-1">
@@ -181,6 +193,12 @@
                 label="Local port"
                 v-model="state.local_port"
               ></v-text-field>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.local_port.$errors.length"
+              >
+                {{ v$.local_port.$errors?.[0].$message }}
+              </p>
             </v-col>
           </v-row>
           <v-row class="mt-2">
@@ -190,6 +208,7 @@
                   v-model:username="state.usernameUser"
                   v-model:password="state.passwordUser"
                   v-model:renegotiate_time="state.renegotiate_time"
+                  :errors="v$"
                 />
                 <cryptoSettings
                   v-model:tlsGenerate="state.tlsGenerate"
@@ -201,6 +220,8 @@
                   v-model:encryptionAlgorithm="state.encryptionAlgorithm"
                   v-model:authDigestAlgorithm="state.authDigestAlgorithm"
                   v-model:hardwareCrypto="state.hardwareCrypto"
+                  :clientCertificateList="state.clientCertificateList"
+                  :mapedCertifAuth="state.mapedCertifAuth"
                   :errors="v$"
                 />
               </v-row>
@@ -398,6 +419,9 @@ export default {
     ]);
 
     const state = reactive({
+      clientCertificateList: [],
+      mapedCertifAuth: [],
+      filtredMapCertif: [],
       id: "",
       isEditState: "",
       //general information
@@ -520,7 +544,7 @@ export default {
         );
         state.peerCertificateAuthority = filtredCert[0];
 
-        let filtredCertiClient = clientCertificateList.value.filter(
+        let filtredCertiClient = state.filtredMapCertif.filter(
           (i) => i.name === data.cert_name
         );
         state.clientCertificate = filtredCertiClient[0];
@@ -581,9 +605,42 @@ export default {
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },
+
+        ipv4TunnelNetwork: {
+          isValidIpv4TunnelNetwork: helpers.withMessage(
+            `Format must be like : X.X.X.X/X`,
+            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+          ),
+        },
+        ipv4RemoteNetwork: {
+          isValidIpv4RemoteNetwork: helpers.withMessage(
+            `Format must be like : X.X.X.X/X`,
+            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+          ),
+        },
+
         server_mode: { required },
         protocol: { required },
         device_mode: { required },
+
+        proxy_host: {
+          isValidProxy_host: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+        proxy_port: {
+          isValidProxy_port: helpers.withMessage(
+            `champs can include only Numbers.`,
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        local_port: {
+          isValidLocal_port: helpers.withMessage(
+            `champs can include only Numbers.`,
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
 
         sharedKey: {
           requiredIfFuction: requiredIf(() => !state.tlsGenerate),
@@ -593,7 +650,25 @@ export default {
             () => state.proxyAuthenticationExtraOptions.slug === "basic"
           ),
         },
+        passwordUser: {
+          isValidPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
+        },
+
         password: {
+          isValidPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
+
           requiredIfFuction: requiredIf(
             () => state.proxyAuthenticationExtraOptions.slug === "basic"
           ),
@@ -625,6 +700,20 @@ export default {
           cancel();
         }
       }
+    );
+
+    watch(
+      () => state.peerCertificateAuthority,
+      (newValue) => {
+        let clientCert = state.filtredMapCertif.filter(
+          (e) => e.certificate_authority === newValue.id
+        );
+        if (clientCert.length == 0) {
+          state.clientCertificate = "";
+          state.clientCertificateList = clientCert;
+        } else state.clientCertificateList = clientCert;
+      },
+      { deep: true }
     );
 
     const getCookie = (name) => {
@@ -793,7 +882,8 @@ export default {
       },
     ]);
     const hasEmptyProperty = (obj) => {
-      var invalidHostChars = /[^0-9.]/.test(obj.host);
+      // var invalidHostChars = /[^0-9.]/.test(obj.host);
+      var invalidHostChars = !/^(\d{1,3}\.){3}\d{1,3}$/.test(obj.host);
       var invalidPortChars = /[^0-9]/.test(obj.port);
 
       return (
@@ -803,6 +893,8 @@ export default {
         invalidPortChars
       );
     };
+
+    // const clientCertificateList = ref([]);
     const getAllCertAuth = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -813,16 +905,18 @@ export default {
             return {
               id: i.id,
               name: i.name,
+              is_private_key: i.is_private_key,
             };
           });
-          state.mapedCertifAuth = mapedList;
+
+          state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
         },
         (error) => {
           console.log(error);
         }
       );
     };
-    const clientCertificateList = ref([]);
+
     const getAllClientCertif = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -833,12 +927,18 @@ export default {
             (i) => i.certificate_type === "client"
           );
 
-          clientCertificateList.value = mapedListCertif.map((i) => {
+          let clientCerticateList = mapedListCertif.map((i) => {
             return {
               id: i.id,
               name: i.name,
+              is_private_key: i.is_private_key,
+              certificate_authority: i.certificate_authority,
             };
           });
+
+          state.filtredMapCertif = clientCerticateList.filter(
+            (i) => i.is_private_key
+          );
         },
         (error) => {
           console.log(error);
@@ -849,25 +949,28 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      var isArrayEmpty = rowDataCertificats.value.length === 0;
-      if (isArrayEmpty) {
-        snackbar.value = true;
-        color.value = "red";
-        textAlert.value = "The array is empty. Please add at least one object.";
-      } else {
-        var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
-
-        if (hasEmptyElement) {
-          snackbar.value = true;
-          color.value = "red";
-          textAlert.value =
-            "At least one element has an empty host or port, or contains invalid characters.";
-        }
-      }
-
       const result = await v$.value.$validate();
 
       if (result) {
+        var isArrayEmpty = rowDataCertificats.value.length === 0;
+        if (isArrayEmpty) {
+          snackbar.value = true;
+          color.value = "red";
+          textAlert.value =
+            "The array is empty. Please add at least one object.";
+          return;
+        } else {
+          var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
+
+          if (hasEmptyElement) {
+            snackbar.value = true;
+            color.value = "red";
+            textAlert.value =
+              "At least one element has an empty host or port, or contains invalid characters.";
+            return;
+          }
+        }
+
         let proxy_authentication = null;
         if (state.proxyAuthenticationExtraOptions.slug === "none") {
           proxy_authentication = {
@@ -970,6 +1073,23 @@ export default {
         }
       } else {
         console.log("v$.value", v$.value);
+
+        var isArrayEmpty = rowDataCertificats.value.length === 0;
+        if (isArrayEmpty) {
+          snackbar.value = true;
+          color.value = "red";
+          textAlert.value =
+            "The array is empty. Please add at least one object.";
+        } else {
+          var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
+
+          if (hasEmptyElement) {
+            snackbar.value = true;
+            color.value = "red";
+            textAlert.value =
+              "At least one element has an empty host or port, or contains invalid characters.";
+          }
+        }
       }
     };
 
@@ -1136,7 +1256,7 @@ export default {
       getAllClientCertif,
       getAllCertAuth,
       rowDataCertificats,
-      clientCertificateList,
+      // clientCertificateList,
       Listprotocols,
       addNewRow,
       snackbar,

@@ -7,7 +7,7 @@ from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE
 
 from backend.ipsec.constant_variables import IPV4_CONFIG
 from backend.ipsec.utils import json_to_str_server_ipsec, up_ipsec_conn
-from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec
+from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec, get_status_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
 from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec_in_system, install_server_ipsec_in_system, update_server_ipsec_in_system
 from backend.managementCertificates.models import Certificate, CertificateAuthority
@@ -22,11 +22,24 @@ from .models import ServerIPsec
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET IPSEC STATUS",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_ipsec_status(request):
+    """Getting IPsec status"""
+    if (request.method == 'GET'):
+        ipsec_status = get_status_ipsec()
+        return JsonResponse(ipsec_status, safe=False)
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL IPSEC",)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def get_all_server_ipsec(request):
+    """Getting all IPsec server from database"""
     if (request.method == 'GET'):
         list_ipsec = get_list_all_server_ipsec()
         return JsonResponse(list_ipsec, safe=False)

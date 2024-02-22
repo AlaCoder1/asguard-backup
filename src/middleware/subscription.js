@@ -5,9 +5,11 @@ import { createVuetify } from "vuetify";
 import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import subscription from "../views/subscription/index.vue";
-import axios from "axios";
 import mitt from "mitt";
-
+import { startTimer } from "../mixins/timer_token.js";
+import { createI18n } from "vue-i18n";
+import enJson from "../locales/en.json";
+import frJson from "../locales/fr.json";
 const emitter = mitt();
 
 const app = createApp(subscription);
@@ -18,19 +20,19 @@ const vuetify = createVuetify({
   components,
   directives,
 });
-
-axios.interceptors.response.use(
-  (response) => {
-    return response;
+let lang = localStorage.getItem("lang");
+if (lang) {
+  var langLocle = JSON.parse(lang);
+}
+const i18n = new createI18n({
+  legacy: false,
+  locale: langLocle ? langLocle[0].lang.toLowerCase() : "en",
+  // locale: "en",
+  messages: {
+    en: enJson,
+    fr: frJson,
   },
-  (error) => {
-    if (error.response.status === 401 || error.response.status === 403) {
-      console.log("Token expired or unauthorized. Redirecting to login.");
-      window.location.href = "/";
-    }
-    return Promise.reject(error);
-  }
-);
+});
 
 const currentPath = window.location.pathname;
 function hrefPath() {
@@ -38,4 +40,5 @@ function hrefPath() {
 }
 
 hrefPath();
-app.use(store).use(vuetify).mount("#app");
+startTimer();
+app.use(store).use(vuetify).use(i18n).mount("#app");

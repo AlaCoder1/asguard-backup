@@ -24,6 +24,9 @@ from backend.ids_ips.serializers import AlertSerializer
 import ast
 from backend.proxy.views import *
 from backend.proxy.models import *
+from backend.sdwan.list_area import get_list_all_area
+from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
+from backend.subscription.models import plan, plansSubscription,plansFeatures
 
 
 def get_squid_status_from_bd():
@@ -38,7 +41,7 @@ def get_squid_status():
                 status = line.split(':')[1].strip()
                 return status
     except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
+        # print(f"Error: {e}")
         return None
     
 def getGeneraleInfo(request):
@@ -269,14 +272,12 @@ def get_all_interfaces(request):
     if (request.method == 'GET'):
         interfaces = Interface.objects.all()
         interface_dict=serializers.serialize("json",interfaces)
-        # interface_dict = serializers.serialize("json", interfaces)
         res = json.loads(interface_dict)
         for i in range(len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
-            # if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")):
             list_interface.append(res[i]['fields'])
         return list_interface
 
@@ -286,7 +287,6 @@ def get_all_interfaces_version2(request):
     if (request.method == 'GET'):
         interfaces = Interface.objects.all()
         interface_dict = serializers.serialize("json",interfaces)
-        # interface_dict = serializers.serialize("json", interfaces)
         res = json.loads(interface_dict)
         for i in range(len(res)):
             res[i].pop('model')
@@ -362,14 +362,13 @@ def get_informations_by_interface(request,name_interface):
             if GatewayInterface.objects.filter(Q(interface=interface_object.id)& Q(ipv4_gw_interface=False)).exists():
                 GatewayInterfaceObject=GatewayInterface.objects.get(Q(interface=interface_object.id)& Q(ipv4_gw_interface=False))
                 gateway_id=GatewayInterfaceObject.gateway_id
-                print(gateway_id)
                 if Gateway.objects.filter(Q(id=gateway_id) & Q(ipv4_gw=False)).exists():
                     addrgw6=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=False)).gwaddress
                     resultat6[0]['fields']['addrgw6']=addrgw6
                 info['IPV6Config']=resultat6[0]['fields']
         else:
             info['IPV6Config']=[]
-        print({"info":info})
+        # print({"info":info})
     return info
 
 
@@ -413,7 +412,7 @@ def general_suricata_configuration(request, id):
         interfaces_ids_value = str(interface_ids_final)
         suricata_yaml_path = "/etc/suricata/suricata.yaml"
         # Exécutez la commande 'sudo cat' pour lire le contenu du fichier
-        output, error = execute_cmd("sudo cat " + suricata_yaml_path)
+        output, _ = execute_cmd("sudo cat " + suricata_yaml_path)
         # Mettez à jour la configuration dans le système
         if output:
             # Lit les lignes du fichier
@@ -438,6 +437,20 @@ def general_suricata_configuration(request, id):
         suricata_instance.interface_ids = interfaces_ids_value
         suricata_instance.home_net = home_net_value
         suricata_instance.save()
+        info_af_object=SuricataInterface.objects.filter(suricata_id=id)
+        info_af_dict = serializers.serialize("json", info_af_object)
+        res_af = json.loads(info_af_dict)
+        liste_interfaces=[]
+        for i in range(len(res_af)):
+            res_af[i].pop('model')
+            res_af[i].pop('pk')
+            res_af[i]['fields']['id_interface'] = res_af[i]['fields']["interface"]
+            res_af[i]['fields']['ifname'] = Interface.objects.get(id=res_af[i]['fields']["interface"]).ifname
+            res_af[i]['fields']['name_interface'] = Interface.objects.get(id=res_af[i]['fields']["interface"]).name_interface
+            res_af[i]['fields'].pop("suricata")
+            res_af[i]['fields'].pop("interface")
+            liste_interfaces.append(res_af[i]['fields'])
+        
         current_configuration = {
             "id":id,
             "promisc": suricata_instance.promisc,
@@ -445,11 +458,11 @@ def general_suricata_configuration(request, id):
             "syslog": suricata_instance.syslog,
             "mpm_algo": suricata_instance.mpm_algo,
             "profile": suricata_instance.profile,
-            "copy_mode": suricata_instance.copy_mode, 
-            "status_enabled":suricata_instance.status_enabled
+            "status_enabled":suricata_instance.status_enabled,
+            "liste_interfaces":liste_interfaces
             }
+      
     return json.dumps({"configuration": current_configuration, "interface_ids": interface_ids_final, "address_home_net": address_home_net_final})
-
 
 ############### End General configuration suricata #################
 ############### Rules suricata #################
@@ -526,7 +539,8 @@ def interface_page(request):
 def firewall_page(request):
     rules=get_all_rules(request)
     interfaces=get_all_interfaces(request)
-    context = {'rules':rules, 'interfaces':interfaces}
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'rules':rules, 'interfaces':interfaces,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'firewall_page.html',context)
 
 @login_required(login_url='/')
@@ -547,7 +561,7 @@ def ipsec_page(request):
     servers=get_list_all_server_ipsec()
     public_key =get_list_all_public_key()
     status = get_status_ipsec()
-    print('status:', status)
+    # print('status:', status)
     context = {'servers': servers, 'publicKey': public_key, 'status': status}
     return render(request, 'ipsec_page.html', context)
 
@@ -573,34 +587,32 @@ def squid_proxy(request):
 
 @login_required(login_url='/')
 def sdwan_page(request):
-    return render(request, 'sdwan_page.html',)
+    allArea = get_list_all_area()
+    allRule = get_list_all_sdwan_rule()
+    context = {'allArea': json.dumps(allArea),'allRule': json.dumps(allRule)}
+    # print('context',context) 
+    return render(request, 'sdwan_page.html',context)
 
 @login_required(login_url='/')
 def clamav_page(request):
     config= getclamavconfigurations()
-    context = {'config':config}
-    print('******************** :',context)
+    # context = {'config':config}
+    # print('******************** :',context)
     return render(request, 'clamaV_page.html',context)
-
 
 @login_required(login_url='/')
 def subscription_page(request):
-    context = {}
+    subscription_information=subscription_info(request)
+    # print('subscription_information',subscription_information)
+    context = {'subscription_information':json.dumps(subscription_information)}
     return render(request, 'subscription_page.html', context)
-
-
+ 
+#comment to test git command
 def login(request):
-    usr=getAllUsers(request)
-    print (usr)
-
-    context = {'users':usr}
     if request.user.is_authenticated:
-        next_url = request
-        # index_page(request)
-        print('path+***********: ',request.path)
         return redirect('/dashboard/')
     else:
-        return render(request, 'login.html',context)
+        return render(request, 'login.html')
 
 
 @login_required(login_url='/')
@@ -624,7 +636,7 @@ def index_page(request):
             "ip_address":ip_address}
         config.append(info_interface)
     context = {"informations":info,"gateways":json.dumps(gateways),"interfaces":json.dumps(config)}
-    print(context)
+    # print(context)
     return render(request, 'index_page.html',context)
 
 
@@ -641,8 +653,51 @@ def suricata(request):
     res = json.loads(suricata)
     id=res[0]['pk']
     general_config_suricata=general_suricata_configuration(request, id)
-    rules_suricata=get_rules_from_database(request)
-    alerts_suricata=get_alerts_from_database(request)
+    # rules_suricata=get_rules_from_database(request)
+    # alerts_suricata=get_alerts_from_database(request)
     interfaces=get_all_interfaces_version2(request)
-    context={"general_config_suricata":general_config_suricata,"rules_suricata":rules_suricata,"alerts_suricata":alerts_suricata,"all_interfaces":interfaces}
+    context={"general_config_suricata":general_config_suricata,"all_interfaces":interfaces}
     return render(request, 'ids_ips.html',context)
+
+
+def list_features_about_last_subscription(request):
+    list_features = []
+    if request.method == 'GET':
+        last_subscription = plansSubscription.objects.order_by('start_at').last()
+        if last_subscription !=None:
+            last_subscription_dict = last_subscription.__dict__
+            if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+                plan_features= plansFeatures.objects.filter(plan = last_subscription.plan.pk)
+                plan_features_dict = serializers.serialize("json", plan_features)
+                res = json.loads(plan_features_dict)
+                for i in res:
+                    for key, value in i.items():
+                        if key == 'fields':
+                            list_features.append(i['fields']['description'])
+        else:
+            list_features = []
+        return list_features
+    
+    
+def subscription_info(request):
+    subscription_info = {}
+    if request.method == 'GET':
+        last_subscription = plansSubscription.objects.order_by('start_at').last()
+        if last_subscription != None:
+            last_subscription_dict = last_subscription.__dict__
+            # if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
+            plan_info = plan.objects.get(id = last_subscription_dict['plan_id'])
+            subscription_info['type_pack'] =plan_info.slug
+            subscription_info['date_start'] =last_subscription_dict['start_at'].strftime('%Y-%m-%d %H:%M:%S')
+            subscription_info['end_at'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
+            subscription_info['expiration_date'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
+        else:
+            subscription_info = {}
+        return subscription_info
+    
+@login_required(login_url='/')
+def openvpn_monitoring(request):
+    return render(request, 'vpnmonitoring.html')
+@login_required(login_url='/')
+def nat_page(request):
+    return render(request, 'nat.html')

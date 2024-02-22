@@ -18,14 +18,29 @@ class suricatafile(models.Model):
     #(["medium", "high", "low"] / medium par défaut)
     profile = models.CharField(max_length=100, null=True, default="medium")
     #(["none", "tap", "ips"] / none par défaut)
-    copy_mode = models.CharField(max_length=100, null=True, default="none")
+    # copy_mode = models.CharField(max_length=100, null=True, default="none")
     # Indique si suricata est enable (par défaut, True )
     status_enabled=models.BooleanField(default=False)
     # par exemple [1,2]
     interface_ids=models.CharField(max_length=100,null=True)
+    
     class Meta:
         db_table = 'suricataconfig'  # Nom de la table dans la base de données
 
+###config interface
+class SuricataInterface(models.Model):
+    interface = models.ForeignKey(Interface, on_delete=models.CASCADE)
+    suricata = models.ForeignKey(suricatafile, on_delete=models.CASCADE)
+    threads=models.CharField(max_length=100,blank=True,null=True)
+    cluster_id=models.IntegerField(null=True,default=0,unique=True)
+    cluster_type=models.CharField(max_length=100,blank=True)
+    defrag=models.CharField(max_length=100,blank=True)
+    use_mmap=models.CharField(max_length=100,blank=True)
+    ring_size=models.IntegerField(null=True,default=0)
+    copy_mode= models.CharField(max_length=100, null=True)
+    copy_iface=models.IntegerField(null=True,default=0)
+    class Meta:
+        db_table = 'suricata_interface'    
 
 #Rule
 class ids_ips_rule(models.Model):

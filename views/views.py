@@ -444,10 +444,12 @@ def general_suricata_configuration(request, id):
         liste_interfaces=[]
         for i in range(len(res_af)):
             res_af[i].pop('model')
-            id = res_af[i]['pk']
             res_af[i].pop('pk')
-            res_af[i]['fields']['id'] = id
+            res_af[i]['fields']['id_interface'] = res_af[i]['fields']["interface"]
+            res_af[i]['fields']['ifname'] = Interface.objects.get(id=res_af[i]['fields']["interface"]).ifname
+            res_af[i]['fields']['name_interface'] = Interface.objects.get(id=res_af[i]['fields']["interface"]).name_interface
             res_af[i]['fields'].pop("suricata")
+            res_af[i]['fields'].pop("interface")
             liste_interfaces.append(res_af[i]['fields'])
         
         current_configuration = {
@@ -460,9 +462,8 @@ def general_suricata_configuration(request, id):
             "status_enabled":suricata_instance.status_enabled,
             "liste_interfaces":liste_interfaces
             }
-        # print(current_configuration)
+      
     return json.dumps({"configuration": current_configuration, "interface_ids": interface_ids_final, "address_home_net": address_home_net_final})
-
 
 ############### End General configuration suricata #################
 ############### Rules suricata #################

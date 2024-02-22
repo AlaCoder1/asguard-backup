@@ -10,12 +10,18 @@
   <v-col align-self="center" cols="4">
     <label>Password</label>
   </v-col>
-  <v-col align-self="center"  cols="8" class="mb-n6">
+  <v-col align-self="center" cols="8" class="mb-n6">
     <v-text-field
       type="password"
       label="Password"
       v-model="password"
     ></v-text-field>
+    <p
+      class="error-feedback mb-5"
+      v-if="props.errors.passwordUser.$errors.length"
+    >
+      {{ props.errors.passwordUser.$errors?.[0].$message }}
+    </p>
   </v-col>
 
   <v-col align-self="center" cols="4">
@@ -32,7 +38,12 @@
 <script setup>
 import { useVModels } from "@vueuse/core";
 
-const props = defineProps(["username", "password", "renegotiate_time"]);
+const props = defineProps([
+  "errors",
+  "username",
+  "password",
+  "renegotiate_time",
+]);
 
 const emit = defineEmits([
   "update:username",

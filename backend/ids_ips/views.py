@@ -68,10 +68,10 @@ def update_suricata_configuration(request, id):
             output,_= execute_cmd("sudo cat " + suricata_yaml_path)
             if output:
                 lines = output.split('\n')
-                # print(lines)
-                updated_lines=update_packet_interface(interface_ids_input,lines)
+                data_updated_sys=transform_data_af(interface_ids_input)
+                updated_lines=update_packet_interface(data_updated_sys,lines)
                 # Appelez d'abord la fonction update_suricata_config pour mettre à jour le système
-                updated_lines=update_suricata_config(updated_lines,home_net_value_sys,str(new_promisc).lower(), new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode)
+                updated_lines=update_suricata_config(updated_lines,home_net_value_sys,str(new_promisc).lower(), new_eve_log, new_syslog, new_mpm_algo, new_profile)
                 aux_update=save_config(updated_lines,suricata_yaml_path,status_enabled)
                 if aux_update is True:
                         # Ensuite, mettez à jour les enregistrements dans la base de données
@@ -90,8 +90,13 @@ def update_suricata_configuration(request, id):
                         suricata_serializer=SuricataFileSerializer(suricata_instance,data=data_updated)
                         if suricata_serializer.is_valid():
                             suricata_serializer.save()
-                            msg = "Configuration updated Successfully!!"
-                            status=200
+                            aux_update=save_suricata_interface(id,interface_ids_input)
+                            if aux_update is True:
+                                msg = "Configuration updated Successfully!!"
+                                status=200
+                            else:
+                                msg= aux_update
+                                status=400
                         else:
                             msg= "Failed to save configuration in database !"
                             status=400
@@ -169,14 +174,27 @@ def get_suricata_configuration(request, id):
         suricata_instance.interface_ids = interfaces_ids_value
         suricata_instance.home_net = home_net_value
         suricata_instance.save()
+        info_af_object=SuricataInterface.objects.filter(suricata_id=id)
+        info_af_dict = serializers.serialize("json", info_af_object)
+        res_af = json.loads(info_af_dict)
+        liste_interfaces=[]
+        for i in range(len(res_af)):
+            res_af[i].pop('model')
+            id = res_af[i]['pk']
+            res_af[i].pop('pk')
+            res_af[i]['fields']['id'] = id
+            res_af[i]['fields'].pop("suricata")
+            liste_interfaces.append(res_af[i]['fields'])
+        
         current_configuration = {
+            "id":id,
             "promisc": suricata_instance.promisc,
             "eve_log": suricata_instance.eve_log,
             "syslog": suricata_instance.syslog,
             "mpm_algo": suricata_instance.mpm_algo,
             "profile": suricata_instance.profile,
-            "copy_mode": suricata_instance.copy_mode,
-            "status_enabled":suricata_instance.status_enabled
+            "status_enabled":suricata_instance.status_enabled,
+            "liste_interfaces":liste_interfaces
             }
     return JsonResponse({"configuration": current_configuration, "interface_ids": interface_ids_final, "address_home_net": address_home_net_final})
 #################################### FIN SURICATA.YAML CONFIGURATION GENERALE ############################################################

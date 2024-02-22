@@ -11,9 +11,7 @@ class RuleIdsIpsSerializer(serializers.ModelSerializer):
                       'msg','rev',"rule",'suricatafile','activate_rule','default_rule'
                       ]
 
-# class RuleSerializerForSwagger(serializers.Serializer):
-#     id = serializers.IntegerField()
-#     rule = RuleIdsIpsSerializer(exclude=['default_rule'])
+
 class RuleSerializerForSwagger(serializers.ModelSerializer):
     class Meta:
         model = ids_ips_rule
@@ -23,13 +21,16 @@ class RuleSerializerForSwagger(serializers.ModelSerializer):
     id = serializers.IntegerField(required=False)
 #Suricata Config
 class SuricataFileSerializer(serializers.ModelSerializer):
-    # interface = serializers.PrimaryKeyRelatedField(queryset=Interface.objects.all())
     class Meta:
             model = suricatafile
-            fields = ['home_net','promisc','syslog','eve_log','mpm_algo','profile','copy_mode',
+            fields = ['home_net','promisc','syslog','eve_log','mpm_algo','profile',
                       'interface_ids','status_enabled'
-                     ]
-
+                   ]
+##suricata interface 
+class SuricataInterfaceSerializer(serializers.ModelSerializer):
+    class Meta:
+            model = SuricataInterface
+            fields = '__all__'
 #Alert       
 class AlertSerializer(serializers.ModelSerializer):
     suricatafile = serializers.PrimaryKeyRelatedField(queryset=suricatafile.objects.all())

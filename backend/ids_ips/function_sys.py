@@ -1,7 +1,7 @@
 import subprocess
 import yaml
-
-from backend.ids_ips.models import ids_ips_rule 
+from backend.ids_ips.models import SuricataInterface, ids_ips_rule, suricatafile 
+from django.db.models import Q
 
 def execute_cmd(command):
     """function to execute command"""
@@ -80,7 +80,7 @@ def read_first_syslog_enabled(suricata_yaml_path):
     return syslog_enabled  
 
 
-def update_suricata_config(lines,home_net_value_sys,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode):    
+def update_suricata_config(lines,home_net_value_sys,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile):    
     """Update fichier de configuration suricata.yaml//"""
     try:
         updated_lines = []
@@ -118,9 +118,9 @@ def update_suricata_config(lines,home_net_value_sys,new_promisc, new_eve_log, ne
             elif "profile:" in stripped_line:
                 # Met à jour la ligne profile avec la nouvelle valeur
                 updated_lines.append(f'  profile: {new_profile}\n')
-            elif "copy-mode:" in stripped_line:
-            # Met à jour la ligne copy-mode avec la nouvelle valeur
-                updated_lines.append(f'      copy-mode: {new_copy_mode}\n')
+            # elif "copy-mode:" in stripped_line:
+            # # Met à jour la ligne copy-mode avec la nouvelle valeur
+            #     updated_lines.append(f'      copy-mode: {new_copy_mode}\n')
             else:
                 # Conserve les autres lignes telles quelles
                 updated_lines.append(line + '\n')
@@ -129,20 +129,41 @@ def update_suricata_config(lines,home_net_value_sys,new_promisc, new_eve_log, ne
         # Capture toute autre exception et affiche un message d'erreur
         return None
     
-def update_packet_interface(list_interfaces_af,lines):
+    
+def transform_data_af(list_interfaces):
+    """function to custom data to form system"""
+    list_out_interfaces=[]
+    for config_input in list_interfaces:
+        data_updated={
+            "id":config_input['id'],
+            "interface":config_input['interface'],
+            "threads":int(config_input["threads"]) if config_input["threads"] !="auto" and config_input["threads"] is not None else config_input["threads"] ,
+            "cluster-id":config_input["cluster_id"],
+            "cluster-type":config_input["cluster_type"],
+            "defrag":config_input["defrag"],
+            "use-mmap":config_input["use_mmap"],
+            "ring-size":config_input["ring_size"],
+            "copy-mode":config_input["copy_mode"],
+            "copy-iface":config_input["copy_iface"]['name'] if 'copy_iface' in config_input else None
+            }
+        list_out_interfaces.append(data_updated)
+    return list_out_interfaces
+
+def update_packet_interface(list_interfaces,lines):
     """function to update af-packet config"""
     af_packet_conf=[]
-    if len(list_interfaces_af)>0:
-        for interface in list_interfaces_af:
+    list_interfaces_af=list_interfaces
+    out_final=lines
+    for interface in list_interfaces_af:
+        if not SuricataInterface.objects.filter(Q(cluster_id=interface['cluster-id']) & ~Q(interface_id=interface["id"])).exists():
             interface={cle: valeur for cle, valeur in interface.items() if valeur is not None and cle!="id"}
             for cle, valeur in interface.items():
                 if cle=="interface":
                     af_packet_conf.append(f"  - {cle}:{valeur}")
                 else:
                     af_packet_conf.append(f"         {cle}:{valeur}")
-                    
-        out_final=lines[:lines.index('af-packet:')+1]+af_packet_conf+lines[lines.index('# Linux high speed af-xdp capture support'):]   
-        return out_final
+            out_final=lines[:lines.index('af-packet:')+1]+af_packet_conf+lines[lines.index('# Linux high speed af-xdp capture support'):] 
+    return out_final
     
 
 def save_config(updated_lines,suricata_yaml_path,status_enabled):

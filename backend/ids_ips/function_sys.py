@@ -1,9 +1,10 @@
 import subprocess
 import yaml
-
-from backend.ids_ips.models import ids_ips_rule 
+from backend.ids_ips.models import SuricataInterface, ids_ips_rule, suricatafile 
+from django.db.models import Q
 
 def execute_cmd(command):
+    """function to execute command"""
     command="sudo "+command
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
     output = completed_process.stdout
@@ -11,9 +12,8 @@ def execute_cmd(command):
     return output, error
 
 #*********** Fichier de configuration suricata.yaml ****************
-    
-#Lire le fichier de configuration suricata.yaml//
 def read_config():
+    """"Lire le fichier de configuration suricata.yaml//"""
     suricata_yaml_path = "/etc/suricata/suricata.yaml"
     syslog_enabled = None
     mpm_algo = None
@@ -56,10 +56,9 @@ def read_config():
     except FileNotFoundError:
         return None
     except yaml.YAMLError :
-        return None
-   
-# Fonction pour lire la première occurrence de "syslog" et "enabled"//
+        return None  
 def read_first_syslog_enabled(suricata_yaml_path):
+    """Fonction pour lire la première occurrence de "syslog" et "enabled"//"""
     syslog_enabled = None
     try:
         output,_= execute_cmd("cat "+suricata_yaml_path)
@@ -80,14 +79,13 @@ def read_first_syslog_enabled(suricata_yaml_path):
         # print(f"Erreur lors de la lecture du fichier {suricata_yaml_path}: {e}")
     return syslog_enabled  
 
-#Update fichier de configuration suricata.yaml//
-def update_suricata_config(suricata_yaml_path,lines,home_net_value_sys,ifname, status_enabled,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode):    
+
+def update_suricata_config(lines,home_net_value_sys,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile):    
+    """Update fichier de configuration suricata.yaml//"""
     try:
         updated_lines = []
         next_eve_log = False
         next_syslog = False
-        syslog_enabled = None
-        af_packet=False
         # Ajout de la logique de testa() ici
         for line in lines:
             stripped_line = line.strip()
@@ -98,13 +96,6 @@ def update_suricata_config(suricata_yaml_path,lines,home_net_value_sys,ifname, s
             elif "promisc:" in stripped_line:
                 # Met à jour la ligne promisc avec la nouvelle valeur
                 updated_lines.append(f'      promisc: {new_promisc}\n')
-            elif "af-packet:" in stripped_line:
-                af_packet=True
-                updated_lines.append(line + '\n')  # Conserve la ligne "af-packet:" telle quelle
-            elif af_packet:
-                if "interface:" in stripped_line:
-                    updated_lines.append(f'  - interface: {ifname}\n')
-                    af_packet = False
             elif "eve-log:" in stripped_line:
                 next_eve_log = True  # Activer la lecture de la ligne suivante sous "eve-log"
                 updated_lines.append(line + '\n')  # Conserve la ligne "eve-log" telle quelle
@@ -127,39 +118,78 @@ def update_suricata_config(suricata_yaml_path,lines,home_net_value_sys,ifname, s
             elif "profile:" in stripped_line:
                 # Met à jour la ligne profile avec la nouvelle valeur
                 updated_lines.append(f'  profile: {new_profile}\n')
-            elif "copy-mode:" in stripped_line:
-            # Met à jour la ligne copy-mode avec la nouvelle valeur
-                updated_lines.append(f'      copy-mode: {new_copy_mode}\n')
+            # elif "copy-mode:" in stripped_line:
+            # # Met à jour la ligne copy-mode avec la nouvelle valeur
+            #     updated_lines.append(f'      copy-mode: {new_copy_mode}\n')
             else:
                 # Conserve les autres lignes telles quelles
                 updated_lines.append(line + '\n')
-        with open(suricata_yaml_path, 'w') as local_file:
-            for string in updated_lines:
-                local_file.write(string)
-
-        if status_enabled is True:
-            aux_enable="enable"
-            aux_action="restart"
-        else:
-            aux_enable="disable"
-            aux_action="stop"
-        commands = [
-        "sudo systemctl {} --quiet suricata.service && sudo systemctl {} suricata.service ".format(aux_enable,aux_action)
-        ]
-        for cmd in commands:
-            _, error=execute_cmd(cmd)
-            if error!="":
-                print({"errot":error,"cmd":cmd})
-                return error
-            
-        return True
+        return updated_lines
     except Exception:
         # Capture toute autre exception et affiche un message d'erreur
         return None
+    
+    
+def transform_data_af(list_interfaces):
+    """function to custom data to form system"""
+    list_out_interfaces=[]
+    for config_input in list_interfaces:
+        data_updated={
+            "id":config_input['id'],
+            "interface":config_input['interface'],
+            "threads":int(config_input["threads"]) if config_input["threads"] !="auto" and config_input["threads"] is not None else config_input["threads"] ,
+            "cluster-id":config_input["cluster_id"],
+            "cluster-type":config_input["cluster_type"],
+            "defrag":config_input["defrag"],
+            "use-mmap":config_input["use_mmap"],
+            "ring-size":config_input["ring_size"],
+            "copy-mode":config_input["copy_mode"],
+            "copy-iface":config_input["copy_iface"]['name'] if 'copy_iface' in config_input else None
+            }
+        list_out_interfaces.append(data_updated)
+    return list_out_interfaces
 
+def update_packet_interface(list_interfaces,lines):
+    """function to update af-packet config"""
+    af_packet_conf=[]
+    list_interfaces_af=list_interfaces
+    out_final=lines
+    for interface in list_interfaces_af:
+        if not SuricataInterface.objects.filter(Q(cluster_id=interface['cluster-id']) & ~Q(interface_id=interface["id"])).exists():
+            interface={cle: valeur for cle, valeur in interface.items() if valeur is not None and cle!="id"}
+            for cle, valeur in interface.items():
+                if cle=="interface":
+                    af_packet_conf.append(f"  - {cle}:{valeur}")
+                else:
+                    af_packet_conf.append(f"         {cle}:{valeur}")
+            out_final=lines[:lines.index('af-packet:')+1]+af_packet_conf+lines[lines.index('# Linux high speed af-xdp capture support'):] 
+    return out_final
+    
+
+def save_config(updated_lines,suricata_yaml_path,status_enabled):
+    """function to save changes """
+    with open(suricata_yaml_path, 'w') as local_file:
+            for string in updated_lines:
+                local_file.write(string)
+    if status_enabled is True:
+        aux_enable="enable"
+        aux_action="restart"
+    else:
+        aux_enable="disable"
+        aux_action="stop"
+    commands = [
+    "sudo systemctl {} --quiet suricata.service && sudo systemctl {} suricata.service ".format(aux_enable,aux_action)
+    ]
+    for cmd in commands:
+        _, error=execute_cmd(cmd)
+        if error!="":
+            print({"errot":error,"cmd":cmd})
+            return error
+    return True
+   
 #*********** Les régles ****************
-#Format des régles    
 def format_dict_as_suricata_rules(content):    
+    """Format des régles  """
     rule_template = "{action} {protocol} {source_ip} {direction} {destination_ip} (msg:\"{msg}\"; rev:{rev};sid:{sid};)"
     rule_str = rule_template.format(
         action=content['action'],
@@ -173,8 +203,9 @@ def format_dict_as_suricata_rules(content):
     )
     return rule_str
 
-# Ajouter une régle
+
 def add_rule_remote(comment, content,file_path):
+    """Ajouter une régle suricata"""
     formatted_content = format_dict_as_suricata_rules(content)
     if comment:
         formatted_content = "#" + formatted_content
@@ -184,8 +215,8 @@ EOF'""".format(file_path,formatted_content)
     output, error = execute_cmd(cmd)
     return output,formatted_content, error
 
-# mise à jour une régle
 def update_rule_remote(comment,contenu,line_to_update,file_path):
+    """mise à jour une régle suricata"""
     rule = line_to_update.strip()  # Supprimez les espaces inutiles
     action=None
     protocol=None

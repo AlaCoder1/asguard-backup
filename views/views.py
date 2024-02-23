@@ -9,6 +9,7 @@ from backend.managementGroup.models import Group
 from backend.managementUsers.models import User
 from backend.managementServers.models import Type, Server
 from backend.managementUsers.views import getAllUsers
+from backend.nat.list_nat import get_list_all_snat
 from backend.network.models import GenericConfig, IP4Config, IP6Config, Interface 
 from backend.rules.models import Rule
 from backend.gateway.models import Gateway, GatewayInterface
@@ -17,18 +18,17 @@ from backend.clamav.list_configurations import getclamavconfigurations
 from backend.openvpn.list_servers_clients import get_list_all_client_openvpn,  get_list_all_server_openvpn
 from backend.managementKeypairs.list_key_pairs import get_list_all_private_key, get_list_all_public_key
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_status_ipsec
-from backend.ids_ips.function_BD import get_home_net_de_la_base_de_donnees, get_ip_addresses
-from backend.ids_ips.function_sys import execute_cmd
+from backend.ids_ips.function_BD import get_home_net_de_la_base_de_donnees, get_ip_addresses, get_suricata_packet
+from backend.ids_ips.function_sys import execute_cmd, read_from_yaml, save_in_yaml
 from backend.ids_ips.models import *
-from backend.ids_ips.serializers import AlertSerializer
+from backend.ids_ips.serializers import AlertSerializer, SuricataFileSerializer
 import ast
 from backend.proxy.views import *
 from backend.proxy.models import *
 from backend.sdwan.list_area import get_list_all_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
 from backend.subscription.models import plan, plansSubscription,plansFeatures
-
-
+import ruamel.yaml
 def get_squid_status_from_bd():
     server_status= ServerSatus.objects.get(id=1)
     return server_status.status_server
@@ -374,82 +374,29 @@ def get_informations_by_interface(request,name_interface):
 
 ################################################ IDS-IPS #######################################################
 ############### General configuration suricata #################
-## function to get suricata configuration
 def general_suricata_configuration(request, id):
+    """function to get informations suricata with update config if neeeded"""
     if request.method=="GET":
-        # Obtenez le champ HOME_NET du système et de la base de données
-        home_net_database, interface_ids = get_home_net_de_la_base_de_donnees(id)
-
-        address_home_net = home_net_database.strip("[]").split(",")
-        # Récupérez les adresses IP à partir de la configuration IP4Config
-        ip4config_object = IP4Config.objects.all()
-        ip4config_dict = serializers.serialize("json", ip4config_object)
-        res = json.loads(ip4config_dict)
-        interfaces_ids_ip4config = []
-        interfaces_address_ip4config = []
-        # Parcourez les enregistrements IP4Config pour obtenir les interfaces et leurs adresses
-        for i in range(len(res)):
-            interfaces_ids_ip4config.append(res[i]['fields']['interface'])
-            interfaces_address_ip4config = get_ip_addresses(interfaces_ids_ip4config)
-        # Initialisez des listes pour stocker les valeurs finales
-        address_home_net_final = []
-        interface_ids_final = []
-        # Comparez les interfaces et leurs adresses pour déterminer la configuration finale
-        if interface_ids is not None:
-            interface_ids = ast.literal_eval(interface_ids)
-            for i in interface_ids:
-                if i in interfaces_ids_ip4config:
-                    if address_home_net[interface_ids.index(i)] == interfaces_address_ip4config[interfaces_ids_ip4config.index(i)]:
-                        address = address_home_net[interface_ids.index(i)]
-                    else:
-                        address = interfaces_address_ip4config[interfaces_ids_ip4config.index(i)]
-                    address_home_net_final.append(address)
-                    interface_ids_final.append(i)
-
+        liste_interfaces=get_suricata_packet(id)
+        interface_ids_final=[d['id_interface'] for d in liste_interfaces]
+        interfaces_address_ip4config = get_ip_addresses(interface_ids_final)
         # Créez une chaîne avec les adresses HOME_NET finales
-        home_net_value = ' , '.join(address_home_net_final)
-        home_net_value = f'[{home_net_value}]'
-        interfaces_ids_value = str(interface_ids_final)
+        home_net_value_sys = f'[{",".join(list(set(interfaces_address_ip4config)))}]'
+        home_net_value = f'[{",".join(interfaces_address_ip4config)}]'
         suricata_yaml_path = "/etc/suricata/suricata.yaml"
-        # Exécutez la commande 'sudo cat' pour lire le contenu du fichier
-        output, _ = execute_cmd("sudo cat " + suricata_yaml_path)
-        # Mettez à jour la configuration dans le système
-        if output:
-            # Lit les lignes du fichier
-            lines = output.split('\n')
-            updated_lines = []
-            for line in lines:
-                stripped_line = line.strip()
-                if stripped_line.startswith("#"):
-                    updated_lines.append(line + '\n')
-                    # Conserve les lignes de commentaire telles quelles
-                elif "HOME_NET:" in stripped_line:
-                    # Met à jour la ligne HOME_NET avec la nouvelle valeur
-                    updated_lines.append(f'    HOME_NET: "{home_net_value}"'+'\n')
-                else:
-                    # Conserve les autres lignes telles quelles
-                    updated_lines.append(line + '\n')
-                    with open(suricata_yaml_path, 'w') as local_file:
-                        for string in updated_lines:
-                            local_file.write(string)
+        yaml_class = ruamel.yaml.YAML()
+        data_input=read_from_yaml(suricata_yaml_path,yaml_class)
+        ##HOME_NET
+        data_input['vars']['address-groups']['HOME_NET']=home_net_value_sys
+        save_in_yaml(suricata_yaml_path,data_input,yaml_class) 
         # Mettez à jour la configuration dans la base de données
         suricata_instance = suricatafile.objects.get(id=id)
-        suricata_instance.interface_ids = interfaces_ids_value
-        suricata_instance.home_net = home_net_value
-        suricata_instance.save()
-        info_af_object=SuricataInterface.objects.filter(suricata_id=id)
-        info_af_dict = serializers.serialize("json", info_af_object)
-        res_af = json.loads(info_af_dict)
-        liste_interfaces=[]
-        for i in range(len(res_af)):
-            res_af[i].pop('model')
-            res_af[i].pop('pk')
-            res_af[i]['fields']['id_interface'] = res_af[i]['fields']["interface"]
-            res_af[i]['fields']['ifname'] = Interface.objects.get(id=res_af[i]['fields']["interface"]).ifname
-            res_af[i]['fields']['name_interface'] = Interface.objects.get(id=res_af[i]['fields']["interface"]).name_interface
-            res_af[i]['fields'].pop("suricata")
-            res_af[i]['fields'].pop("interface")
-            liste_interfaces.append(res_af[i]['fields'])
+        data_updated={
+            "home_net" : home_net_value
+        }
+        suricata_serializer=SuricataFileSerializer(suricata_instance,data=data_updated)
+        if suricata_serializer.is_valid():
+            suricata_serializer.save()
         
         current_configuration = {
             "id":id,
@@ -459,10 +406,10 @@ def general_suricata_configuration(request, id):
             "mpm_algo": suricata_instance.mpm_algo,
             "profile": suricata_instance.profile,
             "status_enabled":suricata_instance.status_enabled,
-            "liste_interfaces":liste_interfaces
+            "liste_interfaces":liste_interfaces,
+            "mode_inline":suricata_instance.mode_inline=='yes'
             }
-      
-    return json.dumps({"configuration": current_configuration, "interface_ids": interface_ids_final, "address_home_net": address_home_net_final})
+    return json.dumps({"configuration": current_configuration, "interface_ids": interface_ids_final, "address_home_net":interfaces_address_ip4config })
 
 ############### End General configuration suricata #################
 ############### Rules suricata #################
@@ -700,4 +647,6 @@ def openvpn_monitoring(request):
     return render(request, 'vpnmonitoring.html')
 @login_required(login_url='/')
 def nat_page(request):
-    return render(request, 'nat.html')
+    listNat= get_list_all_snat()
+    context = {'listNat':listNat}
+    return render(request, 'nat.html',context)

@@ -18,11 +18,11 @@ class suricatafile(models.Model):
     #(["medium", "high", "low"] / medium par défaut)
     profile = models.CharField(max_length=100, null=True, default="medium")
     #(["none", "tap", "ips"] / none par défaut)
-    # copy_mode = models.CharField(max_length=100, null=True, default="none")
+    mode_inline = models.CharField(max_length=100,null=True)
     # Indique si suricata est enable (par défaut, True )
     status_enabled=models.BooleanField(default=False)
     # par exemple [1,2]
-    interface_ids=models.CharField(max_length=100,null=True)
+    # interface_ids=models.CharField(max_length=100,null=True)
     
     class Meta:
         db_table = 'suricataconfig'  # Nom de la table dans la base de données

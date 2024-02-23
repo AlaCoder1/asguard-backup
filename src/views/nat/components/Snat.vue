@@ -186,10 +186,11 @@ export default {
       },
       {
         headerName: "Status",
-        field: "rule_status",
+        // field: "rule_status",
+        cellRenderer: checkboxRender,
         autoHeight: true,
         resizable: true,
-        editable: true,
+        // editable: true,
         width: 90,
         minWidth: 50,
         flex: 1,
@@ -204,6 +205,64 @@ export default {
     const rowDataSnat = reactive({});
 
     const gridApi = ref(null);
+
+    function checkboxRender(params) {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      params.value = params.data.rule_status;
+      input.checked = params.value;
+
+      input.style.margin = "10px";
+      input.style.width = "20px";
+      input.style.height = "18px";
+      input.style.cursor = "pointer";
+
+      input.addEventListener("click", function (event) {
+        params.value = !params.value;
+        params.data.rule_status = params.value;
+
+        if (params.value) {
+          axios
+            .put(`/nat/startSNat/${params.data.id}`)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          axios
+            .put(`/nat/stopSNat/${params.data.id}`)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        }
+      });
+      return input;
+    }
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
@@ -248,8 +307,8 @@ export default {
             `;
       } else {
         eGui.innerHTML = `
-            <button 
-              class="action-button show "  
+            <button
+              class="action-button show "
               data-action="show">
               <i class="mdi mdi-eye" style="color: #086eae;font-size: 20px;"></i>
               </button>
@@ -263,7 +322,7 @@ export default {
               data-action="delete" title="Delete ">
                 <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
               </button>
-    
+
               `;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
@@ -347,7 +406,7 @@ export default {
           .replace(/True/g, "true")
           .replace(/False/g, "false")
           .replace(/None/g, "null");
-        const parsedArray = JSON.parse(validJsonString);;
+        const parsedArray = JSON.parse(validJsonString);
 
         let mapedNatRow = parsedArray.map((i) => {
           return {

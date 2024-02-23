@@ -7,50 +7,27 @@ export const useAuthStore = defineStore("auth", {
     isAuthenticated: false,
     csrfToken: null,
     messageStore: null,
+    message:''
   }),
-
-  getters: {
-    // isAuthenticated: (state) => !!state.user,
-    // csrfToken: (state) => state.csrfToken,
-  },
 
   actions: {
     async login(user) {
-      try {
-        const response = await axios.post("/auth/authentification", user);
-        console.log(response.data);
+      await axios
+        .post("/auth/authentification", user)
+        .then((response) => {
+          localStorage.setItem("user-info", JSON.stringify(response.data));
 
-        this.user = response.data;
-        let userInfo = {
-          username: response.data.currentUser.username,
-          email: response.data.currentUser.email,
-        };
-
-        localStorage.setItem("userInfo", JSON.stringify(userInfo));
-        // this.isAuthenticated = true;
-
-        let message = "You are successfully logged in";
-
-        this.messageStore = message;
-        setTimeout(() => {
-          let message = null;
-
-          this.messageStore = message;
-        }, 1000);
-
-        let hrefPath = localStorage.getItem("href-path") ?? "/dashboard";
-        window.location.href = hrefPath;
-      } catch (error) {
-        let message = "Invalid credentiels";
-
-        this.messageStore = message;
-        setTimeout(() => {
-          let message = null;
-
-          this.messageStore = message;
-        }, 1000);
-        console.error("Error during login:", error);
-      }
+          let hrefPath = localStorage.getItem("href-path") ?? "/dashboard";
+          window.location.href = hrefPath;
+        })
+        .catch((error) => {
+          localStorage.setItem(
+            "response-info",
+            JSON.stringify(error.response.data)
+          );
+          console.log("error", error.response.data.message);
+          this.message = error.response.data.message;
+        });
     },
 
     async logout() {

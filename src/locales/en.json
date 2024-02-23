@@ -1,17 +1,118 @@
 {
   "form":{
     
-    "username":"Nom d'utilisateur",
-    "password":"Password"
+    "username":"Username",
+    "password":"Password",
+    "confirmPassword":"Confirm password",
+    "fullname":"Fullname",
+    "emailForLdapAuth":"Email for Ldap auth",
+    "roleUser":"Role User",
+    "assignToGroup":"Assign to Group",
+    "desactivateUser":"Desactivate User"
   },
   "buttons":{
-    "login":"login"
+    "login":"login",
+    "save":"Save",
+    "close":"Close"
   },
+  "errors":{
+    "valueRequired":"Value is required",
+    "invalidPassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
+    "passwordConfirmation":"Your password does not match"
+
+  },
+
   "placeholder":{
     "enterPassword":"Enter password",
     "enterUserName":"Enter user name"
   
   },
+  "sideBar":{
+    "dashboard":"Dashboard",
+    "system":"System",
+    "interfaces":"Interfaces",
+    "firewall":"Firewall",
+    "services":"Services",
+    "reports":"Reports"
+  },
+  "subtitle":{
+    "assistant":"Assistant",
+    "userCertificatemanagement":"Users & Certificate Management",
+    "networkManagement":"Network Management",
+    "systemConfig":"System configuration",
+    "settings":"Settings",
+    "overview":"Overview",
+    "assignations":"Assignations",
+    "differentNetworks":"Different Networks",
+    "diagnostics":"Diagnostics",
+    "listOfInterface":"List of interfaces",
+    "rules":"Rules",
+    "nat":"Nat",
+    "advancedSettings":"Advanced settings",
+    "siteToSiteVpn":"Site to site VPN",
+    "rsaKeyPairs":"RSA Key Pairs",
+    "openVPN":"OPEN VPN",
+    "ipFilterDoubleMasque":"IP Filter double masque",
+    "clamAV":"Clam AV",
+    "DHCPV4":"DHCP V4",
+    "DHCPV6":"DHCP V6",
+    "intrusionDetection":"Intrusion Detection",
+    "proxyWeb":"Proxy Web",
+    "SDWAN":"SDWAN",
+    "health":"Health",
+    "insight":"Insight",
+    "traffic":"Traffic",
+    "eventLogs":"Event logs",
+    "subscription":"Subscription"
+
+
+  },
+  "header":{
+    "profile":"Profile",
+    "logout":"Logout"
+  },
+
+  "french":"French",
+  "english":"English",
+  "networkAdmins":"Networks admins",
+  "networksGroups":"Networks admins",
+
+     
+  "agGrid":{
+    "name":"Name",
+    "cpuType":"Type CPU",
+    "systemLoad":"System load",
+    "lConfChange":"L.Conf Change",
+    "operatingTime":"Operation Time",
+    "noRowsToShow":"No Rows To Show",
+    "speedUplex":"Speed and uplex",
+    "address":"Address",
+    "status":"Status",
+    "user":"User",
+    "role":"Role"
+
+  },
+
+  "tabs":{
+    "userManagement":"User Management",
+    "certificateManagement":"Certificate Management"
+
+  },
+  "home":{
+    "systemInformation":"System information",
+    "cpuPercentage":"CPU Percentage (%)",
+    "memoryPercentage":"Memory Percentage (%)"
+  },
+
+  "button":{
+    "addUser":"Add User"
+  },
+  "modal":{
+    "create":"Create",
+    "update":"Update"
+
+  },
+
     "PageGeneral": {
       "NetworksServers": "Network Servers",
       "AddServer": "Add Server",

@@ -24,10 +24,12 @@ Encore.setOutputPath("static/")
   .addEntry("clamaV", "./src/middleware/clamaV.js")
   .addEntry("squid", "./src/middleware/squid.js")
   .addEntry("sdwan", "./src/middleware/sdwan.js")
+  .addEntry("nat", "./src/middleware/nat.js")
   .addEntry("keyPair", "./src/middleware/keyPair.js")
   .addEntry("UserAndCertificateManagement", "./src/middleware/userManagment.js")
   .addEntry("404", "./src/middleware/404.js")
   .addEntry("success", "./src/middleware/success.js")
+  .addEntry("vpnmonitoring", "./src/middleware/vpnmonitoring.js")
   .enableVueLoader(() => {}, {
     version: 3,
   })
@@ -46,6 +48,21 @@ Encore.setOutputPath("static/")
   .configureBabel((config) => {
     config.plugins.push("@babel/plugin-proposal-class-properties");
   })
+
+  .addRule({
+    test: /\.(p12)$/,
+    use: [
+      {
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+          outputPath: 'downloads/',  // Change the output path as needed
+        },
+      },
+    ],
+    
+  })
+
 
   .configureBabelPresetEnv((config) => {
     config.useBuiltIns = "usage";

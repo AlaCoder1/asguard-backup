@@ -41,7 +41,7 @@ def get_squid_status():
                 status = line.split(':')[1].strip()
                 return status
     except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
+        # print(f"Error: {e}")
         return None
     
 def getGeneraleInfo(request):
@@ -362,14 +362,13 @@ def get_informations_by_interface(request,name_interface):
             if GatewayInterface.objects.filter(Q(interface=interface_object.id)& Q(ipv4_gw_interface=False)).exists():
                 GatewayInterfaceObject=GatewayInterface.objects.get(Q(interface=interface_object.id)& Q(ipv4_gw_interface=False))
                 gateway_id=GatewayInterfaceObject.gateway_id
-                print(gateway_id)
                 if Gateway.objects.filter(Q(id=gateway_id) & Q(ipv4_gw=False)).exists():
                     addrgw6=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=False)).gwaddress
                     resultat6[0]['fields']['addrgw6']=addrgw6
                 info['IPV6Config']=resultat6[0]['fields']
         else:
             info['IPV6Config']=[]
-        print({"info":info})
+        # print({"info":info})
     return info
 
 
@@ -562,7 +561,7 @@ def ipsec_page(request):
     servers=get_list_all_server_ipsec()
     public_key =get_list_all_public_key()
     status = get_status_ipsec()
-    print('status:', status)
+    # print('status:', status)
     context = {'servers': servers, 'publicKey': public_key, 'status': status}
     return render(request, 'ipsec_page.html', context)
 
@@ -591,20 +590,20 @@ def sdwan_page(request):
     allArea = get_list_all_area()
     allRule = get_list_all_sdwan_rule()
     context = {'allArea': json.dumps(allArea),'allRule': json.dumps(allRule)}
-    print('context',context) 
+    # print('context',context) 
     return render(request, 'sdwan_page.html',context)
 
 @login_required(login_url='/')
 def clamav_page(request):
     config= getclamavconfigurations()
-    context = {'config':config}
-    print('******************** :',context)
+    # context = {'config':config}
+    # print('******************** :',context)
     return render(request, 'clamaV_page.html',context)
 
 @login_required(login_url='/')
 def subscription_page(request):
     subscription_information=subscription_info(request)
-    print('subscription_information',subscription_information)
+    # print('subscription_information',subscription_information)
     context = {'subscription_information':json.dumps(subscription_information)}
     return render(request, 'subscription_page.html', context)
  
@@ -637,7 +636,7 @@ def index_page(request):
             "ip_address":ip_address}
         config.append(info_interface)
     context = {"informations":info,"gateways":json.dumps(gateways),"interfaces":json.dumps(config)}
-    print(context)
+    # print(context)
     return render(request, 'index_page.html',context)
 
 
@@ -699,3 +698,6 @@ def subscription_info(request):
 @login_required(login_url='/')
 def openvpn_monitoring(request):
     return render(request, 'vpnmonitoring.html')
+@login_required(login_url='/')
+def nat_page(request):
+    return render(request, 'nat.html')

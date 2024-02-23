@@ -335,6 +335,7 @@ export default {
             return {
               id: i.id,
               name: i.name_interface,
+              ifname: i.ifname,
             };
           });
 
@@ -458,7 +459,9 @@ export default {
           ring_size: +state.bufferSize,
           copy_mode: state.copyMode.slug ?? null,
           copy_iface: state.copyIface ?? null,
+          ifname: state.interface.ifname,
         };
+
         if (modalMode.value === "create") {
           emitter.emit("add-Interface", payload);
         }

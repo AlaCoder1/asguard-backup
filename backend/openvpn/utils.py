@@ -1,5 +1,5 @@
 from backend.managementCertificates.constant_variables import PATH_CA_CRL_PEM, PATH_CA_CRT, PATH_CLIENT_CERT_CRT, PATH_CLIENT_CERT_KEY, PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
-from backend.openvpn.constant_variables import CONSTANT_COMP_LZO, CONSTANT_COMPRESS_MIGRATE, PATH_CLIENT_PAS, PATH_CLIENT_STATIC, PATH_CLIENT_UP, PATH_LOG_OPENVPN_LOG, PATH_SERVER_DH, PATH_SERVER_STATIC, PATH_STATUS_LOG
+from backend.openvpn.constant_variables import CONSTANT_COMP_LZO, CONSTANT_COMPRESS_MIGRATE, PATH_CLIENT_PAS, PATH_CLIENT_STATIC, PATH_CLIENT_UP, PATH_LOG_OPENVPN_LOG, PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD, PATH_SERVER_DH, PATH_SERVER_STATIC, PATH_STATUS_LOG
 from utils.commands_utils import execute_command_without_arguments
 
 
@@ -92,6 +92,8 @@ persist-tun
 daemon
 #float
 
+#management localhost port path_password
+
 #openvpn status log
 #status {PATH_STATUS_LOG}
 
@@ -183,6 +185,11 @@ log-append {PATH_LOG_OPENVPN_LOG}
         config_input = config_input.replace("#push \"dhcp-option NTP server1\"", f"push \"dhcp-option NTP {json_object['ntp_servers']['ntp_server1']}\"")
         if json_object["ntp_servers"]["ntp_server2"] != '':
             config_input = config_input.replace("#push \"dhcp-option NTP server2\"", f"push \"dhcp-option NTP {json_object['ntp_servers']['ntp_server2']}\"")
+
+    if json_object["client_management"]["client_management_select"]:
+        with open(PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD.format(json_object["name"]), "w") as client_management_file:
+            client_management_file.write(json_object["client_management"]["password"])
+        config_input = config_input.replace("#management localhost port path_password", f"management localhost {json_object['client_management']['port']} {PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD.format(json_object['name'])}")
 
     if json_object["verbosity_level"] != '':
         config_input = config_input.replace("#verb verbosity_level", f"verb {json_object['verbosity_level']}")

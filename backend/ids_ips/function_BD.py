@@ -46,7 +46,7 @@ def save_suricata_interface(id_suricata,list_config_input):
     for config_input in list_config_input:
         id_interface=config_input['id']
         data_updated=config_input
-        data_updated["copy_iface"]=config_input["copy_iface"]['id'] if "copy_iface" in config_input else None
+        data_updated["copy_iface"]=config_input["copy_iface"]['id'] if config_input["copy_iface"] is not None else None
         data_updated['interface']=id_interface
         data_updated['suricata']=id_suricata
         list_id_in.append(config_input['id'])

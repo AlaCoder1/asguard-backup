@@ -105,6 +105,10 @@ def get_server_openvpn(request, id):
                                                                                      properties={'ntp_servers_select': Schema(type=TYPE_BOOLEAN, default=False),
                                                                                                  'ntp_server1': Schema(type=TYPE_STRING, description="Address of NTP server1 like 8.8.8.8, required when selecting NTP servers"),
                                                                                                  'ntp_server2': Schema(type=TYPE_STRING, description="Address of NTP server2 like 8.8.4.4, Optionally you can set the second NTP server afer setting the first NTP server"),}),
+                                                               'client_management': Schema(type=TYPE_OBJECT, description="Client Management Port block", required=['client_management_select'],
+                                                                                           properties={"client_management_select": Schema(type=TYPE_BOOLEAN, default=False),
+                                                                                                       "port": Schema(type=TYPE_STRING, description="Port number like 17562"),
+                                                                                                       "password": Schema(type=TYPE_STRING)}),
                                                                'verbosity_level': Schema(type=TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
                                                                }
                                                                ))
@@ -147,6 +151,7 @@ def create_server_openvpn(request):
         dns_servers = data.get('dns_servers', '')
         force_dns_cache_update = data.get('force_dns_cache_update', '')
         ntp_servers = data.get('ntp_servers', '')
+        client_management = data.get('client_management')
         verb = data.get('verbosity_level', '')
         if interface_name != "Any":
             interface = Interface.objects.get(name_interface=interface_name)
@@ -214,6 +219,12 @@ def create_server_openvpn(request):
             ntp_server2 = ntp_servers.get('ntp_server2', '')
             server_data["ntp_server1"] = ntp_server1
             server_data["ntp_server2"] = ntp_server2
+        
+        if client_management.get('client_management_select'):
+            client_management_port = client_management.get('port')
+            client_management_password = client_management.get('password')
+            server_data["client_management_port"] = client_management_port
+            server_data["client_management_password"] = client_management_password
 
         serializer_server = ServerOpenvpnSerializer(data=server_data)
         if serializer_server.is_valid():
@@ -317,6 +328,10 @@ def delete_server_openvpn(request, id):
                                                                                    properties={'ntp_servers_select': Schema(type=TYPE_BOOLEAN, default=False),
                                                                                                'ntp_server1': Schema(type=TYPE_STRING, description="Address of NTP server1 like 8.8.8.8, required when selecting NTP servers"),
                                                                                                'ntp_server2': Schema(type=TYPE_STRING, description="Address of NTP server2 like 8.8.4.4, Optionally you can set the second NTP server afer setting the first NTP server"),}),
+                                                             'client_management': Schema(type=TYPE_OBJECT, description="Client Management Port block", required=['client_management_select'],
+                                                                                           properties={"client_management_select": Schema(type=TYPE_BOOLEAN, default=False),
+                                                                                                       "port": Schema(type=TYPE_STRING, description="Port number like 17562"),
+                                                                                                       "password": Schema(type=TYPE_STRING)}),
                                                              'verbosity_level': Schema(type=TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
                                                              }
                                                              ))
@@ -360,6 +375,7 @@ def update_server_openvpn(request, id):
         server.force_dns_cache_update = data.get('force_dns_cache_update', '')
         dns_servers = data.get('dns_servers', '')
         ntp_servers = data.get('ntp_servers', '')
+        client_management = data.get('client_management')
         server.verb = data.get('verbosity_level', '')
         if server.interface != "Any":
             server.interface = Interface.objects.get(name_interface=server.interface)
@@ -402,6 +418,13 @@ def update_server_openvpn(request, id):
         else:
             server.ntp_server1 = None
             server.ntp_server2 = None
+        
+        if client_management.get('client_management_select'):
+            server.client_management_port = client_management.get('port')
+            server.client_management_password = client_management.get('password')
+        else:
+            server.client_management_port = None
+            server.client_management_password = None
 
         data['server_mode'] = server.server_mode
         serializer_server = ServerOpenvpnSerializer(server, data=data)

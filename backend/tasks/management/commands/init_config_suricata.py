@@ -23,7 +23,6 @@ class Command(BaseCommand):
                 eve_log= file.get("eve-log-enabled")
                 mpm_algo = file.get("mpm-algo")
                 profile = file.get("profile")
-                copy_mode = file.get("copy-mode")
                 status_command = "systemctl is-enabled suricata.service"
                 output, error = execute_cmd(status_command)
                 if output == 'enabled':
@@ -32,7 +31,7 @@ class Command(BaseCommand):
                     status_enabled = False
                 if not suricatafile.objects.filter(home_net=home_net).exists() and suricatafile.objects.all().count()==0:
                     # Créer une instance du modèle suricatafile
-                    suricata_config = suricatafile(home_net=home_net, promisc=promisc, eve_log=eve_log, syslog=syslog, mpm_algo=mpm_algo, profile=profile,copy_mode=copy_mode,status_enabled=status_enabled)
+                    suricata_config = suricatafile(home_net=home_net, promisc=promisc, eve_log=eve_log, syslog=syslog, mpm_algo=mpm_algo, profile=profile,status_enabled=status_enabled)
                     suricata_config.save()
                     id_conf=suricata_config.id
                     if id_conf is not None:

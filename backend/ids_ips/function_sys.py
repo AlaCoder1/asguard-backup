@@ -374,7 +374,7 @@ def prepare_rule_attribut(rules):
                 "source_ip":src_ip,
                 "direction":direction,
                 "destination_ip":dest_ip,
-                "msg":msg.strip().strip('"'),
+                "msg":msg.strip().strip('"') if msg is not None else msg,
                 "rev":rev,
                 "rule": rule,
                 "suricatafile":id,

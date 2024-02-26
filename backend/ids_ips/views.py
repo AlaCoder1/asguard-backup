@@ -32,7 +32,7 @@ from django.core.serializers import serialize
 @authentication_classes([SessionAuthentication])
 def update_suricata_configuration(request, id):
     if request.method=="PUT":
-        try: 
+        # try: 
             suricata_yaml_path = "/etc/suricata/suricata.yaml"
             data = request.data
             ##status suricata
@@ -75,6 +75,7 @@ def update_suricata_configuration(request, id):
                 aux_update=save_config(updated_lines,suricata_yaml_path,status_enabled)
                 if aux_update is True:
                         # Ensuite, mettez à jour les enregistrements dans la base de données
+                        print({"id":id})
                         suricata_instance = suricatafile.objects.get(id=id)
                         data_updated={
                             "status_enabled":status_enabled,
@@ -107,8 +108,8 @@ def update_suricata_configuration(request, id):
                 msg="Failed to open config file!"
                 status=404
             return JsonResponse({'msg': msg}, status=status) 
-        except Exception as e:
-            return JsonResponse({'success': False, 'msg': str(e)}, status=500) 
+        # except Exception as e:
+        #     return JsonResponse({'success': False, 'msg': str(e)}, status=502) 
 
 
 #Aficher le fichier de configuration suricata.yaml//

@@ -608,7 +608,7 @@ export default {
           uuid: data.uuid,
           cluster_id: data.cluster_id,
           cluster_type: data.cluster_type,
-          copy_iface: data.copy_iface.name,
+          copy_iface: data.copy_iface?.name ? data.copy_iface?.name : null,
           copy_mode: data.copy_mode,
           defrag: data.defrag,
           id_interface: data.id_interface,
@@ -618,7 +618,7 @@ export default {
           use_mmap: data.use_mmap,
         };
         rowDataAF.value.push(test);
-
+        console.log("rowDataAF.value", rowDataAF.value);
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataAF.value);
         } else {
@@ -698,8 +698,8 @@ export default {
           uuid: uuidv4(),
           cluster_id: i.cluster_id,
           cluster_type: i.cluster_type,
-          copy_iface: filtredIFace[0].name,
-          copy_mode: i.copy_mode,
+          copy_iface: filtredIFace.length ? filtredIFace[0].name : "--",
+          copy_mode: i.copy_mode ?? "--",
           defrag: i.defrag,
           id_interface: i.id_interface,
           name_interface: i.name_interface,
@@ -769,7 +769,7 @@ export default {
             defrag: e.defrag,
             use_mmap: e.use_mmap,
             ring_size: e.ring_size,
-            copy_iface: filtredCopy[0],
+            copy_iface: filtredCopy[0] ?? null,
             copy_mode: e.copy_mode,
           };
         });

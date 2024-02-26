@@ -37,7 +37,7 @@ class SuricataInterface(models.Model):
     defrag=models.CharField(max_length=100,blank=True)
     use_mmap=models.CharField(max_length=100,blank=True)
     ring_size=models.IntegerField(null=True,default=0)
-    copy_mode= models.CharField(max_length=100, blank=True, default="none")
+    copy_mode= models.CharField(max_length=100, null=True)
     copy_iface=models.IntegerField(null=True,default=0)
     class Meta:
         db_table = 'suricata_interface'    

@@ -115,12 +115,6 @@
                     background-color="#fffffff"
                   >
                   </v-select>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.copyMode.$errors.length"
-                  >
-                    {{ v$.copyMode.$errors?.[0].$message }}
-                  </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
@@ -134,12 +128,6 @@
                     background-color="#fffffff"
                   >
                   </v-select>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.copyIface.$errors.length"
-                  >
-                    {{ v$.copyIface.$errors?.[0].$message }}
-                  </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
@@ -309,7 +297,7 @@ export default {
       //
       interface: "",
       bufferSize: "",
-      copyIface: "",
+      copyIface: null,
       copyMode: "",
       clusterId: "",
       clusterType: { name: "cluster_flow", slug: "cluster_flow" },
@@ -386,7 +374,7 @@ export default {
     watch(
       () => state.interface,
       (val) => {
-        if (val && state.copyIface) state.copyIface = "";
+        if (val && state.copyIface) state.copyIface = null;
       }
     );
 
@@ -430,7 +418,7 @@ export default {
         if (val === "create") {
           state.interface = "";
           state.bufferSize = "";
-          state.copyIface = "";
+          state.copyIface = null;
           state.copyMode = "";
           state.clusterId = "";
           state.clusterType = { name: "cluster_flow", slug: "cluster_flow" };
@@ -468,9 +456,8 @@ export default {
           defrag: state.defrag.slug,
           use_mmap: state.useNmp.slug,
           ring_size: +state.bufferSize,
-          copy_mode: state.copyMode.slug,
-          copy_iface: state.copyIface,
-          copy_ifaceName: state.copyIface.name,
+          copy_mode: state.copyMode.slug ?? null,
+          copy_iface: state.copyIface ?? null,
         };
         if (modalMode.value === "create") {
           emitter.emit("add-Interface", payload);
@@ -491,7 +478,7 @@ export default {
       emitter.emit("closeModalAddInterface");
       state.interface = "";
       state.bufferSize = "";
-      state.copyIface = "";
+      state.copyIface = null;
       state.copyMode = "";
       state.clusterId = "";
       state.clusterType = "";
@@ -503,10 +490,24 @@ export default {
     const rules = computed(() => {
       return {
         interface: { required },
-        bufferSize: { required },
-        copyIface: { required },
-        copyMode: { required },
-        clusterId: { required },
+        bufferSize: {
+          required,
+          isValidBufferSize: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+
+        clusterId: {
+          required,
+          isValidClusterId: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+
         clusterType: { required },
         defrag: { required },
         thread: { required },

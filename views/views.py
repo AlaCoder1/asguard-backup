@@ -272,14 +272,12 @@ def get_all_interfaces(request):
     if (request.method == 'GET'):
         interfaces = Interface.objects.all()
         interface_dict=serializers.serialize("json",interfaces)
-        # interface_dict = serializers.serialize("json", interfaces)
         res = json.loads(interface_dict)
         for i in range(len(res)):
             res[i].pop('model')
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
-            # if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")):
             list_interface.append(res[i]['fields'])
         return list_interface
 
@@ -289,7 +287,6 @@ def get_all_interfaces_version2(request):
     if (request.method == 'GET'):
         interfaces = Interface.objects.all()
         interface_dict = serializers.serialize("json",interfaces)
-        # interface_dict = serializers.serialize("json", interfaces)
         res = json.loads(interface_dict)
         for i in range(len(res)):
             res[i].pop('model')
@@ -416,7 +413,7 @@ def general_suricata_configuration(request, id):
         interfaces_ids_value = str(interface_ids_final)
         suricata_yaml_path = "/etc/suricata/suricata.yaml"
         # Exécutez la commande 'sudo cat' pour lire le contenu du fichier
-        output, error = execute_cmd("sudo cat " + suricata_yaml_path)
+        output, _ = execute_cmd("sudo cat " + suricata_yaml_path)
         # Mettez à jour la configuration dans le système
         if output:
             # Lit les lignes du fichier
@@ -441,6 +438,20 @@ def general_suricata_configuration(request, id):
         suricata_instance.interface_ids = interfaces_ids_value
         suricata_instance.home_net = home_net_value
         suricata_instance.save()
+        info_af_object=SuricataInterface.objects.filter(suricata_id=id)
+        info_af_dict = serializers.serialize("json", info_af_object)
+        res_af = json.loads(info_af_dict)
+        liste_interfaces=[]
+        for i in range(len(res_af)):
+            res_af[i].pop('model')
+            res_af[i].pop('pk')
+            res_af[i]['fields']['id_interface'] = res_af[i]['fields']["interface"]
+            res_af[i]['fields']['ifname'] = Interface.objects.get(id=res_af[i]['fields']["interface"]).ifname
+            res_af[i]['fields']['name_interface'] = Interface.objects.get(id=res_af[i]['fields']["interface"]).name_interface
+            res_af[i]['fields'].pop("suricata")
+            res_af[i]['fields'].pop("interface")
+            liste_interfaces.append(res_af[i]['fields'])
+        
         current_configuration = {
             "id":id,
             "promisc": suricata_instance.promisc,
@@ -448,11 +459,11 @@ def general_suricata_configuration(request, id):
             "syslog": suricata_instance.syslog,
             "mpm_algo": suricata_instance.mpm_algo,
             "profile": suricata_instance.profile,
-            "copy_mode": suricata_instance.copy_mode, 
-            "status_enabled":suricata_instance.status_enabled
+            "status_enabled":suricata_instance.status_enabled,
+            "liste_interfaces":liste_interfaces
             }
+      
     return json.dumps({"configuration": current_configuration, "interface_ids": interface_ids_final, "address_home_net": address_home_net_final})
-
 
 ############### End General configuration suricata #################
 ############### Rules suricata #################

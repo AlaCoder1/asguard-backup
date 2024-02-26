@@ -1,3 +1,4 @@
+import ipaddress
 import subprocess
 from backend.rules.serializers import *
 from django.conf import settings
@@ -143,7 +144,7 @@ def delete_rule_remote(ifname,type_rule,handle):
    ]
    ##executer ces commandes
    for cmd in commandes:
-      output,error=run_command(cmd)
+      _,error=run_command(cmd)
       if error !="":
          return error  
    return True
@@ -156,15 +157,21 @@ def get_protocol_number(protocol_name):
         return protocol_number
     except socket.error:
         return None  # Protocol name not found
+
      
-def update_rule_remote(old_rule,new_rule,file_path):
-   commandes=[
-      "sed -i '/{}/ s/{}/{}/' {}".format(old_rule, old_rule.strip(), new_rule.strip(), file_path),
-      "nft flush ruleset",
-      "nft -f /etc/nftables.conf"
-      ]
-   for cmd in commandes:
-      output,error=run_command("sudo "+cmd)
-      if error !="":
-         return error  
-   return True
+def calculate_subnet_address(addr_prefix):
+   if addr_prefix is not None:
+      ip_address=addr_prefix.split("/")[0]
+      prefix=addr_prefix.split("/")[1]
+   # Validate input IP address
+      try:
+         ip_address = ipaddress.IPv4Address(ip_address)
+      except ValueError as e:
+         return f"Invalid input: {e}"
+      if prefix!="32":
+         network = ipaddress.IPv4Network(f"{ip_address}/{prefix}", strict=False)
+         return str(network.network_address)+"/"+prefix
+      else:
+         return str(ip_address)
+   else:
+      return None

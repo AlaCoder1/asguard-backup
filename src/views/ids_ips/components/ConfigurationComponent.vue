@@ -126,33 +126,7 @@
               item-title="name"
               item-value="slug"
               return-object
-              :items="[
-                {
-                  id: '1',
-                  name: 'Auto',
-                  slug: 'auto',
-                },
-                {
-                  id: '2',
-                  name: 'Aho-Corasick, default implementation',
-                  slug: 'ac',
-                },
-                {
-                  id: '3',
-                  name: 'Aho-Corasick, reduced memory implementation',
-                  slug: 'ac-bs',
-                },
-                {
-                  id: '4',
-                  name: 'Aho-Corasick, Ken Steele variant',
-                  slug: 'ac-ks',
-                },
-                {
-                  id: '5',
-                  name: 'Hyperscan',
-                  slug: 'hs',
-                },
-              ]"
+              :items="state.algoLists"
             ></v-select>
           </v-col>
           <v-col cols="4" align-self="center">
@@ -165,31 +139,8 @@
               item-title="name"
               item-value="slug"
               return-object
-              :items="[
-                {
-                  id: '1',
-                  name: 'Medium',
-                  slug: 'medium',
-                },
-                {
-                  id: '2',
-                  name: 'High',
-                  slug: 'high',
-                },
-                {
-                  id: '3',
-                  name: 'Low',
-                  slug: 'low',
-                },
-              ]"
+              :items="state.profileLists"
             ></v-select>
-          </v-col>
-
-          <v-col cols="4" align-self="center">
-            <label>Copy Mode</label>
-          </v-col>
-          <v-col cols="8" class="mb-n6">
-            <input type="checkbox" v-model="state.copyMode" />
           </v-col>
         </v-row>
       </v-col>
@@ -249,7 +200,13 @@
       </v-col>
     </v-row>
   </div>
-  <ModalAddInterface :isOpen="state.isModalOpen" />
+  <ModalAddInterface :isOpen="state.isModalOpen" :modalMode="state.modalMode" />
+  <!-- <ModalAddInterface
+    :isOpen="state.isModalOpen"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+    :rowDataList="rowDataAF.value"
+  /> -->
   <h4>Update suricata rules</h4>
   <v-divider class="mt-2"></v-divider>
   <v-row class="flex py-8 mb-5">
@@ -290,12 +247,13 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
-import useValidate from "@vuelidate/core";
+// import useValidate from "@vuelidate/core";
 import VButton from "@/components/VButton.vue";
-import { required, requiredIf, helpers } from "@vuelidate/validators";
+// import { required, requiredIf, helpers } from "@vuelidate/validators";
 import UsersList from "../../system/user/components/UsersList.vue";
 import { reactive, onMounted, computed, ref, inject } from "vue";
 import ModalAddInterface from "@/components/modals/ModalAddInterface.vue";
+import { v4 as uuidv4 } from "uuid";
 
 export default {
   name: "ConfigurationComponent",
@@ -308,17 +266,61 @@ export default {
 
   setup() {
     const emitter = inject("emitter");
-    const rowDataConfiguration = reactive({});
     const rowDataInterfaces = reactive({});
     const switchValue = ref(false);
     const state = reactive({
+      interId: null,
+      profileLists: [
+        {
+          id: "1",
+          name: "Medium",
+          slug: "medium",
+        },
+        {
+          id: "2",
+          name: "High",
+          slug: "high",
+        },
+        {
+          id: "3",
+          name: "Low",
+          slug: "low",
+        },
+      ],
+      algoLists: [
+        {
+          id: "1",
+          name: "Auto",
+          slug: "auto",
+        },
+        {
+          id: "2",
+          name: "Aho-Corasick, default implementation",
+          slug: "ac",
+        },
+        {
+          id: "3",
+          name: "Aho-Corasick, reduced memory implementation",
+          slug: "ac-bs",
+        },
+        {
+          id: "4",
+          name: "Aho-Corasick, Ken Steele variant",
+          slug: "ac-ks",
+        },
+        {
+          id: "5",
+          name: "Hyperscan",
+          slug: "hs",
+        },
+      ],
+      //
       modalData: {},
       modalMode: "create",
       isModalOpen: false,
       isOpen: null,
-
+      editRow: {},
       //
-
       loading: false,
       isLoadingDialogue: false,
 
@@ -328,7 +330,6 @@ export default {
       //General information
       copyMode: false,
       status_enabled: false,
-      copy_mode: false,
       promisc: "",
       syslog: "",
       eve_log: "",
@@ -342,7 +343,8 @@ export default {
     const columnAF = [
       {
         headerName: "Interface",
-        field: "interface",
+        field: "name_interface",
+        // cellRenderer: actionCopyInterface,
         sortable: true,
         autoHeight: true,
         filter: true,
@@ -380,7 +382,8 @@ export default {
       },
       {
         headerName: "Copy Iface",
-        field: "copy_ifaceName",
+        field: "copy_iface",
+        // cellRenderer: actionCopyIface,
         sortable: true,
         filter: true,
       },
@@ -398,7 +401,7 @@ export default {
       },
       {
         headerName: "Actions",
-        // cellRenderer: actionCellRendererKeys,
+        cellRenderer: actionCellRenderer,
         minWidth: 150,
         field: "action",
         sortable: true,
@@ -449,15 +452,97 @@ export default {
       state.mapedInterface = interfaces;
     };
 
-    // const actionCopyIface = (data) => {
+    // function actionCopyIface(data) {
     //   console.log("data", data);
     //   let eGui = document.createElement("div");
 
+    //   if (typeof data.data.copy_iface === "object") {
+    //     var filtredInterface = listeInterfaces.value.filter(
+    //       (i) => i.id === data.data.copy_iface.id
+    //     );
+    //   } else {
+    //     var filtredInterface = listeInterfaces.value.filter(
+    //       (i) => i.id === data.data.copy_iface
+    //     );
+    //   }
+
+    //   console.log("filtredInterfaceIface", filtredInterface[0]);
+
     //   eGui.innerHTML = `
-    //   ${data.data.copy_iface.id} / ${data.data.copy_iface.name}
-    //  `;
+    //     ${filtredInterface[0].name}
+    //    `;
     //   return eGui;
-    // };
+    // }
+
+    // function actionCopyInterface(data) {
+    //   console.log("data", data);
+    //   let eGui = document.createElement("div");
+
+    //   let filtredInterface = listeInterfaces.value.filter(
+    //     (i) => i.name === data.data.name_interface
+    //   );
+    //   console.log("filtredInterface*****", filtredInterface[0]);
+
+    //   eGui.innerHTML = `
+    //     ${filtredInterface[0].name}
+    //    `;
+    //   return eGui;
+    // }
+
+    function actionCellRenderer(params) {
+      let eGui = document.createElement("div");
+      // <button
+      // class="action-button edit"
+      // data-action="edit">
+      //    <i class="far fa-edit" style="color: #086eae;"></i>
+      // </button>
+      eGui.innerHTML = `
+   
+  
+      <button
+        class="action-button delete"
+        data-action="delete">
+          <i class="fas fa-times" style="color: #086eae;"></i>
+      </button>
+      `;
+
+      eGui.querySelectorAll(".action-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.getAttribute("data-action");
+          handleAction(action, params.node.data, params.node.rowIndex);
+        });
+      });
+
+      return eGui;
+    }
+
+    const handleAction = (action, rowData) => {
+      switch (action) {
+        // case "edit":
+        //   // state.modalData = {};
+        //   // state.modalMode = "edit";
+        //   // state.isModalOpen = true;
+        //   // state.editRow = rowData;
+
+        //   break;
+        case "delete":
+          const index = rowDataAF.value.findIndex(
+            (item) => item.id === rowData.id
+          );
+
+          if (index !== -1) {
+            rowDataAF.value.splice(index, 1);
+            if (gridApi.value) {
+              gridApi.value.setRowData(rowDataAF.value);
+            } else {
+              console.error("Grid API.");
+            }
+          }
+          break;
+        default:
+          break;
+      }
+    };
 
     const reloadData = async () => {
       const csrfToken = getCookie("csrftoken");
@@ -466,7 +551,7 @@ export default {
       state.isLoadingDialogue = true;
       try {
         const response = await axios.post(
-          "activerSuricataUpdate/" + rowDataConfiguration.value.configuration.id
+          "activerSuricataUpdate/" + state.interId
         );
         if (response.status === 200) {
           // state.messages=response.data.message
@@ -488,7 +573,7 @@ export default {
           // Automatically close the snackbar after 3000 milliseconds (3 seconds)
           setTimeout(() => {
             state.snackbar = false;
-            // location.reload();
+            location.reload();
           }, 2000);
         }
       } catch (error) {
@@ -500,21 +585,39 @@ export default {
         // Automatically close the snackbar after 3000 milliseconds (3 seconds)
         setTimeout(() => {
           state.snackbar = false;
-          // location.reload();
+          location.reload();
         }, 2000);
       }
     };
+
     onMounted(async () => {
+      await getInterface();
       emitter.on("closeModalAddInterface", () => {
         state.isModalOpen = false;
+        state.isOpen = false;
+        state.modalMode = "";
+        state.editRow = {};
       });
       emitter.on("add-Interface", (data) => {
-        console.log("add-Interface", data);
-
         if (!rowDataAF.value) {
           rowDataAF.value = [];
         }
-        rowDataAF.value.push(data);
+
+        let test = {
+          id: data.id,
+          uuid: data.uuid,
+          cluster_id: data.cluster_id,
+          cluster_type: data.cluster_type,
+          copy_iface: data.copy_iface.name,
+          copy_mode: data.copy_mode,
+          defrag: data.defrag,
+          id_interface: data.id_interface,
+          name_interface: data.interface,
+          ring_size: data.ring_size,
+          threads: data.threads,
+          use_mmap: data.use_mmap,
+        };
+        rowDataAF.value.push(test);
 
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataAF.value);
@@ -523,42 +626,99 @@ export default {
         }
       });
 
-      await getInterface();
-      rowDataConfiguration.value =
-        document.getElementById("app").attributes[
-          "general_config_suricata"
-        ].value;
-      let validJsonString = rowDataConfiguration.value
-        .replace(/True/g, "true")
-        .replace(/False/g, "false")
-        .replace(/None/g, "null");
-      let parsedArray = JSON.parse(validJsonString);
-      rowDataConfiguration.value = parsedArray;
-      state.status_enabled =
-        rowDataConfiguration.value.configuration.status_enabled;
-      state.promisc = rowDataConfiguration.value.configuration.promisc;
-      state.syslog =
-        rowDataConfiguration.value.configuration.syslog.toLowerCase() === "yes";
-      state.eve_log =
-        rowDataConfiguration.value.configuration.eve_log.toLowerCase() ===
-        "yes";
-      state.copy_mode =
-        rowDataConfiguration.value.configuration.copy_mode.toLowerCase() ===
-        "ips";
-      state.mpm_algo = rowDataConfiguration.value.configuration.mpm_algo;
-      state.profile = rowDataConfiguration.value.configuration.profile;
-      const interfaces = listeInterfaces.value;
-      const selectedInterfaces = rowDataConfiguration.value.interface_ids.map(
-        (id) => {
-          const matchingInterface = interfaces.find(
-            (interfaces) => interfaces.id === id
-          );
-          return matchingInterface ? matchingInterface : null;
+      function updateObjectById(uuid, updatedObject) {
+        const index = rowDataAF.value.findIndex((obj) => obj.uuid === uuid);
+
+        if (index !== -1) {
+          rowDataAF.value[index] = {
+            ...rowDataAF.value[index],
+            ...updatedObject,
+          };
         }
+      }
+
+      emitter.on("edit-Interface", (data) => {
+        let test = {
+          uuid: data.uuid,
+          id: data.id,
+          cluster_id: data.cluster_id,
+          cluster_type: data.cluster_type,
+          copy_iface: data.copy_iface.name,
+          copy_mode: data.copy_mode,
+          defrag: data.defrag,
+          id_interface: data.id_interface,
+          name_interface: data.interface,
+          ring_size: data.ring_size,
+          threads: data.threads,
+          use_mmap: data.use_mmap,
+        };
+
+        updateObjectById(data.uuid, test);
+
+        if (!rowDataAF.value) {
+          rowDataAF.value = [];
+        }
+        // rowDataAF.value.push(data);
+
+        if (gridApi.value) {
+          gridApi.value.setRowData(rowDataAF.value);
+        } else {
+          console.error("Grid API.");
+        }
+      });
+
+      let rowConfiguration =
+        document.getElementById("app").attributes["general_config_suricata"]
+          .value;
+      let rowConfig = JSON.parse(rowConfiguration);
+
+      state.status_enabled = rowConfig.configuration.status_enabled;
+      state.promisc = rowConfig.configuration.promisc;
+      state.syslog = rowConfig.configuration.syslog.toLowerCase() === "yes";
+      state.eve_log = rowConfig.configuration.eve_log.toLowerCase() === "yes";
+
+      state.interId = rowConfig.configuration.id;
+
+      let filtredProfile = state.profileLists.filter(
+        (i) => i.slug === rowConfig.configuration.profile
+      );
+      let filtredAlgo = state.algoLists.filter(
+        (i) => i.slug === rowConfig.configuration.mpm_algo
       );
 
-      // state.interface = selectedInterfaces.filter(Boolean).join(' ');
-      state.interface = selectedInterfaces.filter(Boolean);
+      state.mpm_algo = filtredAlgo[0];
+      state.profile = filtredProfile[0];
+
+      rowDataAF.value = rowConfig.configuration.liste_interfaces.map((i) => {
+        var filtredIFace = listeInterfaces.value.filter(
+          (e) => e.id === i.copy_iface
+        );
+
+        return {
+          uuid: uuidv4(),
+          cluster_id: i.cluster_id,
+          cluster_type: i.cluster_type,
+          copy_iface: filtredIFace[0].name,
+          copy_mode: i.copy_mode,
+          defrag: i.defrag,
+          id_interface: i.id_interface,
+          name_interface: i.name_interface,
+          ring_size: i.ring_size,
+          threads: i.threads,
+          use_mmap: i.use_mmap,
+        };
+      });
+
+      if (!rowDataAF.value) {
+        rowDataAF.value = [];
+      }
+      // rowDataAF.value = rowConfig.configuration.liste_interfaces;
+
+      if (gridApi.value) {
+        gridApi.value.setRowData(rowDataAF.value);
+      } else {
+        console.error("Grid API.");
+      }
     });
     const handleRemove = () => {
       state.snackbar = false;
@@ -584,6 +744,7 @@ export default {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
+      emitter.emit("list-Interface", rowDataAF.value);
     };
 
     const submitForm = async () => {
@@ -596,41 +757,38 @@ export default {
 
       if (rowDataAF.value.length) {
         var mapedRow = rowDataAF.value.map((e) => {
+          let filtredCopy = state.mapedInterface.filter(
+            (i) => i.name === e.copy_iface
+          );
           return {
-            id: e.id,
-            interface: e.interface,
+            id: e.id ?? e.id_interface,
+            interface: e.name_interface,
             threads: e.threads,
             cluster_id: e.cluster_id,
             cluster_type: e.cluster_type,
             defrag: e.defrag,
             use_mmap: e.use_mmap,
             ring_size: e.ring_size,
+            copy_iface: filtredCopy[0],
             copy_mode: e.copy_mode,
-            copy_iface: e.copy_iface,
           };
         });
       }
 
       let payload = {
         status_enabled: state.status_enabled,
-        copy_mode: state.copy_mode,
         promisc: state.promisc,
         eve_log: state.eve_log,
         syslog: state.syslog,
         mpm_algo: state.mpm_algo.slug,
         profile: state.profile.slug,
-        copy_mode: state.copyMode,
+        copy_mode: true,
         list_interfaces: mapedRow,
       };
       state.loading = true;
       state.isLoadingDialogue = true;
-      console.log("payload", payload);
       axios
-        .put(
-          "/ids-ips/UpdateGeneralConfig/" +
-            rowDataConfiguration.value.configuration.id,
-          payload
-        )
+        .put("/ids-ips/UpdateGeneralConfig/" + state.interId, payload)
         .then((response) => {
           if (response.status == 200) {
             state.loading = false;
@@ -668,9 +826,7 @@ export default {
           }, 3000);
         });
     };
-    const cancel = () => {
-      console.log("cancel");
-    };
+    const cancel = () => {};
 
     return {
       switchValue,

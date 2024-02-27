@@ -446,6 +446,7 @@ export default {
         return {
           id: i.id,
           name: i.name_interface,
+          ifname: i.ifname,
         };
       });
       listeInterfaces.value = interfaces;
@@ -616,9 +617,9 @@ export default {
           ring_size: data.ring_size,
           threads: data.threads,
           use_mmap: data.use_mmap,
+          ifname: data.ifname,
         };
         rowDataAF.value.push(test);
-        console.log("rowDataAF.value", rowDataAF.value);
         if (gridApi.value) {
           gridApi.value.setRowData(rowDataAF.value);
         } else {
@@ -706,6 +707,7 @@ export default {
           ring_size: i.ring_size,
           threads: i.threads,
           use_mmap: i.use_mmap,
+          ifname: i.ifname,
         };
       });
 
@@ -762,7 +764,7 @@ export default {
           );
           return {
             id: e.id ?? e.id_interface,
-            interface: e.name_interface,
+            interface: e.ifname,
             threads: e.threads,
             cluster_id: e.cluster_id,
             cluster_type: e.cluster_type,
@@ -773,58 +775,66 @@ export default {
             copy_mode: e.copy_mode,
           };
         });
-      }
 
-      let payload = {
-        status_enabled: state.status_enabled,
-        promisc: state.promisc,
-        eve_log: state.eve_log,
-        syslog: state.syslog,
-        mpm_algo: state.mpm_algo.slug,
-        profile: state.profile.slug,
-        copy_mode: true,
-        list_interfaces: mapedRow,
-      };
-      state.loading = true;
-      state.isLoadingDialogue = true;
-      axios
-        .put("/ids-ips/UpdateGeneralConfig/" + state.interId, payload)
-        .then((response) => {
-          if (response.status == 200) {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = "Configuration saved successfully!";
-            // Automatically close the snackbar after 3000 milliseconds (3 seconds)
-            setTimeout(() => {
-              state.snackbar = false;
-              location.reload();
-            }, 3000);
-          } else {
+        let payload = {
+          status_enabled: state.status_enabled,
+          promisc: state.promisc,
+          eve_log: state.eve_log,
+          syslog: state.syslog,
+          mpm_algo: state.mpm_algo.slug,
+          profile: state.profile.slug,
+          copy_mode: true,
+          list_interfaces: mapedRow,
+        };
+
+        state.loading = true;
+        state.isLoadingDialogue = true;
+        axios
+          .put("/ids-ips/UpdateGeneralConfig/" + state.interId, payload)
+          .then((response) => {
+            if (response.status == 200) {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = "Configuration saved successfully!";
+              // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+              setTimeout(() => {
+                state.snackbar = false;
+                location.reload();
+              }, 3000);
+            } else {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.snackbar = true;
+              state.color = "error";
+              state.textAlert = "Failed to save configuration!";
+              // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+              setTimeout(() => {
+                state.snackbar = false;
+                location.reload();
+              }, 3000);
+            }
+          })
+          .catch((i) => {
             state.loading = false;
             state.isLoadingDialogue = false;
             state.snackbar = true;
             state.color = "error";
-            state.textAlert = "Failed to save configuration!";
-            // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+            state.textAlert = error;
             setTimeout(() => {
               state.snackbar = false;
               location.reload();
             }, 3000);
-          }
-        })
-        .catch((i) => {
-          state.loading = false;
-          state.isLoadingDialogue = false;
-          state.snackbar = true;
-          state.color = "error";
-          state.textAlert = error;
-          setTimeout(() => {
-            state.snackbar = false;
-            location.reload();
-          }, 3000);
-        });
+          });
+      } else {
+        state.snackbar = true;
+        state.color = "error";
+        state.textAlert = "Minimum One Interface In AF Packet";
+        setTimeout(() => {
+          state.snackbar = false;
+        }, 2000);
+      }
     };
     const cancel = () => {};
 

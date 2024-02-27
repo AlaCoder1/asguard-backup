@@ -164,6 +164,9 @@
         <v-col cols="8" class="mb-n6">
           <v-text-field
             label="Password"
+            :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+            @click:append-inner="show1 = !show1"
+            :type="show1 ? 'text' : 'password'"
             v-model="passwordClient"
           ></v-text-field>
           <p
@@ -195,6 +198,7 @@
 <script setup>
 import { ref } from "vue";
 import { useVModels } from "@vueuse/core";
+const show1 = ref(false);
 
 const props = defineProps([
   "errors",

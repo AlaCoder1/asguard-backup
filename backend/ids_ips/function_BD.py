@@ -1,9 +1,12 @@
+import ipaddress
 from backend.ids_ips.serializers import SuricataInterfaceSerializer
 from backend.network.models import *
+from backend.rules.functions import calculate_subnet_address
 from.models import *
 from django.db.models import Q
 # Fonction pour obtenir les adresses IP en fonction des interfaces
 def get_ip_addresses(interface_ids):
+    """function to get subnet address """
     list_ipaddress = []
     try:
         # Récupérez les adresses IP de la base de données pour les interfaces spécifiées
@@ -13,14 +16,13 @@ def get_ip_addresses(interface_ids):
     for config  in ip_configs:
         ip_address = config['ip_address']
         prefix_length = config['netmask']
-        if prefix_length == 16:
-            list_ipaddress.append(ip_address.split('.')[0] + "." + ip_address.split('.')[1] + ".0.0/16")
-        elif prefix_length == 24:
-            list_ipaddress.append(ip_address.split('.')[0] + "." + ip_address.split('.')[1] + "." + ip_address.split('.')[2] + ".0/24")
-        elif prefix_length == 8:
-            list_ipaddress.append(ip_address.split('.')[0] + ".0.0.0/8")
+        try:
+            ip_address = ipaddress.IPv4Address(ip_address)
+        except ValueError as e:
+            return f"Invalid input: {e}"
+        network = ipaddress.IPv4Network(f"{ip_address}/{prefix_length}", strict=False)
+        list_ipaddress.append(str(network.network_address)+"/"+str(prefix_length) )
     return list_ipaddress
-
 
 
 # Fonction pour obtenir le champ HOME_NET à partir de la base de données

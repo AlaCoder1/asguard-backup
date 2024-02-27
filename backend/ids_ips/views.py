@@ -64,10 +64,7 @@ def update_suricata_configuration(request, id):
             ip_addresses =get_ip_addresses(interface_ids)
             home_net_value_sys = f'[{",".join(list(set(ip_addresses)))}]'
             home_net_value = f'[{",".join(ip_addresses)}]'
-            
-            print(home_net_value_sys)
-            print(type(home_net_value))
-            ##taritement système
+            ##traitement système
             output,_= execute_cmd("sudo cat " + suricata_yaml_path)
             if output:
                 lines = output.split('\n')

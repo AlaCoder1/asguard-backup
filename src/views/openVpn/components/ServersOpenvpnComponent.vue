@@ -909,10 +909,10 @@ export default {
         state.activeNtpServer1 = data.ntp_server1;
         state.activeNtpServer2 = data.ntp_server2;
         state.verbLevel = data.verb;
-        
-        state.clientPort = data.client_management_select;
-        state.portClient = data.port;
-        state.passwordClient = data.password;
+
+        state.clientPort = data.client_management_port ? true : false;
+        state.portClient = data.client_management_port;
+        state.passwordClient = data.client_management_password;
       });
     });
 

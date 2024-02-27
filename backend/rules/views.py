@@ -94,7 +94,10 @@ def add_rule(request,name_interface):
           data['interface']=interface_object.id
           #appel la fonction pour ajouter rule dans la base de données 
           data={key: value for key, value in data.items() if value is not None}
-          data['rule']=rule
+          saddr_db=calculate_subnet_address(saddr)
+          daddr_db=calculate_subnet_address(daddr)
+          rule_db=return_rule(policy,saddr_db,daddr_db,sport,dport,protocol,type_rule)
+          data['rule']=rule_db
           data["rule_status"]=True
           data["type_rule"]=type_rule
           rule_serializer = RuleSerializer(data=data)
@@ -162,9 +165,11 @@ def update_rule(request,name_interface):
                   #appel la fonction pour update rule dans la base de données 
                   # data={key: value for key, value in data.items() if value is not None}
                   data['interface']=rules_object.interface_id
-                  data['rule']=ruleupdate
+                  saddr_db=calculate_subnet_address(saddr)
+                  daddr_db=calculate_subnet_address(daddr)
+                  rule_db_update=return_rule(policy,saddr_db,daddr_db,sport,dport,protocol,type_rules)
+                  data['rule']=rule_db_update
                   rule_serializer = RuleSerializer(rules_object,data=data)
-                  # InboundSerializer.is_valid(raise_exception=True)
                   if rule_serializer.is_valid():
                     rule_serializer.save()
                     msg = "Rule updated Successfully!!"

@@ -1,6 +1,6 @@
 import subprocess
 import yaml
-from backend.ids_ips.models import SuricataInterface, ids_ips_rule, suricatafile 
+from backend.ids_ips.models import SuricataInterface, ids_ips_rule 
 from django.db.models import Q
 
 def execute_cmd(command):
@@ -92,6 +92,8 @@ def update_suricata_config(lines,home_net_value_sys,new_promisc, new_eve_log, ne
             if stripped_line.startswith("#"):
                 updated_lines.append(line + '\n')
             elif "HOME_NET:" in stripped_line:
+                print({"home net ":home_net_value_sys})
+                print(f'    HOME_NET: "{home_net_value_sys}"' )
                 updated_lines.append(f'    HOME_NET: "{home_net_value_sys}"' + '\n')
             elif "promisc:" in stripped_line:
                 # Met à jour la ligne promisc avec la nouvelle valeur
@@ -124,6 +126,7 @@ def update_suricata_config(lines,home_net_value_sys,new_promisc, new_eve_log, ne
             else:
                 # Conserve les autres lignes telles quelles
                 updated_lines.append(line + '\n')
+        # print(updated_lines)
         return updated_lines
     except Exception:
         # Capture toute autre exception et affiche un message d'erreur
@@ -159,9 +162,9 @@ def update_packet_interface(list_interfaces,lines):
             interface={cle: valeur for cle, valeur in interface.items() if valeur is not None and cle!="id"}
             for cle, valeur in interface.items():
                 if cle=="interface":
-                    af_packet_conf.append(f"  - {cle}:{valeur}")
+                    af_packet_conf.append(f"  - {cle}: {valeur}")
                 else:
-                    af_packet_conf.append(f"         {cle}:{valeur}")
+                    af_packet_conf.append(f"    {cle}: {valeur}")
             out_final=lines[:lines.index('af-packet:')+1]+af_packet_conf+lines[lines.index('# Linux high speed af-xdp capture support'):] 
     return out_final
     
@@ -170,6 +173,8 @@ def save_config(updated_lines,suricata_yaml_path,status_enabled):
     """function to save changes """
     with open(suricata_yaml_path, 'w') as local_file:
             for string in updated_lines:
+                if string.strip().startswith("HOME_NET:"):
+                    home_net_new=string
                 local_file.write(string)
     if status_enabled is True:
         aux_enable="enable"
@@ -177,14 +182,24 @@ def save_config(updated_lines,suricata_yaml_path,status_enabled):
     else:
         aux_enable="disable"
         aux_action="stop"
+    print(home_net_new.split(','))
+    home_net_old=' , '.join(home_net_new.split(',')).strip(",")
+    print({"home_net_old":home_net_old,"home_net_new":home_net_new})
+    home_net_old=home_net_old.strip()
+    home_net_new="amaniiiii"+home_net_new
+    print(home_net_new)
     commands = [
+     f"sed -n '/{home_net_old}/p' {suricata_yaml_path}",
+    "sudo sed -i '/{}/ s|{}|{}|' {}".format(home_net_old, home_net_old, home_net_new.strip(), suricata_yaml_path),    
     "sudo systemctl {} --quiet suricata.service && sudo systemctl {} suricata.service ".format(aux_enable,aux_action)
     ]
     for cmd in commands:
-        _, error=execute_cmd(cmd)
+        out, error=execute_cmd(cmd)
         if error!="":
             print({"errot":error,"cmd":cmd})
             return error
+        else:
+            print(cmd,out)
     return True
    
 #*********** Les régles ****************

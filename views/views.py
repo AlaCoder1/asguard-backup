@@ -699,3 +699,6 @@ def subscription_info(request):
 @login_required(login_url='/')
 def openvpn_monitoring(request):
     return render(request, 'vpnmonitoring.html')
+@login_required(login_url='/')
+def nat_page(request):
+    return render(request, 'nat.html')

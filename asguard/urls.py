@@ -76,6 +76,7 @@ urlpatterns = [
     path("ids-ips/",include("backend.ids_ips.urls")),
     path('proxy/', include('backend.proxy.urls')),
     path("ids-ips/",suricata),
+    path("firewall/nat/",nat_page),
     path("success/",success),
     path("vpnmonitoring/",openvpn_monitoring)
 ]

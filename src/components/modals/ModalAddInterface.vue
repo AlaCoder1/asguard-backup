@@ -461,6 +461,7 @@ export default {
           copy_iface: state.copyIface ?? null,
           ifname: state.interface.ifname,
         };
+
         if (modalMode.value === "create") {
           emitter.emit("add-Interface", payload);
         }

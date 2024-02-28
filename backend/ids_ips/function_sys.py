@@ -144,7 +144,7 @@ def transform_data_af(list_interfaces):
             "use-mmap":config_input["use_mmap"],
             "ring-size":config_input["ring_size"],
             "copy-mode":config_input["copy_mode"],
-            "copy-iface":config_input["copy_iface"]['name'] if 'copy_iface' in config_input else None
+            "copy-iface":config_input["copy_iface"]['name'] if config_input['copy_iface' ] is not None else None
             }
         list_out_interfaces.append(data_updated)
     return list_out_interfaces
@@ -374,7 +374,7 @@ def prepare_rule_attribut(rules):
                 "source_ip":src_ip,
                 "direction":direction,
                 "destination_ip":dest_ip,
-                "msg":msg.strip().strip('"'),
+                "msg":msg.strip().strip('"') if msg is not None else msg,
                 "rev":rev,
                 "rule": rule,
                 "suricatafile":id,

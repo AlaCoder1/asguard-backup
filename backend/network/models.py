@@ -10,6 +10,7 @@ from backend.managementUsers.models import User
 class Interface(models.Model):
     # gateway = models.ForeignKey(
             # Gateway, on_delete=models.CASCADE,null=True)
+    id = models.AutoField(primary_key=True)
     ifname = models.CharField(max_length=200, null=True,unique=True)
     private_aux= models.BooleanField(default=False)
     bogon_aux = models.BooleanField(default=False)
@@ -99,8 +100,8 @@ class IP4Config(models.Model):
     def save(self, *args, **kwargs):
         if not self.id:
             self.created_at = timezone.now()
-            self.created_by = settings.CurrentUserId
-            self.updated_by = settings.CurrentUserId
+            self.created_by = getattr(settings, 'CurrentUserId', None)
+            self.updated_by = getattr(settings, 'CurrentUserId', None)
         self.updated_at = timezone.now()
         super(IP4Config, self).save(*args, **kwargs)
     class Meta:

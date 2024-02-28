@@ -97,8 +97,7 @@ def add_opened_interfaces(list_interfaces_from_system, device_mode='tun'):
                 server = ServerOpenvpn.objects.get(name=interface)
             else:
                 server = list_vpn_server[0]
-            interface_data = {"id": Interface.objects.last().pk + 1,
-                              "ifname": f'{device_mode}_{interface}',
+            interface_data = {"ifname": f'{device_mode}_{interface}',
                               "name_interface": server.name}
             interface_serializer = InterfaceOpenVPNSerializer(data=interface_data)
             if interface_serializer.is_valid():

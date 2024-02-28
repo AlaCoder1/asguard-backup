@@ -62,9 +62,9 @@ def update_suricata_configuration(request, id):
             # interface_names=Interface.objects.filter(id__in=interface_ids).values('ifname')
             # Utilisez la fonction get_ip_addresses pour obtenir les adresses IP
             ip_addresses =get_ip_addresses(interface_ids)
-            home_net_value_sys = f'[{", ".join(list(set(ip_addresses)))}]'
-            home_net_value = f'[{", ".join(ip_addresses)}]'
-            ##taritement système
+            home_net_value_sys = f'[{",".join(list(set(ip_addresses)))}]'
+            home_net_value = f'[{",".join(ip_addresses)}]'
+            ##traitement système
             output,_= execute_cmd("sudo cat " + suricata_yaml_path)
             if output:
                 lines = output.split('\n')
@@ -75,7 +75,6 @@ def update_suricata_configuration(request, id):
                 aux_update=save_config(updated_lines,suricata_yaml_path,status_enabled)
                 if aux_update is True:
                         # Ensuite, mettez à jour les enregistrements dans la base de données
-                        print({"id":id})
                         suricata_instance = suricatafile.objects.get(id=id)
                         data_updated={
                             "status_enabled":status_enabled,

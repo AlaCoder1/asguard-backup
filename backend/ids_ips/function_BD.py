@@ -21,7 +21,7 @@ def get_ip_addresses(interface_ids):
         except ValueError as e:
             return f"Invalid input: {e}"
         network = ipaddress.IPv4Network(f"{ip_address}/{prefix_length}", strict=False)
-        list_ipaddress.append(str(network.network_address)+"/"+str(prefix_length) )
+        list_ipaddress.append(str(network.network_address)+"/"+str(prefix_length).strip())
     return list_ipaddress
 
 

@@ -564,7 +564,7 @@ export default {
           // Automatically close the snackbar after 3000 milliseconds (3 seconds)
           setTimeout(() => {
             state.snackbar = false;
-          }, 2000);
+          }, 1000);
         } else {
           state.loading = false;
           state.isLoadingDialogue = false;
@@ -575,7 +575,7 @@ export default {
           setTimeout(() => {
             state.snackbar = false;
             location.reload();
-          }, 2000);
+          }, 1000);
         }
       } catch (error) {
         state.loading = false;
@@ -587,7 +587,7 @@ export default {
         setTimeout(() => {
           state.snackbar = false;
           location.reload();
-        }, 2000);
+        }, 1000);
       }
     };
 
@@ -759,9 +759,15 @@ export default {
 
       if (rowDataAF.value.length) {
         var mapedRow = rowDataAF.value.map((e) => {
-          let filtredCopy = state.mapedInterface.filter(
-            (i) => i.name === e.copy_iface
-          );
+          let filtredCopy = state.mapedInterface
+            .filter((i) => i.name === e.copy_iface)
+            .map((i) => {
+              return {
+                id: i.id,
+                name: i.ifname,
+              };
+            });
+
           return {
             id: e.id ?? e.id_interface,
             interface: e.ifname,
@@ -786,7 +792,6 @@ export default {
           copy_mode: true,
           list_interfaces: mapedRow,
         };
-
         state.loading = true;
         state.isLoadingDialogue = true;
         axios
@@ -802,7 +807,7 @@ export default {
               setTimeout(() => {
                 state.snackbar = false;
                 location.reload();
-              }, 3000);
+              }, 1000);
             } else {
               state.loading = false;
               state.isLoadingDialogue = false;
@@ -813,7 +818,7 @@ export default {
               setTimeout(() => {
                 state.snackbar = false;
                 location.reload();
-              }, 3000);
+              }, 1000);
             }
           })
           .catch((i) => {
@@ -825,7 +830,7 @@ export default {
             setTimeout(() => {
               state.snackbar = false;
               location.reload();
-            }, 3000);
+            }, 1000);
           });
       } else {
         state.snackbar = true;

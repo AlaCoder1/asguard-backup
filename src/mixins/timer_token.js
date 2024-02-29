@@ -8,7 +8,6 @@ function startTimer() {
   setInterval(() => {
     if (counter < maxCounter) {
       counter++;
-      console.log('counter :', counter)
     } else {
       logout();
     }

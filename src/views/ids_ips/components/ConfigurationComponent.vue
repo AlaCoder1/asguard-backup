@@ -44,11 +44,11 @@
               >Enable intrusion detection system.</small
             >
           </v-col>
-          <!-- <v-col cols="4" align-self="center">
+          <v-col cols="4" align-self="center">
             <label>IPS Mode</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <input type="checkbox" v-model="state.copy_mode" />
+            <input type="checkbox" v-model="state.mode_inline" />
             <label class="ml-2">Enable IPS </label>
             <br />
             <small class="ml-5 error-feedback" v-show="switchValue"
@@ -58,7 +58,7 @@
             <small class="ml-5 error-feedback" v-show="switchValue">
               to intrusion detection rules.</small
             >
-          </v-col> -->
+          </v-col>
           <v-col cols="4" align-self="center">
             <label>Promisuous Mode</label>
           </v-col>
@@ -200,7 +200,7 @@
       </v-col>
     </v-row>
   </div>
-  <ModalAddInterface :isOpen="state.isModalOpen" :modalMode="state.modalMode" />
+  <ModalAddInterface :isOpen="state.isModalOpen" :modalMode="state.modalMode"  />
   <!-- <ModalAddInterface
     :isOpen="state.isModalOpen"
     :editRow="state.editRow"
@@ -316,7 +316,7 @@ export default {
       ],
       //
       modalData: {},
-      modalMode: "create",
+      modalMode: "",
       isModalOpen: false,
       isOpen: null,
       editRow: {},
@@ -330,6 +330,7 @@ export default {
       //General information
       copyMode: false,
       status_enabled: false,
+      mode_inline: false,
       promisc: "",
       syslog: "",
       eve_log: "",
@@ -564,7 +565,7 @@ export default {
           // Automatically close the snackbar after 3000 milliseconds (3 seconds)
           setTimeout(() => {
             state.snackbar = false;
-          }, 2000);
+          }, 1000);
         } else {
           state.loading = false;
           state.isLoadingDialogue = false;
@@ -575,7 +576,7 @@ export default {
           setTimeout(() => {
             state.snackbar = false;
             location.reload();
-          }, 2000);
+          }, 1000);
         }
       } catch (error) {
         state.loading = false;
@@ -587,7 +588,7 @@ export default {
         setTimeout(() => {
           state.snackbar = false;
           location.reload();
-        }, 2000);
+        }, 1000);
       }
     };
 
@@ -674,6 +675,7 @@ export default {
       let rowConfig = JSON.parse(rowConfiguration);
 
       state.status_enabled = rowConfig.configuration.status_enabled;
+      state.mode_inline = rowConfig.configuration?.mode_inline;
       state.promisc = rowConfig.configuration.promisc;
       state.syslog = rowConfig.configuration.syslog.toLowerCase() === "yes";
       state.eve_log = rowConfig.configuration.eve_log.toLowerCase() === "yes";
@@ -759,9 +761,15 @@ export default {
 
       if (rowDataAF.value.length) {
         var mapedRow = rowDataAF.value.map((e) => {
-          let filtredCopy = state.mapedInterface.filter(
-            (i) => i.name === e.copy_iface
-          );
+          let filtredCopy = state.mapedInterface
+            .filter((i) => i.name === e.copy_iface)
+            .map((i) => {
+              return {
+                id: i.id,
+                name: i.ifname,
+              };
+            });
+
           return {
             id: e.id ?? e.id_interface,
             interface: e.ifname,
@@ -772,7 +780,7 @@ export default {
             use_mmap: e.use_mmap,
             ring_size: e.ring_size,
             copy_iface: filtredCopy[0] ?? null,
-            copy_mode: e.copy_mode,
+            copy_mode: e.copy_mode === "--" ? null : e.copy_mode,
           };
         });
 
@@ -783,10 +791,9 @@ export default {
           syslog: state.syslog,
           mpm_algo: state.mpm_algo.slug,
           profile: state.profile.slug,
-          copy_mode: true,
+          mode_inline: state.mode_inline,
           list_interfaces: mapedRow,
         };
-
         state.loading = true;
         state.isLoadingDialogue = true;
         axios
@@ -802,7 +809,7 @@ export default {
               setTimeout(() => {
                 state.snackbar = false;
                 location.reload();
-              }, 3000);
+              }, 1000);
             } else {
               state.loading = false;
               state.isLoadingDialogue = false;
@@ -813,7 +820,7 @@ export default {
               setTimeout(() => {
                 state.snackbar = false;
                 location.reload();
-              }, 3000);
+              }, 1000);
             }
           })
           .catch((i) => {
@@ -825,7 +832,7 @@ export default {
             setTimeout(() => {
               state.snackbar = false;
               location.reload();
-            }, 3000);
+            }, 1000);
           });
       } else {
         state.snackbar = true;

@@ -234,12 +234,10 @@ export default {
     editRow: {
       type: Object,
       Array,
-      required: true,
+      required: false,
     },
     modalMode: {
-      type: Object,
-      Array,
-      String,
+      type: String,
       required: true,
     },
     // rowDataList: {
@@ -254,6 +252,7 @@ export default {
       getInterface();
 
       emitter.on("list-Interface", (data) => {
+        console.log("data", data);
         state.rowList = data;
       });
     });
@@ -286,10 +285,11 @@ export default {
         { name: "cluster_qm", slug: "cluster_qm" },
         { name: "cluster_ebpf", slug: "cluster_ebpf" },
       ],
-      copyModeList: [
+      copyModeValidateList: [
         { name: "IPS", slug: "ips" },
         { name: "TAP", slug: "tap" },
       ],
+      copyModeList: [],
       useNmpList: [
         { name: "Yes", slug: "yes" },
         { name: "No", slug: "no" },
@@ -426,6 +426,18 @@ export default {
           state.defrag = "";
           state.thread = "auto";
           state.useNmp = "";
+
+          if (state.rowList.length == 0) {
+            state.copyModeList.push(
+              { name: "IPS", slug: "ips" },
+              { name: "TAP", slug: "tap" }
+            );
+          } else {
+            let copyMode = state.copyModeValidateList.filter(
+              (i) => i.slug == state.rowList[0].copy_mode
+            );
+            state.copyModeList.push(copyMode[0]);
+          }
         }
       }
     );
@@ -461,6 +473,7 @@ export default {
           copy_iface: state.copyIface ?? null,
           ifname: state.interface.ifname,
         };
+
         if (modalMode.value === "create") {
           emitter.emit("add-Interface", payload);
         }
@@ -483,10 +496,11 @@ export default {
       state.copyIface = null;
       state.copyMode = "";
       state.clusterId = "";
-      state.clusterType = "";
+      state.clusterType = { name: "cluster_flow", slug: "cluster_flow" };
       state.defrag = "";
       state.thread = "";
       state.useNmp = "";
+      state.copyModeList = [];
     };
 
     const rules = computed(() => {

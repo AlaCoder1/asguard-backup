@@ -1,0 +1,13 @@
+table ip nat {
+	chain postrouting {
+		type nat hook postrouting priority srcnat; policy accept;
+		oifname "enp0s3" ip saddr 10.1.12.0/24 ip daddr 69.63.184.142 tcp sport 80 tcp dport 443 ip protocol udp masquerade
+		oifname "enp0s3" ip daddr 69.63.184.142 tcp dport 443 ip protocol udp masquerade
+		oifname "enp0s3" ip protocol udp masquerade
+		oifname "enp0s3" ip protocol udp masquerade
+	}
+
+	chain prerouting {
+		type nat hook prerouting priority 100; policy accept;
+	}
+}

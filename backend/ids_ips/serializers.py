@@ -23,8 +23,8 @@ class RuleSerializerForSwagger(serializers.ModelSerializer):
 class SuricataFileSerializer(serializers.ModelSerializer):
     class Meta:
             model = suricatafile
-            fields = ['home_net','promisc','syslog','eve_log','mpm_algo','profile',
-                      'interface_ids','status_enabled'
+            fields = ['home_net','promisc','syslog','eve_log','mpm_algo','profile','mode_inline',
+                      'status_enabled'
                    ]
 ##suricata interface 
 class SuricataInterfaceSerializer(serializers.ModelSerializer):

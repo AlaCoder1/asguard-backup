@@ -256,7 +256,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Create</span>
+              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -578,7 +578,7 @@ export default {
                 state.color = "success";
                 state.textAlert = response.data.msg;
                 setTimeout(() => {
-                  // location.reload();
+                  location.reload();
                 }, 1000);
               }
             })

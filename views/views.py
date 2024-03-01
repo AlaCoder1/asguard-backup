@@ -9,6 +9,7 @@ from backend.managementGroup.models import Group
 from backend.managementUsers.models import User
 from backend.managementServers.models import Type, Server
 from backend.managementUsers.views import getAllUsers
+from backend.nat.list_nat import get_list_all_snat
 from backend.network.models import GenericConfig, IP4Config, IP6Config, Interface 
 from backend.rules.models import Rule
 from backend.gateway.models import Gateway, GatewayInterface
@@ -700,4 +701,6 @@ def openvpn_monitoring(request):
     return render(request, 'vpnmonitoring.html')
 @login_required(login_url='/')
 def nat_page(request):
-    return render(request, 'nat.html')
+    listNat= get_list_all_snat()
+    context = {'listNat':listNat}
+    return render(request, 'nat.html',context)

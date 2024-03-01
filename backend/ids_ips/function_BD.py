@@ -1,9 +1,27 @@
 import ipaddress
+import json
 from backend.ids_ips.serializers import SuricataInterfaceSerializer
 from backend.network.models import *
-from backend.rules.functions import calculate_subnet_address
 from.models import *
+from django.core import serializers
 from django.db.models import Q
+def get_suricata_packet(id):
+    """function tpo get af packet informations and ip addresse to update HOME_NET"""
+    info_af_object=SuricataInterface.objects.filter(suricata_id=id)
+    info_af_dict = serializers.serialize("json", info_af_object)
+    res_af = json.loads(info_af_dict)
+    liste_interfaces=[]
+    for i in range(len(res_af)):
+        res_af[i].pop('model')
+        res_af[i].pop('pk')
+        res_af[i]['fields']['id_interface'] = res_af[i]['fields']["interface"]
+        res_af[i]['fields']['ifname'] = Interface.objects.get(id=res_af[i]['fields']["interface"]).ifname
+        res_af[i]['fields']['name_interface'] = Interface.objects.get(id=res_af[i]['fields']["interface"]).name_interface
+        res_af[i]['fields'].pop("suricata")
+        res_af[i]['fields'].pop("interface")
+        liste_interfaces.append(res_af[i]['fields'])
+    return liste_interfaces
+
 # Fonction pour obtenir les adresses IP en fonction des interfaces
 def get_ip_addresses(interface_ids):
     """function to get subnet address """

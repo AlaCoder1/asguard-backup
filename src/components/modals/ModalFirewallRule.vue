@@ -226,20 +226,34 @@ export default {
           },
 
           daddr: {
-            isValidDaddr: helpers.withMessage(
-              `Format must be like adresse IP : X.X.X.X`,
+            // isValidDaddr: helpers.withMessage(
+            //   `Format must be like adresse IP : X.X.X.X`,
 
-              helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            //   helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            // ),
+            isValidDaddr: helpers.withMessage(
+              `Format must be like : X.X.X.X/X`,
+              helpers.regex(
+                /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
+              )
             ),
           },
 
           saddr: {
             isValidSaddr: helpers.withMessage(
-              `Format must be like adresse IP : X.X.X.X`,
-
-              helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+              `Format must be like : X.X.X.X/X`,
+              helpers.regex(
+                /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
+              )
             ),
           },
+          // saddr: {
+          //   isValidSaddr: helpers.withMessage(
+          //     `Format must be like adresse IP : X.X.X.X`,
+
+          //     helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          //   ),
+          // },
 
           dport: {
             isValidSport: helpers.withMessage(

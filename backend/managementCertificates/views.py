@@ -4,7 +4,7 @@ from django.db.models import Q
 from django.db.models.deletion import ProtectedError
 from rest_framework.authentication import SessionAuthentication
 from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
+from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from backend.ipsec.models import ServerIPsec
@@ -51,27 +51,26 @@ def get_cert_auth(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO CREATE CERTIFICATE AUTHORITY",
-                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'method'],
-                                                 properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
-                                                             'method': openapi.Schema(
-                                                                 type=openapi.TYPE_OBJECT, required=['name_method'],
-                                                                 properties={'name_method': openapi.Schema(type=openapi.TYPE_STRING, enum=["create", "import"]),
-                                                                             'key_type': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'key_length': openapi.Schema(type=openapi.TYPE_INTEGER),
-                                                                             'digest_algorithm': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\bsha\d+', description="start with sha like sha123"),
-                                                                             'lifetime': openapi.Schema(type=openapi.TYPE_INTEGER),
-                                                                             'country_code': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'state': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'city': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'organization': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'email': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'common_name': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'certificate_data': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
-                                                                             'certificate_key': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
-                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="Optional, when name_method is import"),
-                                                                             }),
-                                                                             }
-                                                                             ))
+                     request_body=Schema(type=TYPE_OBJECT, required=['name', 'method'],
+                                                 properties={'name': Schema(type=TYPE_STRING),
+                                                             'method': Schema(type=TYPE_OBJECT, required=['name_method'],
+                                                                              properties={'name_method': Schema(type=TYPE_STRING, enum=["create", "import"]),
+                                                                                          'key_type': Schema(type=TYPE_STRING),
+                                                                                          'key_length': Schema(type=TYPE_INTEGER),
+                                                                                          'digest_algorithm': Schema(type=TYPE_STRING, pattern=r'\bsha\d+', description="start with sha like sha123"),
+                                                                                          'lifetime': Schema(type=TYPE_INTEGER),
+                                                                                          'country_code': Schema(type=TYPE_STRING),
+                                                                                          'state': Schema(type=TYPE_STRING),
+                                                                                          'city': Schema(type=TYPE_STRING),
+                                                                                          'organization': Schema(type=TYPE_STRING),
+                                                                                          'email': Schema(type=TYPE_STRING),
+                                                                                          'common_name': Schema(type=TYPE_STRING),
+                                                                                          'certificate_data': Schema(type=TYPE_STRING, description="When name_method is import"),
+                                                                                          'certificate_key': Schema(type=TYPE_STRING, description="When name_method is import"),
+                                                                                          'serial': Schema(type=TYPE_STRING, description="Optional, when name_method is import"),
+                                                                                          }),
+                                                                                          }
+                                                                                          ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -136,14 +135,10 @@ def create_cert_auth(request):
                     # Add the server to the database
                     serializer_ca.save()
                     return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('CA', name)}, status=201)
-                
-                else:
-                    return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
-                
-            else:
-                return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
+            
+            return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
         
-        elif method_name == 'import':
+        else:
 
             # Importing an existing CA
             certificate_data = method.get("certificate_data", "")
@@ -169,10 +164,8 @@ def create_cert_auth(request):
                     
                     serializer_ca.save()
                     return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('CA', name)}, status=201)
-                else:
-                    return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
-            else:
-                return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
+                
+            return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
 
 
     except CommandExecutionError:
@@ -189,19 +182,18 @@ def create_cert_auth(request):
 def delete_cert_auth(request, id):
     """Deleting a Certificates Authority from system and then from database"""
     try:
-        if (request.method == 'DELETE'):
-            ca = CertificateAuthority.objects.get(id=id)
-            
-            # Test if there is a certificates authorid by this CA
-            list_cert = Certificate.objects.filter(certificate_authority=ca)
-            if len(list_cert) == 0:
-                # delete from system
-                delete_ca_in_system(ca.name)
-                # delete from database
-                ca.delete()
-                return JsonResponse({"msg": f"delete {ca.name} succesfully"})
-            else:
-                return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_CA}, status=400)
+        ca = CertificateAuthority.objects.get(id=id)
+        
+        # Test if there is a certificates authorid by this CA
+        list_cert = Certificate.objects.filter(certificate_authority=ca)
+        if len(list_cert) == 0:
+            # delete from system
+            delete_ca_in_system(ca.name)
+            # delete from database
+            ca.delete()
+            return JsonResponse({"msg": f"delete {ca.name} succesfully"})
+        else:
+            return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_CA}, status=400)
     except ProtectedError:
         return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_CA}, status=400)
     except CertificateAuthority.DoesNotExist:
@@ -209,28 +201,27 @@ def delete_cert_auth(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD CERTIFICATE AUTHORITY",
-                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['type'],
-                                                 properties={"type": openapi.Schema(type=openapi.TYPE_STRING, enum=['certificate', 'private_key'])}))
+                     request_body=Schema(type=TYPE_OBJECT, required=['type'],
+                                                 properties={"type": Schema(type=TYPE_STRING, enum=['certificate', 'private_key'])}))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def export_cert_auth(request, id):
     """Exporting a Certificate Authority"""
-    if request.method == 'POST':
-        try:
-            ca = CertificateAuthority.objects.get(id=id)
-            data = request.data
-            download_type = data.get('type', '')
-            if download_type == 'certificate':
-                ca_value = export_ca_in_system(PATH_CA_CRT.format(ca.name))
-            else:
-                ca_value = export_ca_in_system(PATH_CA_KEY.format(ca.name))
-            return JsonResponse({"cert": ca_value}, status=201)
+    try:
+        ca = CertificateAuthority.objects.get(id=id)
+        data = request.data
+        download_type = data.get('type', '')
+        if download_type == 'certificate':
+            ca_value = export_ca_in_system(PATH_CA_CRT.format(ca.name))
+        else:
+            ca_value = export_ca_in_system(PATH_CA_KEY.format(ca.name))
+        return JsonResponse({"cert": ca_value}, status=201)
 
-        except CommandExecutionError:
-            return JsonResponse({"error": ERROR_MESSAGES_EXPORTING.format("CA")}, status=400)
-        except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_EXPORTING.format("CA")}, status=400)
+    except CertificateAuthority.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -240,16 +231,15 @@ def export_cert_auth(request, id):
 @permission_classes([IsAuthenticated])
 def export_cert_auth_list_rev(request, id):
     """Exporting a Certificate Authority"""
-    if request.method == 'POST':
-        try:
-            ca = CertificateAuthority.objects.get(id=id)
-            list_revocation = export_ca_list_rev_in_system(ca.name)
-            return JsonResponse({"list_revocation": list_revocation}, status=201)
+    try:
+        ca = CertificateAuthority.objects.get(id=id)
+        list_revocation = export_ca_list_rev_in_system(ca.name)
+        return JsonResponse({"list_revocation": list_revocation}, status=201)
 
-        except CommandExecutionError:
-            return JsonResponse({"error": ERROR_MESSAGES_EXPORTING.format("revokation list")}, status=400)
-        except CertificateAuthority.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_EXPORTING.format("revokation list")}, status=400)
+    except CertificateAuthority.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
 
 
 ##################################################
@@ -281,31 +271,30 @@ def get_certificate(request, id):
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO GET LIST OF ALL CERTIFICATES",
-                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['name', 'activation', 'method'],
-                                                 properties={'name': openapi.Schema(type=openapi.TYPE_STRING),
-                                                             'activation': openapi.Schema(type=openapi.TYPE_BOOLEAN, default=True),
-                                                             'method': openapi.Schema(
-                                                                 type=openapi.TYPE_OBJECT, required=['name_method'],
-                                                                 properties={'method_name': openapi.Schema(type=openapi.TYPE_STRING, enum=["create", "import"]),
-                                                                             'certificate_type': openapi.Schema(type=openapi.TYPE_STRING, enum=["server", "client"]),
-                                                                             'ca': openapi.Schema(type=openapi.TYPE_INTEGER, description="ID of a certificate authority"),
-                                                                             'key_type': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'key_length': openapi.Schema(type=openapi.TYPE_INTEGER),
-                                                                             'digest_algorithm': openapi.Schema(type=openapi.TYPE_STRING, pattern=r'\bsha\d+', description="start with sha like sha123"),
-                                                                             'lifetime': openapi.Schema(type=openapi.TYPE_INTEGER),
-                                                                             'private_key_location': openapi.Schema(type=openapi.TYPE_STRING, default="Save on this firewall"),
-                                                                             'country_code': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'state': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'city': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'organization': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'email': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'common_name': openapi.Schema(type=openapi.TYPE_STRING),
-                                                                             'certificate_data': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
-                                                                             'certificate_key': openapi.Schema(type=openapi.TYPE_STRING, description="When name_method is import"),
-                                                                             'serial': openapi.Schema(type=openapi.TYPE_STRING, description="Optional, when name_method is import"),
-                                                                             }),
-                                                                             }
-                                                                             ))
+                     request_body=Schema(type=TYPE_OBJECT, required=['name', 'activation', 'method'],
+                                         properties={'name': Schema(type=TYPE_STRING),
+                                                     'activation': Schema(type=TYPE_BOOLEAN, default=True),
+                                                     'method': Schema(type=TYPE_OBJECT, required=['name_method'],
+                                                                      properties={'method_name': Schema(type=TYPE_STRING, enum=["create", "import"]),
+                                                                                  'certificate_type': Schema(type=TYPE_STRING, enum=["server", "client"]),
+                                                                                  'ca': Schema(type=TYPE_INTEGER, description="ID of a certificate authority"),
+                                                                                  'key_type': Schema(type=TYPE_STRING),
+                                                                                  'key_length': Schema(type=TYPE_INTEGER),
+                                                                                  'digest_algorithm': Schema(type=TYPE_STRING, pattern=r'\bsha\d+', description="start with sha like sha123"),
+                                                                                  'lifetime': Schema(type=TYPE_INTEGER),
+                                                                                  'private_key_location': Schema(type=TYPE_STRING, default="Save on this firewall"),
+                                                                                  'country_code': Schema(type=TYPE_STRING),
+                                                                                 'state': Schema(type=TYPE_STRING),
+                                                                                 'city': Schema(type=TYPE_STRING),
+                                                                                 'organization': Schema(type=TYPE_STRING),
+                                                                                 'email': Schema(type=TYPE_STRING),
+                                                                                 'common_name': Schema(type=TYPE_STRING),
+                                                                                 'certificate_data': Schema(type=TYPE_STRING, description="When name_method is import"),
+                                                                                 'certificate_key': Schema(type=TYPE_STRING, description="When name_method is import"),
+                                                                                 'serial': Schema(type=TYPE_STRING, description="Optional, when name_method is import"),
+                                                                                 }),
+                                                                                 }
+                                                                                 ))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -381,8 +370,10 @@ def create_certificate(request):
                     if serializer_cert.is_valid():
                         serializer_cert.save()
                         return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('Certificate', name)}, status=201)
-            else:
-                return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
+                else:
+                    return JsonResponse({"error": "Authority valide date is expired"}, status=400)
+            
+            return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
         elif method_name == 'import':
             certificate_data = method.get("certificate_data", "")
             certificate_key = method.get("certificate_key", "")
@@ -410,10 +401,8 @@ def create_certificate(request):
                 if serializer_cert.is_valid():
                     serializer_cert.save()
                     return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('Certificate', name)}, status=201)
-                else:
-                    return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
-            else:
-                return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
+                
+            return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
 
     except CommandExecutionError:
         return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('Certificate')}, status=400)
@@ -428,63 +417,67 @@ def create_certificate(request):
 @permission_classes([IsAuthenticated])
 def delete_certificate(request, id):
     """Deleting a Certificates from system and then from database"""
-    if (request.method == 'DELETE'):
-        try:
-            cert = Certificate.objects.get(id=id)
+    try:
+        cert = Certificate.objects.get(id=id)
 
-            # Test if this certificate is used in OpenVPN or IPsec
-            list_server_vpn = ServerOpenvpn.objects.filter(cert_name=cert.name)
-            list_client_vpn = ClientOpenvpn.objects.filter(cert_name=cert.name)
-            list_server_ipsec = ServerIPsec.objects.filter(cert=cert.name)
+        # Test if this certificate is used in OpenVPN or IPsec
+        list_server_vpn = ServerOpenvpn.objects.filter(cert_name=cert.name)
+        list_client_vpn = ClientOpenvpn.objects.filter(cert_name=cert.name)
+        list_server_ipsec = ServerIPsec.objects.filter(cert=cert.name)
 
-            if len(list_server_vpn) == 0 and len(list_client_vpn) == 0 and len(list_server_ipsec) == 0: # Not used certififcate
-                # delete from system
-                delete_certificate_in_system(cert.name, cert.certificate_type)
-                # delete from database
-                cert.delete()
-                return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(cert.name)}, status=201)
-            
-            elif len(list_server_vpn) > 0:
-                return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_ITEM.format("certificate", "openvpn servers")}, status=400)
-            elif len(list_client_vpn) > 0:
-                return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_ITEM.format("certificate", "openvpn clients")}, status=400)
-            elif len(list_server_ipsec) > 0:
-                return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_ITEM.format("certificate", "IPsec configuration")}, status=400)
-        except Certificate.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
+        if len(list_server_vpn) == 0 and len(list_client_vpn) == 0 and len(list_server_ipsec) == 0: # Not used certififcate
+            # delete from system
+            delete_certificate_in_system(cert.name, cert.certificate_type)
+            # delete from database
+            cert.delete()
+            return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(cert.name)}, status=201)
+        
+        elif len(list_server_vpn) > 0:
+            return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_ITEM.format("certificate", "openvpn servers")}, status=400)
+        elif len(list_client_vpn) > 0:
+            return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_ITEM.format("certificate", "openvpn clients")}, status=400)
+        elif len(list_server_ipsec) > 0:
+            return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_ITEM.format("certificate", "IPsec configuration")}, status=400)
+    except Certificate.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO REVOKE A CERTIFICATE",
-                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['reason'],
-                                                 properties={"reason": openapi.Schema(type=openapi.TYPE_STRING, enum=["No Status", "Unspecified", "key compromise", "CA compromise", "affiliation changed ", "Supersed", "Cessation of Operation", "Certificate Hold ", "End of Validity Period ", "Technical Issues"])}))
+                     request_body=Schema(type=TYPE_OBJECT, required=['reason'],
+                                         properties={"reason": Schema(type=TYPE_STRING, 
+                                                                      enum=["No Status", "Unspecified", "key compromise", 
+                                                                            "CA compromise", "affiliation changed ", "Supersed", 
+                                                                            "Cessation of Operation", "Certificate Hold ", 
+                                                                            "End of Validity Period ", "Technical Issues"])}))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def revoke_certificate(request, id):
-    if request.method == 'PUT':
-        try:
-            data = request.data
-            cert = Certificate.objects.get(id=id)
-            cert.reason_revocation = data.get("reason", "")
-            cert.activation = False
-            ca = cert.certificate_authority
+    try:
+        data = request.data
+        cert = Certificate.objects.get(id=id)
+        cert.reason_revocation = data.get("reason", "")
+        cert.activation = False
+        ca = cert.certificate_authority
 
-            if ca:
-                # Importing all the CA previous revoked certificates and add the new certificate
-                list_revoked = Certificate.objects.filter(Q(certificate_authority=ca, activation=False) | Q(id=id))
-                
-                cert_serializer = CertificateSerializer(cert, data=data)
-                if cert_serializer.is_valid():
-                    # Revoking all the certificates in system and generate a crl file
-                    revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
-                    cert_serializer.save()
-                    return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
-                else:
-                    return JsonResponse({"error": list(cert_serializer.errors.values())[0][0]}, status=400)
-            else:
-                return JsonResponse({"error": "You can't revoke this imported certificate"}, status=400)
-        except Certificate.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
+        if ca:
+            # Importing all the CA previous revoked certificates and add the new certificate
+            list_revoked = Certificate.objects.filter(Q(certificate_authority=ca, activation=False) | Q(id=id))
+            
+            cert_serializer = CertificateSerializer(cert, data=data)
+            if cert_serializer.is_valid():
+                # Revoking all the certificates in system and generate a crl file
+                revoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
+                cert_serializer.save()
+                return JsonResponse({"msg": f"Certificate {cert.name} is revoked and added to the crl file of the ca {ca.name}"})
+            
+            return JsonResponse({"error": list(cert_serializer.errors.values())[0][0]}, status=400)
+        
+        else:
+            return JsonResponse({"error": "You can't revoke this imported certificate"}, status=400)
+    
+    except Certificate.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -493,47 +486,45 @@ def revoke_certificate(request, id):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def unrevoke_certificate(request, id):
-    if request.method == 'PUT':
-        try:
-            cert = Certificate.objects.get(id=id)
-            ca = cert.certificate_authority
+    try:
+        cert = Certificate.objects.get(id=id)
+        ca = cert.certificate_authority
 
-            # Importing all the CA previous revoked certificates and add the new certificate
-            list_revoked = Certificate.objects.filter(~Q(id=cert.id), certificate_authority=ca, activation=False)
-            
-            # Revoking all the certificates in system and generate a crl file
-            unrevoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
-            cert.activation = True
-            cert.save()
-            return JsonResponse({"msg": f"Certificate {cert.name} is unrevoked and removed from the crl file of the ca {ca.name}"})
-        except Certificate.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
+        # Importing all the CA previous revoked certificates and add the new certificate
+        list_revoked = Certificate.objects.filter(~Q(id=cert.id), certificate_authority=ca, activation=False)
+        
+        # Revoking all the certificates in system and generate a crl file
+        unrevoke_certificates_in_system(ca_name=ca.name, cert=cert, list_revoked_cert=list_revoked)
+        cert.activation = True
+        cert.save()
+        return JsonResponse({"msg": f"Certificate {cert.name} is unrevoked and removed from the crl file of the ca {ca.name}"})
+    except Certificate.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD A CERTIFICATE",
-                     request_body=openapi.Schema(type=openapi.TYPE_OBJECT, required=['download_type'],
-                                                 properties={"download_type": openapi.Schema(type=openapi.TYPE_STRING, enum=["certificate", "private_key", "p12"]),
-                                                             "password": openapi.Schema(type=openapi.TYPE_STRING, description="Required when download_type is p12")}))
+                     request_body=Schema(type=TYPE_OBJECT, required=['download_type'],
+                                         properties={"download_type": Schema(type=TYPE_STRING, enum=["certificate", "private_key", "p12"]),
+                                                     "password": Schema(type=TYPE_STRING, description="Required when download_type is p12")}))
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def export_cert(request, id):
     """Creating a new Certificates Authority in system and adding it to the database"""
-    if request.method == 'POST':
-        try:
-            cert = Certificate.objects.get(id=id)
-            data = request.data
-            download_type = data.get('download_type', '')  # Certificate, private key or .p12
-            if download_type == 'p12':
-                password = data.get('password', '')
-                cert_value = export_certificate_in_system(cert_name=cert.name, cert_type=cert.certificate_type, 
-                                                          download_type=download_type, password=password)
-            else:
-                cert_value = export_certificate_in_system(cert_name=cert.name, cert_type=cert.certificate_type,
-                                                          download_type=download_type)
-            return JsonResponse({"cert": cert_value}, status=201)
+    try:
+        cert = Certificate.objects.get(id=id)
+        data = request.data
+        download_type = data.get('download_type', '')  # Certificate, private key or .p12
+        if download_type == 'p12':
+            password = data.get('password', '')
+            cert_value = export_certificate_in_system(cert_name=cert.name, cert_type=cert.certificate_type, 
+                                                        download_type=download_type, password=password)
+        else:
+            cert_value = export_certificate_in_system(cert_name=cert.name, cert_type=cert.certificate_type,
+                                                        download_type=download_type)
+        return JsonResponse({"cert": cert_value}, status=201)
 
-        except CommandExecutionError:
-            return JsonResponse({"error": ERROR_MESSAGES_EXPORTING.format("CA")}, status=400)
-        except Certificate.DoesNotExist:
-            return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_EXPORTING.format("CA")}, status=400)
+    except Certificate.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)

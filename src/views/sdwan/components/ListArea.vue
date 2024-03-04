@@ -14,6 +14,7 @@
               @grid-ready="onGridReady"
               :columnDefs="columnArea"
               :rowData="rowDataArea.value"
+              :gridOptions="gridOptions"
             />
           </div>
           <div class="d-flex justify-end mt-3">
@@ -31,12 +32,16 @@
           </div>
         </v-col>
       </v-row>
-      <AreaSdwanModal :isOpen="state.isModalAreaOpen" />
+      <AreaSdwanModal
+        :isOpen="state.isModalAreaOpen"
+        :editRow="state.editRow"
+        :modalMode="state.modalMode"
+      />
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="headline">Delete Confirmation</v-card-title>
-        <v-card-text>Are you sure you want to delete this Key ?</v-card-text>
+        <v-card-text>Are you sure you want to delete this Area ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
@@ -66,6 +71,7 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import AreaSdwanModal from "@/components/modals/AreaSdwanModal.vue";
+import { getCookie } from "@/mixins/csrftoken.js";
 export default {
   name: "Sdwan",
   components: {
@@ -86,36 +92,37 @@ export default {
       modalMode: "create",
       isModalAreaOpen: false,
       isOpen: null,
+      editRow: {},
+    });
+
+    const gridOptions = ref({
+      pagination: true,
+      paginationPageSize: 5,
+      rowSelection: "single",
     });
 
     const columnArea = [
       {
         headerName: "Area Name",
         field: "name",
-        sortable: true,
         autoHeight: true,
-        filter: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: "Members",
         field: "members",
-        sortable: true,
-        filter: true,
-      },
-      {
-        headerName: "Weight",
         autoHeight: true,
-        field: "weight",
-        sortable: true,
-        filter: true,
+        resizable: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: "Actions",
         cellRenderer: actionCellRendererArea,
-        minWidth: 150,
         field: "action",
-        sortable: true,
-        filter: true,
       },
     ];
 
@@ -124,14 +131,13 @@ export default {
     const gridApi = ref(null);
 
     const onGridReady = (params) => {
-      gridApi.value = params.api;
-
-      gridApi.value.sizeColumnsToFit();
-      window.addEventListener("resize", function () {
-        setTimeout(function () {
-          gridApi.value.sizeColumnsToFit();
-        });
-      });
+      // gridApi.value = params.api;
+      // gridApi.value.sizeColumnsToFit();
+      // window.addEventListener("resize", function () {
+      //   setTimeout(function () {
+      //     gridApi.value.sizeColumnsToFit();
+      //   });
+      // });
     };
 
     const defaultColDef = {
@@ -192,15 +198,18 @@ export default {
       switch (action) {
         case "show":
           console.log("show", rowData);
-          // state.deleteDialog = true;
-          // state.deletedRow = rowData;
 
           break;
         case "edit":
           console.log("edit", rowData);
+          state.modalMode = "edit";
+          state.isModalAreaOpen = true;
+          state.editRow = rowData;
           break;
         case "delete":
           console.log("delete", rowData);
+          state.deleteDialog = true;
+          state.deletedRow = rowData;
 
           break;
         default:
@@ -217,60 +226,56 @@ export default {
     onMounted(() => {
       emitter.on("closeSdwanAreaModal", () => {
         state.isModalAreaOpen = false;
+        state.isOpen = false;
+        state.modalMode = "";
+        state.editRow = {};
       });
-      let objArea = {
-        name: "test",
-        members: "members",
-        weight: "weight",
-      };
+
+      let allArea = document.getElementById("app").attributes["allArea"].value;
+      let parsedArray = JSON.parse(allArea);
+
+      let mapedArea = parsedArray.map((element) => {
+        return {
+          id: element.id,
+          name: element.name,
+          members: element.members.map((i) => {
+            return i;
+          }),
+        };
+      });
+
       if (!rowDataArea.value) rowDataArea.value = [];
-      rowDataArea.value.push(objArea);
+      rowDataArea.value = mapedArea;
     });
 
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
+
     const confirmDelete = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (state.deletedRow?.utility === "Private") {
-        axios
-          .delete(`/key_pairs/deletePrivateKey/${state.deletedRow.id}`)
-          .then((response) => {
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
 
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          })
-          .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
-          });
-      } else if (state.deletedRow?.utility === "Public") {
-        axios
-          .delete(`/key_pairs/deletePublicKey/${state.deletedRow.id}`)
-          .then((response) => {
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
+      axios
+        .delete(`/sdwan/deleteArea/${state.deletedRow.id}`)
+        .then((response) => {
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.msg;
 
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          })
-          .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
-          });
-      }
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
+        });
     };
     return {
       state,
+      gridOptions,
       columnArea,
       emitter,
       rowDataArea,
@@ -284,3 +289,5 @@ export default {
   },
 };
 </script>
+
+<style></style>

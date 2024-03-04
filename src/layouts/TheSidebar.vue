@@ -23,7 +23,7 @@
 
           <div class="ml-5 mt-5 mr-5">
             <v-icon v-if="!rail"
-              ><i class="mdi mdi-menu icon-custom"></i
+              ><i class="mdi mdi-close icon-custom"></i
             ></v-icon>
           </div>
         </div>
@@ -39,7 +39,7 @@
                     ><i :class="item.icon"></i> &nbsp;</span
                   >
                   <span class="ml-7 sidebarTitle">{{
-                    item.title
+                    $t(item.title)
                   }}</span></v-list-item
                 >
 
@@ -68,7 +68,7 @@
             <a :href="subItem.href" class="custom-sub-a">
               <v-list-item>
                 <v-list-item-title class="text-white-space">{{
-                  subItem.title
+                  $t(subItem.title)
                 }}</v-list-item-title>
               </v-list-item>
             </a>
@@ -81,7 +81,7 @@
         class="ml-5 mt-5 mr-5 row-pointer asguard_primary_dark"
         @click="closeSidebar"
       >
-        <v-icon v-if="rail"><i class="mdi mdi-close icon-custom"></i></v-icon>
+        <v-icon v-if="rail"><i class="mdi mdi-menu icon-custom"></i></v-icon>
       </div>
 
       <v-list>
@@ -115,7 +115,7 @@ export default {
       mini: false,
       items: [
         {
-          title: "Dashboard",
+          title: "sideBar.dashboard",
           icon: "mdi mdi-view-dashboard",
           href: "/dashboard",
           active: "dashboard",
@@ -123,37 +123,46 @@ export default {
           mouseOverSubMenu: false,
           subMenuVisible: false,
         },
+        // {
+        //   title: "testMoni",
+        //   icon: "mdi mdi-view-dashboard",
+        //   href: "/vpnmonitoring",
+        //   active: "vpnmonitoring",
+        //   subItems: [],
+        //   mouseOverSubMenu: false,
+        //   subMenuVisible: false,
+        // },
         {
-          title: "System",
+          title: "sideBar.system",
           icon: "mdi mdi-laptop",
           active: "system",
           subItems: [
             {
-              title: "Assistante",
+              title: "subtitle.assistant",
               icon: "",
               href: "/system/assistante",
               active: "Assistante",
             },
             {
-              title: "User & certificat management",
+              title: "subtitle.userCertificatemanagement",
               icon: "",
               href: "/system/user-certificat-management",
               active: "User & certificat management",
             },
             {
-              title: "Network management",
+              title: "subtitle.networkManagement",
               icon: "",
               href: "/system/network-management",
               active: "Network management",
             },
             {
-              title: "System configuration",
+              title: "subtitle.systemConfig",
               icon: "",
               href: "/system/system-configuration",
               active: "System configuration",
             },
             {
-              title: "Settings",
+              title: "subtitle.settings",
               icon: "",
               href: "/settings",
               href: "/settings",
@@ -164,42 +173,42 @@ export default {
           subMenuVisible: false,
         },
         {
-          title: "Interfaces",
+          title: "sideBar.interfaces",
           icon: "mdi mdi-network",
           active: "interfaces",
           subItems: [
             {
-              title: "Overview",
+              title: "subtitle.overview",
               icon: "",
               href: "/interfaces/overview",
               active: "Overview",
             },
             {
-              title: "Assignations",
+              title: "subtitle.assignations",
               icon: "",
               href: "/interfaces/assignations",
               active: "Assignations",
             },
             {
-              title: "Different Networks",
+              title: "subtitle.differentNetworks",
               icon: "",
               href: "/interfaces/different-networks",
               active: "Different Networks",
             },
             {
-              title: "Diagnostics",
+              title: "subtitle.diagnostics",
               icon: "",
               href: "/interfaces/diagnostics",
               active: "Diagnostics",
             },
             {
-              title: "List of interface",
+              title: "subtitle.listOfInterface",
               icon: "",
               href: "/interfaces/list-of-interface",
               active: "List of interface",
             },
             {
-              title: "Settings",
+              title: "subtitle.settings",
               icon: "",
               href: "/settings",
               href: "/settings",
@@ -209,24 +218,24 @@ export default {
           subMenuVisible: false,
         },
         {
-          title: "Firewall",
+          title: "sideBar.firewall",
           icon: "mdi mdi-wall-fire",
           active: "Firewall",
           subItems: [
             {
-              title: "Rules",
+              title: "subtitle.rules",
               icon: "",
               href: "/firewall/rules",
               active: "Rules",
             },
             {
-              title: "Nat",
+              title: "subtitle.nat",
               icon: "",
               href: "/firewall/nat",
               active: "Nat",
             },
             {
-              title: "Advanced settings",
+              title: "subtitle.advancedSettings",
               icon: "",
               href: "/firewall/advanced-settings",
               active: "Advanced settings",
@@ -235,66 +244,66 @@ export default {
           subMenuVisible: false,
         },
         {
-          title: "Services",
+          title: "sideBar.services",
           icon: "mdi mdi-cog",
           active: "Firewall",
           subItems: [
             {
-              title: "Site to site VPN",
+              title: "subtitle.siteToSiteVpn",
               icon: "",
               href: "/ipsec",
               active: "Site to site VPN",
             },
             {
-              title: "RSA Key Pairs",
+              title: "subtitle.rsaKeyPairs",
               icon: "",
               href: "/key_pairs",
               active: "RSA Key Pairs",
             },
             {
-              title: "OPEN VPN",
+              title: "subtitle.openVPN",
               icon: "",
               href: "/openvpn",
               active: "OPEN VPN",
             },
             {
-              title: "IP Filter double masque",
+              title: "subtitle.ipFilterDoubleMasque",
               icon: "",
               href: "/services/ip-filter-double-masque",
               active: "IP Filter double masque",
             },
             {
-              title: "Clam AV",
+              title: "subtitle.clamAV",
               icon: "",
               href: "/clamaV",
               active: "Clam AV",
             },
             {
-              title: "DHCP V4",
+              title: "subtitle.DHCPV4",
               icon: "",
               href: "/services/dhcp-v4",
               active: "DHCP V4",
             },
             {
-              title: "DHCP V6",
+              title: "subtitle.DHCPV6",
               icon: "",
               href: "/services/dhcp-v6",
               active: "DHCP V",
             },
             {
-              title: "Intrusion Detection",
+              title: "subtitle.intrusionDetection",
               icon: "",
               href: "/ids-ips",
               active: "Intrusion Detection",
             },
             {
-              title: "Proxy Web",
+              title: "subtitle.proxyWeb",
               icon: "",
               href: "/proxy",
               active: "Proxy Web",
             },
             {
-              title: "SDWAN",
+              title: "subtitle.SDWAN",
               icon: "",
               href: "/sdwan",
               active: "SDWAN",
@@ -303,30 +312,30 @@ export default {
           subMenuVisible: false,
         },
         {
-          title: "Reports",
+          title: "sideBar.reports",
           icon: "mdi mdi-chart-bar",
           active: "Firewall",
           subItems: [
             {
-              title: "Health",
+              title: "subtitle.health",
               icon: "",
               href: "/reports/health",
               active: "Health",
             },
             {
-              title: "Insight",
+              title: "subtitle.insight",
               icon: "",
               href: "/reports/insight",
               active: "Insight",
             },
             {
-              title: "Traffic",
+              title: "subtitle.traffic",
               icon: "",
               href: "/reports/traffic",
               active: "Traffic",
             },
             {
-              title: "Event logs",
+              title: "subtitle.eventLogs",
               icon: "",
               href: "/reports/event-logs",
               active: "Event logs",
@@ -335,7 +344,7 @@ export default {
           subMenuVisible: false,
         },
         {
-          title: "Subscription",
+          title: "subtitle.subscription",
           icon: "mdi mdi-cash-sync",
           href: "/asguard/subscription",
           active: "Subscription",

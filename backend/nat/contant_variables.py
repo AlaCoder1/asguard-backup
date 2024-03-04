@@ -1,0 +1,5 @@
+CONSTANT_SNAT_RULE = 'SNAT rule'
+CONSTANT_ONE_TO_ONE_NAT_RULE = 'OneToOneNat rule'
+CONSTANT_DNAT_RULE = 'DNAT rule'
+
+PATH_RULESET_NFT = '{}/nat.nft'

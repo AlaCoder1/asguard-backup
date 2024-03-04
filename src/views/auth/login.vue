@@ -31,7 +31,7 @@
           hide-details
           class="mb-6 mt-3"
         ></v-text-field>
-        <label for="" class="field-auth ml-9">{{ $t("form.password") }}</label>
+        <label for="" class="field-auth ml-9">{{ $t("form.password") }}ddd</label>
         <v-text-field
           rounded
           v-model="password"
@@ -63,8 +63,8 @@
         >
           <span class="field-login"> {{ $t("buttons.login") }} </span>
         </v-btn>
-        <div class="text-center mt-6 text-asguard_secondary">
-          {{piniaStore.messageStore}}
+        <div class="text-center mt-6 text-asguard_secondary" v-if="message">
+          {{ message }}
         </div>
       </v-form>
     </v-card>
@@ -74,8 +74,7 @@
 
 <script>
 import "vuetify/styles";
-import { useAuthStore } from "../../store/modules/auth";
-const storeAuth = useAuthStore();
+import axios from "axios";
 
 import Footer from "../../layouts/TheFooter.vue";
 
@@ -84,9 +83,9 @@ export default {
   components: {
     Footer,
   },
+
   data() {
     return {
-      piniaStore:useAuthStore(),
       lang: "en",
       users: "",
       show1: false,
@@ -96,19 +95,50 @@ export default {
       message: "",
     };
   },
+  mounted() {
+    // let error = localStorage.getItem("response-info");
+    // if (error) {
+    //   let response = JSON.parse(error);
+    //   this.message = response.message;
+    //   setTimeout(() => {
+    //     localStorage.removeItem("response-info");
+    //     this.message = "";
+    //   }, 1000);
+    // }
+  },
+
   methods: {
     changeLang(item) {
       this.$i18n.locale = item;
     },
-    connect() {
+    async connect() {
       const user = {
         username: this.username,
         password: this.password,
       };
 
-      storeAuth.login(user).then((response) => {
-        this.invalid = true;
-      });
+      await axios
+        .post("/auth/authentification", user)
+        .then((response) => {
+          localStorage.setItem("user-info", JSON.stringify(response.data));
+
+          this.message = response.data.message;
+          setTimeout(() => {
+            this.message = "";
+          }, 1000);
+          let hrefPath = localStorage.getItem("href-path") ?? "/dashboard";
+          window.location.href = hrefPath;
+        })
+        .catch((error) => {
+          localStorage.setItem(
+            "response-info",
+            JSON.stringify(error.response.data)
+          );
+          this.message = error.response.data.message;
+          setTimeout(() => {
+            this.message = "";
+          }, 1000);
+        });
     },
   },
 };

@@ -104,7 +104,7 @@ export default {
     const columnDnat = [
       {
         headerName: "Interface",
-        field: "Interface",
+        field: "interface_name",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -113,7 +113,7 @@ export default {
       },
       {
         headerName: "Protocol",
-        field: "Protocol",
+        field: "protocol",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -122,7 +122,7 @@ export default {
       },
       {
         headerName: "S.Address",
-        field: "Source Address",
+        field: "source_address",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -131,7 +131,7 @@ export default {
       },
       {
         headerName: "Ports",
-        field: "Ports",
+        cellRenderer: actionSourcePort,
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -140,7 +140,7 @@ export default {
       },
       {
         headerName: "External IP",
-        field: "External IP",
+        field: "external_address",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -149,7 +149,7 @@ export default {
       },
       {
         headerName: "Internal IP",
-        field: "Internal IP",
+        field: "internal_address",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -158,7 +158,7 @@ export default {
       },
       {
         headerName: "Transalation IP",
-        field: "Transalation IP",
+        field: "tcp_ip",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -166,26 +166,36 @@ export default {
         flex: 1,
       },
       {
-        headerName: "D.Address",
+        headerName: "External Port",
         field: "Destination Address",
         autoHeight: true,
+        cellRenderer: actionExternalPort,
         resizable: true,
         width: 90,
         minWidth: 50,
         flex: 1,
       },
       {
-        headerName: "Ports",
-        field: "Ports",
+        headerName: "Internal Port",
+        cellRenderer: actionInternalPort,
         autoHeight: true,
         resizable: true,
         width: 90,
         minWidth: 50,
         flex: 1,
       },
+      // {
+      //   headerName: "Ports",
+      //   field: "destination_port_from",
+      //   autoHeight: true,
+      //   resizable: true,
+      //   width: 90,
+      //   minWidth: 50,
+      //   flex: 1,
+      // },
       {
         headerName: "Description",
-        field: "Description",
+        field: "description",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -194,7 +204,7 @@ export default {
       },
       {
         headerName: "Status",
-        field: "Status",
+        cellRenderer: checkboxRender,
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -207,6 +217,64 @@ export default {
         field: "action",
       },
     ];
+
+    function checkboxRender(params) {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      params.value = params.data.rule_status;
+      input.checked = params.value;
+
+      input.style.margin = "10px";
+      input.style.width = "20px";
+      input.style.height = "18px";
+      input.style.cursor = "pointer";
+
+      input.addEventListener("click", function (event) {
+        params.value = !params.value;
+        params.data.rule_status = params.value;
+
+        if (params.value) {
+          axios
+            .put(`/nat/startDNat/${params.data.id}`)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          axios
+            .put(`/nat/stopDNat/${params.data.id}`)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        }
+      });
+      return input;
+    }
 
     const rowDataDnat = reactive({});
 
@@ -227,6 +295,43 @@ export default {
         console.error("Grid API.");
       }
     };
+
+    function actionSourcePort(data) {
+      let eGui = document.createElement("div");
+      if (data.data.source_port_from || data.data.source_port_to) {
+        eGui.innerHTML = `
+      ${data.data.source_port_from}  -> ${data.data.source_port_to}
+        `;
+      } else {
+        eGui.innerHTML = `
+      --
+        `;
+      }
+
+      return eGui;
+    }
+    function actionExternalPort(data) {
+      let eGui = document.createElement("div");
+      if (data.data.destination_port_from || data.data.destination_port_to) {
+        eGui.innerHTML = `
+      ${data.data.destination_port_from}  -> ${data.data.destination_port_to}
+        `;
+      } else {
+        eGui.innerHTML = `
+      --
+        `;
+      }
+
+      return eGui;
+    }
+    function actionInternalPort(data) {
+      let eGui = document.createElement("div");
+      eGui.innerHTML = `
+      ${data.data.destination_port ?? "--"}
+        `;
+
+      return eGui;
+    }
 
     const defaultColDef = {
       sortable: true,
@@ -318,6 +423,18 @@ export default {
         state.modalMode = "";
         state.editRow = {};
       });
+      let allListDNat =
+        document.getElementById("app").attributes["listDNat"].value;
+
+      const validJsonString = allListDNat
+        .replace(/'/g, '"')
+        .replace(/True/g, "true")
+        .replace(/False/g, "false")
+        .replace(/None/g, "null");
+      const parsedArray = JSON.parse(validJsonString);
+      console.log("parsedArray", parsedArray);
+
+      rowDataDnat.value = parsedArray;
     });
 
     const cancelDelete = () => {
@@ -329,7 +446,7 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       axios
-        .delete(`/sdwan/deleteArea/${state.deletedRow.id}`)
+        .delete(`/nat/deleteDNat/${state.deletedRow.id}`)
         .then((response) => {
           state.snackbar = true;
           state.color = "success";

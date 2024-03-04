@@ -36,7 +36,6 @@ def get_one_snat(id):
 # OneToOne Nat list
 def get_list_all_one_to_one_nat():
     """Getting all one_to_one_nat from database"""
-    save_rules_handle_after_reboot("OneToOneNAT")
 
     list_one_to_one_nat = []
     one_to_one_nats = OneToOneNat.objects.all()
@@ -64,7 +63,6 @@ def get_one_one_to_one_nat(id):
 # DNAT list
 def get_list_all_dnat():
     """Getting all dnat from database"""
-    save_rules_handle_after_reboot("DNAT")
 
     list_dnat = []
     dnats = DNat.objects.all()

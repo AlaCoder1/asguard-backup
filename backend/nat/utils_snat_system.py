@@ -13,16 +13,18 @@ def create_snat_rule_in_system(oifname, source, destination, protocol, outgoing_
     tcp_source = []
     ip_addr_destination = []
     tcp_destination = []
+    ip_protocol = []
     if source != "any":
         ip_addr_source = ["ip", "saddr", source["address"]]
         tcp_source = ["tcp", "sport", source["port"]]
     if destination != "any":
         ip_addr_destination = ["ip", "daddr", destination["address"]]
         tcp_destination = ["tcp", "dport", destination["port"]]
+    if protocol != "":
+        ip_protocol = ["ip", "protocol", protocol]
 
     # Complete the SNAT rule command
-    added_fields_rule = [ip_addr_source, ip_addr_destination, tcp_source,tcp_destination, ["ip", "protocol", protocol],
-                         outgoing_ip_address]
+    added_fields_rule = [ip_addr_source, ip_addr_destination, tcp_source,tcp_destination, ip_protocol, outgoing_ip_address]
     for command in added_fields_rule:
         command_snat.extend(command)
 

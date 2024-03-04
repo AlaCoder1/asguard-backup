@@ -1,7 +1,7 @@
 from django.core import serializers
 import json
 
-from backend.nat.models import DNat, SNat
+from backend.nat.models import DNat, OneToOneNat, SNat
 from backend.nat.utils import save_rules_handle_after_reboot
 
 
@@ -33,10 +33,38 @@ def get_one_snat(id):
     return res[0]['fields']
 
 
+# OneToOne Nat list
+def get_list_all_one_to_one_nat():
+    """Getting all one_to_one_nat from database"""
+    save_rules_handle_after_reboot("OneToOneNAT")
+
+    list_one_to_one_nat = []
+    one_to_one_nats = OneToOneNat.objects.all()
+    one_to_one_nat_dict = serializers.serialize("json", one_to_one_nats)
+    res = json.loads(one_to_one_nat_dict)
+    for one_to_one_nat in res:
+        one_to_one_nat_id = one_to_one_nat['pk']
+        one_to_one_nat['fields']['id'] = one_to_one_nat_id
+        one_to_one_nat['fields']['interface_name'] = OneToOneNat.objects.get(id=one_to_one_nat_id).interface.name_interface
+        list_one_to_one_nat.append(one_to_one_nat['fields'])
+    return list_one_to_one_nat
+
+
+def get_one_one_to_one_nat(id):
+    """Getting one_to_one_nat by id from database"""
+    one_to_one_nat = OneToOneNat.objects.filter(pk=id)
+    one_to_one_nat_dict = serializers.serialize("json", one_to_one_nat)
+    res = json.loads(one_to_one_nat_dict)
+    one_to_one_nat_id = res[0]['pk']
+    res[0]['fields']['id'] = one_to_one_nat_id
+    res[0]['fields']['interface_name'] = OneToOneNat.objects.get(id=one_to_one_nat_id).interface.name_interface
+    return res[0]['fields']
+
+
 # DNAT list
 def get_list_all_dnat():
     """Getting all dnat from database"""
-    save_rules_handle_after_reboot("prerouting")
+    save_rules_handle_after_reboot("DNAT")
 
     list_dnat = []
     dnats = DNat.objects.all()

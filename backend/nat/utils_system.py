@@ -2,11 +2,11 @@ from backend.nat.contant_variables import PATH_RULESET_NFT
 from utils.commands_utils import execute_command_without_arguments, get_current_directory
 
 
-def find_snat_in_ruleset(rule_set:str):
-    """Return list of SNAT rules"""
+def find_nat_in_ruleset(rule_set:str, nat_type="postrouting"):
+    """Return list of NAT rules with it's type: SNAT, OneToOne or DNAT"""
     list_rules = [line.strip() for line in rule_set.splitlines()]
     for line_index in range(len(list_rules)):
-        if list_rules[line_index].startswith("chain postrouting"):
+        if list_rules[line_index].startswith(f"chain {nat_type}"):
             start_snat_line = line_index + 2
             break
     for line_snat in range(start_snat_line, len(list_rules)):

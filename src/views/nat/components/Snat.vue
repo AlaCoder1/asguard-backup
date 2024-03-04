@@ -64,7 +64,7 @@
 
 <script>
 import axios from "axios";
-import { reactive, ref, onMounted, inject } from "vue";
+import { reactive, ref, onMounted, inject, onBeforeMount } from "vue";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -83,6 +83,7 @@ export default {
   setup() {
     const emitter = inject("emitter");
     const state = reactive({
+      mapedInterface: [],
       deleteDialog: false,
       deletedRow: null,
       snackbar: false,
@@ -104,7 +105,7 @@ export default {
     const columnSnat = [
       {
         headerName: "Interface",
-        field: "Interface",
+        field: "interface_name",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -113,7 +114,7 @@ export default {
       },
       {
         headerName: "Protocol",
-        field: "Protocol",
+        field: "protocol",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -122,7 +123,7 @@ export default {
       },
       {
         headerName: "S.address",
-        field: "Source Address",
+        field: "source_address",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -131,7 +132,7 @@ export default {
       },
       {
         headerName: "Ports",
-        field: "Ports",
+        field: "source_port",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -140,7 +141,7 @@ export default {
       },
       {
         headerName: "D.Address",
-        field: "Destination Address",
+        field: "destination_address",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -149,7 +150,7 @@ export default {
       },
       {
         headerName: "Ports",
-        field: "Ports",
+        field: "destination_port",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -158,7 +159,7 @@ export default {
       },
       {
         headerName: "Transalation IP",
-        field: "Transalation IP",
+        field: "tcp_ip",
         autoHeight: true,
         resizable: true,
         width: 100,
@@ -167,7 +168,7 @@ export default {
       },
       {
         headerName: "Ports",
-        field: "Ports",
+        field: "translation_port",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -176,7 +177,7 @@ export default {
       },
       {
         headerName: "Description",
-        field: "Description",
+        field: "description",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -185,9 +186,11 @@ export default {
       },
       {
         headerName: "Status",
-        field: "Status",
+        // field: "rule_status",
+        cellRenderer: checkboxRender,
         autoHeight: true,
         resizable: true,
+        // editable: true,
         width: 90,
         minWidth: 50,
         flex: 1,
@@ -202,6 +205,64 @@ export default {
     const rowDataSnat = reactive({});
 
     const gridApi = ref(null);
+
+    function checkboxRender(params) {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      params.value = params.data.rule_status;
+      input.checked = params.value;
+
+      input.style.margin = "10px";
+      input.style.width = "20px";
+      input.style.height = "18px";
+      input.style.cursor = "pointer";
+
+      input.addEventListener("click", function (event) {
+        params.value = !params.value;
+        params.data.rule_status = params.value;
+
+        if (params.value) {
+          axios
+            .put(`/nat/startSNat/${params.data.id}`)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          axios
+            .put(`/nat/stopSNat/${params.data.id}`)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        }
+      });
+      return input;
+    }
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
@@ -246,8 +307,8 @@ export default {
             `;
       } else {
         eGui.innerHTML = `
-            <button 
-              class="action-button show "  
+            <button
+              class="action-button show "
               data-action="show">
               <i class="mdi mdi-eye" style="color: #086eae;font-size: 20px;"></i>
               </button>
@@ -261,7 +322,7 @@ export default {
               data-action="delete" title="Delete ">
                 <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
               </button>
-    
+
               `;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
@@ -296,20 +357,79 @@ export default {
       }
     };
 
+    const getInterface = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/network/AllInterfaces").then(
+        (response) => {
+          let filtredInterface = response.data.filter(
+            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+          );
+
+          let interfaces = filtredInterface.map((i) => {
+            return {
+              id: i.id,
+              name: i.name_interface,
+            };
+          });
+
+          state.mapedInterface = interfaces;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
+
     const openModalAdd = () => {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalAreaOpen = true;
     };
+    onBeforeMount(() => {
+      getInterface();
+    }),
+      onMounted(() => {
+        emitter.on("closeSnatModal", () => {
+          state.isModalAreaOpen = false;
+          state.isOpen = false;
+          state.modalMode = "";
+          state.editRow = {};
+        });
 
-    onMounted(() => {
-      emitter.on("closeSnatModal", () => {
-        state.isModalAreaOpen = false;
-        state.isOpen = false;
-        state.modalMode = "";
-        state.editRow = {};
+        let allListNat =
+          document.getElementById("app").attributes["listNat"].value;
+
+        const validJsonString = allListNat
+          .replace(/'/g, '"')
+          .replace(/True/g, "true")
+          .replace(/False/g, "false")
+          .replace(/None/g, "null");
+        const parsedArray = JSON.parse(validJsonString);
+
+        let mapedNatRow = parsedArray.map((i) => {
+          return {
+            id: i.id,
+            description: i.description,
+            destination_address: i.destination_address,
+            destination_port: i.destination_port,
+            interface: i.interface,
+            interface_name: i.interface_name,
+            protocol: i.protocol,
+            rule_number: i.rule_number,
+            rule_status: i.rule_status,
+            snat_type: i.snat_type,
+            source_address: i.source_address,
+            source_port: i.source_port,
+            tcp_ip: i.tcp_ip,
+            translation_address_from: i.translation_address_from,
+            translation_address_to: i.translation_address_to,
+            translation_port: i.translation_port,
+          };
+        });
+        rowDataSnat.value = mapedNatRow;
       });
-    });
 
     const cancelDelete = () => {
       state.deleteDialog = false;
@@ -320,7 +440,7 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       axios
-        .delete(`/sdwan/deleteArea/${state.deletedRow.id}`)
+        .delete(`/nat/deleteSNat/${state.deletedRow.id}`)
         .then((response) => {
           state.snackbar = true;
           state.color = "success";

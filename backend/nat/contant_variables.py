@@ -1,3 +1,4 @@
 CONSTANT_SNAT_RULE = 'SNAT rule'
+CONSTANT_DNAT_RULE = 'DNAT rule'
 
 PATH_RULESET_NFT = '{}/ruleset.nft'

@@ -28,7 +28,6 @@
                     item-title="name"
                     item-value="id"
                     :items="state.mapedInterface"
-                    clearable
                     return-object
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.interface.$error">
@@ -86,6 +85,7 @@
                     label="Prefix"
                     v-model="state.sourcePrefix"
                     :items="numberList"
+                    clearable
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.sourcePrefix.$error">
                     {{ v$.sourcePrefix.$errors[0].$message }}
@@ -143,6 +143,7 @@
                     label="Prefix"
                     v-model="state.destinationPrefix"
                     :items="numberList"
+                    clearable
                   ></v-select>
                   <p
                     class="error-feedback mb-5"
@@ -255,7 +256,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Create</span>
+              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -302,6 +303,7 @@ export default {
     const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
 
     const state = reactive({
+      id: null,
       isCombo: ["MASQ", "Static"],
       versionList: [
         { name: "IPv4", slug: "ipv4" },
@@ -367,6 +369,16 @@ export default {
     });
 
     watch(
+      () => state.checkInterface,
+      (val) => {
+        if (val === "MASQ") {
+          state.translationAddressFrom = "";
+          state.translationAddressTo = "";
+          state.translationPort = "";
+        }
+      }
+    );
+    watch(
       () => isOpen.value,
       (val) => {
         state.openModal = val;
@@ -375,33 +387,100 @@ export default {
     watch(
       () => editRow.value,
       (val) => {
-        // populate(val);
+        populate(val);
       }
     );
     watch(
       () => modalMode.value,
       () => {
         if (modalMode.value === "create") {
-          state.areaName = "";
-          state.interfaces = [];
+          state.interface = "";
+          state.tcpIpVersion = "";
+          state.protocol = "";
+          state.sourceAddress = "";
+          state.sourcePrefix = "";
+          state.sourcePort = "";
+          state.port = "";
+          state.destinationAddress = "";
+          state.destinationPrefix = "";
+          state.destinationPort = "";
+          state.specificPort = "";
+          state.checkInterface = "MASQ";
+          state.translationAddressFrom = "";
+          state.translationAddressTo = "";
+          state.translationPort = "";
+          state.description = "";
         }
       }
     );
-    //   const populate = (data) => {
-    //     if (modalMode.value === "edit") {
-    //       state.areaName = data.name;
-    //       state.id = data.id;
+    const populate = (data) => {
+      if (modalMode.value === "edit") {
+        state.id = data.id;
+        let filtredInterface = state.mapedInterface.filter(
+          (i) => i.id === data?.interface
+        );
+        let filtredIpVersion = state.versionList.filter(
+          (i) => i.slug === data?.tcp_ip
+        );
+        let filtredProtocol = state.protocolList.filter(
+          (i) => i.slug === data?.protocol
+        );
 
-    //       let filtredInterface = [];
-    //       data?.members.forEach((e) => {
-    //         filtredInterface = [
-    //           ...filtredInterface,
-    //           ...state.mapedInterface.filter((i) => i.name === e),
-    //         ];
-    //       });
-    //       state.interfaces = filtredInterface;
-    //     }
-    //   };
+        state.interface = filtredInterface[0];
+        state.tcpIpVersion = filtredIpVersion[0];
+        state.protocol = filtredProtocol[0];
+
+        let resultSource = data?.source_address
+          ? data?.source_address?.split("/")
+          : "";
+        if (resultSource) {
+          resultSource[1] = parseInt(resultSource[1], 10);
+        }
+
+        let resultDestination = data?.destination_address
+          ? data?.destination_address?.split("/")
+          : "";
+        if (resultDestination) {
+          resultDestination[1] = parseInt(resultDestination[1], 10);
+        }
+
+        state.sourceAddress = resultSource ? resultSource[0] : "";
+        state.sourcePrefix = resultSource ? resultSource[1] : "";
+
+        state.destinationAddress = resultDestination
+          ? resultDestination[0]
+          : "";
+        state.destinationPrefix = resultDestination ? resultDestination[1] : "";
+
+        let filtredSourcePort = state.listPort.filter(
+          (i) => i.slug === data?.source_port
+        );
+
+        if (filtredSourcePort.length == 0) {
+          state.sourcePort = { name: "OTHER", slug: "other" };
+          state.port = data.source_port;
+        } else {
+          state.sourcePort = filtredSourcePort[0];
+        }
+
+        let filtredDestinationAddress = state.listPort.filter(
+          (i) => i.slug === data?.destination_port
+        );
+
+        if (filtredDestinationAddress.length == 0) {
+          state.destinationPort = { name: "OTHER", slug: "other" };
+          state.specificPort = data.destination_port;
+        } else {
+          state.destinationPort = filtredDestinationAddress[0];
+        }
+
+        state.checkInterface = data.snat_type;
+        state.translationAddressFrom = data.translation_address_from;
+        state.translationAddressTo = data.translation_address_to;
+        state.translationPort = data.translation_port;
+        state.description = data.description;
+      }
+    };
 
     const getInterface = () => {
       const csrfToken = getCookie("csrftoken");
@@ -431,6 +510,22 @@ export default {
     const closeModal = () => {
       emitter.emit("closeSnatModal");
       if (modalMode.value === "create") {
+        state.interface = "";
+        state.tcpIpVersion = "";
+        state.protocol = "";
+        state.sourceAddress = "";
+        state.sourcePrefix = "";
+        state.sourcePort = "";
+        state.port = "";
+        state.destinationAddress = "";
+        state.destinationPrefix = "";
+        state.destinationPort = "";
+        state.specificPort = "";
+        state.checkInterface = "MASQ";
+        state.translationAddressFrom = "";
+        state.translationAddressTo = "";
+        state.translationPort = "";
+        state.description = "";
       }
     };
 
@@ -472,24 +567,45 @@ export default {
             translation_port: state.translationPort,
           };
         }
-        console.log("pay", payload);
-        axios
-          .post(`/nat/createSNat`, payload)
-          .then((response) => {
-            if (response.status == "201") {
+
+        if (modalMode.value === "edit") {
+          console.log("payload", payload);
+          axios
+            .put(`/nat/updateSNat/${state.id}`, payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
               state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.response;
-          });
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          axios
+            .post(`/nat/createSNat`, payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.response;
+            });
+        }
       } else {
         console.log("v$", v$.value);
       }

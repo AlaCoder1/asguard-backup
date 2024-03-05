@@ -79,7 +79,8 @@ urlpatterns = [
     path("ids-ips/",suricata),
     path("firewall/nat/",nat_page),
     path("success/",success),
-    path("vpnmonitoring/",openvpn_monitoring)
+    path("vpnmonitoring/",openvpn_monitoring),
+    path('ldap/',include('backend.LdapServer.urls')),
 ]
 
 # ws/wss url patterns

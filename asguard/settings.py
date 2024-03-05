@@ -70,6 +70,7 @@ INSTALLED_APPS = [
     'backend.nat',
     'channels',
     'drf_yasg',
+    'backend.LdapServer',
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {

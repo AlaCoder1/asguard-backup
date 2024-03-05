@@ -209,6 +209,8 @@
             v-model:activeNtpServer1="state.activeNtpServer1"
             v-model:activeNtpServer2="state.activeNtpServer2"
             v-model:verbLevel="state.verbLevel"
+            v-model:portClient="state.portClient"
+            v-model:passwordClient="state.passwordClient"
             :isBridge="state.isBridge"
             :deviceMode="state.deviceMode.slug"
             :errors="v$"
@@ -348,6 +350,8 @@ export default {
       activeDnsServer2: "",
       activeNtpServer1: "",
       activeNtpServer2: "",
+      portClient: "",
+      passwordClient: "",
       verbLevel: {
         name: "1 (default)",
         slug: "1",
@@ -483,6 +487,25 @@ export default {
             `Format must be like adresse IP : X.X.X.X`,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+
+        portClient: {
+          requiredIfFuction: requiredIf(() => state.clientPort),
+          isValidPortClient: helpers.withMessage(
+            `Champs can include only Numbers`,
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+
+        passwordClient: {
+          requiredIfFuction: requiredIf(() => state.clientPort),
+          isValidPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
           ),
         },
       };
@@ -679,6 +702,14 @@ export default {
     ]);
 
     watch(
+      () => state.deviceMode,
+      (newValue) => {
+        if (newValue.slug === "tun" && state.isBridge) {
+          state.isBridge = false;
+        }
+      }
+    );
+    watch(
       () => dataServer.value,
       (newValue) => {
         if (newValue != "SERVERS") {
@@ -710,6 +741,16 @@ export default {
       (newValue) => {
         if (!newValue) {
           state.activeDnsDefault = "";
+        }
+      }
+    );
+    watch(
+      () => state.clientPort,
+      (newValue) => {
+        if (!newValue) {
+          v$.value.$reset();
+          state.portClient = "";
+          state.passwordClient = "";
         }
       }
     );
@@ -868,6 +909,10 @@ export default {
         state.activeNtpServer1 = data.ntp_server1;
         state.activeNtpServer2 = data.ntp_server2;
         state.verbLevel = data.verb;
+
+        state.clientPort = data.client_management_port ? true : false;
+        state.portClient = data.client_management_port;
+        state.passwordClient = data.client_management_password;
       });
     });
 
@@ -948,6 +993,19 @@ export default {
           };
         }
 
+        let client_management = null;
+        if (state.clientPort) {
+          client_management = {
+            client_management_select: state.clientPort,
+            port: state.portClient,
+            password: state.passwordClient,
+          };
+        } else {
+          client_management = {
+            client_management_select: state.clientPort,
+          };
+        }
+
         let payload = {
           name: state.clientName,
           description: state.description,
@@ -979,13 +1037,15 @@ export default {
           inter_clients: state.interClients,
           address_pool: addressPoolElected,
           dynamic_ip: state.dynamicIP,
-          topology: state.topology,
+          // topology: state.topology,
           dns_default_domain: electedDefaultDns,
           dns_servers: electedDnsServers,
           force_dns_cache_update: state.forceDNS,
           ntp_servers: electedNtpServers,
           verbosity_level: state.verbLevel?.slug ?? state.verbLevel ?? "",
+          client_management: client_management,
         };
+        console.log("paylood", payload);
         state.loading = true;
         state.isLoadingDialogue = true;
 

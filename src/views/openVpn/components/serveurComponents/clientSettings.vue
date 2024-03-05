@@ -41,13 +41,13 @@
           {{ props.errors.endAddressPool.$errors?.[0].$message }}
         </p>
       </v-col>
-      <v-col cols="4" align-self="center">
+      <!-- <v-col cols="4" align-self="center">
         <label>Topology</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="topology" />
         <label class="ml-2">Active toplogy</label>
-      </v-col>
+      </v-col> -->
       <v-col cols="4">
         <label>DNS Default Domain</label>
       </v-col>
@@ -143,6 +143,41 @@
         <input type="checkbox" v-model="clientPort" />
         <label class="ml-2">Active Client Management Port</label>
       </v-col>
+
+      <template v-if="clientPort">
+        <v-col cols="4" class="mt-3">
+          <label>Port</label>
+        </v-col>
+        <v-col cols="8" class="mb-n6">
+          <v-text-field label="Port" v-model="portClient"></v-text-field>
+
+          <p
+            class="error-feedback mb-5 mt-3"
+            v-if="props.errors.portClient.$errors.length"
+          >
+            {{ props.errors.portClient.$errors?.[0].$message }}
+          </p>
+        </v-col>
+        <v-col cols="4" class="mt-3">
+          <label>Password</label>
+        </v-col>
+        <v-col cols="8" class="mb-n6">
+          <v-text-field
+            label="Password"
+            :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+            @click:append-inner="show1 = !show1"
+            :type="show1 ? 'text' : 'password'"
+            v-model="passwordClient"
+          ></v-text-field>
+          <p
+            class="error-feedback mb-5 mt-3"
+            v-if="props.errors.passwordClient.$errors.length"
+          >
+            {{ props.errors.passwordClient.$errors?.[0].$message }}
+          </p>
+        </v-col>
+      </template>
+
       <v-col align-self="center" cols="4" class="mb-5">
         <label>Verbosity Level</label>
       </v-col>
@@ -163,14 +198,17 @@
 <script setup>
 import { ref } from "vue";
 import { useVModels } from "@vueuse/core";
+const show1 = ref(false);
 
 const props = defineProps([
   "errors",
   "deviceMode",
+  "passwordClient",
+  "portClient",
   "isBridge",
   "dynamicIP",
   "adressPool",
-  "topology",
+  // "topology",
   "dnsDefaultDomain",
   "dnsServers",
   "forceDNS",
@@ -188,7 +226,7 @@ const props = defineProps([
 const emit = defineEmits([
   "update:adressPool",
   "update:verbLevel",
-  "update:topology",
+  // "update:topology",
   "update:dnsDefaultDomain",
   "update:dnsServers",
   "update:forceDNS",
@@ -202,11 +240,13 @@ const emit = defineEmits([
   "update:activeNtpServer1",
   "update:activeNtpServer2",
   "update:dynamicIP",
+  "update:passwordClient",
+  "update:portClient",
 ]);
 const {
   verbLevel,
   adressPool,
-  topology,
+  // topology,
   dnsDefaultDomain,
   forceDNS,
   endAddressPool,
@@ -220,7 +260,10 @@ const {
   dynamicIP,
   activeDnsDefault,
   startAddressPool,
+  passwordClient,
+  portClient,
 } = useVModels(props, emit);
+
 const verbosityLevelList = ref([
   {
     name: "0 (none)",

@@ -2,8 +2,18 @@ import subprocess
 from django.core.management.base import BaseCommand
 from backend.proxy.views import run_command
 
-
+def check_line_in_file(file_path, line_to_check):
+        try:
+            with open(file_path, 'r') as file:
+                for line in file:
+                    if line.strip() == line_to_check:
+                        return True
+            return False
+        except FileNotFoundError:
+            print("File not found.")
+            return False
 class Command(BaseCommand):
+    
     def handle(self, *args, **kwargs):
         squid_conf_path = '/etc/squid/squid.conf'
         lines_to_add = [
@@ -62,48 +72,51 @@ class Command(BaseCommand):
             'acl sports url_regex "/etc/squid/acl/sports.acl"',
             'acl violence url_regex "/etc/squid/acl/violence.acl"',
         ]
-
-        # Read the content of the file
-        with open(squid_conf_path, 'r') as file:
-            lines = file.readlines()
-
-        # Find the index of the line that starts with 'acl localnet src fe80::/10'
-        index = next((i for i, line in enumerate(lines) if line.startswith('acl localnet src fe80::/10')), None)
-
-        if index is not None:
-            # Insert the lines after the found line
-            lines[index + 1:index + 1] = [line + '\n' for line in acl_to_add]
-
-            # Write the modified content back to the file
-            with open(squid_conf_path, 'w') as file:
-                file.writelines(lines)
+        line_to_check = 'acl authenticated_users proxy_auth REQUIRED'
+        if check_line_in_file(squid_conf_path, line_to_check):
+            print("The line exists in the file.")
         else:
-            print("Line not found in the file.")
+            # Read the content of the file
+            with open(squid_conf_path, 'r') as file:
+                lines = file.readlines()
 
-        index_acl = next((i for i, line in enumerate(lines) if line.startswith('# INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS')), None)
-        if index_acl is not None:
-            # Insert the lines after the found line
-            lines[index_acl + 1:index_acl + 1] = [line + '\n' for line in lines_to_add]
+            # Find the index of the line that starts with 'acl localnet src fe80::/10'
+            index = next((i for i, line in enumerate(lines) if line.startswith('acl localnet src fe80::/10')), None)
 
-            # Write the modified content back to the file
-            with open(squid_conf_path, 'w') as file:
-                file.writelines(lines)
-        else:
-            print("Line not found in the file.")
-            
-        # Read the content of the file
-        with open(squid_conf_path, 'r') as file:
-            lines = file.readlines()
-        # Find the index of the line that starts with 'http_access deny all'
-        index_http_access = next((i for i, line in enumerate(lines) if line.strip() == 'http_access deny all'), None)
+            if index is not None:
+                # Insert the lines after the found line
+                lines[index + 1:index + 1] = [line + '\n' for line in acl_to_add]
 
-        if index_http_access is not None:
-            # Replace 'http_access deny all' with 'http_access allow all'
-            lines[index_http_access] = 'http_access allow all\n'
+                # Write the modified content back to the file
+                with open(squid_conf_path, 'w') as file:
+                    file.writelines(lines)
+            else:
+                print("Line not found in the file.")
 
-            # Write the modified content back to the file
-            with open(squid_conf_path, 'w') as file:
-                file.writelines(lines)
-        else:
-            print("Line not found in the file.")
-            
+            index_acl = next((i for i, line in enumerate(lines) if line.startswith('# INSERT YOUR OWN RULE(S) HERE TO ALLOW ACCESS FROM YOUR CLIENTS')), None)
+            if index_acl is not None:
+                # Insert the lines after the found line
+                lines[index_acl + 1:index_acl + 1] = [line + '\n' for line in lines_to_add]
+
+                # Write the modified content back to the file
+                with open(squid_conf_path, 'w') as file:
+                    file.writelines(lines)
+            else:
+                print("Line not found in the file.")
+                
+            # Read the content of the file
+            with open(squid_conf_path, 'r') as file:
+                lines = file.readlines()
+            # Find the index of the line that starts with 'http_access deny all'
+            index_http_access = next((i for i, line in enumerate(lines) if line.strip() == 'http_access deny all'), None)
+
+            if index_http_access is not None:
+                # Replace 'http_access deny all' with 'http_access allow all'
+                lines[index_http_access] = 'http_access allow all\n'
+
+                # Write the modified content back to the file
+                with open(squid_conf_path, 'w') as file:
+                    file.writelines(lines)
+            else:
+                print("Line not found in the file.")
+                

@@ -67,8 +67,10 @@ INSTALLED_APPS = [
     'backend.proxy',
     'backend.sdwan',
     'backend.openvpn_monitoring',
+    'backend.nat',
     'channels',
     'drf_yasg',
+    'backend.LdapServer',
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {

@@ -5,11 +5,12 @@ from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYP
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
-from backend.nat.contant_variables import CONSTANT_DNAT_RULE, CONSTANT_SNAT_RULE
-from backend.nat.list_nat import get_list_all_dnat, get_list_all_snat, get_one_dnat, get_one_snat
-from backend.nat.models import DNat, SNat
-from backend.nat.serializers import DNatSerializer, SNatSerializer
+from backend.nat.contant_variables import CONSTANT_DNAT_RULE, CONSTANT_SNAT_RULE, CONSTANT_ONE_TO_ONE_NAT_RULE
+from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat, get_one_dnat, get_one_one_to_one_nat, get_one_snat
+from backend.nat.models import DNat, OneToOneNat, SNat
+from backend.nat.serializers import DNatSerializer, OneToOneNatSerializer, SNatSerializer
 from backend.nat.utils_dnat_system import create_dnat_rule_in_system, delete_dnat_rule_in_system, update_dnat_rule_in_system
+from backend.nat.utils_one_to_one_nat_system import create_one_to_one_nat_rule_in_system, delete_one_to_one_nat_rule_in_system, update_one_to_one_nat_rule_in_system
 from backend.nat.utils_snat_system import create_snat_rule_in_system, delete_snat_rule_in_system, update_snat_rule_in_system
 
 from backend.network.models import Interface
@@ -163,10 +164,14 @@ def update_snat(request, id):
         if data["source_address"] != "":
             source = {"address": data["source_address"],
                       "port": data["source_port"]}
+        else:
+            snat.source_port = None
         destination = "any"
         if data["destination_address"] != "":
             destination = {"address": data["destination_address"],
                            "port": data["destination_port"]}
+        else:
+            snat.destination_port = None
         
         outgoing_ip_address = ["masquerade"]
         if data["snat_type"] == "Static":
@@ -191,6 +196,9 @@ def update_snat(request, id):
                     # Update the rule in the database
                     serializer_snat.save()
                     return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(CONSTANT_SNAT_RULE)}, status=201)
+                else:
+                    return JsonResponse({"error": list(serializer_snat.errors.values())[0][0]}, status=400)
+            
             serializer_snat.save()
             return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(CONSTANT_SNAT_RULE)}, status=201)
         
@@ -261,6 +269,203 @@ def stop_snat(request, id):
         return JsonResponse({"error": ERROR_MESSAGES_STOP.format(CONSTANT_SNAT_RULE)}, status=400)
     except SNat.DoesNotExist:
         return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_SNAT_RULE)}, status=400)
+
+
+########################################
+################ OneToOne NAT ##################
+########################################
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL OneToOneNat RULES",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_one_to_one_nat(request):
+    """Getting all one_to_one_nat from database"""
+    list_one_to_one_nat = []
+    list_one_to_one_nat = get_list_all_one_to_one_nat()
+    return JsonResponse(list_one_to_one_nat, safe=False)
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET AN OneToOneNat RULE",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_one_to_one_nat(request, id):
+    """Getting one_to_one_nat by id from database"""
+    one_to_one_nat = get_one_one_to_one_nat(id)
+    return JsonResponse(one_to_one_nat, safe=False)
+
+
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO CREATE A OneToOneNat RULE", request_body=Schema(
+                         type=TYPE_OBJECT, required=['interface', 'source_address', 'translation_address', 'destination_address'],
+                         properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
+                                     'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
+                                     'destination_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
+                                     'translation_address': Schema(type=TYPE_STRING, description="required when choosing Static, format of address like 51.32.100.5"),
+                                     'description': Schema(type=TYPE_STRING, description="description of OneToOneNat rule"),
+                                     }
+                                     ))
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def create_one_to_one_nat(request):
+    """Creating a new OneToOneNat rule and adding it to the database"""
+    try:
+        data = request.data
+        
+        serializer_one_to_one_nat = OneToOneNatSerializer(data=data)
+        if serializer_one_to_one_nat.is_valid():
+
+            interface_ifname = Interface.objects.get(id=data["interface"]).ifname
+            
+            destination = "any"
+            if data["destination_address"] != "":
+                destination = data["destination_address"]
+            
+            # Add the rule in system
+            rule_number = create_one_to_one_nat_rule_in_system(interface_ifname, data["source_address"], destination, data["translation_address"])
+            data["rule_number"] = int(rule_number)
+
+            serializer_one_to_one_nat = OneToOneNatSerializer(data=data)
+            if serializer_one_to_one_nat.is_valid():
+
+                # Add the rule to the database
+                serializer_one_to_one_nat.save()
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_ONE_TO_ONE_NAT_RULE, "")}, status=201)
+
+        return JsonResponse({"error": list(serializer_one_to_one_nat.errors.values())[0][0]}, status=400)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
+
+
+@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE AN OneToOneNat RULE",)
+@api_view(['Delete'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_one_to_one_nat(request, id):
+    """Deleting an one_to_one_nat from database"""
+    try:
+        one_to_one_nat = OneToOneNat.objects.get(id=id)
+
+        if one_to_one_nat.rule_status:
+            # Delete rule from system
+            delete_one_to_one_nat_rule_in_system(one_to_one_nat.rule_number)
+
+        # delete rule from database
+        one_to_one_nat.delete()
+        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=201)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_DELETING.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
+    except SNat.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
+
+
+@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO UPDATE A OneToOneNat RULE", request_body=Schema(
+                         type=TYPE_OBJECT, required=['interface', 'source_address', 'translation_address', 'destination_address'],
+                         properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
+                                     'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
+                                     'destination_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
+                                     'translation_address': Schema(type=TYPE_STRING, description="required when choosing Static, format of address like 51.32.100.5"),
+                                     'description': Schema(type=TYPE_STRING, description="description of OneToOneNat rule"),
+                                     }
+                                     ))
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def update_one_to_one_nat(request, id):
+    """Updating an OneToOneNat rule"""
+    try:
+        data = request.data
+        one_to_one_nat = OneToOneNat.objects.get(id=id)
+        
+        serializer_one_to_one_nat = OneToOneNatSerializer(one_to_one_nat, data=data)
+        if serializer_one_to_one_nat.is_valid():
+
+            interface_ifname = Interface.objects.get(id=data["interface"]).ifname
+            
+            destination = "any"
+            if data["destination_address"] != "":
+                destination = data["destination_address"]
+            
+            # update the rule in system if the rule was started
+            if one_to_one_nat.rule_status:
+                rule_number = update_one_to_one_nat_rule_in_system(interface_ifname, data["source_address"], destination, 
+                                                                   data["translation_address"], one_to_one_nat.rule_number)
+                data["rule_number"] = int(rule_number)
+
+                serializer_one_to_one_nat = OneToOneNatSerializer(one_to_one_nat, data=data)
+                if serializer_one_to_one_nat.is_valid():
+
+                    # Add the rule to the database
+                    serializer_one_to_one_nat.save()
+                    return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=201)
+                else:
+                    return JsonResponse({"error": list(serializer_one_to_one_nat.errors.values())[0][0]}, status=400)
+        
+            serializer_one_to_one_nat.save()
+            return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=201)
+
+        return JsonResponse({"error": list(serializer_one_to_one_nat.errors.values())[0][0]}, status=400)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
+
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def start_one_to_one_nat(request, id):
+    """Start a OneToOneNat rule"""
+    try:
+        one_to_one_nat = OneToOneNat.objects.get(id=id)
+
+        destination = "any"
+        if one_to_one_nat.destination_address != "":
+            destination = one_to_one_nat.destination_address
+
+        # Add the rule in system
+        rule_number = create_one_to_one_nat_rule_in_system(one_to_one_nat.interface.ifname, one_to_one_nat.source_address, destination,
+                                                           one_to_one_nat.translation_address)
+        one_to_one_nat.rule_number = int(rule_number)
+
+        one_to_one_nat.rule_status = True
+        one_to_one_nat.save()
+        
+        return JsonResponse({"msg": SUCCESS_MESSAGES_START.format(CONSTANT_ONE_TO_ONE_NAT_RULE, "")}, status=201)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_START.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
+    except OneToOneNat.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
+
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def stop_one_to_one_nat(request, id):
+    """Stop a OneToOneNat rule"""
+    try:
+        one_to_one_nat = OneToOneNat.objects.get(id=id)
+
+        # Delete rule from system
+        delete_one_to_one_nat_rule_in_system(one_to_one_nat.rule_number)
+        
+        one_to_one_nat.rule_status = False
+        one_to_one_nat.rule_number = None
+        one_to_one_nat.save()
+        
+        return JsonResponse({"msg": SUCCESS_MESSAGES_STOP.format(CONSTANT_ONE_TO_ONE_NAT_RULE, "")}, status=201)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_STOP.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
+    except OneToOneNat.DoesNotExist:
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
 
 
 ########################################
@@ -480,12 +685,12 @@ def start_dnat(request, id):
         dnat.rule_status = True
         dnat.save()
         
-        return JsonResponse({"msg": SUCCESS_MESSAGES_START.format(CONSTANT_SNAT_RULE, "")}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_START.format(CONSTANT_DNAT_RULE, "")}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_START.format(CONSTANT_SNAT_RULE)}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_START.format(CONSTANT_DNAT_RULE)}, status=400)
     except DNat.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_SNAT_RULE)}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_DNAT_RULE)}, status=400)
 
 
 @api_view(['PUT'])

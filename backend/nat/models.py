@@ -23,6 +23,19 @@ class SNat(models.Model):
         db_table = 'nat_snat'
 
 
+class OneToOneNat(models.Model):
+    interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None)
+    source_address = models.CharField(max_length=100, default=None, null=True, blank=True)
+    translation_address = models.CharField(max_length=100, default=None, null=True, blank=True)
+    destination_address = models.CharField(max_length=100, default=None, null=True, blank=True)
+    description = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    rule_number = models.IntegerField(default=None, null=True)
+    rule_status = models.BooleanField(default=True, null=True)
+
+    class Meta:
+        db_table = 'nat_one_to_one'
+
+
 class DNat(models.Model):
     interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None)
     tcp_ip = models.CharField(max_length=100, default=None)

@@ -44,12 +44,13 @@ def authentification(request):
         password = data['password']
         
         ad_servers = ADServer.objects.all()
-        if not ad_servers.exists():
-            msg = "No Active Directory servers registered in the database."
-            print(msg)
-            return JsonResponse({'msg': msg}, status=400)
+        
 
         if '@' in username:
+            if not ad_servers.exists():
+                msg = "No Active Directory servers registered in the database."
+                print(msg)
+                return JsonResponse({'msg': msg}, status=400)
             # Perform LDAP authentication
             for ad_server in ad_servers:
                 ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
@@ -67,7 +68,7 @@ def authentification(request):
                     if username.lower() in [user.lower() for user in user_principal_names]:
                        
                         msg = f"Email found in Active Directory: {ad_server.server_name}"
-                        print(msg)
+                        # print(msg)
                         serializer = ObtainTokenSerializer(data=data)
                         if (serializer.is_valid()):
                             user_session=User.objects.filter(email=username).first()

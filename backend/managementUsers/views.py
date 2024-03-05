@@ -94,13 +94,14 @@ def createUser(request):
         print(email)
         email_founded=False
         ad_servers = ADServer.objects.all()
-        #check if there is AD server Exist in Database to connected
-        if not ad_servers.exists():
-            msg = "No Active Directory servers registered in the database."
-            print(msg)
-            return JsonResponse({'msg': msg}, status=400)
+       
         # Check if the email exists in any AD server
         for ad_server in ad_servers:
+             #check if there is AD server Exist in Database to connected
+            if not ad_servers.exists():
+                msg = "No Active Directory servers registered in the database."
+                print(msg)
+                return JsonResponse({'msg': msg}, status=400)
              # Connect to AD server
             try:
                 userDict = serializers.serialize("json", ad_servers)
@@ -109,9 +110,6 @@ def createUser(request):
                 ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
                 ldap_conn = ldap.initialize(ldap_uri)
                 byte_content = ast.literal_eval(ad_server.bind_user_password)
-                print({"edededed":byte_content})
-
-                print(f'Decrypted Password: {decrypt_data(byte_content)}')
                 ldap_conn.simple_bind_s(ad_server.bind_user_dn,decrypt_data(byte_content))
                 
                
@@ -154,7 +152,7 @@ def createUser(request):
                 # Convert the stderr stream to a string
                 if stderr.decode('utf-8') == "":
                     addMailSpool(username)
-                    msg = username + " added successfully"
+                    msg = username + " added successfully with their email in AD"
                     uid = getUidUser()
                     data['password'] = make_password(data['password'])
                     data['uid'] = uid
@@ -210,9 +208,70 @@ def createUser(request):
                 msg = "invalid password"
                 return JsonResponse({"msg": msg}, status=201)
         else:
-            msg = f"Email '{email}' not found in Active Directory on any server."
-            print(msg)
-            return JsonResponse({'msg': msg}, status=400)
+            if validInput(username) and validPassword(password):
+                # Execute the command on the remote machine
+                stdout, stderr = addUser(username, password)
+                print({"stdout": stdout.decode('utf-8')})
+                print({"stder": stderr.decode('utf-8')})
+
+                # Convert the stderr stream to a string
+                if stderr.decode('utf-8') == "":
+                    addMailSpool(username)
+                    msg = username + " added successfully with simple System email "
+                    uid = getUidUser()
+                    data['password'] = make_password(data['password'])
+                    data['uid'] = uid
+
+                    if 'group' in data:
+                        groups = data['group']
+                        print({"groups": groups})
+                        for i in range(0, len(groups)):
+                            add_user_group(getGroupNameById(groups[i]), username)
+                        serializerUser = UserSerializerPost(data=data)
+                        gid = getUidGroup()
+                        groupname = {"groupname": username}
+                        groupname['gid'] = gid
+                        groupname['created_by_system'] = True
+                        serializerGroup = GroupSerializer(data=groupname)
+
+                        # Check if the sent information is okay
+                        if serializerUser.is_valid():
+                            if serializerGroup.is_valid():
+                                # If okay, save it on the database
+                                serializerUser.save()
+                                serializerGroup.save()
+                                # Provide a Json Response with the data that was saved
+                                return JsonResponse({"msg": msg}, status=201)
+                            # Provide a Json Response with the necessary error information
+                            return JsonResponse(serializerGroup.errors, status=400)
+                        # Provide a Json Response with the necessary error information
+                        return JsonResponse(serializerUser.errors, status=400)
+                    else:
+                        serializerUser = UserSerializerPostWithoutGroupAndPermission(data=data)
+                        gid = getUidGroup()
+                        groupname = {"groupname": username}
+                        groupname['gid'] = gid
+                        groupname['created_by_system'] = True
+                        serializerGroup = GroupSerializer(data=groupname)
+
+                        # Check if the sent information is okay
+                        if serializerUser.is_valid():
+                            if serializerGroup.is_valid():
+                                # If okay, save it on the database
+                                serializerUser.save()
+                                serializerGroup.save()
+                                # Provide a Json Response with the data that was saved
+                                return JsonResponse({"msg": msg}, status=201)
+                            # Provide a Json Response with the necessary error information
+                            return JsonResponse(serializerGroup.errors, status=400)
+                        # Provide a Json Response with the necessary error information
+                        return JsonResponse(serializerUser.errors, status=400)
+                else:
+                    msg = stderr.decode('utf-8')
+                    return JsonResponse({"msg": msg}, status=400)
+            else:
+                msg = "invalid password"
+                return JsonResponse({"msg": msg}, status=201)
 
 
 

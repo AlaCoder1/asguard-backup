@@ -34,6 +34,9 @@
 /backend/managementUsers/__pycache__/
 /backend/managementUsers/migrations/__pycache__/
 
+/backend/nat/__pycache__/
+/backend/nat/migrations/__pycache__/
+
 /backend/network/__pycache__/
 /backend/network/migrations/__pycache__/
 
@@ -57,6 +60,9 @@
 
 /backend/tasks/migrations/__pycache__/
 /backend/tasks/__pycache__/
+
+/backend/openvpn_monitoring/migrations/__pycache__/
+/backend/openvpn_monitoring/__pycache__/
 
 /node_modules/
 

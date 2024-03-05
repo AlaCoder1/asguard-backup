@@ -241,7 +241,7 @@ export default {
               </g>
               </svg>`,
         lang: "Fr",
-        language: "frensh",
+        language: "french",
       },
     ]);
 

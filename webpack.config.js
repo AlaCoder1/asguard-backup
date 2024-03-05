@@ -24,10 +24,12 @@ Encore.setOutputPath("static/")
   .addEntry("clamaV", "./src/middleware/clamaV.js")
   .addEntry("squid", "./src/middleware/squid.js")
   .addEntry("sdwan", "./src/middleware/sdwan.js")
+  .addEntry("nat", "./src/middleware/nat.js")
   .addEntry("keyPair", "./src/middleware/keyPair.js")
   .addEntry("UserAndCertificateManagement", "./src/middleware/userManagment.js")
   .addEntry("404", "./src/middleware/404.js")
   .addEntry("success", "./src/middleware/success.js")
+  .addEntry("vpnmonitoring", "./src/middleware/vpnmonitoring.js")
   .enableVueLoader(() => {}, {
     version: 3,
   })

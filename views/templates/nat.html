@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load encore %}
+
+{% block stylesheets %}
+    {{ block.super }}
+
+    {% encore_entry_link_tags 'nat' %}
+{% endblock %}
+
+{% block javascripts %}
+    {% encore_entry_script_tags 'nat' %}
+{% endblock %}
+
+{% block body %}
+
+    <div id='app' listNat='{{ listNat }} ' listDNat='{{ listDNat }} '
+    >
+</div>
+
+{% endblock %}

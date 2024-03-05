@@ -1,165 +1,113 @@
 import subprocess
-import yaml
+from backend.ids_ips.models import SuricataInterface, ids_ips_rule 
+from django.db.models import Q
 
-from backend.ids_ips.models import ids_ips_rule 
 
 def execute_cmd(command):
+    """function to execute command"""
     command="sudo "+command
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
     output = completed_process.stdout
     error = completed_process.stderr
     return output, error
 
+
+
 #*********** Fichier de configuration suricata.yaml ****************
-    
-#Lire le fichier de configuration suricata.yaml//
-def read_config():
-    suricata_yaml_path = "/etc/suricata/suricata.yaml"
-    syslog_enabled = None
-    mpm_algo = None
-    try:
-        output,_ = execute_cmd("cat " + suricata_yaml_path)
-        if output:
-            lines = output.strip('\n').split('\n')
-            home_net = None
-            promisc = None
-            eve_log_enabled = None
-            profile = None
-            copy_mode = None
-            next_line = False  # Variable pour suivre si la ligne suivante doit être lue
-            for line in lines:
-                stripped_line = line.strip()
-                if stripped_line.startswith("#"):
-                    continue  # Ignorer les lignes de commentaires
-                if "HOME_NET:" in stripped_line:
-                    home_net = stripped_line.split(":")[1].strip()
-                if "promisc:" in stripped_line:
-                    promisc = stripped_line.split(":")[1].strip()
-                if "eve-log:" in stripped_line:
-                    next_line = True  # Activer la lecture de la ligne suivante
-                elif next_line:
-                    eve_log_enabled = stripped_line.split(":")[1].strip()
-                    next_line = False  
-                # Utiliser la fonction pour lire la première occurrence de "syslog" et "enabled"
-                if "syslog:" in stripped_line and syslog_enabled is None:
-                    syslog_enabled = read_first_syslog_enabled(suricata_yaml_path)
-                # Ajout de la lecture de "mpm-algo"
-                if "mpm-algo:" in stripped_line:
-                    mpm_algo = stripped_line.split(":")[1].strip()
-                if "profile:" in stripped_line:
-                    profile = stripped_line.split(":")[1].strip()
-                if "copy-mode:" in stripped_line:
-                    copy_mode= stripped_line.split(":")[1].strip()  
-            return {"HOME_NET": home_net, "promisc": promisc, "eve-log-enabled": eve_log_enabled, "syslog-enabled": syslog_enabled, "mpm-algo": mpm_algo, "profile": profile, "copy-mode": copy_mode }
-        else:
-            return None
-    except FileNotFoundError:
-        return None
-    except yaml.YAMLError :
-        return None
+def read_from_yaml(path,yaml):
+    """function to read from yaml file suricata"""
+    with open(path, 'r') as file:
+        data = yaml.load(file)
+    return data 
+
+
+def save_in_yaml(suricata_yaml_path,data,yaml):
+    """function to save date in yaml file suricata"""
+    with open(suricata_yaml_path, 'w') as file:
+        yaml.dump(data, file)
+    return True
+
+def transform_data_af(list_interfaces):
+    """function to custom data to form system"""
+    list_out_interfaces=[]
+    for config_input in list_interfaces:
+        data_updated={
+            "id":config_input['id'],
+            "interface":config_input['interface'],
+            "threads":int(config_input["threads"]) if config_input["threads"] !="auto" and config_input["threads"] is not None else config_input["threads"] ,
+            "cluster-id":config_input["cluster_id"],
+            "cluster-type":config_input["cluster_type"],
+            "defrag":config_input["defrag"],
+            "use-mmap":config_input["use_mmap"],
+            "ring-size":config_input["ring_size"],
+            "copy-mode":config_input["copy_mode"],
+            "copy-iface":config_input["copy_iface"]['name'] if config_input['copy_iface' ] is not None else None
+            }
+        if not SuricataInterface.objects.filter(Q(cluster_id=data_updated['cluster-id']) & ~Q(interface_id=data_updated["id"])).exists():
+            data_updated={cle: valeur for cle, valeur in data_updated.items() if valeur is not None and cle!="id"}
+        list_out_interfaces.append(data_updated)
+    return list_out_interfaces
+def update_suricata_config(data,home_net_value_sys,new_promisc, new_eve_log, new_syslog, new_mpm_algo,new_profile,packet_interface,new_mode_inline):
+    """function to update value of suricata configuration  """
+    ##HOME_NET
+    data['vars']['address-groups']['HOME_NET']=home_net_value_sys if home_net_value_sys is not None else data['vars']['address-groups']['HOME_NET']
+    ##promisc
+    [data['dpdk']['interfaces'][i].update({'promisc': new_promisc}) for i, d in enumerate(data['dpdk']['interfaces']) if 'promisc' in d and new_promisc is not None]
+    ##evelog
+    data['outputs'][1]["eve-log"]['enabled']=new_eve_log if new_eve_log is not None else data['outputs'][1]["eve-log"]['enabled']
+    ##syslog
+    data['outputs'][-5]['syslog']['enabled']=new_syslog if new_syslog is not None else data['outputs'][-5]['syslog']['enabled']
+    ##mpm algo
+    data['mpm-algo']=new_mpm_algo if new_mpm_algo is not None else data['mpm-algo']
+    ##profile
+    data['detect']['profile']=new_profile if new_profile is not None else data['detect']['profile']
+    ##af packet
+    data['af-packet']=packet_interface if packet_interface is not None else data['af-packet']
+    ## inline mode 
+    data['stream']['inline']=new_mode_inline if new_mode_inline is not None else  data['stream']['inline']
+    return data
+
+def read_config(data):
+    """extract informations from dict"""
+    status_command = "systemctl is-enabled suricata.service"
+    output, _ = execute_cmd(status_command)
+    if output == 'enabled':
+        status_enabled = True
+    else:
+        status_enabled = False
+    data_output={
+        "HOME_NET": data['vars']['address-groups']['HOME_NET'], 
+        "promisc": data['dpdk']['interfaces'][0],
+        "eve-log-enabled":data['outputs'][1]["eve-log"]['enabled'], 
+        "syslog-enabled":  data['outputs'][-5]['syslog']['enabled'],
+        "mpm-algo": data['mpm-algo'], 
+        "profile": data['detect']['profile'],
+        "mode_inline": data['stream']['inline'] ,
+        "status_enabled":status_enabled,
+                }
+    return data_output
+
+
+
+def update_config(status_enabled):
+    """function to save changes """
+    aux_action="restart"
+    if status_enabled is True:
+        aux_enable="enable"
+    else:
+        aux_enable="disable"
+    commands = [
+    "sudo systemctl {} --quiet suricata.service && sudo systemctl {} suricata.service ".format(aux_enable,aux_action)
+    ]
+    for cmd in commands:
+        _, error=execute_cmd(cmd)
+        if error!="":
+            return error
+    return True
    
-# Fonction pour lire la première occurrence de "syslog" et "enabled"//
-def read_first_syslog_enabled(suricata_yaml_path):
-    syslog_enabled = None
-    try:
-        output,_= execute_cmd("cat "+suricata_yaml_path)
-        lines = output.split('\n')
-        skip_next_line = False
-        for line in lines:
-            stripped_line = line.strip()
-            if stripped_line.startswith("#"):
-                continue  # Ignorer les lignes de commentaire
-            if "syslog:" in stripped_line and syslog_enabled is None:
-                skip_next_line = True  # Activer la lecture de la ligne suivante
-            elif skip_next_line:
-                # La ligne suivante après "syslog" est "enabled:"
-                syslog_enabled = stripped_line.split(":")[1].strip()
-                break  # Sortir de la boucle après avoir trouvé la première occurrence de "syslog:"
-    except Exception :
-        return None
-        # print(f"Erreur lors de la lecture du fichier {suricata_yaml_path}: {e}")
-    return syslog_enabled  
-
-#Update fichier de configuration suricata.yaml//
-def update_suricata_config(suricata_yaml_path,lines,home_net_value_sys,ifname, status_enabled,new_promisc, new_eve_log, new_syslog, new_mpm_algo, new_profile, new_copy_mode):    
-    try:
-        updated_lines = []
-        next_eve_log = False
-        next_syslog = False
-        syslog_enabled = None
-        af_packet=False
-        # Ajout de la logique de testa() ici
-        for line in lines:
-            stripped_line = line.strip()
-            if stripped_line.startswith("#"):
-                updated_lines.append(line + '\n')
-            elif "HOME_NET:" in stripped_line:
-                updated_lines.append(f'    HOME_NET: "{home_net_value_sys}"' + '\n')
-            elif "promisc:" in stripped_line:
-                # Met à jour la ligne promisc avec la nouvelle valeur
-                updated_lines.append(f'      promisc: {new_promisc}\n')
-            elif "af-packet:" in stripped_line:
-                af_packet=True
-                updated_lines.append(line + '\n')  # Conserve la ligne "af-packet:" telle quelle
-            elif af_packet:
-                if "interface:" in stripped_line:
-                    updated_lines.append(f'  - interface: {ifname}\n')
-                    af_packet = False
-            elif "eve-log:" in stripped_line:
-                next_eve_log = True  # Activer la lecture de la ligne suivante sous "eve-log"
-                updated_lines.append(line + '\n')  # Conserve la ligne "eve-log" telle quelle
-            elif next_eve_log:
-                if "enabled:" in stripped_line:
-                    # Met à jour la ligne "enabled" sous "eve-log" avec la nouvelle valeur
-                    updated_lines.append(f'      enabled: {new_eve_log}\n')
-                    next_eve_log = False
-            elif "syslog:" in stripped_line:
-               next_syslog = True  # Activer la lecture de la ligne suivante
-               updated_lines.append(line + '\n') 
-            elif next_syslog:
-                if "enabled:" in stripped_line:
-                    # Met à jour la ligne "enabled" sous "syslog" avec la nouvelle valeur
-                    updated_lines.append(f'      enabled: {new_syslog}\n')
-                    next_syslog = False
-            elif "mpm-algo:" in stripped_line:
-                # Met à jour la ligne mpm-algo avec la nouvelle valeur
-                updated_lines.append(f'mpm-algo: {new_mpm_algo}\n')
-            elif "profile:" in stripped_line:
-                # Met à jour la ligne profile avec la nouvelle valeur
-                updated_lines.append(f'  profile: {new_profile}\n')
-            elif "copy-mode:" in stripped_line:
-            # Met à jour la ligne copy-mode avec la nouvelle valeur
-                updated_lines.append(f'      copy-mode: {new_copy_mode}\n')
-            else:
-                # Conserve les autres lignes telles quelles
-                updated_lines.append(line + '\n')
-        with open(suricata_yaml_path, 'w') as local_file:
-            for string in updated_lines:
-                local_file.write(string)
-
-        if status_enabled is True:
-            aux_enable="enable"
-            aux_action="restart"
-        else:
-            aux_enable="disable"
-            aux_action="stop"
-        commands = [
-        "sudo systemctl {} --quiet suricata.service && sudo systemctl {} suricata.service ".format(aux_enable,aux_action)
-        ]
-        for cmd in commands:
-            _, error=execute_cmd(cmd)
-            if error!="":
-                print({"errot":error,"cmd":cmd})
-                return error
-            
-        return True
-    except Exception:
-        # Capture toute autre exception et affiche un message d'erreur
-        return None
-
 #*********** Les régles ****************
-#Format des régles    
 def format_dict_as_suricata_rules(content):    
+    """Format des régles  """
     rule_template = "{action} {protocol} {source_ip} {direction} {destination_ip} (msg:\"{msg}\"; rev:{rev};sid:{sid};)"
     rule_str = rule_template.format(
         action=content['action'],
@@ -173,8 +121,9 @@ def format_dict_as_suricata_rules(content):
     )
     return rule_str
 
-# Ajouter une régle
+
 def add_rule_remote(comment, content,file_path):
+    """Ajouter une régle suricata"""
     formatted_content = format_dict_as_suricata_rules(content)
     if comment:
         formatted_content = "#" + formatted_content
@@ -184,8 +133,8 @@ EOF'""".format(file_path,formatted_content)
     output, error = execute_cmd(cmd)
     return output,formatted_content, error
 
-# mise à jour une régle
 def update_rule_remote(comment,contenu,line_to_update,file_path):
+    """mise à jour une régle suricata"""
     rule = line_to_update.strip()  # Supprimez les espaces inutiles
     action=None
     protocol=None
@@ -343,7 +292,7 @@ def prepare_rule_attribut(rules):
                 "source_ip":src_ip,
                 "direction":direction,
                 "destination_ip":dest_ip,
-                "msg":msg.strip().strip('"'),
+                "msg":msg.strip().strip('"') if msg is not None else msg,
                 "rev":rev,
                 "rule": rule,
                 "suricatafile":id,

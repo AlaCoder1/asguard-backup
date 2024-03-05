@@ -16,7 +16,8 @@ import paramiko
 from .models import *
 from drf_yasg.utils import swagger_auto_schema
 import stripe
-
+from backend.LdapServer.models import ADServer
+import ldap
 # Create your views here.
 
 
@@ -41,22 +42,80 @@ def authentification(request):
         data = json.loads(request.body)
         username = data['username']
         password = data['password']
-        serializer = ObtainTokenSerializer(data=data)
-        if (serializer.is_valid()):
-            user = authenticate(request, username=username, password=password)
-            if (user is not None):
-                login(request, user)
-                settings.USERNAME = username
-                settings.PASSWORD = password
-                userObject = User.objects.get(username=username)
-                userDict = userObject.__dict__
-                CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
-                settings.CurrentUserId = userDict['id']
-                return JsonResponse({'message': ' Success Authentification',"currentUser":CurrentUser}, status=status.HTTP_200_OK)
-            else:
-                return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        ad_servers = ADServer.objects.all()
+        if not ad_servers.exists():
+            msg = "No Active Directory servers registered in the database."
+            print(msg)
+            return JsonResponse({'msg': msg}, status=400)
+
+        if '@' in username:
+            # Perform LDAP authentication
+            for ad_server in ad_servers:
+                ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
+                ldap_conn = ldap.initialize(ldap_uri)
+                try:
+                    ldap_conn.simple_bind_s(username, password)
+                    print(data)
+                    result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(objectClass=user)", ['userPrincipalName'])
+                    print(result)
+                    user_principal_names = [
+                    entry[1].get('userPrincipalName', [])[0].decode('utf-8')
+                    for entry in result
+                    if 'userPrincipalName' in entry[1]
+                ]
+                    if username.lower() in [user.lower() for user in user_principal_names]:
+                       
+                        msg = f"Email found in Active Directory: {ad_server.server_name}"
+                        print(msg)
+                        serializer = ObtainTokenSerializer(data=data)
+                        if (serializer.is_valid()):
+                            user_session=User.objects.filter(email=username).first()
+                           
+                            if (user_session is not None):
+                                login(request, user_session)
+                                settings.USERNAME = user_session.username
+                                settings.PASSWORD = user_session.password
+                                userObject = User.objects.get(email=username)
+                                userDict = userObject.__dict__
+                                CurrentUser = {"username": userDict['username'], "email": userDict['email'], "role": userDict['role']}
+                                settings.CurrentUserId = userDict['id']
+                                ldap_conn.unbind()
+                                return JsonResponse({'message': 'Success Authentification', 'currentUser': CurrentUser},status=status.HTTP_200_OK)
+                            else:
+                                return JsonResponse({'message': 'User not Registred in Asguard'}, status=status.HTTP_401_UNAUTHORIZED)
+
+                        else:
+                            return JsonResponse({'message': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+                    else:
+                            return JsonResponse({'message': 'User not Registred in AD Server'}, status=status.HTTP_401_UNAUTHORIZED)
+
+
+
+
+                except ldap.LDAPError as e:
+                    msg = f"Error connecting to Active Directory Verify your Credentiels {ad_server.server_name}"
+                    print(msg)
+                    return JsonResponse({'msg': msg}, status=400)
+
+
         else:
-            return JsonResponse({'message': 'Invalid username or password'},status=status.HTTP_401_UNAUTHORIZED)
+            serializer = ObtainTokenSerializer(data=data)
+            if (serializer.is_valid()):
+                user = authenticate(request, username=username, password=password)
+                if (user is not None):
+                    login(request, user)
+                    settings.USERNAME = username
+                    settings.PASSWORD = password
+                    userObject = User.objects.get(username=username)
+                    userDict = userObject.__dict__
+                    CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
+                    settings.CurrentUserId = userDict['id']
+                    return JsonResponse({'message': ' Success Authentification',"currentUser":CurrentUser}, status=status.HTTP_200_OK)
+                else:
+                    return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
+            else:
+                return JsonResponse({'message': 'Invalid username or password'},status=status.HTTP_401_UNAUTHORIZED)
 
 @swagger_auto_schema(
     method='GET',

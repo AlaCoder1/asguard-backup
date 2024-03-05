@@ -11,14 +11,13 @@ from django.views.decorators.csrf import csrf_exempt
 from backend.LdapServer.serializers import ADServerSerializer
 from backend.LdapServer.models import ADServer
 import ldap
-from backend.LdapServer.config_ldaps import update_ldap_conf
 from rest_framework.response import Response
 
 
 
 
 # Create new Connection to Active Directory Server  
-
+from backend.LdapServer.encryption_utils import encrypt_data,decrypt_data
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -42,33 +41,31 @@ def connect_to_ad(request):
                 ad_server.port = serializer.validated_data['port']
                 ad_server.bind_user_dn = serializer.validated_data['bind_user_dn']
                 ad_server.search_base = serializer.validated_data['search_base']
-                ad_server.bind_user_password = serializer.validated_data['bind_user_password']
+                ad_server.bind_user_password=encrypt_data(serializer.validated_data['bind_user_password'])
                 ad_server.ssl_tls_activation = serializer.validated_data['ssl_tls_activation']
                 ad_server.save()
-
+                decrypted_password=decrypt_data(ad_server.bind_user_password)
+                print("test",serializer.validated_data['bind_user_password'])
+                print("test11",decrypted_password)
                 # Connect to AD server
                 ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
-                #ldap_uri = f"ldap://{ad_server.server_url}:{ad_server.port}"
-                ldap_conn = ldap.initialize(ldap_uri)
-                ldap_conn.simple_bind_s(ad_server.bind_user_dn, ad_server.bind_user_password)
+                ldap_conn = ldap.initialize(ldap_uri) 
+                ldap_conn.simple_bind_s(ad_server.bind_user_dn,decrypted_password)
 
-                # Update ldap.conf based on SSL/TLS activation
-                ldap_conf_path = '/etc/openldap/ldap.conf'
-                update_ldap_conf(ldap_conf_path, ad_server.ssl_tls_activation)
-
-                # Retrieve user details from AD (you can modify this part based on your needs)
-                result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(objectClass=user)")
+                
+                result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(objectClass=user)", ['userPrincipalName'])
                 print(result)
-                users = [
-                    entry[1].get('sAMAccountName', [])[0].decode('utf-8') 
-                    for entry in result 
-                    if 'sAMAccountName' in entry[1]
+                
+                user_principal_names = [
+                    entry[1].get('userPrincipalName', [])[0].decode('utf-8')
+                    for entry in result
+                    if 'userPrincipalName' in entry[1]
                 ]
 
                 # Close LDAP connection
                 ldap_conn.unbind()
 
-                return Response({'success': True, 'users': users})
+                return Response({'success': True, 'users_emails': user_principal_names})
             else:
                 return Response({'success': False, 'error': serializer.errors})
         except Exception as e:

@@ -14,23 +14,18 @@
           <v-card-text>
             <v-container>
               <v-row>
-                <v-col cols="4" align-self="center">
-                  <label>Activate</label>
-                </v-col>
-                <v-col cols="8" class="mb-n6">
-                  <input type="checkbox" v-model="state.activateStatus" />
-                  <label class="ml-2"> Activate rule</label>
-                </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
-                    v-model="state.interfaces"
+                    v-model="state.interface"
                     label="Interface"
                     item-title="name"
                     item-value="id"
                     :items="state.mapedInterface"
-                    clearable
                     return-object
                   ></v-select>
+                  <p class="error-feedback mb-5" v-if="v$.interface.$error">
+                    {{ v$.interface.$errors[0].$message }}
+                  </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
@@ -38,7 +33,7 @@
                     label="Select TCP/IP version"
                     item-title="name"
                     item-value="id"
-                    :items="state.mapedInterface"
+                    :items="state.versionList"
                     clearable
                     return-object
                   ></v-select>
@@ -49,18 +44,7 @@
                     label="Select Protocol"
                     item-title="name"
                     item-value="id"
-                    :items="state.mapedInterface"
-                    clearable
-                    return-object
-                  ></v-select>
-                </v-col>
-                <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.source"
-                    label="select source"
-                    item-title="name"
-                    item-value="id"
-                    :items="state.mapedInterface"
+                    :items="state.protocolList"
                     clearable
                     return-object
                   ></v-select>
@@ -71,6 +55,9 @@
                     label="Enter source address"
                     v-model="state.sourceAddress"
                   ></v-text-field>
+                  <p class="error-feedback mb-5" v-if="v$.sourceAddress.$error">
+                    {{ v$.sourceAddress.$errors[0].$message }}
+                  </p>
                 </v-col>
                 <v-col cols="1" class="mb-n6">
                   <div class="ml-1 mt-5">/</div>
@@ -81,58 +68,91 @@
                     v-model="state.sourcePrefix"
                     :items="numberList"
                   ></v-select>
+                  <p class="error-feedback mb-5" v-if="v$.sourcePrefix.$error">
+                    {{ v$.sourcePrefix.$errors[0].$message }}
+                  </p>
                 </v-col>
 
                 <v-col cols="6" class="mb-n6 mt-3">
-                  <span>Source Port Range</span>
+                  <span>Source Port Range </span>
                 </v-col>
                 <v-col cols="3" class="mb-n6">
                   <v-select
                     label="From"
                     v-model="state.sourceRangeFrom"
-                    :items="numberList"
+                    :items="state.listPort"
+                    item-title="name"
+                    item-value="slug"
+                    return-object
                   ></v-select>
+                  <v-text-field
+                    v-if="state.sourceRangeFrom.slug === 'other'"
+                    label="From"
+                    v-model="state.specificSourceFrom"
+                  ></v-text-field>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.specificSourceFrom.$error"
+                  >
+                    {{ v$.specificSourceFrom.$errors[0].$message }}
+                  </p>
                 </v-col>
                 <v-col cols="3" class="mb-n6">
                   <v-select
                     label="To"
                     v-model="state.sourceRangeTo"
-                    :items="numberList"
+                    :items="state.listPortSourceTo"
+                    item-title="name"
+                    item-value="slug"
+                    return-object
                   ></v-select>
+                  <v-text-field
+                    v-if="state.sourceRangeTo.slug === 'other'"
+                    label="To"
+                    v-model="state.specificSourceTo"
+                  ></v-text-field>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.specificSourceTo.$error"
+                  >
+                    {{ v$.specificSourceTo.$errors[0].$message }}
+                  </p>
                 </v-col>
+                <p
+                  class="error-feedback mb-5 ml-5"
+                  v-if="
+                    state.specificSourceFrom &&
+                    state.specificSourceTo &&
+                    !isHightSpecificSource
+                  "
+                >
+                  Port To must me greater than or equal to Port from
+                </p>
 
-                <v-col cols="7" class="mb-n6">
+                <v-col cols="12" class="mb-n6">
                   <v-text-field
                     label="Enter External address"
                     v-model="state.externalAddress"
                   ></v-text-field>
-                </v-col>
-                <v-col cols="1" class="mb-n6">
-                  <div class="ml-1 mt-5">/</div>
-                </v-col>
-                <v-col cols="4" class="mb-n6">
-                  <v-select
-                    label="Prefix"
-                    v-model="state.externalPrefix"
-                    :items="numberList"
-                  ></v-select>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.externalAddress.$error"
+                  >
+                    {{ v$.externalAddress.$errors[0].$message }}
+                  </p>
                 </v-col>
 
-                <v-col cols="7" class="mb-n6">
+                <v-col cols="12" class="mb-n6">
                   <v-text-field
                     label="Enter Internal address"
                     v-model="state.internalAddress"
                   ></v-text-field>
-                </v-col>
-                <v-col cols="1" class="mb-n6">
-                  <div class="ml-1 mt-5">/</div>
-                </v-col>
-                <v-col cols="4" class="mb-n6">
-                  <v-select
-                    label="Prefix"
-                    v-model="state.internalPrefix"
-                    :items="numberList"
-                  ></v-select>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.internalAddress.$error"
+                  >
+                    {{ v$.internalAddress.$errors[0].$message }}
+                  </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
@@ -144,32 +164,106 @@
                     </v-row>
                   </v-radio-group>
                 </v-col>
+                <template v-if="state.checkInterface === 'Port Frowardin'">
+                  <v-col cols="6" class="mb-n6 mt-3">
+                    <span>destination port range</span>
+                  </v-col>
+                  <v-col cols="3" class="mb-n6">
+                    <v-select
+                      label="From"
+                      v-model="state.destinationRangeFrom"
+                      :items="state.listPort"
+                      item-title="name"
+                      item-value="slug"
+                      return-object
+                    ></v-select>
+                    <v-text-field
+                      v-if="state.destinationRangeFrom.slug === 'other'"
+                      label="From"
+                      v-model="state.specificDestinationFrom"
+                    ></v-text-field>
+                    <p
+                      class="error-feedback mb-5"
+                      v-if="v$.specificDestinationFrom.$error"
+                    >
+                      {{ v$.specificDestinationFrom.$errors[0].$message }}
+                    </p>
 
-                <v-col cols="6" class="mb-n6 mt-3">
-                  <span>destination port range</span>
-                </v-col>
-                <v-col cols="3" class="mb-n6">
-                  <v-select
-                    label="From"
-                    v-model="state.destinationRangeFrom"
-                    :items="numberList"
-                  ></v-select>
-                </v-col>
-                <v-col cols="3" class="mb-n6">
-                  <v-select
-                    label="To"
-                    v-model="state.destinationRangeTo"
-                    :items="numberList"
-                  ></v-select>
-                </v-col>
+                    <p
+                      class="error-feedback mb-5"
+                      v-if="v$.destinationRangeFrom.$error"
+                    >
+                      {{ v$.destinationRangeFrom.$errors[0].$message }}
+                    </p>
+                  </v-col>
+                  <v-col cols="3" class="mb-n6">
+                    <v-select
+                      label="To"
+                      v-model="state.destinationRangeTo"
+                      :items="state.listPortDestinationTo"
+                      item-title="name"
+                      item-value="slug"
+                      return-object
+                    ></v-select>
+                    <v-text-field
+                      v-if="state.destinationRangeTo.slug === 'other'"
+                      label="To"
+                      v-model="state.specificDestinationTo"
+                    ></v-text-field>
+                    <p
+                      class="error-feedback mb-5"
+                      v-if="v$.specificDestinationTo.$error"
+                    >
+                      {{ v$.specificDestinationTo.$errors[0].$message }}
+                    </p>
 
-                <v-col cols="12" class="mb-n6">
-                  <v-select
-                    label="Port"
-                    v-model="state.port"
-                    :items="numberList"
-                  ></v-select>
-                </v-col>
+                    <p
+                      class="error-feedback mb-5"
+                      v-if="v$.destinationRangeTo.$error"
+                    >
+                      {{ v$.destinationRangeTo.$errors[0].$message }}
+                    </p>
+                  </v-col>
+
+                  <p
+                    class="error-feedback mb-5 ml-5"
+                    v-if="
+                      state.specificDestinationFrom &&
+                      state.specificDestinationTo &&
+                      !isHightSpecificDestination
+                    "
+                  >
+                    Port To must me greater than or equal to Port from
+                  </p>
+
+                  <v-col cols="12" class="mb-n6">
+                    <v-select
+                      label="Port"
+                      v-model="state.port"
+                      :items="state.listPort"
+                      item-title="name"
+                      item-value="slug"
+                      return-object
+                    ></v-select>
+
+                    <v-text-field
+                      v-if="state.port.slug === 'other'"
+                      label="Port"
+                      v-model="state.specificPort"
+                    ></v-text-field>
+                    <p
+                      class="error-feedback mb-5"
+                      v-if="v$.specificPort.$error"
+                    >
+                      {{ v$.specificPort.$errors[0].$message }}
+                    </p>
+
+                    <p class="error-feedback mb-5" v-if="v$.port.$error">
+                      {{ v$.port.$errors[0].$message }}
+                    </p>
+                  </v-col>
+                </template>
+
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     label="Description"
@@ -205,8 +299,9 @@
               :rounded="true"
               variant="flat"
               class="mt-3 btn-add"
+              :disabled="isfalse || isfalseSpecific"
             >
-              <span class="text-white pr-3 pl-3">Create</span>
+              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -227,8 +322,8 @@
 <script>
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { toRefs, watch, reactive, computed, inject, onMounted } from "vue";
-import { required, helpers } from "@vuelidate/validators";
+import { toRefs, watch, reactive, computed, inject, onMounted, ref } from "vue";
+import { required, helpers, requiredIf } from "@vuelidate/validators";
 import { getCookie } from "@/mixins/csrftoken.js";
 
 export default {
@@ -250,33 +345,71 @@ export default {
   setup(props) {
     const emitter = inject("emitter");
     const { isOpen, editRow, modalMode } = toRefs(props);
+    const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
 
     const state = reactive({
+      id: null,
       //list
       isCombo: ["Frowarding", "Port Frowardin"],
+      versionList: [
+        { name: "IPv4", slug: "ipv4" },
+        { name: "IPv6", slug: "ipv6" },
+      ],
+      protocolList: [
+        { name: "Udp", slug: "udp" },
+        { name: "Tcp", slug: "tcp" },
+      ],
+      listPort: [
+        { name: "HTTP", slug: "80" },
+        { name: "HTTPS", slug: "443" },
+        { name: "FTP", slug: "21" },
+        { name: "SSH", slug: "22" },
+        { name: "Telnet", slug: "23" },
+        { name: "SMTP", slug: "25" },
+        { name: "DNS", slug: "53" },
+        { name: "DHCP", slug: "67" },
+        { name: "TFTP", slug: "69" },
+        { name: "HTTP(alternative)", slug: "8080" },
+        { name: "MySQL", slug: "3306" },
+        { name: "PostgreSQL", slug: "5432" },
+        { name: "RDP (Remote Desktop Protocol)", slug: "3389" },
+        { name: "NTP (Network Time Protocol)", slug: "123" },
+        { name: "SNMP (Simple Network Management Protocol)", slug: "161" },
+        { name: "LDAP (Lightweight Directory Access Protocol)", slug: "389" },
+        { name: "HTTPS (alternative)", slug: "8443" },
+        { name: "SMTPS", slug: "465" },
+        { name: "OTHER", slug: "other" },
+      ],
+      listPortSourceTo: [],
+      listPortDestinationTo: [],
       //
-      activateStatus: "",
       interface: "",
-      tcpIpVersion: "",
+      tcpIpVersion: { name: "IPv4", slug: "ipv4" },
       protocol: "",
-      source: "",
       sourceAddress: "",
       sourcePrefix: "",
       destination: "",
-      checkInterface: "",
+      checkInterface: "Frowarding",
 
       //
       sourceRangeFrom: "",
       sourceRangeTo: "",
-      internalPrefix: "",
       internalAddress: "",
-      externalPrefix: "",
       externalAddress: "",
       description: "",
       port: "",
-      destinationRangeTo: "",
+      //
       destinationRangeFrom: "",
-      checkInterface: "",
+      destinationRangeTo: "",
+
+      //port other
+      specificSourceFrom: "",
+      specificSourceTo: "",
+
+      specificDestinationFrom: "",
+      specificDestinationTo: "",
+
+      specificPort: "",
     });
 
     onMounted(() => {
@@ -292,33 +425,179 @@ export default {
     watch(
       () => editRow.value,
       (val) => {
-        // populate(val);
+        populate(val);
       }
     );
     watch(
       () => modalMode.value,
       () => {
         if (modalMode.value === "create") {
-          state.areaName = "";
-          state.interfaces = [];
+          state.interface = "";
+          state.tcpIpVersion = { name: "IPv4", slug: "ipv4" };
+          state.protocol = "";
+          state.sourceAddress = "";
+          state.sourcePrefix = "";
+          state.destination = "";
+          state.checkInterface = "Frowarding";
+
+          //
+          state.sourceRangeFrom = "";
+          state.sourceRangeTo = "";
+          state.internalAddress = "";
+          state.externalAddress = "";
+          state.description = "";
+          state.port = "";
+          //
+          state.destinationRangeFrom = "";
+          state.destinationRangeTo = "";
+
+          //port other
+          state.specificSourceFrom = "";
+          state.specificSourceTo = "";
+
+          state.specificDestinationFrom = "";
+          state.specificDestinationTo = "";
+
+          state.specificPort = "";
         }
       }
     );
-    //   const populate = (data) => {
-    //     if (modalMode.value === "edit") {
-    //       state.areaName = data.name;
-    //       state.id = data.id;
 
-    //       let filtredInterface = [];
-    //       data?.members.forEach((e) => {
-    //         filtredInterface = [
-    //           ...filtredInterface,
-    //           ...state.mapedInterface.filter((i) => i.name === e),
-    //         ];
-    //       });
-    //       state.interfaces = filtredInterface;
-    //     }
-    //   };
+    watch(
+      () => state.sourceRangeFrom,
+      (val) => {
+        if (val.slug) {
+          state.listPortSourceTo = state.listPort.filter(
+            (i) => i.slug >= val.slug
+          );
+        }
+      }
+    );
+    watch(
+      () => state.destinationRangeFrom,
+      (val) => {
+        if (val.slug) {
+          state.listPortDestinationTo = state.listPort.filter(
+            (i) => i.slug >= val.slug
+          );
+        }
+      }
+    );
+    watch(
+      () => state.checkInterface,
+      (val) => {
+        if (val === "Frowarding") {
+          state.port = "";
+          state.destinationRangeTo = "";
+          state.destinationRangeFrom = "";
+        }
+      }
+    );
+
+    const populate = (data) => {
+      if (modalMode.value === "edit") {
+        console.log("data*", data);
+
+        state.id = data.id;
+
+        let filtredInterface = state.mapedInterface.filter(
+          (i) => i.id === data?.interface
+        );
+        let filtredIpVersion = state.versionList.filter(
+          (i) => i.slug === data?.tcp_ip
+        );
+        let filtredProtocol = state.protocolList.filter(
+          (i) => i.slug === data?.protocol
+        );
+
+        state.interface = filtredInterface[0];
+        state.tcpIpVersion = filtredIpVersion[0];
+        state.protocol = filtredProtocol[0];
+
+        let resultSource = data?.source_address
+          ? data?.source_address?.split("/")
+          : "";
+        if (resultSource) {
+          resultSource[1] = parseInt(resultSource[1], 10);
+        }
+        state.sourceAddress = resultSource ? resultSource[0] : "";
+        state.sourcePrefix = resultSource ? resultSource[1] : "";
+
+        let filtredSourcePortFrom = state.listPort.filter(
+          (i) => i.slug === data?.source_port_from
+        );
+
+        if (filtredSourcePortFrom.length == 0) {
+          state.sourceRangeFrom = data?.source_port_from
+            ? { name: "OTHER", slug: "other" }
+            : "";
+          state.specificSourceFrom = data.source_port_from;
+        } else {
+          state.sourceRangeFrom = filtredSourcePortFrom[0];
+        }
+
+        let filtredSourcePorTo = state.listPort.filter(
+          (i) => i.slug === data?.source_port_from
+        );
+
+        if (filtredSourcePorTo.length == 0) {
+          state.sourceRangeTo = data?.source_port_from
+            ? { name: "OTHER", slug: "other" }
+            : "";
+          state.specificSourceTo = data.source_port_to;
+        } else {
+          state.sourceRangeTo = filtredSourcePorTo[0];
+        }
+
+        state.externalAddress = data.external_address;
+        state.internalAddress = data.internal_address;
+
+        state.checkInterface = data.destination_port
+          ? "Port Frowardin"
+          : "Frowarding";
+
+        let filtredPort = state.listPort.filter(
+          (i) => i.slug === data?.destination_port
+        );
+
+        if (filtredPort.length == 0) {
+          state.port = data.destination_port
+            ? { name: "OTHER", slug: "other" }
+            : "";
+          state.specificPort = data.destination_port;
+        } else {
+          state.port = filtredPort[0];
+        }
+
+        let filtredDestinationPortFrom = state.listPort.filter(
+          (i) => i.slug === data?.destination_port_from
+        );
+
+        if (filtredDestinationPortFrom.length == 0) {
+          state.destinationRangeFrom = data?.destination_port_from
+            ? { name: "OTHER", slug: "other" }
+            : "";
+          state.specificDestinationFrom = data.destination_port_from;
+        } else {
+          state.destinationRangeFrom = filtredDestinationPortFrom[0];
+        }
+
+        let filtredDestinationPortTo = state.listPort.filter(
+          (i) => i.slug === data?.destination_port_to
+        );
+
+        if (filtredDestinationPortTo.length == 0) {
+          state.destinationRangeTo = data?.destination_port_to
+            ? { name: "OTHER", slug: "other" }
+            : "";
+          state.specificDestinationTo = data.destination_port_to;
+        } else {
+          state.destinationRangeTo = filtredDestinationPortTo[0];
+        }
+
+        state.description = data.description;
+      }
+    };
 
     const getInterface = () => {
       const csrfToken = getCookie("csrftoken");
@@ -348,84 +627,293 @@ export default {
     const closeModal = () => {
       emitter.emit("closeDnatModal");
       if (modalMode.value === "create") {
+        state.interface = "";
+        state.tcpIpVersion = { name: "IPv4", slug: "ipv4" };
+        state.protocol = "";
+        state.sourceAddress = "";
+        state.sourcePrefix = "";
+        state.destination = "";
+        state.checkInterface = "Frowarding";
+
+        //
+        state.sourceRangeFrom = "";
+        state.sourceRangeTo = "";
+        state.internalAddress = "";
+        state.externalAddress = "";
+        state.description = "";
+        state.port = "";
+        //
+        state.destinationRangeFrom = "";
+        state.destinationRangeTo = "";
+
+        //port other
+        state.specificSourceFrom = "";
+        state.specificSourceTo = "";
+
+        state.specificDestinationFrom = "";
+        state.specificDestinationTo = "";
+
+        state.specificPort = "";
       }
     };
 
+    const isHightSpecificSource = computed(() => {
+      return (
+        parseInt(state.specificSourceTo) >= parseInt(state.specificSourceFrom)
+      );
+    });
+    const isHightSpecificDestination = computed(() => {
+      return (
+        parseInt(state.specificDestinationTo) >=
+        parseInt(state.specificDestinationFrom)
+      );
+    });
+    const isfalse = computed(() => {
+      if (
+        state.specificDestinationFrom &&
+        state.specificDestinationTo &&
+        !isHightSpecificDestination.value
+      )
+        return true;
+      else return false;
+    });
+    const isfalseSpecific = computed(() => {
+      if (
+        state.specificSourceFrom &&
+        state.specificSourceTo &&
+        !isHightSpecificSource.value
+      )
+        return true;
+      else return false;
+    });
+
     const submitForm = async () => {
-      console.log("state", state);
-      // const result = await v$.value.$validate();
-      // const csrfToken = getCookie("csrftoken");
-      // axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      // if (result && isMoreThanTwo.value) {
-      //   let nameInterface = state.interfaces.map((e) => e.id);
-      //   let payload = {
-      //     name: state.areaName,
-      //     members: nameInterface,
-      //   };
-      //   console.log("payload", payload);
-      //   if (modalMode.value === "edit") {
-      //     axios
-      //       .put(`/sdwan/updateArea/${state.id}`, payload)
-      //       .then((response) => {
-      //         if (response.status == "201") {
-      //           state.snackbar = true;
-      //           state.color = "success";
-      //           state.textAlert = response.data.msg;
-      //           setTimeout(() => {
-      //             location.reload();
-      //           }, 1000);
-      //         }
-      //       })
-      //       .catch((i) => {
-      //         state.snackbar = true;
-      //         state.color = "red";
-      //         state.textAlert = i.response.data.response;
-      //       });
-      //   } else {
-      //     axios
-      //       .post("/sdwan/createArea", payload)
-      //       .then((response) => {
-      //         if (response.status == "201") {
-      //           state.openModal = false;
-      //           state.snackbar = true;
-      //           state.color = "success";
-      //           state.textAlert = response.data.msg;
-      //           setTimeout(() => {
-      //             location.reload();
-      //           }, 1000);
-      //         }
-      //       })
-      //       .catch((i) => {
-      //         state.snackbar = true;
-      //         state.color = "red";
-      //         state.textAlert = i.response.data.error;
-      //       });
-      //   }
-      // } else {
-      //   console.log("v$", v$.value);
-      // }
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const result = await v$.value.$validate();
+      if (result) {
+        let payload = {
+          interface: state.interface.id,
+          tcp_ip: state.tcpIpVersion?.slug ?? "",
+          protocol: state.protocol?.slug ?? "",
+
+          source_address: state.sourceAddress
+            ? `${state.sourceAddress}/${state.sourcePrefix}`
+            : "",
+          source_port_from:
+            state.sourceRangeFrom?.slug === "other"
+              ? state.specificSourceFrom
+              : state.sourceRangeFrom?.slug
+              ? state.sourceRangeFrom?.slug
+              : "",
+
+          source_port_to:
+            state.sourceRangeTo?.slug === "other"
+              ? state.specificSourceTo
+              : state.sourceRangeTo?.slug
+              ? state.sourceRangeTo?.slug
+              : "",
+          external_address: state.externalAddress,
+          internal_address: state.internalAddress,
+          port_forwarding: state.checkInterface === "Frowarding" ? false : true,
+          description: state.description,
+        };
+        if (state.checkInterface === "Port Frowardin") {
+          payload = {
+            ...payload,
+            destination_port_from:
+              state.destinationRangeFrom.slug === "other"
+                ? state.specificDestinationFrom
+                : state.destinationRangeFrom?.slug
+                ? state.destinationRangeFrom?.slug
+                : "",
+
+            destination_port_to:
+              state.destinationRangeTo.slug === "other"
+                ? state.specificDestinationTo
+                : state.destinationRangeTo?.slug
+                ? state.destinationRangeTo?.slug
+                : "",
+
+            destination_port:
+              state.port.slug === "other"
+                ? state.specificPort
+                : state.port?.slug
+                ? state.port?.slug
+                : "",
+          };
+        }
+
+        if (modalMode.value === "edit") {
+          console.log("payload", payload);
+          axios
+            .put(`/nat/updateDNat/${state.id}`, payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          axios
+            .post(`/nat/createDNat`, payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.response;
+            });
+        }
+      } else {
+        console.log("v$", v$.value);
+      }
     };
 
-    //   const rules = computed(() => {
-    //     return {
-    //       interfaces: { required, isMoreThanTwo },
-    //       areaName: {
-    //         required,
-    //         isValidkeyName: helpers.withMessage(
-    //           `Champs can include only letters & Numbers & underscores & hyphens without space.`,
+    const rules = computed(() => {
+      return {
+        interface: { required },
 
-    //           helpers.regex(/^[A-Za-z0-9_\-]+$/)
-    //         ),
-    //       },
-    //     };
-    //   });
+        sourceAddress: {
+          isValidSourceAddress: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
 
-    //   const v$ = useValidate(rules, state);
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+
+        sourcePrefix: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.sourceAddress)
+          ),
+        },
+
+        internalAddress: {
+          required,
+          isValidSourceAddress: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+        externalAddress: {
+          required,
+          isValidSourceAddress: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+
+        destinationRangeFrom: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.checkInterface === "Port Frowardin")
+          ),
+        },
+        destinationRangeTo: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.checkInterface === "Port Frowardin")
+          ),
+        },
+        port: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.checkInterface === "Port Frowardin")
+          ),
+        },
+
+        specificSourceFrom: {
+          isValidSpecificSourceFrom: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.sourceRangeFrom.slug === "other")
+          ),
+        },
+
+        specificSourceTo: {
+          isValidSpecificSourceTo: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.sourceRangeTo.slug === "other")
+          ),
+        },
+
+        specificDestinationFrom: {
+          isValidSpecificSourceTo: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.destinationRangeFrom.slug === "other")
+          ),
+        },
+        specificDestinationTo: {
+          isValidSpecificSourceTo: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.destinationRangeTo.slug === "other")
+          ),
+        },
+
+        specificPort: {
+          isValidSpecificSourceTo: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.port.slug === "other")
+          ),
+        },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
 
     return {
+      isfalse,
+      isfalseSpecific,
       state,
-      // v$,
+      v$,
+      numberList,
       emitter,
+      isHightSpecificSource,
+      isHightSpecificDestination,
       submitForm,
       closeModal,
     };

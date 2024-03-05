@@ -1,10 +1,11 @@
 from django.db import models
-
 # Create your models here.
 from django.db import models
 from django.utils import timezone
 from backend.managementUsers.models import User
-
+    
+#model generic config
+from django.conf import settings
 # Create your models here.
 ##model interface
 class Interface(models.Model):
@@ -32,9 +33,7 @@ class Interface(models.Model):
     description=models.CharField(max_length=200, null=True,default=None)
 
 
-    
-#model generic config
-from django.conf import settings
+
 class GenericConfig(models.Model):
     interface = models.ForeignKey(
             Interface, on_delete=models.CASCADE)
@@ -56,7 +55,7 @@ class GenericConfig(models.Model):
         self.updated_at = timezone.now()
         super(GenericConfig, self).save(*args, **kwargs)
     class Meta:
-        db_table = 'genericConfig'
+        db_table = 'generic_config'
 
 
 #model to configure ipv4

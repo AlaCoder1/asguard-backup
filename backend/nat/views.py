@@ -46,11 +46,10 @@ def get_snat(request, id):
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO CREATE AN SNAT RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['interface', 'tcp_ip', 'protocol', 'source_address', 
-                                                     'destination_address', 'snat_type'],
+                         type=TYPE_OBJECT, required=['interface', 'source_address', 'destination_address', 'snat_type'],
                          properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"]),
-                                     'protocol': Schema(type=TYPE_STRING),
+                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
+                                     'protocol': Schema(type=TYPE_STRING, description="required when choosing Static"),
                                      'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
                                      'source_port': Schema(type=TYPE_STRING),
                                      'destination_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
@@ -133,11 +132,10 @@ def delete_snat(request, id):
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO UPDATE AN SNAT RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['interface', 'tcp_ip', 'protocol', 'source_address', 
-                                                     'destination_address', 'snat_type'],
+                         type=TYPE_OBJECT, required=['interface', 'source_address', 'destination_address', 'snat_type'],
                          properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"]),
-                                     'protocol': Schema(type=TYPE_STRING),
+                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
+                                     'protocol': Schema(type=TYPE_STRING, description="required when choosing Static"),
                                      'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
                                      'source_port': Schema(type=TYPE_STRING),
                                      'destination_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
@@ -496,11 +494,11 @@ def get_dnat(request, id):
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO CREATE A DNAT RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['interface', 'tcp_ip', 'protocol', 'source_address', 'source_port_from',
-                                                     'source_port_to', 'external_address', 'internal_address', 'port_forwarding'],
+                         type=TYPE_OBJECT, required=['interface', 'source_address', 'source_port_from', 'source_port_to', 
+                                                     'external_address', 'internal_address', 'port_forwarding'],
                          properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"]),
-                                     'protocol': Schema(type=TYPE_STRING),
+                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
+                                     'protocol': Schema(type=TYPE_STRING, description="required when choosing Static"),
                                      'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
                                      'source_port_from': Schema(type=TYPE_STRING),
                                      'source_port_to': Schema(type=TYPE_STRING),
@@ -582,11 +580,11 @@ def delete_dnat(request, id):
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO CREATE A DNAT RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['interface', 'tcp_ip', 'protocol', 'source_address', 'source_port_from',
-                                                     'source_port_to', 'external_address', 'internal_address', 'port_forwarding'],
+                         type=TYPE_OBJECT, required=['interface', 'source_address', 'source_port_from', 'source_port_to', 
+                                                     'external_address', 'internal_address', 'port_forwarding'],
                          properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
-                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"]),
-                                     'protocol': Schema(type=TYPE_STRING),
+                                     'tcp_ip': Schema(type=TYPE_STRING, enum=["ipv4", "ipv6"], description="required when choosing Static"),
+                                     'protocol': Schema(type=TYPE_STRING, description="required when choosing Static"),
                                      'source_address': Schema(type=TYPE_STRING, description="format of address/mask or blank for Any"),
                                      'source_port_from': Schema(type=TYPE_STRING),
                                      'source_port_to': Schema(type=TYPE_STRING),

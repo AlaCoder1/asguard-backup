@@ -386,6 +386,7 @@ EOF""".format('\n'.join(output_service))
         else:
             msg="Connection is not active !!"
             status=400
+    print(msg)
     return JsonResponse({"message":msg},status=status)
 
 ##API to delete config 

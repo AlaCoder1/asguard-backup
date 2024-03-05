@@ -68,6 +68,7 @@ INSTALLED_APPS = [
     'backend.sdwan',
     'backend.openvpn_monitoring',
     'backend.nat',
+    'backend.vlan',
     'channels',
     'drf_yasg',
 ]

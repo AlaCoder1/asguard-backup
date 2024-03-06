@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from backend.network.serializers import *
+from backend.server_dhcp4.functions import create_dhcpv4_db
 from .models import *
 from backend.settings.serializers import *
 import json
@@ -351,6 +352,8 @@ EOF""".format('\n'.join(output_service))
                                         if aux_inter is True:  
                                             if aux_gw_dhcp is True:
                                                 if aux_gw6_dhcp is True:
+                                                    if setuptypeIP4.lower()=="static" :
+                                                        create_dhcpv4_db(id_interface,ip_address4,netmask4)
                                                     ###### 
                                                     msg="Your interface {} was configured Successfully!!".format(name_interface)
                                                     status=200

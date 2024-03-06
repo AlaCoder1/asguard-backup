@@ -72,8 +72,9 @@ def delete_vlan(request,id):
         # parse the incoming information
         if Vlan.objects.filter(id=id):
             vlan_object=Vlan.objects.get(id=id)
-            if Interface.objects.filter(ifname="vlan"+str(vlan_object.vlan_tag)).exists():
-                interface_object=Interface.objects.get(ifname="vlan"+str(vlan_object.vlan_tag))
+            name_interface=Interface.objects.get(id=vlan_object.parent_interface_id).ifname
+            if Interface.objects.filter(ifname=f"vlan{vlan_object.vlan_tag}@{name_interface}").exists():
+                interface_object=Interface.objects.get(ifname=f"vlan{vlan_object.vlan_tag}@{name_interface}")
                 aux_delete=delete_vlan_sys(interface_object.ifname)
                 if aux_delete:
                     interface_object.delete()
@@ -101,10 +102,11 @@ def assign_vlan_interface(request):
             vlan_tag=res_vlan["vlan_tag"]
             vlan_priority=convert_priority(res_vlan["vlan_priority"])
             data_save={
-                        "ifname":f"vlan{vlan_tag}",
+                        "ifname":f"vlan{vlan_object.vlan_tag}@{parent_interface}",
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":data_input['name_interface'],
+                        "description":f"default config vlan{vlan_object.vlan_tag}@{parent_interface}",
                     }
             aux_save=add_vlan_sys(parent_interface,vlan_tag,vlan_priority)
             if aux_save is True:
@@ -133,10 +135,11 @@ def update_vlan_interface(request,id_interface):
             vlan_tag=res_vlan["vlan_tag"]
             vlan_priority=convert_priority(res_vlan["vlan_priority"])
             data_save={
-                        "ifname":f"vlan{vlan_tag}",
+                        "ifname":f"vlan{vlan_object.vlan_tag}@{parent_interface}",
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":data_input['name_interface'],
+                        "description":f"default config vlan{vlan_object.vlan_tag}",
                     }
             
             vlan_object=Interface.objects.get(id=id_interface)
@@ -185,7 +188,7 @@ def get_vlan_interface(request):
         vlans = serializers.serialize("json", vlan_object)
         res = json.loads(vlans)
         for i in range(len(res)):
-            vlan_tag=res[i]['fields']['ifname'].strip("vlan")
+            vlan_tag=res[i]['fields']['ifname'].strip("vlan").split("@")[0]
             interface=Vlan.objects.get(vlan_tag=vlan_tag).parent_interface_id
             ifname_parent=Interface.objects.get(id=interface).ifname      
             data={

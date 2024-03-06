@@ -227,9 +227,9 @@ export default {
       },
     ]);
     const columnInterfaces = ref([
-      { headerName: name, field: "name" },
-      { headerName: speed, field: "speed_uplex" },
-      { headerName: address, field: "address" },
+      { headerName: name, field: "name_interface" },
+      { headerName: speed, field: "speed_duplex" },
+      { headerName: address, field: "ip_address" },
     ]);
     const columnGateways = ref([
       { headerName: name, field: "name" },
@@ -304,11 +304,11 @@ export default {
 
       // gridApi.value.sizeColumnsToFit();
 
-      if (gridApi.value) {
-        gridApi.value.setRowData(rowDataServices.value);
-      } else {
-        console.error("Grid API.");
-      }
+      // if (gridApi.value) {
+      //   gridApi.value.setRowData(rowDataServices.value);
+      // } else {
+      //   console.error("Grid API.");
+      // }
     };
     const defaultColDef = {
       // flex: 2,
@@ -338,7 +338,6 @@ export default {
               operating: data.current_date,
             },
           ];
-         
 
           const timestamp = new Date(data.timestamp * 1000).getTime();
 
@@ -429,14 +428,14 @@ export default {
 
       let parsedArray = JSON.parse(interfaces);
 
-      let infoInterfaces = parsedArray.map((element) => {
-        return {
-          name: element.name_interface,
-          speed_uplex: element.speed_duplex,
-          address: element.ip_address,
-        };
-      });
-      rowDataInterfaces.value = infoInterfaces;
+      // let infoInterfaces = parsedArray.map((element) => {
+      //   return {
+      //     name: element.name_interface,
+      //     speed_uplex: element.speed_duplex,
+      //     address: element.ip_address,
+      //   };
+      // });
+      rowDataInterfaces.value = parsedArray;
     });
 
     return {

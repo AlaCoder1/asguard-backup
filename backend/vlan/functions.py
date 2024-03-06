@@ -11,9 +11,57 @@ def execute_cmd(command):
 
 def add_vlan_sys(parent_interface,vlan_tag,vlan_priority):
     """function to add vlan in system"""
-    cmd= f"nmcli connection add type vlan con-name vlan{vlan_tag} ifname vlan{vlan_tag} dev {parent_interface} id {vlan_tag} ingress {vlan_priority}"
+    commandes= [
+    f"nmcli connection add type vlan con-name vlan{vlan_tag} ifname vlan{vlan_tag} dev {parent_interface} id {vlan_tag} ingress {vlan_priority}",
+    "systemctl restart NetworkManager"
+          ]
+    for cmd in commandes:
+        _, error = execute_cmd(cmd)
+        if error!="":
+            return error
+    return True
+
+def update_vlan_sys(old_vlan,parent_interface,vlan_tag,vlan_priority):
+    """function to update vlan in system"""
+    cmd= f"nmcli connection modify {old_vlan} con-name  vlan{vlan_tag} ifname vlan{vlan_tag} dev {parent_interface} id {vlan_tag} ingress {vlan_priority}"
     _, error = execute_cmd(cmd)
     if error=="":
         return True
-    print(cmd)
     return error
+
+def delete_vlan_sys(vlan):
+    """function to update vlan in system"""
+    cmd= f"nmcli connection delete {vlan}"
+    _, error = execute_cmd(cmd)
+    if error=="":
+        return True
+    return error
+def convert_priority(priority):
+    match priority:
+        case 'Best Effort ( 0 , default )':
+            priority="0:1"
+        case 'Background ( 1, lowest)':
+            priority="1:0"
+        case 'Excellent Effort (2)':
+            priority="2:2"
+        case 'Critical Applications (3)':
+            priority="3:3"
+        case 'Video (4)':
+            priority="4:4"
+        case 'Voice (5)':
+            priority="5:5"
+        case 'Internetwork Control (6)':
+            priority="6:6"
+        case 'Network Control (7)':
+            priority="7:7"
+    return priority
+
+def save_in_db(aux_save,interface_serializer):
+    if aux_save and interface_serializer.is_valid():
+        interface_serializer.save()
+        msg="Interface saved Successfully"
+        status=200
+    else:
+        msg=interface_serializer.errors 
+        status=400
+    return msg,status

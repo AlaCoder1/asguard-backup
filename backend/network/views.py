@@ -31,9 +31,6 @@ def conf(request,name_interface):
     status=400
     list_metric = []
     if (request.method == 'PUT'):
-        # interfaceObject = Interface.objects.get(name_interface=name_interface)
-        # id_interface = interfaceObject.id
-       
         #get object of interface type
         deviceInfo = device_name_interface(name_interface)
         #get interface name to execute command systeme
@@ -50,7 +47,6 @@ def conf(request,name_interface):
         if uuid is not None:
             # parse the incoming information
             data = request.data
-            # return JsonResponse({"data":data})
             setuptypeIP4 = data.get('setuptypeIP4')
             ## for ipv6
             setuptypeIP6 = data.get('setuptypeIP6')

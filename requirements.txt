@@ -107,3 +107,4 @@ pyshark==0.6
 semantic-version==2.10.0
 ruamel.yaml
 ruamel.yaml.clib
+python-ldap

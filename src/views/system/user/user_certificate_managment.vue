@@ -14,9 +14,9 @@
                 <user-management :DataList="{ groups: groups, users: users }" />
               </v-col>
 
-              <!-- <v-col cols="6" style="height: 100%;">
-                                            <network-server-management :DataList="servers" />
-                                        </v-col> -->
+              <v-col cols="6" style="height: 100%">
+                <network-server-management :DataList="servers" />
+              </v-col>
 
               <v-col cols="6" style="height: 100%">
                 <group-management :DataList="groups" />
@@ -46,14 +46,14 @@
 import BaseLayout from "../../../layouts/layout.vue";
 import UserManagement from "../user/components/user-management.vue";
 import GroupManagement from "../user/components/group-management.vue";
-// import NetworkServerManagement from "@/components/systemmanagment/network-server-management.vue";
+import NetworkServerManagement from "../user/components/network-server-management.vue";
 
 export default {
   name: "DataManagment",
   components: {
     BaseLayout,
     UserManagement,
-    // NetworkServerManagement,
+    NetworkServerManagement,
     GroupManagement,
   },
 

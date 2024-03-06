@@ -54,7 +54,7 @@ class MyUserManager(BaseUserManager):
 class User(AbstractBaseUser):
     username = models.CharField(max_length=200, null=True, unique=True)
     password = models.CharField(max_length=800, null=True)
-    email = models.CharField(max_length=800, null=True)
+    email = models.CharField(max_length=800, null=True, unique=True)
     fullname = models.CharField(max_length=800, null=True)
     organisation = models.ForeignKey(
         organization, on_delete=models.CASCADE, null=True)

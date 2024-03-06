@@ -99,12 +99,13 @@ def assign_vlan_interface(request):
             res_vlan = json.loads(vlan)[0]['fields']
             parent_interface=Interface.objects.get(id=res_vlan["parent_interface"]).ifname
             vlan_tag=res_vlan["vlan_tag"]
-            vlan_priority=convert_priority(res_vlan["vlan_priority"])
+            vlan_priority=convert_priority(res_vlan["vlan_priority"]) if res_vlan["vlan_priority"] is not None else res_vlan["vlan_priority"]
             data_save={
                         "ifname":f"vlan{vlan_tag}",
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":data_input['name_interface'],
+                        "description":f"test default config vlan {vlan_tag}"
                     }
             aux_save=add_vlan_sys(parent_interface,vlan_tag,vlan_priority)
             if aux_save is True:

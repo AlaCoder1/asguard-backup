@@ -5,8 +5,8 @@ from backend.network.models import Interface
 
 class SNat(models.Model):
     interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None)
-    tcp_ip = models.CharField(max_length=100, default=None)
-    protocol = models.CharField(max_length=100, default=None)
+    tcp_ip = models.CharField(max_length=100, default=None, null=True, blank=True)
+    protocol = models.CharField(max_length=100, default=None, null=True, blank=True)
     source_address = models.CharField(max_length=100, default=None, null=True, blank=True)
     source_port = models.CharField(max_length=20, default=None, null=True, blank=True)
     destination_address = models.CharField(max_length=100, default=None, null=True, blank=True)
@@ -38,8 +38,8 @@ class OneToOneNat(models.Model):
 
 class DNat(models.Model):
     interface = models.ForeignKey(Interface, on_delete=models.PROTECT, default=None)
-    tcp_ip = models.CharField(max_length=100, default=None)
-    protocol = models.CharField(max_length=100, default=None)
+    tcp_ip = models.CharField(max_length=100, default=None, null=True, blank=True)
+    protocol = models.CharField(max_length=100, default=None, null=True, blank=True)
     source_address = models.CharField(max_length=100, default=None, null=True, blank=True)
     source_port_from = models.CharField(max_length=20, default=None, null=True, blank=True)
     source_port_to = models.CharField(max_length=20, default=None, null=True, blank=True)

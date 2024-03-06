@@ -19,6 +19,9 @@
 /backend/ipsec/__pycache__/
 /backend/ipsec/migrations/__pycache__/
 
+/backend/LdapServer/__pycache__/
+/backend/LdapServer/migrations/__pycache__/
+
 /backend/managementCertificates/__pycache__/
 /backend/managementCertificates/migrations/__pycache__/
 

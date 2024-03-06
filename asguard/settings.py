@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     'backend.vlan',
     'channels',
     'drf_yasg',
+    'backend.LdapServer',
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {
@@ -233,8 +234,6 @@ SSH_HOST = os.getenv('SSH_HOST')
 SSH_PORT = int(os.getenv('SSH_PORT'))
 ASGUARD_VERSION = os.getenv('ASGUARD_VERSION')
 
-USERNAME=None
-PASSWORD=None
 
 EMAIL_HOST = 'smtp.office365.com'
 EMAIL_PORT = 587

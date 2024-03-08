@@ -48,12 +48,19 @@ def device_name_interface(name_interface):
 #################################################### end BD functions  ############################################################### 
 
 ####################################################  system functions  ############################################################### 
+def restart_network_manager():
+    restart_cmd = "sudo systemctl restart NetworkManager"
+    run_command(restart_cmd)
+    time.sleep(5)
 ## function to get uuid connection
 def get_uuid_con(ifname):
     cmd = "sudo nmcli connection show | awk '$NF == \"{}\" {{print}}'".format(ifname)
-    output,error=run_command(cmd)
+    output,_=run_command(cmd)
     if len(output)==0:
-        return None
+        restart_network_manager()
+        output,_=run_command(cmd)
+        if len(output) == 0:
+            return None
     else:
         output = output.split('  ')
         output=[value for value in output if value]
@@ -124,10 +131,10 @@ def run_command_with_timeout(type, command, timeout):
         new_entry.save()
         # If the subprocess completed within the timeout
         if process.returncode == 0:
-            print(f"Command not too long ({elapsed_time:.2f} seconds). {command}")
+            # print(f"Command not too long ({elapsed_time:.2f} seconds). {command}")
             return (stdout, stderr)
         else:
-            print(command,"==============>",process.returncode )
+            # print(command,"==============>",process.returncode )
             return None,stderr
 
     except subprocess.TimeoutExpired:

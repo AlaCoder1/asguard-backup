@@ -16,8 +16,8 @@ class Interface(models.Model):
     private_aux= models.BooleanField(default=False)
     bogon_aux = models.BooleanField(default=False)
     service_status=models.CharField(max_length=200, null=True,default=None)
-    name_interface=models.CharField(max_length=200, null=True,default=None)
-    description=models.CharField(max_length=200, null=True,default=None)
+    name_interface=models.CharField(max_length=200, null=True,default=None,unique=True)
+    description=models.CharField(max_length=200,null=True,default=None)
     # Created and updated timestamps
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(default=timezone.now,editable=False)
@@ -30,7 +30,6 @@ class Interface(models.Model):
 
     class Meta:
         db_table = 'interface'
-    description=models.CharField(max_length=200, null=True,default=None)
 
 
 

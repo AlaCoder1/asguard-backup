@@ -8,7 +8,12 @@ import * as directives from "vuetify/directives";
 import clamaV from "../views/clamaV/index.vue";
 import ElementPlus from "element-plus";
 import "element-plus/dist/index.css";
-import axios from "axios";
+import { startTimer } from "../mixins/timer_token.js";
+
+import { createI18n } from "vue-i18n";
+import enJson from "../locales/en.json";
+import frJson from "../locales/fr.json";
+
 const app = createApp(clamaV);
 const vuetify = createVuetify({
   components,
@@ -17,6 +22,15 @@ const vuetify = createVuetify({
 const emitter = mitt()
 app.provide('emitter', emitter)
 
+const i18n = new createI18n({
+  locale: "en",
+  messages: {
+    en: enJson,
+    fr: frJson,
+  },
+});
+
+
 
 const currentPath = window.location.pathname;
 function hrefPath(){
@@ -24,17 +38,6 @@ function hrefPath(){
 }
 
 hrefPath()
+startTimer();
 
-axios.interceptors.response.use(
-  (response) => {
-    return response;
-  },
-  (error) => {
-    if (error.response.status === 401 || error.response.status === 403) {
-      window.location.href = "/";
-    }
-    return Promise.reject(error);
-  }
-);
-
-app.use(ElementPlus).use(store).use(vuetify).mount("#app");
+app.use(ElementPlus).use(store).use(vuetify).use(i18n).mount("#app");

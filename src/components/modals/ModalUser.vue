@@ -82,6 +82,49 @@
                   >
                 </v-col>
 
+                <v-col cols="12" class="mt-5">
+                  <label for="Activate" class="mr-3">Activate ldap</label>
+                  <input
+                    type="checkbox"
+                    id="Activate"
+                    v-model="state.formData.activateStatus"
+                  />
+                </v-col>
+                <template v-if="state.formData.activateStatus">
+                  <v-col cols="12" class="mb-n5">
+                    <v-select
+                      v-model="state.formData.dnValue"
+                      label="DN"
+                      item-title="name"
+                      item-value="id"
+                      return-object
+                      :items="state.formData.mapedServer"
+                    ></v-select>
+                    <span
+                      class="error-feedback"
+                      v-if="v$.formData.dnValue.$error"
+                      >{{ v$.formData.dnValue.$errors[0].$message }}</span
+                    >
+                  </v-col>
+                  <v-col cols="12" class="mb-n5">
+                    <v-text-field
+                      label="Passwrod AD"
+                      v-model="state.formData.passwordDN"
+                      :append-inner-icon="
+                        state.show1 ? 'mdi-eye' : 'mdi-eye-off'
+                      "
+                      prepend-inner-icon="mdi-lock-outline"
+                      :type="state.show1 ? 'text' : 'password'"
+                      @click:append-inner="state.show1 = !state.show1"
+                    ></v-text-field>
+                    <span
+                      class="error-feedback"
+                      v-if="v$.formData.passwordDN.$error"
+                      >{{ v$.formData.passwordDN.$errors[0].$message }}</span
+                    >
+                  </v-col>
+                </template>
+
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
                     :items="['root', 'admin', 'user']"
@@ -167,7 +210,8 @@ import {
   helpers,
   requiredIf,
 } from "@vuelidate/validators";
-import { reactive, computed } from "vue";
+import { reactive, computed, onMounted, watch } from "vue";
+import { getCookie } from "@/mixins/csrftoken.js";
 export default {
   name: "Modal_User",
   props: {
@@ -195,6 +239,10 @@ export default {
   setup() {
     const state = reactive({
       formData: {
+        mapedServer: [],
+        activateStatus: false,
+        dnValue: "",
+        passwordDN: "",
         username: "",
         password: "",
         confirm_password: "",
@@ -204,10 +252,12 @@ export default {
         groups: null,
         deactivateUser: true,
       },
+      show1: "",
       userRole: null,
       userId: null,
       ModalMode: null,
     });
+
     const { t } = useI18n();
     const error = computed(() => {
       return t("errors.valueRequired");
@@ -218,6 +268,41 @@ export default {
     const passwordConfirmation = computed(() => {
       return t("errors.passwordConfirmation");
     });
+
+    onMounted(() => {
+      getAdList();
+    });
+    watch(
+      () => state.formData.activateStatus,
+      (val) => {
+        if (!val) {
+          state.formData.dnValue = "";
+          state.formData.passwordDN = "";
+        }
+      }
+    );
+    const getAdList = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/ldap/getAllldap_Servers").then(
+        (response) => {
+          const parsedArray = JSON.parse(response.data);
+
+          let serverAd = parsedArray.map((i) => {
+            return {
+              id: i.id,
+              name: i.server_name,
+            };
+          });
+
+          state.formData.mapedServer = serverAd;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
 
     const rules = computed(() => {
       return {
@@ -259,6 +344,19 @@ export default {
           email: { required: helpers.withMessage(error, required), email },
           fullname: { required: helpers.withMessage(error, required) },
           role: { required: helpers.withMessage(error, required) },
+
+          dnValue: {
+            requiredIfFuction: helpers.withMessage(
+              error,
+              requiredIf(() => state.formData.activateStatus)
+            ),
+          },
+          passwordDN: {
+            requiredIfFuction: helpers.withMessage(
+              error,
+              requiredIf(() => state.formData.activateStatus)
+            ),
+          },
         },
       };
     });
@@ -270,6 +368,7 @@ export default {
       v$,
     };
   },
+
   data() {
     return {
       openModal: false,
@@ -298,6 +397,7 @@ export default {
   methods: {
     populate(data) {
       if (this.mode == "update") {
+        console.log("data", data);
         this.state.formData.username = data.username;
         this.state.formData.fullname = data.fullname;
         this.state.formData.email = data.email;
@@ -313,6 +413,19 @@ export default {
         this.state.formData.deactivateUser = data.is_active;
         this.userId = data.id;
         this.state.userId = data.id;
+
+        let filtredAD = this.state.formData.mapedServer.filter(
+          (i) => i.id === data?.id_server
+        );
+        this.state.formData.dnValue = filtredAD[0];
+
+        this.state.formData.activateStatus = filtredAD[0] ? true : false;
+        // this.state.formData.passwordDN = data.password_ad;
+
+        console.log(
+          "state.formData.mapedServer",
+          this.state.formData.mapedServer
+        );
       }
     },
     handleGroupChange(selectedItems) {
@@ -364,6 +477,8 @@ export default {
           role: this.state.formData.role,
           group: groupsIds ?? [],
           is_active: this.state.formData.deactivateUser,
+          password_ad: this.state.formData.passwordDN,
+          id_server: this.state.formData.dnValue?.id,
           // username: "testtest1525dzada4",
           // password: "azerty",
           // fullname: "sousqdqshail",
@@ -380,7 +495,6 @@ export default {
           axios
             .post("/users/createUser", payload)
             .then((response) => {
-              console.log("res", response);
               if (response.status == "201") {
                 this.closeModal();
 
@@ -408,17 +522,20 @@ export default {
           let groupsIds = this.state.formData?.groups?.map((i) => {
             return i.id;
           });
-
+          let payload2 = {
+            username: this.state.formData.username,
+            password: this.state.formData.password,
+            fullname: this.state.formData.fullname,
+            email: this.state.formData.email,
+            role: this.state.formData.role,
+            group: groupsIds ?? [],
+            is_active: this.state.formData.deactivateUser,
+            password_ad: this.state.formData.passwordDN ?? "",
+            id_server: this.state.formData.dnValue?.id ?? "",
+          };
+          console.log("payload2", payload2);
           axios
-            .put(`/users/modifyUser/${this.userId}`, {
-              username: this.state.formData.username,
-              password: this.state.formData.password,
-              fullname: this.state.formData.fullname,
-              email: this.state.formData.email,
-              role: this.state.formData.role,
-              group: groupsIds ?? [],
-              is_active: this.state.formData.deactivateUser,
-            })
+            .put(`/users/modifyUser/${this.userId}`, payload2)
             .then((response) => {
               console.log("resUpdate", response);
               if (response.status == 200) {

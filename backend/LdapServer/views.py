@@ -149,8 +149,11 @@ def updateLdapServer(request,id):
         msg="failed to update Ldap server!!"
         if (ADServer.objects.filter(id=id).exists()):
             data = JSONParser().parse(request)
-            if update_Ldapserver_DB(data,id):
-                msg="update Ldap Server Successfully!!"
+            result = update_Ldapserver_DB(data, id)
+            if result is True:
+                msg = "Update LDAP Server Successfully!!"
+            elif 'msg' in result:
+                msg = result['msg']  
     return JsonResponse({"msg":msg})      
 
 

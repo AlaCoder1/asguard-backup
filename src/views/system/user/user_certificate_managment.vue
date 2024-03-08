@@ -67,12 +67,12 @@ export default {
   },
   methods: {
     setData(Array_String) {
-      const validJsonString = Array_String.replace(/'/g, '"')
-        .replace(/True/g, "true")
-        .replace(/False/g, "false")
-        .replace(/None/g, "null");
+      // const validJsonString = Array_String.replace(/'/g, '"')
+      //   .replace(/True/g, "true")
+      //   .replace(/False/g, "false")
+      //   .replace(/None/g, "null");
 
-      const parsedArray = JSON.parse(validJsonString);
+      const parsedArray = JSON.parse(Array_String);
 
       // this.users = parsedArray;
       // console.log("parsedarray :"+parsedArray)

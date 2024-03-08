@@ -111,8 +111,20 @@ export default {
       modalData: {},
       modalMode: "",
       columnDefs: [
-        { headerName: this.user, field: "username" },
-        { headerName: this.role, field: "role" },
+        {
+          headerName: this.user,
+          field: "username",
+          width: 90,
+          minWidth: 50,
+          flex: 1,
+        },
+        {
+          headerName: this.role,
+          field: "role",
+          width: 90,
+          minWidth: 50,
+          flex: 1,
+        },
         { headerName: "Actions", cellRenderer: this.actionCellRenderer },
       ],
       rowData: [], // Initialize rowData as an empty array

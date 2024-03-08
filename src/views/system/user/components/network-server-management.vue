@@ -2,7 +2,7 @@
   <div class="mr-3">
     <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
       <h4>Networks servers</h4>
-      <v-divider></v-divider>
+      <!-- <v-divider></v-divider> -->
       <v-row>
         <v-col cols="12">
           <div style="overflow: hidden; flex-grow: 1">
@@ -27,15 +27,18 @@
               <span class="text-white">add Server</span>
             </v-btn>
           </div>
-      
         </v-col>
       </v-row>
-      <Modal :modalMode="state.modalMode" :isOpen="state.isModalOpen" />
+      <Modal
+        :modalMode="state.modalMode"
+        :isOpen="state.isModalOpen"
+        :editRow="state.editRow"
+      />
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="headline">Delete Confirmation</v-card-title>
-        <v-card-text>Are you sure you want to delete this Row ?</v-card-text>
+        <v-card-text>Are you sure you want to delete this Server ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
@@ -97,8 +100,20 @@ export default {
     });
 
     const columnDefs = [
-      { headerName: "Server name", field: "name_server" },
-      { headerName: "Url", field: "hostname" },
+      {
+        headerName: "Server name",
+        field: "server_name",
+        width: 90,
+        minWidth: 50,
+        flex: 1,
+      },
+      {
+        headerName: "Url",
+        field: "server_url",
+        width: 90,
+        minWidth: 50,
+        flex: 1,
+      },
       { headerName: "Actions", cellRenderer: actionCellRenderer },
     ];
 
@@ -143,20 +158,16 @@ export default {
               `;
       } else {
         eGui.innerHTML = `
-              <button 
-                class="action-button show "  
-                data-action="show">
-                <i class="mdi mdi-eye" style="color: #086eae;font-size: 20px;"></i>
-                </button>
+         
               <button
                 class="action-button edit"
                 data-action="edit" title="Edit Server">
-                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                   <i class="far fa-edit" style="color: #086EAE;"></i>
                 </button>
                 <button
                 class="action-button delete"
                 data-action="delete" title="Delete ">
-                  <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                  <i class="fas fa-times" style="color: #086EAE;"></i>
                 </button>
       
                 `;
@@ -202,18 +213,12 @@ export default {
         state.modalMode = "";
         state.editRow = {};
       });
-      // let allListDNat =
-      //   document.getElementById("app").attributes["listDNat"].value;
+      let allLisServers =
+        document.getElementById("app").attributes["servers"].value;
 
-      // const validJsonString = allListDNat
-      //   .replace(/'/g, '"')
-      //   .replace(/True/g, "true")
-      //   .replace(/False/g, "false")
-      //   .replace(/None/g, "null");
-      // const parsedArray = JSON.parse(validJsonString);
-      // console.log("parsedArray", parsedArray);
+      const parsedArray = JSON.parse(allLisServers);
 
-      // rowData.value = parsedArray;
+      rowData.value = parsedArray;
     });
 
     const cancelDelete = () => {
@@ -225,8 +230,9 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       axios
-        .delete(`/nat/deleteDNat/${state.deletedRow.id}`)
+        .delete(`/ldap/deleteldap_Server/${state.deletedRow.id}`)
         .then((response) => {
+          console.log("response.data", response.data);
           state.snackbar = true;
           state.color = "success";
           state.textAlert = response.data.msg;

@@ -139,7 +139,7 @@
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, watch, reactive, computed, inject, onMounted, ref } from "vue";
-import { required, helpers, requiredIf } from "@vuelidate/validators";
+import { required, helpers, requiredIf, email } from "@vuelidate/validators";
 import { getCookie } from "@/mixins/csrftoken.js";
 
 export default {
@@ -163,8 +163,9 @@ export default {
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
-      name: "",
+      id: null,
       show1: "",
+      name: "",
       hostIp: "",
       port: "",
       userDn: "",
@@ -189,17 +190,39 @@ export default {
       () => modalMode.value,
       () => {
         if (modalMode.value === "create") {
+          state.name = "";
+          state.hostIp = "";
+          state.port = "";
+          state.userDn = "";
+          state.searchBase = "";
+          state.password = "";
+          state.activateStatus = "";
         }
       }
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
+        state.id = data.id;
+        state.name = data.server_name;
+        state.hostIp = data.server_url;
+        state.port = data.port;
+        state.userDn = data.bind_user_dn;
+        state.searchBase = data.search_base;
+        state.password = "";
+        state.activateStatus = data.ssl_tls_activation;
       }
     };
 
     const closeModal = () => {
       emitter.emit("closeServerModal");
       if (modalMode.value === "create") {
+        state.name = "";
+        state.hostIp = "";
+        state.port = "";
+        state.userDn = "";
+        state.searchBase = "";
+        state.password = "";
+        state.activateStatus = "";
       }
     };
 
@@ -219,14 +242,14 @@ export default {
         };
         if (modalMode.value === "edit") {
           axios
-            .put(`/nat/updateOneToOneNat/${state.id}`, payload)
+            .put(`/ldap/updateldap_Server/${state.id}`, payload)
             .then((response) => {
               if (response.status == "200") {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
                 setTimeout(() => {
-                  // location.reload();
+                  location.reload();
                 }, 1000);
               }
             })
@@ -245,14 +268,14 @@ export default {
                 state.color = "success";
                 state.textAlert = response.data.msg;
                 setTimeout(() => {
-                  // location.reload();
+                  location.reload();
                 }, 1000);
               }
             })
             .catch((i) => {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = i.response.data.msg;
             });
         }
       } else {
@@ -279,7 +302,9 @@ export default {
             helpers.regex(/^[0-9]+$/)
           ),
         },
-        userDn: { required },
+        userDn: {
+          required: helpers.withMessage("Value is required", required),
+        },
         password: { required },
       };
     });

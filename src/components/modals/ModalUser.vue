@@ -82,6 +82,49 @@
                   >
                 </v-col>
 
+                <v-col cols="12" class="mt-5">
+                  <label for="Activate" class="mr-3">Activate ldap</label>
+                  <input
+                    type="checkbox"
+                    id="Activate"
+                    v-model="state.formData.activateStatus"
+                  />
+                </v-col>
+                <template v-if="state.formData.activateStatus">
+                  <v-col cols="12" class="mb-n5">
+                    <v-select
+                      v-model="state.formData.dnValue"
+                      label="DN"
+                      item-title="name"
+                      item-value="id"
+                      return-object
+                      :items="state.formData.mapedServer"
+                    ></v-select>
+                    <span
+                      class="error-feedback"
+                      v-if="v$.formData.dnValue.$error"
+                      >{{ v$.formData.dnValue.$errors[0].$message }}</span
+                    >
+                  </v-col>
+                  <v-col cols="12" class="mb-n5">
+                    <v-text-field
+                      label="Passwrod AD"
+                      v-model="state.formData.passwordDN"
+                      :append-inner-icon="
+                        state.show1 ? 'mdi-eye' : 'mdi-eye-off'
+                      "
+                      prepend-inner-icon="mdi-lock-outline"
+                      :type="state.show1 ? 'text' : 'password'"
+                      @click:append-inner="state.show1 = !state.show1"
+                    ></v-text-field>
+                    <span
+                      class="error-feedback"
+                      v-if="v$.formData.passwordDN.$error"
+                      >{{ v$.formData.passwordDN.$errors[0].$message }}</span
+                    >
+                  </v-col>
+                </template>
+
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
                     :items="['root', 'admin', 'user']"
@@ -167,7 +210,8 @@ import {
   helpers,
   requiredIf,
 } from "@vuelidate/validators";
-import { reactive, computed } from "vue";
+import { reactive, computed, onMounted } from "vue";
+import { getCookie } from "@/mixins/csrftoken.js";
 export default {
   name: "Modal_User",
   props: {
@@ -195,6 +239,10 @@ export default {
   setup() {
     const state = reactive({
       formData: {
+        mapedServer: [],
+        activateStatus: false,
+        dnValue: "",
+        passwordDN: "",
         username: "",
         password: "",
         confirm_password: "",
@@ -204,10 +252,12 @@ export default {
         groups: null,
         deactivateUser: true,
       },
+      show1: "",
       userRole: null,
       userId: null,
       ModalMode: null,
     });
+
     const { t } = useI18n();
     const error = computed(() => {
       return t("errors.valueRequired");
@@ -218,6 +268,33 @@ export default {
     const passwordConfirmation = computed(() => {
       return t("errors.passwordConfirmation");
     });
+
+    onMounted(() => {
+      getAdList();
+    });
+
+    const getAdList = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/ldap/getAllldap_Servers").then(
+        (response) => {
+          const parsedArray = JSON.parse(response.data);
+
+          let serverAd = parsedArray.map((i) => {
+            return {
+              id: i.id,
+              name: i.server_name,
+            };
+          });
+
+          state.formData.mapedServer = serverAd;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
 
     const rules = computed(() => {
       return {
@@ -259,6 +336,19 @@ export default {
           email: { required: helpers.withMessage(error, required), email },
           fullname: { required: helpers.withMessage(error, required) },
           role: { required: helpers.withMessage(error, required) },
+
+          dnValue: {
+            requiredIfFuction: helpers.withMessage(
+              error,
+              requiredIf(() => state.formData.activateStatus)
+            ),
+          },
+          passwordDN: {
+            requiredIfFuction: helpers.withMessage(
+              error,
+              requiredIf(() => state.formData.activateStatus)
+            ),
+          },
         },
       };
     });
@@ -270,6 +360,7 @@ export default {
       v$,
     };
   },
+
   data() {
     return {
       openModal: false,
@@ -364,6 +455,8 @@ export default {
           role: this.state.formData.role,
           group: groupsIds ?? [],
           is_active: this.state.formData.deactivateUser,
+          password_ad: this.state.formData.passwordDN,
+          id_server: this.state.formData.dnValue?.id,
           // username: "testtest1525dzada4",
           // password: "azerty",
           // fullname: "sousqdqshail",

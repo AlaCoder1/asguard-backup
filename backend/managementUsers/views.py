@@ -114,31 +114,35 @@ def createUser(request):
         if data['password_ad'] != "":
             id_server = data['id_server']
             ad_server = ADServer.objects.get(id=id_server)
-            try:
-                is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
-                if is_password_matched:
-                    ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
-                    ldap_conn = ldap.initialize(ldap_uri)
-                    ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
-                    
-                    # Retrieve user details from AD
-                    result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(objectClass=user)", ['userPrincipalName'])
-                    user_principal_names = [
-                        entry[1].get('userPrincipalName', [])[0].decode('utf-8')
-                        for entry in result
-                        if 'userPrincipalName' in entry[1]
-                    ]
+            if ad_server:
+                try:
+                    is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
+                    if is_password_matched:
+                        ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
+                        ldap_conn = ldap.initialize(ldap_uri)
+                        ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
+                        
+                        # Retrieve user details from AD
+                        result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(objectClass=user)", ['userPrincipalName'])
+                        user_principal_names = [
+                            entry[1].get('userPrincipalName', [])[0].decode('utf-8')
+                            for entry in result
+                            if 'userPrincipalName' in entry[1]
+                        ]
+                       
+                        # Check if the email exists in the list of userPrincipalNames
+                        if email.lower() in [user.lower() for user in user_principal_names]:
+                            email_founded=True
 
-                    # Check if the email exists in the list of userPrincipalNames
-                    if email.lower() in [user.lower() for user in user_principal_names]:
-                        email_founded=True
-
-                    # Close LDAP connection
-                    ldap_conn.unbind()
-                else:
-                    return JsonResponse({'msg': "please verify you password of Ldap server"},status=400)   
-            except ldap.LDAPError as e:
-                return JsonResponse({'msg': "Error connecting to Active Directory"},status=400)  
+                        # Close LDAP connection
+                       
+                        ldap_conn.unbind()
+                    else:
+                        return JsonResponse({'msg': "please verify you password of Ldap server"},status=400)   
+                except ldap.LDAPError as e:
+                    return JsonResponse({'msg': "Error connecting to Active Directory"},status=400)  
+            else:    
+                    return JsonResponse({'msg': "This AD Server is not Exist"},status=400)  
         exist_email = User.objects.filter(email=email).exists()
         print({"exist_email":exist_email})
         if User.objects.filter(email=email).exists():
@@ -156,17 +160,18 @@ def createUser(request):
                     addMailSpool(username)
                     if email_founded:
                         msg = username + " added successfully with their email in AD"
+                        data['id_server_id']= ad_server.id
                     else:
                         msg = username + " added successfully with simple System email "
                     uid = getUidUser()
                     data['password'] = make_password(data['password'])
                     data['uid'] = uid
-
                     if 'group' in data:
                         groups = data['group']
                         print({"groups": groups})
                         for i in range(0, len(groups)):
                             add_user_group(getGroupNameById(groups[i]), username)
+                        print({"data":data})
                         serializerUser = UserSerializerPost(data=data)
                         gid = getUidGroup()
                         groupname = {"groupname": username}
@@ -189,6 +194,7 @@ def createUser(request):
                         error_message = next(iter(serializerUser.errors.values()))[0]
                         return JsonResponse({"msg":error_message}, status=400)
                     else:
+                       
                         serializerUser = UserSerializerPostWithoutGroupAndPermission(data=data)
                         gid = getUidGroup()
                         groupname = {"groupname": username}
@@ -257,6 +263,7 @@ def modifyUser(request, id):
         userById = User.objects.filter(id=id)
         userDict = serializers.serialize("json", userById)
         res = json.loads(userDict)
+        print(res)
         res[0].pop('model')
         id = res[0]['pk']
         res[0].pop('pk')
@@ -267,6 +274,7 @@ def modifyUser(request, id):
         data = request.data
         newusername = data['username']
         newfullname = data['fullname']
+        
         email_founded=False
         if data['password_ad'] != "":
             id_server = data['id_server']
@@ -307,7 +315,7 @@ def modifyUser(request, id):
        
         # user['permission'] = userJson['permission']
         if validInput(newusername):
-            if username_exists(newusername) and newusername != oldusername or User.objects.filter(email=newmail).exists():
+            if username_exists(newusername) and newusername != oldusername:
                 msg = f"username or email already Used."
                 return JsonResponse({"msg": msg})
             else:
@@ -325,6 +333,10 @@ def modifyUser(request, id):
                 userObject.fullname = newfullname
                 userObject.email = newmail
                 userObject.role = newrole
+                if email_founded:
+                    userObject.id_server=ad_server
+                    print(userObject.id_server)
+                
                 if ('group' in data):
                     groups = data['group']
                     userJson['group'] = groups

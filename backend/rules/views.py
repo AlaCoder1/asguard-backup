@@ -1,17 +1,13 @@
 from django.shortcuts import render
 from backend.network.serializers import *
 from .models import *
-# from settings.serializers import *
 from rest_framework.parsers import JSONParser
-import json
 from rest_framework.authentication import SessionAuthentication
-from django.core import serializers
 from backend.authentification.views import *
 from backend.network.address import *
 # Version without SSh connection
 from .functions import *
 from django.db.models import Q
-from django.core import serializers
 # Create your views here.
 
 @api_view(['DELETE'])
@@ -101,7 +97,7 @@ def add_rule(request,name_interface):
           data["rule_status"]=True
           data["type_rule"]=type_rule
           rule_serializer = RuleSerializer(data=data)
-          rule_serializer.is_valid(raise_exception=True)
+          # rule_serializer.is_valid(raise_exception=True)
           if rule_serializer.is_valid():
             rule_serializer.save()
             msg = "Rule added Successfully!!"

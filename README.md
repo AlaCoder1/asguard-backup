@@ -14,7 +14,7 @@ docker-compose up -d
 
 dans le 1 er terminal lancer
 
-python manage.py make migrations
+python manage.py makemigrations
 
 python manage.py migrate
 

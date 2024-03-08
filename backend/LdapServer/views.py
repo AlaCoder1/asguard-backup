@@ -113,7 +113,8 @@ def connect_to_ad(request):
                 if serializer.is_valid():
                     serializer.save()
                 else:
-                    return JsonResponse({'msg': serializer.errors},status=400)    
+                    error_message = next(iter(serializer.errors.values()))[0]
+                    return JsonResponse({'msg': error_message},status=400)    
 
                 # Close LDAP connection
                 ldap_conn.unbind()
@@ -145,12 +146,12 @@ def connect_to_ad(request):
 @permission_classes([])
 def updateLdapServer(request,id):
     if (request.method == 'PUT'):
-        msg="failed to update gateway!!"
+        msg="failed to update Ldap server!!"
         if (ADServer.objects.filter(id=id).exists()):
             data = JSONParser().parse(request)
             if update_Ldapserver_DB(data,id):
                 msg="update Ldap Server Successfully!!"
-    return JsonResponse({"msg:": msg})      
+    return JsonResponse({"msg":msg})      
 
 
 
@@ -170,7 +171,7 @@ def deleteldap_server(request,id):
             ldap_servers = ADServer.objects.get(id=id)
             ldap_servers.delete()
             msg="Delete ldap server successfully!!"
-    return JsonResponse({"msg:": msg})      
+    return JsonResponse({"msg": msg})      
 
 
 

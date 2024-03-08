@@ -140,7 +140,8 @@ export default {
   watch: {
     DataList: {
       handler(newData) {
-        this.rowData = newData.users; // Update rowData with the new prop value
+        this.rowData = newData.users.filter((i) => i.id != 1);
+        // Update rowData with the new prop value
       },
       immediate: true,
     },

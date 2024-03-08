@@ -210,7 +210,7 @@ import {
   helpers,
   requiredIf,
 } from "@vuelidate/validators";
-import { reactive, computed, onMounted } from "vue";
+import { reactive, computed, onMounted, watch } from "vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 export default {
   name: "Modal_User",
@@ -272,7 +272,15 @@ export default {
     onMounted(() => {
       getAdList();
     });
-
+    watch(
+      () => state.formData.activateStatus,
+      (val) => {
+        if (!val) {
+          state.formData.dnValue = "";
+          state.formData.passwordDN = "";
+        }
+      }
+    );
     const getAdList = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -389,6 +397,7 @@ export default {
   methods: {
     populate(data) {
       if (this.mode == "update") {
+        console.log("data", data);
         this.state.formData.username = data.username;
         this.state.formData.fullname = data.fullname;
         this.state.formData.email = data.email;
@@ -404,6 +413,19 @@ export default {
         this.state.formData.deactivateUser = data.is_active;
         this.userId = data.id;
         this.state.userId = data.id;
+
+        let filtredAD = this.state.formData.mapedServer.filter(
+          (i) => i.id === data?.id_server
+        );
+        this.state.formData.dnValue = filtredAD[0];
+
+        this.state.formData.activateStatus = filtredAD[0] ? true : false;
+        // this.state.formData.passwordDN = data.password_ad;
+
+        console.log(
+          "state.formData.mapedServer",
+          this.state.formData.mapedServer
+        );
       }
     },
     handleGroupChange(selectedItems) {
@@ -473,7 +495,6 @@ export default {
           axios
             .post("/users/createUser", payload)
             .then((response) => {
-              console.log("res", response);
               if (response.status == "201") {
                 this.closeModal();
 
@@ -482,7 +503,7 @@ export default {
                 this.textAlert = response.data.msg;
 
                 setTimeout(() => {
-                  location.reload();
+                  // location.reload();
                 }, 1000);
 
                 // this.textAlert = "user Created Successfully";
@@ -501,17 +522,20 @@ export default {
           let groupsIds = this.state.formData?.groups?.map((i) => {
             return i.id;
           });
-
+          let payload2 = {
+            username: this.state.formData.username,
+            password: this.state.formData.password,
+            fullname: this.state.formData.fullname,
+            email: this.state.formData.email,
+            role: this.state.formData.role,
+            group: groupsIds ?? [],
+            is_active: this.state.formData.deactivateUser,
+            password_ad: this.state.formData.passwordDN ?? "",
+            id_server: this.state.formData.dnValue?.id ?? "",
+          };
+          console.log("payload2", payload2);
           axios
-            .put(`/users/modifyUser/${this.userId}`, {
-              username: this.state.formData.username,
-              password: this.state.formData.password,
-              fullname: this.state.formData.fullname,
-              email: this.state.formData.email,
-              role: this.state.formData.role,
-              group: groupsIds ?? [],
-              is_active: this.state.formData.deactivateUser,
-            })
+            .put(`/users/modifyUser/${this.userId}`, payload2)
             .then((response) => {
               console.log("resUpdate", response);
               if (response.status == 200) {
@@ -522,7 +546,7 @@ export default {
                 this.textAlert = response.data.msg;
 
                 setTimeout(() => {
-                  location.reload();
+                  // location.reload();
                 }, 1000);
                 // this.textAlert = "User updated succesfully";
                 // setTimeout(() => {

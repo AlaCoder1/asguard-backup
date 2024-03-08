@@ -503,7 +503,7 @@ export default {
                 this.textAlert = response.data.msg;
 
                 setTimeout(() => {
-                  // location.reload();
+                  location.reload();
                 }, 1000);
 
                 // this.textAlert = "user Created Successfully";
@@ -546,7 +546,7 @@ export default {
                 this.textAlert = response.data.msg;
 
                 setTimeout(() => {
-                  // location.reload();
+                  location.reload();
                 }, 1000);
                 // this.textAlert = "User updated succesfully";
                 // setTimeout(() => {

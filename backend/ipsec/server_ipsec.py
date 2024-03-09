@@ -1,11 +1,14 @@
+import time
 from backend.ipsec.constant_variables import PATH_IPSEC_CONF, PATH_IPSEC_SECRETS
 from backend.ipsec.models import ServerIPsec
+from backend.ipsec.utils import up_ipsec_conn
 from backend.ipsec.utils_config import comment_conn_in_config_file, edit_conn_in_config_file, uncomment_conn_in_config_file
 from backend.ipsec.utils_secrets import comment_line_in_secrets_file, create_line_secrets, edit_line_in_secrets_file, uncomment_line_in_secrets_file
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_KEY
 from backend.managementKeypairs.models import PublicKey
 from backend.openvpn.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_RSA
 from utils.commands_utils import execute_command_without_arguments
+from utils.constant_variables import SUCCESS_MESSAGES_START, SUCCESS_MESSAGES_STOP
 
 
 def install_server_ipsec_in_system(conn_config, authentication, interface_address, remote_gateway):
@@ -86,3 +89,21 @@ def change_status_conn(enable, server:ServerIPsec):
         uncomment_line_in_secrets_file(server)
     else:
         comment_line_in_secrets_file(server)
+
+
+def change_status_ipsec_in_system(status="start"):
+    """Start or stop IPsec. In case of start IPsec, execute command ipsec up {server_name} for all enabled ipsec config"""
+
+    # Start or stop ipsec
+    execute_command_without_arguments(['sudo', 'ipsec', status])
+
+    # Up all enabled ipsec config
+    if status == "start":
+        time.sleep(2)
+        list_enable_server = ServerIPsec.objects.filter(server_status=True)
+        for server in list_enable_server:
+            up_ipsec_conn(server.conn_name)
+            time.sleep(1)
+        return SUCCESS_MESSAGES_START.format("IPsec", "")
+    
+    return SUCCESS_MESSAGES_STOP.format("IPsec", "")

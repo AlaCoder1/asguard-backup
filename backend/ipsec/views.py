@@ -10,12 +10,11 @@ from backend.ipsec.constant_variables import IPV4_CONFIG
 from backend.ipsec.utils import json_to_str_server_ipsec, up_ipsec_conn
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec, get_status_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
-from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec_in_system, install_server_ipsec_in_system, update_server_ipsec_in_system
+from backend.ipsec.server_ipsec import change_status_conn, change_status_ipsec_in_system, delete_server_ipsec_in_system, install_server_ipsec_in_system, update_server_ipsec_in_system
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
 from backend.openvpn.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA
-from utils.commands_utils import execute_command_without_arguments
 from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INEXISTANT, SUCCESS_MESSAGES_CONFIGURATION, SUCCESS_MESSAGES_DELETE
 from utils.errors_utils import CommandExecutionError
 
@@ -591,12 +590,9 @@ def status_ipsec(request):
             data = request.data
             status = data.get("status", "")
 
-            execute_command_without_arguments(['sudo', 'ipsec', status])
-
-            if status == "start":
-                return JsonResponse({"msg": "IPsec is started"})
+            status_ipsec = change_status_ipsec_in_system(status)
             
-            return JsonResponse({"msg": "IPsec is stoped"})
+            return JsonResponse({"msg": status_ipsec})
         
     except ServerIPsec.DoesNotExist:
         return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)

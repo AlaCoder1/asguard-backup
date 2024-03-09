@@ -1,26 +1,127 @@
-from django.shortcuts import render
 from django.http import JsonResponse
-
 from backend.managementGroup.remoteFunctions import sudo
 from backend.network.models import Interface
 from .models import *
 from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
-from rest_framework.parsers import JSONParser
 import json
-from django.core import serializers
 from backend.authentification.views import *
+from backend.gateway.models import *
 import socket
 import datetime
 import subprocess
 import random
+from .function import *
+from django.core import serializers
+from collections import defaultdict
 # Create your views here.
+
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+def generale_settings(request,id):
+    msg = ''
+    if (request.method == 'PUT'):
+        system_object = System.objects.get(id=id)
+        network = Network.objects.get(id=id)
+        data = request.data
+        if change_hostname(data['hostname']) and '.' in data['domain'] and data['domain'][-1] is not '.':
+            system_object.hostname = data['hostname']
+            change_domain(data['domain'])
+            system_object.domaine = data['domain']
+            timezone = Timezone.objects.get(name = data['timezone'])
+            set_time_zone(timezone.name)
+            system_object.time_zone = timezone
+            system_object.save()
+            for i in data['dns_servers']:
+                add_dns_servers(i['dns_server'])
+                gateway = Gateway.objects.get(gwaddress = i['gateway'])
+                interface = Interface.objects.get(id = i['interface_id'])
+                # gateway_interface = GatewayInterface.objects.get(gateway_id = gateway.pk)
+                
+                # print({"metric":gateway_interface.metric})
+                # print({"interface_id":gateway_interface.interface_id})
+                resultat,error = add_gateway_to_dns_servers(i['dns_server'],gateway.gwaddress,interface.ifname,i['metric'])
+            network.server_dns = data['dns_servers']
+            network.save()
+            msg = "done"
+            status = 200
+        else:
+            msg = "eroor"
+            status = 400
+    return JsonResponse({"msg": msg}, status=status)
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
-def Settings(request,id):
-    return JsonResponse(getSystem(request, id))
+def get_generale_settings(request,id):
+    if (request.method == 'GET'):
+        system_object = System.objects.get(id=id)
+        time_zone = Timezone.objects.get(name = system_object.time_zone.name)
+        system_dict = {
+            "hostname":system_object.hostname,
+            "domaine":system_object.domaine,
+            "time_zone":{
+                "name" :time_zone.name,
+                "id":time_zone.pk
+            }
+        }
+        return JsonResponse({"generale_settings":system_dict})
+    
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
+def time_zones(request):
+    list_timezones=[]
+    if (request.method == 'GET'):
+        timezones=Timezone.objects.all()
+        timezonesDict = serializers.serialize("json", timezones)
+        res = json.loads(timezonesDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_timezones.append(res[i]['fields'])
+        return JsonResponse({"timezones": list_timezones})
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+#@permission_classes([IsAuthenticated])
+def gatways_information(request):
+    gatways_information=[]
+    if (request.method == 'GET'):
+        gateway=GatewayInterface.objects.all()
+        gatewayDict = serializers.serialize("json", gateway)
+        res = json.loads(gatewayDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            gatways_information.append(res[i]['fields'])
+        
+        output_data = defaultdict(list)
+        for item in gatways_information:
+            gateway = item["gateway"]
+            fetch_gateway = Gateway.objects.get(id = gateway)
+            del item["gateway"]
+            output_data[gateway].append(item)
+        output_data = [
+            {
+                "gateway": {"id": gateway, "address": fetch_gateway.gwaddress},
+                "info": info
+            } for gateway, info in output_data.items()
+        ]
+        return JsonResponse({"gatways_information": output_data})
+
+
+
+
+
+
+
 
 
 @api_view(['GET'])
@@ -228,7 +329,7 @@ def InterfaceFromGateway(gateway):
 
 def AllGateway():
     list_gateways=[]
-    gateways=GateWayInterface.objects.all()
+    gateways=Gateway.objects.all()
     gatewaysDict = serializers.serialize("json", gateways)
     res = json.loads(gatewaysDict)
     print(res)
@@ -242,25 +343,6 @@ def AllGateway():
 ############################################   TimeZone ############################################################
 
 
-def initDB_by_timeZone(request):
-    msg=""
-    if (request.method == 'GET'):
-        cmd = "timedatectl list-timezones"
-        stdin, stdout, stderr = ssh.exec_command(cmd)
-        error_str = stderr.read().decode('utf-8')
-        listesOfTimezone = stdout.read().decode('utf-8').split('\n')
-        listesOfTimezone.pop()
-        print({"error_str":error_str})
-        if error_str =='':
-            for time_data in listesOfTimezone:
-                timezone = Timezone(name=time_data)
-                timezone.save()
-                msg="timezone added succesfully"
-        else:
-            msg=error_str
-        return JsonResponse({"msg": msg})
-
-from django.core import serializers   
 def timeZones(request):
     list_timezones=[]
     if (request.method == 'GET'):

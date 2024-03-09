@@ -81,6 +81,7 @@ urlpatterns = [
     path("firewall/nat/",nat_page),
     path("success/",success),
     path("vpnmonitoring/",openvpn_monitoring),
+    path("routing/",routing_page),
     path('ldap/',include('backend.LdapServer.urls')),
 ]
 

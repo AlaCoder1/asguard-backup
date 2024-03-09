@@ -14,7 +14,7 @@ docker-compose up -d
 
 dans le 1 er terminal lancer
 
-python manage.py make migrations
+python manage.py makemigrations
 
 python manage.py migrate
 
@@ -56,21 +56,21 @@ python manage.py init_services
 
 python manage.py collectstatic //avec debug=False 
 
+#### suricata
+
+//commande to correct config file to generate rules 
+
+sudo python manage.py init_suricata_file
+
 //commande to generate file suricata.rules
 
 sudo suricata-update
 
 //commande to init Suricata config  (all config general config , default rules and alerts)
 
-python manage.py init_config_suricata 
+sudo python manage.py init_config_suricata 
 
-//commande to init  default rules 
-
-python manage.py init_rules_suricata -id id_suricata
-
-//commande to init  default alerts 
-
-python manage.py init_alerts_suricata -id id_suricata
+#### suricata
 
 // commande to init default values clamav
 
@@ -81,3 +81,9 @@ python manage.py init_clamav
 python manage.py create_files_squid
 python manage.py  init_conf_squid
 python manage.py init_squid_conf_bd
+
+#### Nat
+python manage.py init_rules_nat
+
+#### IPsec start
+python manage.py start_ipsec

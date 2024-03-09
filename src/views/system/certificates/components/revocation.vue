@@ -38,15 +38,15 @@
     />
   </div>
   <v-snackbar
-      :timeout="2000"
-      v-model="snackbar"
-      location="bottom right"
-      :color="color"
-    >
-      {{ textAlert }}
+    :timeout="2000"
+    v-model="snackbar"
+    location="bottom right"
+    :color="color"
+  >
+    {{ textAlert }}
 
-      <template v-slot:actions> </template>
-    </v-snackbar>
+    <template v-slot:actions> </template>
+  </v-snackbar>
 </template>
 <script>
 import axios from "axios";
@@ -66,9 +66,9 @@ export default {
 
   data() {
     return {
-      snackbar:false,
-      color:'',
-      textAlert:'',
+      snackbar: false,
+      color: "",
+      textAlert: "",
       listAuthRevoc: null,
       modalMode: "",
       rowEdit: {},
@@ -76,10 +76,11 @@ export default {
       isModalOpen: false,
 
       columnRevocation: [
-        { headerName: "nom", field: "nom" },
+        { headerName: "nom", field: "nom", width: 300 },
         {
           headerName: "list of authority certificate",
           field: "list_revoc",
+          width: 400,
         },
         {
           headerName: "Actions",
@@ -97,6 +98,7 @@ export default {
       this.listAuthRevoc = newValue;
 
       if (newValue) {
+        console.log("newValue", newValue);
         let infoRevocCertif = newValue.map((element) => {
           return {
             id: element.id,
@@ -105,9 +107,12 @@ export default {
             list_revoc: element.list_revokation.map((i) => {
               return i.name;
             }),
+            is_private_key: element.is_private_key,
           };
         });
-        this.rowDataRevocation = infoRevocCertif;
+
+        let mapedListAuth = infoRevocCertif.filter((i) => i.is_private_key);
+        this.rowDataRevocation = mapedListAuth;
         setTimeout(() => {
           this.gridApi.setRowData(this.rowDataRevocation);
         }, 5);
@@ -116,7 +121,6 @@ export default {
   },
   methods: {
     openModal() {
-      
       this.modalData = {};
       this.isModalOpen = true;
     },
@@ -210,7 +214,6 @@ export default {
           axios
             .post(`/certificates/exportCertAuthListRev/${id}`)
             .then((response) => {
-
               const text = response.data.list_revocation;
               const blob = new Blob([text], {
                 type: "application/x-x509-ca-cert",
@@ -227,8 +230,6 @@ export default {
 
               window.URL.revokeObjectURL(url);
               document.body.removeChild(a);
-
-        
             })
             .catch((i) => {
               this.snackbar = true;

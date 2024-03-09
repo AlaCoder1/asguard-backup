@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h4>Networks groups</h4>
+    <h4>{{ $t("networksGroups") }}</h4>
 
     <div style="height: 100%">
       <div style="display: flex; flex-direction: row; height: 100%">
@@ -90,8 +90,20 @@ export default {
       modalData: {},
       selectedRowIndex: null,
       columnDefs: [
-        { headerName: "Group", field: "groupname" },
-        { headerName: "Description", field: "description" },
+        {
+          headerName: "Group",
+          field: "groupname",
+          width: 90,
+          minWidth: 50,
+          flex: 1,
+        },
+        {
+          headerName: "Description",
+          field: "description",
+          width: 90,
+          minWidth: 50,
+          flex: 1,
+        },
         { headerName: "Actions", cellRenderer: this.actionCellRenderer },
       ],
       rowData: [],

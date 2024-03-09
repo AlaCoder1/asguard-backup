@@ -1,3 +1,4 @@
+import time
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.authentication import SessionAuthentication
@@ -293,6 +294,7 @@ def create_server_ipsec(request):
                 install_server_ipsec_in_system(server_conf, authentication, interface_address.ip_address, remote_gateway)
             else:
                 install_server_ipsec_in_system(server_conf, authentication, 'any', remote_gateway)
+            time.sleep(3)
 
             # Add the server to the database
             serializer_server.save()
@@ -532,14 +534,14 @@ def update_server_ipsec(request, id):
             
             # Install the server in system
             update_server_ipsec_in_system(previous_server, server, server_conf)
+            time.sleep(3)
 
             # Add the server to the database
             serializer_server.save()
             up_ipsec_status = up_ipsec_conn(server.conn_name)
             if up_ipsec_status:
                 return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(server.conn_name, 'updated')}, status=201)
-            else:
-                return JsonResponse({"error": "Error in up ipsec"}, status=400)
+            return JsonResponse({"error": "Error in up ipsec"}, status=400)
         else:
             return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 

@@ -37,7 +37,7 @@
                 </div>
               </v-col>
             </v-row>
-            <!-- <ModalKeys :isOpen="state.isModalOpen" /> -->
+            <RoutingModal :isOpen="state.isModalOpen" />
           </div>
           <v-dialog v-model="state.deleteDialog" max-width="500px">
             <v-card>
@@ -78,11 +78,11 @@ import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-// import ModalKeys from "@/components/modals/ModalKeys.vue";
+import RoutingModal from "@/components/modals/RoutingModal.vue";
 export default {
-  name: "KeyPair",
+  name: "Routing",
   components: {
-    // ModalKeys,
+    RoutingModal,
     BaseLayout,
     AgGridVue,
     VButton,

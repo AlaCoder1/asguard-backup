@@ -29,6 +29,8 @@ from backend.sdwan.list_area import get_list_all_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
 from backend.subscription.models import plan, plansSubscription,plansFeatures
 import ruamel.yaml
+
+from views.functions import get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
     server_status= ServerSatus.objects.get(id=1)
     return server_status.status_server
@@ -144,6 +146,7 @@ def getUsers(request):
             res[i]['fields'].pop('password')
             res[i]['fields'].pop('last_login')
             res[i]['fields'].pop('token_last_expired')
+            res[i]['fields'].pop('id_server')
             res[i]['fields']['id'] = id
             if len(res[i]['fields']['group'])!=0:
                 for k in res[i]['fields']['group']:
@@ -652,3 +655,10 @@ def nat_page(request):
     listOneToOne= get_list_all_one_to_one_nat()
     context = {'listNat':listNat,'listDNat':listDNat,'listOneToOne':listOneToOne}
     return render(request, 'nat.html',context)
+
+@login_required(login_url='/')
+def vlan_page(request):
+    list_vlan=get_vlan(request)
+    list_vlan_interface= get_vlan_interface(request)
+    context = {'list_vlan':list_vlan,'list_vlan_interface':list_vlan_interface}
+    return render(request, 'vlan.html',context)

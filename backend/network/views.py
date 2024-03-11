@@ -24,6 +24,7 @@ from django.core import serializers
     operation_summary="API TO CONFIG NETWORK INTERFACES",
     operation_description="This API help to configure advanced parametres in network and configure interfaces networrk to get addresses IPV4 and IPV6 in system then in database",
 )
+                
 ########################### 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -37,7 +38,7 @@ def conf(request,name_interface):
         #get interface name to execute command systeme
         ifname=deviceInfo.ifname
         id_interface = deviceInfo.id
-         ###### get object Config
+        ###### get object Config service
         genericConfigObject=None
         if GenericConfig.objects.filter(interface_id=id_interface).exists():
             genericConfigObject=GenericConfig.objects.get(interface_id=id_interface)
@@ -383,9 +384,10 @@ EOF""".format('\n'.join(output_service))
                         status=400
              
         else:
+            
             msg="Connection is not active !!"
             status=400
-    print(msg)
+    # print(msg)
     return JsonResponse({"message":msg},status=status)
 
 ##API to delete config 

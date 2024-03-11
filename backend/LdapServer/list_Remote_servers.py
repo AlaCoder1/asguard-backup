@@ -7,7 +7,7 @@ from .serializers import ADServerSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from django.core import serializers
-
+from django.contrib.auth.hashers import make_password
 
 
 ###################################### Function to display list of Servers ##########################
@@ -33,10 +33,32 @@ def get_list_ad_servers():
 
 ########################################### Function to update the ldap server credentiels ####################################
 
-def update_Ldapserver_DB(data,id):
-    servers = ADServer.objects.get(id=id)
-    server_serializers = ADServerSerializer(servers,data=data)
-    if server_serializers.is_valid():
-        server_serializers.save()
-        return True
-    return server_serializers.errors
+def update_Ldapserver_DB(data, id):
+    server = ADServer.objects.get(id=id)
+    server_serializers = ADServerSerializer(server, data=data)
+
+    ldap_uri = f"{'ldaps' if data['ssl_tls_activation'] else 'ldap'}://{data['server_url']}:{data['port']}"
+    ldap_conn = ldap.initialize(ldap_uri)
+
+    try:
+        ldap_conn.simple_bind_s(data['bind_user_dn'], data['bind_user_password'])
+
+        # Check LDAP search result more explicitly
+        result = ldap_conn.search_s(data['search_base'], ldap.SCOPE_SUBTREE, "(objectClass=user)", ['userPrincipalName'])
+       
+        if result!=-1:
+            if server_serializers.is_valid():
+                server_serializers.validated_data['bind_user_password'] = make_password(data['bind_user_password'])
+                server_serializers.save()
+                ldap_conn.unbind()
+                return True
+        else:
+            
+            return False
+            
+    except ldap.LDAPError as e:
+        print("LDAPError:", e)
+        return {'msg': 'credentiels not correct to connect Ldap server'}
+    
+
+

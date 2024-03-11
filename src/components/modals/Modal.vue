@@ -196,7 +196,7 @@ export default {
           state.userDn = "";
           state.searchBase = "";
           state.password = "";
-          state.activateStatus = "";
+          state.activateStatus = false;
         }
       }
     );
@@ -222,7 +222,7 @@ export default {
         state.userDn = "";
         state.searchBase = "";
         state.password = "";
-        state.activateStatus = "";
+        state.activateStatus = false;
       }
     };
 
@@ -256,7 +256,7 @@ export default {
             .catch((i) => {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.response;
+              state.textAlert = i.response.data.msg;
             });
         } else {
           axios

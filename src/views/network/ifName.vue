@@ -77,7 +77,7 @@ export default {
     if (tab) {
       this.activeTab = tab;
     } else {
-      this.activeTab = this.interfaces[0].name_interface;
+      this.activeTab = this.interfaces[0]?.name_interface;
     }
 
     this.IPV4Config =

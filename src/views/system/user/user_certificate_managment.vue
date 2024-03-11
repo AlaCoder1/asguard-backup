@@ -14,9 +14,9 @@
                 <user-management :DataList="{ groups: groups, users: users }" />
               </v-col>
 
-              <!-- <v-col cols="6" style="height: 100%;">
-                                            <network-server-management :DataList="servers" />
-                                        </v-col> -->
+              <v-col cols="6" style="height: 100%">
+                <network-server-management :DataList="servers" />
+              </v-col>
 
               <v-col cols="6" style="height: 100%">
                 <group-management :DataList="groups" />
@@ -46,14 +46,14 @@
 import BaseLayout from "../../../layouts/layout.vue";
 import UserManagement from "../user/components/user-management.vue";
 import GroupManagement from "../user/components/group-management.vue";
-// import NetworkServerManagement from "@/components/systemmanagment/network-server-management.vue";
+import NetworkServerManagement from "../user/components/network-server-management.vue";
 
 export default {
   name: "DataManagment",
   components: {
     BaseLayout,
     UserManagement,
-    // NetworkServerManagement,
+    NetworkServerManagement,
     GroupManagement,
   },
 
@@ -67,12 +67,12 @@ export default {
   },
   methods: {
     setData(Array_String) {
-      const validJsonString = Array_String.replace(/'/g, '"')
-        .replace(/True/g, "true")
-        .replace(/False/g, "false")
-        .replace(/None/g, "null");
+      // const validJsonString = Array_String.replace(/'/g, '"')
+      //   .replace(/True/g, "true")
+      //   .replace(/False/g, "false")
+      //   .replace(/None/g, "null");
 
-      const parsedArray = JSON.parse(validJsonString);
+      const parsedArray = JSON.parse(Array_String);
 
       // this.users = parsedArray;
       // console.log("parsedarray :"+parsedArray)
@@ -111,6 +111,7 @@ export default {
     //   parsing users data
     let userData = document.getElementById("app").attributes["users"].value;
     let parsedData = this.setData(userData);
+    console.log("parsedData", parsedData);
 
     this.users = parsedData;
     //   parsing users data

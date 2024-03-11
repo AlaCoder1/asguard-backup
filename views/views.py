@@ -147,7 +147,6 @@ def getUsers(request):
             res[i]['fields'].pop('password')
             res[i]['fields'].pop('last_login')
             res[i]['fields'].pop('token_last_expired')
-            res[i]['fields'].pop('id_server')
             res[i]['fields']['id'] = id
             if len(res[i]['fields']['group'])!=0:
                 for k in res[i]['fields']['group']:
@@ -663,3 +662,7 @@ def vlan_page(request):
     list_vlan_interface= get_vlan_interface(request)
     context = {'list_vlan':list_vlan,'list_vlan_interface':list_vlan_interface}
     return render(request, 'vlan.html',context)
+
+@login_required(login_url='/')
+def routing_page(request):
+    return render(request, 'routing.html')

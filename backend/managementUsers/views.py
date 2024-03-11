@@ -335,8 +335,8 @@ def modifyUser(request, id):
                 userObject.role = newrole
                 if email_founded:
                     userObject.id_server=ad_server
-                    print(userObject.id_server)
-                
+                else:
+                    userObject.id_server=None
                 if ('group' in data):
                     groups = data['group']
                     userJson['group'] = groups

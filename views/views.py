@@ -663,3 +663,7 @@ def vlan_page(request):
     list_vlan_interface= get_vlan_interface(request)
     context = {'list_vlan':list_vlan,'list_vlan_interface':list_vlan_interface}
     return render(request, 'vlan.html',context)
+
+@login_required(login_url='/')
+def routing_page(request):
+    return render(request, 'routing.html')

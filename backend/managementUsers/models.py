@@ -69,7 +69,7 @@ class User(AbstractBaseUser):
     objects = MyUserManager()
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
-    id_server = models.ForeignKey(ADServer, on_delete=models.CASCADE, null=True)
+    id_server = models.ForeignKey(ADServer, on_delete=models.SET_NULL, null=True)
 
     class Meta:
         db_table = 'user'

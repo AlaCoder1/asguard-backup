@@ -50,17 +50,24 @@ def update_config_dhcp4_server(request,id_server):
                         range_to = ' , '.join(filter(None, ranges_to)) if len(ranges_to)!=0 else None
                         data['range_from']=range_from
                         data['range_to']=range_to
+                        data['interface']=server_object.interface_id
                         serializer_server=DHCP4ServerSerializer(server_object,data=data)
                         if serializer_server.is_valid():
                             serializer_server.save()
                             msg="Config server DHPV4 saved successfully!"
                             status=200
+                        else:
+                            msg=serializer_server.errors
+                            status=400
                     else:
                         msg=aux_save_sys
                         status=400
                 else:
                     msg=aux_init
-                    status=400    
+                    status=400  
+            else:
+                msg="Server not exist!"
+                status=400   
         else:
             msg="Range from or to not in available range!"
             status=400 

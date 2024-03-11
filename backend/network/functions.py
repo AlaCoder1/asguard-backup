@@ -82,11 +82,16 @@ def get_old_config():
     return output,error
    
 def add_requirement(ifname,output):
+    ifname=ifname.split("@")[0]if ifname.startswith("vlan")else ifname
     index=output.index('[Service]')
     values_to_add=['BindsTo=sys-subsystem-net-devices-{}.device'.format(ifname),
                     'After=sys-subsystem-net-devices-{}.device'.format(ifname)]
+    all_interfaces = Interface.objects.all()
+    interface_names = [interface.ifname.split("@")[0] if ifname.startswith("vlan") else interface.ifname for interface in all_interfaces ]
     values_to_add = [x for x in values_to_add if x not in output]
     output = output[:index] + values_to_add + output[index:]
+    output[:index] = [x for x in output[:index] if (x.startswith("BindsTo") or  x.startswith("After")) and x.split(".")[0].split("-")[-1] in interface_names]
+    
     return output
 
 def add_cmd(output,commandes):
@@ -158,6 +163,7 @@ def run_all_commands(commandes,setuptypeIP4,timeout):
     return True
 
 def desactiver_interface_remote(ifname,output):
+    ifname=ifname.split("@")[0]if ifname.startswith("vlan")else ifname
     #la liste des commandes pour la désactivation de l'interface dans Asguard Service
     commands=[
          "#Start IP4Config {}".format(ifname),

@@ -7,6 +7,6 @@ class DHCP4ServerSerializer(serializers.ModelSerializer):
     class Meta:
             model = ServerDhcp4
             fields = ['enable_dhcpv4','subnet_addr','subnet_mask','available_range',
-                      'range_from','range_to','dns_server','gateway','domain_name'
+                      'range_from','range_to','dns_server','gateway','domain_name',
                       'interface',
                       ]

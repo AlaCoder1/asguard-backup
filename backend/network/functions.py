@@ -54,8 +54,10 @@ def restart_network_manager():
     time.sleep(5)
 ## function to get uuid connection
 def get_uuid_con(ifname):
+    ifname=ifname.split("@")[0]if ifname.startswith("vlan")else ifname
     cmd = "sudo nmcli connection show | awk '$NF == \"{}\" {{print}}'".format(ifname)
     output,_=run_command(cmd)
+    # print({"cmd":cmd,"output":output})
     if len(output)==0:
         restart_network_manager()
         output,_=run_command(cmd)

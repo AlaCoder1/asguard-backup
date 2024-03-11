@@ -16,3 +16,4 @@ class ServerDhcp4(models.Model):
     domain_name=models.CharField(max_length=200, null=True,unique=True)
     class Meta:
             db_table = 'server_dhcp4'
+

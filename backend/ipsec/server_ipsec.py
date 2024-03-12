@@ -50,7 +50,9 @@ def update_server_ipsec_in_system(previous_server:ServerIPsec, server:ServerIPse
     """Function to update an ipsec server in system by updating the right config of the tunnel"""
 
     # Create line of the secrets file
-    new_line_in_secrets_file = create_line_secrets(server)
+    with open(PATH_IPSEC_SECRETS) as secret_file:
+        secret_content = secret_file.read()
+    new_line_in_secrets_file = create_line_secrets(secret_content, server)
     
     # Uncomment conn block and secrets line before updating it if the server is disabled
     if not previous_server.server_status:

@@ -71,6 +71,10 @@
 /backend/vlan/migrations/__pycache__/
 /backend/vlan/__pycache__/
 
+
+/backend/server_dhcp4/migrations/__pycache__/
+/backend/server_dhcp4/__pycache__/
+
 /node_modules/
 
 /static/

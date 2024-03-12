@@ -62,7 +62,8 @@
     "insight":"Aperçu",
     "traffic":"Trafic",
     "eventLogs":"Journaux d'événements",
-    "subscription":"Abonnement"
+    "subscription":"Abonnement",
+    "routing":"Routage"
 
   },
   "header":{

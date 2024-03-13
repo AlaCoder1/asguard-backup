@@ -53,7 +53,6 @@ def conf(request,name_interface):
             ## for ipv6
             setuptypeIP6 = data.get('setuptypeIP6')
             ####
-            description = data.get('description')
             bogon_aux = data.get('bogon_aux')
             private_aux = data.get('private_aux')
             mtuv =  None if data.get('mtuv', None) == "" else data.get('mtuv', None)
@@ -79,7 +78,6 @@ def conf(request,name_interface):
                     output_service = [x for x in output_service if x]
                     ##add requirement service
                     output_service=add_requirement(ifname,output_service)
-                    ###set gatewayObject to None
                     GatewayObject=None
                     ##IPV4 configuration cases 
                     match setuptypeIP4.lower():

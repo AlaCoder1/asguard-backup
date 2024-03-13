@@ -1,6 +1,7 @@
 import subprocess
 
 
+
 def execute_cmd(command):
     """function to excecute system commands"""
     command = "sudo " + command
@@ -39,12 +40,15 @@ def delete_vlan_sys(vlan):
     # print(vlan.split('@')[0].strip())
     commandes= [
         f"nmcli connection delete {vlan}",
-        "sed -i '/{}/d' /etc/systemd/system/Asguard-Networking.service".format(vlan.split('@')[0].strip())]
+        "sed -i '/{}/d' /etc/systemd/system/Asguard-Networking.service".format(vlan.split('@')[0].strip()),
+         '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(vlan,vlan),
+        "systemctl restart dhcpd4.service"
+        ]
     for cmd in commandes:
         _, error = execute_cmd(cmd)
         if error!="":
             return error
-        # print(cmd)
+      
     return True
 def convert_priority(priority):
     match priority:

@@ -54,8 +54,8 @@ def calculate_address_range(ip_address, subnet_mask):
     network = ipaddress.IPv4Network(f"{ip_address}/{subnet_mask}", strict=False)
     return network.network_address + 1, network.network_address + network.num_addresses - 2
 
-def create_dhcpv4_db(id_interface,ip_address4,netmask4):
-    """"save server in database after config ipv4 static on interface if exist update it if not create new one"""
+def prepare_conf_server(id_interface,ip_address4,netmask4):
+    """function to prepare data to save"""
     subnet_prefix=calculate_subnet_address(str(ip_address4)+"/"+str(netmask4))
     # print(subnet_prefix)
     subnet_prefix=subnet_prefix+"/32" if netmask4==32 else subnet_prefix
@@ -70,7 +70,11 @@ def create_dhcpv4_db(id_interface,ip_address4,netmask4):
         'interface':id_interface
         
     }
-    if not ServerDhcp4.objects.filter(Q(subnet_addr=subnet_addr)|Q(available_range=available_range)).exists() :
+    return data_save,subnet_addr,subnet_addr
+def create_dhcpv4_db(id_interface,ip_address4,netmask4):
+    """"save server in database after config ipv4 static on interface if exist update it if not create new one"""
+    data_save,subnet_addr,subnet_addr=prepare_conf_server(id_interface,ip_address4,netmask4)
+    if not ServerDhcp4.objects.filter(Q(subnet_addr=subnet_addr)|Q(available_range=subnet_addr)).exists() :
         if ServerDhcp4.objects.filter(Q(interface_id=id_interface)).exists():
             server_object=ServerDhcp4.objects.get(interface_id=id_interface)
             # data_save['interface']=server_object.interface_id
@@ -89,22 +93,39 @@ def delete_dhcp4_server(id_interface,ifname):
     """"delete server config from system and database """
     if ServerDhcp4.objects.filter(interface_id=id_interface).exists():
         server_object=ServerDhcp4.objects.get(interface_id=id_interface)
-        server_object.delete()
-        config_server_interface=return_interfaces_server()
         commandes=[
-            'echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname),
-             """cat <<EOF > /etc/default/isc-dhcp-server
-{} 
-EOF""".format('\n'.join(config_server_interface)),
+            '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
             "systemctl restart dhcpd4.service"
         ]
         
         for cmd in commandes:
             _, error = execute_cmd(cmd)
-            # print(cmd,error)
             if error!="":
                 return error
+        server_object.delete()  
     return True
+        
+# def delete_dhcp4_server(id_interface,ifname):
+#     """"delete server config from system and database """
+#     if ServerDhcp4.objects.filter(interface_id=id_interface).exists():
+#         server_object=ServerDhcp4.objects.get(interface_id=id_interface)
+#         server_object.delete()
+#         # config_server_interface=return_interfaces_server()
+#         commandes=[
+#             '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
+#             # 'echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname),
+#              """cat <<EOF > /etc/default/isc-dhcp-server
+# {} 
+# EOF""".format('\n'.join(config_server_interface)),
+#             "systemctl restart dhcpd4.service"
+#         ]
+        
+#         for cmd in commandes:
+#             _, error = execute_cmd(cmd)
+#             # print(cmd,error)
+#             if error!="":
+#                 return error
+#     return True
         
 def retur_config_file(subnet_address,subnet_mask,ranges_from,ranges_to,dns_server,gateway,domain_name):
     """function to prepare config to write in file"""

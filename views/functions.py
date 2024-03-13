@@ -28,7 +28,7 @@ def get_vlan_interface(request):
         vlans = serializers.serialize("json", vlan_object)
         res = json.loads(vlans)
         for i in range(len(res)):
-            vlan_tag=res[i]['fields']['ifname'].strip("vlan")
+            vlan_tag=res[i]['fields']['ifname'].split("@")[0].strip("vlan").strip()
             interface=Vlan.objects.get(vlan_tag=vlan_tag).parent_interface_id
             ifname_parent=Interface.objects.get(id=interface).ifname      
             data={

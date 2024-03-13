@@ -668,6 +668,13 @@ def routing_page(request):
     return render(request, 'routing.html')
 
 @login_required(login_url='/')
+def interface_type(request):
+    list_vlan=get_vlan(request)
+    list_vlan_interface= get_vlan_interface(request)
+    context = {'list_vlan':json.dumps(list_vlan),'list_vlan_interface':json.dumps(list_vlan_interface)}
+    return render(request, 'interfaceType.html',context)
+
+@login_required(login_url='/')
 def server_dhcp4_page(request):
     list_dhcp4_server=get_all_server_dhcp4(request)
     context = {'list_dhcp4_server':list_dhcp4_server}

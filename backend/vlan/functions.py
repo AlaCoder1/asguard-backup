@@ -36,7 +36,7 @@ def update_vlan_sys(old_vlan,parent_interface,vlan_tag,vlan_priority):
 
 def delete_vlan_sys(vlan):
     """function to update vlan in system"""
-    print(vlan.split('@')[0].strip())
+    # print(vlan.split('@')[0].strip())
     commandes= [
         f"nmcli connection delete {vlan}",
         "sed -i '/{}/d' /etc/systemd/system/Asguard-Networking.service".format(vlan.split('@')[0].strip())]
@@ -44,7 +44,7 @@ def delete_vlan_sys(vlan):
         _, error = execute_cmd(cmd)
         if error!="":
             return error
-        print(cmd)
+        # print(cmd)
     return True
 def convert_priority(priority):
     match priority:

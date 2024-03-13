@@ -72,6 +72,6 @@ def save_in_db(aux_save,interface_serializer):
         msg="Interface saved Successfully!"
         status=200
     else:
-        msg=interface_serializer.errors 
+        msg=str(next(iter(interface_serializer.errors.values()))[0]).strip('.')+"!"
         status=400
     return msg,status

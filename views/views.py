@@ -31,7 +31,7 @@ from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
 from backend.subscription.models import plan, plansSubscription,plansFeatures
 import ruamel.yaml
 
-from views.functions import get_vlan, get_vlan_interface
+from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
     server_status= ServerSatus.objects.get(id=1)
     return server_status.status_server
@@ -666,3 +666,9 @@ def vlan_page(request):
 @login_required(login_url='/')
 def routing_page(request):
     return render(request, 'routing.html')
+
+@login_required(login_url='/')
+def server_dhcp4_page(request):
+    list_dhcp4_server=get_all_server_dhcp4(request)
+    context = {'list_dhcp4_server':list_dhcp4_server}
+    return render(request, 'dhcp4_server.html',context)

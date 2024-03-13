@@ -72,8 +72,7 @@ def delete_dhcp4_server(id_interface,ifname):
     if ServerDhcp4.objects.filter(interface_id=id_interface).exists():
         server_object=ServerDhcp4.objects.get(interface_id=id_interface)
         server_object.delete()
-        config_server_interface=return_interfaces_server(ifname)
-        # include_files='/dhcp4_servers/{}/dhcpd.conf'.format(ifname) 
+        config_server_interface=return_interfaces_server()
         commandes=[
             'echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname),
              """cat <<EOF > /etc/default/isc-dhcp-server
@@ -126,7 +125,7 @@ def init_file_dhcp4(ifname):
             return error
     return True
 
-def return_interfaces_server(ifname):
+def return_interfaces_server():
     """function to return interfaces as server"""
     id_servers_interfaces=[server.interface_id for server in ServerDhcp4.objects.all()]
     all_interfaces = Interface.objects.filter(id__in=id_servers_interfaces)
@@ -137,7 +136,7 @@ def return_interfaces_server(ifname):
 
 def save_config_in_system(list_config,ifname):
     """function to apply config on system"""
-    config_server_interface=return_interfaces_server(ifname)
+    config_server_interface=return_interfaces_server()
     commandes=[
     """cat <<EOF > /etc/dhcp4_servers/{}/dhcpd.conf
 {} 
@@ -152,3 +151,27 @@ EOF""".format('\n'.join(config_server_interface)),
         if error!="":
             return error
     return True
+
+def parse_range_address(data_input):
+    """parse list of addresses """
+    available_range=None if data_input.get('available_range', None) == "" else data_input.get('available_range', None)
+    ranges_from=[] if data_input.get('ranges_from', []) == "" else data_input.get('ranges_from', [])
+    ranges_to=[] if data_input.get('ranges_to', []) == "" else data_input.get('ranges_to', [])
+    return available_range,ranges_from,ranges_to
+
+def save_server_db(data,ranges_from,ranges_to,server_object):
+    """function to save changes of config server in database """
+    range_from = ' , '.join(filter(None, ranges_from)) if len(ranges_from)!=0 else None
+    range_to = ' , '.join(filter(None, ranges_to)) if len(ranges_to)!=0 else None
+    data['range_from']=range_from
+    data['range_to']=range_to
+    data['interface']=server_object.interface_id
+    serializer_server=DHCP4ServerSerializer(server_object,data=data)
+    if serializer_server.is_valid():
+        serializer_server.save()
+        msg="Config server DHPV4 saved successfully!"
+        status=200
+    else:
+        msg=str(next(iter(serializer_server.errors.values()))[0]).strip('.')+"!"
+        status=400
+    return msg,status

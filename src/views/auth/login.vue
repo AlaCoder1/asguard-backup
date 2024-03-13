@@ -31,7 +31,7 @@
           hide-details
           class="mb-6 mt-3"
         ></v-text-field>
-        <label for="" class="field-auth ml-9">{{ $t("form.password") }}ddd</label>
+        <label for="" class="field-auth ml-9">{{ $t("form.password") }}</label>
         <v-text-field
           rounded
           v-model="password"

@@ -457,7 +457,10 @@ export default {
         );
 
         if (filtredSourcePort.length == 0) {
-          state.sourcePort = { name: "OTHER", slug: "other" };
+          state.sourcePort = data?.source_port
+            ? { name: "OTHER", slug: "other" }
+            : "";
+
           state.port = data.source_port;
         } else {
           state.sourcePort = filtredSourcePort[0];
@@ -468,7 +471,10 @@ export default {
         );
 
         if (filtredDestinationAddress.length == 0) {
-          state.destinationPort = { name: "OTHER", slug: "other" };
+          state.destinationPort = data?.destination_port
+            ? { name: "OTHER", slug: "other" }
+            : "";
+
           state.specificPort = data.destination_port;
         } else {
           state.destinationPort = filtredDestinationAddress[0];

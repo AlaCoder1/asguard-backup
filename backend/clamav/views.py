@@ -46,7 +46,7 @@ def update_clamav_configuration(request, id):
     if request.method=="PUT":
         """Update clamav configurations in config and freshclam file"""
         try:
-            print("Request Data:", request.data)
+            # print("Request Data:", request.data)
             # Retrieve ClamAV object from the database using the id
             clamav_object = ClamAV.objects.get(pk=id)
 

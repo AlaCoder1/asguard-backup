@@ -5,11 +5,12 @@ from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 import json
 import ast
+from backend.LdapServer.list_Remote_servers import get_list_ad_servers
 from backend.managementGroup.models import Group
 from backend.managementUsers.models import User
 from backend.managementServers.models import Type, Server
 from backend.managementUsers.views import getAllUsers
-from backend.nat.list_nat import get_list_all_dnat, get_list_all_snat
+from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat
 from backend.network.models import GenericConfig, IP4Config, IP6Config, Interface 
 from backend.rules.models import Rule
 from backend.gateway.models import Gateway, GatewayInterface
@@ -29,6 +30,8 @@ from backend.sdwan.list_area import get_list_all_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
 from backend.subscription.models import plan, plansSubscription,plansFeatures
 import ruamel.yaml
+
+from views.functions import get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
     server_status= ServerSatus.objects.get(id=1)
     return server_status.status_server
@@ -151,7 +154,7 @@ def getUsers(request):
                     group_dict.append({"name":group.groupname,"id":group.id})
                 res[i]['fields']['group']=group_dict
             list_users.append(res[i]['fields'])
-        return list_users
+        return json.dumps(list_users)
 
 
 def get_groups(request):
@@ -171,7 +174,7 @@ def get_groups(request):
             else:
                 res[i]['fields']['sudoers']=True
             list_group.append(res[i]['fields'])
-        return list_group
+        return json.dumps(list_group)
 
 
 def get_servers(request):
@@ -457,8 +460,8 @@ def get_alerts_from_database(request):
 def user_certificate_managment_page(request):
     usr=getUsers(request)
     grp=get_groups(request)
-    srv=get_servers(request)
-    context = {'users':usr,"groups":grp,"servers":srv}
+    servers=get_list_ad_servers()
+    context = {'users':usr,"groups":grp,"servers":servers}
     return render(request, 'user_certificate_managment.html',context)
 
 
@@ -649,5 +652,17 @@ def openvpn_monitoring(request):
 def nat_page(request):
     listNat= get_list_all_snat()
     listDNat= get_list_all_dnat()
-    context = {'listNat':listNat,'listDNat':listDNat}
+    listOneToOne= get_list_all_one_to_one_nat()
+    context = {'listNat':listNat,'listDNat':listDNat,'listOneToOne':listOneToOne}
     return render(request, 'nat.html',context)
+
+@login_required(login_url='/')
+def vlan_page(request):
+    list_vlan=get_vlan(request)
+    list_vlan_interface= get_vlan_interface(request)
+    context = {'list_vlan':list_vlan,'list_vlan_interface':list_vlan_interface}
+    return render(request, 'vlan.html',context)
+
+@login_required(login_url='/')
+def routing_page(request):
+    return render(request, 'routing.html')

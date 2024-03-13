@@ -104,7 +104,7 @@ export default {
     const columnOneTowOne = [
       {
         headerName: "Interface",
-        field: "Interface",
+        field: "interface_name",
         autoHeight: true,
         width: 90,
         minWidth: 50,
@@ -112,7 +112,7 @@ export default {
       },
       {
         headerName: "Source IP",
-        field: "Source IP",
+        field: "source_address",
         autoHeight: true,
         width: 90,
         minWidth: 50,
@@ -121,7 +121,7 @@ export default {
 
       {
         headerName: "Translation IP",
-        field: "Translation IP",
+        field: "translation_address",
         autoHeight: true,
         width: 90,
         minWidth: 50,
@@ -129,7 +129,7 @@ export default {
       },
       {
         headerName: "D.Address",
-        field: "Destination Address",
+        field: "destination_address",
         autoHeight: true,
         width: 90,
         minWidth: 50,
@@ -137,7 +137,7 @@ export default {
       },
       {
         headerName: "Description",
-        field: "Description",
+        field: "description",
         autoHeight: true,
         width: 90,
         minWidth: 50,
@@ -145,7 +145,7 @@ export default {
       },
       {
         headerName: "Status",
-        field: "Status",
+        cellRenderer: checkboxRender,
         autoHeight: true,
         width: 90,
         minWidth: 50,
@@ -159,6 +159,63 @@ export default {
       },
     ];
 
+    function checkboxRender(params) {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      params.value = params.data.rule_status;
+      input.checked = params.value;
+
+      input.style.margin = "10px";
+      input.style.width = "20px";
+      input.style.height = "18px";
+      input.style.cursor = "pointer";
+
+      input.addEventListener("click", function (event) {
+        params.value = !params.value;
+        params.data.rule_status = params.value;
+
+        if (params.value) {
+          axios
+            .put(`/nat/startOneToOneNat/${params.data.id}`)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          axios
+            .put(`/nat/stopOneToOneNat/${params.data.id}`)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        }
+      });
+      return input;
+    }
     const rowDataOneTowOne = reactive({});
 
     const gridApi = ref(null);
@@ -269,6 +326,19 @@ export default {
         state.modalMode = "";
         state.editRow = {};
       });
+
+      let listOneToOne =
+        document.getElementById("app").attributes["listOneToOne"].value;
+
+      const validJsonString = listOneToOne
+        .replace(/'/g, '"')
+        .replace(/True/g, "true")
+        .replace(/False/g, "false")
+        .replace(/None/g, "null");
+      const parsedArray = JSON.parse(validJsonString);
+      console.log("parsedArrayOne", parsedArray);
+
+      rowDataOneTowOne.value = parsedArray;
     });
 
     const cancelDelete = () => {
@@ -280,7 +350,7 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       axios
-        .delete(`/sdwan/deleteArea/${state.deletedRow.id}`)
+        .delete(`/nat/deleteOneToOneNat/${state.deletedRow.id}`)
         .then((response) => {
           state.snackbar = true;
           state.color = "success";

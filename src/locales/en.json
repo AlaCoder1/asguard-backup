@@ -63,7 +63,8 @@
     "insight":"Insight",
     "traffic":"Traffic",
     "eventLogs":"Event logs",
-    "subscription":"Subscription"
+    "subscription":"Subscription",
+    "routing":"Routing"
 
 
   },
@@ -75,7 +76,7 @@
   "french":"French",
   "english":"English",
   "networkAdmins":"Networks admins",
-  "networksGroups":"Networks admins",
+  "networksGroups":"Networks groups",
 
      
   "agGrid":{

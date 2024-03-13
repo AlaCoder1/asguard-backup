@@ -77,10 +77,12 @@ urlpatterns = [
     path('proxy/', include('backend.proxy.urls')),
     path('nat/', include('backend.nat.urls')),
     path("vlan/",include("backend.vlan.urls")),
+    path("server_dhcp4/",include("backend.server_dhcp4.urls")),
     path("ids-ips/",suricata),
     path("firewall/nat/",nat_page),
     path("success/",success),
     path("vpnmonitoring/",openvpn_monitoring),
+    path("routing/",routing_page),
     path('ldap/',include('backend.LdapServer.urls')),
 ]
 

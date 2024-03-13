@@ -62,6 +62,7 @@
 /backend/subscription/migrations/__pycache__/
 
 /backend/tasks/migrations/__pycache__/
+/backend/tasks/management/commands/__pycache__/
 /backend/tasks/__pycache__/
 
 /backend/openvpn_monitoring/migrations/__pycache__/
@@ -69,6 +70,10 @@
 
 /backend/vlan/migrations/__pycache__/
 /backend/vlan/__pycache__/
+
+
+/backend/server_dhcp4/migrations/__pycache__/
+/backend/server_dhcp4/__pycache__/
 
 /node_modules/
 

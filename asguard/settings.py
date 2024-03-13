@@ -69,6 +69,7 @@ INSTALLED_APPS = [
     'backend.openvpn_monitoring',
     'backend.nat',
     'backend.vlan',
+    'backend.server_dhcp4',
     'channels',
     'drf_yasg',
     'backend.LdapServer',

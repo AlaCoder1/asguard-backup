@@ -70,7 +70,8 @@
     "insight":"Insight",
     "traffic":"Traffic",
     "eventLogs":"Event logs",
-    "subscription":"Subscription"
+    "subscription":"Subscription",
+    "routing":"Routing"
 
 
   },

@@ -165,7 +165,7 @@
             <!-- <small>*indicates required field</small> -->
           </v-card-text>
           <v-card-actions>
-            <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
+            <span></span>
             <v-spacer></v-spacer>
             <v-btn
               type="submit"
@@ -514,9 +514,10 @@ export default {
               }
             })
             .catch((i) => {
+              console.log("i.response.data", i.response);
               this.snackbar = true;
               this.color = "red";
-              this.textAlert = i.response.data.error;
+              this.textAlert = i.response.data.msg;
             });
         } else {
           let groupsIds = this.state.formData?.groups?.map((i) => {

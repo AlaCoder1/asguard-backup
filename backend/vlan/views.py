@@ -21,8 +21,9 @@ def get_vlan(request):
         res = json.loads(vlan)
         for i in range(len(res)):
             res[i]['fields']['id']=res[i]["pk"]
+            res[i]['fields']['name_interface']=Interface.objects.get(id=res[i]['fields']['parent_interface']).name_interface
             list_vlan.append(res[i]['fields'])
-    return JsonResponse({"response": list_vlan})  
+    return JsonResponse({"msg": list_vlan})  
 
 
 @api_view(['POST'])
@@ -38,9 +39,9 @@ def add_vlan(request):
             msg="Vlan added Successfully!"
             status=200
         else:
-            msg=vlan_serializer.errors
+            msg=str(next(iter(vlan_serializer.errors.values()))[0]).strip('.')+"!"
             status=400
-    return JsonResponse({"response": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status)  
     
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -57,12 +58,12 @@ def update_vlan(request,id):
                 msg="Vlan updated Successfully!"
                 status=200
             else:
-                msg=vlan_serializer.errors
+                msg=str(next(iter(vlan_serializer.errors.values()))[0]).strip('.')+"!"
                 status=400
         else:
             msg="Vlan not exist!"
             status=400
-    return JsonResponse({"response": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status)  
 
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
@@ -72,8 +73,9 @@ def delete_vlan(request,id):
         # parse the incoming information
         if Vlan.objects.filter(id=id):
             vlan_object=Vlan.objects.get(id=id)
-            if Interface.objects.filter(ifname="vlan"+str(vlan_object.vlan_tag)).exists():
-                interface_object=Interface.objects.get(ifname="vlan"+str(vlan_object.vlan_tag))
+            name_interface=Interface.objects.get(id=vlan_object.parent_interface_id).ifname
+            if Interface.objects.filter(ifname=f"vlan{vlan_object.vlan_tag}@{name_interface}").exists():
+                interface_object=Interface.objects.get(ifname=f"vlan{vlan_object.vlan_tag}@{name_interface}")
                 aux_delete=delete_vlan_sys(interface_object.ifname)
                 if aux_delete:
                     interface_object.delete()
@@ -83,7 +85,7 @@ def delete_vlan(request,id):
         else:
             msg="Vlan not exist!"
             status=400
-    return JsonResponse({"response": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status)  
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -101,7 +103,7 @@ def assign_vlan_interface(request):
             vlan_tag=res_vlan["vlan_tag"]
             vlan_priority=convert_priority(res_vlan["vlan_priority"]) if res_vlan["vlan_priority"] is not None else res_vlan["vlan_priority"]
             data_save={
-                        "ifname":f"vlan{vlan_tag}",
+                        "ifname":f"vlan{vlan_object.vlan_tag}@{parent_interface}",
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":data_input['name_interface'],
@@ -117,7 +119,7 @@ def assign_vlan_interface(request):
         else:
             msg="Vlan not exist!"
             status=400
-    return JsonResponse({"response": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status)  
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -134,10 +136,11 @@ def update_vlan_interface(request,id_interface):
             vlan_tag=res_vlan["vlan_tag"]
             vlan_priority=convert_priority(res_vlan["vlan_priority"])
             data_save={
-                        "ifname":f"vlan{vlan_tag}",
+                        "ifname":f"vlan{vlan_object.vlan_tag}@{parent_interface}",
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":data_input['name_interface'],
+                        "description":f"default config vlan{vlan_object.vlan_tag}",
                     }
             
             vlan_object=Interface.objects.get(id=id_interface)
@@ -151,7 +154,7 @@ def update_vlan_interface(request,id_interface):
         else:
             msg="Vlan not exist!"
             status=400
-    return JsonResponse({"response": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status)  
     
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
@@ -173,7 +176,7 @@ def delete_vlan_interface(request,id_interface):
             msg="Vlan interface not exist!"
             status=400
       
-    return JsonResponse({"response": msg},status=status) 
+    return JsonResponse({"msg": msg},status=status) 
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -186,7 +189,7 @@ def get_vlan_interface(request):
         vlans = serializers.serialize("json", vlan_object)
         res = json.loads(vlans)
         for i in range(len(res)):
-            vlan_tag=res[i]['fields']['ifname'].strip("vlan")
+            vlan_tag=res[i]['fields']['ifname'].strip("vlan").split("@")[0]
             interface=Vlan.objects.get(vlan_tag=vlan_tag).parent_interface_id
             ifname_parent=Interface.objects.get(id=interface).ifname      
             data={
@@ -195,4 +198,4 @@ def get_vlan_interface(request):
                 "network_port":f"VLAN {vlan_tag} on {ifname_parent}"
             }
             list_vlan_interface.append(data)
-    return JsonResponse({"response": list_vlan_interface})  
+    return JsonResponse({"msg": list_vlan_interface})  

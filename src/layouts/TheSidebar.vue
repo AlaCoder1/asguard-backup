@@ -178,6 +178,12 @@ export default {
           active: "interfaces",
           subItems: [
             {
+              title: "subtitle.listOfInterface",
+              icon: "",
+              href: "/interfaces/list-of-interface",
+              active: "List of interface",
+            },
+            {
               title: "subtitle.overview",
               icon: "",
               href: "/interfaces/overview",
@@ -196,17 +202,19 @@ export default {
               active: "Different Networks",
             },
             {
+              title: "subtitle.routing",
+              icon: "",
+              href: "/routing",
+              href: "/routing",
+              active: "routing",
+            },
+            {
               title: "subtitle.diagnostics",
               icon: "",
               href: "/interfaces/diagnostics",
               active: "Diagnostics",
             },
-            {
-              title: "subtitle.listOfInterface",
-              icon: "",
-              href: "/interfaces/list-of-interface",
-              active: "List of interface",
-            },
+
             {
               title: "subtitle.settings",
               icon: "",

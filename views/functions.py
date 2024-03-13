@@ -1,5 +1,6 @@
 import json
 from backend.network.models import Interface
+from backend.server_dhcp4.models import ServerDhcp4
 from backend.vlan.models import Vlan
 from django.core import serializers
 
@@ -14,6 +15,7 @@ def get_vlan(request):
         res = json.loads(vlan)
         for i in range(len(res)):
             res[i]['fields']['id']=res[i]["pk"]
+            res[i]['fields']['name_interface']=Interface.objects.get(id=res[i]['fields']['parent_interface']).name_interface
             list_vlan.append(res[i]['fields'])
     return list_vlan
 
@@ -36,3 +38,19 @@ def get_vlan_interface(request):
             }
             list_vlan_interface.append(data)
     return list_vlan_interface
+
+def get_all_server_dhcp4(request):
+    """API to get all dhcp4 server from database """
+    if (request.method == 'GET'):
+        list_dhcp4_server=[]
+        # parse the incoming information
+        dhcp4_object=ServerDhcp4.objects.all()
+        dhcp4 = serializers.serialize("json", dhcp4_object)
+        res = json.loads(dhcp4)
+        for i in range(len(res)):
+            res[i]['fields']['id']=res[i]["pk"]
+            res[i]['fields']['range_from']=res[i]['fields']['range_from'].split(',') if res[i]['fields']['range_from'] is not None else None
+            res[i]['fields']['range_to']=res[i]['fields']['range_to'].split(',') if res[i]['fields']['range_to'] is not None else None
+            res[i]['fields']['dns_server']=res[i]['fields']['dns_server'].split(',') if res[i]['fields']['dns_server'] is not None else None
+            list_dhcp4_server.append(res[i]['fields'])
+    return list_dhcp4_server

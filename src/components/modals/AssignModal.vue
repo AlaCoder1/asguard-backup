@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              Create new VLAN</span
+              Create new Interface</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              Update VLAN</span
+              Update Interface</span
             >
           </v-card-title>
           <v-card-text>
@@ -16,11 +16,12 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-select
+                    :readonly="modalMode === 'edit' ? true : false"
                     v-model="state.interface"
-                    label="Parent Interface"
-                    item-title="name"
-                    item-value="slug"
-                    :items="state.listInterfaces"
+                    label="New interface"
+                    item-title="vlan"
+                    item-value="id"
+                    :items="state.listVlan"
                     return-object
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.interface.$error">
@@ -29,33 +30,14 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="VLAN Tag"
-                    v-model="state.vlanTag"
+                    label="Name Interface"
+                    v-model="state.name_interface"
                   ></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.vlanTag.$error">
-                    {{ v$.vlanTag.$errors[0].$message }}
-                  </p>
-                </v-col>
-                <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.vlanPriority"
-                    label="Vlan priority"
-                    item-title="name"
-                    item-value="slug"
-                    :items="state.listPriority"
-                    return-object
-                  ></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.vlanPriority.$error">
-                    {{ v$.vlanPriority.$errors[0].$message }}
-                  </p>
-                </v-col>
-                <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    label="Description"
-                    v-model="state.description"
-                  ></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.description.$error">
-                    {{ v$.description.$errors[0].$message }}
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.name_interface.$error"
+                  >
+                    {{ v$.name_interface.$errors[0].$message }}
                   </p>
                 </v-col>
               </v-row>
@@ -127,34 +109,28 @@ export default {
   setup(props) {
     const emitter = inject("emitter");
     onMounted(() => {
-      getInterface();
+      let vlanList =
+        document.getElementById("app").attributes["list_vlan"].value;
+      const parsedArray = JSON.parse(vlanList);
+      state.listVlan = parsedArray.map((e) => {
+        return {
+          id: e.id,
+          vlan: `VLAN : ${e.vlan_tag}`,
+        };
+      });
     });
 
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
-      listInterfaces: [],
-      listPriority: [
-        "Best Effort ( 0 , default )",
-        "Background ( 1, lowest)",
-        "Excellent Effort (2)",
-        "Critical Applications (3",
-        "Video (4)",
-        "Voice (5)",
-        "Internetwork Control (6)",
-        "Network Control (7)",
-      ],
       id: null,
-      //
+      listVlan: [],
       snackbar: false,
       color: "",
       textAlert: "",
       openModal: false,
-
       interface: "",
-      vlanPriority: "",
-      description: "",
-      vlanTag: "",
+      name_interface: "",
     });
 
     watch(
@@ -174,9 +150,7 @@ export default {
       () => {
         if (modalMode.value === "create") {
           state.interface = "";
-          state.vlanTag = "";
-          state.vlanPriority = "";
-          state.description = "";
+          state.name_interface = "";
         }
       }
     );
@@ -184,40 +158,10 @@ export default {
     const populate = (data) => {
       if (modalMode.value === "edit") {
         state.id = data.id;
-
-        let filtredInterface = state.listInterfaces.filter(
-          (i) => i.id === data?.parent_interface
-        );
+        let filtredInterface = state.listVlan.filter((i) => i.id === data?.id);
         state.interface = filtredInterface[0];
-        state.vlanTag = data.vlan_tag;
-        state.vlanPriority = data.vlan_priority;
-        state.description = data.description;
+        state.name_interface = data.name_interface;
       }
-    };
-
-    const getInterface = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-      axios.get("/network/AllInterfaces").then(
-        (response) => {
-          let filtredInterface = response.data.filter(
-            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
-          );
-
-          let interfaces = filtredInterface.map((i) => {
-            return {
-              id: i.id,
-              name: i.name_interface,
-            };
-          });
-
-          state.listInterfaces = interfaces;
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
     };
 
     const getCookie = (name) => {
@@ -242,16 +186,13 @@ export default {
 
       if (result) {
         let payload = {
-          parent_interface: state.interface?.id,
-          vlan_tag: state.vlanTag,
-          vlan_priority: state.vlanPriority,
-          description: state.description,
+          id: state.interface.id,
+          name_interface: state.name_interface,
         };
-        console.log("payload", payload);
 
         if (modalMode.value === "edit") {
           axios
-            .put(`/vlan/updateVlan/${state.id}`, payload)
+            .put(`/vlan/updateVlanInterface/${state.id}`, payload)
             .then((response) => {
               if (response.status == "200") {
                 state.snackbar = true;
@@ -269,7 +210,7 @@ export default {
             });
         } else {
           axios
-            .post("/vlan/addVlan", payload)
+            .post("/vlan/assignVlanInterface", payload)
             .then((response) => {
               if (response.status == "200") {
                 state.openModal = false;
@@ -294,33 +235,19 @@ export default {
     };
 
     const closeModal = () => {
-      emitter.emit("closeVlanModal");
+      emitter.emit("closeAssignModal");
       if (modalMode.value === "create") {
         state.interface = "";
-        state.vlanTag = "";
-        state.vlanPriority = "";
-        state.description = "";
+        state.name_interface = "";
       }
     };
 
     const rules = computed(() => {
       return {
-        vlanTag: {
-          isValidVlanTag: helpers.withMessage(
-            `Champs can include only Numbers.`,
-
-            helpers.regex(/^[0-9]+$/)
-          ),
-        },
-
-        vlanPriority: {
-          required,
-        },
-
         interface: {
           required,
         },
-        description: {
+        name_interface: {
           required,
         },
       };

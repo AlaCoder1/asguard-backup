@@ -1,67 +1,62 @@
 <template>
-
-      <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
-        <h4>VLAN</h4>
-        <v-divider></v-divider>
-        <v-row>
-          <v-col cols="12">
-            <div style="overflow: hidden; flex-grow: 1">
-              <ag-grid-vue
-                id="grid-wrapper"
-                domLayout="autoHeight"
-                class="ag-theme-alpine mt-3"
-                style="width: 100%"
-                @grid-ready="onGridReady"
-                :columnDefs="columnVlan"
-                :rowData="rowDataVlan.value"
-                :pagination="true"
-                :paginationPageSize="5"
-              />
-            </div>
-            <div class="d-flex justify-end mt-3">
-              <VButton
-                rounded
-                outlined
-                color="#213E9F"
-                label-color="#ffffff"
-                label="Add VLAN"
-                :isLarge="true"
-                type="submit"
-                class="ml-2"
-                @click="openModalAdd"
-              />
-            </div>
-          </v-col>
-        </v-row>
-        <ModalVlan
-          :isOpen="state.isModalOpen"
-          :editRow="state.editRow"
-          :modalMode="state.modalMode"
-        />
-      </div>
-      <v-dialog v-model="state.deleteDialog" max-width="500px">
-        <v-card>
-          <v-card-title class="headline">Delete Confirmation</v-card-title>
-          <v-card-text>Are you sure you want to delete this Row ?</v-card-text>
-          <v-card-actions>
-            <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="cancelDelete"
-              >Cancel</v-btn
-            >
-            <v-btn color="blue darken-1" text @click="confirmDelete"
-              >Delete</v-btn
-            >
-          </v-card-actions>
-        </v-card>
-      </v-dialog>
-      <v-snackbar
-        :timeout="2000"
-        v-model="state.snackbar"
-        location="bottom right"
-        :color="state.color"
-      >
-        {{ state.textAlert }}
-      </v-snackbar>
+  <div class="ml-5" style="display: flex; flex-direction: column">
+    <h4>Assing Interface</h4>
+    <v-divider></v-divider>
+    <v-row class="mb-15">
+      <v-col cols="12">
+        <div style="overflow: hidden; flex-grow: 1">
+          <ag-grid-vue
+            id="grid-wrapper"
+            domLayout="autoHeight"
+            class="ag-theme-alpine mt-3"
+            style="width: 100%"
+            @grid-ready="onGridReady"
+            :columnDefs="columnAssign"
+            :rowData="rowDataAssign.value"
+            :pagination="true"
+            :paginationPageSize="5"
+          />
+        </div>
+        <div class="d-flex justify-end mt-3">
+          <VButton
+            rounded
+            outlined
+            color="#213E9F"
+            label-color="#ffffff"
+            label="Add new interface"
+            :isLarge="true"
+            type="submit"
+            class="ml-2"
+            @click="openModalAdd"
+          />
+        </div>
+      </v-col>
+    </v-row>
+    <AssignModal
+      :isOpen="state.isModalOpen"
+      :editRow="state.editRow"
+      :modalMode="state.modalMode"
+    />
+  </div>
+  <v-dialog v-model="state.deleteDialog" max-width="500px">
+    <v-card>
+      <v-card-title class="headline">Delete Confirmation</v-card-title>
+      <v-card-text>Are you sure you want to delete this Row ?</v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
+        <v-btn color="blue darken-1" text @click="confirmDelete">Delete</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+  <v-snackbar
+    :timeout="2000"
+    v-model="state.snackbar"
+    location="bottom right"
+    :color="state.color"
+  >
+    {{ state.textAlert }}
+  </v-snackbar>
 </template>
 
 <script>
@@ -72,12 +67,12 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import VButton from "@/components/VButton.vue";
 
-import ModalVlan from "@/components/modals/ModalVlan.vue";
+import AssignModal from "@/components/modals/AssignModal.vue";
 export default {
-  name: "Vlan",
+  name: "VlanInterface",
   components: {
     VButton,
-    ModalVlan,
+    AssignModal,
     AgGridVue,
   },
   setup() {
@@ -96,21 +91,21 @@ export default {
     });
 
     onMounted(() => {
-      emitter.on("closeVlanModal", () => {
+      emitter.on("closeAssignModal", () => {
         state.isModalOpen = false;
         state.isOpen = false;
         state.modalMode = "";
         state.editRow = {};
       });
 
-      let vlanList =
-        document.getElementById("app").attributes["list_vlan"].value;
-      const parsedArray = JSON.parse(vlanList);
+      let vlanInterfaceList =
+        document.getElementById("app").attributes["list_vlan_interface"].value;
+      const parsedArray = JSON.parse(vlanInterfaceList);
 
-      rowDataVlan.value = parsedArray;
+      rowDataAssign.value = parsedArray;
     });
 
-    const columnVlan = [
+    const columnAssign = [
       {
         headerName: "Interface",
         field: "name_interface",
@@ -122,33 +117,15 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Tag",
-        field: "vlan_tag",
+        headerName: "Network port",
+        field: "network_port",
         sortable: true,
         filter: true,
         width: 90,
         minWidth: 50,
         flex: 1,
       },
-      {
-        headerName: "PCP",
-        autoHeight: true,
-        field: "vlan_priority",
-        sortable: true,
-        filter: true,
-        width: 90,
-        minWidth: 50,
-        flex: 1,
-      },
-      {
-        headerName: "Description",
-        field: "description",
-        sortable: true,
-        filter: true,
-        width: 90,
-        minWidth: 50,
-        flex: 1,
-      },
+
       {
         headerName: "Action",
         cellRenderer: actionCellRendererKeys,
@@ -158,14 +135,14 @@ export default {
       },
     ];
 
-    const rowDataVlan = reactive({});
+    const rowDataAssign = reactive({});
 
     const gridApi = ref(null);
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
       if (gridApi.value) {
-        gridApi.value.setRowData(rowDataVlan.value);
+        gridApi.value.setRowData(rowDataAssign.value);
       } else {
         console.error("Grid API.");
       }
@@ -199,29 +176,29 @@ export default {
       });
       if (isCurrentRowEditing) {
         eGui.innerHTML = `
-            <button
-              class="action-button update"
-              data-action="update">
-                   update
-            </button>
-            <button
-              class="action-button cancel"
-              data-action="cancel">
-                   cancel
-            </button>
-            `;
+              <button
+                class="action-button update"
+                data-action="update">
+                     update
+              </button>
+              <button
+                class="action-button cancel"
+                data-action="cancel">
+                     cancel
+              </button>
+              `;
       } else {
         eGui.innerHTML = `
-          <button
-                class="action-button edit"
-                data-action="edit" title="Edit Server">
-                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
-                </button>
-                <button
-                class="action-button delete"
-                data-action="delete" title="Delete ">
-                  <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
-                </button>`;
+            <button
+                  class="action-button edit"
+                  data-action="edit" title="Edit Server">
+                     <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                  </button>
+                  <button
+                  class="action-button delete"
+                  data-action="delete" title="Delete ">
+                    <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                  </button>`;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -263,7 +240,7 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       axios
-        .delete(`/vlan/deleteVlan/${state.deletedRow.id}`)
+        .delete(`/vlan/deleteVlanInterface/${state.deletedRow.id}`)
         .then((response) => {
           state.snackbar = true;
           state.color = "success";
@@ -281,8 +258,8 @@ export default {
     };
     return {
       state,
-      columnVlan,
-      rowDataVlan,
+      columnAssign,
+      rowDataAssign,
       defaultColDef,
       emitter,
       actionCellRendererKeys,

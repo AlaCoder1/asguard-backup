@@ -5,7 +5,7 @@
         <v-card>
           <v-card-title>
             <span class="text-h5"
-              >{{ mode === "create" ? "Create" : "Update" }} group</span
+              >{{ mode === "create" ? $t("modal.create") : $t("modal.update") }} group</span
             >
           </v-card-title>
           <v-card-text>
@@ -13,7 +13,7 @@
               <v-row class="mb-5">
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    label="Group name*"
+                    :label="$t('form.goupname')*"
                     v-model="state.formData.groupname"
                   ></v-text-field>
                   <span
@@ -25,7 +25,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    label="Description*"
+                    :label="$t('form.description')*"
                     v-model="state.formData.description"
                   ></v-text-field>
                   <span
@@ -43,7 +43,7 @@
               </v-row>
             </v-container>
 
-            <small class="mt-10">*indicates required field</small>
+            <small class="mt-10">*{{$t("requiredfield.indicatesrequiredfield")}}</small>
           </v-card-text>
           <v-card-actions>
             <!-- <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
@@ -58,7 +58,7 @@
               variant="text"
               type="submit"
             >
-              <span class="text-white">Save</span>
+              <span class="text-white">{{ $t("buttons.save") }}</span>
             </v-btn>
             <v-btn
               :rounded="true"
@@ -67,7 +67,7 @@
               variant="text"
               @click="closeModal"
             >
-              <span class="text-white">Close</span>
+              <span class="text-white">{{ $t("buttons.close") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>

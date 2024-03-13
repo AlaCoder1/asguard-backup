@@ -8,13 +8,20 @@
     "emailForLdapAuth":"Email for Ldap auth",
     "roleUser":"Role User",
     "assignToGroup":"Assign to Group",
-    "desactivateUser":"Desactivate User"
+    "desactivateUser":"Desactivate User",
+    "goupname":"Group name",
+    "description":"Description"
   },
   "buttons":{
     "login":"login",
     "save":"Save",
     "close":"Close"
   },
+
+  "requiredfield":{
+    "indicatesrequiredfield":"Indicates required field"
+  },
+
   "errors":{
     "valueRequired":"Value is required",
     "invalidPassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
@@ -89,7 +96,8 @@
     "address":"Address",
     "status":"Status",
     "user":"User",
-    "role":"Role"
+    "role":"Role",
+    "authority":"Authority"
 
   },
 

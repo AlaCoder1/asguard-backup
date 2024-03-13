@@ -208,33 +208,17 @@ export default {
           </button>
           `;
       } else {
-        if (params.data.utility === "Public") {
-          eGui.innerHTML = `
-            <button
-             class="action-button copy"
-             data-action="copy"  title="Copy Public Key">
-                <i class="mdi mdi-content-copy" style="color: #086eae;font-size: 20px;"></i>
-             </button>
-            <button
-             class="action-button download"
-             data-action="export"  title="Download Public Key">
-                <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
-             </button>
-             <button
-            class="action-button delete"
-            data-action="delete" title="Delete Server">
-              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
-            </button>`;
-        } else {
-          eGui.innerHTML = `
-            <button
-            class="action-button delete"
-            data-action="delete" title="Delete Server">
-              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
-            </button>
-  
-            `;
-        }
+        eGui.innerHTML = `
+          <button
+                class="action-button edit"
+                data-action="edit" title="Edit Server">
+                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+                <button
+                class="action-button delete"
+                data-action="delete" title="Delete ">
+                  <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>`;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {

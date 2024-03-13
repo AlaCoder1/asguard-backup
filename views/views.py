@@ -666,3 +666,10 @@ def vlan_page(request):
 @login_required(login_url='/')
 def routing_page(request):
     return render(request, 'routing.html')
+
+@login_required(login_url='/')
+def interface_type(request):
+    list_vlan=get_vlan(request)
+    list_vlan_interface= get_vlan_interface(request)
+    context = {'list_vlan':json.dumps(list_vlan),'list_vlan_interface':json.dumps(list_vlan_interface)}
+    return render(request, 'interfaceType.html',context)

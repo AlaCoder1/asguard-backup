@@ -50,11 +50,34 @@ def update_vlan(request,id):
     if (request.method == 'PUT'):
         # parse the incoming information
         data_input =request.data
-        if Vlan.objects.filter(id=id):
+        if Vlan.objects.filter(id=id).exists():
             vlan_object=Vlan.objects.get(id=id)
             vlan_serializer=VlanSerializer(vlan_object,data=data_input)
             if vlan_serializer.is_valid():
-                vlan_serializer.save()
+                parent_interface=Interface.objects.get(id=vlan_object.parent_interface_id).ifname
+                vlan_tag=vlan_object.vlan_tag
+                if Interface.objects.filter(ifname=f"vlan{vlan_tag}@{parent_interface}").exists():
+                    vlan_priority=convert_priority(data_input['vlan_priority'])
+                    data_save={
+                                "ifname":f"vlan{data_input['vlan_tag']}@{data_input['parent_interface']}",
+                                "private_aux":False,
+                                "bogon_aux":False,
+                                "description":f"update default config vlan{data_input['vlan_tag']}",
+                            }
+                    
+                    interface_object=Interface.objects.get(ifname=f"vlan{vlan_tag}@{parent_interface}")
+                    aux_save=update_vlan_sys(interface_object.ifname,data_input['parent_interface'],data_input['vlan_tag'],vlan_priority)
+                    print(data_save)
+                    if aux_save:
+                        interface_serializer=InterfaceSerializer(interface_object,data=data_save)
+                        msg,status=save_in_db(aux_save,interface_serializer)
+                        vlan_serializer.save()
+                    else:
+                        msg=aux_save
+                        status=400
+                else:
+                    msg="Vlan not exist!"
+                    status=400
                 msg="Vlan updated Successfully!"
                 status=200
             else:

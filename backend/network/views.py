@@ -1,5 +1,6 @@
 from django.http import JsonResponse
 from backend.network.serializers import *
+from backend.server_dhcp4.functions import create_dhcpv4_db, delete_dhcp4_server
 from .models import *
 from backend.settings.serializers import *
 import json
@@ -52,7 +53,6 @@ def conf(request,name_interface):
             ## for ipv6
             setuptypeIP6 = data.get('setuptypeIP6')
             ####
-            description = data.get('description')
             bogon_aux = data.get('bogon_aux')
             private_aux = data.get('private_aux')
             mtuv =  None if data.get('mtuv', None) == "" else data.get('mtuv', None)
@@ -78,7 +78,6 @@ def conf(request,name_interface):
                     output_service = [x for x in output_service if x]
                     ##add requirement service
                     output_service=add_requirement(ifname,output_service)
-                    ###set gatewayObject to None
                     GatewayObject=None
                     ##IPV4 configuration cases 
                     match setuptypeIP4.lower():
@@ -311,7 +310,7 @@ def conf(request,name_interface):
 EOF""".format('\n'.join(output_service))
                     aux_run=run_all_commands(commandes_final,setuptypeIP4,10)
                     if aux_run is True:
-                        output, error=run_command(cmd_asguard)
+                        _, error=run_command(cmd_asguard)
                         if  (error==""):
                             ## for dhcp 4
                             if setuptypeIP4 is None or setuptypeIP4.lower()=="static" :
@@ -352,9 +351,18 @@ EOF""".format('\n'.join(output_service))
                                         if aux_inter is True:  
                                             if aux_gw_dhcp is True:
                                                 if aux_gw6_dhcp is True:
-                                                    ###### 
-                                                    msg="Your interface {} was configured Successfully!!".format(name_interface)
-                                                    status=200
+                                                    if setuptypeIP4.lower()=="static" :
+                                                        aux_server=create_dhcpv4_db(id_interface,ip_address4,netmask4)
+                                                    elif setuptypeIP4.lower()=="dhcp":
+                                                        aux_server=delete_dhcp4_server(id_interface,ifname)
+                                                    if aux_server is True:
+                                                            ###### 
+                                                            msg="Your interface {} was configured Successfully!!".format(name_interface)
+                                                            status=200
+                                                    else:
+                                                        msg=aux_server
+                                                        status=400
+                                                    
                                                 else:
                                                     msg=aux_gw6_dhcp
                                                     status=400

@@ -1,3 +1,4 @@
+import time
 from django.http import JsonResponse
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.authentication import SessionAuthentication
@@ -9,12 +10,11 @@ from backend.ipsec.constant_variables import IPV4_CONFIG
 from backend.ipsec.utils import json_to_str_server_ipsec, up_ipsec_conn
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec, get_status_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
-from backend.ipsec.server_ipsec import change_status_conn, delete_server_ipsec_in_system, install_server_ipsec_in_system, update_server_ipsec_in_system
+from backend.ipsec.server_ipsec import change_status_conn, change_status_ipsec_in_system, delete_server_ipsec_in_system, install_server_ipsec_in_system, update_server_ipsec_in_system
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
 from backend.openvpn.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA
-from utils.commands_utils import execute_command_without_arguments
 from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INEXISTANT, SUCCESS_MESSAGES_CONFIGURATION, SUCCESS_MESSAGES_DELETE
 from utils.errors_utils import CommandExecutionError
 
@@ -293,6 +293,7 @@ def create_server_ipsec(request):
                 install_server_ipsec_in_system(server_conf, authentication, interface_address.ip_address, remote_gateway)
             else:
                 install_server_ipsec_in_system(server_conf, authentication, 'any', remote_gateway)
+            time.sleep(3)
 
             # Add the server to the database
             serializer_server.save()
@@ -532,14 +533,14 @@ def update_server_ipsec(request, id):
             
             # Install the server in system
             update_server_ipsec_in_system(previous_server, server, server_conf)
+            time.sleep(3)
 
             # Add the server to the database
             serializer_server.save()
             up_ipsec_status = up_ipsec_conn(server.conn_name)
             if up_ipsec_status:
                 return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(server.conn_name, 'updated')}, status=201)
-            else:
-                return JsonResponse({"error": "Error in up ipsec"}, status=400)
+            return JsonResponse({"error": "Error in up ipsec"}, status=400)
         else:
             return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 
@@ -589,12 +590,9 @@ def status_ipsec(request):
             data = request.data
             status = data.get("status", "")
 
-            execute_command_without_arguments(['sudo', 'ipsec', status])
-
-            if status == "start":
-                return JsonResponse({"msg": "IPsec is started"})
+            status_ipsec = change_status_ipsec_in_system(status)
             
-            return JsonResponse({"msg": "IPsec is stoped"})
+            return JsonResponse({"msg": status_ipsec})
         
     except ServerIPsec.DoesNotExist:
         return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)

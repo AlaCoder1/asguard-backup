@@ -212,7 +212,7 @@
               </v-row>
             </div>
           </div>
-          <div v-if="setuptypeip4=== 'dhcp'">
+          <div v-if="setuptypeip4 === 'dhcp'">
             <v-card-title class="title-text"
               >Configuring the DHCP Client</v-card-title
             >
@@ -281,29 +281,29 @@
       </div>
       <br /><br /><br />
       <v-alert
-        type="success" 
-        class="d-flex mt-3" 
-        style="align-self: flex-end;"
-          elevation="2"
-          icon="mdi-check-circle-outline"
-          border="top"
-          v-if="showAlertGateway"
-          :style="alertStyle"
-        >
-          Gateway added successfully
-        </v-alert>
-        <v-alert
-          type="success" 
-        class="d-flex mt-3" 
-        style="align-self: flex-end;"
-          elevation="2"
-          icon="mdi-check-circle-outline"
-          border="top"
-          v-if="showAlert"
-          :style="alertStyle"
-        >
-          Configuration saved successfully
-        </v-alert>
+        type="success"
+        class="d-flex mt-3"
+        style="align-self: flex-end"
+        elevation="2"
+        icon="mdi-check-circle-outline"
+        border="top"
+        v-if="showAlertGateway"
+        :style="alertStyle"
+      >
+        Gateway added successfully
+      </v-alert>
+      <v-alert
+        type="success"
+        class="d-flex mt-3"
+        style="align-self: flex-end"
+        elevation="2"
+        icon="mdi-check-circle-outline"
+        border="top"
+        v-if="showAlert"
+        :style="alertStyle"
+      >
+        Configuration saved successfully
+      </v-alert>
       <v-dialog
         v-model="showGatewayDialog"
         max-width="600px"
@@ -409,10 +409,7 @@ export default {
         hostname: "",
         overrideMTU: false,
       },
-      items: [
-        { id: 1, value: "static" },
-        { id: 2, value: "dhcp" },
-      ],
+      items: [{ id: 1, value: "static" }],
       speedDuplexItems: [
         "100baseTx-FD",
         "100baseTx-HD",
@@ -532,7 +529,7 @@ export default {
     },
     addNetwork() {
       if (this.advancedParameters) {
-        this.typeDHCP4 = "Advanced"
+        this.typeDHCP4 = "Advanced";
       } else {
         this.typeDHCP4 = "Base";
       }

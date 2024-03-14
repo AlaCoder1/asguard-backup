@@ -41,7 +41,6 @@ def add_server_dhcp4(request):
         if not ServerDhcp4.objects.filter(Q(subnet_addr=subnet_addr)|Q(available_range=subnet_addr)).exists() :
             if ServerDhcp4.objects.filter(Q(interface_id=id_interface)).exists():
                 server_object=ServerDhcp4.objects.get(interface_id=id_interface)
-                # data_save['interface']=server_object.interface_id
                 server_serializer=DHCP4ServerSerializer(server_object,data=data_save)
             else:
                 server_serializer=DHCP4ServerSerializer(data=data_save)

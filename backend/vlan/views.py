@@ -4,7 +4,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 from backend.network.models import Interface
 from backend.network.serializers import InterfaceSerializer
-from backend.vlan.functions import add_vlan_sys, convert_priority, delete_vlan_sys, save_in_db, update_vlan_info, update_vlan_sys
+from backend.vlan.functions import add_vlan_sys, convert_priority, delete_vlan_sys, save_in_db, update_vlan_sys
 from backend.vlan.models import Vlan
 from django.core import serializers
 from backend.vlan.serializers import VlanSerializer

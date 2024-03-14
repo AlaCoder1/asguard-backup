@@ -1,26 +1,19 @@
 from django.db import models
-# Create your models here.
-from django.db import models
 from django.utils import timezone
-from backend.managementUsers.models import User
-    
-#model generic config
 from django.conf import settings
 # Create your models here.
+
 ##model interface
 class Interface(models.Model):
-    # gateway = models.ForeignKey(
-            # Gateway, on_delete=models.CASCADE,null=True)
-    id = models.AutoField(primary_key=True)
-    ifname = models.CharField(max_length=200, null=True,unique=True)
-    private_aux= models.BooleanField(default=False)
+    ifname = models.CharField(max_length=200, null=True, unique=True)
+    private_aux = models.BooleanField(default=False)
     bogon_aux = models.BooleanField(default=False)
-    service_status=models.CharField(max_length=200, null=True,default=None)
-    name_interface=models.CharField(max_length=200, null=True,default=None,unique=True)
-    description=models.CharField(max_length=200,null=True,default=None)
-    # Created and updated timestamps
+    service_status = models.CharField(max_length=200, null=True, default=None)
+    name_interface = models.CharField(max_length=200, null=True, default=None, unique=True)
+    description = models.CharField(max_length=200, null=True, default=None)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
-    updated_at = models.DateTimeField(default=timezone.now,editable=False)
+    updated_at = models.DateTimeField(default=timezone.now, editable=False)
+
     
     def save(self, *args, **kwargs):
         if not self.id:
@@ -172,13 +165,6 @@ class IP6Config(models.Model):
         super(IP6Config, self).save(*args, **kwargs)
     class Meta:
         db_table = 'ip6config'
-
-
-
-
-
-
-
 
 class tempsExucution(models.Model):
     type=models.CharField(max_length=200, null=True)

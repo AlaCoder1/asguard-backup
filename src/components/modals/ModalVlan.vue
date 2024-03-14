@@ -138,7 +138,7 @@ export default {
         "Best Effort ( 0 , default )",
         "Background ( 1, lowest)",
         "Excellent Effort (2)",
-        "Critical Applications (3",
+        "Critical Applications (3)",
         "Video (4)",
         "Voice (5)",
         "Internetwork Control (6)",
@@ -202,7 +202,10 @@ export default {
       axios.get("/network/AllInterfaces").then(
         (response) => {
           let filtredInterface = response.data.filter(
-            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+            (i) =>
+              !i.ifname.startsWith("tun_") &&
+              !i.ifname.startsWith("tap_") &&
+              !i.ifname.startsWith("vlan")
           );
 
           let interfaces = filtredInterface.map((i) => {

@@ -16,8 +16,8 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-select
-                    :readonly="modalMode === 'edit' ? true : false"
                     v-model="state.interface"
+                    :readonly="modalMode === 'edit' ? true : false"
                     label="New interface"
                     item-title="vlan"
                     item-value="id"
@@ -151,6 +151,7 @@ export default {
         if (modalMode.value === "create") {
           state.interface = "";
           state.name_interface = "";
+          state.id = null;
         }
       }
     );
@@ -158,7 +159,9 @@ export default {
     const populate = (data) => {
       if (modalMode.value === "edit") {
         state.id = data.id;
-        let filtredInterface = state.listVlan.filter((i) => i.id === data?.id);
+        let filtredInterface = state.listVlan.filter(
+          (i) => i.id === data?.id_vlan
+        );
         state.interface = filtredInterface[0];
         state.name_interface = data.name_interface;
       }
@@ -239,6 +242,7 @@ export default {
       if (modalMode.value === "create") {
         state.interface = "";
         state.name_interface = "";
+        state.id = null;
       }
     };
 

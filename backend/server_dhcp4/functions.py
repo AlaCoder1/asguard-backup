@@ -5,6 +5,19 @@ import ipaddress
 from backend.server_dhcp4.models import ServerDhcp4
 from backend.server_dhcp4.serializers import DHCP4ServerSerializer
 from backend.vlan.functions import execute_cmd
+from django.db.models import Q
+
+
+def customize_error_msg(serializer):
+    """function to custom error message serializer"""
+    error_messages = [
+    f"{field}: {error}"
+    for field, errors in serializer.errors.items()
+    for error in errors
+]
+    concatenated_error_message = "\n".join(error_messages)
+    concatenated_error_message+="!"
+    return concatenated_error_message
 
 def parse_server_info(data):
     """function to parse server info from data input"""
@@ -41,8 +54,8 @@ def calculate_address_range(ip_address, subnet_mask):
     network = ipaddress.IPv4Network(f"{ip_address}/{subnet_mask}", strict=False)
     return network.network_address + 1, network.network_address + network.num_addresses - 2
 
-def create_dhcpv4_db(id_interface,ip_address4,netmask4):
-    """"save server in database after config ipv4 static on interface if exist update it if not create new one"""
+def prepare_conf_server(id_interface,ip_address4,netmask4):
+    """function to prepare data to save"""
     subnet_prefix=calculate_subnet_address(str(ip_address4)+"/"+str(netmask4))
     # print(subnet_prefix)
     subnet_prefix=subnet_prefix+"/32" if netmask4==32 else subnet_prefix
@@ -54,39 +67,65 @@ def create_dhcpv4_db(id_interface,ip_address4,netmask4):
         "subnet_addr":subnet_addr,
         "subnet_mask":subnet_mask,
         "available_range":available_range,
-        "interface":id_interface
+        'interface':id_interface
+        
     }
-    if ServerDhcp4.objects.filter(interface_id=id_interface).exists():
-        server_object=ServerDhcp4.objects.get(interface_id=id_interface)
-        server_serializer=DHCP4ServerSerializer(server_object,data=data_save)
-    else:
-        server_serializer=DHCP4ServerSerializer(data=data_save)
-    if server_serializer.is_valid():
-        server_serializer.save()
-        return True
-    else:
-        return server_serializer.errors
+    return data_save,subnet_addr,subnet_addr
+def create_dhcpv4_db(id_interface,ip_address4,netmask4):
+    """"save server in database after config ipv4 static on interface if exist update it if not create new one"""
+    data_save,subnet_addr,subnet_addr=prepare_conf_server(id_interface,ip_address4,netmask4)
+    if not ServerDhcp4.objects.filter(Q(subnet_addr=subnet_addr)|Q(available_range=subnet_addr)).exists() :
+        if ServerDhcp4.objects.filter(Q(interface_id=id_interface)).exists():
+            server_object=ServerDhcp4.objects.get(interface_id=id_interface)
+            # data_save['interface']=server_object.interface_id
+            server_serializer=DHCP4ServerSerializer(server_object,data=data_save)
+        else:
+            server_serializer=DHCP4ServerSerializer(data=data_save)
+        if server_serializer.is_valid():
+            server_serializer.save()
+            return True
+        else:
+            return customize_error_msg(server_serializer)
+            # return str(next(iter(server_serializer.errors.values()))[0]).strip('.')+"!"
+    return True
 
 def delete_dhcp4_server(id_interface,ifname):
     """"delete server config from system and database """
     if ServerDhcp4.objects.filter(interface_id=id_interface).exists():
         server_object=ServerDhcp4.objects.get(interface_id=id_interface)
-        server_object.delete()
-        config_server_interface=return_interfaces_server()
         commandes=[
-            'echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname),
-             """cat <<EOF > /etc/default/isc-dhcp-server
-{} 
-EOF""".format('\n'.join(config_server_interface)),
+            '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
             "systemctl restart dhcpd4.service"
         ]
         
         for cmd in commandes:
             _, error = execute_cmd(cmd)
-            print(cmd,error)
             if error!="":
                 return error
+        server_object.delete()  
     return True
+        
+# def delete_dhcp4_server(id_interface,ifname):
+#     """"delete server config from system and database """
+#     if ServerDhcp4.objects.filter(interface_id=id_interface).exists():
+#         server_object=ServerDhcp4.objects.get(interface_id=id_interface)
+#         server_object.delete()
+#         # config_server_interface=return_interfaces_server()
+#         commandes=[
+#             '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
+#             # 'echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname),
+#              """cat <<EOF > /etc/default/isc-dhcp-server
+# {} 
+# EOF""".format('\n'.join(config_server_interface)),
+#             "systemctl restart dhcpd4.service"
+#         ]
+        
+#         for cmd in commandes:
+#             _, error = execute_cmd(cmd)
+#             # print(cmd,error)
+#             if error!="":
+#                 return error
+#     return True
         
 def retur_config_file(subnet_address,subnet_mask,ranges_from,ranges_to,dns_server,gateway,domain_name):
     """function to prepare config to write in file"""
@@ -172,6 +211,7 @@ def save_server_db(data,ranges_from,ranges_to,server_object):
         msg="Config server DHPV4 saved successfully!"
         status=200
     else:
-        msg=str(next(iter(serializer_server.errors.values()))[0]).strip('.')+"!"
+        # msg=str(next(iter(serializer_server.errors.values()))[0]).strip('.')+"!"
+        msg=customize_error_msg(serializer_server)
         status=400
     return msg,status

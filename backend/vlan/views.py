@@ -4,7 +4,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 from backend.network.models import Interface
 from backend.network.serializers import InterfaceSerializer
-from backend.vlan.functions import add_vlan_sys, convert_priority, delete_vlan_sys, save_in_db, update_vlan_sys
+from backend.vlan.functions import add_vlan_sys, convert_priority, delete_vlan_sys, save_in_db, update_vlan_info, update_vlan_sys
 from backend.vlan.models import Vlan
 from django.core import serializers
 from backend.vlan.serializers import VlanSerializer
@@ -46,7 +46,7 @@ def add_vlan(request):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vlan(request,id):
-    """API to update vlan in database only"""
+    """API to update vlan in system and database"""
     if (request.method == 'PUT'):
         # parse the incoming information
         data_input =request.data
@@ -56,37 +56,39 @@ def update_vlan(request,id):
             if vlan_serializer.is_valid():
                 parent_interface=Interface.objects.get(id=vlan_object.parent_interface_id).ifname
                 vlan_tag=vlan_object.vlan_tag
-                if Interface.objects.filter(ifname=f"vlan{vlan_tag}@{parent_interface}").exists():
-                    vlan_priority=convert_priority(data_input['vlan_priority'])
-                    data_save={
-                                "ifname":f"vlan{data_input['vlan_tag']}@{data_input['parent_interface']}",
-                                "private_aux":False,
-                                "bogon_aux":False,
-                                "description":f"update default config vlan{data_input['vlan_tag']}",
-                            }
-                    
+                new_vlan_priority=convert_priority(data_input['vlan_priority']) if data_input["vlan_priority"] is not None else data_input["vlan_priority"]
+                new_parent_interface=Interface.objects.get(id=data_input['parent_interface']).ifname
+                new_vlan_tag=data_input['vlan_tag']
+                if Interface.objects.filter(ifname=f"vlan{vlan_tag}@{parent_interface}").exists(): 
                     interface_object=Interface.objects.get(ifname=f"vlan{vlan_tag}@{parent_interface}")
-                    aux_save=update_vlan_sys(interface_object.ifname,data_input['parent_interface'],data_input['vlan_tag'],vlan_priority)
-                    print(data_save)
+                    aux_save=update_vlan_sys(interface_object.ifname,new_parent_interface,new_vlan_tag,new_vlan_priority)  
+                    data_save={
+                        "ifname":f"vlan{new_vlan_tag}@{new_parent_interface}",
+                        "private_aux":False,
+                        "bogon_aux":False,
+                        "description":f"update default config vlan{new_vlan_tag}",
+                        }
                     if aux_save:
                         interface_serializer=InterfaceSerializer(interface_object,data=data_save)
                         msg,status=save_in_db(aux_save,interface_serializer)
-                        vlan_serializer.save()
+                        
                     else:
                         msg=aux_save
                         status=400
                 else:
-                    msg="Vlan not exist!"
-                    status=400
-                msg="Vlan updated Successfully!"
-                status=200
+                    msg="Configuration VLAN saved successfully!"
+                    status=200
+                vlan_serializer.save()
             else:
                 msg=str(next(iter(vlan_serializer.errors.values()))[0]).strip('.')+"!"
                 status=400
+      
         else:
             msg="Vlan not exist!"
             status=400
-    return JsonResponse({"msg": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status) 
+
+
 
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
@@ -157,7 +159,7 @@ def update_vlan_interface(request,id_interface):
             res_vlan = json.loads(vlan)[0]['fields']
             parent_interface=Interface.objects.get(id=res_vlan["parent_interface"]).ifname
             vlan_tag=res_vlan["vlan_tag"]
-            vlan_priority=convert_priority(res_vlan["vlan_priority"])
+            vlan_priority=convert_priority(res_vlan["vlan_priority"]) if res_vlan["vlan_priority"] is not None else res_vlan["vlan_priority"]
             data_save={
                         "ifname":f"vlan{vlan_object.vlan_tag}@{parent_interface}",
                         "private_aux":False,

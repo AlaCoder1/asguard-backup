@@ -409,7 +409,7 @@ export default {
         hostname: "",
         overrideMTU: false,
       },
-      items: [{ id: 1, value: "static" }],
+      items: [],
       speedDuplexItems: [
         "100baseTx-FD",
         "100baseTx-HD",
@@ -774,6 +774,26 @@ export default {
     },
   },
   beforeMount: async function () {
+    let interfaces =
+      document.getElementById("app").attributes["interfaces"].value;
+
+    let validJsonStringInterface = interfaces
+      .replace(/'/g, '"')
+      .replace(/True/g, "true")
+      .replace(/False/g, "false")
+      .replace(/None/g, "null");
+    let parsedArrayInterface = JSON.parse(validJsonStringInterface);
+
+    let tab = localStorage.getItem("network-tab");
+    let filtredInterface = parsedArrayInterface.filter(
+      (i) => i.name_interface === tab
+    );
+    if (filtredInterface[0].ifname.startsWith("vlan")) {
+      this.items.push({ id: 1, value: "static" });
+    } else {
+      this.items.push({ id: 1, value: "static" }, { id: 2, value: "dhcp" });
+    }
+
     this.IPV4Config =
       document.getElementById("app").attributes["ipv4config"].value;
     let validJsonString = this.IPV4Config.replace(/'/g, '"')

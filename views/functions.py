@@ -30,9 +30,11 @@ def get_vlan_interface(request):
         for i in range(len(res)):
             vlan_tag=res[i]['fields']['ifname'].split("@")[0].strip("vlan").strip()
             interface=Vlan.objects.get(vlan_tag=vlan_tag).parent_interface_id
+            id_vlan=Vlan.objects.get(vlan_tag=vlan_tag).id
             ifname_parent=Interface.objects.get(id=interface).ifname      
             data={
                 "id":res[i]['pk'],
+                "id_vlan":id_vlan,
                 "name_interface":res[i]['fields']['name_interface'],
                 "network_port":f"VLAN {vlan_tag} on {ifname_parent}"
             }

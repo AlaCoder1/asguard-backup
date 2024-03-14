@@ -87,7 +87,7 @@ export default {
       isModalOpen: false,
       isOpen: null,
       editRow: {},
-      modalMode: "create",
+      modalMode: "",
     });
 
     onMounted(() => {
@@ -231,6 +231,7 @@ export default {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
+      emitter.emit("list-assing", rowDataAssign.value);
     };
 
     const cancelDelete = () => {

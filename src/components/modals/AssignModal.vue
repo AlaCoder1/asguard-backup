@@ -21,7 +21,7 @@
                     label="New interface"
                     item-title="vlan"
                     item-value="id"
-                    :items="state.listVlan"
+                    :items="state.listVlanAssing"
                     return-object
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.interface.$error">
@@ -118,13 +118,19 @@ export default {
           vlan: `VLAN : ${e.vlan_tag}`,
         };
       });
+
+      emitter.on("list-assing", (data) => {
+        state.rowList = data;
+      });
     });
 
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
       id: null,
+      rowList: [],
       listVlan: [],
+      listVlanAssing: [],
       snackbar: false,
       color: "",
       textAlert: "",
@@ -152,10 +158,35 @@ export default {
           state.interface = "";
           state.name_interface = "";
           state.id = null;
+
+          if (state.rowList.length == 0) {
+            state.listVlanAssing = [...state.listVlan];
+          } else {
+            const differentValues = filterDifferentValues(
+              state.rowList,
+              state.listVlan
+            );
+            state.listVlanAssing = [...differentValues];
+          }
         }
       }
     );
+    function filterDifferentValues(array1, array2) {
+      const differentValues = [];
 
+      // array1.forEach((obj1) => {
+      //   if (!array2.some((obj2) => obj2.id === obj1.id_vlan)) {
+      //     differentValues.push(obj1);
+
+      //   }
+      // });
+      array2.forEach((obj2) => {
+        if (!array1.some((obj1) => obj1.id_vlan === obj2.id)) {
+          differentValues.push(obj2);
+        }
+      });
+      return differentValues;
+    }
     const populate = (data) => {
       if (modalMode.value === "edit") {
         state.id = data.id;
@@ -212,6 +243,7 @@ export default {
               state.textAlert = i.response.data.msg;
             });
         } else {
+          localStorage.setItem("network-tab", state.name_interface);
           axios
             .post("/vlan/assignVlanInterface", payload)
             .then((response) => {
@@ -222,7 +254,7 @@ export default {
                 state.textAlert = response.data.msg;
 
                 setTimeout(() => {
-                  location.reload();
+                  window.location.href = "/interfaces/list-of-interface";
                 }, 1000);
               }
             })

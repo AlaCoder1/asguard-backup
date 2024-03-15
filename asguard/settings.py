@@ -71,6 +71,7 @@ INSTALLED_APPS = [
     "backend.subscription",
     'backend.tasks',
     'backend.vlan',
+    'backend.server_dhcp4',
     'channels',
     'drf_yasg',
 ]

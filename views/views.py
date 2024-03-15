@@ -12,6 +12,7 @@ from backend.managementServers.models import Type, Server
 from backend.managementUsers.views import getAllUsers
 from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat
 from backend.network.models import GenericConfig, IP4Config, IP6Config, Interface 
+from backend.routing.list_routing import get_list_all_gateway, get_list_all_routing
 from backend.rules.models import Rule
 from backend.gateway.models import Gateway, GatewayInterface
 from backend.dashboard.functions import get_system_infomations
@@ -665,7 +666,11 @@ def vlan_page(request):
 
 @login_required(login_url='/')
 def routing_page(request):
-    return render(request, 'routing.html')
+    listAllRouting = get_list_all_routing()
+    listAllGateway=get_list_all_gateway()
+    context = {'listAllRouting':listAllRouting,'listAllGateway':listAllGateway}
+    return render(request, 'routing.html',context)
+
 
 @login_required(login_url='/')
 def interface_type(request):

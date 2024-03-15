@@ -85,6 +85,7 @@ urlpatterns = [
     path("vpnmonitoring/",openvpn_monitoring),
     path("routing/",routing_page),
     path('ldap/',include('backend.LdapServer.urls')),
+    path('routing/',include('backend.routing.urls')),
 ]
 
 # ws/wss url patterns

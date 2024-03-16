@@ -1,95 +1,84 @@
 <template>
-  <v-app id="inspire">
-    <base-layout title="Routing" active-menu="Key_Pair">
-      <template #content>
-        <div class="mr-3">
-          <div
-            class="certificats-management mt-6 ml-5"
-            style="display: flex; flex-direction: column"
-          >
-            <h4>Static Routing</h4>
-            <v-divider></v-divider>
-            <v-row>
-              <v-col cols="12">
-                <div style="overflow: hidden; flex-grow: 1">
-                  <ag-grid-vue
-                    id="grid-wrapper"
-                    domLayout="autoHeight"
-                    class="ag-theme-alpine mt-3"
-                    style="width: 100%"
-                    @grid-ready="onGridReady"
-                    :columnDefs="columnRoute"
-                    :rowData="rowDataRoute.value"
-                  />
-                </div>
-                <div class="d-flex justify-end mt-3">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#213E9F"
-                    label-color="#ffffff"
-                    label="Add"
-                    :isLarge="true"
-                    type="submit"
-                    class="ml-2"
-                    @click="openModalAdd"
-                  />
-                </div>
-              </v-col>
-            </v-row>
-            <RoutingModal
-              :isOpen="state.isModalOpen"
-              :editRow="state.editRow"
-              :modalMode="state.modalMode"
-            />
-          </div>
-          <v-dialog v-model="state.deleteDialog" max-width="500px">
-            <v-card>
-              <v-card-title class="headline">Delete Confirmation</v-card-title>
-              <v-card-text
-                >Are you sure you want to delete this Row ?</v-card-text
-              >
-              <v-card-actions>
-                <v-spacer></v-spacer>
-                <v-btn color="blue darken-1" text @click="cancelDelete"
-                  >Cancel</v-btn
-                >
-                <v-btn color="blue darken-1" text @click="confirmDelete"
-                  >Delete</v-btn
-                >
-              </v-card-actions>
-            </v-card>
-          </v-dialog>
-          <v-snackbar
-            :timeout="2000"
-            v-model="state.snackbar"
-            location="bottom right"
-            :color="state.color"
-          >
-            {{ state.textAlert }}
-          </v-snackbar>
-        </div>
-      </template>
-    </base-layout>
-  </v-app>
+
+      <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
+        <h4>VLAN</h4>
+        <v-divider></v-divider>
+        <v-row>
+          <v-col cols="12">
+            <div style="overflow: hidden; flex-grow: 1">
+              <ag-grid-vue
+                id="grid-wrapper"
+                domLayout="autoHeight"
+                class="ag-theme-alpine mt-3"
+                style="width: 100%"
+                @grid-ready="onGridReady"
+                :columnDefs="columnVlan"
+                :rowData="rowDataVlan.value"
+                :pagination="true"
+                :paginationPageSize="5"
+              />
+            </div>
+            <div class="d-flex justify-end mt-3">
+              <VButton
+                rounded
+                outlined
+                color="#213E9F"
+                label-color="#ffffff"
+                label="Add VLAN"
+                :isLarge="true"
+                type="submit"
+                class="ml-2"
+                @click="openModalAdd"
+              />
+            </div>
+          </v-col>
+        </v-row>
+        <ModalVlan
+          :isOpen="state.isModalOpen"
+          :editRow="state.editRow"
+          :modalMode="state.modalMode"
+        />
+      </div>
+      <v-dialog v-model="state.deleteDialog" max-width="500px">
+        <v-card>
+          <v-card-title class="headline">Delete Confirmation</v-card-title>
+          <v-card-text>Are you sure you want to delete this Row ?</v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="blue darken-1" text @click="cancelDelete"
+              >Cancel</v-btn
+            >
+            <v-btn color="blue darken-1" text @click="confirmDelete"
+              >Delete</v-btn
+            >
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
+      <v-snackbar
+        :timeout="2000"
+        v-model="state.snackbar"
+        location="bottom right"
+        :color="state.color"
+      >
+        {{ state.textAlert }}
+      </v-snackbar>
 </template>
 
 <script>
 import axios from "axios";
 import { reactive, ref, onMounted, inject } from "vue";
-import VButton from "@/components/VButton.vue";
-import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import RoutingModal from "@/components/modals/RoutingModal.vue";
+import VButton from "@/components/VButton.vue";
+
+import ModalVlan from "@/components/modals/ModalVlan.vue";
 export default {
-  name: "Routing",
+  name: "Vlan",
   components: {
-    RoutingModal,
-    BaseLayout,
-    AgGridVue,
     VButton,
+    ModalVlan,
+    AgGridVue,
   },
   setup() {
     const emitter = inject("emitter");
@@ -100,38 +89,31 @@ export default {
       color: null,
       textAlert: "",
       modalData: {},
-      editRow: {},
-      modalMode: "",
       isModalOpen: false,
       isOpen: null,
+      editRow: {},
+      modalMode: "create",
     });
 
     onMounted(() => {
-      emitter.on("closeRoutingModal", () => {
+      emitter.on("closeVlanModal", () => {
         state.isModalOpen = false;
         state.isOpen = false;
         state.modalMode = "";
         state.editRow = {};
       });
 
-      let allListRouting =
-        document.getElementById("app").attributes["listAllRouting"].value;
+      let vlanList =
+        document.getElementById("app").attributes["list_vlan"].value;
+      const parsedArray = JSON.parse(vlanList);
 
-      const validJsonString = allListRouting
-        .replace(/'/g, '"')
-        .replace(/True/g, "true")
-        .replace(/False/g, "false")
-        .replace(/None/g, "null");
-      const parsedArray = JSON.parse(validJsonString);
-
-      rowDataRoute.value = parsedArray;
-
+      rowDataVlan.value = parsedArray;
     });
 
-    const columnRoute = [
+    const columnVlan = [
       {
-        headerName: "Network",
-        field: "destination_address",
+        headerName: "Interface",
+        field: "name_interface",
         sortable: true,
         autoHeight: true,
         filter: true,
@@ -140,8 +122,18 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Gateway",
-        field: "gateway_name",
+        headerName: "Tag",
+        field: "vlan_tag",
+        sortable: true,
+        filter: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
+      },
+      {
+        headerName: "PCP",
+        autoHeight: true,
+        field: "vlan_priority",
         sortable: true,
         filter: true,
         width: 90,
@@ -150,7 +142,6 @@ export default {
       },
       {
         headerName: "Description",
-        autoHeight: true,
         field: "description",
         sortable: true,
         filter: true,
@@ -167,14 +158,14 @@ export default {
       },
     ];
 
-    const rowDataRoute = reactive({});
+    const rowDataVlan = reactive({});
 
     const gridApi = ref(null);
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
       if (gridApi.value) {
-        gridApi.value.setRowData(rowDataRoute.value);
+        gridApi.value.setRowData(rowDataVlan.value);
       } else {
         console.error("Grid API.");
       }
@@ -208,17 +199,17 @@ export default {
       });
       if (isCurrentRowEditing) {
         eGui.innerHTML = `
-          <button
-            class="action-button update"
-            data-action="update">
-                 update
-          </button>
-          <button
-            class="action-button cancel"
-            data-action="cancel">
-                 cancel
-          </button>
-          `;
+            <button
+              class="action-button update"
+              data-action="update">
+                   update
+            </button>
+            <button
+              class="action-button cancel"
+              data-action="cancel">
+                   cancel
+            </button>
+            `;
       } else {
         eGui.innerHTML = `
           <button
@@ -249,7 +240,6 @@ export default {
 
           break;
         case "edit":
-          console.log("rowData", rowData);
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
@@ -272,9 +262,8 @@ export default {
     const confirmDelete = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
       axios
-        .delete(`/routing/deleteRouting/${state.deletedRow.id}`)
+        .delete(`/vlan/deleteVlan/${state.deletedRow.id}`)
         .then((response) => {
           state.snackbar = true;
           state.color = "success";
@@ -292,8 +281,8 @@ export default {
     };
     return {
       state,
-      columnRoute,
-      rowDataRoute,
+      columnVlan,
+      rowDataVlan,
       defaultColDef,
       emitter,
       actionCellRendererKeys,

@@ -12,6 +12,7 @@ from backend.managementServers.models import Type, Server
 from backend.managementUsers.views import getAllUsers
 from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat
 from backend.network.models import GenericConfig, IP4Config, IP6Config, Interface 
+from backend.routing.list_routing import get_list_all_gateway, get_list_all_routing
 from backend.rules.models import Rule
 from backend.gateway.models import Gateway, GatewayInterface
 from backend.dashboard.functions import get_system_infomations
@@ -33,6 +34,8 @@ import ruamel.yaml
 from backend.settings.models import *
 from collections import defaultdict
 from views.functions import get_vlan, get_vlan_interface
+
+from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
     server_status= ServerSatus.objects.get(id=1)
     return server_status.status_server
@@ -668,6 +671,26 @@ def vlan_page(request):
 def routing_page(request):
     return render(request, 'routing.html')
 
+
+
+    listAllRouting = get_list_all_routing()
+    listAllGateway=get_list_all_gateway()
+    context = {'listAllRouting':listAllRouting,'listAllGateway':listAllGateway}
+    return render(request, 'routing.html',context)
+
+
+@login_required(login_url='/')
+def interface_type(request):
+    list_vlan=get_vlan(request)
+    list_vlan_interface= get_vlan_interface(request)
+    context = {'list_vlan':json.dumps(list_vlan),'list_vlan_interface':json.dumps(list_vlan_interface)}
+    return render(request, 'interfaceType.html',context)
+
+@login_required(login_url='/')
+def server_dhcp4_page(request):
+    list_dhcp4_server=get_all_server_dhcp4(request)
+    context = {'list_dhcp4_server':list_dhcp4_server}
+    return render(request, 'dhcp4_server.html',context)
 
 ################## generale information ##################
 

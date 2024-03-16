@@ -45,6 +45,7 @@ urlpatterns = [
     path('dashboard/', index_page),
     path('userCertifMang/', user_certificate_managment_page),
     path('interfaces/list-of-interface', interface_page),
+    path('interfaces/type-of-interface', interface_type),
     path('system/user-certificat-management', user_certificate_managment_page),
     path('firewall/rules', firewall_page),
     path('settings/', settings_page),
@@ -84,6 +85,7 @@ urlpatterns = [
     path("vpnmonitoring/",openvpn_monitoring),
     path("routing/",routing_page),
     path('ldap/',include('backend.LdapServer.urls')),
+    path('routing/',include('backend.routing.urls')),
 ]
 
 # ws/wss url patterns

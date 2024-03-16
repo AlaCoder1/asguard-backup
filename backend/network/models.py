@@ -5,8 +5,8 @@ from django.conf import settings
 
 ##model interface
 class Interface(models.Model):
-    ifname = models.CharField(max_length=200, null=True, unique=True)
-    private_aux = models.BooleanField(default=False)
+    ifname = models.CharField(max_length=200, null=True,unique=True)
+    private_aux= models.BooleanField(default=False)
     bogon_aux = models.BooleanField(default=False)
     service_status = models.CharField(max_length=200, null=True, default=None)
     name_interface = models.CharField(max_length=200, null=True, default=None, unique=True)

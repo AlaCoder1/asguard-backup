@@ -14,9 +14,20 @@ import random
 from .function import *
 from django.core import serializers
 from collections import defaultdict
+from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 # Create your views here.
 
-
+@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE generale settings",
+                     request_body=Schema(type=TYPE_OBJECT,  required=['hostname', 'domain', 'timezone', 'dns_servers'],
+                                                 properties={'hostname': Schema(type=TYPE_STRING),
+                                                             'domain': Schema(type=TYPE_STRING),
+                                                             'timezone': Schema(type=TYPE_STRING),
+                                                             'dns_servers': Schema(type=TYPE_OBJECT,
+                                                                                properties={'dns_server': Schema(type=TYPE_STRING),
+                                                                                            'gateway': Schema(type=TYPE_STRING),
+                                                                                            'interface_id': Schema(type=TYPE_INTEGER),
+                                                                                            'metric': Schema(type=TYPE_INTEGER)}),
+                                                             }))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def generale_settings(request,id):

@@ -30,7 +30,8 @@ from backend.sdwan.list_area import get_list_all_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
 from backend.subscription.models import plan, plansSubscription,plansFeatures
 import ruamel.yaml
-
+from backend.settings.models import *
+from collections import defaultdict
 from views.functions import get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
     server_status= ServerSatus.objects.get(id=1)
@@ -666,3 +667,66 @@ def vlan_page(request):
 @login_required(login_url='/')
 def routing_page(request):
     return render(request, 'routing.html')
+
+
+################## generale information ##################
+
+def get_generale_settings(request,id):
+    """get information system from database"""
+    if (request.method == 'GET'):
+        system_object = System.objects.get(id=id)
+        time_zone = Timezone.objects.get(name = system_object.time_zone.name)
+        system_dict = {
+            "hostname":system_object.hostname,
+            "domaine":system_object.domaine,
+            "time_zone":{
+                "name" :time_zone.name,
+                "id":time_zone.pk
+            }
+        }
+        return system_dict
+    
+def time_zones(request):
+    """get list of all time zone"""
+    list_timezones=[]
+    if (request.method == 'GET'):
+        timezones=Timezone.objects.all()
+        timezonesDict = serializers.serialize("json", timezones)
+        res = json.loads(timezonesDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_timezones.append(res[i]['fields'])
+        return list_timezones
+    
+def gatways_information(request):
+    """get all gateways informations"""
+    gatways_information=[]
+    if (request.method == 'GET'):
+        gateway=GatewayInterface.objects.all()
+        gatewayDict = serializers.serialize("json", gateway)
+        res = json.loads(gatewayDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            gatways_information.append(res[i]['fields'])
+        
+        output_data = defaultdict(list)
+        for item in gatways_information:
+            gateway = item["gateway"]
+            fetch_gateway = Gateway.objects.get(id = gateway)
+            del item["gateway"]
+            output_data[gateway].append(item)
+        output_data = [
+            {
+                "gateway": {"id": gateway, "address": fetch_gateway.gwaddress},
+                "info": info
+            } for gateway, info in output_data.items()
+        ]
+        return JsonResponse({"gatways_information": output_data})
+    
+################## generale information ##################

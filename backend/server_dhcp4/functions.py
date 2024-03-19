@@ -41,11 +41,12 @@ def parse_server_info(data):
 def is_ip_in_range(from_addrs,to_addrs, available_range):
     """function to test from address and to address in available range"""
     for i in range(len(from_addrs)):
-        from_addr = ipaddress.ip_address(from_addrs[i])
-        to_addr = ipaddress.ip_address(to_addrs[i])
+        print(from_addrs[i])
+        from_addr = ipaddress.ip_address(from_addrs[i]) if ipaddress.ip_address(from_addrs[i]) else None
+        to_addr = ipaddress.ip_address(to_addrs[i]) if ipaddress.ip_address(to_addrs[i]) else None
         start_ip = ipaddress.ip_address(available_range.split("-")[0].strip())
         end_ip = ipaddress.ip_address(available_range.split("-")[1].strip())
-        if start_ip <= from_addr <= end_ip and start_ip <= to_addr <= end_ip is False:
+        if start_ip is None or start_ip is None or (start_ip <= from_addr <= end_ip and start_ip <= to_addr <= end_ip is False):
             return False
     return True
 
@@ -95,7 +96,7 @@ def delete_dhcp4_server(id_interface,ifname):
         server_object=ServerDhcp4.objects.get(interface_id=id_interface)
         commandes=[
             '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
-            "systemctl restart dhcpd4.service"
+            "systemctl restart --quiet dhcpd4.service"
         ]
         
         for cmd in commandes:

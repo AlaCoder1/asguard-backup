@@ -25,6 +25,7 @@ def get_all_server_dhcp4(request):
             res[i]['fields']['range_from']=res[i]['fields']['range_from'].split(',') if res[i]['fields']['range_from'] is not None else None
             res[i]['fields']['range_to']=res[i]['fields']['range_to'].split(',') if res[i]['fields']['range_to'] is not None else None
             res[i]['fields']['dns_server']=res[i]['fields']['dns_server'].split(',') if res[i]['fields']['dns_server'] is not None else None
+            res[i]['fields']['name_interface']=Interface.objects.get(id=res[i]['fields']['interface']).name_interface
             list_dhcp4_server.append(res[i]['fields'])
     return JsonResponse({"list_dhcp4_server": list_dhcp4_server})  
 
@@ -83,7 +84,7 @@ def update_config_dhcp4_server(request,id_server):
                     msg=aux_init
                     status=400  
             else:
-                msg="Server not exist!"
+                msg="Server not active!"
                 status=400   
         else:
             msg="Range from or to not in available range!"

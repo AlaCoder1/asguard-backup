@@ -32,6 +32,7 @@ Encore.setOutputPath("static/")
   .addEntry("success", "./src/middleware/success.js")
   .addEntry("vpnmonitoring", "./src/middleware/vpnmonitoring.js")
   .addEntry("interfacesType", "./src/middleware/interfaces_type.js")
+  .addEntry("dhcp4-server", "./src/middleware/dhcp4-server.js")
   .enableVueLoader(() => {}, {
     version: 3,
   })

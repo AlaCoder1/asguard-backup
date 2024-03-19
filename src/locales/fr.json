@@ -83,8 +83,12 @@
   "networkAdmins":"Administrateurs de réseaux",
   "networksGroups":"Groupes de réseaux",
 
-  
-   
+
+  "deleteconfirmation":{
+
+ 
+  },
+
   "agGrid":{
     "name":"Nom",
     "cpuType":"CPU Type",
@@ -97,7 +101,8 @@
     "status":"Statut",
     "user":"Utilisateur",
     "role":"Rôle",
-    "authority":"Authorités"
+    "authority":"Authorités",
+    "group":"Groupe"
     
 
   },
@@ -114,7 +119,9 @@
   },
 
   "button":{
-    "addUser":"Ajouter Utilisateur"
+    "addUser":"Ajouter Utilisateur",
+    "addGroup":"Ajouter groupe"
+    
   },
   "modal":{
     "create":"Créer Un",

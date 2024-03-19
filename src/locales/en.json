@@ -98,7 +98,8 @@
     "status":"Status",
     "user":"User",
     "role":"Role",
-    "authority":"Authority"
+    "authority":"Authority",
+    "group":"Group"
 
   },
 
@@ -114,7 +115,8 @@
   },
 
   "button":{
-    "addUser":"Add User"
+    "addUser":"Add User",
+    "addGroup":"Add Group"
   },
   "modal":{
     "create":"Create",

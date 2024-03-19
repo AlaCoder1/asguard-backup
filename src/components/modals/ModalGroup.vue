@@ -13,7 +13,7 @@
               <v-row class="mb-5">
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.goupname')*"
+                    :label="$t('form.goupname')"
                     v-model="state.formData.groupname"
                   ></v-text-field>
                   <span
@@ -25,7 +25,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    :label="$t('form.description')*"
+                    :label="$t('form.description')"
                     v-model="state.formData.description"
                   ></v-text-field>
                   <span

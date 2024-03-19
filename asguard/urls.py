@@ -79,6 +79,8 @@ urlpatterns = [
     path('nat/', include('backend.nat.urls')),
     path("vlan/",include("backend.vlan.urls")),
     path("server_dhcp4/",include("backend.server_dhcp4.urls")),
+    path("services/server-dhcp4",server_dhcp4_page),
+    
     path("ids-ips/",suricata),
     path("firewall/nat/",nat_page),
     path("success/",success),

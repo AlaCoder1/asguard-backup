@@ -84,7 +84,7 @@ def update_config_dhcp4_server(request,id_server):
                     msg=aux_init
                     status=400  
             else:
-                msg="Server not exist!"
+                msg="Server not active!"
                 status=400   
         else:
             msg="Range from or to not in available range!"

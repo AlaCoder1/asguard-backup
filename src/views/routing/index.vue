@@ -37,7 +37,11 @@
                 </div>
               </v-col>
             </v-row>
-            <RoutingModal :isOpen="state.isModalOpen" />
+            <RoutingModal
+              :isOpen="state.isModalOpen"
+              :editRow="state.editRow"
+              :modalMode="state.modalMode"
+            />
           </div>
           <v-dialog v-model="state.deleteDialog" max-width="500px">
             <v-card>
@@ -96,7 +100,8 @@ export default {
       color: null,
       textAlert: "",
       modalData: {},
-      modalMode: "create",
+      editRow: {},
+      modalMode: "",
       isModalOpen: false,
       isOpen: null,
     });
@@ -104,13 +109,29 @@ export default {
     onMounted(() => {
       emitter.on("closeRoutingModal", () => {
         state.isModalOpen = false;
+        state.isOpen = false;
+        state.modalMode = "";
+        state.editRow = {};
       });
+
+      let allListRouting =
+        document.getElementById("app").attributes["listAllRouting"].value;
+
+      const validJsonString = allListRouting
+        .replace(/'/g, '"')
+        .replace(/True/g, "true")
+        .replace(/False/g, "false")
+        .replace(/None/g, "null");
+      const parsedArray = JSON.parse(validJsonString);
+
+      rowDataRoute.value = parsedArray;
+
     });
 
     const columnRoute = [
       {
         headerName: "Network",
-        field: "Network",
+        field: "destination_address",
         sortable: true,
         autoHeight: true,
         filter: true,
@@ -120,7 +141,7 @@ export default {
       },
       {
         headerName: "Gateway",
-        field: "Gateway",
+        field: "gateway_name",
         sortable: true,
         filter: true,
         width: 90,
@@ -130,16 +151,7 @@ export default {
       {
         headerName: "Description",
         autoHeight: true,
-        field: "Description",
-        sortable: true,
-        filter: true,
-        width: 90,
-        minWidth: 50,
-        flex: 1,
-      },
-      {
-        headerName: "Status",
-        field: "Status",
+        field: "description",
         sortable: true,
         filter: true,
         width: 90,
@@ -208,33 +220,17 @@ export default {
           </button>
           `;
       } else {
-        if (params.data.utility === "Public") {
-          eGui.innerHTML = `
-            <button
-             class="action-button copy"
-             data-action="copy"  title="Copy Public Key">
-                <i class="mdi mdi-content-copy" style="color: #086eae;font-size: 20px;"></i>
-             </button>
-            <button
-             class="action-button download"
-             data-action="export"  title="Download Public Key">
-                <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
-             </button>
-             <button
-            class="action-button delete"
-            data-action="delete" title="Delete Server">
-              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
-            </button>`;
-        } else {
-          eGui.innerHTML = `
-            <button
-            class="action-button delete"
-            data-action="delete" title="Delete Server">
-              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
-            </button>
-  
-            `;
-        }
+        eGui.innerHTML = `
+          <button
+                class="action-button edit"
+                data-action="edit" title="Edit Server">
+                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+                <button
+                class="action-button delete"
+                data-action="delete" title="Delete ">
+                  <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>`;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -254,6 +250,9 @@ export default {
           break;
         case "edit":
           console.log("rowData", rowData);
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+          state.editRow = rowData;
           break;
 
         default:
@@ -273,41 +272,23 @@ export default {
     const confirmDelete = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (state.deletedRow?.utility === "Private") {
-        axios
-          .delete(`/key_pairs/deletePrivateKey/${state.deletedRow.id}`)
-          .then((response) => {
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
 
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          })
-          .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
-          });
-      } else if (state.deletedRow?.utility === "Public") {
-        axios
-          .delete(`/key_pairs/deletePublicKey/${state.deletedRow.id}`)
-          .then((response) => {
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
+      axios
+        .delete(`/routing/deleteRouting/${state.deletedRow.id}`)
+        .then((response) => {
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.msg;
 
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          })
-          .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
-          });
-      }
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
+        });
     };
     return {
       state,

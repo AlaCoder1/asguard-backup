@@ -53,6 +53,7 @@
     "differentNetworks":"Different Networks",
     "diagnostics":"Diagnostics",
     "listOfInterface":"List of interfaces",
+    "typeOfInterface":"Type of interfaces",
     "rules":"Rules",
     "nat":"Nat",
     "advancedSettings":"Advanced settings",

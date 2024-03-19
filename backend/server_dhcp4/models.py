@@ -11,9 +11,9 @@ class ServerDhcp4(models.Model):
     available_range=models.CharField(max_length=200, null=True,unique=True)
     range_from=models.CharField(max_length=200, null=True,unique=True)
     range_to=models.CharField(max_length=200, null=True,unique=True)
-    dns_server=models.CharField(max_length=200, null=True,unique=True)
-    gateway=models.CharField(max_length=200, null=True,unique=True)
-    domain_name=models.CharField(max_length=200, null=True,unique=True)
+    dns_server=models.CharField(max_length=200, null=True)
+    gateway=models.CharField(max_length=200, null=True)
+    domain_name=models.CharField(max_length=200, null=True)
     class Meta:
             db_table = 'server_dhcp4'
 

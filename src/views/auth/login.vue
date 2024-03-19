@@ -44,7 +44,6 @@
           required
           single-line
           hide-details
-          type="password"
           @click:append-inner="show1 = !show1"
           class="field-placeholder mb-6 mt-3"
         ></v-text-field>

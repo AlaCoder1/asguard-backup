@@ -184,17 +184,23 @@ export default {
               active: "List of interface",
             },
             {
-              title: "subtitle.overview",
+              title: "subtitle.typeOfInterface",
               icon: "",
-              href: "/interfaces/overview",
-              active: "Overview",
+              href: "/interfaces/type-of-interface",
+              active: "Type of interface",
             },
-            {
-              title: "subtitle.assignations",
-              icon: "",
-              href: "/interfaces/assignations",
-              active: "Assignations",
-            },
+            // {
+            //   title: "subtitle.overview",
+            //   icon: "",
+            //   href: "/interfaces/overview",
+            //   active: "Overview",
+            // },
+            // {
+            //   title: "subtitle.assignations",
+            //   icon: "",
+            //   href: "/interfaces/assignations",
+            //   active: "Assignations",
+            // },
             {
               title: "subtitle.differentNetworks",
               icon: "",
@@ -289,7 +295,7 @@ export default {
             {
               title: "subtitle.DHCPV4",
               icon: "",
-              href: "/services/dhcp-v4",
+              href: "/services/server-dhcp4",
               active: "DHCP V4",
             },
             {

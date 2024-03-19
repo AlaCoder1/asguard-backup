@@ -4,7 +4,12 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> Create new Route</span>
+            <span class="headline" v-if="modalMode === 'create'">
+              Create new Route</span
+            >
+            <span class="headline" v-if="modalMode === 'edit'">
+              Update Route</span
+            >
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -24,7 +29,7 @@
                     v-model="state.gateway"
                     label="Gateway"
                     item-title="name"
-                    item-value="slug"
+                    item-value="id"
                     :items="state.listGateway"
                     return-object
                   ></v-select>
@@ -32,14 +37,49 @@
                     {{ v$.gateway.$errors[0].$message }}
                   </p>
                 </v-col>
+                <template v-if="state.gateway.name === 'Other'">
+                  <v-col cols="12" class="mb-n6">
+                    <v-text-field
+                      label="Gateway Address"
+                      v-model="state.gatewayAddress"
+                    ></v-text-field>
+                    <p
+                      class="error-feedback mb-5"
+                      v-if="v$.gatewayAddress.$error"
+                    >
+                      {{ v$.gatewayAddress.$errors[0].$message }}
+                    </p>
+                  </v-col>
+                  <v-col cols="12" class="mb-n6">
+                    <v-select
+                      v-model="state.interface"
+                      label="Parent Interface"
+                      item-title="name"
+                      item-value="slug"
+                      :items="state.listInterfaces"
+                      return-object
+                    ></v-select>
+                    <p class="error-feedback mb-5" v-if="v$.interface.$error">
+                      {{ v$.interface.$errors[0].$message }}
+                    </p>
+                  </v-col>
+
+                  <v-col cols="12" class="mb-n6">
+                    <v-text-field
+                      label="Metric"
+                      v-model="state.metric"
+                    ></v-text-field>
+                    <p class="error-feedback mb-5" v-if="v$.metric.$error">
+                      {{ v$.metric.$errors[0].$message }}
+                    </p>
+                  </v-col>
+                </template>
+
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     label="Description"
                     v-model="state.description"
                   ></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.description.$error">
-                    {{ v$.description.$errors[0].$message }}
-                  </p>
                 </v-col>
               </v-row>
             </v-container>
@@ -47,7 +87,6 @@
           <v-card-actions class="mt-3 actionBtn">
             <v-btn
               color="indigo-darken-3"
-              :rounded="true"
               large
               rounded
               outlined
@@ -66,11 +105,10 @@
               label-color="#213E9F"
               type="submit"
               color="indigo-darken-3"
-              :rounded="true"
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Create</span>
+              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -99,16 +137,77 @@ export default {
       type: Boolean,
       required: true,
     },
+    editRow: {
+      type: Object,
+      Array,
+      required: true,
+    },
+    modalMode: {
+      required: true,
+    },
   },
 
   setup(props) {
     const emitter = inject("emitter");
-    onMounted(() => {});
+    onMounted(() => {
+      getInterface();
 
-    const { isOpen } = toRefs(props);
+      let allListGateway =
+        document.getElementById("app").attributes["listAllGateway"].value;
+
+      const validJsonString = allListGateway
+        .replace(/'/g, '"')
+        .replace(/True/g, "true")
+        .replace(/False/g, "false")
+        .replace(/None/g, "null");
+      const parsedArray = JSON.parse(validJsonString);
+
+      let gateway = parsedArray.map((i) => {
+        return {
+          id: i.id,
+          name: i.gwname,
+        };
+      });
+
+      let listGat = [{ id: 0, name: "Other" }];
+      var combinedArray = [...gateway, ...listGat];
+      state.listGateway = combinedArray;
+    });
+
+    const getInterface = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/network/AllInterfaces").then(
+        (response) => {
+          let filtredInterface = response.data.filter(
+            (i) =>
+              !i.ifname.startsWith("tun_") &&
+              !i.ifname.startsWith("tap_") &&
+              !i.ifname.startsWith("vlan")
+          );
+
+          let interfaces = filtredInterface.map((i) => {
+            return {
+              id: i.id,
+              name: i.name_interface,
+            };
+          });
+
+          state.listInterfaces = interfaces;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
+
+    const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      id: null,
       listGateway: [],
+      listInterfaces: [],
       snackbar: false,
       color: "",
       textAlert: "",
@@ -116,6 +215,10 @@ export default {
       gateway: "",
       description: "",
       network: "",
+      //
+      gatewayAddress: "",
+      metric: "",
+      interface: "",
     });
 
     watch(
@@ -124,6 +227,55 @@ export default {
         state.openModal = val;
       }
     );
+    watch(
+      () => state.gateway,
+      (val) => {
+        if (val.slug != "Other") {
+          state.gatewayAddress = "";
+          state.metric = " ";
+          state.interface = "";
+        }
+      }
+    );
+
+    watch(
+      () => editRow.value,
+      (val) => {
+        populate(val);
+      }
+    );
+    watch(
+      () => modalMode.value,
+      () => {
+        if (modalMode.value === "create") {
+          state.id = null;
+          state.gateway = "";
+          state.description = "";
+          state.network = "";
+          state.gatewayAddress = "";
+          state.metric = "";
+          state.interface = "";
+        }
+      }
+    );
+
+    const populate = (data) => {
+      if (modalMode.value === "edit") {
+        state.id = data.id;
+
+        let filtredGateway = state.listGateway.filter(
+          (i) => i.id === data?.gateway
+        );
+        state.gateway = filtredGateway[0];
+        // if (filtredGateway.length == 0) {
+        //   state.gateway = { id: 0, name: "Other" };
+        // } else {
+
+        // }
+        state.network = data.destination_address;
+        state.description = data.description;
+      }
+    };
 
     const getCookie = (name) => {
       let cookieValue = null;
@@ -146,34 +298,64 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (result) {
-        let payload = {};
+        let gateway = null;
 
-        payload = {
-          name: state.network,
-          encryption_algorithm: "RSA",
-          key_size: state.key.slug,
+        if (state.gateway.name === "Other") {
+          gateway = {
+            gateway_address: state.gatewayAddress,
+            interface: state.interface.id,
+            metric: state.metric,
+          };
+        } else {
+          gateway = state.gateway.id;
+        }
+
+        let payload = {
+          destination_address: state.network,
+          gateway_create: state.gateway.name === "Other" ? true : false,
+          gateway: gateway,
+          description: state.description,
         };
-
-        axios
-          .post("/key_pairs/createPrivateKey", payload)
-          .then((response) => {
-            console.log("response", response);
-            if (response.status == "201") {
-              state.openModal = false;
+        if (modalMode.value === "edit") {
+          console.log("edit");
+          axios
+            .put(`/routing/updateRouting/${state.id}`, payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
               state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          axios
+            .post("/routing/createRouting", payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.openModal = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
-          });
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        }
       } else {
         console.log("v$", v$.value);
       }
@@ -181,21 +363,57 @@ export default {
 
     const closeModal = () => {
       emitter.emit("closeRoutingModal");
+
+      if (modalMode.value === "create") {
+        state.id = null;
+        state.gateway = "";
+        state.description = "";
+        state.network = "";
+        state.gatewayAddress = "";
+        state.metric = "";
+        state.interface = "";
+      }
     };
 
     const rules = computed(() => {
       return {
-        type: { required },
-
         network: {
           required,
+          isValidlNetwork: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
 
         gateway: {
           required,
         },
-        description: {
-          required,
+
+        //
+
+        gatewayAddress: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.gateway.name === "Other")
+          ),
+        },
+        interface: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.gateway.name === "Other")
+          ),
+        },
+        metric: {
+          // isValidMetric: helpers.withMessage(
+          //   `Champs can include only Numbers.`,
+
+          //   helpers.regex(/^[0-9]+$/)
+          // ),
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(() => state.gateway.name === "Other")
+          ),
         },
       };
     });

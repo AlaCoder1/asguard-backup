@@ -3,7 +3,7 @@
     class="certificats-management"
     style="display: flex; flex-direction: column; height: 100%"
   >
-    <h4>Authorités</h4>
+    <h4>{{$t('agGrid.authority')}}</h4>
     <v-divider></v-divider>
     <ag-grid-vue
       id="grid-wrapper"

@@ -135,6 +135,12 @@
           label="IPv4 Remote Network"
           v-model="iPv4Remote"
         ></v-text-field>
+        <p
+          class="error-feedback mb-5"
+          v-if="props.errors.iPv4Remote.$errors.length"
+        >
+          {{ props.errors.iPv4Remote.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" align-self="center">
         <label>IPv6 Remote Network</label>

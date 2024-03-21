@@ -212,7 +212,7 @@
               </v-row>
             </div>
           </div>
-          <div v-if="setuptypeip4=== 'dhcp'">
+          <div v-if="setuptypeip4 === 'dhcp'">
             <v-card-title class="title-text"
               >Configuring the DHCP Client</v-card-title
             >
@@ -281,29 +281,29 @@
       </div>
       <br /><br /><br />
       <v-alert
-        type="success" 
-        class="d-flex mt-3" 
-        style="align-self: flex-end;"
-          elevation="2"
-          icon="mdi-check-circle-outline"
-          border="top"
-          v-if="showAlertGateway"
-          :style="alertStyle"
-        >
-          Gateway added successfully
-        </v-alert>
-        <v-alert
-          type="success" 
-        class="d-flex mt-3" 
-        style="align-self: flex-end;"
-          elevation="2"
-          icon="mdi-check-circle-outline"
-          border="top"
-          v-if="showAlert"
-          :style="alertStyle"
-        >
-          Configuration saved successfully
-        </v-alert>
+        type="success"
+        class="d-flex mt-3"
+        style="align-self: flex-end"
+        elevation="2"
+        icon="mdi-check-circle-outline"
+        border="top"
+        v-if="showAlertGateway"
+        :style="alertStyle"
+      >
+        Gateway added successfully
+      </v-alert>
+      <v-alert
+        type="success"
+        class="d-flex mt-3"
+        style="align-self: flex-end"
+        elevation="2"
+        icon="mdi-check-circle-outline"
+        border="top"
+        v-if="showAlert"
+        :style="alertStyle"
+      >
+        Configuration saved successfully
+      </v-alert>
       <v-dialog
         v-model="showGatewayDialog"
         max-width="600px"
@@ -409,10 +409,7 @@ export default {
         hostname: "",
         overrideMTU: false,
       },
-      items: [
-        { id: 1, value: "static" },
-        { id: 2, value: "dhcp" },
-      ],
+      items: [],
       speedDuplexItems: [
         "100baseTx-FD",
         "100baseTx-HD",
@@ -532,7 +529,7 @@ export default {
     },
     addNetwork() {
       if (this.advancedParameters) {
-        this.typeDHCP4 = "Advanced"
+        this.typeDHCP4 = "Advanced";
       } else {
         this.typeDHCP4 = "Base";
       }
@@ -777,6 +774,26 @@ export default {
     },
   },
   beforeMount: async function () {
+    let interfaces =
+      document.getElementById("app").attributes["interfaces"].value;
+
+    let validJsonStringInterface = interfaces
+      .replace(/'/g, '"')
+      .replace(/True/g, "true")
+      .replace(/False/g, "false")
+      .replace(/None/g, "null");
+    let parsedArrayInterface = JSON.parse(validJsonStringInterface);
+
+    let tab = localStorage.getItem("network-tab");
+    let filtredInterface = parsedArrayInterface.filter(
+      (i) => i.name_interface === tab
+    );
+    if (filtredInterface[0].ifname.startsWith("vlan")) {
+      this.items.push({ id: 1, value: "static" });
+    } else {
+      this.items.push({ id: 1, value: "static" }, { id: 2, value: "dhcp" });
+    }
+
     this.IPV4Config =
       document.getElementById("app").attributes["ipv4config"].value;
     let validJsonString = this.IPV4Config.replace(/'/g, '"')

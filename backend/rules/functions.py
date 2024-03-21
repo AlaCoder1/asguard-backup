@@ -1,3 +1,4 @@
+import ipaddress
 import subprocess
 from backend.rules.serializers import *
 from django.conf import settings
@@ -33,7 +34,7 @@ def init_file_nftables(ifname):
 EOF""".format(ifname,rules),
 "sudo nft add table inet filter_{} ".format(ifname),
 "sudo nft add chain inet filter_{} inbound {{ type filter hook input priority 0 \; }}".format(ifname),
-"sudo nft add chain inet filter_{} outbound {{ type filter hook input priority 0 \; }}".format(ifname),
+"sudo nft add chain inet filter_{} outbound {{ type filter hook output priority 0 \; }}".format(ifname),
 "sudo nft add chain inet filter_{} cellular {{ type filter hook input priority 0 \; }}".format(ifname),
 "sudo nft add chain inet filter_{} inbound_cellular {{ type filter hook input priority 0 \; }}".format(ifname),
 'sudo nft list table inet filter_{} > /etc/rules/{}/nftables.conf'.format(ifname,ifname),
@@ -50,7 +51,7 @@ EOF""".format(ifname,rules),
 
 
 ###function to return rule  outbound
-def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
+def return_rule(policy,saddr,daddr,sport,dport,protocol,type_rule):
    #initialiser une chaine vide
    rule=''
    #concatener tous les addresses à bloquer
@@ -99,25 +100,20 @@ def get_config_file(ifname):
    return output.splitlines()
    
 ###function to add rule
-def add_rule_remote(rule,ifname,type_rule,config,description):
+###function to add rule
+def add_rule_remote(rule,ifname,type_rule):
    ##initialiser les commanndes pour ajouter une règle et l'entregistrer 
-      for r in config:
-         if r.strip()=="chain "+type_rule+" {":
-            index_chain=config.index(r)
-      
-      config=config[:index_chain+2]+["                "+rule+" #"+description]+config[index_chain+2:]
-      commandes=["""cat <<EOF > /etc/rules/{}/nftables.conf
-{} 
-EOF""".format(ifname, '\n'.join(config)),
-         "nft flush ruleset",
-         "nft -f /etc/nftables.conf"
+      commandes=[
+         "sudo nft add rule inet filter_{} {} {}".format(ifname,type_rule,rule),
+        'sudo nft list table inet filter_{} > /etc/rules/{}/nftables.conf'.format(ifname,ifname)
    ]
       ###executer ces commandes
       for cmd in commandes:
-         output,error=run_command("sudo "+cmd)
+         _,error=run_command(cmd)
          if error!='': 
             return error
       return True
+
 ###function to get handle rule   
 def get_handle_rule(ifname,type_rule,rule):
    # if not(rule.find('sport')==-1 and rule.find('dport')==-1):
@@ -131,7 +127,7 @@ def get_handle_rule(ifname,type_rule,rule):
    ##cmd pour obtenir handle number pour supprimer rule 
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
-   output,error=run_command(cmd)
+   output,_=run_command(cmd)
    output = output.split('#')
    # print(cmd,output)
    if len(output)<2:
@@ -148,7 +144,7 @@ def delete_rule_remote(ifname,type_rule,handle):
    ]
    ##executer ces commandes
    for cmd in commandes:
-      output,error=run_command(cmd)
+      _,error=run_command(cmd)
       if error !="":
          return error  
    return True
@@ -161,15 +157,21 @@ def get_protocol_number(protocol_name):
         return protocol_number
     except socket.error:
         return None  # Protocol name not found
+
      
-def update_rule_remote(old_rule,new_rule,file_path):
-   commandes=[
-      "sed -i '/{}/ s/{}/{}/' {}".format(old_rule, old_rule.strip(), new_rule.strip(), file_path),
-      "nft flush ruleset",
-      "nft -f /etc/nftables.conf"
-      ]
-   for cmd in commandes:
-      output,error=run_command("sudo "+cmd)
-      if error !="":
-         return error  
-   return True
+def calculate_subnet_address(addr_prefix):
+   if addr_prefix is not None:
+      ip_address=addr_prefix.split("/")[0]
+      prefix=addr_prefix.split("/")[1]
+   # Validate input IP address
+      try:
+         ip_address = ipaddress.IPv4Address(ip_address)
+      except ValueError as e:
+         return f"Invalid input: {e}"
+      if prefix!="32":
+         network = ipaddress.IPv4Network(f"{ip_address}/{prefix}", strict=False)
+         return str(network.network_address)+"/"+prefix
+      else:
+         return str(ip_address)
+   else:
+      return None

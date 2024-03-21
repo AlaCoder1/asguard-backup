@@ -19,14 +19,14 @@ class UserSerializerPost(serializers.ModelSerializer):
         model = User
         # fields =  ('username', 'password','fullname', 'email','role', 'uid', 'group','permission')
         fields = ('username', 'password', 'fullname',
-                  'email', 'role', 'uid','organisation', 'group','is_active')
+                  'email', 'role', 'uid','organisation', 'group','is_active','id_server','dn_user')
         write_only_fields = ('password')
 
 
 class UserSerializerPostWithoutGroupAndPermission(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ('username', 'password', 'fullname', 'email', 'role', 'uid','organisation','is_active')
+        fields = ('username', 'password', 'fullname', 'email', 'role', 'uid','organisation','is_active','id_server_id','dn_user')
         write_only_fields = ('password')
 
 

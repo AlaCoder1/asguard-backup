@@ -5,26 +5,47 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth import authenticate, login, logout
-from datetime import datetime, timedelta
 from django.conf import settings
-
 from backend.authentification.constant_variables import STRIPE_CANCEL_URL, STRIPE_SECRET_KEY, STRIPE_SUCCESS_URL
 from .serializers import *
 import json
 from django.http import JsonResponse
-import paramiko
-from .models import *
+from backend.managementUsers.models import User
 from drf_yasg.utils import swagger_auto_schema
 import stripe
-
+from backend.LdapServer.models import ADServer
+import ldap
+from django.core import serializers
 # Create your views here.
 
 
-User = get_user_model()
-ssh = paramiko.SSHClient()
-from django.shortcuts import redirect, render
-from django.conf import settings
+# User = get_user_model()
 
+       
+
+def normal_connect(request,data):
+    serializer = ObtainTokenSerializer(data=data)
+    if (serializer.is_valid()):
+        user = authenticate(request, username=data['username'], password=data['password'])
+        if (user is not None):
+            login(request, user)
+            userObject = User.objects.get(username=data['username'])
+            userDict = userObject.__dict__
+            CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
+            settings.CurrentUserId = userDict['id']
+            return 'Success Authentification',CurrentUser, status.HTTP_200_OK
+        else:
+            return 'Invalid credentiels',status.HTTP_401_UNAUTHORIZED
+    else:
+        return 'Invalid username or password',status.HTTP_401_UNAUTHORIZED
+    
+def exist_user_email(username):
+    try:
+        user_session = User.objects.get(email=username)
+        return user_session
+    except User.DoesNotExist:
+        return False
+    
 @swagger_auto_schema(
     method='POST',
     request_body=ObtainTokenSerializer,
@@ -33,44 +54,72 @@ from django.conf import settings
     operation_summary="Summary of your API endpoint",
     operation_description="Description of your API endpoint",
 )
+     
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def authentification(request):
     if (request.method == "POST"):
-        User = get_user_model()
         data = json.loads(request.body)
         username = data['username']
         password = data['password']
-        serializer = ObtainTokenSerializer(data=data)
-        if (serializer.is_valid()):
-            user = authenticate(request, username=username, password=password)
-            if (user is not None):
-                login(request, user)
-                # Version SSH connection 
-                # ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
-                # ssh.connect(settings.SSH_HOST, username=username,
-                #             password=password, port=settings.SSH_PORT)
-                # end Version SSH connection
-                settings.USERNAME = username
-                settings.PASSWORD = password
-                ## add this code so that logout work with jwt and timeleft
-                
-                # jwt_token = str(JWTAuthentication.create_jwt(user))
-                # userObject = User.objects.get(username=username)
-                # userObject.token_last_expired = datetime.now(
-                # )+timedelta(hours=settings.JWT_CONF['TOKEN_LIFETIME_HOURS'])
-                # userObject.save()
-                
-                ## end code
-                userObject = User.objects.get(username=username)
-                userDict = userObject.__dict__
-                CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
-                settings.CurrentUserId = userDict['id']
-                return JsonResponse({'message': ' Success Authentification',"currentUser":CurrentUser}, status=status.HTTP_200_OK)
+        ad_servers = ADServer.objects.all()
+        user_session = exist_user_email(username)
+        if '@' in username:
+            if not ad_servers.exists():
+                return JsonResponse({'msg': "No Directory servers registered in the database."}, status=400)
+            if user_session == False:
+                return JsonResponse({'message': 'User Not Registred in Asguard'}, status=401)
             else:
-                return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
+                print({"user_session.id_server_id":user_session.id_server_id})
+                if user_session.id_server_id is None:
+                    authentication_server=False
+                else:
+                    server = ADServer.objects.get(id = user_session.id_server_id)
+                    ldap_uri = f"{'ldaps' if server.ssl_tls_activation else 'ldap'}://{server.server_url}:{server.port}"
+                    ldap_conn = ldap.initialize(ldap_uri)
+                    if server.server_type=="ad":
+                        try :  
+                            ldap_conn.simple_bind_s(username, password) 
+                            result = ldap_conn.search_s(server.search_base, ldap.SCOPE_SUBTREE, "(objectClass=user)", ['userPrincipalName'])
+                            if result:
+                                authentication_server=True
+                        except ldap.INVALID_CREDENTIALS as e:
+                            authentication_server=False
+                            return JsonResponse({'msg': 'Authentication failed. Invalid credentials'},status=500)   
+                            
+                        except ldap.SERVER_DOWN:
+                            authentication_server=False
+                            return JsonResponse({'msg': 'directory server is unreachable'},status=500)    
+                            
+                    elif server.server_type=="openldap":   
+                        try : 
+                            dn_user = user_session.dn_user
+                            ldap_conn.simple_bind_s(dn_user,password)
+                            authenticated_dn = ldap_conn.whoami_s()
+                            if authenticated_dn:
+                                authentication_server=True
+                        except ldap.INVALID_CREDENTIALS as e:
+                            authentication_server=False
+                            return JsonResponse({'msg': 'Authentication failed. Invalid credentials'},status=500)   
+                            
+                        except ldap.SERVER_DOWN:
+                            authentication_server=False
+                            return JsonResponse({'msg': 'directory server is unreachable'},status=500)   
+            if authentication_server:
+                login(request, user_session)
+                ldap_conn.unbind()
+                return JsonResponse({'msg': 'Success Authentification '},status=200)
+            else:
+                return JsonResponse({'msg':'Verify your Credentiels'}, status=401)
+                    
         else:
-            return JsonResponse({'message': 'Invalid username or password'})
+            message,CurrentUser,status =normal_connect(request,data)
+            return JsonResponse({'message': message,"currentUser":CurrentUser}, status=status)
+
+
+
+
+
 
 @swagger_auto_schema(
     method='GET',

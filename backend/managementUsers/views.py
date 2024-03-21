@@ -24,14 +24,27 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.hashers import make_password
 from django.conf import settings
 from django.views.decorators.csrf import csrf_exempt
-# Create your views here.
+import requests
+from backend.LdapServer.models import ADServer
+from backend.LdapServer.serializers import ADServerSerializer
+from rest_framework.response import Response
+from rest_framework.authtoken.models import Token
+import ldap
 
-# API to get all users
+from drf_yasg.utils import swagger_auto_schema
+import ast
 
 
-@csrf_exempt
-#@authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF Users",
+                     operation_description="API TO GET LIST OF Users",)
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
 def getAllUsers(request):
     list_users = []
     if (request.method == 'GET'):
@@ -50,10 +63,16 @@ def getAllUsers(request):
         #return JsonResponse(list_users, safe=False)
 
 
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET USER BY ID",
+                     operation_description="API TO GET USER BY ID",)
+
 # API to get one user
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def getUser(request, id):
     if (request.method == 'GET'):
         user = User.objects.filter(id=id)
@@ -72,108 +91,152 @@ def getUser(request, id):
 # API to create user
 
 
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO Create New USER",
+                     operation_description="API TO Create New USER",)
+
+
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def createUser(request):
     msg = ''
-    if (request.method == 'POST'):
-        # if has_subscription():
-        #     if is_valid():
-        #         # test index of feature by plan e.g 1,2 index of management users in our BD
-        #         if if_subscribed([1]):
-                    # parse the incoming information
-                    data = request.data
-                    username = data['username']
-                    password = data['password']
-                    organisation = organization.objects.get(id=1)
-                    print({"organisation": organisation.id})
-                    data['organisation'] = organisation.id
-                    if (validInput(username)):
-                        if (validPassword(password)):
-                            # Execute the command on the remote machine
-                            stdout, stderr = addUser(
-                                username, password)
-                            print({"stdout":stdout.decode('utf-8')})
-                            print({"stder":stderr.decode('utf-8')})
-                            
-                            # convert the stderr stream to a string
-                            if stderr.decode('utf-8') == "":
-                                addMailSpool(username)
-                                msg = username+" added sucessfully"
-                                uid = getUidUser()
-                                data['password'] = make_password(
-                                    data['password'])
-                                data['uid'] = uid
+    email_founded = False
+    if request.method == 'POST':
+        data = request.data
+        username = data['username']
+        password = data['password']
+        organisation = organization.objects.get(id=1)
+        data['organisation'] = organisation.id
+        email = data['email']
+        
+        if data['password_ad'] != "":
+            id_server = data['id_server']
+            ad_server = ADServer.objects.get(id=id_server)
+            if ad_server:
+                try:
+                    is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
+                    if is_password_matched:
+                        ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
+                        ldap_conn = ldap.initialize(ldap_uri)
+                        ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
+                        
+                        result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
+                        print('result',result)
+                         # get the list of users email from AD server 
+                        user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
+                         # get the list of users email from openldap server 
+                        user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
+                        
+                        
+                        if email.lower() in [user.lower() for user in user_principal_names] :
+                            email_founded = True
+                            data['dn_user'] = None
 
-                                if ('group' in data):
-                                    groups = data['group']
-                                    print({"groups":groups})
-                                    for i in range(0, len(groups)):
-                                        add_user_group(
-                                            getGroupNameById(groups[i]), username)
-                                    serializerUser = UserSerializerPost(
-                                        data=data)
-                                    gid = getUidGroup()
-                                    groupname = {"groupname": username}
-                                    groupname['gid'] = gid
-                                    groupname['created_by_system'] = True
-                                    serializerGroup = GroupSerializer(
-                                        data=groupname)
-                                    # check if the sent information is okay
-                                    if (serializerUser.is_valid()):
-                                        if (serializerGroup.is_valid()):
-                                            # if okay, save it on the database
-                                            serializerUser.save()
-                                            serializerGroup.save()
-                                            # provide a Json Response with the data that was saved
-                                            return JsonResponse({"msg": msg}, status=201)
-                                        # provide a Json Response with the necessary error information
-                                        return JsonResponse(serializerGroup.errors, status=400)
-                                    # provide a Json Response with the necessary error information
-                                    return JsonResponse(serializerUser.errors, status=400)
-                                else:
-                                    serializerUser = UserSerializerPostWithoutGroupAndPermission(
-                                        data=data)
-                                    gid = getUidGroup()
-                                    groupname = {"groupname": username}
-                                    groupname['gid'] = gid
-                                    groupname['created_by_system'] = True
-                                    serializerGroup = GroupSerializer(
-                                        data=groupname)
-                                    # check if the sent information is okay
-                                    if (serializerUser.is_valid()):
-                                        if (serializerGroup.is_valid()):
-                                            # if okay, save it on the database
-                                            serializerUser.save()
-                                            serializerGroup.save()
-                                            # provide a Json Response with the data that was saved
-                                            return JsonResponse({"msg": msg}, status=201)
-                                        # provide a Json Response with the necessary error information
-                                        return JsonResponse(serializerGroup.errors, status=400)
-                                    # provide a Json Response with the necessary error information
-                                    return JsonResponse(serializerUser.errors, status=400)
-                            else:
-                                msg = stderr.decode('utf-8')
-                                return JsonResponse({"msg": msg}, status=400)
-                        else:
-                            msg = "invalid password"
-                            return JsonResponse({"msg": msg}, status=201)
+                        if email.lower() in [user.lower() for user in user_emails]: 
+                            email_founded = True
+                            for entry in result:
+                                entry_email = entry[1].get('mail', [''])[0].decode('utf-8').lower()
+                                if email.lower() == entry_email:
+                                    data['dn_user'] = entry[0]
+                                    
+                                    break   
+                        # Close LDAP connection
+                        ldap_conn.unbind()
                     else:
-                        msg = "invalid username"
-                        return JsonResponse({"msg": msg}, status=201)
-        #         else:
-        #             return JsonResponse({"msg": "your plan dosn't satisfy your requerement"}, status=400)
-        #     else:
-        #         return JsonResponse({"msg": "your subscription has expired"}, status=400)
-        # else:
-        #     return JsonResponse({"msg": "your havn't a subscription"}, status=400)
+                        return JsonResponse({'msg': "please verify you password of directory server"},status=400)   
+                except ldap.LDAPError as e:
+                    return JsonResponse({'msg': "Error connecting to directory server"},status=400)  
+            else:    
+                    return JsonResponse({'msg': "This directory server is not Exist"},status=400)  
+        exist_email = User.objects.filter(email=email).exists()
+        print({"exist_email":exist_email})
+        if User.objects.filter(email=email).exists():
+            return JsonResponse({"msg": "email allready exist"}, status=400)
+        else:
+            if validInput(username) and validPassword(password):
+                # Execute the command on the remote machine
+                error_useradd, stdout_password, stderr_password  = addUser(username, password)
+                print({"error_useradd":error_useradd})
+                print({"stdout_password": stdout_password.decode('utf-8')})
+                print({"stderr_password": stderr_password.decode('utf-8')})
 
+                # Convert the stderr stream to a string
+                if error_useradd == '':
+                    addMailSpool(username)
+                    if email_founded:
+                        msg = username + " added successfully with their email in directory server"
+                        data['id_server_id']= ad_server.id
+                    else:
+                        msg = username + " added successfully with simple System email "
+                    uid = getUidUser()
+                    data['password'] = make_password(data['password'])
+                    data['uid'] = uid
+                    if 'group' in data:
+                        groups = data['group']
+                        print({"groups": groups})
+                        for i in range(0, len(groups)):
+                            add_user_group(getGroupNameById(groups[i]), username)
+                        print({"data":data})
+                        serializerUser = UserSerializerPost(data=data)
+                        gid = getUidGroup()
+                        groupname = {"groupname": username}
+                        groupname['gid'] = gid
+                        groupname['created_by_system'] = True
+                        serializerGroup = GroupSerializer(data=groupname)
+
+                        # Check if the sent information is okay
+                        if serializerUser.is_valid():
+                            if serializerGroup.is_valid():
+                                # If okay, save it on the database
+                                serializerUser.save()
+                                serializerGroup.save()
+                                # Provide a Json Response with the data that was saved
+                                return JsonResponse({"msg": msg}, status=201)
+                            # Provide a Json Response with the necessary error information
+                            error_message_Group = next(iter(serializerGroup.errors.values()))[0]
+                            return JsonResponse({"msg":error_message_Group}, status=400)
+                        # Provide a Json Response with the necessary error information
+                        error_message = next(iter(serializerUser.errors.values()))[0]
+                        return JsonResponse({"msg":error_message}, status=400)
+                    else:
+                       
+                        serializerUser = UserSerializerPostWithoutGroupAndPermission(data=data)
+                        gid = getUidGroup()
+                        groupname = {"groupname": username}
+                        groupname['gid'] = gid
+                        groupname['created_by_system'] = True
+                        serializerGroup = GroupSerializer(data=groupname)
+
+                        # Check if the sent information is okay
+                        if serializerUser.is_valid():
+                            if serializerGroup.is_valid():
+                                # If okay, save it on the database
+                                serializerUser.save()
+                                serializerGroup.save()
+                                # Provide a Json Response with the data that was saved
+                                return JsonResponse({"msg": msg}, status=201)
+                            # Provide a Json Response with the necessary error information
+                            return JsonResponse(serializerGroup.errors, status=400)
+                        # Provide a Json Response with the necessary error information
+                        return JsonResponse(serializerUser.errors, status=400)
+                else:
+                    error_msg = error_useradd.strip()
+                    modified_error_msg = " " + error_msg.replace("useradd: ", "")
+                    return JsonResponse({"msg": modified_error_msg}, status=400)
+            else:
+                msg = "invalid password"
+                return JsonResponse({"msg": msg}, status=201)
+
+
+@swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE USER",
+                     operation_description="API TO DELETE USER",)
 
 # API to delete group
 @api_view(['DELETE'])
-# @authentication_classes([AllowAny])
-@permission_classes([AllowAny])
+@authentication_classes([SessionAuthentication])
 def delete_user(request, id):
     msg = ""
     if (request.method == 'DELETE'):
@@ -193,15 +256,23 @@ def delete_user(request, id):
         return JsonResponse({"msg": msg})
 
 
-# API to update user
+@swagger_auto_schema(
+    method='PUT',
+    request_body=UserSerializerPost,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO UPDATE User",
+    operation_description="This API help us to update User added ",
+)
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
+@permission_classes([IsAuthenticated])
 def modifyUser(request, id):
     if (request.method == 'PUT'):
         userById = User.objects.filter(id=id)
         userDict = serializers.serialize("json", userById)
         res = json.loads(userDict)
+        print(res)
         res[0].pop('model')
         id = res[0]['pk']
         res[0].pop('pk')
@@ -212,6 +283,46 @@ def modifyUser(request, id):
         data = request.data
         newusername = data['username']
         newfullname = data['fullname']
+        data['dn_user'] = None
+        email_founded=False
+        if data['password_ad'] != "":
+            id_server = data['id_server']
+            ad_server = ADServer.objects.get(id=id_server)
+            try:
+                is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
+                if is_password_matched:
+                    ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
+                    ldap_conn = ldap.initialize(ldap_uri)
+                    ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
+                    
+                   
+                    result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
+                         # get the list of users email from AD server 
+                    user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
+                         # get the list of users email from openldap server 
+                    user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
+                        
+
+                    if data['email'].lower() in [user.lower() for user in user_principal_names]:
+                        newmail = data['email']
+                        email_founded=True
+                        
+
+                    if data['email'].lower() in [user.lower() for user in user_emails]:
+                        newmail = data['email']
+                        email_founded=True
+                        for entry in result:
+                                entry_email = entry[1].get('mail', [''])[0].decode('utf-8').lower()
+                                if data['email'].lower() == entry_email:
+                                    data['dn_user'] = entry[0]
+                                    
+                                    break   
+                 
+                    ldap_conn.unbind()
+                else:
+                    return JsonResponse({'msg': "please verify you password of directory server"},status=400)   
+            except ldap.LDAPError as e:
+                return JsonResponse({'msg': "Error connecting to directory server"},status=400)  
         newmail = data['email']
         newrole = data['role']
         userObject = User.objects.get(id=id)
@@ -220,10 +331,11 @@ def modifyUser(request, id):
         print({"userJson": userJson})
         print({"userObject.username": userObject.username})
         user['group'] = userJson['group']
+       
         # user['permission'] = userJson['permission']
         if validInput(newusername):
             if username_exists(newusername) and newusername != oldusername:
-                msg = f"newusername  exists."
+                msg = f"username or email already Used."
                 return JsonResponse({"msg": msg})
             else:
                 userObject.username = newusername
@@ -232,6 +344,7 @@ def modifyUser(request, id):
                 if checkSameGroupnameWithUsername(oldusername):
                     changeUsername(newusername, oldusername)
                     change_groupname_username(oldusername, newusername)
+                    
                     msg = "updated groupname and username succesfully"
                 else:
                     changeUsername(newusername, oldusername)
@@ -239,6 +352,11 @@ def modifyUser(request, id):
                 userObject.fullname = newfullname
                 userObject.email = newmail
                 userObject.role = newrole
+                userObject.dn_user=data['dn_user']
+                if email_founded:
+                    userObject.id_server=ad_server
+                else:
+                    userObject.id_server=None
                 if ('group' in data):
                     groups = data['group']
                     userJson['group'] = groups
@@ -260,7 +378,13 @@ def modifyUser(request, id):
 
 
 
-
+@swagger_auto_schema(
+    method='PUT',
+    request_body=UserSerializerGet,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO UPDATE Change Password User By Admin",
+    operation_description="This API help us to update User's password added By admin",
+)
 # API to change password user
 
 
@@ -294,6 +418,15 @@ def changePasswordByAdmin(request, id):
             else:
                 print(f"Error changing password: {stderr}")
         return JsonResponse(serializer.data, status=201)
+
+
+@swagger_auto_schema(
+    method='PUT',
+    request_body=UserSerializerPost,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO UPDATE Change Password User ",
+    operation_description="This API help us to update User's password added ",
+)
 
 
 @api_view(['PUT'])
@@ -339,6 +472,16 @@ def changePassword(request, id):
             return JsonResponse({"msg": msg},status=status)
 
 
+
+
+
+@swagger_auto_schema(
+    method='POST',
+    request_body=PermissionSerializer,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO ADD Permission ",
+    operation_description="This API help us to ADD Permission",
+)
 # API de create permission
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])

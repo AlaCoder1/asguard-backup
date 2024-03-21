@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+
+{% load static %}
+{% load encore %}
+
+{% block stylesheets %}
+    {{ block.super }}
+
+    {% encore_entry_link_tags 'dhcp4-server' %}
+{% endblock %}
+
+{% block javascripts %}
+    {% encore_entry_script_tags 'dhcp4-server' %}
+{% endblock %}
+
+{% block body %}
+
+    <div id='app' list_dhcp4_server='{{ list_dhcp4_server }}' >
+    </div>
+
+{% endblock %}

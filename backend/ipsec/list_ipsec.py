@@ -7,6 +7,7 @@ from utils.errors_utils import CommandExecutionError
 
 
 def get_status_ipsec():
+    """Getting IPsec status from system"""
     try:
         execute_command_without_arguments(['sudo', 'ipsec', 'status'])
         return True
@@ -15,6 +16,7 @@ def get_status_ipsec():
 
 
 def get_list_all_server_ipsec():
+    """Getting list of IPsec server from database"""
     list_ipsec = []
     ipsec = ServerIPsec.objects.all()
     ipsec_dict = serializers.serialize("json", ipsec)

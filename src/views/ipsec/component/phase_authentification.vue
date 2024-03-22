@@ -94,7 +94,7 @@
             label="Remote Certificate"
             item-title="name"
             item-value="id"
-            :items="props.CertificateList"
+            :items="props.CertificateListRemote"
             return-object
           ></v-select>
 
@@ -161,6 +161,7 @@ import { useVModels } from "@vueuse/core";
 const props = defineProps([
   "mapedKeyPublic",
   "CertificateList",
+  "CertificateListRemote",
   "negotiationList",
   "authMethodItem",
   "keyExchange",

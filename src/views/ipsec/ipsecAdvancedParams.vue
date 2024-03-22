@@ -49,6 +49,7 @@
           :authenticationMethodList="authenticationMethodList"
           :negotiationList="negotiationList"
           :CertificateList="CertificateList"
+          :CertificateListRemote="CertificateListRemote"
           :mapedKeyPublic="mapedKeyPublic"
           :errors="v$"
         />
@@ -602,6 +603,7 @@ export default {
 
     const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
     const CertificateList = ref([]);
+    const CertificateListRemote = ref([]);
     const mapedInterfaceType = ref([]);
     const mapedKeyPublic = ref([]);
 
@@ -625,7 +627,7 @@ export default {
           isValidlRemoteGateway: helpers.withMessage(
             `Format must be like adresse IP : X.X.X.X`,
 
-            helpers.regex(/^[0-9.]+$/)
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
 
@@ -767,7 +769,7 @@ export default {
           isValidremoteNetworkAddress: helpers.withMessage(
             `Format must be like adresse IP : X.X.X.X`,
 
-            helpers.regex(/^[0-9.]+$/)
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
 
@@ -799,7 +801,7 @@ export default {
           isValidlocalNetworkAddress: helpers.withMessage(
             `Format must be like adresse IP : X.X.X.X`,
 
-            helpers.regex(/^[0-9.]+$/)
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
 
@@ -912,12 +914,17 @@ export default {
           let mapedListCertif = response.data.filter(
             (i) => i.certificate_type === "server"
           );
-          CertificateList.value = mapedListCertif.map((i) => {
+
+          let certif = mapedListCertif.map((i) => {
             return {
               id: i.id,
               name: i.name,
+              is_private_key: i.is_private_key,
             };
           });
+          CertificateListRemote.value = certif;
+
+          CertificateList.value = certif.filter((i) => i.is_private_key);
         },
         (error) => {
           console.log(error);
@@ -1024,7 +1031,7 @@ export default {
         state.keyPair = filtredKeyPairList[0];
         state.localKey = filtredPublicLocalList[0];
 
-        let filtredRemoteCertificate = CertificateList.value.filter(
+        let filtredRemoteCertificate = CertificateListRemote.value.filter(
           (i) => i.name === data?.remote_cert
         );
 
@@ -1528,6 +1535,7 @@ export default {
       pfsList,
       negotiationList,
       CertificateList,
+      CertificateListRemote,
       mapedKeyPublic,
       dhKeyList,
       hashAlgoList,

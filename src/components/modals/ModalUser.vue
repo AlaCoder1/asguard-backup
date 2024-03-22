@@ -3,11 +3,14 @@
     <!-- <v-dialog v-model="isOpen" persistent width="600">
        -->
     <v-dialog v-model="openModal" persistent width="600">
-      <form ref="myForm" @submit.prevent="submitForm">
+      <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
           <v-card-title>
             <span class="text-h5"
-              >{{ mode === "create" ? "Create" : "Update" }} user</span
+              >{{
+                mode === "create" ? $t("modal.create") : $t("modal.update")
+              }}
+              {{ $t("agGrid.user") }}</span
             >
           </v-card-title>
           <v-card-text>
@@ -17,7 +20,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    label="Username "
+                    :label="$t('form.username')"
                     v-model="state.formData.username"
                   ></v-text-field>
                   <span
@@ -29,7 +32,7 @@
 
                 <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
                   <v-text-field
-                    label="Password"
+                    :label="$t('form.password')"
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
@@ -42,7 +45,7 @@
 
                 <v-col cols="6" v-if="mode == 'create'" class="mb-n5">
                   <v-text-field
-                    label="Confirm password"
+                    :label="$t('form.confirmPassword')"
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
@@ -57,7 +60,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    label="Fullname "
+                    :label="$t('form.fullname')"
                     v-model="state.formData.fullname"
                   ></v-text-field>
                   <span
@@ -69,7 +72,7 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-text-field
-                    label="Email for Ldap auth "
+                    :label="$t('form.emailForLdapAuth')"
                     v-model="state.formData.email"
                   ></v-text-field>
                   <span
@@ -79,10 +82,53 @@
                   >
                 </v-col>
 
+                <v-col cols="12" class="mt-5">
+                  <label for="Activate" class="mr-3">Activate ldap</label>
+                  <input
+                    type="checkbox"
+                    id="Activate"
+                    v-model="state.formData.activateStatus"
+                  />
+                </v-col>
+                <template v-if="state.formData.activateStatus">
+                  <v-col cols="12" class="mb-n5">
+                    <v-select
+                      v-model="state.formData.dnValue"
+                      label="DN"
+                      item-title="name"
+                      item-value="id"
+                      return-object
+                      :items="state.formData.mapedServer"
+                    ></v-select>
+                    <span
+                      class="error-feedback"
+                      v-if="v$.formData.dnValue.$error"
+                      >{{ v$.formData.dnValue.$errors[0].$message }}</span
+                    >
+                  </v-col>
+                  <v-col cols="12" class="mb-n5">
+                    <v-text-field
+                      label="Passwrod AD"
+                      v-model="state.formData.passwordDN"
+                      :append-inner-icon="
+                        state.show1 ? 'mdi-eye' : 'mdi-eye-off'
+                      "
+                      prepend-inner-icon="mdi-lock-outline"
+                      :type="state.show1 ? 'text' : 'password'"
+                      @click:append-inner="state.show1 = !state.show1"
+                    ></v-text-field>
+                    <span
+                      class="error-feedback"
+                      v-if="v$.formData.passwordDN.$error"
+                      >{{ v$.formData.passwordDN.$errors[0].$message }}</span
+                    >
+                  </v-col>
+                </template>
+
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
                     :items="['root', 'admin', 'user']"
-                    label="Role user"
+                    :label="$t('form.roleUser')"
                     v-model="state.formData.role"
                   ></v-autocomplete>
                   <span class="error-feedback" v-if="v$.formData.role.$error">{{
@@ -93,7 +139,7 @@
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
                     :items="groups"
-                    label="Assign to Group"
+                    :label="$t('form.assignToGroup')"
                     multiple
                     item-title="groupname"
                     item-value="id"
@@ -104,9 +150,9 @@
                 </v-col>
 
                 <v-col cols="12" class="mt-5">
-                  <label for="Deactivate User" class="mr-1"
-                    >Desactivate User</label
-                  >
+                  <label for="Deactivate User" class="mr-3">{{
+                    $t("form.desactivateUser")
+                  }}</label>
                   <input
                     type="checkbox"
                     id="Deactivate User"
@@ -119,7 +165,7 @@
             <!-- <small>*indicates required field</small> -->
           </v-card-text>
           <v-card-actions>
-            <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
+            <span></span>
             <v-spacer></v-spacer>
             <v-btn
               type="submit"
@@ -127,7 +173,7 @@
               :rounded="true"
               class="mt-3 btn-add"
             >
-              <span class="text-white">Save</span>
+              <span class="text-white">{{ $t("buttons.save") }}</span>
             </v-btn>
 
             <v-btn
@@ -136,7 +182,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white">Close</span>
+              <span class="text-white">{{ $t("buttons.close") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -154,6 +200,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import {
@@ -163,7 +210,8 @@ import {
   helpers,
   requiredIf,
 } from "@vuelidate/validators";
-import { reactive, computed } from "vue";
+import { reactive, computed, onMounted, watch } from "vue";
+import { getCookie } from "@/mixins/csrftoken.js";
 export default {
   name: "Modal_User",
   props: {
@@ -191,6 +239,10 @@ export default {
   setup() {
     const state = reactive({
       formData: {
+        mapedServer: [],
+        activateStatus: false,
+        dnValue: "",
+        passwordDN: "",
         username: "",
         password: "",
         confirm_password: "",
@@ -200,22 +252,69 @@ export default {
         groups: null,
         deactivateUser: true,
       },
+      show1: "",
       userRole: null,
       userId: null,
       ModalMode: null,
     });
 
+    const { t } = useI18n();
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const invalidPassword = computed(() => {
+      return t("errors.invalidPassword");
+    });
+    const passwordConfirmation = computed(() => {
+      return t("errors.passwordConfirmation");
+    });
+
+    onMounted(() => {
+      getAdList();
+    });
+    watch(
+      () => state.formData.activateStatus,
+      (val) => {
+        if (!val) {
+          state.formData.dnValue = "";
+          state.formData.passwordDN = "";
+        }
+      }
+    );
+    const getAdList = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/ldap/getAllldap_Servers").then(
+        (response) => {
+          const parsedArray = JSON.parse(response.data);
+
+          let serverAd = parsedArray.map((i) => {
+            return {
+              id: i.id,
+              name: i.server_name,
+            };
+          });
+
+          state.formData.mapedServer = serverAd;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
+
     const rules = computed(() => {
       return {
         formData: {
-          username: { required },
+          username: { required: helpers.withMessage(error, required) },
           password: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(() => state.ModalMode == "create")
             ),
             isValidPassword: helpers.withMessage(
-              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+              invalidPassword,
 
               helpers.regex(
                 /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
@@ -224,17 +323,17 @@ export default {
           },
           confirm_password: {
             sameAsPassword: helpers.withMessage(
-              "Your password does not match",
+              passwordConfirmation,
 
               sameAs(state.formData.password)
             ),
             requiredIf: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(() => state.ModalMode == "create")
             ),
 
             isValidPassword: helpers.withMessage(
-              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+              invalidPassword,
 
               helpers.regex(
                 /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
@@ -242,19 +341,34 @@ export default {
             ),
           },
 
-          email: { required, email },
-          fullname: { required },
-          role: { required },
+          email: { required: helpers.withMessage(error, required), email },
+          fullname: { required: helpers.withMessage(error, required) },
+          role: { required: helpers.withMessage(error, required) },
+
+          dnValue: {
+            requiredIfFuction: helpers.withMessage(
+              error,
+              requiredIf(() => state.formData.activateStatus)
+            ),
+          },
+          passwordDN: {
+            requiredIfFuction: helpers.withMessage(
+              error,
+              requiredIf(() => state.formData.activateStatus)
+            ),
+          },
         },
       };
     });
 
     const v$ = useValidate(rules, state);
     return {
+      t,
       state,
       v$,
     };
   },
+
   data() {
     return {
       openModal: false,
@@ -283,6 +397,7 @@ export default {
   methods: {
     populate(data) {
       if (this.mode == "update") {
+        console.log("data", data);
         this.state.formData.username = data.username;
         this.state.formData.fullname = data.fullname;
         this.state.formData.email = data.email;
@@ -298,6 +413,19 @@ export default {
         this.state.formData.deactivateUser = data.is_active;
         this.userId = data.id;
         this.state.userId = data.id;
+
+        let filtredAD = this.state.formData.mapedServer.filter(
+          (i) => i.id === data?.id_server
+        );
+        this.state.formData.dnValue = filtredAD[0];
+
+        this.state.formData.activateStatus = filtredAD[0] ? true : false;
+        // this.state.formData.passwordDN = data.password_ad;
+
+        console.log(
+          "state.formData.mapedServer",
+          this.state.formData.mapedServer
+        );
       }
     },
     handleGroupChange(selectedItems) {
@@ -349,6 +477,8 @@ export default {
           role: this.state.formData.role,
           group: groupsIds ?? [],
           is_active: this.state.formData.deactivateUser,
+          password_ad: this.state.formData.passwordDN,
+          id_server: this.state.formData.dnValue?.id,
           // username: "testtest1525dzada4",
           // password: "azerty",
           // fullname: "sousqdqshail",
@@ -365,7 +495,6 @@ export default {
           axios
             .post("/users/createUser", payload)
             .then((response) => {
-              console.log("res", response);
               if (response.status == "201") {
                 this.closeModal();
 
@@ -385,25 +514,29 @@ export default {
               }
             })
             .catch((i) => {
+              console.log("i.response.data", i.response);
               this.snackbar = true;
               this.color = "red";
-              this.textAlert = i.response.data.error;
+              this.textAlert = i.response.data.msg;
             });
         } else {
           let groupsIds = this.state.formData?.groups?.map((i) => {
             return i.id;
           });
-
+          let payload2 = {
+            username: this.state.formData.username,
+            password: this.state.formData.password,
+            fullname: this.state.formData.fullname,
+            email: this.state.formData.email,
+            role: this.state.formData.role,
+            group: groupsIds ?? [],
+            is_active: this.state.formData.deactivateUser,
+            password_ad: this.state.formData.passwordDN ?? "",
+            id_server: this.state.formData.dnValue?.id ?? "",
+          };
+          console.log("payload2", payload2);
           axios
-            .put(`/users/modifyUser/${this.userId}`, {
-              username: this.state.formData.username,
-              password: this.state.formData.password,
-              fullname: this.state.formData.fullname,
-              email: this.state.formData.email,
-              role: this.state.formData.role,
-              group: groupsIds ?? [],
-              is_active: this.state.formData.deactivateUser,
-            })
+            .put(`/users/modifyUser/${this.userId}`, payload2)
             .then((response) => {
               console.log("resUpdate", response);
               if (response.status == 200) {
@@ -439,5 +572,8 @@ export default {
   color: red;
   font-size: 0.85em;
   display: flex;
+}
+.scroller {
+  overflow: auto;
 }
 </style>

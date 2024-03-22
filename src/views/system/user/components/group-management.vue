@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h4>Networks groups</h4>
+    <h4>{{ $t('networksGroups') }}</h4>
 
     <div style="height: 100%">
       <div style="display: flex; flex-direction: row; height: 100%">
@@ -24,7 +24,7 @@
         class="mt-3 add-btn-group"
         @click="openModal"
       >
-        <span class="text-white">Add Group</span>
+        <span class="text-white">{{ $t("button.addGroup") }}</span>
       </v-btn>
     </div>
     <Modal_Group
@@ -90,8 +90,20 @@ export default {
       modalData: {},
       selectedRowIndex: null,
       columnDefs: [
-        { headerName: "Group", field: "groupname" },
-        { headerName: "Description", field: "description" },
+        {
+          headerName: this.testGroupe,
+          field: "groupname",
+          width: 90,
+          minWidth: 50,
+          flex: 1,
+        },
+        {
+          headerName: "Description",
+          field: "description",
+          width: 90,
+          minWidth: 50,
+          flex: 1,
+        },
         { headerName: "Actions", cellRenderer: this.actionCellRenderer },
       ],
       rowData: [],
@@ -102,6 +114,11 @@ export default {
       },
     };
   },
+  computed: {
+    testGroupe() {
+      return this.$t("agGrid.group");
+    },
+  },
 
   watch: {
     DataList: {
@@ -109,6 +126,12 @@ export default {
         this.rowData = newData; // Update rowData with the new prop value
       },
       immediate: true, // This will trigger the watcher when the component is created to initialize rowData
+    },
+    testGroupe: {
+      handler(val) {
+        this.columnDefs[0].headerName = val;
+      },
+      immediate: true,
     },
   },
 

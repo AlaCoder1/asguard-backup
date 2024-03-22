@@ -2,10 +2,10 @@ from backend.routing.constant_variables import PATH_ROUTING
 from utils.commands_utils import execute_command_without_arguments, get_current_directory
 
 
-def routing_in_system(routing_method, destination_address, gateway_address, interface_address, metric):
+def routing_in_system(routing_method, destination_address, gateway_address, ifname, metric):
     """Create or delete a route in system and save all route list in a file routing.txt to assure the reproducibility"""
     current_dir = get_current_directory()
-    command_route = f"sudo ip route {routing_method} {destination_address} via {gateway_address} dev {interface_address}"
+    command_route = f"sudo ip route {routing_method} {destination_address} via {gateway_address} dev {ifname}"
     if metric:
         command_route += f" metric {metric}"
     execute_command_without_arguments(list(command_route.split(" ")))

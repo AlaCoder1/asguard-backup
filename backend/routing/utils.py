@@ -5,11 +5,19 @@ from backend.network.models import Interface
 
 def create_gateway(gateway):
     """Create a new Gateway and GatewayInterface in database"""
-    # Add a Gateway to the database
-    data_gateway = {"gwname": f'static_gw_{gateway["gateway_address"]}',
+    gwname = f'static_gw_{gateway["gateway_address"]}'
+    data_gateway = {"gwname": gwname,
                     "gwaddress": gateway["gateway_address"],
                     "staticgw": True}
-    serializer_gateway = GatewaySerializer(data=data_gateway)
+    
+    # Add a Gateway to the database
+    if len(Gateway.objects.filter(gwname=gwname)) == 0:
+        serializer_gateway = GatewaySerializer(data=data_gateway)
+    # Update a Gateway in database
+    else:
+        gateway_instance = Gateway.objects.get(gwname=gwname)
+        serializer_gateway = GatewaySerializer(gateway_instance, data=data_gateway)
+
     if serializer_gateway.is_valid():
         serializer_gateway.save()
         # Get the last added Gateway

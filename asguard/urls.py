@@ -45,6 +45,7 @@ urlpatterns = [
     path('dashboard/', index_page),
     path('userCertifMang/', user_certificate_managment_page),
     path('interfaces/list-of-interface', interface_page),
+    path('interfaces/type-of-interface', interface_type),
     path('system/user-certificat-management', user_certificate_managment_page),
     path('firewall/rules', firewall_page),
     path('settings/', settings_page),
@@ -77,11 +78,16 @@ urlpatterns = [
     path('proxy/', include('backend.proxy.urls')),
     path('nat/', include('backend.nat.urls')),
     path("vlan/",include("backend.vlan.urls")),
+    path("server_dhcp4/",include("backend.server_dhcp4.urls")),
+    path("services/server-dhcp4",server_dhcp4_page),
+    
     path("ids-ips/",suricata),
     path("firewall/nat/",nat_page),
     path("success/",success),
     path("vpnmonitoring/",openvpn_monitoring),
+    path("routing/",routing_page),
     path('ldap/',include('backend.LdapServer.urls')),
+    path('routing/',include('backend.routing.urls')),
 ]
 
 # ws/wss url patterns

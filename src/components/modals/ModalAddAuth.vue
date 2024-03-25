@@ -6,7 +6,7 @@
           <v-card-title>
             <span class="text-h5"
               >{{
-                mode === "create" ? "Create new Authority" : "Update Authority"
+                mode === "create" ? $('Create new Authority') : "Update Authority"
               }}
               Certificat</span
             >

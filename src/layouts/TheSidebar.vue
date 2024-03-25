@@ -178,17 +178,29 @@ export default {
           active: "interfaces",
           subItems: [
             {
-              title: "subtitle.overview",
+              title: "subtitle.listOfInterface",
               icon: "",
-              href: "/interfaces/overview",
-              active: "Overview",
+              href: "/interfaces/list-of-interface",
+              active: "List of interface",
             },
             {
-              title: "subtitle.assignations",
+              title: "subtitle.typeOfInterface",
               icon: "",
-              href: "/interfaces/assignations",
-              active: "Assignations",
+              href: "/interfaces/type-of-interface",
+              active: "Type of interface",
             },
+            // {
+            //   title: "subtitle.overview",
+            //   icon: "",
+            //   href: "/interfaces/overview",
+            //   active: "Overview",
+            // },
+            // {
+            //   title: "subtitle.assignations",
+            //   icon: "",
+            //   href: "/interfaces/assignations",
+            //   active: "Assignations",
+            // },
             {
               title: "subtitle.differentNetworks",
               icon: "",
@@ -196,17 +208,19 @@ export default {
               active: "Different Networks",
             },
             {
+              title: "subtitle.routing",
+              icon: "",
+              href: "/routing",
+              href: "/routing",
+              active: "routing",
+            },
+            {
               title: "subtitle.diagnostics",
               icon: "",
               href: "/interfaces/diagnostics",
               active: "Diagnostics",
             },
-            {
-              title: "subtitle.listOfInterface",
-              icon: "",
-              href: "/interfaces/list-of-interface",
-              active: "List of interface",
-            },
+
             {
               title: "subtitle.settings",
               icon: "",
@@ -281,7 +295,7 @@ export default {
             {
               title: "subtitle.DHCPV4",
               icon: "",
-              href: "/services/dhcp-v4",
+              href: "/services/server-dhcp4",
               active: "DHCP V4",
             },
             {

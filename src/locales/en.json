@@ -8,13 +8,20 @@
     "emailForLdapAuth":"Email for Ldap auth",
     "roleUser":"Role User",
     "assignToGroup":"Assign to Group",
-    "desactivateUser":"Desactivate User"
+    "desactivateUser":"Desactivate User",
+    "goupname":"Group name",
+    "description":"Description"
   },
   "buttons":{
     "login":"login",
     "save":"Save",
     "close":"Close"
   },
+
+  "requiredfield":{
+    "indicatesrequiredfield":"Indicates required field"
+  },
+
   "errors":{
     "valueRequired":"Value is required",
     "invalidPassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
@@ -46,6 +53,7 @@
     "differentNetworks":"Different Networks",
     "diagnostics":"Diagnostics",
     "listOfInterface":"List of interfaces",
+    "typeOfInterface":"Type of interfaces",
     "rules":"Rules",
     "nat":"Nat",
     "advancedSettings":"Advanced settings",
@@ -63,7 +71,8 @@
     "insight":"Insight",
     "traffic":"Traffic",
     "eventLogs":"Event logs",
-    "subscription":"Subscription"
+    "subscription":"Subscription",
+    "routing":"Routing"
 
 
   },
@@ -89,7 +98,9 @@
     "address":"Address",
     "status":"Status",
     "user":"User",
-    "role":"Role"
+    "role":"Role",
+    "authority":"Authority",
+    "group":"Group"
 
   },
 
@@ -105,7 +116,8 @@
   },
 
   "button":{
-    "addUser":"Add User"
+    "addUser":"Add User",
+    "addGroup":"Add Group"
   },
   "modal":{
     "create":"Create",

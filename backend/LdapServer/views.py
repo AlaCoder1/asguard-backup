@@ -58,9 +58,9 @@ def getServerById(request, id):
                 res[i].pop('pk')
                 res[i]['fields']['id'] = id
                 list_servers.append(res[i]['fields'])
-            return JsonResponse({"Ldap server ": list_servers})
+            return JsonResponse({"Directory server ": list_servers})
         except ADServer.DoesNotExist:
-            return JsonResponse({"error": "Ldap server not found"}, status=404)     
+            return JsonResponse({"error": "Directory server not found"}, status=404)     
 
 
 
@@ -92,6 +92,7 @@ def connect_to_ad(request):
             password_ldap=data['bind_user_password']
             bind_user_password = make_password(data['bind_user_password'])
             ssl_tls_activation = data['ssl_tls_activation']
+            server_type = data['server_type']
 
             # Connect to AD server
             ldap_uri = f"{'ldaps' if ssl_tls_activation else 'ldap'}://{server_url}:{port}"
@@ -121,9 +122,12 @@ def connect_to_ad(request):
 
                 return JsonResponse({ 'msg': "Successfuly connected and created"},status=200)
             
+            except ldap.SERVER_DOWN:
+                # LDAP authentication failed
+                return JsonResponse({'msg': 'directory server is unreachable'},status=500)
             except ldap.LDAPError as e:
                 # LDAP authentication failed
-                return JsonResponse({'msg': 'LDAP authentication failed'},status=500)
+                return JsonResponse({'msg': 'directory server authentication failed'},status=500)
 
         
         except Exception as e:
@@ -139,8 +143,8 @@ def connect_to_ad(request):
     method='PUT',
     request_body=ADServerSerializer,
     responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO UPDATE LDAP Server",
-    operation_description="This API help us to update parametres in Ldap server added ",
+    operation_summary="API TO UPDATE directory Server",
+    operation_description="This API help us to update parametres in directory server added ",
 )
 @api_view(['PUT'])
 @permission_classes([])
@@ -151,10 +155,12 @@ def updateLdapServer(request,id):
             data = JSONParser().parse(request)
             result = update_Ldapserver_DB(data, id)
             if result is True:
-                msg = "Update LDAP Server Successfully!!"
+                msg = "Update directory Server Successfully!!"
+                status_code= 200
             elif 'msg' in result:
-                msg = result['msg']  
-    return JsonResponse({"msg":msg})      
+                msg = "Credentiels invalide to connect directory server "  
+                status_code= 400
+    return JsonResponse({"msg":msg},status=status_code)      
 
 
 
@@ -163,7 +169,7 @@ def updateLdapServer(request,id):
     method='DELETE',
     responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API DELETE Ldap Server",
-    operation_description="This API delete Ldap server ",
+    operation_description="This API delete directory server ",
 )
 @api_view(['DELETE'])
 @permission_classes([])
@@ -173,7 +179,7 @@ def deleteldap_server(request,id):
         if (ADServer.objects.filter(id=id).exists()):
             ldap_servers = ADServer.objects.get(id=id)
             ldap_servers.delete()
-            msg="Delete ldap server successfully!!"
+            msg="Delete directory server successfully!!"
     return JsonResponse({"msg": msg})      
 
 

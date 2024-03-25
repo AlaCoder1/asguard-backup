@@ -12,6 +12,7 @@ from backend.managementServers.models import Type, Server
 from backend.managementUsers.views import getAllUsers
 from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat
 from backend.network.models import GenericConfig, IP4Config, IP6Config, Interface 
+from backend.routing.list_routing import get_list_all_gateway, get_list_all_routing
 from backend.rules.models import Rule
 from backend.gateway.models import Gateway, GatewayInterface
 from backend.dashboard.functions import get_system_infomations
@@ -30,8 +31,11 @@ from backend.sdwan.list_area import get_list_all_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
 from backend.subscription.models import plan, plansSubscription,plansFeatures
 import ruamel.yaml
-
+from backend.settings.models import *
+from collections import defaultdict
 from views.functions import get_vlan, get_vlan_interface
+
+from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
     server_status= ServerSatus.objects.get(id=1)
     return server_status.status_server
@@ -662,3 +666,90 @@ def vlan_page(request):
     list_vlan_interface= get_vlan_interface(request)
     context = {'list_vlan':list_vlan,'list_vlan_interface':list_vlan_interface}
     return render(request, 'vlan.html',context)
+
+@login_required(login_url='/')
+def routing_page(request):
+    return render(request, 'routing.html')
+
+
+
+    listAllRouting = get_list_all_routing()
+    listAllGateway=get_list_all_gateway()
+    context = {'listAllRouting':listAllRouting,'listAllGateway':listAllGateway}
+    return render(request, 'routing.html',context)
+
+
+@login_required(login_url='/')
+def interface_type(request):
+    list_vlan=get_vlan(request)
+    list_vlan_interface= get_vlan_interface(request)
+    context = {'list_vlan':json.dumps(list_vlan),'list_vlan_interface':json.dumps(list_vlan_interface)}
+    return render(request, 'interfaceType.html',context)
+
+@login_required(login_url='/')
+def server_dhcp4_page(request):
+    list_dhcp4_server=get_all_server_dhcp4(request)
+    context = {'list_dhcp4_server':list_dhcp4_server}
+    return render(request, 'dhcp4_server.html',context)
+
+################## generale information ##################
+
+def get_generale_settings(request,id):
+    """get information system from database"""
+    if (request.method == 'GET'):
+        system_object = System.objects.get(id=id)
+        time_zone = Timezone.objects.get(name = system_object.time_zone.name)
+        system_dict = {
+            "hostname":system_object.hostname,
+            "domaine":system_object.domaine,
+            "time_zone":{
+                "name" :time_zone.name,
+                "id":time_zone.pk
+            }
+        }
+        return system_dict
+    
+def time_zones(request):
+    """get list of all time zone"""
+    list_timezones=[]
+    if (request.method == 'GET'):
+        timezones=Timezone.objects.all()
+        timezonesDict = serializers.serialize("json", timezones)
+        res = json.loads(timezonesDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_timezones.append(res[i]['fields'])
+        return list_timezones
+    
+def gatways_information(request):
+    """get all gateways informations"""
+    gatways_information=[]
+    if (request.method == 'GET'):
+        gateway=GatewayInterface.objects.all()
+        gatewayDict = serializers.serialize("json", gateway)
+        res = json.loads(gatewayDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            gatways_information.append(res[i]['fields'])
+        
+        output_data = defaultdict(list)
+        for item in gatways_information:
+            gateway = item["gateway"]
+            fetch_gateway = Gateway.objects.get(id = gateway)
+            del item["gateway"]
+            output_data[gateway].append(item)
+        output_data = [
+            {
+                "gateway": {"id": gateway, "address": fetch_gateway.gwaddress},
+                "info": info
+            } for gateway, info in output_data.items()
+        ]
+        return JsonResponse({"gatways_information": output_data})
+    
+################## generale information ##################

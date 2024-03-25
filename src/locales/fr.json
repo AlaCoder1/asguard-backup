@@ -7,13 +7,20 @@
     "emailForLdapAuth":"E-mail pour l'authentification Ldap",
     "roleUser":"Rôle de l'utilisateur",
     "assignToGroup":"Affecter à un groupe",
-    "desactivateUser":"Désactiver l'utilisateur"
+    "desactivateUser":"Désactiver l'utilisateur",
+    "goupname":"Nom de groupe",
+    "description":"Description"
   },
   "buttons":{
     "login":"se connecter",
     "save":"Sauvegarder",
     "close":"Fermer"
   },
+
+  "requiredfield":{
+    "indicatesrequiredfield":"Indique champ obligatoire"
+  },
+
   "errors":{
     "valueRequired":"champs est obligatoire",
     "invalidPassword":"Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
@@ -45,6 +52,7 @@
     "differentNetworks":"Différents réseaux",
     "diagnostics":"Diagnostiques",
     "listOfInterface":"Liste des interfaces",
+    "typeOfInterface":"Type des interfaces",
     "rules":"Rules",
     "nat":"Nat",
     "advancedSettings":"Paramètres avancés",
@@ -62,7 +70,8 @@
     "insight":"Aperçu",
     "traffic":"Trafic",
     "eventLogs":"Journaux d'événements",
-    "subscription":"Abonnement"
+    "subscription":"Abonnement",
+    "routing":"Routage"
 
   },
   "header":{
@@ -75,8 +84,12 @@
   "networkAdmins":"Administrateurs de réseaux",
   "networksGroups":"Groupes de réseaux",
 
-  
-   
+
+  "deleteconfirmation":{
+
+ 
+  },
+
   "agGrid":{
     "name":"Nom",
     "cpuType":"CPU Type",
@@ -88,7 +101,9 @@
     "address":"Adresse",
     "status":"Statut",
     "user":"Utilisateur",
-    "role":"Rôle"
+    "role":"Rôle",
+    "authority":"Authorités",
+    "group":"Groupe"
     
 
   },
@@ -105,7 +120,9 @@
   },
 
   "button":{
-    "addUser":"Ajouter Utilisateur"
+    "addUser":"Ajouter Utilisateur",
+    "addGroup":"Ajouter groupe"
+    
   },
   "modal":{
     "create":"Créer Un",

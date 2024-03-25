@@ -66,7 +66,7 @@ def authentification(request):
         user_session = exist_user_email(username)
         if '@' in username:
             if not ad_servers.exists():
-                return JsonResponse({'msg': "No Directory servers registered in the database."}, status=400)
+                return JsonResponse({'message': "No Directory servers registered in the database."}, status=400)
             if user_session == False:
                 return JsonResponse({'message': 'User Not Registred in Asguard'}, status=401)
             else:
@@ -85,11 +85,11 @@ def authentification(request):
                                 authentication_server=True
                         except ldap.INVALID_CREDENTIALS as e:
                             authentication_server=False
-                            return JsonResponse({'msg': 'Authentication failed. Invalid credentials'},status=500)   
+                            return JsonResponse({'message': 'Authentication failed. Invalid credentials'},status=500)   
                             
                         except ldap.SERVER_DOWN:
                             authentication_server=False
-                            return JsonResponse({'msg': 'directory server is unreachable'},status=500)    
+                            return JsonResponse({'message': 'directory server is unreachable'},status=500)    
                             
                     elif server.server_type=="openldap":   
                         try : 
@@ -100,17 +100,21 @@ def authentification(request):
                                 authentication_server=True
                         except ldap.INVALID_CREDENTIALS as e:
                             authentication_server=False
-                            return JsonResponse({'msg': 'Authentication failed. Invalid credentials'},status=500)   
+                            return JsonResponse({'message': 'Authentication failed. Invalid credentials'},status=500)   
                             
                         except ldap.SERVER_DOWN:
                             authentication_server=False
-                            return JsonResponse({'msg': 'directory server is unreachable'},status=500)   
+                            return JsonResponse({'message': 'directory server is unreachable'},status=500)   
             if authentication_server:
                 login(request, user_session)
+                userObject = User.objects.get(email=data['username'])
+                userDict = userObject.__dict__
+                CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
+                settings.CurrentUserId = userDict['id']
                 ldap_conn.unbind()
-                return JsonResponse({'msg': 'Success Authentification '},status=200)
+                return JsonResponse({'message': 'Success Authentification ',"currentUser":CurrentUser},status=200)
             else:
-                return JsonResponse({'msg':'Verify your Credentiels'}, status=401)
+                return JsonResponse({'message':'Verify your Credentiels'}, status=401)
                     
         else:
             message,CurrentUser,status =normal_connect(request,data)

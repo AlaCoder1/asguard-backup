@@ -94,7 +94,7 @@
                   <v-col cols="12" class="mb-n5">
                     <v-select
                       v-model="state.formData.dnValue"
-                      label="DN"
+                      label="Directory Server"
                       item-title="name"
                       item-value="id"
                       return-object
@@ -108,7 +108,7 @@
                   </v-col>
                   <v-col cols="12" class="mb-n5">
                     <v-text-field
-                      label="Passwrod AD"
+                      label="Passwrod"
                       v-model="state.formData.passwordDN"
                       :append-inner-icon="
                         state.show1 ? 'mdi-eye' : 'mdi-eye-off'

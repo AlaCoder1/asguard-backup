@@ -70,6 +70,7 @@ class User(AbstractBaseUser):
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
     id_server = models.ForeignKey(ADServer, on_delete=models.SET_NULL, null=True)
+    dn_user=models.CharField(max_length=900, null=True)
 
     class Meta:
         db_table = 'user'

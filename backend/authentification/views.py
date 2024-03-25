@@ -21,6 +21,31 @@ from django.core import serializers
 
 # User = get_user_model()
 
+       
+
+def normal_connect(request,data):
+    serializer = ObtainTokenSerializer(data=data)
+    if (serializer.is_valid()):
+        user = authenticate(request, username=data['username'], password=data['password'])
+        if (user is not None):
+            login(request, user)
+            userObject = User.objects.get(username=data['username'])
+            userDict = userObject.__dict__
+            CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
+            settings.CurrentUserId = userDict['id']
+            return 'Success Authentification',CurrentUser, status.HTTP_200_OK
+        else:
+            return 'Invalid credentiels',status.HTTP_401_UNAUTHORIZED
+    else:
+        return 'Invalid username or password',status.HTTP_401_UNAUTHORIZED
+    
+def exist_user_email(username):
+    try:
+        user_session = User.objects.get(email=username)
+        return user_session
+    except User.DoesNotExist:
+        return False
+    
 @swagger_auto_schema(
     method='POST',
     request_body=ObtainTokenSerializer,
@@ -29,8 +54,7 @@ from django.core import serializers
     operation_summary="Summary of your API endpoint",
     operation_description="Description of your API endpoint",
 )
-            
-
+     
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def authentification(request):
@@ -39,47 +63,62 @@ def authentification(request):
         username = data['username']
         password = data['password']
         ad_servers = ADServer.objects.all()
+        user_session = exist_user_email(username)
         if '@' in username:
             if not ad_servers.exists():
-                msg = "No Active Directory servers registered in the database."
-                return JsonResponse({'msg': msg}, status=400)
-            # Perform LDAP authentication
-            for ad_server in ad_servers:
-                ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
-                ldap_conn = ldap.initialize(ldap_uri)
-                try:
-                    ldap_conn.simple_bind_s(username, password)
-                    result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(objectClass=user)", ['userPrincipalName'])
-                    if result:
-                        user_session=User.objects.get(email=username)
-                        if (user_session is not None):
-                            login(request, user_session)
-                            CurrentUser = {"username": user_session.username, "email": user_session.email, "role": user_session.role}
-                            settings.CurrentUserId = user_session.id
-                            ldap_conn.unbind()
-                            return JsonResponse({'msg': 'Success Authentification', 'currentUser': CurrentUser},status=status.HTTP_200_OK)
-                        else:
-                            return JsonResponse({'msg': 'User not Registred in Asguard'}, status=status.HTTP_401_UNAUTHORIZED)
-                    else:
-                            return JsonResponse({'msg': 'User not Registred in AD Server'}, status=status.HTTP_401_UNAUTHORIZED)
-                except ldap.LDAPError as e:
-                    msg = f"Error connecting to Active Directory Verify your Credentiels {ad_server.server_name}"
-                    return JsonResponse({'msg': msg}, status=400)
-        else:
-            serializer = ObtainTokenSerializer(data=data)
-            if (serializer.is_valid()):
-                user = authenticate(request, username=username, password=password)
-                if (user is not None):
-                    login(request, user)
-                    userObject = User.objects.get(username=username)
-                    userDict = userObject.__dict__
-                    CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
-                    settings.CurrentUserId = userDict['id']
-                    return JsonResponse({'message': ' Success Authentification',"currentUser":CurrentUser}, status=status.HTTP_200_OK)
-                else:
-                    return JsonResponse({'message': 'Invalid credentiels'}, status=status.HTTP_401_UNAUTHORIZED)
+                return JsonResponse({'msg': "No Directory servers registered in the database."}, status=400)
+            if user_session == False:
+                return JsonResponse({'message': 'User Not Registred in Asguard'}, status=401)
             else:
-                return JsonResponse({'message': 'Invalid username or password'},status=status.HTTP_401_UNAUTHORIZED)
+                print({"user_session.id_server_id":user_session.id_server_id})
+                if user_session.id_server_id is None:
+                    authentication_server=False
+                else:
+                    server = ADServer.objects.get(id = user_session.id_server_id)
+                    ldap_uri = f"{'ldaps' if server.ssl_tls_activation else 'ldap'}://{server.server_url}:{server.port}"
+                    ldap_conn = ldap.initialize(ldap_uri)
+                    if server.server_type=="ad":
+                        try :  
+                            ldap_conn.simple_bind_s(username, password) 
+                            result = ldap_conn.search_s(server.search_base, ldap.SCOPE_SUBTREE, "(objectClass=user)", ['userPrincipalName'])
+                            if result:
+                                authentication_server=True
+                        except ldap.INVALID_CREDENTIALS as e:
+                            authentication_server=False
+                            return JsonResponse({'msg': 'Authentication failed. Invalid credentials'},status=500)   
+                            
+                        except ldap.SERVER_DOWN:
+                            authentication_server=False
+                            return JsonResponse({'msg': 'directory server is unreachable'},status=500)    
+                            
+                    elif server.server_type=="openldap":   
+                        try : 
+                            dn_user = user_session.dn_user
+                            ldap_conn.simple_bind_s(dn_user,password)
+                            authenticated_dn = ldap_conn.whoami_s()
+                            if authenticated_dn:
+                                authentication_server=True
+                        except ldap.INVALID_CREDENTIALS as e:
+                            authentication_server=False
+                            return JsonResponse({'msg': 'Authentication failed. Invalid credentials'},status=500)   
+                            
+                        except ldap.SERVER_DOWN:
+                            authentication_server=False
+                            return JsonResponse({'msg': 'directory server is unreachable'},status=500)   
+            if authentication_server:
+                login(request, user_session)
+                ldap_conn.unbind()
+                return JsonResponse({'msg': 'Success Authentification '},status=200)
+            else:
+                return JsonResponse({'msg':'Verify your Credentiels'}, status=401)
+                    
+        else:
+            message,CurrentUser,status =normal_connect(request,data)
+            return JsonResponse({'message': message,"currentUser":CurrentUser}, status=status)
+
+
+
+
 
 
 @swagger_auto_schema(

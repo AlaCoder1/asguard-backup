@@ -295,7 +295,7 @@ export default {
             {
               title: "subtitle.DHCPV4",
               icon: "",
-              href: "/services/dhcp-v4",
+              href: "/services/server-dhcp4",
               active: "DHCP V4",
             },
             {

@@ -1,7 +1,7 @@
 <template>
   <div class="mr-3">
     <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
-      <h4>Networks servers</h4>
+      <h4>{{ $t('networksServers') }}</h4>
       <!-- <v-divider></v-divider> -->
       <v-row>
         <v-col cols="12">
@@ -24,7 +24,7 @@
               class="mt-3 btn-add"
               @click="openModalAdd"
             >
-              <span class="text-white">add Server</span>
+              <span class="text-white"> {{ $t("button.addServer") }}</span>
             </v-btn>
           </div>
         </v-col>

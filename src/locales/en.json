@@ -10,7 +10,9 @@
     "assignToGroup":"Assign to Group",
     "desactivateUser":"Desactivate User",
     "goupname":"Group name",
-    "description":"Description"
+    "description":"Description",
+    "server":"Directory Server"
+    
   },
   "buttons":{
     "login":"login",
@@ -20,6 +22,10 @@
 
   "requiredfield":{
     "indicatesrequiredfield":"Indicates required field"
+  },
+
+  "ldap":{
+    "ActivateLdap":"Activate  LDAP"
   },
 
   "errors":{
@@ -85,7 +91,14 @@
   "english":"English",
   "networkAdmins":"Networks admins",
   "networksGroups":"Networks groups",
+  "networksServers":"Networks Servers",
 
+
+  "delete":{
+    "DeleteConfirmation":"Delete Confirmation",
+    "question":"Are you sure you want to delete this user?"
+ 
+  },
      
   "agGrid":{
     "name":"Name",
@@ -117,7 +130,8 @@
 
   "button":{
     "addUser":"Add User",
-    "addGroup":"Add Group"
+    "addGroup":"Add Group",
+    "addServer":"Add Server"
   },
   "modal":{
     "create":"Create",

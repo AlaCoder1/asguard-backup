@@ -9,17 +9,24 @@
     "assignToGroup":"Affecter à un groupe",
     "desactivateUser":"Désactiver l'utilisateur",
     "goupname":"Nom de groupe",
-    "description":"Description"
+    "description":"Description",
+    "server":"Serveur d'annuaire"
   },
   "buttons":{
     "login":"se connecter",
     "save":"Sauvegarder",
     "close":"Fermer"
+    
   },
 
   "requiredfield":{
     "indicatesrequiredfield":"Indique champ obligatoire"
   },
+  
+  "ldap":{
+    "ActivateLdap":"Activer LDAP"
+  },
+
 
   "errors":{
     "valueRequired":"champs est obligatoire",
@@ -83,10 +90,12 @@
   "english":"Anglais",
   "networkAdmins":"Administrateurs de réseaux",
   "networksGroups":"Groupes de réseaux",
+  "networksServers":"Serveurs de réseaux",
 
 
-  "deleteconfirmation":{
-
+  "delete":{
+    "DeleteConfirmation":"Confirmation de Suppression",
+    "question":"Êtes-vous sûr de vouloir supprimer cet utilisateur ?"
  
   },
 
@@ -121,7 +130,10 @@
 
   "button":{
     "addUser":"Ajouter Utilisateur",
-    "addGroup":"Ajouter groupe"
+    "addGroup":"Ajouter Groupe",
+    "addServer":"Ajouter Serveur"
+    
+
     
   },
   "modal":{

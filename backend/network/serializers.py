@@ -5,12 +5,12 @@ from backend.network.models import *
 class InterfaceSerializer(serializers.ModelSerializer):
     class Meta:
             model = Interface
-            fields = ['ifname', 'private_aux','bogon_aux','service_status','description']
+            fields = ['ifname', 'private_aux','bogon_aux','service_status','description',"name_interface"]
 
 class InterfaceOpenVPNSerializer(serializers.ModelSerializer):
     class Meta:
             model = Interface
-            fields = ['ifname', 'private_aux','bogon_aux','service_status','description', 'name_interface']
+            fields = [ 'ifname', 'private_aux','bogon_aux','service_status','description', 'name_interface']
             
 
 # #serializer for ip4 config   

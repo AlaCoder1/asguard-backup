@@ -6,20 +6,17 @@ from backend.ipsec.models import ServerIPsec
 from backend.ipsec.utils import reorganize_file
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_KEY
 from backend.managementKeypairs.models import PublicKey
-from backend.network.models import IP4Config, Interface
 from backend.openvpn.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_RSA
 
 
-def create_line_secrets(server:ServerIPsec):
+def create_line_secrets(secret_config:str, server:ServerIPsec):
     """Return a line secrets of a server IPsec"""
-    if server.interface != "Any":
-        interface = Interface.objects.get(name_interface=server.interface)
-        interface_address = IP4Config.objects.get(interface_id=interface.pk).ip_address
-    else:
-        interface_address = "any"
-
     if server.authentication_method == CONSTANT_METHOD_PSK:
-        return f"""{interface_address} {server.remote_gateway} : PSK '{server.pre_shared_key}' """
+        list_secret_lines = secret_config.splitlines()
+        for line_secret in list_secret_lines:
+            if line_secret.find(server.pre_shared_key) > 0:
+                return line_secret
+        return ""
     elif server.authentication_method == CONSTANT_METHOD_RSA:
         return f""" : RSA {PATH_SERVER_CERT_KEY.format(server.cert)}"""
     else:
@@ -29,7 +26,7 @@ def create_line_secrets(server:ServerIPsec):
 
 def find_line_in_secrets_file(config:str, server:ServerIPsec):
     """Find a line secrets in ipsec.secrets file"""
-    line_secrets = create_line_secrets(server)
+    line_secrets = create_line_secrets(config, server)
     if config[config.find(line_secrets)-1] == "#":
         return f'#{line_secrets}'
     return line_secrets
@@ -72,7 +69,7 @@ def edit_line_in_secrets_file(previous_server:ServerIPsec, new_line_secrets):
     with open(PATH_IPSEC_SECRETS, 'r') as secrets_file:
         secrets_content = secrets_file.read()
     
-    previous_line_in_secrets_file = create_line_secrets(previous_server)
+    previous_line_in_secrets_file = create_line_secrets(secrets_content, previous_server)
 
     secrets_content = secrets_content.replace(previous_line_in_secrets_file, new_line_secrets)
     secrets_content = reorganize_file(secrets_content)

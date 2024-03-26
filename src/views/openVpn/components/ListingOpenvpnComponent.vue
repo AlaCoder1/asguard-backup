@@ -617,7 +617,7 @@ export default {
       let eGui = document.createElement("div");
       let mapedServer = data.data.server_remote
         .map((i) => {
-          return i.host + ` : ${i.port}`;
+          return i.host;
         })
         .join("<br>");
 
@@ -639,10 +639,16 @@ export default {
       return eGui;
     }
     function formatedProtocClient(data) {
+      let mapedServer = data.data.server_remote
+        .map((i) => {
+          return `${i.port}`;
+        })
+        .join("<br>");
+
       let eGui = document.createElement("div");
 
       eGui.innerHTML = `
-         ${data.data.proto} / ${data.data.port}
+         ${data.data.proto} / ${mapedServer}
         `;
       eGui.style.lineHeight = "2";
 

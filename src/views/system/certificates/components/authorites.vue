@@ -3,7 +3,7 @@
     class="certificats-management"
     style="display: flex; flex-direction: column; height: 100%"
   >
-    <h4>Authorités</h4>
+    <h4>{{$t('agGrid.authority')}}</h4>
     <v-divider></v-divider>
     <ag-grid-vue
       id="grid-wrapper"
@@ -88,17 +88,16 @@ export default {
       rowEdit: {},
       isModalOpen: false,
       columnAuthority: [
-        { headerName: "nom", field: "nom", minWidth: 150 },
-        { headerName: "certificats", field: "certificats", minWidth: 150 },
+        { headerName: "nom", field: "nom", width: 200 },
+        { headerName: "certificats", field: "certificats", width: 200 },
         {
           headerName: "distingushed name",
           cellRenderer: this.formatedDn,
-          minWidth: 100,
+          width: 400,
         },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,
-          minWidth: 150,
           editable: false,
           sortable: false,
           filter: false,
@@ -132,6 +131,7 @@ export default {
             email: element.email,
             valid_from: element.valid_from,
             valid_until: element.valid_until,
+            is_private_key: element.is_private_key,
           };
         });
         this.rowDataAuthority = infoAuth;
@@ -199,7 +199,8 @@ export default {
         </button>
         `;
       } else {
-        eGui.innerHTML = `
+        if (params.data.is_private_key) {
+          eGui.innerHTML = `
         
         <button 
           class="action-button download"
@@ -217,6 +218,22 @@ export default {
             <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
         </button>
         `;
+        } else {
+          eGui.innerHTML = `
+        
+        <button 
+          class="action-button download"
+          data-action="export" title="download CRT">
+             <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
+          </button>
+       
+        <button 
+          class="action-button delete"
+          data-action="delete">
+            <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
+        </button>
+        `;
+        }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -268,7 +285,6 @@ export default {
 
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
-
         })
         .catch((i) => {
           this.snackbar = true;

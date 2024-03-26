@@ -54,6 +54,19 @@
                     {{ v$.port.$errors[0].$message }}
                   </p>
                 </v-col>
+                <v-col cols="12" class="mb-n6">
+                  <v-select
+                    v-model="state.serverType"
+                    label="Server Type"
+                    item-title="name"
+                    item-value="slug"
+                    return-object
+                    :items="state.listServers"
+                  />
+                  <p class="error-feedback mb-5" v-if="v$.serverType.$error">
+                    {{ v$.serverType.$errors[0].$message }}
+                  </p>
+                </v-col>
                 <v-col cols="6" class="mb-n6">
                   <v-text-field
                     label="User DN"
@@ -163,6 +176,13 @@ export default {
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      listServers: [
+        {
+          slug: "ad",
+          name: "AD",
+        },
+        { slug: "openldap", name: "Open Ldap" },
+      ],
       id: null,
       show1: "",
       name: "",
@@ -171,6 +191,7 @@ export default {
       userDn: "",
       searchBase: "",
       password: "",
+      serverType: "",
       activateStatus: false,
     });
 
@@ -210,10 +231,16 @@ export default {
         state.searchBase = data.search_base;
         state.password = "";
         state.activateStatus = data.ssl_tls_activation;
+
+        let filtredServerType = state.listServers.filter(
+          (i) => i.slug === data?.server_type
+        );
+        state.serverType = filtredServerType[0];
       }
     };
 
     const closeModal = () => {
+      v$.value.$reset();
       emitter.emit("closeServerModal");
       if (modalMode.value === "create") {
         state.name = "";
@@ -239,6 +266,7 @@ export default {
           bind_user_dn: state.userDn,
           bind_user_password: state.password,
           ssl_tls_activation: state.activateStatus,
+          server_type: state.serverType?.slug,
         };
         if (modalMode.value === "edit") {
           axios
@@ -286,6 +314,7 @@ export default {
     const rules = computed(() => {
       return {
         name: { required },
+        serverType: { required },
         hostIp: {
           isValidHostIp: helpers.withMessage(
             `Format must be like adresse IP : X.X.X.X`,

@@ -11,6 +11,7 @@ ERROR_MESSAGES_DELETE_USED_SERVER = "You have to delete Clients related to this 
 ERROR_MESSAGES_DELETE_USED_ITEM = "You can't delete this {}, it is used in {}"
 ERROR_MESSAGES_START = "Error in starting {}"
 ERROR_MESSAGES_STOP = "Error in stoping {}"
+ERROR_MESSAGES_CHANGE = "Error in changing {}"
 
 # Success Messages
 SUCCESS_MESSAGES_CONFIGURATION = "Connection {} Configuration is {}"
@@ -20,6 +21,7 @@ SUCCESS_MESSAGES_UPDATE = "Update {} succesfully"
 SUCCESS_MESSAGES_STATUS_OPENVPN_SERVER = "Server {} is {}"
 SUCCESS_MESSAGES_START = "{} {} is started"
 SUCCESS_MESSAGES_STOP = "{} {} is stoped"
+SUCCESS_MESSAGES_CHANGE = "{} {} is changed"
 
 IPV4_CONFIG = 'IPv4 config'
 CONSTANT_PRIVATE_KEY = 'PRIVATE KEY'

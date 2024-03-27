@@ -99,3 +99,40 @@ def get_next_nat_handle(rule_nat, chain="postrouting"):
         if len(list_next_dnat) > 0:
             return list_next_dnat.order_by('prerouting_position')[0].rule_number
     return -1
+
+
+def input_create_snat(snat:SNat):
+    source = {"address": snat.source_address,
+              "port": snat.source_port}
+    destination = {"address": snat.destination_address,
+                   "port": snat.destination_port}
+    masking = ["masquerade"]
+    if snat.snat_type == "Static":
+        masking = snat.translation_address_from
+        if snat.translation_address_to != "":
+            masking += f"""-{snat.translation_address_to}"""
+        if snat.translation_port != "":
+            masking += f""":{snat.translation_port}"""
+        masking = ["snat", "ip", "to",  masking]
+    
+    return source, destination, masking
+
+
+def input_create_dnat(dnat:DNat):
+    source = "any"
+    if dnat.source_address != "":
+        source = {"address": dnat.source_address,
+                    "port": dnat.source_port_from}
+        if dnat.source_port_to != "":
+            source["port"] += f"""-{dnat.source_port_to}"""
+
+    destination = {"external_address": dnat.external_address,
+                    "internal_address": dnat.internal_address}
+    
+    if dnat.destination_port_from:
+        destination["port_forwarding"] = f'{dnat.destination_port_from}-{dnat.destination_port_to}'
+        destination["port"] = f' : {dnat.destination_port}'
+    else:
+        destination["port_forwarding"] = False
+    
+    return source, destination

@@ -669,9 +669,6 @@ def vlan_page(request):
 
 @login_required(login_url='/')
 def routing_page(request):
-    return render(request, 'routing.html')
-
-
 
     listAllRouting = get_list_all_routing()
     listAllGateway=get_list_all_gateway()

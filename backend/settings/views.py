@@ -36,7 +36,7 @@ def generale_settings(request,id):
         system_object = System.objects.get(id=id)
         network = Network.objects.get(id=id)
         data = request.data
-        if change_hostname(data['hostname']) and '.' in data['domain'] and data['domain'][-1] is not '.':
+        if change_hostname(data['hostname']) and '.' in data['domain'] and data['domain'][-1] != '.':
             system_object.hostname = data['hostname']
             change_domain(data['domain'])
             system_object.domaine = data['domain']

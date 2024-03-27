@@ -131,7 +131,7 @@ def delete_dhcp4_server(id_interface,ifname):
 def retur_config_file(subnet_address,subnet_mask,ranges_from,ranges_to,dns_server,gateway,domain_name):
     """function to prepare config to write in file"""
     list_config_server=[]
-    list_config_server+=[(f'option domain-name"{domain_name}";')if domain_name is not None else []]
+    list_config_server+=[(f'option domain-name"{domain_name}";')if domain_name is not None else None]
     list_config_server+=[
         'subnet ' + subnet_address + ' netmask ' + subnet_mask + ' {' if subnet_address is not None and subnet_mask is not None else None,]
     config_pool=''
@@ -148,7 +148,7 @@ def retur_config_file(subnet_address,subnet_mask,ranges_from,ranges_to,dns_serve
         list_config_server.append(f'option domain-name-servers {dns_server};')
     list_config_server+='}' 
     # print(list_config_server)
-    list_config_server=[x for x in list_config_server if x is not None]
+    list_config_server=[x for x in list_config_server if x is not None ]
     return list_config_server
     
 def init_file_dhcp4(ifname):
@@ -175,6 +175,7 @@ def return_interfaces_server():
     return config_server_interface
 
 def save_config_in_system(list_config,ifname):
+    print(list_config)
     """function to apply config on system"""
     config_server_interface=return_interfaces_server()
     commandes=[
@@ -184,7 +185,7 @@ EOF""".format(ifname,'\n'.join(list_config)),
     """cat <<EOF > /etc/default/isc-dhcp-server
 {} 
 EOF""".format('\n'.join(config_server_interface)),
-    "systemctl enable --quiet dhcpd4.service && systemctl restart dhcpd4.service"
+    "systemctl enable --quiet dhcpd4.service && systemctl restart  --quiet dhcpd4.service"
     ]
     for cmd in commandes:
         _, error = execute_cmd(cmd)
@@ -195,8 +196,14 @@ EOF""".format('\n'.join(config_server_interface)),
 def parse_range_address(data_input):
     """parse list of addresses """
     available_range=None if data_input.get('available_range', None) == "" else data_input.get('available_range', None)
-    ranges_from=[] if data_input.get('ranges_from', []) == "" else data_input.get('ranges_from', [])
-    ranges_to=[] if data_input.get('ranges_to', []) == "" else data_input.get('ranges_to', [])
+    ranges_address=[] if data_input.get("ranges_address",[]) == "" else data_input.get('ranges_address', [])
+    ranges_from=[]
+    ranges_to=[]
+    if len(ranges_address)>0:
+        for addr in ranges_address:
+            ranges_from.append(addr['range_from'])
+            ranges_to.append(addr['range_to'])
+        
     return available_range,ranges_from,ranges_to
 
 def save_server_db(data,ranges_from,ranges_to,server_object):

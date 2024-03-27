@@ -15,6 +15,9 @@
               :columnDefs="columnDnat"
               :rowData="rowDataDnat.value"
               :gridOptions="gridOptions"
+              :rowDragManaged="true"
+              :rowDragEntireRow="true"
+              @row-drag-end="onRowDragEnd"
             />
           </div>
           <div class="d-flex justify-end mt-3">
@@ -276,6 +279,33 @@ export default {
       return input;
     }
 
+    const onRowDragEnd = (event) => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const id = event.node.data.id;
+      let payload = {
+        new_position: event.overIndex + 1,
+      };
+
+      axios
+        .put(`/nat/changeDNatPosition/${id}`, payload)
+        .then((response) => {
+          if (response.status == "201") {
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          }
+        })
+        .catch((i) => {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.msg;
+        });
+    };
+
     const rowDataDnat = reactive({});
 
     const gridApi = ref(null);
@@ -474,6 +504,7 @@ export default {
       onGridReady,
       cancelDelete,
       confirmDelete,
+      onRowDragEnd,
     };
   },
 };

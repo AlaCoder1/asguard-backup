@@ -37,16 +37,22 @@ def parse_server_info(data):
         "domain_name":domain_name,
         }
     return data_server
+def subnet_mask_to_cidr(subnet_mask):
+    octets = subnet_mask.split('.')
+    binary_mask = ''.join(format(int(octet), '08b') for octet in octets)
+    cidr = binary_mask.count('1')
+    return int(cidr)
 
-def is_ip_in_range(from_addrs,to_addrs, available_range):
+def is_ip_in_range(from_addrs,to_addrs, available_range,subnet_addr,subnet_mask):
     """function to test from address and to address in available range"""
+    network = ipaddress.IPv4Network((subnet_addr, subnet_mask), strict=False)
     for i in range(len(from_addrs)):
         print(from_addrs[i])
         from_addr = ipaddress.ip_address(from_addrs[i]) if ipaddress.ip_address(from_addrs[i]) else None
         to_addr = ipaddress.ip_address(to_addrs[i]) if ipaddress.ip_address(to_addrs[i]) else None
         start_ip = ipaddress.ip_address(available_range.split("-")[0].strip())
         end_ip = ipaddress.ip_address(available_range.split("-")[1].strip())
-        if start_ip is None or start_ip is None or (start_ip <= from_addr <= end_ip and start_ip <= to_addr <= end_ip is False):
+        if start_ip is None or start_ip is None or (start_ip <= from_addr <= end_ip and start_ip <= to_addr <= end_ip is False) or from_addr not in network or to_addr not in network  :
             return False
     return True
 

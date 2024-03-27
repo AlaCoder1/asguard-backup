@@ -66,7 +66,7 @@ def update_config_dhcp4_server(request,id_server):
         data_input=request.data
         ##parse data 
         available_range,ranges_from,ranges_to=parse_range_address(data_input)
-        if is_ip_in_range(ranges_from,ranges_to, available_range) is True:
+        if is_ip_in_range(ranges_from,ranges_to, available_range,data_input['subnet_addr'],data_input['subnet_mask']) is True:
             data=parse_server_info(data_input)
             if ServerDhcp4.objects.filter(id=id_server).exists() and data['enable_dhcpv4'] is True :
                 server_object=ServerDhcp4.objects.get(id=id_server)

@@ -67,6 +67,7 @@
     "intrusionDetection":"Intrusion Detection",
     "proxyWeb":"Proxy Web",
     "SDWAN":"SDWAN",
+    "WAF":"WAF",
     "health":"Health",
     "insight":"Insight",
     "traffic":"Traffic",

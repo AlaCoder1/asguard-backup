@@ -38,7 +38,7 @@
     <v-dialog v-model="deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="headline">{{ $t("delete.DeleteConfirmation") }}</v-card-title>
-        <v-card-text>{{ $t("delete.question") }}</v-card-text>
+        <v-card-text>{{ $t("delete.questiongroup") }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{ $t("PageGeneral.form.Cancel") }}</v-btn>

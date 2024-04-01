@@ -17,15 +17,30 @@
   "buttons":{
     "login":"login",
     "save":"Save",
-    "close":"Close"
+    "close":"Close",
+    "create":"Create",
+    "update":"Edit",
+    "ajoutauthority":"Add Authorities",
+    "ajoutcertifcat":"Add certificates",
+    "download":"Download",
+    "createauth":"Create new Authority",
+    "updateauth":"Update Authority",
+    "updatecertif":"Update",
+    "createcertif":"Create new"
+
+
   },
 
   "requiredfield":{
-    "indicatesrequiredfield":"Indicates required field"
+    "indicatesrequiredfield":"Indicates required field",
+    "attente":"Please Wait...",
+    "download":"Download Validation"
   },
 
   "ldap":{
-    "ActivateLdap":"Activate  LDAP"
+    "ActivateLdap":"Activate  LDAP",
+    "TLS":"TLS/SSL encryption",
+    "Activateecnryption":"Activate ecnryption"
   },
 
   "errors":{
@@ -113,7 +128,47 @@
     "user":"User",
     "role":"Role",
     "authority":"Authority",
-    "group":"Group"
+    "group":"Group",
+    "server":"Server",
+    "certificates":"Certificates",
+    "distinguishedname":"Distinguished name",
+    "ListRevocation":"List Revocation per authority",
+    "Listauthoriy":"list of certification authorities",
+    "certificat":"certificate"
+
+  },
+
+  "certificat":{
+    "certificatName":"Certificate Name",
+    "method":"Method",
+    "exist_certif":"Import an existing Certificate Authority",
+    "certificat_existant":"Existing certificate",
+    "certificatdata":"Certificat data",
+    "privatekey":"Private key certificate (optional)",
+    "serialnumber":"Serial number certificate",
+    "certificat_auth":"Certificate Authority",
+    "certificatlist":"No data available",
+    "keytype":"key type",
+    "keylength":"Key length",
+    "Hashalgo":"Hash algorithm",
+    "lifetime":"Life time",
+    "country":"Country",
+    "state":"State province",
+    "place":"Place",
+    "organisation":"organization",
+    "communName":"Common name",
+    "certif_new":"Create Certificate Authority",
+    "exist_certificat":"Import an existing Certificate",
+    "certif_intern":"Certification intern",
+    "create_certificat":"Create Certificate"
+
+  },
+
+  "champs":{
+    "indication":"champs can include only letters & Numbers & underscores & hyphens without space.",
+    "champNumber":"champs lifeTime can include only Numbers.",
+    "champletter":"champs state can include only letters.",
+    "champplaceletter":"champs place can include only letters."
 
   },
 
@@ -145,6 +200,10 @@
       "ServerName": "Server Name",
       "Type": "Type",
       "HostName": "Host Name",
+      "IPAddress":"IP address",
+      "SearchBase":"Search Base",
+      "ServerType":"Server Type",
+      "UserDN":"User distinguished name",
       "form": {
         "Actions": "Actions",
         "Update": "Update",

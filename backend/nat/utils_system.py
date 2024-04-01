@@ -2,11 +2,11 @@ from backend.nat.contant_variables import PATH_RULESET_NFT
 from utils.commands_utils import execute_command_without_arguments, get_current_directory
 
 
-def find_nat_in_ruleset(rule_set:str, nat_type="postrouting"):
+def find_nat_in_ruleset(rule_set:str, chain="postrouting"):
     """Return list of NAT rules with it's type: SNAT, OneToOne or DNAT"""
     list_rules = [line.strip() for line in rule_set.splitlines()]
     for line_index in range(len(list_rules)):
-        if list_rules[line_index].startswith(f"chain {nat_type}"):
+        if list_rules[line_index].startswith(f"chain {chain}"):
             start_snat_line = line_index + 2
             break
     for line_snat in range(start_snat_line, len(list_rules)):
@@ -24,5 +24,5 @@ def save_ruleset_nft():
         rulset_file.write(ruleset_process.stdout)
 
 
-def delete_nat_rule_in_system(routing, handle_number):
-    execute_command_without_arguments(["sudo", "nft", "delete", "rule", "nat", routing, "handle", f"{handle_number}"])
+def delete_nat_rule_in_system(chain, handle_number):
+    execute_command_without_arguments(["sudo", "nft", "delete", "rule", "nat", chain, "handle", f"{handle_number}"])

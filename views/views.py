@@ -548,6 +548,10 @@ def sdwan_page(request):
     return render(request, 'sdwan_page.html',context)
 
 @login_required(login_url='/')
+def waf_page(request):
+    return render(request, 'waf_page.html')
+
+@login_required(login_url='/')
 def clamav_page(request):
     config= getclamavconfigurations()
     # context = {'config':config}
@@ -669,9 +673,6 @@ def vlan_page(request):
 
 @login_required(login_url='/')
 def routing_page(request):
-    return render(request, 'routing.html')
-
-
 
     listAllRouting = get_list_all_routing()
     listAllGateway=get_list_all_gateway()

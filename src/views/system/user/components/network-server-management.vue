@@ -1,7 +1,7 @@
 <template>
   <div class="mr-3">
     <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
-      <h4>Networks servers</h4>
+      <h4>{{ $t("networksServers") }}</h4>
       <!-- <v-divider></v-divider> -->
       <v-row>
         <v-col cols="12">
@@ -24,7 +24,7 @@
               class="mt-3 btn-add"
               @click="openModalAdd"
             >
-              <span class="text-white">add Server</span>
+              <span class="text-white"> {{ $t("button.addServer") }}</span>
             </v-btn>
           </div>
         </v-col>
@@ -37,14 +37,18 @@
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
-        <v-card-title class="headline">Delete Confirmation</v-card-title>
-        <v-card-text>Are you sure you want to delete this Server ?</v-card-text>
+        <v-card-title class="headline">{{
+          $t("delete.DeleteConfirmation")
+        }}</v-card-title>
+        <v-card-text>{{ $t("delete.questionserver") }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
-          <v-btn color="blue darken-1" text @click="confirmDelete"
-            >Delete</v-btn
-          >
+          <v-btn color="blue darken-1" text @click="cancelDelete">{{
+            $t("PageGeneral.form.Cancel")
+          }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete">{{
+            $t("PageGeneral.form.Delete")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -60,8 +64,9 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
-import { reactive, ref, onMounted, inject } from "vue";
+import { reactive, ref, onMounted, inject, computed } from "vue";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -79,7 +84,9 @@ export default {
     VButton,
   },
   setup() {
+    const { t } = useI18n();
     const emitter = inject("emitter");
+
     const state = reactive({
       deleteDialog: false,
       deletedRow: null,
@@ -99,9 +106,13 @@ export default {
       rowSelection: "single",
     });
 
-    const columnDefs = [
+    const servername = computed(() => {
+      return t("PageGeneral.ServerName");
+    });
+    
+    const columnDefs = ref([
       {
-        headerName: "Server name",
+        headerName: servername,
         field: "server_name",
         width: 90,
         minWidth: 50,
@@ -115,7 +126,7 @@ export default {
         flex: 1,
       },
       { headerName: "Actions", cellRenderer: actionCellRenderer },
-    ];
+    ]);
 
     const rowData = reactive({});
 
@@ -249,6 +260,7 @@ export default {
     };
     return {
       state,
+      t,
       gridOptions,
       columnDefs,
       emitter,

@@ -9,17 +9,38 @@
     "assignToGroup":"Affecter à un groupe",
     "desactivateUser":"Désactiver l'utilisateur",
     "goupname":"Nom de groupe",
-    "description":"Description"
+    "description":"Description",
+    "server":"Serveur d'annuaire"
+
   },
   "buttons":{
     "login":"se connecter",
     "save":"Sauvegarder",
-    "close":"Fermer"
+    "close":"Fermer",
+    "create":"Créer",
+    "update":"Modifier",
+    "ajoutauthority":"Ajouter Autorités",
+    "ajoutcertifcat":"Ajouter certificats",
+    "download":"Télécharger",
+    "createauth":"Créer une nouvelle autorité",
+    "updateauth":"Mettre à jour l'autorité",
+    "updatecertif":"Mettre à jour",
+    "createcertif":"Créer un nouveau"
+    
   },
 
   "requiredfield":{
-    "indicatesrequiredfield":"Indique champ obligatoire"
+    "indicatesrequiredfield":"Indique champ obligatoire",
+    "attente":"S'il vous plaît, attendez...",
+    "download":"Validation du téléchargement"
   },
+  
+  "ldap":{
+    "ActivateLdap":"Activer LDAP",
+    "TLS":"Cryptage TLS/SSL (chiffrement)",
+    "Activateecnryption":"Activer cryptage"
+  },
+
 
   "errors":{
     "valueRequired":"champs est obligatoire",
@@ -66,6 +87,7 @@
     "intrusionDetection":"Détection des intrusions",
     "proxyWeb":"Web proxy",
     "SDWAN":"SDWAN",
+    "WAF":"WAF",
     "health":"Santé",
     "insight":"Aperçu",
     "traffic":"Trafic",
@@ -83,9 +105,16 @@
   "english":"Anglais",
   "networkAdmins":"Administrateurs de réseaux",
   "networksGroups":"Groupes de réseaux",
+  "networksServers":"Serveurs de réseaux",
 
 
-  "deleteconfirmation":{
+  "delete":{
+    "DeleteConfirmation":"Confirmation de Suppression",
+    "questionuser":"Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
+    "questiongroup":"Êtes-vous sûr de vouloir supprimer ce groupe ?",
+    "questionserver":"Êtes-vous sûr de vouloir supprimer ce server ?",
+    "questioncertif":"Êtes-vous sûr de vouloir supprimer cette autorité ?",
+    "questioncertificat":"Êtes-vous sûr de vouloir supprimer ce certificat ?"
 
  
   },
@@ -103,10 +132,52 @@
     "user":"Utilisateur",
     "role":"Rôle",
     "authority":"Authorités",
-    "group":"Groupe"
+    "group":"Groupe",
+    "server":"Serveur",
+    "certificates":"Certificats",
+    "distinguishedname":"Nom Distingué",
+    "ListRevocation":"Liste de révocation par autorité",
+    "Listauthoriy":"liste des autorités de certification",
+    "certificat":"certificat"
+    
     
 
   },
+
+  "certificat":{
+    "certificatName":"Nom du certificat",
+    "method":"Méthode",
+    "exist_certif":"Importer une autorité de certification existante",
+    "certificat_existant":"Certificat existant",
+    "certificatdata":"Données du certificat",
+    "privatekey":"Certificat de clé privée (facultatif)",
+    "serialnumber":"Certificat de numéro de série",
+    "certificat_auth":"Autorité de certification",
+    "certificatlist":"Pas de données disponibles",
+    "keytype":"Type de clé",
+    "keylength":"Longueur de clé",
+    "Hashalgo":"Algorithme de hachage",
+    "lifetime":"Durée de vie",
+    "country":"Pays",
+    "state":"État Province",
+    "place":"Lieu",
+    "organisation":"organisation",
+    "communName":"Nom commun",
+    "certif_new":"Créer une autorité de certification",
+    "exist_certificat":"Importer un certificat existant",
+    "certif_intern":"Certification interne",
+    "create_certificat":"Créer un certificat"
+   
+  },
+
+  "champs":{
+    "indication":"champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",
+    "champNumber":"champs lifeTime ne peuvent inclure que des nombres.",
+    "champletter":"champs d'etat ne peut inclure que des lettres.",
+    "champplaceletter":"champs Lieu peut inclure que des lettres."
+
+  },
+
   "tabs":{
     "userManagement":"Gestion des utilisateurs",
     "certificateManagement":"Gestion des certificats"
@@ -121,7 +192,11 @@
 
   "button":{
     "addUser":"Ajouter Utilisateur",
-    "addGroup":"Ajouter groupe"
+    "addGroup":"Ajouter Groupe",
+    "addServer":"Ajouter Serveur"
+    
+    
+
     
   },
   "modal":{
@@ -137,6 +212,10 @@
       "ServerName": "Nom du serveur",
       "Type": "Type",
       "HostName": "Nom d'hôte",
+      "IPAddress":"adresse IP",
+      "SearchBase":"Base de recherche",
+      "ServerType":"Type de serveur",
+      "UserDN":"Nom distinctif de l'utilisateur",
       "form": {
         "Actions": "Actions",
         "Update": "Mettre à jour",

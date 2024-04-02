@@ -68,6 +68,7 @@ urlpatterns = [
     path('ipsec/', ipsec_page),
     path('proxy/', squid_proxy),
     path('sdwan/', sdwan_page),
+    path('waf/', waf_page),
     path('sdwan/', include('backend.sdwan.urls')),
     path('clamaV/', clamav_page),
     path('clamaV/', include('backend.clamav.urls')),
@@ -89,6 +90,10 @@ urlpatterns = [
     path("routing/",routing_page),
     path('ldap/',include('backend.LdapServer.urls')),
     path('routing/',include('backend.routing.urls')),
+    path("profile/",profile_page),
+
+
+
 ]
 
 # ws/wss url patterns

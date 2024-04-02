@@ -78,6 +78,7 @@ urlpatterns = [
     path('proxy/', include('backend.proxy.urls')),
     path('nat/', include('backend.nat.urls')),
     path("vlan/",include("backend.vlan.urls")),
+    path("waf/",include("backend.waf.urls")),
     path("server_dhcp4/",include("backend.server_dhcp4.urls")),
     path("services/server-dhcp4",server_dhcp4_page),
     

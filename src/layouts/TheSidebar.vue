@@ -322,6 +322,12 @@ export default {
               href: "/sdwan",
               active: "SDWAN",
             },
+            {
+              title: "subtitle.WAF",
+              icon: "",
+              href: "/waf",
+              active: "WAF",
+            },
           ],
           subMenuVisible: false,
         },

@@ -5,18 +5,19 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              Create New Server</span
+              {{$t("modal.create")}} {{$t("agGrid.server")}}</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              Update Server</span
+              {{$t("modal.update")}} {{$t("agGrid.server")}}</span
             >
+            
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Enter name"
+                    :label="$t('PageGeneral.ServerName')"
                     v-model="state.name"
                   ></v-text-field>
 
@@ -26,7 +27,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Enter Hostname or IP @ (url)"
+                    :label="$t('PageGeneral.IPAddress')"
                     v-model="state.hostIp"
                   ></v-text-field>
 
@@ -36,7 +37,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Search Base"
+                   :label="$t('PageGeneral.SearchBase')"
                     v-model="state.searchBase"
                   ></v-text-field>
 
@@ -57,7 +58,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.serverType"
-                    label="Server Type"
+                    :label="$t('PageGeneral.ServerType')"
                     item-title="name"
                     item-value="slug"
                     return-object
@@ -69,7 +70,7 @@
                 </v-col>
                 <v-col cols="6" class="mb-n6">
                   <v-text-field
-                    label="User DN"
+                    :label="$t('PageGeneral.UserDN')"
                     v-model="state.userDn"
                   ></v-text-field>
 
@@ -79,7 +80,7 @@
                 </v-col>
                 <v-col cols="6" class="mb-n6">
                   <v-text-field
-                    label="Password "
+                    :label="$t('form.password')"
                     v-model="state.password"
                     :append-inner-icon="state.show1 ? 'mdi-eye' : 'mdi-eye-off'"
                     prepend-inner-icon="mdi-lock-outline"
@@ -93,11 +94,11 @@
                 </v-col>
 
                 <v-col cols="7" align-self="center">
-                  <label>TLS/ SSL encryption (chiffrement)</label>
+                  <label>{{$t('ldap.TLS')}}</label>
                 </v-col>
                 <v-col cols="5" class="mb-n6">
                   <input type="checkbox" v-model="state.activateStatus" />
-                  <label class="ml-2"> Active ecnryption</label>
+                  <label class="ml-2">{{$t('ldap.Activateecnryption')}}</label>
                 </v-col>
               </v-row>
             </v-container>
@@ -115,7 +116,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
+              <span class="text-white pr-3 pl-3">{{ modalMode === 'create' ? $t("buttons.create") : $t("buttons.update") }}</span>
             </v-btn>
             <v-btn
               color="indigo-darken-3"
@@ -129,7 +130,7 @@
               class="mt-3 btn-add"
             >
               <span class="pr-3 pl-3 text-white" style="color: #213e9f"
-                >Close</span
+                >{{$t('buttons.close')}}</span
               >
             </v-btn>
           </v-card-actions>
@@ -210,7 +211,7 @@ export default {
     watch(
       () => modalMode.value,
       () => {
-        if (modalMode.value === "create") {
+        if (modalMode.value === "create"){
           state.name = "";
           state.hostIp = "";
           state.port = "";

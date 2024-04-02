@@ -6,9 +6,10 @@
           <v-card-title>
             <span class="text-h5"
               >{{
-                mode === "create" ? $('Create new Authority') : "Update Authority"
+                mode === "create" ? $t("buttons.createauth") : $t("buttons.updateauth")
+                
               }}
-              Certificat</span
+              {{$t("agGrid.certificat")}}</span
             >
           </v-card-title>
           <v-card-text>
@@ -16,9 +17,10 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Certificat Name "
+                    :label="$t('certificat.certificatName')"
                     v-model="state.formData.certifName"
                   ></v-text-field>
+
                   <p
                     class="error-feedback mb-5"
                     v-if="v$.formData.certifName.$error"
@@ -30,22 +32,11 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.formData.method"
-                    label="Method"
+                    :label="$t('certificat.method')"
                     item-title="name"
                     item-value="id"
                     return-object
-                    :items="[
-                      {
-                        name: 'Import an existing Certificate Authority',
-                        slug: 'import',
-                        id: '1',
-                      },
-                      {
-                        name: 'Create Certificate Authority',
-                        slug: 'create',
-                        id: '2',
-                      },
-                    ]"
+                    :items="selectcetifoptions"
                   ></v-select>
                   <p
                     class="error-feedback mb-5"
@@ -56,13 +47,13 @@
                 </v-col>
 
                 <v-col cols="12" v-if="isImportCetif" class="mb-n6">
-                  <label for=""> Certificate Existant</label>
+                  <label for="">{{ $t("certificat.certificat_existant") }}</label>
                   <v-divider></v-divider>
 
                   <v-textarea
                     class="mt-3"
                     v-model="state.formData.certificatData"
-                    label="Certificat data"
+                    :label="$t('certificat.certificatdata')"
                     variant="outlined"
                   ></v-textarea>
 
@@ -76,23 +67,23 @@
                   <v-textarea
                     class="mt-3"
                     v-model="state.formData.privateKey"
-                    label="Private key certificate (facultatif)"
+                    :label="$t('certificat.privatekey')"
                     variant="outlined"
                   ></v-textarea>
 
                   <v-text-field
-                    label="Serial number certificate"
+                    :label="$t('certificat.serialnumber')"
                     v-model="state.formData.serialNumber"
                   ></v-text-field>
                 </v-col>
 
                 <v-col v-if="isCreateCetif" cols="12" class="mb-n6">
-                  <label for=""> Certification autority</label>
+                  <label for="">{{ $t("certificat.certificat_auth") }}</label>
                   <v-divider></v-divider>
                   <!--  -->
                   <v-select
                     v-model="state.formData.keyType"
-                    label="Key type"
+                    :label="$t('certificat.keytype')"
                     item-title="name"
                     item-value="id"
                     return-object
@@ -107,7 +98,7 @@
 
                   <v-select
                     v-model="state.formData.keyLength"
-                    label="Key length"
+                    :label="$t('certificat.keylength')"
                     item-title="name"
                     item-value="id"
                     return-object
@@ -142,7 +133,7 @@
                   </p>
                   <v-select
                     v-model="state.formData.hashAlgo"
-                    label="Hash algo"
+                    :label="$t('certificat.Hashalgo')"
                     item-title="name"
                     item-value="id"
                     return-object
@@ -172,7 +163,7 @@
                   </p>
 
                   <v-text-field
-                    label="Lifetime"
+                    :label="$t('certificat.lifetime')"
                     v-model="state.formData.lifeTime"
                   ></v-text-field>
                   <p
@@ -185,7 +176,7 @@
                     <v-col cols="6" class="mb-n6">
                       <v-autocomplete
                         v-model="state.formData.country"
-                        label="Country"
+                        :label="$t('certificat.country')"
                         item-title="countryName"
                         item-value="countryID"
                         return-object
@@ -200,7 +191,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                        label="State province"
+                        :label="$t('certificat.state')"
                         v-model="state.formData.state"
                       ></v-text-field>
                       <p
@@ -212,7 +203,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                        label="place"
+                       :label="$t('certificat.place')"
                         v-model="state.formData.place"
                       ></v-text-field>
                       <p
@@ -224,7 +215,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                        label="Organisation"
+                       :label="$t('certificat.organisation')"
                         v-model="state.formData.organisation"
                       ></v-text-field>
                       <p
@@ -236,7 +227,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                        label="Mail"
+                        label="E-Mail"
                         v-model="state.formData.mail"
                       ></v-text-field>
                       <p
@@ -248,7 +239,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                        label="Commun name"
+                        :label="$t('certificat.communName')"
                         v-model="state.formData.communName"
                       ></v-text-field>
                       <p
@@ -272,7 +263,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Close</span>
+              <span class="text-white pr-3 pl-3">{{$t('buttons.close')}}</span>
             </v-btn>
             <v-btn
               type="submit"
@@ -280,7 +271,7 @@
               :rounded="true"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Save</span>
+              <span class="text-white pr-3 pl-3">{{$t('buttons.save')}}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -298,10 +289,11 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { required, requiredIf, helpers, email } from "@vuelidate/validators";
-import { reactive, computed, watch } from "vue";
+import { reactive, computed, watch,ref } from "vue";
 export default {
   name: "Modal_User",
   props: {
@@ -319,6 +311,7 @@ export default {
     },
   },
   setup() {
+    const { t } = useI18n();
     const state = reactive({
       formData: {
         certifName: "",
@@ -339,137 +332,176 @@ export default {
       },
       ModalMode: null,
     });
+    const certifexist = computed(() => {
+      return t("certificat.exist_certif");
+    });
+    const certifnew = computed(() => {
+      return t("certificat.certif_new");
+    });
+    const selectcetifoptions=ref([
+                      {
+                        name:certifexist,
+                        slug: 'import',
+                        id: '1',
+                      },
+                      {
+                        name:certifnew,
+                        slug: 'create',
+                        id: '2',
+                      },
+                    ]);
+                    
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const champ = computed(() => {
+      return t("champs.indication");
+    });
+    const champNumber = computed(() => {
+      return t("champs.champNumber");
+    });
+    const champletter = computed(() => {
+      return t("champs.champletter");
+    });
 
+    const champplaceletter = computed(() => {
+      return t("champs.champplaceletter");
+    });
     const rules = computed(() => {
       return {
         formData: {
           certifName: {
-            required,
+            required: helpers.withMessage(
+                error, 
+                required
+              ),
             isValidCertifName: helpers.withMessage(
-              `champs can include only letters & Numbers & underscores & hyphens without space.`,
-
+              champ,
               helpers.regex(/^[A-Za-z0-9_\-]+$/)
             ),
           },
-          method: { required },
+          method: {  required: helpers.withMessage(
+                error, 
+                required
+              ),},
           certificatData: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
                   state.formData.method.name ===
-                  "Import an existing Certificate Authority"
+                  "Import an existing Certificate Authority" || state.formData.method.name ==="Importer une autorité de certification existante"
               )
             ),
           },
 
           keyLength: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority"
+                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
               )
             ),
           },
           hashAlgo: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority"
+                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
               )
             ),
           },
           keyType: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority"
+                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
               )
             ),
           },
           lifeTime: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority"
+                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
               )
             ),
             isValidlifeTime: helpers.withMessage(
-              `champs lifeTime can include only Numbers.`,
+              champNumber,
 
               helpers.regex(/^[0-9]+$/)
             ),
           },
           country: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority"
+                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
               )
             ),
           },
           state: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority"
+                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
               )
             ),
             isValidState: helpers.withMessage(
-              `champs state can include only letters.`,
+              champletter,
 
               helpers.regex(/^[a-zA-Z]+$/)
             ),
           },
           place: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority"
+                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
               )
             ),
             isValidPlace: helpers.withMessage(
-              `champs place can include only letters.`,
+              champplaceletter,
 
               helpers.regex(/^[a-zA-Z]+$/)
             ),
           },
           organisation: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority"
+                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
               )
             ),
           },
           mail: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority"
+                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
               )
             ),
             email,
           },
           communName: {
             requiredIfFuction: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority"
+                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
               )
             ),
             isValidCommne: helpers.withMessage(
-              `champs can include only letters & Numbers & underscores & hyphens without space.`,
+              champ,
 
               helpers.regex(/^[A-Za-z0-9_\-]+$/)
             ),
@@ -481,6 +513,8 @@ export default {
     return {
       state,
       v$,
+      selectcetifoptions
+
     };
   },
   data() {
@@ -499,12 +533,14 @@ export default {
     isImportCetif() {
       return (
         this.state.formData.method.name ===
-        "Import an existing Certificate Authority"
+        "Import an existing Certificate Authority" || this.state.formData.method.name ==="Importer une autorité de certification existante"
       );
     },
     isCreateCetif() {
-      return this.state.formData.method.name === "Create Certificate Authority";
-    },
+      return (
+        this.state.formData.method.name === "Create Certificate Authority" || this.state.formData.method.name ==="Créer une autorité de certification"
+    );
+  },
   },
 
   watch: {
@@ -578,7 +614,7 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         let payload = {};
-        if (this.state.formData.method.name == "Create Certificate Authority") {
+        if (this.state.formData.method.name == "Create Certificate Authority" || this.state.formData.method.name ==="Créer une autorité de certification") {
           payload = {
             name: this.state.formData?.certifName,
             method: {

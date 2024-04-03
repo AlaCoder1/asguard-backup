@@ -89,6 +89,10 @@ urlpatterns = [
     path("routing/",routing_page),
     path('ldap/',include('backend.LdapServer.urls')),
     path('routing/',include('backend.routing.urls')),
+    path("profile/",profile_page),
+
+
+
 ]
 
 # ws/wss url patterns

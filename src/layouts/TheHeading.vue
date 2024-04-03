@@ -34,7 +34,12 @@
           </v-avatar>
         </template>
         <v-list style="cursor: pointer; padding: 15px">
-          <v-list-item> {{ $t("header.profile") }} </v-list-item>
+          <a :href="'/profile'" style="text-decoration: none; color: black">
+            <v-list-item>
+              {{ $t("header.profile") }}
+            </v-list-item>
+          </a>
+
           <v-list-item> {{ $t("subtitle.settings") }} </v-list-item>
 
           <v-list-item>
@@ -58,7 +63,7 @@ import axios from "axios";
 import { reactive, onMounted, ref } from "vue";
 export default {
   name: "ToolbarComponent",
-  inject:["emitter"],
+  inject: ["emitter"],
 
   setup() {
     onMounted(() => {
@@ -254,12 +259,16 @@ export default {
         console.error("Error during logout:", error);
       }
     };
+    const profilRedirect = async () => {
+      console.log("test");
+    };
 
     return {
       state,
       langs,
       selectedLang,
       logout,
+      profilRedirect,
     };
   },
 
@@ -280,7 +289,7 @@ export default {
   methods: {
     changeLang(lang) {
       this.$i18n.locale = lang.toLowerCase();
-      this.emitter.emit('reload-tabs')
+      this.emitter.emit("reload-tabs");
     },
   },
 };

@@ -6,7 +6,7 @@ from backend.server_dhcp4.models import ServerDhcp4
 from backend.server_dhcp4.serializers import DHCP4ServerSerializer
 from backend.vlan.functions import execute_cmd
 from django.db.models import Q
-
+from django.core import serializers
 
 def customize_error_msg(serializer):
     """function to custom error message serializer"""
@@ -112,27 +112,7 @@ def delete_dhcp4_server(id_interface,ifname):
         server_object.delete()  
     return True
         
-# def delete_dhcp4_server(id_interface,ifname):
-#     """"delete server config from system and database """
-#     if ServerDhcp4.objects.filter(interface_id=id_interface).exists():
-#         server_object=ServerDhcp4.objects.get(interface_id=id_interface)
-#         server_object.delete()
-#         # config_server_interface=return_interfaces_server()
-#         commandes=[
-#             '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
-#             # 'echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname),
-#              """cat <<EOF > /etc/default/isc-dhcp-server
-# {} 
-# EOF""".format('\n'.join(config_server_interface)),
-#             "systemctl restart dhcpd4.service"
-#         ]
-        
-#         for cmd in commandes:
-#             _, error = execute_cmd(cmd)
-#             # print(cmd,error)
-#             if error!="":
-#                 return error
-#     return True
+
         
 def retur_config_file(subnet_address,subnet_mask,ranges_from,ranges_to,dns_server,gateway,domain_name):
     """function to prepare config to write in file"""
@@ -229,3 +209,32 @@ def save_server_db(data,ranges_from,ranges_to,server_object):
         msg=customize_error_msg(serializer_server)
         status=400
     return msg,status
+def get_all_server_dhcp4(request):
+    """API to get all dhcp4 server from database """
+    if (request.method == 'GET'):
+        list_dhcp4_server=[]
+        # parse the incoming information
+        dhcp4_object=ServerDhcp4.objects.all()
+        dhcp4 = serializers.serialize("json", dhcp4_object)
+        res = json.loads(dhcp4)
+        print({"res":res})
+        for i in range(len(res)):
+            res[i]['fields']['id']=res[i]["pk"]
+            ranges_from=res[i]['fields']['range_from'].split(',') if res[i]['fields']['range_from'] is not None else None
+            ranges_to=res[i]['fields']['range_to'].split(',') if res[i]['fields']['range_to'] is not None else None
+            ranges_address=[]
+            if ranges_from is not None :
+                for j in range(len(ranges_from)):
+                    ranges_address.append({"range_from":ranges_from[j] , "range_to":ranges_to[j]})
+            
+            res[i]['fields']['ranges_address']=ranges_address
+            res[i]['fields'].pop("range_from") if "range_from" in res[i]['fields']  else ""
+            res[i]['fields'].pop("range_to") if "range_tos" in res[i]['fields']  else ""
+            list_dns=res[i]['fields']['dns_server'].split(',') if res[i]['fields']['dns_server'] is not None else None
+            list_dns=[x.strip() for x in list_dns ] if list_dns is not None else None
+            res[i]['fields']['dns_server']=list_dns
+            
+            res[i]['fields']['name_interface']=Interface.objects.get(id=res[i]['fields']['interface']).name_interface
+            list_dhcp4_server.append(res[i]['fields'])
+            print(list_dhcp4_server)
+    return list_dhcp4_server

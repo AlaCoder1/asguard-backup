@@ -4,7 +4,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 from django.core import serializers
 from backend.network.models import Interface
-from backend.server_dhcp4.functions import create_dhcpv4_db, customize_error_msg, delete_dhcp4_server, init_file_dhcp4, is_ip_in_range, parse_range_address, parse_server_info, prepare_conf_server, retur_config_file, save_config_in_system, save_server_db
+from backend.server_dhcp4.functions import  customize_error_msg, delete_dhcp4_server, init_file_dhcp4, is_ip_in_range, parse_range_address, parse_server_info, prepare_conf_server, retur_config_file, save_config_in_system, save_server_db
 from django.db.models import Q
 from backend.server_dhcp4.models import ServerDhcp4
 from backend.server_dhcp4.serializers import DHCP4ServerSerializer

@@ -4,7 +4,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 from django.core import serializers
 from backend.network.models import Interface
-from backend.server_dhcp4.functions import create_dhcpv4_db, customize_error_msg, delete_dhcp4_server, init_file_dhcp4, is_ip_in_range, parse_range_address, parse_server_info, prepare_conf_server, retur_config_file, save_config_in_system, save_server_db
+from backend.server_dhcp4.functions import  customize_error_msg, delete_dhcp4_server, init_file_dhcp4, is_ip_in_range, parse_range_address, parse_server_info, prepare_conf_server, retur_config_file, save_config_in_system, save_server_db
 from django.db.models import Q
 from backend.server_dhcp4.models import ServerDhcp4
 from backend.server_dhcp4.serializers import DHCP4ServerSerializer
@@ -66,7 +66,7 @@ def update_config_dhcp4_server(request,id_server):
         data_input=request.data
         ##parse data 
         available_range,ranges_from,ranges_to=parse_range_address(data_input)
-        if is_ip_in_range(ranges_from,ranges_to, available_range) is True:
+        if is_ip_in_range(ranges_from,ranges_to, available_range,data_input['subnet_addr'],data_input['subnet_mask']) is True:
             data=parse_server_info(data_input)
             if ServerDhcp4.objects.filter(id=id_server).exists() and data['enable_dhcpv4'] is True :
                 server_object=ServerDhcp4.objects.get(id=id_server)

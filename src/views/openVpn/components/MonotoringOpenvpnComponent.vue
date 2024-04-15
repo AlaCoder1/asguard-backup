@@ -1,6 +1,6 @@
 <template>
   <div class="mt-3">
-    <v-dialog v-model="state.modal" persistent class="mx-auto" width="450">
+    <!-- <v-dialog v-model="state.modal" persistent class="mx-auto" width="450">
       <v-card color="#193286" class="ml-16 mr-16 mx-auto">
         <v-card-text>
           <v-select
@@ -40,16 +40,30 @@
           </div>
         </v-card-text>
       </v-card>
-    </v-dialog>
-    <div class="d-flex justify-end mr-1 mt-0" v-if="!state.modal">
+    </v-dialog> -->
+    <!-- <div class="d-flex justify-end mr-1 mt-0" v-if="!state.modal">
       <i
         class="mdi mdi-server-network"
         style="color: #213e9f; font-size: 30px; cursor: pointer; padding: 10px"
         @click="state.modal = true"
         title="Choose Server"
       ></i>
-    </div>
-    <v-row>
+    </div> -->
+    <v-row class="ml-1">
+      <v-col cols="2">
+        <v-select
+          label="Choose Server"
+          density="compact"
+          v-model="state.server"
+          item-title="name"
+          item-value="id"
+          return-object
+          :items="state.serverList"
+          @update:modelValue="serve"
+        ></v-select>
+      </v-col>
+    </v-row>
+    <v-row class="mt-n5">
       <v-col cols="7">
         <div class="ml-3 mr-3">
           <v-row class="mt-0 mb-5">
@@ -57,13 +71,27 @@
           </v-row>
           <v-row class="mt-2 mb-10">
             <v-col cols="6">
-              <apexchart
-                ref="apexChart"
-                id="top-trafic-chart"
-                type="bar"
-                :options="state.chartOptions"
-                :series="state.chartOptions.series"
-              />
+              <v-card-title> Top Traffic </v-card-title>
+              <v-card-item>
+                <apexchart
+                  ref="apexChart"
+                  id="top-trafic-chart"
+                  type="bar"
+                  :options="state.chartOptions"
+                  :series="state.chartOptions.series"
+                />
+              </v-card-item>
+            </v-col>
+            <v-col cols="6">
+              <v-card elevation="0">
+                <v-card-title> Traffic distribution </v-card-title>
+                <v-card-item>
+                  <apexchart
+                    :options="state.chartOptionsPie"
+                    :series="state.chartOptionsPie.series"
+                  ></apexchart>
+                </v-card-item>
+              </v-card>
             </v-col>
             <!-- <v-col cols="6">
               <apexchart
@@ -74,12 +102,15 @@
               />
             </v-col> -->
             <v-col cols="12">
-              <apexchart
-                ref="apexChartNetwork"
-                height="350"
-                :options="state.chartOptionsNetwork"
-                :series="state.chartOptionsNetwork.series"
-              ></apexchart>
+              <v-card-title> Top 2 Client Network Activity </v-card-title>
+              <v-card-item>
+                <apexchart
+                  ref="apexChartNetwork"
+                  height="350"
+                  :options="state.chartOptionsNetwork"
+                  :series="state.chartOptionsNetwork.series"
+                ></apexchart>
+              </v-card-item>
             </v-col>
           </v-row>
         </div>
@@ -101,11 +132,7 @@
 </template>
 
 <script>
-import {
-  reactive,
-  onMounted,
-  ref
-} from "vue";
+import { reactive, onMounted, ref } from "vue";
 import monitoringCards from "./monitoringCards.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VueApexCharts from "vue3-apexcharts";
@@ -131,7 +158,7 @@ export default {
       dataChart: null,
       chartOptions: {
         chart: {
-          height: 350,
+          height: "250px",
           type: "bar",
           zoom: {
             enabled: false,
@@ -140,8 +167,9 @@ export default {
         colors: ["#008FFB", "#00E396", "#FEB019", "#FF4560", "#775DD0"],
         plotOptions: {
           bar: {
-            columnWidth: "45%",
+            columnWidth: "70%",
             distributed: true,
+            width: "10%",
           },
         },
         legend: {
@@ -178,6 +206,35 @@ export default {
           {
             name: "",
             data: [],
+          },
+        ],
+      },
+
+      chartOptionsPie: {
+        series: [44, 55, 13, 43, 22],
+        chart: {
+          width: 380,
+          type: "donut",
+        },
+        labels: ["Team A", "Team B", "Team C", "Team D", "Team E"],
+        responsive: [
+          {
+            breakpoint: 480,
+            options: {
+              chart: {
+                width: 200,
+              },
+             
+              style: {
+                fontSize: "10px",
+                fontFamily: "DM sans",
+                fontWeight: "light",
+              },
+              legend: {
+                position: "bottom",
+              },
+            
+            },
           },
         ],
       },
@@ -285,7 +342,6 @@ export default {
 
     onMounted(async () => {
       getAllListServer();
-      state.modal = true;
     });
 
     const onGridReady = (params) => {

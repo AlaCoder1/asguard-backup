@@ -87,3 +87,9 @@ python manage.py init_rules_nat
 
 #### IPsec start
 python manage.py start_ipsec
+
+#### Routing
+python manage.py init_routing
+
+#### WAF
+python manage.py init_waf_config

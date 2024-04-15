@@ -5,18 +5,19 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              Create New Server</span
+              {{$t("modal.create")}} {{$t("agGrid.server")}}</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              Update Server</span
+              {{$t("modal.update")}} {{$t("agGrid.server")}}</span
             >
+            
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Enter name"
+                    :label="$t('PageGeneral.ServerName')"
                     v-model="state.name"
                   ></v-text-field>
 
@@ -26,7 +27,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Enter Hostname or IP @ (url)"
+                    :label="$t('PageGeneral.IPAddress')"
                     v-model="state.hostIp"
                   ></v-text-field>
 
@@ -36,7 +37,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Search Base"
+                   :label="$t('PageGeneral.SearchBase')"
                     v-model="state.searchBase"
                   ></v-text-field>
 
@@ -54,9 +55,22 @@
                     {{ v$.port.$errors[0].$message }}
                   </p>
                 </v-col>
+                <v-col cols="12" class="mb-n6">
+                  <v-select
+                    v-model="state.serverType"
+                    :label="$t('PageGeneral.ServerType')"
+                    item-title="name"
+                    item-value="slug"
+                    return-object
+                    :items="state.listServers"
+                  />
+                  <p class="error-feedback mb-5" v-if="v$.serverType.$error">
+                    {{ v$.serverType.$errors[0].$message }}
+                  </p>
+                </v-col>
                 <v-col cols="6" class="mb-n6">
                   <v-text-field
-                    label="User DN"
+                    :label="$t('PageGeneral.UserDN')"
                     v-model="state.userDn"
                   ></v-text-field>
 
@@ -66,7 +80,7 @@
                 </v-col>
                 <v-col cols="6" class="mb-n6">
                   <v-text-field
-                    label="Password "
+                    :label="$t('form.password')"
                     v-model="state.password"
                     :append-inner-icon="state.show1 ? 'mdi-eye' : 'mdi-eye-off'"
                     prepend-inner-icon="mdi-lock-outline"
@@ -80,11 +94,11 @@
                 </v-col>
 
                 <v-col cols="7" align-self="center">
-                  <label>TLS/ SSL encryption (chiffrement)</label>
+                  <label>{{$t('ldap.TLS')}}</label>
                 </v-col>
                 <v-col cols="5" class="mb-n6">
                   <input type="checkbox" v-model="state.activateStatus" />
-                  <label class="ml-2"> Active ecnryption</label>
+                  <label class="ml-2">{{$t('ldap.Activateecnryption')}}</label>
                 </v-col>
               </v-row>
             </v-container>
@@ -102,7 +116,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
+              <span class="text-white pr-3 pl-3">{{ modalMode === 'create' ? $t("buttons.create") : $t("buttons.update") }}</span>
             </v-btn>
             <v-btn
               color="indigo-darken-3"
@@ -116,7 +130,7 @@
               class="mt-3 btn-add"
             >
               <span class="pr-3 pl-3 text-white" style="color: #213e9f"
-                >Close</span
+                >{{$t('buttons.close')}}</span
               >
             </v-btn>
           </v-card-actions>
@@ -163,6 +177,13 @@ export default {
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      listServers: [
+        {
+          slug: "ad",
+          name: "AD",
+        },
+        { slug: "openldap", name: "Open Ldap" },
+      ],
       id: null,
       show1: "",
       name: "",
@@ -171,6 +192,7 @@ export default {
       userDn: "",
       searchBase: "",
       password: "",
+      serverType: "",
       activateStatus: false,
     });
 
@@ -189,7 +211,7 @@ export default {
     watch(
       () => modalMode.value,
       () => {
-        if (modalMode.value === "create") {
+        if (modalMode.value === "create"){
           state.name = "";
           state.hostIp = "";
           state.port = "";
@@ -210,10 +232,16 @@ export default {
         state.searchBase = data.search_base;
         state.password = "";
         state.activateStatus = data.ssl_tls_activation;
+
+        let filtredServerType = state.listServers.filter(
+          (i) => i.slug === data?.server_type
+        );
+        state.serverType = filtredServerType[0];
       }
     };
 
     const closeModal = () => {
+      v$.value.$reset();
       emitter.emit("closeServerModal");
       if (modalMode.value === "create") {
         state.name = "";
@@ -239,6 +267,7 @@ export default {
           bind_user_dn: state.userDn,
           bind_user_password: state.password,
           ssl_tls_activation: state.activateStatus,
+          server_type: state.serverType?.slug,
         };
         if (modalMode.value === "edit") {
           axios
@@ -286,6 +315,7 @@ export default {
     const rules = computed(() => {
       return {
         name: { required },
+        serverType: { required },
         hostIp: {
           isValidHostIp: helpers.withMessage(
             `Format must be like adresse IP : X.X.X.X`,

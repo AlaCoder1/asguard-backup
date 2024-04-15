@@ -31,6 +31,9 @@ from backend.sdwan.list_area import get_list_all_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
 from backend.subscription.models import plan, plansSubscription,plansFeatures
 import ruamel.yaml
+from backend.settings.models import *
+from collections import defaultdict
+from views.functions import get_vlan, get_vlan_interface
 
 from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
@@ -341,10 +344,13 @@ def get_informations_by_interface(request,name_interface):
             resultat[0]['fields']['addrgw']=""
             ### get gateway4 from table intermediaire
             if GatewayInterface.objects.filter(Q(interface=interface_object.id)& Q(ipv4_gw_interface=True)).exists():
-                GatewayInterfaceObject=GatewayInterface.objects.get(Q(interface=interface_object.id)& Q(ipv4_gw_interface=True))
-                gateway_id=GatewayInterfaceObject.gateway_id
-                addrgw4=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=True)).gwaddress
-                resultat[0]['fields']['addrgw']=addrgw4
+                list_gateway=[]
+                GatewayInterfaceObject=GatewayInterface.objects.filter(Q(interface=interface_object.id)& Q(ipv4_gw_interface=True))
+                for gateway_interface in GatewayInterfaceObject:
+                    gateway_id=gateway_interface.gateway_id
+                    addrgw4=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=True)).gwaddress
+                    list_gateway.append(addrgw4)                
+                resultat[0]['fields']['addrgw']=' , '.join(list_gateway) if len(list_gateway)>0 else list_gateway[0]
             info['IPV4Config']=resultat[0]['fields']
         else:
             info['IPV4Config']=[]
@@ -545,6 +551,14 @@ def sdwan_page(request):
     return render(request, 'sdwan_page.html',context)
 
 @login_required(login_url='/')
+def waf_page(request):
+    return render(request, 'waf_page.html')
+
+@login_required(login_url='/')
+def profile_page(request):
+    return render(request, 'profile_page.html')
+
+@login_required(login_url='/')
 def clamav_page(request):
     config= getclamavconfigurations()
     # context = {'config':config}
@@ -666,6 +680,7 @@ def vlan_page(request):
 
 @login_required(login_url='/')
 def routing_page(request):
+
     listAllRouting = get_list_all_routing()
     listAllGateway=get_list_all_gateway()
     context = {'listAllRouting':listAllRouting,'listAllGateway':listAllGateway}
@@ -684,3 +699,65 @@ def server_dhcp4_page(request):
     list_dhcp4_server=get_all_server_dhcp4(request)
     context = {'list_dhcp4_server':list_dhcp4_server}
     return render(request, 'dhcp4_server.html',context)
+
+################## generale information ##################
+
+def get_generale_settings(request,id):
+    """get information system from database"""
+    if (request.method == 'GET'):
+        system_object = System.objects.get(id=id)
+        time_zone = Timezone.objects.get(name = system_object.time_zone.name)
+        system_dict = {
+            "hostname":system_object.hostname,
+            "domaine":system_object.domaine,
+            "time_zone":{
+                "name" :time_zone.name,
+                "id":time_zone.pk
+            }
+        }
+        return system_dict
+    
+def time_zones(request):
+    """get list of all time zone"""
+    list_timezones=[]
+    if (request.method == 'GET'):
+        timezones=Timezone.objects.all()
+        timezonesDict = serializers.serialize("json", timezones)
+        res = json.loads(timezonesDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_timezones.append(res[i]['fields'])
+        return list_timezones
+    
+def gatways_information(request):
+    """get all gateways informations"""
+    gatways_information=[]
+    if (request.method == 'GET'):
+        gateway=GatewayInterface.objects.all()
+        gatewayDict = serializers.serialize("json", gateway)
+        res = json.loads(gatewayDict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            gatways_information.append(res[i]['fields'])
+        
+        output_data = defaultdict(list)
+        for item in gatways_information:
+            gateway = item["gateway"]
+            fetch_gateway = Gateway.objects.get(id = gateway)
+            del item["gateway"]
+            output_data[gateway].append(item)
+        output_data = [
+            {
+                "gateway": {"id": gateway, "address": fetch_gateway.gwaddress},
+                "info": info
+            } for gateway, info in output_data.items()
+        ]
+        return JsonResponse({"gatways_information": output_data})
+    
+################## generale information ##################

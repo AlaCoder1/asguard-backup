@@ -122,27 +122,34 @@ def createUser(request):
                         ldap_conn = ldap.initialize(ldap_uri)
                         ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
                         
-                        # Retrieve user details from AD
-                        result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(objectClass=user)", ['userPrincipalName'])
-                        user_principal_names = [
-                            entry[1].get('userPrincipalName', [])[0].decode('utf-8')
-                            for entry in result
-                            if 'userPrincipalName' in entry[1]
-                        ]
-                       
-                        # Check if the email exists in the list of userPrincipalNames
-                        if email.lower() in [user.lower() for user in user_principal_names]:
-                            email_founded=True
+                        result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
+                        print('result',result)
+                         # get the list of users email from AD server 
+                        user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
+                         # get the list of users email from openldap server 
+                        user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
+                        
+                        
+                        if email.lower() in [user.lower() for user in user_principal_names] :
+                            email_founded = True
+                            data['dn_user'] = None
 
+                        if email.lower() in [user.lower() for user in user_emails]: 
+                            email_founded = True
+                            for entry in result:
+                                entry_email = entry[1].get('mail', [''])[0].decode('utf-8').lower()
+                                if email.lower() == entry_email:
+                                    data['dn_user'] = entry[0]
+                                    
+                                    break   
                         # Close LDAP connection
-                       
                         ldap_conn.unbind()
                     else:
-                        return JsonResponse({'msg': "please verify you password of Ldap server"},status=400)   
+                        return JsonResponse({'msg': "please verify you password of directory server"},status=400)   
                 except ldap.LDAPError as e:
-                    return JsonResponse({'msg': "Error connecting to Active Directory"},status=400)  
+                    return JsonResponse({'msg': "Error connecting to directory server"},status=400)  
             else:    
-                    return JsonResponse({'msg': "This AD Server is not Exist"},status=400)  
+                    return JsonResponse({'msg': "This directory server is not Exist"},status=400)  
         exist_email = User.objects.filter(email=email).exists()
         print({"exist_email":exist_email})
         if User.objects.filter(email=email).exists():
@@ -159,7 +166,7 @@ def createUser(request):
                 if error_useradd == '':
                     addMailSpool(username)
                     if email_founded:
-                        msg = username + " added successfully with their email in AD"
+                        msg = username + " added successfully with their email in directory server"
                         data['id_server_id']= ad_server.id
                     else:
                         msg = username + " added successfully with simple System email "
@@ -215,7 +222,9 @@ def createUser(request):
                         # Provide a Json Response with the necessary error information
                         return JsonResponse(serializerUser.errors, status=400)
                 else:
-                    return JsonResponse({"msg": error_useradd}, status=400)
+                    error_msg = error_useradd.strip()
+                    modified_error_msg = " " + error_msg.replace("useradd: ", "")
+                    return JsonResponse({"msg": modified_error_msg}, status=400)
             else:
                 msg = "invalid password"
                 return JsonResponse({"msg": msg}, status=201)
@@ -274,7 +283,7 @@ def modifyUser(request, id):
         data = request.data
         newusername = data['username']
         newfullname = data['fullname']
-        
+        data['dn_user'] = None
         email_founded=False
         if data['password_ad'] != "":
             id_server = data['id_server']
@@ -286,24 +295,34 @@ def modifyUser(request, id):
                     ldap_conn = ldap.initialize(ldap_uri)
                     ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
                     
-                    # Retrieve user details from AD
-                    result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(objectClass=user)", ['userPrincipalName'])
-                    user_principal_names = [
-                        entry[1].get('userPrincipalName', [])[0].decode('utf-8')
-                        for entry in result
-                        if 'userPrincipalName' in entry[1]
-                    ]
+                   
+                    result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
+                         # get the list of users email from AD server 
+                    user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
+                         # get the list of users email from openldap server 
+                    user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
+                        
 
-                    # Check if the email exists in the list of userPrincipalNames
                     if data['email'].lower() in [user.lower() for user in user_principal_names]:
                         newmail = data['email']
                         email_founded=True
-                    # Close LDAP connection
+                        
+
+                    if data['email'].lower() in [user.lower() for user in user_emails]:
+                        newmail = data['email']
+                        email_founded=True
+                        for entry in result:
+                                entry_email = entry[1].get('mail', [''])[0].decode('utf-8').lower()
+                                if data['email'].lower() == entry_email:
+                                    data['dn_user'] = entry[0]
+                                    
+                                    break   
+                 
                     ldap_conn.unbind()
                 else:
-                    return JsonResponse({'msg': "please verify you password of Ldap server"},status=400)   
+                    return JsonResponse({'msg': "please verify you password of directory server"},status=400)   
             except ldap.LDAPError as e:
-                return JsonResponse({'msg': "Error connecting to Active Directory"},status=400)  
+                return JsonResponse({'msg': "Error connecting to directory server"},status=400)  
         newmail = data['email']
         newrole = data['role']
         userObject = User.objects.get(id=id)
@@ -333,6 +352,7 @@ def modifyUser(request, id):
                 userObject.fullname = newfullname
                 userObject.email = newmail
                 userObject.role = newrole
+                userObject.dn_user=data['dn_user']
                 if email_founded:
                     userObject.id_server=ad_server
                 else:

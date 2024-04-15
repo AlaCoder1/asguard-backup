@@ -49,11 +49,24 @@ def get_all_server_dhcp4(request):
         dhcp4_object=ServerDhcp4.objects.all()
         dhcp4 = serializers.serialize("json", dhcp4_object)
         res = json.loads(dhcp4)
+        print({"res":res})
         for i in range(len(res)):
             res[i]['fields']['id']=res[i]["pk"]
-            res[i]['fields']['range_from']=res[i]['fields']['range_from'].split(',') if res[i]['fields']['range_from'] is not None else None
-            res[i]['fields']['range_to']=res[i]['fields']['range_to'].split(',') if res[i]['fields']['range_to'] is not None else None
-            res[i]['fields']['dns_server']=res[i]['fields']['dns_server'].split(',') if res[i]['fields']['dns_server'] is not None else None
+            ranges_from=res[i]['fields']['range_from'].split(',') if res[i]['fields']['range_from'] is not None else None
+            ranges_to=res[i]['fields']['range_to'].split(',') if res[i]['fields']['range_to'] is not None else None
+            ranges_address=[]
+            if ranges_from is not None :
+                for j in range(len(ranges_from)):
+                    ranges_address.append({"range_from":ranges_from[j] , "range_to":ranges_to[j]})
+            
+            res[i]['fields']['ranges_address']=ranges_address
+            res[i]['fields'].pop("range_from") if "range_from" in res[i]['fields']  else ""
+            res[i]['fields'].pop("range_to") if "range_tos" in res[i]['fields']  else ""
+            list_dns=res[i]['fields']['dns_server'].split(',') if res[i]['fields']['dns_server'] is not None else None
+            list_dns=[x.strip() for x in list_dns ] if list_dns is not None else None
+            res[i]['fields']['dns_server']=list_dns
+            
             res[i]['fields']['name_interface']=Interface.objects.get(id=res[i]['fields']['interface']).name_interface
             list_dhcp4_server.append(res[i]['fields'])
+            print(list_dhcp4_server)
     return list_dhcp4_server

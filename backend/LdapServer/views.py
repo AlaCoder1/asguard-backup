@@ -158,7 +158,7 @@ def updateLdapServer(request,id):
                 msg = "Update directory Server Successfully!!"
                 status_code= 200
             elif 'msg' in result:
-                msg = "Credentiels invalide to connect directory server "  
+                msg = result['msg'] 
                 status_code= 400
     return JsonResponse({"msg":msg},status=status_code)      
 

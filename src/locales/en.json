@@ -39,8 +39,8 @@
 
   "ldap":{
     "ActivateLdap":"Activate  LDAP",
-    "TLS":"TLS/SSL encryption",
-    "Activateecnryption":"Activate ecnryption"
+    "TLS":"SSL/TLS encryption",
+    "Activateecnryption":"Activate encryption"
   },
 
   "errors":{
@@ -112,7 +112,11 @@
 
   "delete":{
     "DeleteConfirmation":"Delete Confirmation",
-    "question":"Are you sure you want to delete this user?"
+    "questionuser": "Are you sure you want to delete this user?",
+    "questiongroup": "Are you sure you want to delete this group?",
+    "questionserver": "Are you sure you want to delete this server?",
+    "questioncertif": "Are you sure you want to delete this authority?",
+    "questioncertificat": "Are you sure you want to delete this certificate?"
  
   },
      
@@ -315,5 +319,20 @@
       "PrefixIDIPv6": "IPv6 Prefix ID",
       "ManualConfiguration": "Manual Configuration",
       "AlowManualAdjustmentOfDHCPv6AndRouterAdvertisements": "Allow Manual Adjustment of DHCPv6 and Router Advertisements"
+    },
+    
+    "PageIpsec":{
+      "title":"Phase 1: General Information",
+      "section":"Phase 2 : General Information",
+      "Tunnelsettingsname":"Tunnel settings name",
+      "Connectionmethod":"Connection method",
+      "pardefaut":"default",
+      "keyechange":"Key Exchange version",
+      "internetprotocole":"Internet Protocol",
+      "remotegateway":"Remote gateway",
+      "dynamiquepassrelle":"Dynamic gateway",
+      "allowgateway":" Allow any remote gateway to connect",
+      "localnetwork":"Local Network",
+      "Address":"Address"
     }
   }

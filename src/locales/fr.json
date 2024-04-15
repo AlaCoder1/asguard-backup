@@ -326,5 +326,21 @@
       "PrefixIDIPv6": "ID de préfixe IPv6",
       "ManualConfiguration": "Configuration manuelle",
       "AlowManualAdjustmentOfDHCPv6AndRouterAdvertisements": "Autoriser l'ajustement manuel des annonces DHCPv6 et des routeurs"
+    },
+
+    "PageIpsec":{
+      "title":"Phase 1 : Informations générales",
+      "section":"Phase 2 : Informations générales",
+      "Tunnelsettingsname":"Nom des paramètres du tunnel",
+      "Connectionmethod":"Méthode de connexion",
+      "pardefaut":"par défaut",
+      "keyechange":"Version d'échange de clés",
+      "internetprotocole":"Protocole Internet",
+      "remotegateway":"Passerelle distante",
+      "dynamiquepassrelle":"Passerelle dynamique",
+      "allowgateway":"Autoriser n'importe quelle passerelle distante à se connecter.",
+      "localnetwork":"Réseau Local",
+      "Address":"Adresse"
+      
     }
   }

@@ -58,6 +58,9 @@
 /backend/sdwan/__pycache__/
 /backend/sdwan/migrations/__pycache__/
 
+/backend/server_dhcp4/migrations/__pycache__/
+/backend/server_dhcp4/__pycache__/
+
 /backend/settings/__pycache__/
 /backend/settings/migrations/__pycache__/
 
@@ -74,9 +77,8 @@
 /backend/vlan/migrations/__pycache__/
 /backend/vlan/__pycache__/
 
-
-/backend/server_dhcp4/migrations/__pycache__/
-/backend/server_dhcp4/__pycache__/
+/backend/waf/migrations/__pycache__/
+/backend/waf/__pycache__/
 
 /node_modules/
 

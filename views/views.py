@@ -344,10 +344,13 @@ def get_informations_by_interface(request,name_interface):
             resultat[0]['fields']['addrgw']=""
             ### get gateway4 from table intermediaire
             if GatewayInterface.objects.filter(Q(interface=interface_object.id)& Q(ipv4_gw_interface=True)).exists():
-                GatewayInterfaceObject=GatewayInterface.objects.get(Q(interface=interface_object.id)& Q(ipv4_gw_interface=True))
-                gateway_id=GatewayInterfaceObject.gateway_id
-                addrgw4=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=True)).gwaddress
-                resultat[0]['fields']['addrgw']=addrgw4
+                list_gateway=[]
+                GatewayInterfaceObject=GatewayInterface.objects.filter(Q(interface=interface_object.id)& Q(ipv4_gw_interface=True))
+                for gateway_interface in GatewayInterfaceObject:
+                    gateway_id=gateway_interface.gateway_id
+                    addrgw4=Gateway.objects.get(Q(id=gateway_id) & Q(ipv4_gw=True)).gwaddress
+                    list_gateway.append(addrgw4)                
+                resultat[0]['fields']['addrgw']=' , '.join(list_gateway) if len(list_gateway)>0 else list_gateway[0]
             info['IPV4Config']=resultat[0]['fields']
         else:
             info['IPV4Config']=[]
@@ -550,6 +553,10 @@ def sdwan_page(request):
 @login_required(login_url='/')
 def waf_page(request):
     return render(request, 'waf_page.html')
+
+@login_required(login_url='/')
+def profile_page(request):
+    return render(request, 'profile_page.html')
 
 @login_required(login_url='/')
 def clamav_page(request):

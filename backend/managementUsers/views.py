@@ -1,41 +1,21 @@
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from .models import *
-from django.views.decorators.csrf import csrf_protect
-
 from .serializers import *
+from .functions import *
 from backend.managementGroup.serializers import *
 from backend.managementGroup.views import *
-from backend.subscription.views import *
-# Version without SSh connection
-from .functions import *
 from backend.managementGroup.functions import *
-# end Version without SSh connection
-# Version SSh connection
-# from .remoteFunctions import *
-# end Version SSh connection
+from backend.subscription.views import *
 import json
-from rest_framework.parsers import JSONParser
 from django.core import serializers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.hashers import make_password
-from django.conf import settings
-from django.views.decorators.csrf import csrf_exempt
-import requests
 from backend.LdapServer.models import ADServer
-from backend.LdapServer.serializers import ADServerSerializer
-from rest_framework.response import Response
-from rest_framework.authtoken.models import Token
 import ldap
-
 from drf_yasg.utils import swagger_auto_schema
-import ast
-
-
-
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF Users",
@@ -46,6 +26,7 @@ import ast
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def getAllUsers(request):
+    """Get all users from database"""
     list_users = []
     if (request.method == 'GET'):
         users = User.objects.all()
@@ -62,18 +43,15 @@ def getAllUsers(request):
         return list_users
         #return JsonResponse(list_users, safe=False)
 
-
-
-
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET USER BY ID",
                      operation_description="API TO GET USER BY ID",)
 
-# API to get one user
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def getUser(request, id):
+    """Get user  by ID from database"""
     if (request.method == 'GET'):
         user = User.objects.filter(id=id)
         userDict = serializers.serialize("json", user)
@@ -84,23 +62,17 @@ def getUser(request, id):
         res[0]['fields'].pop('password')
         res[0]['fields']['id'] = id
         userJson = res[0]['fields']
-        # return a no content response.
         return JsonResponse(userJson)
-
-
-# API to create user
-
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO Create New USER",
                      operation_description="API TO Create New USER",)
 
-
-
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def createUser(request):
+    """Create user"""
     msg = ''
     email_founded = False
     if request.method == 'POST':
@@ -123,12 +95,10 @@ def createUser(request):
                         ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
                         
                         result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
-                        print('result',result)
                          # get the list of users email from AD server 
                         user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
                          # get the list of users email from openldap server 
                         user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
-                        
                         
                         if email.lower() in [user.lower() for user in user_principal_names] :
                             email_founded = True
@@ -151,17 +121,12 @@ def createUser(request):
             else:    
                     return JsonResponse({'msg': "This directory server is not Exist"},status=400)  
         exist_email = User.objects.filter(email=email).exists()
-        print({"exist_email":exist_email})
         if User.objects.filter(email=email).exists():
             return JsonResponse({"msg": "email allready exist"}, status=400)
         else:
             if validInput(username) and validPassword(password):
                 # Execute the command on the remote machine
                 error_useradd, stdout_password, stderr_password  = addUser(username, password)
-                print({"error_useradd":error_useradd})
-                print({"stdout_password": stdout_password.decode('utf-8')})
-                print({"stderr_password": stderr_password.decode('utf-8')})
-
                 # Convert the stderr stream to a string
                 if error_useradd == '':
                     addMailSpool(username)
@@ -175,10 +140,8 @@ def createUser(request):
                     data['uid'] = uid
                     if 'group' in data:
                         groups = data['group']
-                        print({"groups": groups})
                         for i in range(0, len(groups)):
                             add_user_group(getGroupNameById(groups[i]), username)
-                        print({"data":data})
                         serializerUser = UserSerializerPost(data=data)
                         gid = getUidGroup()
                         groupname = {"groupname": username}
@@ -234,17 +197,17 @@ def createUser(request):
                      operation_summary="API TO DELETE USER",
                      operation_description="API TO DELETE USER",)
 
-# API to delete group
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_user(request, id):
+    """Delete group"""
     msg = ""
     if (request.method == 'DELETE'):
         user = User.objects.get(id=id)
         group = Group.objects.filter(groupname=user.username)
         print({"username":user.username})
         # # Execute the command on the remote machine
-        stdout, stderr = deleteUser(user.username)
+        _, stderr = deleteUser(user.username)
         # # convert the stderr stream to a string
         if stderr == "":
             user.delete()
@@ -272,7 +235,6 @@ def modifyUser(request, id):
         userById = User.objects.filter(id=id)
         userDict = serializers.serialize("json", userById)
         res = json.loads(userDict)
-        print(res)
         res[0].pop('model')
         id = res[0]['pk']
         res[0].pop('pk')
@@ -294,19 +256,15 @@ def modifyUser(request, id):
                     ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
                     ldap_conn = ldap.initialize(ldap_uri)
                     ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
-                    
-                   
                     result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
                          # get the list of users email from AD server 
                     user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
                          # get the list of users email from openldap server 
                     user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
-                        
 
                     if data['email'].lower() in [user.lower() for user in user_principal_names]:
                         newmail = data['email']
                         email_founded=True
-                        
 
                     if data['email'].lower() in [user.lower() for user in user_emails]:
                         newmail = data['email']
@@ -315,9 +273,7 @@ def modifyUser(request, id):
                                 entry_email = entry[1].get('mail', [''])[0].decode('utf-8').lower()
                                 if data['email'].lower() == entry_email:
                                     data['dn_user'] = entry[0]
-                                    
                                     break   
-                 
                     ldap_conn.unbind()
                 else:
                     return JsonResponse({'msg': "please verify you password of directory server"},status=400)   
@@ -327,12 +283,7 @@ def modifyUser(request, id):
         newrole = data['role']
         userObject = User.objects.get(id=id)
         user = userObject.__dict__
-        print({"user": user})
-        print({"userJson": userJson})
-        print({"userObject.username": userObject.username})
         user['group'] = userJson['group']
-       
-        # user['permission'] = userJson['permission']
         if validInput(newusername):
             if username_exists(newusername) and newusername != oldusername:
                 msg = f"username or email already Used."
@@ -375,9 +326,6 @@ def modifyUser(request, id):
         
         return JsonResponse({"data": data, "msg": msg})
 
-
-
-
 @swagger_auto_schema(
     method='PUT',
     request_body=UserSerializerGet,
@@ -385,16 +333,14 @@ def modifyUser(request, id):
     operation_summary="API TO UPDATE Change Password User By Admin",
     operation_description="This API help us to update User's password added By admin",
 )
-# API to change password user
-
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def changePasswordByAdmin(request, id):
+    """Change password user"""
     if (request.method == 'PUT'):
         userObject = User.objects.get(id=id)
-        print({'username': userObject.username})
         data = request.data
         # instanciate with the serializer
         serializer = UserSerializerGet()
@@ -406,10 +352,8 @@ def changePasswordByAdmin(request, id):
             return JsonResponse({"msg": "Passwords do not match. Please try again."})
         else:
             # run 'passwd' command to change password
-            stdout, stderr = changePW_byAdmin(
+            _, stderr = changePW_byAdmin(
                 new_password, userObject.username)
-            print({"stderr":stderr})
-            print({"stdout":stdout})
             # check if password change was successful
             if stderr == "":
                 userObject.password = make_password(new_password)
@@ -427,7 +371,6 @@ def changePasswordByAdmin(request, id):
     operation_summary="API TO UPDATE Change Password User ",
     operation_description="This API help us to update User's password added ",
 )
-
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -449,9 +392,7 @@ def changePassword(request, id):
                 print("Passwords do not match. Please try again.")
                 msg = "Passwords do not match. Please try again."
             else:
-                stdout, stderr = resetPW (userObject.username,new_password )
-                print({"str":stderr})
-                print({"std":stdout})
+                _, stderr = resetPW (userObject.username,new_password )
                 # check if password change was successful
                 if stderr == "":
                     userObject.password = make_password(new_password)
@@ -470,10 +411,6 @@ def changePassword(request, id):
             #     msg = 'Passwords do not match'
             #     status=400
             return JsonResponse({"msg": msg},status=status)
-
-
-
-
 
 @swagger_auto_schema(
     method='POST',

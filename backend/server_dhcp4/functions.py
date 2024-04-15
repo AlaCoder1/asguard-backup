@@ -6,7 +6,7 @@ from backend.server_dhcp4.models import ServerDhcp4
 from backend.server_dhcp4.serializers import DHCP4ServerSerializer
 from backend.vlan.functions import execute_cmd
 from django.db.models import Q
-
+from django.core import serializers
 
 def customize_error_msg(serializer):
     """function to custom error message serializer"""
@@ -37,15 +37,22 @@ def parse_server_info(data):
         "domain_name":domain_name,
         }
     return data_server
+def subnet_mask_to_cidr(subnet_mask):
+    octets = subnet_mask.split('.')
+    binary_mask = ''.join(format(int(octet), '08b') for octet in octets)
+    cidr = binary_mask.count('1')
+    return int(cidr)
 
-def is_ip_in_range(from_addrs,to_addrs, available_range):
+def is_ip_in_range(from_addrs,to_addrs, available_range,subnet_addr,subnet_mask):
     """function to test from address and to address in available range"""
+    network = ipaddress.IPv4Network((subnet_addr, subnet_mask), strict=False)
     for i in range(len(from_addrs)):
-        from_addr = ipaddress.ip_address(from_addrs[i])
-        to_addr = ipaddress.ip_address(to_addrs[i])
+        print(from_addrs[i])
+        from_addr = ipaddress.ip_address(from_addrs[i]) if ipaddress.ip_address(from_addrs[i]) else None
+        to_addr = ipaddress.ip_address(to_addrs[i]) if ipaddress.ip_address(to_addrs[i]) else None
         start_ip = ipaddress.ip_address(available_range.split("-")[0].strip())
         end_ip = ipaddress.ip_address(available_range.split("-")[1].strip())
-        if start_ip <= from_addr <= end_ip and start_ip <= to_addr <= end_ip is False:
+        if start_ip is None or start_ip is None or (start_ip <= from_addr <= end_ip and start_ip <= to_addr <= end_ip is False) or from_addr not in network or to_addr not in network  :
             return False
     return True
 
@@ -95,7 +102,7 @@ def delete_dhcp4_server(id_interface,ifname):
         server_object=ServerDhcp4.objects.get(interface_id=id_interface)
         commandes=[
             '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
-            "systemctl restart dhcpd4.service"
+            "systemctl restart --quiet dhcpd4.service"
         ]
         
         for cmd in commandes:
@@ -105,32 +112,12 @@ def delete_dhcp4_server(id_interface,ifname):
         server_object.delete()  
     return True
         
-# def delete_dhcp4_server(id_interface,ifname):
-#     """"delete server config from system and database """
-#     if ServerDhcp4.objects.filter(interface_id=id_interface).exists():
-#         server_object=ServerDhcp4.objects.get(interface_id=id_interface)
-#         server_object.delete()
-#         # config_server_interface=return_interfaces_server()
-#         commandes=[
-#             '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
-#             # 'echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname),
-#              """cat <<EOF > /etc/default/isc-dhcp-server
-# {} 
-# EOF""".format('\n'.join(config_server_interface)),
-#             "systemctl restart dhcpd4.service"
-#         ]
-        
-#         for cmd in commandes:
-#             _, error = execute_cmd(cmd)
-#             # print(cmd,error)
-#             if error!="":
-#                 return error
-#     return True
+
         
 def retur_config_file(subnet_address,subnet_mask,ranges_from,ranges_to,dns_server,gateway,domain_name):
     """function to prepare config to write in file"""
     list_config_server=[]
-    list_config_server+=[(f'option domain-name"{domain_name}";')if domain_name is not None else []]
+    list_config_server+=[(f'option domain-name"{domain_name}";')if domain_name is not None else None]
     list_config_server+=[
         'subnet ' + subnet_address + ' netmask ' + subnet_mask + ' {' if subnet_address is not None and subnet_mask is not None else None,]
     config_pool=''
@@ -147,7 +134,7 @@ def retur_config_file(subnet_address,subnet_mask,ranges_from,ranges_to,dns_serve
         list_config_server.append(f'option domain-name-servers {dns_server};')
     list_config_server+='}' 
     # print(list_config_server)
-    list_config_server=[x for x in list_config_server if x is not None]
+    list_config_server=[x for x in list_config_server if x is not None ]
     return list_config_server
     
 def init_file_dhcp4(ifname):
@@ -174,6 +161,7 @@ def return_interfaces_server():
     return config_server_interface
 
 def save_config_in_system(list_config,ifname):
+    print(list_config)
     """function to apply config on system"""
     config_server_interface=return_interfaces_server()
     commandes=[
@@ -183,7 +171,7 @@ EOF""".format(ifname,'\n'.join(list_config)),
     """cat <<EOF > /etc/default/isc-dhcp-server
 {} 
 EOF""".format('\n'.join(config_server_interface)),
-    "systemctl enable --quiet dhcpd4.service && systemctl restart dhcpd4.service"
+    "systemctl enable --quiet dhcpd4.service && systemctl restart  --quiet dhcpd4.service"
     ]
     for cmd in commandes:
         _, error = execute_cmd(cmd)
@@ -194,8 +182,14 @@ EOF""".format('\n'.join(config_server_interface)),
 def parse_range_address(data_input):
     """parse list of addresses """
     available_range=None if data_input.get('available_range', None) == "" else data_input.get('available_range', None)
-    ranges_from=[] if data_input.get('ranges_from', []) == "" else data_input.get('ranges_from', [])
-    ranges_to=[] if data_input.get('ranges_to', []) == "" else data_input.get('ranges_to', [])
+    ranges_address=[] if data_input.get("ranges_address",[]) == "" else data_input.get('ranges_address', [])
+    ranges_from=[]
+    ranges_to=[]
+    if len(ranges_address)>0:
+        for addr in ranges_address:
+            ranges_from.append(addr['range_from'])
+            ranges_to.append(addr['range_to'])
+        
     return available_range,ranges_from,ranges_to
 
 def save_server_db(data,ranges_from,ranges_to,server_object):
@@ -215,3 +209,32 @@ def save_server_db(data,ranges_from,ranges_to,server_object):
         msg=customize_error_msg(serializer_server)
         status=400
     return msg,status
+def get_all_server_dhcp4(request):
+    """API to get all dhcp4 server from database """
+    if (request.method == 'GET'):
+        list_dhcp4_server=[]
+        # parse the incoming information
+        dhcp4_object=ServerDhcp4.objects.all()
+        dhcp4 = serializers.serialize("json", dhcp4_object)
+        res = json.loads(dhcp4)
+        print({"res":res})
+        for i in range(len(res)):
+            res[i]['fields']['id']=res[i]["pk"]
+            ranges_from=res[i]['fields']['range_from'].split(',') if res[i]['fields']['range_from'] is not None else None
+            ranges_to=res[i]['fields']['range_to'].split(',') if res[i]['fields']['range_to'] is not None else None
+            ranges_address=[]
+            if ranges_from is not None :
+                for j in range(len(ranges_from)):
+                    ranges_address.append({"range_from":ranges_from[j] , "range_to":ranges_to[j]})
+            
+            res[i]['fields']['ranges_address']=ranges_address
+            res[i]['fields'].pop("range_from") if "range_from" in res[i]['fields']  else ""
+            res[i]['fields'].pop("range_to") if "range_tos" in res[i]['fields']  else ""
+            list_dns=res[i]['fields']['dns_server'].split(',') if res[i]['fields']['dns_server'] is not None else None
+            list_dns=[x.strip() for x in list_dns ] if list_dns is not None else None
+            res[i]['fields']['dns_server']=list_dns
+            
+            res[i]['fields']['name_interface']=Interface.objects.get(id=res[i]['fields']['interface']).name_interface
+            list_dhcp4_server.append(res[i]['fields'])
+            print(list_dhcp4_server)
+    return list_dhcp4_server

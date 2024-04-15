@@ -83,7 +83,7 @@
                 </v-col>
 
                 <v-col cols="12" class="mt-5">
-                  <label for="Activate" class="mr-3">Activate ldap</label>
+                  <label for="Activate" class="mr-3">{{$t("ldap.ActivateLdap")}}</label>
                   <input
                     type="checkbox"
                     id="Activate"
@@ -94,7 +94,7 @@
                   <v-col cols="12" class="mb-n5">
                     <v-select
                       v-model="state.formData.dnValue"
-                      label="DN"
+                      :label="$t('form.server')"
                       item-title="name"
                       item-value="id"
                       return-object
@@ -108,7 +108,7 @@
                   </v-col>
                   <v-col cols="12" class="mb-n5">
                     <v-text-field
-                      label="Passwrod AD"
+                      :label="$t('form.password')"
                       v-model="state.formData.passwordDN"
                       :append-inner-icon="
                         state.show1 ? 'mdi-eye' : 'mdi-eye-off'

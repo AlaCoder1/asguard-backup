@@ -1,91 +1,72 @@
 import grp
-import os
 import subprocess
-import sys
 import re
-
 from django.http import JsonResponse
 from .models import *
 
-# validation name of group and users (must content char and int)
-
 
 def validInput(var):
+    """Check if the input string contains only alphanumeric characters, hyphens, and underscores."""
     regexp = re.compile('[^0-9a-zA-Z-_]+')
     if regexp.search(var):
         return False
     else:
         return True
 
-# function to add group
-
-
 def addGroup(groupname):
+    """Add a new group to the system."""
     cmd = "groupadd " + groupname
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout.split("\n")
     error = completed_process.stderr
     return output,error
 
-
-# function to delete group
-
-
 def delete_group(groupname):
+    """DElete a group from the system."""
     cmd = "groupdel " + groupname
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout.split("\n")
     error = completed_process.stderr
     return output,error 
 
-# functio to change username
-
-
 def change_groupname(oldgroupname, Newgroupname):
+    """Change groupname in the system."""
     cmd = "groupmod -n " + Newgroupname + " "+oldgroupname
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout.split("\n")
     error = completed_process.stderr
     return output,error
-    # return os.system("groupmod -n " + Newgroupname + " "+oldgroupname)
-
-# function to get UID from system
 
 
 def getLastGroupName():
+    """Get the last groupname from the system."""
     return subprocess.run(["getent", "group"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[0]
 
-# function de get id group
-
-
 def getUidGroup():
+    """Get a Uuid group from the system."""
     return subprocess.run(["getent", "group"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
 
-# function to test if groupname exit
-
-
 def group_exists(group_name):
+    """Check if a group exists on the system."""
     try:
         grp.getgrnam(group_name)
         return True
     except KeyError:
         return False
 
-# function de get all groupname by id
-
-
 def getGroupNameById(pk):
+    """Get groupname from database."""
     group = Group.objects.get(id=pk)
     return str(group)
 
-# function to change groupname if groupname=username
 def change_groupname_username(oldgroupname, Newgroupname):
+    """Change groupname if groupname=username in the system."""
     msg = ''
     if group_exists(Newgroupname):
         msg = f"Username {Newgroupname} exists."
         return JsonResponse({"msg": msg})
     else:
-        stdout, stderr = change_groupname(oldgroupname, Newgroupname) 
+        _, stderr = change_groupname(oldgroupname, Newgroupname) 
         if stderr=='':
             reporter = Group.objects.get(groupname=oldgroupname)
             reporter.groupname = Newgroupname

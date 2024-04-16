@@ -30,7 +30,7 @@
     <v-card class="mx-auto">
       <v-card-item>
         <div class="title-card mb-4">Users</div>
-        <v-row class="mb-5">
+        <v-row class="mb-5 d-flex justify-center align-center">
           <v-col cols="6">
             <div class="text-h6 mb-1">
               <v-row>
@@ -50,7 +50,7 @@
             </div>
             <div class="text-caption">Active Users</div>
           </v-col>
-          <v-col cols="6">
+          <!-- <v-col cols="6">
             <div class="text-h6 mb-1">
               <v-row>
                 <v-col cols="2">
@@ -68,28 +68,19 @@
               </v-row>
             </div>
             <div class="text-caption">Active Devices</div>
-          </v-col>
+          </v-col> -->
         </v-row>
       </v-card-item>
     </v-card>
   </v-col>
-  <!-- <v-col cols="3">
-    <v-card class="mx-auto">
-      <v-card-item>
-        <div>
-          <div class="mb-3 title-card">Traffic distribution</div>
-          <div class="text-caption">client1</div>
-          <div class="text-caption">client2</div>
-          <div class="text-caption">client3</div>
-          <div class="text-caption">client4</div>
-        </div>
-      </v-card-item>
-    </v-card>
-  </v-col> -->
 </template>
 <script>
+import VueApexCharts from "vue3-apexcharts";
 import { watch, ref, reactive, toRefs } from "vue";
 export default {
+  components: {
+    apexchart: VueApexCharts,
+  },
   props: {
     dataChart: {
       type: Object,

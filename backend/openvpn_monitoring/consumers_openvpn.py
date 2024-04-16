@@ -4,8 +4,9 @@ import time
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
-from backend.dashboard.serializers import MonitoringDataSerializer
 from channels.db import database_sync_to_async
+from backend.openvpn_monitoring.models import VpnMonitoring
+from backend.openvpn_monitoring.serializers import VpnMonitoringSerializer
 from .functions_client import *
 import pyshark
 from django.core import serializers
@@ -26,9 +27,11 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         id_server = text_data_json['id']
         while True:
             data =await self.start_data_loop_openvpn(id_server)
-            # print(data)
+            # print(type(data))
+            print(data)
             await self.send(json.dumps(data))
-            asyncio.sleep(2)
+            await self.save_system_usage(data)
+            await asyncio.sleep(60)
  
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
@@ -37,23 +40,53 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         )
         logger.info('WebSocket connection for Global Chart closed with code: %s', close_code)
    
-    ##function to save in database asynchrononsly
-    # @database_sync_to_async
-    # def save_system_usage(self, data):
-    # # Create a serializer instance
-    #     Dashboardserializer = MonitoringDataSerializer(data=data)
-    #     # Check if the data is valid
-    #     if Dashboardserializer.is_valid():
-    #         # Check the count of existing entries
-    #         count = MonitoringData.objects.count()
-    #         # If the count exceeds 20, delete the oldest entry
-    #         if count >= 20:
-    #             # Find the record with the minimum timestamp and delete it
-    #             min_timestamp_record = MonitoringData.objects.order_by('timestamp').first()
-    #             if min_timestamp_record:
-    #                 min_timestamp_record.delete()
-    #         # Save the new data
-    #         Dashboardserializer.save()
+    #function to save in database asynchrononsly
+    @database_sync_to_async
+    def save_system_usage(self, data):
+        print(data)
+        data_server={
+           "address_server": data['address_server'] if 'address_server' in data else None,
+            "client_active": data['client_active'] if 'client_active' in data else None,
+            "capacity_server_in": data['capacity_server_in'] if 'capacity_server_in' in data else None,
+            "capacity_client_out": data['capacity_client_out'] if 'capacity_client_out' in data else None
+
+        }
+        data_client = [
+        {
+            "username": d['username'] if 'username' in d else None,
+            "login_time": d['login_time'] if 'login_time' in d else None,
+            "address": d['address'] if 'address' in d else None,
+            "bytes_recv": d['bytes_recv'] if 'bytes_recv' in d else None,
+            "bytes_sent": d['bytes_sent'] if 'bytes_sent' in d else None,
+            "total_traffic": d['total_traffic'] if 'total_traffic' in d else None,
+            "location": d['location'] if 'location' in d else None,
+            "traffic_distr": d['traffic_distr'] if 'traffic_distr' in d else None
+            }
+            for d in data['info_clients']
+                        ]
+        
+    # Create a serializer instance
+        dashboard_serializer = VpnMonitoringSerializer(data=data_server)
+        # Check if the data is valid
+        if dashboard_serializer.is_valid():
+            dashboard_serializer.save()
+            id_vpn=dashboard_serializer.id
+            for client in data_client:
+                client['vpnmonitor']=id_vpn
+                    
+                client_serializer = VpnMonitoringSerializer(data=client)
+                if client_serializer.is_valid():
+                    # Check the count of existing entries
+                    count = VpnMonitoring.objects.count()
+                    # If the count exceeds 20, delete the oldest entry
+                    if count >= 20:
+                        # Find the record with the minimum timestamp and delete it
+                        min_timestamp_record = VpnMonitoring.objects.order_by('timestamp').first()
+                        if min_timestamp_record:
+                            min_timestamp_record.delete()
+                    # Save the new data
+                    client_serializer.save()
+            
    
     ##function to convert bytes
     def convert_bytes(self,capture_size):
@@ -167,7 +200,6 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
                             }
                         for session in vpn['sessions'].values()
                         ]
-        # print({"info_client":info_clients})
         # Create a JSON object with the data
         data = {
             "address_server":address_server,
@@ -182,12 +214,4 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
            
         }
         return data
-           # Save the data to the database asynchronously
-            # await self.save_system_usage(data)
-            # Send the JSON data to the WebSocket client
-            # print({"data":data})
-            # self.send("hellooooo i am connected ")
-            # # # await self.delete_data()
-           
-            # # # Sleep for a while before sending the next data (adjust the interval as needed)
-            # asyncio.sleep(1)
+        

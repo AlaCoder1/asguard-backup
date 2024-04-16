@@ -3,25 +3,19 @@ from django.http import JsonResponse
 from .models import *
 from .serializers import *
 import json
-from rest_framework.parsers import JSONParser
 from rest_framework.authentication import SessionAuthentication
-# Version without SSh connection
 from .functions import *
-# end Version without SSh connection
-# Version SSh connection
-# from .remoteFunctions import *
-# end Version SSh connection
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
 # Create your views here.
 
 
-# API to get all groups
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getAllGroups(request):
+    """Get all group from database"""
     list_group = []
     if (request.method == 'GET'):
         groups = Group.objects.filter(created_by_system=0)
@@ -34,48 +28,39 @@ def getAllGroups(request):
             res[i]['fields'].pop('created_by_system')
             res[i]['fields']['id'] = id
             list_group.append(res[i]['fields'])
-        # return a Json response
         return JsonResponse(list_group, safe=False)
 
 
-# API to get one group
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def getGroup(request, id):
+    """Get group by ID"""
     if (request.method == 'GET'):
         group = Group.objects.get(id=id)
         groupDict = group.__dict__
         groupDict.pop("_state")
-        # return a no content response.
         return JsonResponse(groupDict)
 
-
-# API to create group
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
 def createGroup(request):
+    """Create a group"""
     msg = ''
     if (request.method == 'POST'):
-        # parse the incoming information
         data = request.data
         groupname = data['groupname']
         if (validInput(groupname)):
-            # Execute the command on the remote machine
-            stdout, stderr = addGroup(groupname)
+            _, stderr = addGroup(groupname)
             if stderr == "":
                 gid = getUidGroup()
                 data['gid'] = gid
                 serializer = GroupSerializer(data=data)
-                # check if the sent information is okay
                 if (serializer.is_valid()):
-                    # if okay, save it on the database
                     serializer.save()
                     msg = groupname+" added sucessfully"
-                    # provide a Json Response with the data that was saved
                     return JsonResponse({"msg": msg}, status=201)
-                # provide a Json Response with the necessary error information
                 return JsonResponse(serializer.errors, status=400)
             else:
                 msg = stderr
@@ -90,36 +75,27 @@ def createGroup(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def deleteGroup(request, id):
+    """Delete a group"""
     msg = ''
     if (request.method == 'DELETE'):
         group = Group.objects.get(id=id)
-        # Execute the command on the remote machine
-        stdout, stderr = delete_group(group.groupname)
+        _, stderr = delete_group(group.groupname)
         if stderr == "":
             group.delete()
             msg = "delete succesfully"
         else:
             msg = stderr
-        # return a no content response.
         return JsonResponse({"msg": msg})
-
-
-# API to update group
-def updateGroup(request, id):
-    return True
-
-# API to change groupname
-
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def changeGroupname(request, id):
+    """Change groupname in database"""
     msg = ''
     if (request.method == 'PUT'):
         group = Group.objects.get(id=id)
         groupDict = group.__dict__
-        # parse the incoming information
         data = request.data
         oldgroupname = groupDict['groupname']
         Newgroupname = data['Newgroupname']

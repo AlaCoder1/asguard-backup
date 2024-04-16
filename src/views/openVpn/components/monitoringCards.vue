@@ -1,34 +1,36 @@
 <template>
-  <v-col cols="4">
+  <v-col cols="6">
     <v-card class="mx-auto">
       <v-card-item>
         <v-row>
           <v-col cols="7">
             <div class="title-card mb-2">Capacity</div>
-            <span class="mb-1 soutitle">Transferred</span>
+            <span class="mb-1 soutitle" style="font-size: 17px"
+              >Transferred</span
+            >
             <h6 class="daysTitle">Today</h6>
           </v-col>
           <v-col class="mt-4" cols="5" align-self="center">
-            <span  class="numberTitle">2.23 GB</span>
+            <span class="numberTitle">{{ state.transferred }}</span>
           </v-col>
         </v-row>
         <v-row>
           <v-col cols="7">
-            <span class="mb-1 soutitle">Recieved</span>
+            <span class="mb-1 soutitle" style="font-size: 17px">Recieved</span>
             <h6 class="daysTitle">Today</h6>
           </v-col>
           <v-col cols="5" align-self="center">
-            <span class="mb-1 numberTitle">2.23 GB</span>
+            <span class="mb-1 numberTitle">{{ state.recieved }}</span>
           </v-col>
         </v-row>
       </v-card-item>
     </v-card>
   </v-col>
-  <v-col cols="5">
+  <v-col cols="6">
     <v-card class="mx-auto">
       <v-card-item>
-        <div class="title-card mb-6">Users</div>
-        <v-row>
+        <div class="title-card mb-4">Users</div>
+        <v-row class="mb-5 d-flex justify-center align-center">
           <v-col cols="6">
             <div class="text-h6 mb-1">
               <v-row>
@@ -37,18 +39,18 @@
                     :rotate="-180"
                     :size="40"
                     :width="2"
-                    :model-value="50"
+                    v-model="state.activeClient"
                     color="#086EAE"
                   >
-                    50
+                    {{ state.activeClient }}
                   </v-progress-circular>
                 </v-col>
-                <span class="subTitle"> of 100</span>
+                <span class="subTitle"> of {{ state.allClient }}</span>
               </v-row>
             </div>
             <div class="text-caption">Active Users</div>
           </v-col>
-          <v-col cols="6">
+          <!-- <v-col cols="6">
             <div class="text-h6 mb-1">
               <v-row>
                 <v-col cols="2">
@@ -56,39 +58,61 @@
                     :rotate="-180"
                     :size="40"
                     :width="2"
-                    :model-value="25"
+                    v-model="state.activeClient"
                     color="#086EAE"
                   >
-                    25
+                    {{ state.activeClient }}
                   </v-progress-circular>
                 </v-col>
-                <span class="subTitle"> of 100</span>
+                <span class="subTitle"> of {{ state.allClient }}</span>
               </v-row>
             </div>
             <div class="text-caption">Active Devices</div>
-          </v-col>
+          </v-col> -->
         </v-row>
-      </v-card-item>
-    </v-card>
-  </v-col>
-  <v-col cols="3">
-    <v-card class="mx-auto">
-      <v-card-item>
-        <div>
-          <div class="mb-3 title-card">Traffic distribution</div>
-          <div class="text-caption">client1</div>
-          <div class="text-caption">client2</div>
-          <div class="text-caption">client3</div>
-          <div class="text-caption">client4</div>
-        </div>
       </v-card-item>
     </v-card>
   </v-col>
 </template>
 <script>
+import VueApexCharts from "vue3-apexcharts";
+import { watch, ref, reactive, toRefs } from "vue";
 export default {
-  data() {
-    return {};
+  components: {
+    apexchart: VueApexCharts,
+  },
+  props: {
+    dataChart: {
+      type: Object,
+    },
+  },
+  setup(props) {
+    const { dataChart } = toRefs(props);
+
+    const state = reactive({
+      transferred: "",
+      recieved: "",
+      activeClient: "",
+    });
+
+    watch(
+      () => dataChart.value,
+      (val) => {
+        state.transferred =
+          Math.round(val.capacity_client_out.capture_size) +
+          ` ${val.capacity_client_out.unit}`;
+        state.recieved =
+          Math.round(val.capacity_client_in.capture_size) +
+          ` ${val.capacity_client_in.unit}`;
+
+        state.activeClient = val.client_active;
+        state.allClient = val.all_client;
+      }
+    );
+
+    return {
+      state,
+    };
   },
 };
 </script>

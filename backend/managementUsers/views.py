@@ -113,14 +113,20 @@ def createUser(request):
                                     
                                     break   
                         # Close LDAP connection
+                        if not email_founded:
+                            return JsonResponse({'msg': f"The email '{email}' doesn't exist in any directory server. Do you want to add this user with a simple email?"}, status=400)
                         ldap_conn.unbind()
                     else:
-                        return JsonResponse({'msg': "please verify you password of directory server"},status=400)   
+                        return JsonResponse({'msg': "please verify your password of directory server"},status=400)   
+                    
+                except ldap.SERVER_DOWN:
+                # LDAP authentication failed
+                    return JsonResponse({'msg': 'directory server is unreachable'},status=500)    
                 except ldap.LDAPError as e:
                     return JsonResponse({'msg': "Error connecting to directory server"},status=400)  
             else:    
                     return JsonResponse({'msg': "This directory server is not Exist"},status=400)  
-        exist_email = User.objects.filter(email=email).exists()
+       
         if User.objects.filter(email=email).exists():
             return JsonResponse({"msg": "email allready exist"}, status=400)
         else:
@@ -274,9 +280,14 @@ def modifyUser(request, id):
                                 if data['email'].lower() == entry_email:
                                     data['dn_user'] = entry[0]
                                     break   
+                    if not email_founded:
+                            return JsonResponse({'msg': "The email doesn't exist in any directory server. Do you want to add this user with a simple email?"}, status=400)
                     ldap_conn.unbind()
                 else:
-                    return JsonResponse({'msg': "please verify you password of directory server"},status=400)   
+                    return JsonResponse({'msg': "please verify your password of directory server"},status=400)    
+            except ldap.SERVER_DOWN:
+                # LDAP authentication failed
+                return JsonResponse({'msg': 'directory server is unreachable'},status=500)        
             except ldap.LDAPError as e:
                 return JsonResponse({'msg': "Error connecting to directory server"},status=400)  
         newmail = data['email']

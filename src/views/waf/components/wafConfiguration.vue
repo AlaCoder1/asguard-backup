@@ -486,7 +486,7 @@ export default {
               setTimeout(() => {
                 state.snackbar = false;
                 location.reload();
-              }, 3000);
+              }, 1000);
             }
           })
           .catch((i) => {

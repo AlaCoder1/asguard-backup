@@ -55,13 +55,15 @@ def update_Ldapserver_DB(data, id):
         else:
             
             return False
+        
+    except ldap.SERVER_DOWN:
+        return {'msg': 'directory server is unreachable'}     
             
     except ldap.LDAPError as e:
         print("LDAPError:", e)
-        return {'msg': 'credentiels not correct to connect Ldap server'}
+        return {'msg': 'directory server authentication failed'}
     
-    except ldap.SERVER_DOWN:
-        return {'msg': 'directory server is unreachable'}       
+         
                 
     
 

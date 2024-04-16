@@ -83,7 +83,9 @@
                 </v-col>
 
                 <v-col cols="12" class="mt-5">
-                  <label for="Activate" class="mr-3">{{$t("ldap.ActivateLdap")}}</label>
+                  <label for="Activate" class="mr-3">{{
+                    $t("ldap.ActivateLdap")
+                  }}</label>
                   <input
                     type="checkbox"
                     id="Activate"
@@ -557,9 +559,10 @@ export default {
               }
             })
             .catch((i) => {
+              console.log("re", i.respone);
               this.snackbar = true;
               this.color = "red";
-              this.textAlert = i.response.data.error;
+              this.textAlert = i.response.data.msg;
             });
         }
       }

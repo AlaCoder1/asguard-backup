@@ -33,6 +33,7 @@ from backend.subscription.models import plan, plansSubscription,plansFeatures
 import ruamel.yaml
 from backend.settings.models import *
 from collections import defaultdict
+from backend.waf.list_waf import get_one_waf_config
 from views.functions import get_vlan, get_vlan_interface
 
 from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
@@ -552,7 +553,10 @@ def sdwan_page(request):
 
 @login_required(login_url='/')
 def waf_page(request):
-    return render(request, 'waf_page.html')
+    waf_conf = get_one_waf_config()
+    context = {'waf_conf': json.dumps(waf_conf)}
+    print(context)
+    return render(request, 'waf_page.html',context)
 
 @login_required(login_url='/')
 def profile_page(request):

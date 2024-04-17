@@ -38,7 +38,7 @@
               item-value="slug"
               clearable
               return-object
-              :items="[]"
+              :items="state.engineList"
             ></v-select>
             <p class="error-feedback mb-5" v-if="v$.rule_engine.$error">
               {{ v$.rule_engine.$errors[0].$message }}
@@ -110,7 +110,7 @@
               item-value="slug"
               clearable
               return-object
-              :items="[]"
+              :items="state.requestBodyList"
             ></v-select>
             <p class="error-feedback mb-5" v-if="v$.limit_action.$error">
               {{ v$.limit_action.$errors[0].$message }}
@@ -191,7 +191,7 @@
               item-value="slug"
               clearable
               return-object
-              :items="[]"
+              :items="state.bodyMimeTypeList"
             ></v-select>
             <p class="error-feedback mb-5" v-if="v$.body_mimetype.$error">
               {{ v$.body_mimetype.$errors[0].$message }}
@@ -222,7 +222,7 @@
               item-value="slug"
               clearable
               return-object
-              :items="[]"
+              :items="state.responseBodyList"
             ></v-select>
             <p
               class="error-feedback mb-5"
@@ -290,6 +290,18 @@ export default {
     const state = reactive({
       loading: false,
       isLoadingDialogue: false,
+      id: null,
+      //
+      engineList: ["On", "Off", "Detection only"],
+      requestBodyList: ["Accept", "Reject"],
+      responseBodyList: [
+        "ProcessPartial",
+        "Reject",
+        "log",
+        "log allow",
+        "pass",
+      ],
+      bodyMimeTypeList: ["text/*", "text/html", "text/xml", "text/plain"],
       //
 
       rule_engine: null,
@@ -315,6 +327,27 @@ export default {
       textAlert: "",
     });
 
+    onMounted(() => {
+      let wafConf = document.getElementById("app").attributes["waf_conf"].value;
+      let configuration = JSON.parse(wafConf);
+
+      state.id = configuration?.id;
+      state.rule_engine = configuration?.rule_engine_initialization;
+      state.access_request = configuration?.access_request_bodies;
+      state.xml_request = configuration?.xml_request_body_parser;
+      state.json_request = configuration?.json_request_body_parser;
+      state.maximum_request = configuration?.maximum_request_body_size;
+      state.size_file = configuration?.request_body_size_files_excluded;
+      state.limit_action = configuration?.request_body_limit_action;
+      state.max_parsing = configuration?.maximum_parsing_depth_json;
+      state.max_number = configuration?.maximum_number_args_request;
+      state.pcre_match_limit = configuration?.pcre_match_limit;
+      state.pcre_limit_recursion = configuration?.pcre_match_limit_recursion;
+      state.access_bodies = configuration?.response_body_access;
+      state.body_mimetype = configuration?.response_body_mimetype;
+      state.response_body_limit = configuration?.response_body_limit;
+      state.response_limit_action = configuration?.response_body_limit_action;
+    });
     const getCookie = (name) => {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {
@@ -330,19 +363,87 @@ export default {
       return cookieValue;
     };
 
+    const cancel = () => {
+      state.id = null;
+      state.rule_engine = null;
+      state.access_request = false;
+      state.xml_request = false;
+      state.json_request = false;
+      state.maximum_request = null;
+      state.size_file = null;
+      state.limit_action = null;
+      state.max_parsing = null;
+      state.max_number = null;
+      state.pcre_match_limit = null;
+      state.pcre_limit_recursion = null;
+      state.access_bodies = false;
+      state.body_mimetype = null;
+      state.response_body_limit = "";
+      state.response_limit_action = null;
+    };
+
     const rules = computed(() => {
       return {
         limit_action: { required },
-        size_file: { required },
+        size_file: {
+          required,
+          isValidSizeFile: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
         rule_engine: { required },
-        maximum_request: { required },
-        max_parsing: { required },
+        maximum_request: {
+          required,
+          isValidMaxRequest: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        max_parsing: {
+          required,
+          isValidMaxParsing: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
         body_mimetype: { required },
         response_limit_action: { required },
-        response_body_limit: { required },
-        max_number: { required },
-        pcre_limit_recursion: { required },
-        pcre_match_limit: { required },
+        response_body_limit: {
+          required,
+          isValidResponseBodyLimit: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        max_number: {
+          required,
+          isValidMaxNumber: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        pcre_limit_recursion: {
+          required,
+          isValidPcreLimitRecursion: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        pcre_match_limit: {
+          required,
+          isValidPcreMatchLimit: helpers.withMessage(
+            `Champs can include only Numbers.`,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
       };
     });
 
@@ -354,47 +455,47 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (result) {
-        // let payload = {
-        //   access_request: state.access_request,
-        //   maximum_request: state.maximum_request,
-        //   size_file: state.size_file,
-        //   limit_action: state.limit_action,
-        //   dns_server: mapredServer,
-        //   max_parsing: state.max_parsing,
-        //   max_number: state.max_number,
-        //   ranges_address: mapredRow,
-        // };
-        // state.loading = true;
-        // state.isLoadingDialogue = true;
-        // axios
-        //   .put(
-        //     `/server_dhcp4/updateDhcp4Server/${props.configInfo.id}`,
-        //     payload
-        //   )
-        //   .then((response) => {
-        //     if (response.status == 200) {
-        //       state.loading = false;
-        //       state.isLoadingDialogue = false;
-        //       state.snackbar = true;
-        //       state.color = "success";
-        //       state.textAlert = response.data.msg;
-        //       setTimeout(() => {
-        //         state.snackbar = false;
-        //         location.reload();
-        //       }, 3000);
-        //     }
-        //   })
-        //   .catch((i) => {
-        //     state.loading = false;
-        //     state.isLoadingDialogue = false;
-        //     state.snackbar = true;
-        //     state.color = "error";
-        //     state.textAlert = i.response.data.msg;
-        //     setTimeout(() => {
-        //       state.snackbar = false;
-        //       location.reload();
-        //     }, 1000);
-        //   });
+        let payload = {
+          rule_engine_initialization: state.rule_engine,
+          access_request_bodies: state.access_request,
+          xml_request_body_parser: state.xml_request,
+          json_request_body_parser: state.json_request,
+          maximum_request_body_size: state.maximum_request,
+          request_body_size_files_excluded: state.size_file,
+          request_body_limit_action: state.limit_action,
+          maximum_parsing_depth_json: state.max_parsing,
+          maximum_number_args_request: state.max_number,
+          pcre_match_limit: state.pcre_match_limit,
+          pcre_match_limit_recursion: state.pcre_limit_recursion,
+          response_body_access: state.access_bodies,
+          response_body_mimetype: state.body_mimetype,
+          response_body_limit: state.response_body_limit,
+          response_body_limit_action: state.response_limit_action,
+        };
+        state.loading = true;
+        state.isLoadingDialogue = true;
+        axios
+          .put(`/waf/updateConfigWaf/${state.id}`, payload)
+          .then((response) => {
+            if (response.status == 200) {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              setTimeout(() => {
+                state.snackbar = false;
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "error";
+            state.textAlert = i.response.data.msg;
+          });
       } else {
         console.log("error", v$.value);
       }
@@ -403,6 +504,7 @@ export default {
       v$,
       getCookie,
       submitForm,
+      cancel,
       state,
       emitter,
     };

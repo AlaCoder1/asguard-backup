@@ -36,7 +36,7 @@
       v-model="peerCertificateAuthority"
       item-title="name"
       item-value="id"
-      :items="mapedCertifAuth"
+      :items="props.mapedCertifAuth"
       return-object
     ></v-select>
     <p
@@ -55,7 +55,7 @@
       v-model="clientCertificate"
       item-title="name"
       item-value="id"
-      :items="clientCertificateList"
+      :items="props.clientCertificateList"
       return-object
     ></v-select>
     <p
@@ -188,11 +188,12 @@ const hardwareCryptoList = ref([
     slug: "Intel RDRAND engine -RAND",
   },
 ]);
-const clientCertificateList = ref([]);
-const mapedCertifAuth = ref([]);
+
 
 const props = defineProps([
   "errors",
+  "clientCertificateList",
+  "mapedCertifAuth",
   "tlsGenerate",
   "sharedKey",
   "peerCertificateAuthority",
@@ -222,66 +223,4 @@ const {
   hardwareCrypto,
 } = useVModels(props, emit);
 
-onBeforeMount(() => {
-  getAllCertAuth();
-  getAllClientCertif();
-});
-
-const getCookie = (name) => {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== "") {
-    const cookies = document.cookie.split(";");
-    for (let i = 0; i < cookies.length; i++) {
-      const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === name + "=") {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
-    }
-  }
-  return cookieValue;
-};
-
-const getAllCertAuth = () => {
-  const csrfToken = getCookie("csrftoken");
-  axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-  axios.get("/certificates/getAllCertAuth").then(
-    (response) => {
-      let mapedList = response.data.map((i) => {
-        return {
-          id: i.id,
-          name: i.name,
-        };
-      });
-      mapedCertifAuth.value = mapedList;
-    },
-    (error) => {
-      console.log(error);
-    }
-  );
-};
-
-const getAllClientCertif = () => {
-  const csrfToken = getCookie("csrftoken");
-  axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-  axios.get("/certificates/getAllCertificates").then(
-    (response) => {
-      let mapedListCertif = response.data.filter(
-        (i) => i.certificate_type === "client"
-      );
-
-      clientCertificateList.value = mapedListCertif.map((i) => {
-        return {
-          id: i.id,
-          name: i.name,
-        };
-      });
-    },
-    (error) => {
-      console.log(error);
-    }
-  );
-};
 </script>

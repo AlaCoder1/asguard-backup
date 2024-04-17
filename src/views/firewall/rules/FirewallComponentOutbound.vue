@@ -253,15 +253,21 @@ export default defineComponent({
     const rules = reactive([]);
     const filterText = ref(null);
     const columnOrder = ref([]);
+    const last_Subscription = ref([]);
 
     const deleteDialog = ref(false);
     const showAddModal = ref(false);
     const rowDataToDelete = ref(null);
 
     const openModalAdd = () => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
+      if (last_Subscription.value.includes("Firewall")) {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        emitter.emit("firewal-subscription");
+        window.scrollTo(0, 0);
+      }
     };
 
     const onGridReady = (params) => {
@@ -455,6 +461,11 @@ export default defineComponent({
         .replace(/None/g, "null");
       let parsedArray = JSON.parse(validJsonString);
       rules.value = parsedArray;
+
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
     });
 
     watch(
@@ -502,6 +513,7 @@ export default defineComponent({
       showAddModal,
       alert,
       mode,
+      last_Subscription,
       onGridReady,
       setGridApi,
       onFirstDataRendered,

@@ -10,74 +10,44 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    label="Client Name"
-                    v-model="state.formData.userName"
-                  ></v-text-field>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.formData.userName.$error"
-                  >
+                  <v-text-field label="Client Name" v-model="state.formData.userName"></v-text-field>
+                  <p class="error-feedback mb-5" v-if="v$.formData.userName.$error">
                     {{ v$.formData.userName.$errors[0].$message }}
                   </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-select
-                    label="Client Certificate"
-                    v-model="state.formData.clientCertificate"
-                    item-title="name"
-                    item-value="id"
-                    :items="clientCertificateList"
-                    return-object
-                  ></v-select>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.formData.clientCertificate.$errors.length"
-                  >
+                  <v-select label="Client Certificate" v-model="state.formData.clientCertificate" item-title="name"
+                    item-value="id" :items="clientCertificateList" return-object></v-select>
+                  <p class="error-feedback mb-5" v-if="v$.formData.clientCertificate.$errors.length">
                     {{ v$.formData.clientCertificate.$errors?.[0].$message }}
                   </p>
                 </v-col>
+                <template v-if="addressAny">
+                  <v-col cols="12" class="mb-n6">
+                    <v-text-field label="Address" v-model="state.formData.address"></v-text-field>
+                    <p class="error-feedback mb-5" v-if="v$.formData.address.$error">
+                      {{ v$.formData.address.$errors[0].$message }}
+                    </p>
+                  </v-col>
+                </template>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              @click="closeModal"
-              class="mt-3 btn-add"
-            >
+            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
+              @click="closeModal" class="mt-3 btn-add">
               <span class="text-white pr-3 pl-3">Close</span>
             </v-btn>
 
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              type="submit"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 btn-add"
-            >
+            <v-btn large rounded outlined label-color="#213E9F" type="submit" color="indigo-darken-3" :rounded="true"
+              variant="flat" class="mt-3 btn-add">
               <span class="text-white pr-3 pl-3">Create</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -86,7 +56,7 @@
 <script>
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { required } from "@vuelidate/validators";
+import { required, helpers, requiredIf } from "@vuelidate/validators";
 import { reactive, computed, toRefs, watch, ref, onMounted, inject } from "vue";
 import VButton from "@/components/VButton.vue";
 export default {
@@ -129,6 +99,20 @@ export default {
         formData: {
           userName: { required },
           clientCertificate: { required },
+          address: {
+            requiredIfFuction: helpers.withMessage(
+              "Value is required",
+              requiredIf(
+                () =>
+                  state.rowEditFilter.interface === "Any"
+              )
+            ),
+            isValidlAddress: helpers.withMessage(
+              `Format must be like adresse IP : X.X.X.X`,
+              helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            ),
+          },
+
         },
       };
     });
@@ -149,6 +133,10 @@ export default {
         state.id = editRow.id;
       }
     );
+
+    const addressAny = computed(() => {
+      return state.rowEditFilter.interface === "Any";
+    });
 
     const getCookie = (name) => {
       let cookieValue = null;
@@ -201,34 +189,42 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (result) {
-        console.log("state", state);
-        let payload = {
-          name: state.formData.userName,
-          client_cert: state.formData.clientCertificate?.name,
-        };
-        console.log('payload',payload)
+        let payload = {};
+
+        if (addressAny) {
+          payload = {
+            name: state.formData.userName,
+            client_cert: state.formData.clientCertificate?.name,
+            interface_address: state.formData.address,
+          };
+        } else {
+          payload = {
+            name: state.formData.userName,
+            client_cert: state.formData.clientCertificate?.name,
+          };
+        }
+        console.log("payl", payload);
 
         axios
-            .post(`/openvpn/generateClientOpenvpn/${state.id}`, payload)
-            .then((response) => {
-              console.log("response", response);
-              if (response.status == "201") {
-                state.openModal = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
+          .post(`/openvpn/generateClientOpenvpn/${state.id}`, payload)
+          .then((response) => {
+            console.log("response", response);
+            if (response.status == "201") {
+              state.openModal = false;
               state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            });
+              state.color = "success";
+              state.textAlert = response.data.msg;
 
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          });
       } else {
         console.log("error", v$.value);
       }
@@ -239,6 +235,7 @@ export default {
       emitter,
       clientCertificateList,
       v$,
+      addressAny,
       getAllClientCertif,
       closeModal,
       submitForm,
@@ -251,6 +248,7 @@ export default {
   color: red;
   font-size: 0.85em;
 }
+
 .actionBtn {
   justify-content: end;
 }

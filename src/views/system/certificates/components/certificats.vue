@@ -1,9 +1,28 @@
 <template>
+  <v-overlay v-model="loading">
+    <v-dialog
+      v-model="isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{$t("requiredfield.attente")}}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div
     class="certificats-management"
     style="display: flex; flex-direction: column; height: 100%"
   >
-    <h4>certificats</h4>
+    <h4>{{$t("agGrid.certificates")}}</h4>
     <v-divider></v-divider>
 
     <ag-grid-vue
@@ -13,6 +32,7 @@
       :columnDefs="columnCertificats"
       style="width: 100%; height: 100%"
       :gridOptions="gridOptions"
+      :overlayNoRowsTemplate="overlayTemplate"
       @grid-ready="onGridReady"
     />
 
@@ -25,7 +45,7 @@
         @click="openModalAdd"
       >
         <span class="text-white" style="text-transform: lowercase"
-          >Ajouter certificats</span
+          >{{$t("buttons.ajoutcertifcat")}}</span
         >
       </v-btn>
     </div>
@@ -39,7 +59,7 @@
       :initialData="modalData"
     />
     <ModalRevocation
-      :isOpen="isModalOpenRevoce"
+      :isOpen="isModalOpenRevoce" 
       :editRow="rowEdit"
       v-model="isModalOpenRevoce"
       :mode="modalMode"
@@ -50,36 +70,27 @@
     <v-dialog v-model="deleteDialog" max-width="500px">
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
-          <v-card-title class="headline">Download Validation</v-card-title>
+          <v-card-title class="headline">{{$t("requiredfield.download")}}</v-card-title>
           <v-card-text>
+            <div>
+              <a> </a>
+            </div>
             <v-container>
               <v-row>
                 <v-col cols="6">
                   <v-text-field
-                    label="Password"
+                    :label="$t('form.password')"
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
-                  <!-- <span
-                    class="error-feedback"
-                    v-if="v$.formData.password.$error"
-                    >{{ v$.formData.password.$errors[0].$message }}</span
-                  > -->
                 </v-col>
 
                 <v-col cols="6">
                   <v-text-field
-                    label="Confirm password"
+                    :label="$t('form.confirmPassword')"
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
-                  <!-- <span
-                    class="error-feedback"
-                    v-if="v$.formData.confirm_password.$error"
-                    >{{
-                      v$.formData.confirm_password.$errors[0].$message
-                    }}</span
-                  > -->
                 </v-col>
               </v-row>
             </v-container>
@@ -87,26 +98,30 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="blue darken-1" text @click="cancelDelete"
-              >Cancel</v-btn
+              >{{ $t("PageGeneral.form.Cancel") }}</v-btn
             >
-            <v-btn color="blue darken-1" text @click="confirmDownload"
-              >Download</v-btn
+            <v-btn
+              color="blue darken-1"
+              text
+              @click="confirmDownload"
+              :disabled="!isPassword || !isSame"
+              >{{$t("buttons.download")}}</v-btn
             >
           </v-card-actions>
-        </v-card>
+        </v-card> 
       </form>
     </v-dialog>
     <v-dialog v-model="deleteDialogCertif" max-width="500px">
       <v-card>
-        <v-card-title class="headline">Delete Confirmation</v-card-title>
-        <v-card-text>Are you sure you want to delete this certif ?</v-card-text>
+        <v-card-title class="headline">{{ $t("delete.DeleteConfirmation") }}</v-card-title>
+        <v-card-text>{{ $t("delete.questioncertificat") }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDeleteCertif"
-            >Cancel</v-btn
+            >{{ $t("PageGeneral.form.Cancel") }}</v-btn
           >
           <v-btn color="blue darken-1" text @click="confirmDeleteCertif"
-            >Delete</v-btn
+            >{{ $t("PageGeneral.form.Delete") }}</v-btn
           >
         </v-card-actions>
       </v-card>
@@ -127,11 +142,12 @@
 <script>
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { required, sameAs, helpers } from "@vuelidate/validators";
-import { reactive, computed } from "vue";
+import { helpers, sameAs } from "@vuelidate/validators";
+import { reactive, computed, defineAsyncComponent } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import ModalAddEditCertif from "@/components/modals/ModalAddEditCertif.vue";
 import ModalRevocation from "@/components/modals/ModalRevocation.vue";
+// import FileP12 from `../../../../downloads/${this.rowName}.p12`
 export default {
   props: {
     certifData: {
@@ -149,7 +165,6 @@ export default {
     ModalRevocation,
   },
   setup() {
-    //data
     const state = reactive({
       formData: {
         password: "",
@@ -158,49 +173,38 @@ export default {
       userRole: null,
       userName: null,
     });
-    const rules = computed(() => {
-      return {
-        formData: {
-          // password: {
-          //   required: helpers.withMessage(
-          //     "This field must be indicated",
-          //     required
-          //   ),
-          //   isValidPassword: helpers.withMessage(
-          //     `There must be at least 12 characters, including at least one uppercase, one number, and one special character.`,
-          //     helpers.regex(
-          //       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{12,}$/
-          //     )
-          //   ),
-          // },
-          // confirm_password: {
-          //   sameAsPassword: helpers.withMessage(
-          //     "Your password does not match",
-          //     sameAs(state.formData.password)
-          //   ), // can be a reference to a field or computed property
-          //   required: helpers.withMessage(
-          //     "This field must be indicated",
-          //     required
-          //   ),
-          //   isValidPassword: helpers.withMessage(
-          //     `There must be at least 12 characters, including at least one uppercase, one number, and one special character.`,
-          //     helpers.regex(
-          //       /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{12,}$/
-          //     )
-          //   ),
-          // },
-        },
-      };
+
+    const isSame = computed(() => {
+      return state.formData.confirm_password == state.formData.password;
     });
 
-    const v$ = useValidate(rules, state);
+    const isPassword = computed(() => {
+      let password =
+        state.formData.password && state.formData.confirm_password
+          ? true
+          : false;
+      return password;
+    });
+
     return {
       state,
-      v$,
+      isSame,
+      isPassword,
     };
+  },
+  async mounted() {
+    let downloadCert = localStorage.getItem("cert-name");
+    if (downloadCert) {
+      this.localName = downloadCert;
+      this.downloadCertificatP12();
+    }
   },
   data() {
     return {
+      isLoadingDialogue: false,
+      loading: false,
+      localName: "",
+      rowName: "",
       textAlert: "",
       color: "",
       snackbar: false,
@@ -215,8 +219,12 @@ export default {
       modalData: {},
       isModalOpen: false,
       columnCertificats: [
-        { headerName: "nom", field: "nom" },
-        { headerName: "distingushed name", cellRenderer: this.formatedDn },
+        { headerName: this.namecertif, field: "nom", width: 500 },
+        {
+          headerName:  this.distingushedname,
+          cellRenderer: this.formatedDn,
+          width: 500,
+        },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,
@@ -233,6 +241,13 @@ export default {
         rowSelection: "single",
       },
       rowDataCertificats: null,
+      overlayTemplate:`<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+    </svg></span>`
     };
   },
   watch: {
@@ -250,9 +265,13 @@ export default {
             city: element.city,
             organization: element.organization,
             email: element.email,
+            is_private_key: element.is_private_key,
           };
         });
-        this.allCertifAuth = infoAuth;
+
+        let mapedListCertifAuth = infoAuth.filter((i) => i.is_private_key);
+
+        this.allCertifAuth = mapedListCertifAuth;
       }
     },
     certifData(newValue) {
@@ -271,6 +290,7 @@ export default {
             valid_from: element.valid_from,
             valid_until: element.valid_until,
             certificate_authority: element.certificate_authority,
+            is_private_key: element.is_private_key,
           };
         });
 
@@ -280,8 +300,43 @@ export default {
         }, 5);
       }
     },
+    namecertif: {
+      handler(val) {
+        this.columnCertificats[0].headerName = val;
+      },
+      immediate: true,
+    }, 
+    distingushedname: {
+      handler(val) {
+        this.columnCertificats[1].headerName = val;
+      },
+      immediate: true,
+    }, 
+  },
+  computed: {
+    namecertif() {
+      return this.$t("agGrid.name");
+    },
+    distingushedname() {
+      return this.$t("agGrid.distinguishedname");
+    },
+    
   },
   methods: {
+    downloadCertificatP12() {
+      const link = document.createElement("a");
+      import(`@/downloads/${this.localName}.p12`).then((module) => {
+        if (module.default) {
+          link.href = module.default;
+          link.download = `${this.localName}.p12`;
+          link.click();
+          localStorage.removeItem("cert-name");
+        } else {
+          console.log("error");
+        }
+      });
+    },
+
     formatedDn(data) {
       let eGui = document.createElement("div");
 
@@ -309,9 +364,7 @@ export default {
       }
       return cookieValue;
     },
-    confirmDownload() {
-      // this.v$.$validate();
-      // if (!this.v$.$error) {
+    async confirmDownload() {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -322,29 +375,23 @@ export default {
       axios
         .post(`/certificates/exportCert/${this.rowId}`, payload)
         .then((response) => {
-          const text = response.data.cert;
-          const blob = new Blob([text], {
-            type: "blob",
-          });
-
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = "p12.p12";
-
-          document.body.appendChild(a);
-          a.click();
-
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+          this.deleteDialog = false;
+          this.state.formData.password = "";
+          this.state.formData.confirm_password = "";
+          localStorage.setItem("cert-name", this.rowName);
+          this.isLoadingDialogue = true;
+          this.loading = true;
+          setTimeout(() => {
+            this.isLoadingDialogue = false;
+            this.loading = false;
+            location.reload();
+          }, 2000);
         })
         .catch((i) => {
           this.snackbar = true;
           this.color = "red";
           this.textAlert = i.response.data.error;
         });
-      // }
     },
     cancelDeleteCertif() {
       this.deleteDialogCertif = false;
@@ -376,7 +423,6 @@ export default {
       this.isModalOpen = false;
       this.isModalOpenRevoce = false;
       this.deleteDialogCertif = false;
-      // location.reload()
     },
     actionCellRenderer(params) {
       let eGui = document.createElement("div");
@@ -385,7 +431,11 @@ export default {
         return cell.rowIndex === params.node.rowIndex;
       });
 
-      if (params.data.activation && params.data.certificate_authority) {
+      if (
+        params.data.activation &&
+        params.data.certificate_authority &&
+        params.data.is_private_key
+      ) {
         eGui.innerHTML = `
 
 
@@ -394,8 +444,6 @@ export default {
            data-action="revoce">
            <i class="mdi mdi-skull-outline" style="color: #086eae;font-size: 20px;"></i>
            </button>
-
-
            <button
            class="action-button download"
            data-action="exportP12" title="download P12 file">
@@ -418,7 +466,39 @@ export default {
         </button>
 
          `;
-      } else if (!params.data.activation) {
+      } else if (
+        params.data.activation &&
+        params.data.certificate_authority &&
+        !params.data.is_private_key
+      ) {
+        eGui.innerHTML = `
+
+
+        <button
+            class="action-button revoce"
+            data-action="revoce">
+            <i class="mdi mdi-skull-outline" style="color: #086eae;font-size: 20px;"></i>
+            </button>
+            <button
+            class="action-button download"
+            data-action="exportP12" title="download P12 file">
+              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
+            </button>
+            <button
+            class="action-button download"
+            data-action="export" title="download CRT">
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+            </button>
+            <button
+          class="action-button delete"
+          data-action="delete">
+            <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
+        </button>
+
+          `;
+      }
+
+      if (!params.data.activation && params.data.is_private_key) {
         eGui.innerHTML = `  <button
          class="action-button lock"
          data-action="lock">
@@ -446,21 +526,72 @@ export default {
             <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
         </button>
          `;
-      } else if (params.data.activation && !params.data.certificate_authority) {
-        eGui.innerHTML = `
+      } else if (!params.data.activation && !params.data.is_private_key) {
+        eGui.innerHTML = `  <button
+         class="action-button lock"
+         data-action="lock">
+
+         <i class="fa fa-unlock-alt" aria-hidden="true" style="color: #086eae;font-size: 20px;"></i>
+         </button>
          <button
            class="action-button download"
-           data-action="exportP12">
+           data-action="exportP12"  title="download P12 file">
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="export">
+           data-action="export" title="download CRT">
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+           </button>
+           <button
+          class="action-button delete"
+          data-action="delete">
+            <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
+        </button>
+         `;
+      }
+
+      if (
+        params.data.activation &&
+        !params.data.certificate_authority &&
+        params.data.is_private_key
+      ) {
+        eGui.innerHTML = `
+         <button
+           class="action-button download"
+           data-action="exportP12" title="download P12 file">
+              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
+           </button>
+           <button
+           class="action-button download"
+           data-action="export" title="download CRT">
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="exportKey">
+           data-action="exportKey" title="download Private Key">
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+           </button>
+           <button
+          class="action-button delete"
+          data-action="delete">
+            <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
+        </button>
+         `;
+      } else if (
+        params.data.activation &&
+        !params.data.certificate_authority &&
+        !params.data.is_private_key
+      ) {
+        eGui.innerHTML = `
+         <button
+           class="action-button download"
+           data-action="exportP12" title="download P12 file">
+              <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
+           </button>
+           <button
+           class="action-button download"
+           data-action="export" title="download CRT">
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
@@ -560,7 +691,7 @@ export default {
         case "exportP12":
           this.deleteDialog = true;
           this.rowId = rowData.id;
-          this.rowName = rowData.name;
+          this.rowName = rowData.nom;
 
           break;
 

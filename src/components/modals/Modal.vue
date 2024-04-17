@@ -180,7 +180,7 @@ export default {
       listServers: [
         {
           slug: "ad",
-          name: "AD",
+          name: "Active Directory",
         },
         { slug: "openldap", name: "Open Ldap" },
       ],

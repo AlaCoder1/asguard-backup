@@ -8,7 +8,7 @@ from backend.managementCertificates.utils import initialize_ca
 from backend.openvpn.constant_variables import PATH_DH_FILES, PATH_LOG_OPENVPN, PATH_OPENVPN, PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD, PATH_SERVER_CONF, PATH_SERVER_DH, PATH_SERVER_LOG, PATH_SERVER_STATIC, PATH_STATUS_LOG
 from backend.openvpn.utils import create_tls_file
 from backend.openvpn.servers_status import change_status_server_openvpn
-from utils.commands_utils import execute_command_without_arguments, execute_list_commands_without_arguments, get_current_directory
+from utils.commands_utils import execute_list_commands_without_arguments, get_current_directory
 
 
 def install_server_openvpn_in_system(server_name, ca_name, tls_auth, dh_length, server_conf:str):
@@ -51,7 +51,7 @@ def delete_server_openvpn_in_system(server_name):
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
-def update_server_openvpn_in_system(previous_server_name, server_name, tls_auth, dh_length, server_conf, server_status):
+def update_server_openvpn_in_system(previous_server_name, server_name, tls_auth, server_conf, server_status):
     """Function to update an openvpn server in system"""
     # Change files name related to the server openvpn
     change_status_server_openvpn(previous_server_name, 'stop')

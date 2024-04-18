@@ -1,6 +1,7 @@
 import time
 from django.http import JsonResponse
 from django.db.models.deletion import ProtectedError
+from django.contrib.auth.hashers import check_password, make_password
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 
@@ -224,7 +225,8 @@ def create_server_openvpn(request):
             client_management_port = client_management.get('port')
             client_management_password = client_management.get('password')
             server_data["client_management_port"] = client_management_port
-            server_data["client_management_password"] = client_management_password
+            server_data["client_management_password"] = make_password(client_management_password)
+            data["client_management"]["password"] = server_data["client_management_password"]
 
         serializer_server = ServerOpenvpnSerializer(data=server_data)
         if serializer_server.is_valid():
@@ -331,7 +333,8 @@ def delete_server_openvpn(request, id):
                                                              'client_management': Schema(type=TYPE_OBJECT, description="Client Management Port block", required=['client_management_select'],
                                                                                            properties={"client_management_select": Schema(type=TYPE_BOOLEAN, default=False),
                                                                                                        "port": Schema(type=TYPE_STRING, description="Port number like 17562"),
-                                                                                                       "password": Schema(type=TYPE_STRING)}),
+                                                                                                       "password": Schema(type=TYPE_STRING, description="Old password"),
+                                                                                                       "new_password": Schema(type=TYPE_STRING, description="New password")}),
                                                              'verbosity_level': Schema(type=TYPE_STRING, pattern=r'\d', default="3", description="Set a number of verbosity level"),
                                                              }
                                                              ))
@@ -421,7 +424,9 @@ def update_server_openvpn(request, id):
         
         if client_management.get('client_management_select'):
             server.client_management_port = client_management.get('port')
-            server.client_management_password = client_management.get('password')
+            if check_password(client_management.get('password'), server.client_management_password):
+                server.client_management_password = make_password(client_management.get('new_password'))
+            data["client_management"]["password"] = server.client_management_password
         else:
             server.client_management_port = None
             server.client_management_password = None
@@ -435,7 +440,7 @@ def update_server_openvpn(request, id):
         
             #updating the server in system
             update_server_openvpn_in_system(previous_server_name=previous_name, server_name=server.name, tls_auth=tls_auth, 
-                                            dh_length=server.dh, server_conf=server_conf, server_status=server.server_status)
+                                            server_conf=server_conf, server_status=server.server_status)
 
             #updating the server in database
             serializer_server.save()
@@ -599,7 +604,8 @@ def create_client_openvpn(request):
         proxy_authentication_option = proxy_authentication.get('option', '')
         port = data.get('local_port', '')
         username = data.get('username', '')
-        password = data.get('password', '')
+        data["password"] = make_password(data.get('password', ''))
+        password = data["password"]
         renegotiate_time = data.get('renegotiate_time', '')
         tls_auth = data.get('tls_auth', '')
         ca_name = data.get('ca_name', '')
@@ -651,10 +657,9 @@ def create_client_openvpn(request):
                         }
         
         if proxy_authentication_option == 'basic':
-            proxy_authentication_username = proxy_authentication.get('username', '')
-            proxy_authentication_password = proxy_authentication.get('password', '')
-            client_data["proxy_auth_username"] = proxy_authentication_username
-            client_data["proxy_auth_password"] = proxy_authentication_password
+            client_data["proxy_auth_username"] = proxy_authentication.get('username', '')
+            data["proxy_authentication"]["password"] = make_password(proxy_authentication.get('password', ''))
+            client_data["proxy_auth_password"] = data["proxy_authentication"]["password"]
 
         client_serializer = ClientOpenvpnSerializer(data=client_data)
         if client_serializer.is_valid():
@@ -713,10 +718,12 @@ def delete_client_openvpn(request, id):
                                                      'proxy_authentication': Schema(type=TYPE_OBJECT, required=['option'], description="Additional options for proxy authentication", 
                                                                                     properties={'option': Schema(type=TYPE_STRING, default="none", enum=["none", "basic", "ntlm"]),
                                                                                                 'username': Schema(type=TYPE_STRING, description="required when choosing basic in authentication method option"),
-                                                                                                'password': Schema(type=TYPE_STRING, description="required when choosing basic in authentication method option"),}),
+                                                                                                'password': Schema(type=TYPE_STRING, description="Old password if user choose basic and want to change proxy password"),
+                                                                                                'new_password': Schema(type=TYPE_STRING, description="New password if user choose basic and want to change proxy password"),}),
                                                      'local_port': Schema(type=TYPE_STRING, description="local port number with maximum of 5 digits"),
                                                      'username': Schema(type=TYPE_STRING),
-                                                     'password': Schema(type=TYPE_STRING),
+                                                     'password': Schema(type=TYPE_STRING, description="Old password if user want to change password for user authentication"),
+                                                     'new_password': Schema(type=TYPE_STRING, description="New password if user want to change password for user authentication"),
                                                      'renegotiate_time': Schema(type=TYPE_STRING, description="Number of seconds to renogotiate"),
                                                      'tls_auth': Schema(type=TYPE_OBJECT, description="importing tls key or generating it", required=['generate'],
                                                                         properties={'generate': Schema(type=TYPE_BOOLEAN, default=False),
@@ -769,7 +776,9 @@ def update_client_openvpn(request, id):
         client.proxy_authentication_option = proxy_authentication.get('option', '')
         client.port = data.get('local_port', '')
         client.username = data.get('username', '')
-        client.password = data.get('password', '')
+        if check_password(data.get('password', ''), client.password):
+            client.password = make_password(data.get('new_password', ''))
+        data["password"] = client.password
         client.renegotiate_time = data.get('renegotiate_time', '')
         tls_auth = data.get('tls_auth', '')
         client.ca_name = data.get('ca_name', '')
@@ -793,7 +802,9 @@ def update_client_openvpn(request, id):
 
         if client.proxy_authentication_option == 'basic':
             client.proxy_auth_username = proxy_authentication.get('username', '')
-            client.proxy_auth_password = proxy_authentication.get('password', '')
+            if check_password(proxy_authentication.get('password', ''), client.proxy_auth_password):
+                client.proxy_auth_password = make_password(proxy_authentication.get('password', ''))
+            data["proxy_authentication"]["password"] = client.proxy_auth_password
             
         data['server_mode'] = client.server_mode
         data['server_remote'] = client.server_remote

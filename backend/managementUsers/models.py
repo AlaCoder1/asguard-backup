@@ -77,3 +77,15 @@ class User(AbstractBaseUser):
 
     # def __str__(self):
     #     return self.username
+
+class Profile(models.Model):
+    user = models.OneToOneField('User', on_delete=models.CASCADE, related_name='profile')
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    region = models.CharField(max_length=100, blank=True, null=True)
+    code_postal = models.CharField(max_length=20, blank=True, null=True)
+    address = models.TextField(blank=True, null=True)
+    country = models.CharField(max_length=100, blank=True, null=True)
+    photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
+
+    class Meta:
+        db_table = 'profile'

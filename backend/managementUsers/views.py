@@ -337,6 +337,94 @@ def modifyUser(request, id):
         
         return JsonResponse({"data": data, "msg": msg})
 
+
+
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def update_profile(request, id):
+     if (request.method == 'PUT'):
+        user = User.objects.filter(id=id)
+        userDict = serializers.serialize("json", user)
+        res = json.loads(userDict)
+        res[0].pop('model')
+        id = res[0]['pk']
+        res[0].pop('pk')
+        res[0]['fields']['id'] = id
+        userJson = res[0]['fields']
+        oldusername = userJson['username']
+        data = request.data
+    
+        # Update user fields
+        user.username = data.get('username', user.username)
+        user.fullname = data.get('fullname', user.fullname)
+        data['dn_user'] = None
+        email_founded=False
+        if data['password_ad'] != "":
+                id_server = data['id_server']
+                ad_server = ADServer.objects.get(id=id_server)
+                try:
+                    is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
+                    if is_password_matched:
+                        ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
+                        ldap_conn = ldap.initialize(ldap_uri)
+                        ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
+                        result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
+                            # get the list of users email from AD server 
+                        user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
+                            # get the list of users email from openldap server 
+                        user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
+
+                        if data['email'].lower() in [user.lower() for user in user_principal_names]:
+                            user.email = data['email']
+                            email_founded=True
+
+                        if data['email'].lower() in [user.lower() for user in user_emails]:
+                            user.email = data['email']
+                            email_founded=True
+                            for entry in result:
+                                    entry_email = entry[1].get('mail', [''])[0].decode('utf-8').lower()
+                                    if data['email'].lower() == entry_email:
+                                        data['dn_user'] = entry[0]
+                                        break   
+                        if not email_founded:
+                                return JsonResponse({'msg': "The email doesn't exist in any directory server. Do you want to add this user with a simple email?"}, status=400)
+                        ldap_conn.unbind()
+                    else:
+                        return JsonResponse({'msg': "please verify your password of directory server"},status=400)    
+                except ldap.SERVER_DOWN:
+                    # LDAP authentication failed
+                    return JsonResponse({'msg': 'directory server is unreachable'},status=500)        
+                except ldap.LDAPError as e:
+                    return JsonResponse({'msg': "Error connecting to directory server"},status=400)  
+        user.email = data['email']
+
+        # Update profile fields
+        profile = user.profile
+        profile.phone_number = data.get('phone_number', profile.phone_number)
+        profile.region = data.get('region', profile.region)
+        profile.code_postal = data.get('code_postal', profile.code_postal)
+        profile.address = data.get('address', profile.address)
+        profile.country = data.get('country', profile.country)
+
+        # Handle photo upload
+        if 'photo' in request.FILES:
+            profile.photo = request.FILES['photo'].name  # Just store the file name
+
+        # Save changes
+        user.save()
+        profile.save()
+
+        return JsonResponse({'message': 'Profile updated successfully'})
+
+
+
+
+
+
+
+
 @swagger_auto_schema(
     method='PUT',
     request_body=UserSerializerGet,

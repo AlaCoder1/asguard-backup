@@ -5,12 +5,12 @@ import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 from channels.db import database_sync_to_async
-from backend.openvpn_monitoring.models import VpnMonitoring
-from backend.openvpn_monitoring.serializers import VpnMonitoringSerializer
+from backend.openvpn_monitoring.models import VpnMonitoring, VpnMonitoringClient
+from backend.openvpn_monitoring.serializers import VpnMonitoringClientSerializer, VpnMonitoringSerializer
 from .functions_client import *
 import pyshark
 from django.core import serializers
- 
+from django.contrib.auth.hashers import  check_password
 logger = logging.getLogger(__name__)
 class OpenVpnConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -20,15 +20,13 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
             "chart_group_global",
             self.channel_name,
         )
-        # await self.send("hello i am connected from this !!!")
        
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         id_server = text_data_json['id']
+        password=text_data_json['password']
         while True:
-            data =await self.start_data_loop_openvpn(id_server)
-            # print(type(data))
-            print(data)
+            data =await self.start_data_loop_openvpn(id_server,password)
             await self.send(json.dumps(data))
             await self.save_system_usage(data)
             await asyncio.sleep(60)
@@ -43,12 +41,11 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
     #function to save in database asynchrononsly
     @database_sync_to_async
     def save_system_usage(self, data):
-        print(data)
         data_server={
            "address_server": data['address_server'] if 'address_server' in data else None,
             "client_active": data['client_active'] if 'client_active' in data else None,
-            "capacity_server_in": data['capacity_server_in'] if 'capacity_server_in' in data else None,
-            "capacity_client_out": data['capacity_client_out'] if 'capacity_client_out' in data else None
+            "capacity_server_in": data['capacity_client_in']['initial_size'] if 'capacity_client_in' in data else None,
+            "capacity_client_out": data['capacity_client_out']['initial_size'] if 'capacity_client_out' in data else None
 
         }
         data_client = [
@@ -56,37 +53,53 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
             "username": d['username'] if 'username' in d else None,
             "login_time": d['login_time'] if 'login_time' in d else None,
             "address": d['address'] if 'address' in d else None,
-            "bytes_recv": d['bytes_recv'] if 'bytes_recv' in d else None,
-            "bytes_sent": d['bytes_sent'] if 'bytes_sent' in d else None,
-            "total_traffic": d['total_traffic'] if 'total_traffic' in d else None,
+            "bytes_recv": d['bytes_recv']['initial_size'] if 'bytes_recv' in d else None,
+            "bytes_sent": d['bytes_sent']['initial_size'] if 'bytes_sent' in d else None,
+            "total_traffic": d['total_traffic']['initial_size'] if 'total_traffic' in d else None,
             "location": d['location'] if 'location' in d else None,
             "traffic_distr": d['traffic_distr'] if 'traffic_distr' in d else None
             }
             for d in data['info_clients']
                         ]
-        
-    # Create a serializer instance
-        dashboard_serializer = VpnMonitoringSerializer(data=data_server)
+        if not VpnMonitoring.objects.filter(address_server=data_server["address_server"]).exists():
+            # Create a serializer instance
+            dashboard_serializer = VpnMonitoringSerializer(data=data_server)
+        else:
+            object_serializer=VpnMonitoring.objects.get(address_server=data_server["address_server"])
+            dashboard_serializer = VpnMonitoringSerializer(object_serializer,data=data_server)
+
         # Check if the data is valid
         if dashboard_serializer.is_valid():
-            dashboard_serializer.save()
-            id_vpn=dashboard_serializer.id
-            for client in data_client:
-                client['vpnmonitor']=id_vpn
-                    
-                client_serializer = VpnMonitoringSerializer(data=client)
-                if client_serializer.is_valid():
-                    # Check the count of existing entries
-                    count = VpnMonitoring.objects.count()
-                    # If the count exceeds 20, delete the oldest entry
-                    if count >= 20:
-                        # Find the record with the minimum timestamp and delete it
-                        min_timestamp_record = VpnMonitoring.objects.order_by('timestamp').first()
-                        if min_timestamp_record:
-                            min_timestamp_record.delete()
-                    # Save the new data
-                    client_serializer.save()
-            
+            dashboard_instance = dashboard_serializer.save()
+            id_vpn = dashboard_instance.id
+            if id_vpn is not None:
+                for client in data_client:
+                    client['vpnmonitor']=id_vpn
+                    client_serializer = VpnMonitoringClientSerializer(data=client)
+                    if client_serializer.is_valid():
+                        # Check the count of existing entries
+                        count = VpnMonitoring.objects.count()
+                        # If the count exceeds 20, delete the oldest entry
+                        if count >= 20:
+                            # Find the record with the minimum timestamp and delete it
+                            min_timestamp_record = VpnMonitoring.objects.order_by('timestamp').first()
+                            if min_timestamp_record:
+                                min_timestamp_record.delete()
+                        # Save the new data
+                        client_serializer.save()
+                         # Check the count of existing entries
+                        count2 = VpnMonitoringClient.objects.count()
+                        # If the count exceeds 20, delete the oldest entry
+                        if count2 >= 20:
+                            # Find the record with the minimum timestamp and delete it
+                            min_timestamp_record2 = VpnMonitoringClient.objects.order_by('timestamp').first()
+                            if min_timestamp_record2:
+                                min_timestamp_record2.delete()
+        #             else:
+        #                 print({"client serializer": client_serializer.errors})
+        # else:
+        #     print({"dashboard_serializer": dashboard_serializer.errors})
+
    
     ##function to convert bytes
     def convert_bytes(self,capture_size):
@@ -130,7 +143,6 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         # Convert the formatted timestamp to a Unix timestamp
         unix_timestamp = int(time.mktime(time.strptime(current_time, "%Y-%m-%d %H:%M:%S")))
         if len(top_traffic)!=0:
-        # print(top_traffic[0])
             if len(top_traffic)>=2:
                 top_network={
                     "timestamp": unix_timestamp,
@@ -152,7 +164,6 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
    
     def get_top_logging(self,vpn,name_server,address_server):
         """function to get top logging """
-        # print({"name_server":name_server})
         capture = pyshark.LiveCapture(interface=name_server)
           # Execute get openvpn client informations
         traffic_counts={}
@@ -171,47 +182,50 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         return top_logging
    
     @database_sync_to_async  
-    def start_data_loop_openvpn(self,id):
+    def start_data_loop_openvpn(self,id,password):
         """function to get top logging """
         vpn_db=ServerOpenvpn.objects.get(pk=id)
         name_server=vpn_db.dev+"_"+vpn_db.name
         all_client=ClientOpenvpn.objects.all().count()
-        cfg=[{'host': 'localhost', 'port': vpn_db.client_management_port, 'name':name_server, 'password': vpn_db.client_management_password, 'show_disconnect': False,"server_status":vpn_db.server_status} ]
-        vpn = OpenvpnMgmtInterface(cfg).vpns
-        vpn=vpn[0]
-        client_active=vpn['stats']['nclients'] if 'stats' in vpn and 'nclients' in vpn['stats'] else 0
-        capacity_server_in=int(vpn['stats']['bytesin'])   if 'stats'in vpn and 'bytesin' in vpn['stats'] else 0
-        capacity_server_out=int(vpn['stats']['bytesout'])   if 'stats'in vpn and 'bytesout' in vpn['stats'] else 0
-        address_server=str(vpn["state"]["local_ip"]) if "state" in vpn  and "local_ip" in vpn["state"]  else None
-        # print({"vpn":vpn})
-        info_clients=[]
-        if 'sessions' in vpn:
- 
-            info_clients = [
-                            {
-                                "username": session['username'],
-                                "login_time": str(session['connected_since']),
-                                "address": str(session['local_ip']),
-                                "bytes_recv":self.convert_bytes(int(session['bytes_recv'])),
-                                "bytes_sent":self.convert_bytes(int(session['bytes_sent'])),
-                                "total_traffic":self.convert_bytes(int(session['bytes_recv'])+int(session['bytes_sent'])),
-                                "location":session['location'],
-                                "traffic_distr":(capacity_server_in+capacity_server_out/int(session['bytes_recv'])+int(session['bytes_sent']))*100
-                            }
-                        for session in vpn['sessions'].values()
-                        ]
-        # Create a JSON object with the data
-        data = {
-            "address_server":address_server,
-            "all_client": all_client,
-            "client_active": client_active,
-            "capacity_client_in":self.convert_bytes(capacity_server_in),
-            "capacity_client_out":self.convert_bytes(capacity_server_out),
-            "info_clients":info_clients,
-            "top_traffic":self.get_top_traffic(info_clients),
-            # "top_logging":self.get_top_logging(vpn,name_server,address_server),
-            "top_network":self.get_top_network(info_clients)
-           
-        }
-        return data
+        check_match=check_password(password,  vpn_db.client_management_password)
+        if check_match:
+            cfg=[{'host': 'localhost', 'port': vpn_db.client_management_port, 'name':name_server, 'password':password, 'show_disconnect': False,"server_status":vpn_db.server_status} ]
+            vpn = OpenvpnMgmtInterface(cfg).vpns
+            vpn=vpn[0]
+            client_active=vpn['stats']['nclients'] if 'stats' in vpn and 'nclients' in vpn['stats'] else 0
+            capacity_server_in=int(vpn['stats']['bytesin'])   if 'stats'in vpn and 'bytesin' in vpn['stats'] else 0
+            capacity_server_out=int(vpn['stats']['bytesout'])   if 'stats'in vpn and 'bytesout' in vpn['stats'] else 0
+            address_server=str(vpn["state"]["local_ip"]) if "state" in vpn  and "local_ip" in vpn["state"]  else None
+            info_clients=[]
+            if 'sessions' in vpn:
+    
+                info_clients = [
+                                {
+                                    "username": session['username'],
+                                    "login_time": str(session['connected_since']),
+                                    "address": str(session['local_ip']),
+                                    "bytes_recv":self.convert_bytes(int(session['bytes_recv'])),
+                                    "bytes_sent":self.convert_bytes(int(session['bytes_sent'])),
+                                    "total_traffic":self.convert_bytes(int(session['bytes_recv'])+int(session['bytes_sent'])),
+                                    "location":session['location'],
+                                    "traffic_distr":((int(session['bytes_recv'])+int(session['bytes_sent']))/(capacity_server_in+capacity_server_out))*100
+                                }
+                            for session in vpn['sessions'].values()
+                            ]
+            # Create a JSON object with the data
+            data = {
+                "address_server":address_server,
+                "all_client": all_client,
+                "client_active": client_active,
+                "capacity_client_in":self.convert_bytes(capacity_server_in),
+                "capacity_client_out":self.convert_bytes(capacity_server_out),
+                "info_clients":info_clients,
+                "top_traffic":self.get_top_traffic(info_clients),
+                # "top_logging":self.get_top_logging(vpn,name_server,address_server),
+                "top_network":self.get_top_network(info_clients)
+            
+            }
+            return data
+        else:
+            return "Check your password!"
         

@@ -49,21 +49,45 @@
         title="Choose Server"
       ></i>
     </div> -->
-    <v-row class="ml-1">
+    <v-row class="ml-1 d-flex justify-start">
       <v-col cols="2">
         <v-select
-          label="Choose Server"
+          label="Server"
           density="compact"
           v-model="state.server"
           item-title="name"
           item-value="id"
           return-object
           :items="state.serverList"
-          @update:modelValue="serve"
         ></v-select>
+        <!-- @update:modelValue="serve" -->
+      </v-col>
+      <v-col cols="2">
+        <v-text-field
+          density="compact"
+          label="Password"
+          v-model="state.password"
+        ></v-text-field>
+      </v-col>
+      <v-col cols="2" class="mt-2" style="">
+        <v-btn
+          rounded
+          style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 30px;
+            width: 60%;
+          "
+          label-color="#213E9F"
+          color="indigo-darken-3"
+          @click="serve"
+        >
+          <span class="text-white pr-3 pl-3">Load</span>
+        </v-btn>
       </v-col>
     </v-row>
-    <v-row class="mt-n5">
+    <v-row class="mt-n10">
       <v-col cols="7">
         <div class="ml-3 mr-3">
           <v-row class="mt-0 mb-5">
@@ -85,8 +109,9 @@
             <v-col cols="6">
               <v-card elevation="0">
                 <v-card-title> Traffic distribution </v-card-title>
-                <v-card-item>
+                <v-card-item style="margin-left: -19%">
                   <apexchart
+                    ref="chartTraffic"
                     :options="state.chartOptionsPie"
                     :series="state.chartOptionsPie.series"
                   ></apexchart>
@@ -152,6 +177,7 @@ export default {
   setup() {
     const state = reactive({
       server: "",
+      password: "",
       serverList: [],
       modal: false,
       socket: null,
@@ -164,7 +190,7 @@ export default {
             enabled: false,
           },
         },
-        colors: ["#008FFB", "#00E396", "#FEB019", "#FF4560", "#775DD0"],
+        colors: [],
         plotOptions: {
           bar: {
             columnWidth: "70%",
@@ -211,12 +237,17 @@ export default {
       },
 
       chartOptionsPie: {
-        series: [44, 55, 13, 43, 22],
+        series: [],
         chart: {
           width: 380,
           type: "donut",
         },
-        labels: ["Team A", "Team B", "Team C", "Team D", "Team E"],
+        labels: [],
+        legend: {
+          enabled: true,
+          position: "top",
+        },
+        colors: [],
         responsive: [
           {
             breakpoint: 480,
@@ -224,21 +255,37 @@ export default {
               chart: {
                 width: 200,
               },
-             
-              style: {
-                fontSize: "10px",
-                fontFamily: "DM sans",
-                fontWeight: "light",
-              },
+
+              // style: {
+              //   fontSize: "10px",
+              //   fontFamily: "DM sans",
+              //   fontWeight: "light",
+              // },
               legend: {
-                position: "bottom",
+                enabled: true,
+                // position: "top",
               },
-            
             },
           },
         ],
       },
     });
+
+    var usedColors = [];
+
+    const getRandomColor = () => {
+      var letters = "0123456789ABCDEF";
+      var color;
+      do {
+        color = "#";
+        for (var i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+      } while (usedColors.includes(color));
+      usedColors.push(color);
+      return color;
+    };
+
     const columns = ref([
       {
         headerName: "Username",
@@ -368,6 +415,7 @@ export default {
     };
 
     const apexChart = ref(null);
+    const chartTraffic = ref(null);
     const apexChartNetwork = ref(null);
 
     const initializeWebSocket = () => {
@@ -385,6 +433,7 @@ export default {
       };
       state.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
+        // console.log("dataaa", data);
         state.dataChart = data;
 
         rowData.value = [];
@@ -393,6 +442,15 @@ export default {
 
         state.chartOptions.xaxis.categories = [];
         state.chartOptions.series[0].data = [];
+        state.chartOptionsPie.labels = [];
+        state.chartOptionsPie.series = [];
+
+        data.info_clients.forEach((element) => {
+          state.chartOptionsPie.labels.push(element.username);
+          state.chartOptionsPie.series.push(
+            parseFloat(element.traffic_distr.toFixed(2))
+          );
+        });
 
         data.top_traffic.forEach((element) => {
           state.chartOptions.series[0].data.push({
@@ -400,6 +458,14 @@ export default {
             y: Math.round(element.total_traffic.capture_size),
           });
         });
+
+        for (var i = 0; i < state.chartOptionsPie.labels.length; i++) {
+          state.chartOptionsPie.colors.push(getRandomColor());
+        }
+        for (var i = 0; i < state.chartOptions.series[0].data.length; i++) {
+          state.chartOptions.colors.push(getRandomColor());
+        }
+        chartTraffic.value.updateOptions(state.chartOptionsPie);
 
         apexChart.value.updateOptions(state.chartOptions);
 
@@ -443,6 +509,7 @@ export default {
       state,
       apexChart,
       apexChartNetwork,
+      chartTraffic,
       rowData,
       columns,
       gridApi,

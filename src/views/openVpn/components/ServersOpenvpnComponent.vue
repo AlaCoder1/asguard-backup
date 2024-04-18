@@ -211,8 +211,10 @@
             v-model:verbLevel="state.verbLevel"
             v-model:portClient="state.portClient"
             v-model:passwordClient="state.passwordClient"
+            v-model:NewPasswordClient="state.NewPasswordClient"
             :isBridge="state.isBridge"
             :deviceMode="state.deviceMode.slug"
+            :serverModeState="state.serverModeState"
             :errors="v$"
           />
         </div>
@@ -286,6 +288,7 @@ export default {
     const state = reactive({
       id: "",
       loading: false,
+      serverModeState: "create",
       isLoadingDialogue: false,
 
       mapedCertifServer: [],
@@ -352,6 +355,7 @@ export default {
       activeNtpServer2: "",
       portClient: "",
       passwordClient: "",
+      NewPasswordClient: "",
       verbLevel: {
         name: "1 (default)",
         slug: "1",
@@ -499,7 +503,23 @@ export default {
         },
 
         passwordClient: {
-          requiredIfFuction: requiredIf(() => state.clientPort),
+          requiredIfFuction: requiredIf(
+            () =>
+              (state.clientPort && state.serverModeState === "create") ||
+              (state.serverModeState === "edit" && state.NewPasswordClient)
+          ),
+          isValidPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
+        },
+        NewPasswordClient: {
+          requiredIfFuction: requiredIf(
+            () => state.serverModeState === "edit" && state.passwordClient
+          ),
           isValidPassword: helpers.withMessage(
             `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
 
@@ -811,6 +831,7 @@ export default {
       emitter.on("edit-server", (data) => {
         if (data) state.isEditState = "edit";
 
+        state.serverModeState = "edit";
         state.id = data.id;
 
         //General information
@@ -999,6 +1020,7 @@ export default {
             client_management_select: state.clientPort,
             port: state.portClient,
             password: state.passwordClient,
+            new_password: state.NewPasswordClient,
           };
         } else {
           client_management = {
@@ -1107,8 +1129,9 @@ export default {
     const cancel = () => {
       state.id = "";
       state.isEditState = "";
-      //General information
-      state.clientName = "";
+      (state.serverModeState = "create"),
+        //General information
+        (state.clientName = "");
       state.description = "";
       state.serverMode = "";
       state.protocol = "";

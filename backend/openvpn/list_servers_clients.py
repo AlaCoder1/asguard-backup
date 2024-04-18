@@ -21,12 +21,13 @@ def get_list_all_server_openvpn():
         serv_id = serv['pk']
         serv.pop('pk')
         serv['fields']['id'] = serv_id
+        serv['fields']['client_management_password'] = ''
         serv['fields']['cert_status'] = certificate.activation
         with open(PATH_SERVER_STATIC.format(serv["fields"]["name"])) as tls_file:
             serv['fields']['tls_key'] = tls_file.read()
         list_server.append(serv['fields'])
     return list_server
-    
+
 
 def get_one_server_openvpn(id):
     """Getting server by id from database"""
@@ -37,6 +38,7 @@ def get_one_server_openvpn(id):
     serv_id = res[0]['pk']
     res[0].pop('pk')
     res[0]['fields']['id'] = serv_id
+    res[0]['fields']['client_management_password'] = ''
     certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
     res[0]['fields']['cert_status'] = certificate.activation
     with open(PATH_SERVER_STATIC.format(res[0]["fields"]["name"])) as tls_file:
@@ -56,6 +58,8 @@ def get_list_all_client_openvpn():
         client_id = cli['pk']
         cli.pop('pk')
         cli['fields']['id'] = client_id
+        cli['fields']['proxy_auth_password'] = ''
+        cli['fields']['password'] = ''
         cli['fields']['cert_status'] = certificate.activation
         with open(PATH_CLIENT_STATIC.format(cli["fields"]["name"])) as tls_file:
             cli['fields']['tls_key'] = tls_file.read()
@@ -77,6 +81,8 @@ def get_one_client_openvpn(id):
     client_id = res[0]['pk']
     res[0].pop('pk')
     res[0]['fields']['id'] = client_id
+    res[0]['fields']['proxy_auth_password'] = ''
+    res[0]['fields']['password'] = ''
     certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
     res[0]['fields']['cert_status'] = certificate.activation
     with open(PATH_CLIENT_STATIC.format(res[0]["fields"]["name"])) as tls_file:

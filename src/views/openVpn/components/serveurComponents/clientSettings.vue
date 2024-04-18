@@ -161,7 +161,7 @@
         <v-col cols="4" class="mt-3">
           <label>Password</label>
         </v-col>
-        <v-col cols="8" class="mb-n6">
+        <v-col :cols="props.serverModeState === 'edit' ? 4 : 8" class="mb-n6">
           <v-text-field
             label="Password"
             :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
@@ -174,6 +174,21 @@
             v-if="props.errors.passwordClient.$errors.length"
           >
             {{ props.errors.passwordClient.$errors?.[0].$message }}
+          </p>
+        </v-col>
+        <v-col cols="4" class="mb-n6" v-if="props.serverModeState === 'edit'">
+          <v-text-field
+            label="New Password"
+            :append-inner-icon="showClientNewPass ? 'mdi-eye' : 'mdi-eye-off'"
+            @click:append-inner="showClientNewPass = !showClientNewPass"
+            :type="showClientNewPass ? 'text' : 'password'"
+            v-model="NewPasswordClient"
+          ></v-text-field>
+          <p
+            class="error-feedback mb-5 mt-3"
+            v-if="props.errors.NewPasswordClient.$errors.length"
+          >
+            {{ props.errors.NewPasswordClient.$errors?.[0].$message }}
           </p>
         </v-col>
       </template>
@@ -199,11 +214,14 @@
 import { ref } from "vue";
 import { useVModels } from "@vueuse/core";
 const show1 = ref(false);
+const showClientNewPass = ref(false);
 
 const props = defineProps([
   "errors",
+  "serverModeState",
   "deviceMode",
   "passwordClient",
+  "NewPasswordClient",
   "portClient",
   "isBridge",
   "dynamicIP",
@@ -241,6 +259,7 @@ const emit = defineEmits([
   "update:activeNtpServer2",
   "update:dynamicIP",
   "update:passwordClient",
+  "update:NewPasswordClient",
   "update:portClient",
 ]);
 const {
@@ -262,6 +281,7 @@ const {
   startAddressPool,
   passwordClient,
   portClient,
+  NewPasswordClient,
 } = useVModels(props, emit);
 
 const verbosityLevelList = ref([

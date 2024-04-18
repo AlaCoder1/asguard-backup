@@ -49,21 +49,51 @@
         title="Choose Server"
       ></i>
     </div> -->
-    <v-row class="ml-1">
+    <v-row class="ml-1 d-flex justify-start">
       <v-col cols="2">
         <v-select
-          label="Choose Server"
+          label="Server"
           density="compact"
           v-model="state.server"
           item-title="name"
           item-value="id"
           return-object
           :items="state.serverList"
-          @update:modelValue="serve"
         ></v-select>
+        <!-- @update:modelValue="serve" -->
+      </v-col>
+      <v-col cols="2">
+        <v-text-field
+          :append-inner-icon="state.show1 ? 'mdi-eye' : 'mdi-eye-off'"
+          @click:append-inner="state.show1 = !state.show1"
+          :type="state.show1 ? 'text' : 'password'"
+          density="compact"
+          label="Password"
+          v-model="state.password"
+        ></v-text-field>
+        <p class="error-feedback mb-5" v-if="v$.password.$errors.length">
+          {{ v$.password.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="2" class="mt-2" style="">
+        <v-btn
+          rounded
+          style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 30px;
+            width: 60%;
+          "
+          label-color="#213E9F"
+          color="indigo-darken-3"
+          @click="serve"
+        >
+          <span class="text-white pr-3 pl-3">Load</span>
+        </v-btn>
       </v-col>
     </v-row>
-    <v-row class="mt-n5">
+    <v-row class="mt-n10">
       <v-col cols="7">
         <div class="ml-3 mr-3">
           <v-row class="mt-0 mb-5">
@@ -85,8 +115,9 @@
             <v-col cols="6">
               <v-card elevation="0">
                 <v-card-title> Traffic distribution </v-card-title>
-                <v-card-item>
+                <v-card-item style="margin-left: -19%">
                   <apexchart
+                    ref="chartTraffic"
                     :options="state.chartOptionsPie"
                     :series="state.chartOptionsPie.series"
                   ></apexchart>
@@ -128,11 +159,21 @@
         </div>
       </v-col>
     </v-row>
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
+      {{ state.textAlert }}
+    </v-snackbar>
   </div>
 </template>
 
 <script>
-import { reactive, onMounted, ref } from "vue";
+import useValidate from "@vuelidate/core";
+import { required, helpers } from "@vuelidate/validators";
+import { reactive, onMounted, ref, computed } from "vue";
 import monitoringCards from "./monitoringCards.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VueApexCharts from "vue3-apexcharts";
@@ -151,7 +192,12 @@ export default {
   },
   setup() {
     const state = reactive({
+      show1: false,
       server: "",
+      snackbar: false,
+      color: "",
+      textAlert: "",
+      password: "",
       serverList: [],
       modal: false,
       socket: null,
@@ -164,7 +210,7 @@ export default {
             enabled: false,
           },
         },
-        colors: ["#008FFB", "#00E396", "#FEB019", "#FF4560", "#775DD0"],
+        colors: [],
         plotOptions: {
           bar: {
             columnWidth: "70%",
@@ -211,12 +257,17 @@ export default {
       },
 
       chartOptionsPie: {
-        series: [44, 55, 13, 43, 22],
+        series: [],
         chart: {
           width: 380,
           type: "donut",
         },
-        labels: ["Team A", "Team B", "Team C", "Team D", "Team E"],
+        labels: [],
+        legend: {
+          enabled: true,
+          position: "top",
+        },
+        colors: [],
         responsive: [
           {
             breakpoint: 480,
@@ -224,21 +275,52 @@ export default {
               chart: {
                 width: 200,
               },
-             
-              style: {
-                fontSize: "10px",
-                fontFamily: "DM sans",
-                fontWeight: "light",
-              },
+
+              // style: {
+              //   fontSize: "10px",
+              //   fontFamily: "DM sans",
+              //   fontWeight: "light",
+              // },
               legend: {
-                position: "bottom",
+                enabled: true,
+                // position: "top",
               },
-            
             },
           },
         ],
       },
     });
+
+    const rules = computed(() => {
+      return {
+        password: {
+          isValidPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
+        },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
+    var usedColors = [];
+
+    const getRandomColor = () => {
+      var letters = "0123456789ABCDEF";
+      var color;
+      do {
+        color = "#";
+        for (var i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+        }
+      } while (usedColors.includes(color));
+      usedColors.push(color);
+      return color;
+    };
+
     const columns = ref([
       {
         headerName: "Username",
@@ -354,12 +436,16 @@ export default {
       }
     };
 
-    const serve = () => {
-      if (state.server) {
-        state.modal = false;
-        setTimeout(() => {
-          initializeWebSocket();
-        }, 1000);
+    const serve = async () => {
+      const result = await v$.value.$validate();
+
+      if (result) {
+        if (state.server) {
+          state.modal = false;
+          setTimeout(() => {
+            initializeWebSocket();
+          }, 1000);
+        }
       }
     };
 
@@ -368,6 +454,7 @@ export default {
     };
 
     const apexChart = ref(null);
+    const chartTraffic = ref(null);
     const apexChartNetwork = ref(null);
 
     const initializeWebSocket = () => {
@@ -380,58 +467,86 @@ export default {
         state.socket.send(
           JSON.stringify({
             id: state.server.id,
+            password: state.password,
           })
         );
       };
       state.socket.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        state.dataChart = data;
+        // console.log("dataaa", data);
 
-        rowData.value = [];
+        if (typeof data === "object") {
+          state.dataChart = data;
 
-        rowData.value = data.info_clients;
+          rowData.value = [];
 
-        state.chartOptions.xaxis.categories = [];
-        state.chartOptions.series[0].data = [];
+          rowData.value = data.info_clients;
 
-        data.top_traffic.forEach((element) => {
-          state.chartOptions.series[0].data.push({
-            x: element.username + `( ${element.total_traffic.unit} )`,
-            y: Math.round(element.total_traffic.capture_size),
+          state.chartOptions.xaxis.categories = [];
+          state.chartOptions.series[0].data = [];
+          state.chartOptionsPie.labels = [];
+          state.chartOptionsPie.series = [];
+
+          data.info_clients.forEach((element) => {
+            state.chartOptionsPie.labels.push(element.username);
+            state.chartOptionsPie.series.push(
+              parseFloat(element.traffic_distr.toFixed(2))
+            );
           });
-        });
 
-        apexChart.value.updateOptions(state.chartOptions);
+          data.top_traffic.forEach((element) => {
+            state.chartOptions.series[0].data.push({
+              x: element.username + `( ${element.total_traffic.unit} )`,
+              y: Math.round(element.total_traffic.capture_size),
+            });
+          });
 
-        const timestamp = new Date(data.top_network.timestamp * 1000).getTime();
+          for (var i = 0; i < state.chartOptionsPie.labels.length; i++) {
+            state.chartOptionsPie.colors.push(getRandomColor());
+          }
+          for (var i = 0; i < state.chartOptions.series[0].data.length; i++) {
+            state.chartOptions.colors.push(getRandomColor());
+          }
+          chartTraffic.value.updateOptions(state.chartOptionsPie);
 
-        state.chartOptionsNetwork.series[0].name = "First Network";
-        state.chartOptionsNetwork.series[1].name = "Second Network";
+          apexChart.value.updateOptions(state.chartOptions);
 
-        if (data.top_network.first_network.capture_size) {
-          state.chartOptionsNetwork.series[0].data.push([
-            timestamp,
-            data.top_network.first_network.capture_size.toFixed(2),
-          ]);
+          const timestamp = new Date(
+            data.top_network.timestamp * 1000
+          ).getTime();
+
+          state.chartOptionsNetwork.series[0].name = "First Network";
+          state.chartOptionsNetwork.series[1].name = "Second Network";
+
+          if (data.top_network.first_network.capture_size) {
+            state.chartOptionsNetwork.series[0].data.push([
+              timestamp,
+              data.top_network.first_network.capture_size.toFixed(2),
+            ]);
+          }
+
+          if (
+            data.top_network.second_network &&
+            data.top_network.second_network.capture_size
+          ) {
+            state.chartOptionsNetwork.series[1].data.push([
+              timestamp,
+              data.top_network.second_network.capture_size.toFixed(2),
+            ]);
+          }
+
+          const maxDataPoints = 10;
+          if (state.chartOptionsNetwork.series[0].data.length > maxDataPoints) {
+            state.chartOptionsNetwork.series[0].data.shift();
+            state.chartOptionsNetwork.series[1].data.shift();
+          }
+
+          apexChartNetwork.value.updateOptions({});
+        } else if (typeof data === "string") {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = data;
         }
-
-        if (
-          data.top_network.second_network &&
-          data.top_network.second_network.capture_size
-        ) {
-          state.chartOptionsNetwork.series[1].data.push([
-            timestamp,
-            data.top_network.second_network.capture_size.toFixed(2),
-          ]);
-        }
-
-        const maxDataPoints = 10;
-        if (state.chartOptionsNetwork.series[0].data.length > maxDataPoints) {
-          state.chartOptionsNetwork.series[0].data.shift();
-          state.chartOptionsNetwork.series[1].data.shift();
-        }
-
-        apexChartNetwork.value.updateOptions({});
       };
 
       state.socket.onclose = () => {
@@ -441,8 +556,10 @@ export default {
 
     return {
       state,
+      v$,
       apexChart,
       apexChartNetwork,
+      chartTraffic,
       rowData,
       columns,
       gridApi,

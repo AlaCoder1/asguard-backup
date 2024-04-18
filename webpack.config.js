@@ -24,10 +24,17 @@ Encore.setOutputPath("static/")
   .addEntry("clamaV", "./src/middleware/clamaV.js")
   .addEntry("squid", "./src/middleware/squid.js")
   .addEntry("sdwan", "./src/middleware/sdwan.js")
+  .addEntry("waf", "./src/middleware/waf.js")
+  .addEntry("nat", "./src/middleware/nat.js")
+  .addEntry("routing", "./src/middleware/routing.js")
   .addEntry("keyPair", "./src/middleware/keyPair.js")
   .addEntry("UserAndCertificateManagement", "./src/middleware/userManagment.js")
   .addEntry("404", "./src/middleware/404.js")
   .addEntry("success", "./src/middleware/success.js")
+  .addEntry("vpnmonitoring", "./src/middleware/vpnmonitoring.js")
+  .addEntry("interfacesType", "./src/middleware/interfaces_type.js")
+  .addEntry("dhcp4-server", "./src/middleware/dhcp4-server.js")
+  .addEntry("profile", "./src/middleware/profile.js")
   .enableVueLoader(() => {}, {
     version: 3,
   })
@@ -46,6 +53,21 @@ Encore.setOutputPath("static/")
   .configureBabel((config) => {
     config.plugins.push("@babel/plugin-proposal-class-properties");
   })
+
+  .addRule({
+    test: /\.(p12)$/,
+    use: [
+      {
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+          outputPath: 'downloads/',  // Change the output path as needed
+        },
+      },
+    ],
+    
+  })
+
 
   .configureBabelPresetEnv((config) => {
     config.useBuiltIns = "usage";

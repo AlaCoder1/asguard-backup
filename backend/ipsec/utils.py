@@ -1,5 +1,7 @@
 import subprocess
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_CRT
+from utils.commands_utils import execute_command_without_arguments
+from utils.errors_utils import CommandExecutionError
 
 
 def reorganize_file(config:str):
@@ -30,12 +32,11 @@ def set_key_group_config(key_group:str):
 
 def up_ipsec_conn(conn_name):
     """Up IPsec config"""
-    process = subprocess.run(['sudo', 'ipsec', 'up', conn_name], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    error_up_command = process.stderr.decode()
-    if len(error_up_command) != 0:
-        print('error up command: ', error_up_command)
+    try:
+        execute_command_without_arguments(['ipsec', 'up', conn_name])
+        return True
+    except CommandExecutionError:
         return False
-    return True
 
 
 def json_to_str_server_ipsec(json_object):

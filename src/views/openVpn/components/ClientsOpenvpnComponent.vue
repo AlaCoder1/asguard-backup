@@ -114,6 +114,12 @@
                 label="Proxy host or address"
                 v-model="state.proxy_host"
               ></v-text-field>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.proxy_host.$errors.length"
+              >
+                {{ v$.proxy_host.$errors?.[0].$message }}
+              </p>
             </v-col>
             <v-col align-self="center" cols="4">
               <label>Proxy port</label>
@@ -123,6 +129,12 @@
                 label="Proxy port"
                 v-model="state.proxy_port"
               ></v-text-field>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.proxy_port.$errors.length"
+              >
+                {{ v$.proxy_port.$errors?.[0].$message }}
+              </p>
             </v-col>
 
             <v-col align-self="center" cols="4" class="mt-1">
@@ -143,7 +155,7 @@
               class="ml-1 mt-3"
             >
               <v-col align-self="center" cols="4"> <label> </label></v-col>
-              <v-col align-self="center" cols="8">
+              <v-col align-self="center" cols="8" class="mb-n6">
                 <v-text-field
                   label="Username"
                   v-model="state.username"
@@ -157,8 +169,13 @@
               </v-col>
 
               <v-col align-self="center" cols="4"><label> </label> </v-col>
-              <v-col align-self="center" cols="8">
+              <v-col :cols="state.modeState === 'create' ? 8 : 4" class="mb-n6">
                 <v-text-field
+                  :append-inner-icon="
+                    state.showpassword ? 'mdi-eye' : 'mdi-eye-off'
+                  "
+                  @click:append-inner="state.showpassword = !state.showpassword"
+                  :type="state.showpassword ? 'text' : 'password'"
                   type="password"
                   label="Password"
                   v-model="state.password"
@@ -168,6 +185,26 @@
                   v-if="v$.password.$errors.length"
                 >
                   {{ v$.password.$errors?.[0].$message }}
+                </p>
+              </v-col>
+              <v-col cols="4" class="mb-n6" v-if="state.modeState === 'edit'">
+                <v-text-field
+                  :append-inner-icon="
+                    state.showNewpassword ? 'mdi-eye' : 'mdi-eye-off'
+                  "
+                  @click:append-inner="
+                    state.showNewpassword = !state.showNewpassword
+                  "
+                  :type="state.showNewpassword ? 'text' : 'password'"
+                  type="password"
+                  label="New Password"
+                  v-model="state.NewProxyPassword"
+                ></v-text-field>
+                <p
+                  class="error-feedback mb-5"
+                  v-if="v$.NewProxyPassword.$errors.length"
+                >
+                  {{ v$.NewProxyPassword.$errors?.[0].$message }}
                 </p>
               </v-col>
             </template>
@@ -181,6 +218,12 @@
                 label="Local port"
                 v-model="state.local_port"
               ></v-text-field>
+              <p
+                class="error-feedback mb-5"
+                v-if="v$.local_port.$errors.length"
+              >
+                {{ v$.local_port.$errors?.[0].$message }}
+              </p>
             </v-col>
           </v-row>
           <v-row class="mt-2">
@@ -189,7 +232,10 @@
                 <userAuthSettings
                   v-model:username="state.usernameUser"
                   v-model:password="state.passwordUser"
+                  v-model:NewUserPassword="state.NewUserPassword"
                   v-model:renegotiate_time="state.renegotiate_time"
+                  :modeState="state.modeState"
+                  :errors="v$"
                 />
                 <cryptoSettings
                   v-model:tlsGenerate="state.tlsGenerate"
@@ -201,6 +247,8 @@
                   v-model:encryptionAlgorithm="state.encryptionAlgorithm"
                   v-model:authDigestAlgorithm="state.authDigestAlgorithm"
                   v-model:hardwareCrypto="state.hardwareCrypto"
+                  :clientCertificateList="state.clientCertificateList"
+                  :mapedCertifAuth="state.mapedCertifAuth"
                   :errors="v$"
                 />
               </v-row>
@@ -398,6 +446,12 @@ export default {
     ]);
 
     const state = reactive({
+      modeState: "create",
+      showpassword: false,
+      showNewpassword: false,
+      clientCertificateList: [],
+      mapedCertifAuth: [],
+      filtredMapCertif: [],
       id: "",
       isEditState: "",
       //general information
@@ -416,15 +470,17 @@ export default {
       },
       usernameUser: "",
       passwordUser: "",
+      NewUserPassword: "",
 
-      username: "",
-      password: "",
+      // username: "",
+      // password: "",
       local_port: "",
       // mapedInterface: [],
       mapedCertifAuth: [],
       //User Auth
       username: "",
       password: "",
+      NewProxyPassword: "",
       renegotiate_time: "",
       //cryp
       tlsGenerate: true,
@@ -466,7 +522,9 @@ export default {
       protocolsList.value = protocols;
 
       emitter.on("edit-client", (data) => {
+        console.log("clinet-edit", data);
         if (data) state.isEditState = "edit";
+        state.modeState = "edit";
         state.id = data.id;
         state.clientName = data.name;
         state.description = data.description;
@@ -509,8 +567,8 @@ export default {
         state.username = data.proxy_auth_username;
         state.password = data.proxy_auth_password;
         state.local_port = data.port;
-        state.username = data.password;
-        state.password = data.username;
+        // state.username = data.password;
+        // state.password = data.username;
         state.renegotiate_time = data.renegotiate_time;
         state.tlsGenerate = data.tls_key ? false : true;
         state.sharedKey = data.tls_key;
@@ -520,7 +578,7 @@ export default {
         );
         state.peerCertificateAuthority = filtredCert[0];
 
-        let filtredCertiClient = clientCertificateList.value.filter(
+        let filtredCertiClient = state.filtredMapCertif.filter(
           (i) => i.name === data.cert_name
         );
         state.clientCertificate = filtredCertiClient[0];
@@ -581,9 +639,42 @@ export default {
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },
+
+        ipv4TunnelNetwork: {
+          isValidIpv4TunnelNetwork: helpers.withMessage(
+            `Format must be like : X.X.X.X/X`,
+            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+          ),
+        },
+        ipv4RemoteNetwork: {
+          isValidIpv4RemoteNetwork: helpers.withMessage(
+            `Format must be like : X.X.X.X/X`,
+            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+          ),
+        },
+
         server_mode: { required },
         protocol: { required },
         device_mode: { required },
+
+        proxy_host: {
+          isValidProxy_host: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+        proxy_port: {
+          isValidProxy_port: helpers.withMessage(
+            `champs can include only Numbers.`,
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        local_port: {
+          isValidLocal_port: helpers.withMessage(
+            `champs can include only Numbers.`,
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
 
         sharedKey: {
           requiredIfFuction: requiredIf(() => !state.tlsGenerate),
@@ -593,9 +684,58 @@ export default {
             () => state.proxyAuthenticationExtraOptions.slug === "basic"
           ),
         },
-        password: {
+        passwordUser: {
+          isValidPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
           requiredIfFuction: requiredIf(
-            () => state.proxyAuthenticationExtraOptions.slug === "basic"
+            () => state.modeState === "edit" && state.NewUserPassword
+          ),
+        },
+        NewUserPassword: {
+          isValidNewUserPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
+          requiredIfFuction: requiredIf(
+            () => state.modeState === "edit" && state.passwordUser
+          ),
+        },
+
+        password: {
+          isValidPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
+
+          requiredIfFuction: requiredIf(
+            () =>
+              state.proxyAuthenticationExtraOptions.slug === "basic" &&
+              state.modeState === "create" ||
+              (state.modeState === "edit" && state.NewProxyPassword)
+          ),
+        },
+        NewProxyPassword: {
+          isValidNewProxyPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
+
+          requiredIfFuction: requiredIf(
+            () => state.modeState === "edit" && state.password
           ),
         },
         peerCertificateAuthority: { required },
@@ -610,7 +750,9 @@ export default {
     watch(
       state,
       () => {
-        if (state.proxyAuthenticationExtraOptions) {
+        if (state.proxyAuthenticationExtraOptions.slug === "none") {
+          state.username = "";
+          state.password = "";
           v$.value.username.$reset();
           v$.value.password.$reset();
         }
@@ -625,6 +767,20 @@ export default {
           cancel();
         }
       }
+    );
+
+    watch(
+      () => state.peerCertificateAuthority,
+      (newValue) => {
+        let clientCert = state.filtredMapCertif.filter(
+          (e) => e.certificate_authority === newValue.id
+        );
+        if (clientCert.length == 0) {
+          state.clientCertificate = "";
+          state.clientCertificateList = clientCert;
+        } else state.clientCertificateList = clientCert;
+      },
+      { deep: true }
     );
 
     const getCookie = (name) => {
@@ -793,7 +949,8 @@ export default {
       },
     ]);
     const hasEmptyProperty = (obj) => {
-      var invalidHostChars = /[^0-9.]/.test(obj.host);
+      // var invalidHostChars = /[^0-9.]/.test(obj.host);
+      var invalidHostChars = !/^(\d{1,3}\.){3}\d{1,3}$/.test(obj.host);
       var invalidPortChars = /[^0-9]/.test(obj.port);
 
       return (
@@ -803,6 +960,8 @@ export default {
         invalidPortChars
       );
     };
+
+    // const clientCertificateList = ref([]);
     const getAllCertAuth = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -813,16 +972,18 @@ export default {
             return {
               id: i.id,
               name: i.name,
+              is_private_key: i.is_private_key,
             };
           });
-          state.mapedCertifAuth = mapedList;
+
+          state.mapedCertifAuth = mapedList.filter((i) => i.is_private_key);
         },
         (error) => {
           console.log(error);
         }
       );
     };
-    const clientCertificateList = ref([]);
+
     const getAllClientCertif = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -833,12 +994,18 @@ export default {
             (i) => i.certificate_type === "client"
           );
 
-          clientCertificateList.value = mapedListCertif.map((i) => {
+          let clientCerticateList = mapedListCertif.map((i) => {
             return {
               id: i.id,
               name: i.name,
+              is_private_key: i.is_private_key,
+              certificate_authority: i.certificate_authority,
             };
           });
+
+          state.filtredMapCertif = clientCerticateList.filter(
+            (i) => i.is_private_key
+          );
         },
         (error) => {
           console.log(error);
@@ -849,25 +1016,28 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      var isArrayEmpty = rowDataCertificats.value.length === 0;
-      if (isArrayEmpty) {
-        snackbar.value = true;
-        color.value = "red";
-        textAlert.value = "The array is empty. Please add at least one object.";
-      } else {
-        var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
-
-        if (hasEmptyElement) {
-          snackbar.value = true;
-          color.value = "red";
-          textAlert.value =
-            "At least one element has an empty host or port, or contains invalid characters.";
-        }
-      }
-
       const result = await v$.value.$validate();
 
       if (result) {
+        var isArrayEmpty = rowDataCertificats.value.length === 0;
+        if (isArrayEmpty) {
+          snackbar.value = true;
+          color.value = "red";
+          textAlert.value =
+            "The array is empty. Please add at least one object.";
+          return;
+        } else {
+          var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
+
+          if (hasEmptyElement) {
+            snackbar.value = true;
+            color.value = "red";
+            textAlert.value =
+              "At least one element has an empty host or port, or contains invalid characters.";
+            return;
+          }
+        }
+
         let proxy_authentication = null;
         if (state.proxyAuthenticationExtraOptions.slug === "none") {
           proxy_authentication = {
@@ -878,6 +1048,7 @@ export default {
             option: state.proxyAuthenticationExtraOptions.slug,
             username: state.username,
             password: state.password,
+            new_password: state.NewProxyPassword,
           };
         }
         let tls_auth = null;
@@ -907,6 +1078,7 @@ export default {
           local_port: state.local_port,
           username: state.usernameUser,
           password: state.passwordUser,
+          new_password: state.NewUserPassword,
           renegotiate_time: state.renegotiate_time,
           tls_auth: tls_auth,
           auth_digest_algorithm: state.authDigestAlgorithm.slug,
@@ -970,6 +1142,23 @@ export default {
         }
       } else {
         console.log("v$.value", v$.value);
+
+        var isArrayEmpty = rowDataCertificats.value.length === 0;
+        if (isArrayEmpty) {
+          snackbar.value = true;
+          color.value = "red";
+          textAlert.value =
+            "The array is empty. Please add at least one object.";
+        } else {
+          var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
+
+          if (hasEmptyElement) {
+            snackbar.value = true;
+            color.value = "red";
+            textAlert.value =
+              "At least one element has an empty host or port, or contains invalid characters.";
+          }
+        }
       }
     };
 
@@ -1062,6 +1251,7 @@ export default {
 
     const cancel = () => {
       state.id = "";
+      state.modeState = "create";
       state.isEditState = "";
       //general information
       state.clientName = "";
@@ -1136,7 +1326,7 @@ export default {
       getAllClientCertif,
       getAllCertAuth,
       rowDataCertificats,
-      clientCertificateList,
+      // clientCertificateList,
       Listprotocols,
       addNewRow,
       snackbar,

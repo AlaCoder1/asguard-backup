@@ -10,7 +10,7 @@
         <input type="checkbox" v-model="dynamicIP" />
         <label class="ml-2">Active Dynamic IP</label>
       </v-col>
-      <v-col v-if="props.deviceMode === 'tun'" cols="4" >
+      <v-col v-if="props.deviceMode === 'tun'" cols="4">
         <label>Adress Pool </label>
       </v-col>
       <v-col v-if="props.deviceMode === 'tun'" cols="8" class="mb-n6">
@@ -41,13 +41,13 @@
           {{ props.errors.endAddressPool.$errors?.[0].$message }}
         </p>
       </v-col>
-      <v-col cols="4" align-self="center">
+      <!-- <v-col cols="4" align-self="center">
         <label>Topology</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="topology" />
         <label class="ml-2">Active toplogy</label>
-      </v-col>
+      </v-col> -->
       <v-col cols="4">
         <label>DNS Default Domain</label>
       </v-col>
@@ -91,6 +91,12 @@
           v-model="activeDnsServer2"
           v-if="dnsServers"
         ></v-text-field>
+        <p
+          class="error-feedback mb-5 mt-3"
+          v-if="props.errors.activeDnsServer2.$errors.length"
+        >
+          {{ props.errors.activeDnsServer2.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" align-self="center">
         <label>Force DNS cache update</label>
@@ -123,6 +129,12 @@
           v-model="activeNtpServer2"
           v-if="ntpServers"
         ></v-text-field>
+        <p
+          class="error-feedback mb-5 mt-3"
+          v-if="props.errors.activeNtpServer2.$errors.length"
+        >
+          {{ props.errors.activeNtpServer2.$errors?.[0].$message }}
+        </p>
       </v-col>
       <v-col cols="4" align-self="center">
         <label>Client Management Port</label>
@@ -131,6 +143,56 @@
         <input type="checkbox" v-model="clientPort" />
         <label class="ml-2">Active Client Management Port</label>
       </v-col>
+
+      <template v-if="clientPort">
+        <v-col cols="4" class="mt-3">
+          <label>Port</label>
+        </v-col>
+        <v-col cols="8" class="mb-n6">
+          <v-text-field label="Port" v-model="portClient"></v-text-field>
+
+          <p
+            class="error-feedback mb-5 mt-3"
+            v-if="props.errors.portClient.$errors.length"
+          >
+            {{ props.errors.portClient.$errors?.[0].$message }}
+          </p>
+        </v-col>
+        <v-col cols="4" class="mt-3">
+          <label>Password</label>
+        </v-col>
+        <v-col :cols="props.serverModeState === 'edit' ? 4 : 8" class="mb-n6">
+          <v-text-field
+            label="Password"
+            :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+            @click:append-inner="show1 = !show1"
+            :type="show1 ? 'text' : 'password'"
+            v-model="passwordClient"
+          ></v-text-field>
+          <p
+            class="error-feedback mb-5 mt-3"
+            v-if="props.errors.passwordClient.$errors.length"
+          >
+            {{ props.errors.passwordClient.$errors?.[0].$message }}
+          </p>
+        </v-col>
+        <v-col cols="4" class="mb-n6" v-if="props.serverModeState === 'edit'">
+          <v-text-field
+            label="New Password"
+            :append-inner-icon="showClientNewPass ? 'mdi-eye' : 'mdi-eye-off'"
+            @click:append-inner="showClientNewPass = !showClientNewPass"
+            :type="showClientNewPass ? 'text' : 'password'"
+            v-model="NewPasswordClient"
+          ></v-text-field>
+          <p
+            class="error-feedback mb-5 mt-3"
+            v-if="props.errors.NewPasswordClient.$errors.length"
+          >
+            {{ props.errors.NewPasswordClient.$errors?.[0].$message }}
+          </p>
+        </v-col>
+      </template>
+
       <v-col align-self="center" cols="4" class="mb-5">
         <label>Verbosity Level</label>
       </v-col>
@@ -151,14 +213,20 @@
 <script setup>
 import { ref } from "vue";
 import { useVModels } from "@vueuse/core";
+const show1 = ref(false);
+const showClientNewPass = ref(false);
 
 const props = defineProps([
   "errors",
+  "serverModeState",
   "deviceMode",
+  "passwordClient",
+  "NewPasswordClient",
+  "portClient",
   "isBridge",
   "dynamicIP",
   "adressPool",
-  "topology",
+  // "topology",
   "dnsDefaultDomain",
   "dnsServers",
   "forceDNS",
@@ -176,7 +244,7 @@ const props = defineProps([
 const emit = defineEmits([
   "update:adressPool",
   "update:verbLevel",
-  "update:topology",
+  // "update:topology",
   "update:dnsDefaultDomain",
   "update:dnsServers",
   "update:forceDNS",
@@ -190,11 +258,14 @@ const emit = defineEmits([
   "update:activeNtpServer1",
   "update:activeNtpServer2",
   "update:dynamicIP",
+  "update:passwordClient",
+  "update:NewPasswordClient",
+  "update:portClient",
 ]);
 const {
   verbLevel,
   adressPool,
-  topology,
+  // topology,
   dnsDefaultDomain,
   forceDNS,
   endAddressPool,
@@ -208,7 +279,11 @@ const {
   dynamicIP,
   activeDnsDefault,
   startAddressPool,
+  passwordClient,
+  portClient,
+  NewPasswordClient,
 } = useVModels(props, emit);
+
 const verbosityLevelList = ref([
   {
     name: "0 (none)",

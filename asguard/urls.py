@@ -16,6 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from backend.dashboard import consumers
+from backend.openvpn_monitoring import consumers_openvpn
 from views.views import *
 from django.conf.urls import handler404
 from drf_yasg.views import get_schema_view
@@ -44,6 +45,7 @@ urlpatterns = [
     path('dashboard/', index_page),
     path('userCertifMang/', user_certificate_managment_page),
     path('interfaces/list-of-interface', interface_page),
+    path('interfaces/type-of-interface', interface_type),
     path('system/user-certificat-management', user_certificate_managment_page),
     path('firewall/rules', firewall_page),
     path('settings/', settings_page),
@@ -66,6 +68,8 @@ urlpatterns = [
     path('ipsec/', ipsec_page),
     path('proxy/', squid_proxy),
     path('sdwan/', sdwan_page),
+    path('waf/', waf_page),
+    path('sdwan/', include('backend.sdwan.urls')),
     path('clamaV/', clamav_page),
     path('clamaV/', include('backend.clamav.urls')),
     path('rules/', include('backend.rules.urls')),
@@ -73,14 +77,31 @@ urlpatterns = [
     path("monitoring/",include("backend.dashboard.urls")),
     path("ids-ips/",include("backend.ids_ips.urls")),
     path('proxy/', include('backend.proxy.urls')),
+    path('nat/', include('backend.nat.urls')),
+    path("vlan/",include("backend.vlan.urls")),
+    path("waf/",include("backend.waf.urls")),
+    path("server_dhcp4/",include("backend.server_dhcp4.urls")),
+    path("services/server-dhcp4",server_dhcp4_page),
+    
     path("ids-ips/",suricata),
-    path("success/",success)
+    path("firewall/nat/",nat_page),
+    path("success/",success),
+    path("vpnmonitoring/",openvpn_monitoring),
+    path("routing/",routing_page),
+    path('ldap/',include('backend.LdapServer.urls')),
+    path('routing/',include('backend.routing.urls')),
+    path("profile/",profile_page),
+
+
+
 ]
 
 # ws/wss url patterns
 websocket_urlpatterns = [
     # consumer for a particular user
       path('ws/data/', consumers.DashboardConsumer.as_asgi()),
+      path('ws/vpnmonitoring/', consumers_openvpn.OpenVpnConsumer.as_asgi()),
+      
 ]
 
 handler404 = 'views.views.error_404_view'

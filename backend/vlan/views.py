@@ -134,12 +134,16 @@ def assign_vlan_interface(request):
                         "name_interface":data_input['name_interface'],
                         "description":f"test default config vlan {vlan_tag}"
                     }
-            aux_save=add_vlan_sys(parent_interface,vlan_tag,vlan_priority)
-            if aux_save is True:
-                interface_serializer=InterfaceSerializer(data=data_save)
-                msg,status=save_in_db(aux_save,interface_serializer)
+            if not Interface.objects.filter(ifname=f"vlan{vlan_object.vlan_tag}@{parent_interface}").exists():
+                aux_save=add_vlan_sys(parent_interface,vlan_tag,vlan_priority)
+                if aux_save is True:
+                    interface_serializer=InterfaceSerializer(data=data_save)
+                    msg,status=save_in_db(aux_save,interface_serializer)
+                else:
+                    msg=aux_save
+                    status=400
             else:
-                msg=aux_save
+                msg="Vlan interface already exist!"
                 status=400
         else:
             msg="Vlan not exist!"

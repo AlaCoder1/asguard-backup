@@ -114,7 +114,7 @@ def createUser(request):
                                     break   
                         # Close LDAP connection
                         if not email_founded:
-                            return JsonResponse({'msg': f"The email '{email}' doesn't exist in any directory server. Do you want to add this user with a simple email?"}, status=400)
+                            return JsonResponse({'msg': f"The email '{email}' does not exist in the directory server"}, status=400)
                         ldap_conn.unbind()
                     else:
                         return JsonResponse({'msg': "please verify your password of directory server"},status=400)   
@@ -128,7 +128,7 @@ def createUser(request):
                     return JsonResponse({'msg': "This directory server is not Exist"},status=400)  
        
         if User.objects.filter(email=email).exists():
-            return JsonResponse({"msg": "email allready exist"}, status=400)
+            return JsonResponse({"msg": "Email allready exist"}, status=400)
         else:
             if validInput(username) and validPassword(password):
                 # Execute the command on the remote machine
@@ -281,7 +281,7 @@ def modifyUser(request, id):
                                     data['dn_user'] = entry[0]
                                     break   
                     if not email_founded:
-                            return JsonResponse({'msg': "The email doesn't exist in any directory server. Do you want to add this user with a simple email?"}, status=400)
+                            return JsonResponse({'msg': "The email does not exist in the directory server"}, status=400)
                     ldap_conn.unbind()
                 else:
                     return JsonResponse({'msg': "please verify your password of directory server"},status=400)    
@@ -290,6 +290,9 @@ def modifyUser(request, id):
                 return JsonResponse({'msg': 'directory server is unreachable'},status=500)        
             except ldap.LDAPError as e:
                 return JsonResponse({'msg': "Error connecting to directory server"},status=400)  
+            
+        if User.objects.filter(email=data['email']).exclude(id=id).exists():
+            return JsonResponse({"msg": "Email allready exist"}, status=400)    
         newmail = data['email']
         newrole = data['role']
         userObject = User.objects.get(id=id)

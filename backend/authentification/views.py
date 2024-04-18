@@ -85,7 +85,7 @@ def authentification(request):
                                 authentication_server=True
                         except ldap.INVALID_CREDENTIALS as e:
                             authentication_server=False
-                            return JsonResponse({'message': 'Authentication failed. Invalid credentials'},status=500)   
+                            return JsonResponse({'message': 'Invalid credentials'},status=500)   
                             
                         except ldap.SERVER_DOWN:
                             authentication_server=False
@@ -100,7 +100,7 @@ def authentification(request):
                                 authentication_server=True
                         except ldap.INVALID_CREDENTIALS as e:
                             authentication_server=False
-                            return JsonResponse({'message': 'Authentication failed. Invalid credentials'},status=500)   
+                            return JsonResponse({'message': ' Invalid credentials'},status=500)   
                             
                         except ldap.SERVER_DOWN:
                             authentication_server=False

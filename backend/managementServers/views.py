@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from backend.managementUsers.remoteFunctions import decrypt
 from .models import *
 from .serializers import *
 from django.views.decorators.csrf import csrf_exempt

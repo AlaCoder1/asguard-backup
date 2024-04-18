@@ -1,5 +1,5 @@
 from django.http import JsonResponse
-# from backend.managementGroup.functions import sudo
+# from backend.managementGroup.remoteFunctions import sudo
 from backend.network.models import Interface
 from .models import *
 from .serializers import *

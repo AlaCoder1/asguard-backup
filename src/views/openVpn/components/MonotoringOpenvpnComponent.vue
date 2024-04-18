@@ -282,6 +282,7 @@ export default {
           color += letters[Math.floor(Math.random() * 16)];
         }
       } while (usedColors.includes(color));
+      usedColors.push(color);
       return color;
     };
 

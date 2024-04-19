@@ -563,6 +563,10 @@ def profile_page(request):
     return render(request, 'profile_page.html')
 
 @login_required(login_url='/')
+def setting_page(request):
+    return render(request, 'settings_page.html')
+
+@login_required(login_url='/')
 def clamav_page(request):
     config= getclamavconfigurations()
     # context = {'config':config}

@@ -68,6 +68,7 @@ urlpatterns = [
     path('ipsec/', ipsec_page),
     path('proxy/', squid_proxy),
     path('sdwan/', sdwan_page),
+    path('settings/', setting_page),
     path('waf/', waf_page),
     path('sdwan/', include('backend.sdwan.urls')),
     path('clamaV/', clamav_page),

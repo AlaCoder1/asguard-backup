@@ -1,4 +1,3 @@
-from django.contrib.auth import get_user_model
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.authentication import SessionAuthentication
@@ -15,13 +14,12 @@ from drf_yasg.utils import swagger_auto_schema
 import stripe
 from backend.LdapServer.models import ADServer
 import ldap
-from django.core import serializers
+from email.mime.text import MIMEText
+import smtplib
+import random
+import string
+import time
 # Create your views here.
-
-
-# User = get_user_model()
-
-       
 
 def normal_connect(request,data):
     serializer = ObtainTokenSerializer(data=data)
@@ -120,11 +118,6 @@ def authentification(request):
             message,CurrentUser,status =normal_connect(request,data)
             return JsonResponse({'message': message,"currentUser":CurrentUser}, status=status)
 
-
-
-
-
-
 @swagger_auto_schema(
     method='GET',
     responses={201: 'Created', 400: 'Bad Request'},
@@ -138,7 +131,6 @@ def logout_view(request):
     logout(request)
     return JsonResponse({"msg": 'User Logged out successfully'})
 
-
 def show_url(request):
     host = request.get_host()
     if host.startswith("127"):
@@ -147,8 +139,6 @@ def show_url(request):
         url="https://"+host
     print('url',url)
     return url
-
-
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -160,9 +150,6 @@ def create_checkout_session(request):
         price = data['price']
         # card_type = data['card_type']  # Assuming card_type is provided in the request data
         card_type = 'card'
-        print('********************',price)
-       
-
         stripe.api_key = STRIPE_SECRET_KEY
         try:
             url=show_url(request)
@@ -204,3 +191,83 @@ def create_checkout_session(request):
             return JsonResponse({'error': str(e)})
     else:
         return JsonResponse({'error': 'Invalid request'})
+
+
+from django.views.decorators.csrf import csrf_exempt
+from .models import VerificationCode
+###### data in settings.py and .env
+EMAIL_HOST = 'smtp.office365.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'mh.benelghali@numeryx.fr'  
+EMAIL_HOST_PASSWORD = 'Ess4live+++'
+
+def generate_verification_code():
+    return ''.join(random.choices(string.digits, k=8))
+
+def send_email_to_user(email, code, username):
+    subject = 'Welcome ' + username
+    message = f'Welcome {username},\n\nThis is your account:\n* EMAIL: {email}\n* Your verification code is: {code}\n\nBest regards'
+    server = smtplib.SMTP(EMAIL_HOST, 587)
+    server.starttls()
+    server.login(EMAIL_HOST_USER, EMAIL_HOST_PASSWORD)
+    msg = MIMEText(message)
+    msg['Subject'] = subject
+    msg['From'] = EMAIL_HOST_USER
+    msg['To'] = email
+    server.sendmail(EMAIL_HOST_USER, [email], msg.as_string())
+    server.quit()
+
+from datetime import datetime, timedelta   
+@csrf_exempt
+def send_verification_code(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        email = data['email']
+        username = data['username']
+        
+        user = User.objects.get(email=email)
+        verification_code = generate_verification_code()
+
+        send_email_to_user(email, verification_code, username)
+        expiration_time = datetime.now() + timedelta(minutes=2)
+        VerificationCode.objects.update_or_create(user=user, defaults={'code': verification_code, 'expiration_time': expiration_time})
+
+        return JsonResponse({"message": "Verification code sent successfully"})
+
+from django.utils import timezone
+@csrf_exempt
+def verify_code(request,id):
+    if request.method == 'POST':
+        user = User.objects.get(id=id)
+        data = json.loads(request.body)
+        user_input = data['verification_code']
+
+        try:
+            verification_code = VerificationCode.objects.get(user=user.pk)
+            if timezone.now() <= verification_code.expiration_time:
+                if user_input == verification_code.code:
+                    verification_code.delete()
+                    return JsonResponse({"message": "Verification successful"})
+                else:
+                    return JsonResponse({"message": "Invalid verification code"})
+            else:
+                verification_code.delete()
+                return JsonResponse({"message": "Verification code expired. Please request a new one."})
+        except VerificationCode.DoesNotExist:
+            return JsonResponse({"message": "No verification code found for this email"})
+
+@csrf_exempt
+def resend_verification_code(request,id):
+    if request.method == 'POST':
+        user = User.objects.get(id=id)
+        
+        email = user.email
+        username = user.username
+
+        verification_code = generate_verification_code()
+        send_email_to_user(email, verification_code, username)
+
+        expiration_time = datetime.now() + timedelta(minutes=2)
+        VerificationCode.objects.update_or_create(user=user, defaults={'code': verification_code, 'expiration_time': expiration_time})
+
+        return JsonResponse({"message": "Verification code resent successfully"})

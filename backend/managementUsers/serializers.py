@@ -34,3 +34,8 @@ class PermissionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Permission
         fields = ('name', 'context',)
+
+class ProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ['id', 'user', 'phone_number', 'region', 'code_postal', 'address', 'country', 'photo_url','is_enable_2FA']

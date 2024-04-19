@@ -206,6 +206,31 @@ export default {
       let timeZone =
         document.getElementById("app").attributes["time_zone"].value;
       const parsedArray = JSON.parse(timeZone);
+
+          let gatewaySettings =
+        document.getElementById("app").attributes["network_info"].value;
+      const parsedArray2 = JSON.parse(gatewaySettings);
+
+      rowDataGateway.value = parsedArray2[0].map((i) => {
+        return {
+          uuid: uuidv4(),
+          dns_server: i.dns_server,
+          gateway: i.gateway
+        };
+      });
+
+      if (!rowDataGateway.value) {
+        rowDataGateway.value = [];
+      }
+
+      if (gridApi.value) {
+        gridApi.value.setRowData(rowDataGateway.value);
+      } else {
+        console.error("Grid API.");
+      }
+      console.log('parsedArray2',parsedArray2)
+
+
       state.timeZoneList = parsedArray;
       let time = state.timeZoneList.filter(
         (i) => i.id === parsedArray1?.time_zone?.id
@@ -275,17 +300,30 @@ export default {
 
     const submitForm = async () => {
       console.log("gateway", rowDataGateway.value);
-      // const csrfToken = getCookie("csrftoken");
-      // axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      // let payload = {
-      //   hostname: state.hostName,
-      //   domain: `${state.domain}.com`,
-      //   timezone: state.timeZone.name,
-      // };
-      // console.log("pay", payload);
-      // state.loading = true;
-      // state.isLoadingDialogue = true;
+      let payload = {
+        hostname: state.hostName,
+        domain: `${state.domain}.com`,
+        timezone: state.timeZone.name,
+
+    //     "dns_servers":[{
+    //     "dns_server":"1.1.1.2",
+    //     "gateway":"10.1.12.1",
+    //     "interface_id":3,
+    //     "metric":20014
+    // },{
+    //     "dns_server":"1.1.1.5",
+    //     "gateway":"192.168.189.172",
+    //     "interface_id":5,
+    //     "metric":20014
+    // }]
+
+      };
+      console.log("pay", payload);
+      state.loading = true;
+      state.isLoadingDialogue = true;
       // axios
       //   .put(`/settings/generale_settings/1`, payload)
       //   .then((response) => {

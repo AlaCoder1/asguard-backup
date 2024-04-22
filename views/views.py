@@ -502,11 +502,6 @@ def firewall_page(request):
     return render(request, 'firewall_page.html',context)
 
 @login_required(login_url='/')
-def settings_page(request):
-    return render(request, 'settings_page.html')
-
-
-@login_required(login_url='/')
 def openvpn_page(request):
     servers=get_list_all_server_openvpn()
     clients=get_list_all_client_openvpn()
@@ -561,6 +556,14 @@ def waf_page(request):
 @login_required(login_url='/')
 def profile_page(request):
     return render(request, 'profile_page.html')
+
+@login_required(login_url='/')
+def setting_page(request):
+    generale_settings=get_generale_settings(request,id=1)
+    time_zone = time_zones(request)
+    gateway=gatways_information(request)
+    context = {'gateway':gateway,'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings)}
+    return render(request, 'settings_page.html',context)
 
 @login_required(login_url='/')
 def clamav_page(request):
@@ -762,6 +765,9 @@ def gatways_information(request):
                 "info": info
             } for gateway, info in output_data.items()
         ]
-        return JsonResponse({"gatways_information": output_data})
+        return output_data
+
+        # return JsonResponse({"gatways_information": output_data})
+    
     
 ################## generale information ##################

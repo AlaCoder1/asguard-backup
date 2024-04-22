@@ -80,12 +80,13 @@ class User(AbstractBaseUser):
 
 class Profile(models.Model):
     user = models.OneToOneField('User', on_delete=models.CASCADE, related_name='profile')
-    phone_number = models.CharField(max_length=20, blank=True, null=True)
-    region = models.CharField(max_length=100, blank=True, null=True)
-    code_postal = models.CharField(max_length=20, blank=True, null=True)
-    address = models.TextField(blank=True, null=True)
-    country = models.CharField(max_length=100, blank=True, null=True)
-    photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
+    phone_number = models.CharField(max_length=20, blank=False,null=True)
+    region = models.CharField(max_length=100, blank=False,null=True)
+    code_postal = models.CharField(max_length=20, blank=True,null=True)
+    address = models.TextField(blank=False,null=True)
+    country = models.CharField(max_length=100, blank=False,null=True)
+    photo_url = models.CharField(blank=True,null=True,default='/media/profile.jpg',max_length=1000)
+    is_enable_2FA = models.BooleanField(default=False)
 
     class Meta:
         db_table = 'profile'

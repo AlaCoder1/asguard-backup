@@ -16,7 +16,8 @@ from django.contrib.auth.hashers import make_password
 from backend.LdapServer.models import ADServer
 import ldap
 from drf_yasg.utils import swagger_auto_schema
-
+from django.conf import settings
+from rest_framework import status
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF Users",
                      operation_description="API TO GET LIST OF Users",)
@@ -55,13 +56,16 @@ def getUser(request, id):
     if (request.method == 'GET'):
         user = User.objects.filter(id=id)
         userDict = serializers.serialize("json", user)
-        res = json.loads(userDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields'].pop('password')
-        res[0]['fields']['id'] = id
-        userJson = res[0]['fields']
+        res_user = json.loads(userDict)
+        res_user[0]['fields']['id'] = res_user[0]['pk']
+        userJson = res_user[0]['fields']
+        
+        profile=Profile.objects.filter(user_id=id)
+        profile_user=serializers.serialize("json", profile)
+        res_profile = json.loads(profile_user)
+        res_profile[0]['fields']['id'] = res_profile[0]['pk']
+        profileJson = res_profile[0]['fields']
+        userJson['profile']=profileJson
         return JsonResponse(userJson)
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -161,6 +165,7 @@ def createUser(request):
                                 # If okay, save it on the database
                                 serializerUser.save()
                                 serializerGroup.save()
+                                Profile.objects.create(user=serializerUser.save())
                                 # Provide a Json Response with the data that was saved
                                 return JsonResponse({"msg": msg}, status=201)
                             # Provide a Json Response with the necessary error information
@@ -182,14 +187,17 @@ def createUser(request):
                         if serializerUser.is_valid():
                             if serializerGroup.is_valid():
                                 # If okay, save it on the database
+                                
                                 serializerUser.save()
                                 serializerGroup.save()
+                                Profile.objects.create(user=serializerUser.save())
                                 # Provide a Json Response with the data that was saved
                                 return JsonResponse({"msg": msg}, status=201)
                             # Provide a Json Response with the necessary error information
                             return JsonResponse(serializerGroup.errors, status=400)
                         # Provide a Json Response with the necessary error information
                         return JsonResponse(serializerUser.errors, status=400)
+                    
                 else:
                     error_msg = error_useradd.strip()
                     modified_error_msg = " " + error_msg.replace("useradd: ", "")
@@ -339,94 +347,141 @@ def modifyUser(request, id):
             msg = "invalid "+newusername
         
         return JsonResponse({"data": data, "msg": msg})
+    
+from django.core.exceptions import ValidationError
 
+@swagger_auto_schema(
+    method='PUT',
+    request_body=ProfileSerializer,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO UpdateProfile",
+    operation_description="This API help us to update profile of user ",
+)
 
 
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def update_profile(request, id):
-     if (request.method == 'PUT'):
-        user = User.objects.filter(id=id)
-        userDict = serializers.serialize("json", user)
-        res = json.loads(userDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields']['id'] = id
-        userJson = res[0]['fields']
-        oldusername = userJson['username']
+def update_profile(request):
+    if (request.method == 'PUT'):
+        user = request.user 
+        oldusername = user.username
         data = request.data
-    
-        # Update user fields
-        user.username = data.get('username', user.username)
-        user.fullname = data.get('fullname', user.fullname)
-        data['dn_user'] = None
-        email_founded=False
-        if data['password_ad'] != "":
-                id_server = data['id_server']
-                ad_server = ADServer.objects.get(id=id_server)
-                try:
-                    is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
-                    if is_password_matched:
-                        ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
-                        ldap_conn = ldap.initialize(ldap_uri)
-                        ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
-                        result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
-                            # get the list of users email from AD server 
-                        user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
-                            # get the list of users email from openldap server 
-                        user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
+        try:
+            # Update user fields
+            user.username = data.get('username', user.username)
+            user.fullname = data.get('fullname', user.fullname)
+            data['dn_user'] = None
+            email_founded=False
+            if data['password_ad'] != "":
+                    id_server = data['id_server']
+                    ad_server = ADServer.objects.get(id=id_server)
+                    try:
+                        is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
+                        if is_password_matched:
+                            ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
+                            ldap_conn = ldap.initialize(ldap_uri)
+                            ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
+                            result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
+                                # get the list of users email from AD server 
+                            user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
+                                # get the list of users email from openldap server 
+                            user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
 
-                        if data['email'].lower() in [user.lower() for user in user_principal_names]:
-                            user.email = data['email']
-                            email_founded=True
+                            if data['email'].lower() in [user.lower() for user in user_principal_names]:
+                                user.email = data['email']
+                                email_founded=True
 
-                        if data['email'].lower() in [user.lower() for user in user_emails]:
-                            user.email = data['email']
-                            email_founded=True
-                            for entry in result:
-                                    entry_email = entry[1].get('mail', [''])[0].decode('utf-8').lower()
-                                    if data['email'].lower() == entry_email:
-                                        data['dn_user'] = entry[0]
-                                        break   
-                        if not email_founded:
-                                return JsonResponse({'msg': "The email doesn't exist in any directory server. Do you want to add this user with a simple email?"}, status=400)
-                        ldap_conn.unbind()
+                            if data['email'].lower() in [user.lower() for user in user_emails]:
+                                user.email = data['email']
+                                email_founded=True
+                                for entry in result:
+                                        entry_email = entry[1].get('mail', [''])[0].decode('utf-8').lower()
+                                        if data['email'].lower() == entry_email:
+                                            data['dn_user'] = entry[0]
+                                            break   
+                            if not email_founded:
+                                    return JsonResponse({'msg': "The email doesn't exist in any directory server"}, status=400)
+                            ldap_conn.unbind()
+                        else:
+                            return JsonResponse({'msg': "please verify your password of directory server"},status=400)    
+                    except ldap.SERVER_DOWN:
+                        # LDAP authentication failed
+                        return JsonResponse({'msg': 'directory server is unreachable'},status=500)        
+                    except ldap.LDAPError as e:
+                        return JsonResponse({'msg': "Error connecting to directory server"},status=400)  
+                    
+            if User.objects.filter(email=data['email']).exclude(id=user.id).exists():
+                return JsonResponse({"msg": "Email allready exist"}, status=400)          
+            user.email = data['email']
+            userObject = User.objects.get(id=user.id)
+            if validInput(user.username):
+                if username_exists(user.username) and  user.username != oldusername:
+                    msg = f"username or email already Used."
+                    return JsonResponse({"msg": msg})
+                else:
+                    userObject.username = user.username
+                    
+                    if checkSameGroupnameWithUsername(oldusername):
+                        changeUsername(user.username, oldusername)
+                        change_groupname_username(oldusername, user.username)
+                        
+                        msg = "updated groupname and username succesfully"
                     else:
-                        return JsonResponse({'msg': "please verify your password of directory server"},status=400)    
-                except ldap.SERVER_DOWN:
-                    # LDAP authentication failed
-                    return JsonResponse({'msg': 'directory server is unreachable'},status=500)        
-                except ldap.LDAPError as e:
-                    return JsonResponse({'msg': "Error connecting to directory server"},status=400)  
-        user.email = data['email']
+                        changeUsername(user.username, oldusername)
+                        msg = "updated only username succesfully"
+                    userObject.fullname = user.fullname
+                    userObject.email = user.email
+                    userObject.dn_user=data['dn_user']
+                    if email_founded:
+                        userObject.id_server=ad_server
+                    else:
+                        userObject.id_server=None
+                    userObject.save()
+            else:
+                msg = "invalid "+ user.username
 
-        # Update profile fields
-        profile = user.profile
-        profile.phone_number = data.get('phone_number', profile.phone_number)
-        profile.region = data.get('region', profile.region)
-        profile.code_postal = data.get('code_postal', profile.code_postal)
-        profile.address = data.get('address', profile.address)
-        profile.country = data.get('country', profile.country)
+            # Update profile fields
+            profile = Profile.objects.get(user=userObject)
+            # profile.phone_number = data.get('phone_number', profile.phone_number)
+            # profile.region = data.get('region', profile.region)
+            # profile.code_postal = data.get('code_postal', profile.code_postal)
+            # profile.address = data.get('address', profile.address)
+            # profile.country = data.get('country', profile.country)
+            
+            # if 'is_enable_2FA' in data:
+            #     profile.is_enable_2FA = data['is_enable_2FA']
 
-        # Handle photo upload
-        if 'photo' in request.FILES:
-            profile.photo = request.FILES['photo'].name  # Just store the file name
+            if 'photo' in request.FILES:
+                photo = request.FILES['photo']
+                # Create or update the user-specific folder
+                user_folder = os.path.join(settings.MEDIA_ROOT, str(user.id))
+                if not os.path.exists(user_folder):
+                    os.makedirs(user_folder)
 
-        # Save changes
-        user.save()
-        profile.save()
-
-        return JsonResponse({'message': 'Profile updated successfully'})
-
-
-
-
-
-
-
+                photo_path = os.path.join(user_folder, photo.name)
+                photo_url = '/media/'+os.path.relpath(photo_path, settings.MEDIA_ROOT)
+                old_photo_url_path = os.path.join(user_folder, profile.photo_url.split('/')[3])
+                
+                # Delete the old photo_url file if it exists
+                if os.path.exists(old_photo_url_path):
+                    os.remove(old_photo_url_path)
+                with open(photo_path, 'wb+') as destination:
+                    for chunk in photo.chunks():
+                        destination.write(chunk)
+                
+            data['photo_url']  = photo_url
+            serializer = ProfileSerializer(profile, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return JsonResponse({'message': 'Profile updated successfully'})
+            return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+          
+        except ValidationError as e:
+            return JsonResponse({'msg': e.message}, status=400)
+        except Exception as e:
+            return JsonResponse({'msg': str(e)}, status=500)
 
 @swagger_auto_schema(
     method='PUT',

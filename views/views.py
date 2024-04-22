@@ -559,10 +559,15 @@ def profile_page(request):
 
 @login_required(login_url='/')
 def setting_page(request):
+    network_info = []
     generale_settings=get_generale_settings(request,id=1)
+    network = Network.objects.all()
+    for i in network:
+        network_info.append(i.server_dns)
     time_zone = time_zones(request)
     gateway=gatways_information(request)
-    context = {'gateway':gateway,'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings)}
+    print({"gateway":gateway})
+    context = {'gateway':gateway,'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings),"network_info":json.dumps(network_info),"gateway":json.dumps(gateway)}
     return render(request, 'settings_page.html',context)
 
 @login_required(login_url='/')

@@ -28,7 +28,7 @@
                     v-model="state.gateway"
                     label="Gateway"
                     density="compact"
-                    item-title="name"
+                    item-title="address"
                     item-value="id"
                     return-object
                     :items="state.gatwayList"
@@ -123,6 +123,23 @@ export default {
         console.log("dataGateway", data);
         state.rowList = data;
       });
+
+      let gateway =
+        document.getElementById("app").attributes["gateway"].value;
+      const parsedArrayGateway = JSON.parse(gateway);
+      console.log('parsedArrayGateway',parsedArrayGateway)
+
+       let array=[]
+       parsedArrayGateway.forEach(element => {
+        array.push(element.gateway)
+       });
+       state.gatwayList = array
+
+
+   
+
+
+
     });
 
     const { isOpen, editRow, modalMode } = toRefs(props);
@@ -131,8 +148,7 @@ export default {
       rowList: [],
       editValue: null,
       gatwayList: [
-        { id: 1, name: "gateway1" },
-        { id: 2, name: "gateway2" },
+     
       ],
 
       //
@@ -172,7 +188,7 @@ export default {
       if (modalMode.value === "edit") {
         console.log("editGateway : ", data);
         let filtredGateway = state.gatwayList.filter(
-          (i) => i.name === data.gateway
+          (i) => i.address === data.gateway
         );
         state.editValue = data.uuid;
         state.gateway = filtredGateway[0];
@@ -198,7 +214,7 @@ export default {
         
         let payload = {
           uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
-          gateway: state.gateway.name,
+          gateway: state.gateway.address,
           dns_server: state.dns_server,
         };
 

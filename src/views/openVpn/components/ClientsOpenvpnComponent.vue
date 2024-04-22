@@ -155,7 +155,7 @@
               class="ml-1 mt-3"
             >
               <v-col align-self="center" cols="4"> <label> </label></v-col>
-              <v-col align-self="center" cols="8">
+              <v-col align-self="center" cols="8" class="mb-n6">
                 <v-text-field
                   label="Username"
                   v-model="state.username"
@@ -169,8 +169,13 @@
               </v-col>
 
               <v-col align-self="center" cols="4"><label> </label> </v-col>
-              <v-col align-self="center" cols="8">
+              <v-col :cols="state.modeState === 'create' ? 8 : 4" class="mb-n6">
                 <v-text-field
+                  :append-inner-icon="
+                    state.showpassword ? 'mdi-eye' : 'mdi-eye-off'
+                  "
+                  @click:append-inner="state.showpassword = !state.showpassword"
+                  :type="state.showpassword ? 'text' : 'password'"
                   type="password"
                   label="Password"
                   v-model="state.password"
@@ -180,6 +185,26 @@
                   v-if="v$.password.$errors.length"
                 >
                   {{ v$.password.$errors?.[0].$message }}
+                </p>
+              </v-col>
+              <v-col cols="4" class="mb-n6" v-if="state.modeState === 'edit'">
+                <v-text-field
+                  :append-inner-icon="
+                    state.showNewpassword ? 'mdi-eye' : 'mdi-eye-off'
+                  "
+                  @click:append-inner="
+                    state.showNewpassword = !state.showNewpassword
+                  "
+                  :type="state.showNewpassword ? 'text' : 'password'"
+                  type="password"
+                  label="New Password"
+                  v-model="state.NewProxyPassword"
+                ></v-text-field>
+                <p
+                  class="error-feedback mb-5"
+                  v-if="v$.NewProxyPassword.$errors.length"
+                >
+                  {{ v$.NewProxyPassword.$errors?.[0].$message }}
                 </p>
               </v-col>
             </template>
@@ -207,7 +232,9 @@
                 <userAuthSettings
                   v-model:username="state.usernameUser"
                   v-model:password="state.passwordUser"
+                  v-model:NewUserPassword="state.NewUserPassword"
                   v-model:renegotiate_time="state.renegotiate_time"
+                  :modeState="state.modeState"
                   :errors="v$"
                 />
                 <cryptoSettings
@@ -419,6 +446,9 @@ export default {
     ]);
 
     const state = reactive({
+      modeState: "create",
+      showpassword: false,
+      showNewpassword: false,
       clientCertificateList: [],
       mapedCertifAuth: [],
       filtredMapCertif: [],
@@ -440,15 +470,17 @@ export default {
       },
       usernameUser: "",
       passwordUser: "",
+      NewUserPassword: "",
 
-      username: "",
-      password: "",
+      // username: "",
+      // password: "",
       local_port: "",
       // mapedInterface: [],
       mapedCertifAuth: [],
       //User Auth
       username: "",
       password: "",
+      NewProxyPassword: "",
       renegotiate_time: "",
       //cryp
       tlsGenerate: true,
@@ -490,7 +522,9 @@ export default {
       protocolsList.value = protocols;
 
       emitter.on("edit-client", (data) => {
+        console.log("clinet-edit", data);
         if (data) state.isEditState = "edit";
+        state.modeState = "edit";
         state.id = data.id;
         state.clientName = data.name;
         state.description = data.description;
@@ -533,8 +567,8 @@ export default {
         state.username = data.proxy_auth_username;
         state.password = data.proxy_auth_password;
         state.local_port = data.port;
-        state.username = data.password;
-        state.password = data.username;
+        // state.username = data.password;
+        // state.password = data.username;
         state.renegotiate_time = data.renegotiate_time;
         state.tlsGenerate = data.tls_key ? false : true;
         state.sharedKey = data.tls_key;
@@ -658,6 +692,21 @@ export default {
               /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
             )
           ),
+          requiredIfFuction: requiredIf(
+            () => state.modeState === "edit" && state.NewUserPassword
+          ),
+        },
+        NewUserPassword: {
+          isValidNewUserPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
+          requiredIfFuction: requiredIf(
+            () => state.modeState === "edit" && state.passwordUser
+          ),
         },
 
         password: {
@@ -670,7 +719,23 @@ export default {
           ),
 
           requiredIfFuction: requiredIf(
-            () => state.proxyAuthenticationExtraOptions.slug === "basic"
+            () =>
+              state.proxyAuthenticationExtraOptions.slug === "basic" &&
+              state.modeState === "create" ||
+              (state.modeState === "edit" && state.NewProxyPassword)
+          ),
+        },
+        NewProxyPassword: {
+          isValidNewProxyPassword: helpers.withMessage(
+            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+
+            helpers.regex(
+              /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            )
+          ),
+
+          requiredIfFuction: requiredIf(
+            () => state.modeState === "edit" && state.password
           ),
         },
         peerCertificateAuthority: { required },
@@ -685,7 +750,9 @@ export default {
     watch(
       state,
       () => {
-        if (state.proxyAuthenticationExtraOptions) {
+        if (state.proxyAuthenticationExtraOptions.slug === "none") {
+          state.username = "";
+          state.password = "";
           v$.value.username.$reset();
           v$.value.password.$reset();
         }
@@ -981,6 +1048,7 @@ export default {
             option: state.proxyAuthenticationExtraOptions.slug,
             username: state.username,
             password: state.password,
+            new_password: state.NewProxyPassword,
           };
         }
         let tls_auth = null;
@@ -1010,6 +1078,7 @@ export default {
           local_port: state.local_port,
           username: state.usernameUser,
           password: state.passwordUser,
+          new_password: state.NewUserPassword,
           renegotiate_time: state.renegotiate_time,
           tls_auth: tls_auth,
           auth_digest_algorithm: state.authDigestAlgorithm.slug,
@@ -1182,6 +1251,7 @@ export default {
 
     const cancel = () => {
       state.id = "";
+      state.modeState = "create";
       state.isEditState = "";
       //general information
       state.clientName = "";

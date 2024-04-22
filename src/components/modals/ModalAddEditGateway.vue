@@ -1,0 +1,260 @@
+<template>
+  <v-row justify="center">
+    <v-dialog v-model="state.openModal" persistent width="600">
+      <form ref="myForm" @submit.prevent="submitForm" style="overflow: auto">
+        <v-card>
+          <v-card-title>
+            <span class="text-h5"> Gateway</span>
+          </v-card-title>
+          <v-card-text>
+            <v-container>
+              <v-row>
+                <v-col cols="12" class="mb-n6">
+                  <v-text-field
+                    label="DNS Server"
+                    density="compact"
+                    v-model="state.dns_server"
+                  ></v-text-field>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.dns_server.$errors.length"
+                  >
+                    {{ v$.dns_server.$errors?.[0].$message }}
+                  </p>
+                </v-col>
+
+                <v-col cols="12" class="mb-n6">
+                  <v-select
+                    v-model="state.gateway"
+                    label="Gateway"
+                    density="compact"
+                    item-title="name"
+                    item-value="id"
+                    return-object
+                    :items="state.gatwayList"
+                    background-color="#fffffff"
+                  >
+                  </v-select>
+                </v-col>
+              </v-row>
+            </v-container>
+          </v-card-text>
+          <v-card-actions class="mt-3 actionBtn">
+            <v-btn
+              color="indigo-darken-3"
+              :rounded="true"
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              variant="outlined"
+              @click="closeModal"
+              class="mt-3 btn-add"
+            >
+              <span class="pr-3 pl-3">Close</span>
+            </v-btn>
+
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              type="submit"
+              color="indigo-darken-3"
+              :rounded="true"
+              variant="flat"
+              class="mt-3 btn-add"
+            >
+              <span class="text-white pr-3 pl-3">Add</span>
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </form>
+    </v-dialog>
+
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
+      {{ state.textAlert }}
+    </v-snackbar>
+  </v-row>
+</template>
+
+<script>
+import axios from "axios";
+import useValidate from "@vuelidate/core";
+import {
+  toRefs,
+  ref,
+  watch,
+  onMounted,
+  reactive,
+  computed,
+  inject,
+  watchEffect,
+} from "vue";
+import { required, helpers, requiredIf } from "@vuelidate/validators";
+import { v4 as uuidv4 } from "uuid";
+
+export default {
+  props: {
+    isOpen: {
+      type: Boolean,
+      required: true,
+    },
+    editRow: {
+      type: Object,
+      Array,
+      required: false,
+    },
+    modalMode: {
+      type: String,
+      required: true,
+    },
+  },
+
+  setup(props) {
+    const emitter = inject("emitter");
+    onMounted(() => {
+      emitter.on("list-gateway", (data) => {
+        console.log("dataGateway", data);
+        state.rowList = data;
+      });
+    });
+
+    const { isOpen, editRow, modalMode } = toRefs(props);
+
+    const state = reactive({
+      rowList: [],
+      editValue: null,
+      gatwayList: [
+        { id: 1, name: "gateway1" },
+        { id: 2, name: "gateway2" },
+      ],
+
+      //
+      dns_server: "",
+      gateway: "",
+    });
+
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    };
+
+    watch(
+      () => isOpen.value,
+      (val) => {
+        state.openModal = val;
+      }
+    );
+    watch(
+      () => editRow.value,
+      (val) => {
+        populate(val);
+      }
+    );
+
+    const populate = (data) => {
+      if (modalMode.value === "edit") {
+        console.log("editGateway : ", data);
+        let filtredGateway = state.gatwayList.filter(
+          (i) => i.name === data.gateway
+        );
+        state.editValue = data.uuid;
+        state.gateway = filtredGateway[0];
+        state.dns_server = data.dns_server;
+      }
+    };
+
+    watch(
+      () => modalMode.value,
+      (val) => {
+        if (val === "create") {
+          state.dns_server = "";
+          state.gateway = "";
+        }
+      }
+    );
+
+    const submitForm = async () => {
+      const result = await v$.value.$validate();
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      if (result) {
+        
+        let payload = {
+          uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
+          gateway: state.gateway.name,
+          dns_server: state.dns_server,
+        };
+
+        if (modalMode.value === "create") {
+          emitter.emit("add-gateway", payload);
+        }
+
+        if (modalMode.value === "edit") {
+          emitter.emit("edit-gateway", payload);
+        }
+
+        closeModal();
+        v$.value.$reset();
+      } else {
+        console.log("v$", v$.value);
+      }
+    };
+
+    const closeModal = () => {
+      emitter.emit("closeModalGateway");
+      state.dns_server = "";
+      state.gateway = "";
+    };
+
+    const rules = computed(() => {
+      return {
+        dns_server: {
+          required,
+          isValidDns_server: helpers.withMessage(
+            `Format must be like adresse IP : X.X.X.X`,
+
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
+
+    return {
+      state,
+      emitter,
+      v$,
+      closeModal,
+      submitForm,
+      getCookie,
+    };
+  },
+};
+</script>
+<style>
+.error-feedback {
+  color: red !important;
+  font-size: 0.85em;
+}
+.actionBtn {
+  justify-content: center;
+}
+</style>

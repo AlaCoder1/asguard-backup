@@ -45,7 +45,7 @@ def get_waf_config(request):
                                      'pcre_match_limit': Schema(type=TYPE_INTEGER),
                                      'pcre_match_limit_recursion': Schema(type=TYPE_INTEGER),
                                      'response_body_access':Schema(type=TYPE_BOOLEAN),
-                                     'response_body_mimetype': Schema(type=TYPE_STRING),
+                                     'response_body_mimetype': Schema(type=TYPE_STRING, enum=["text/html", "text/xml", "text/plain", "text/*"]),
                                      'response_body_limit': Schema(type=TYPE_INTEGER),
                                      'response_body_limit_action': Schema(type=TYPE_STRING, enum=["ProcessPartial", "Reject", "log", "log allow", "pass"]),
                                      }

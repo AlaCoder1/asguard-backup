@@ -347,7 +347,7 @@ export default {
             isValidValue: helpers.withMessage(
               `Format must be like adresse IP : X.X.X.X`,
 
-              helpers.regex(/^[0-9.]+$/)
+              helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
             ),
           },
 

@@ -3,7 +3,7 @@
     class="certificats-management"
     style="display: flex; flex-direction: column; height: 100%"
   >
-    <h4>List Revocation per authority</h4>
+    <h4>{{$t("agGrid.ListRevocation")}}</h4>
     <v-divider></v-divider>
 
     <div style="height: 100%">
@@ -14,6 +14,7 @@
             domLayout="autoHeight"
             class="ag-theme-alpine mt-3"
             :columnDefs="columnRevocation"
+            :overlayNoRowsTemplate="overlayTemplate"
             style="width: 100%; height: 100%"
             @grid-ready="onGridReady"
           />
@@ -38,15 +39,15 @@
     />
   </div>
   <v-snackbar
-      :timeout="2000"
-      v-model="snackbar"
-      location="bottom right"
-      :color="color"
-    >
-      {{ textAlert }}
+    :timeout="2000"
+    v-model="snackbar"
+    location="bottom right"
+    :color="color"
+  >
+    {{ textAlert }}
 
-      <template v-slot:actions> </template>
-    </v-snackbar>
+    <template v-slot:actions> </template>
+  </v-snackbar>
 </template>
 <script>
 import axios from "axios";
@@ -66,9 +67,9 @@ export default {
 
   data() {
     return {
-      snackbar:false,
-      color:'',
-      textAlert:'',
+      snackbar: false,
+      color: "",
+      textAlert: "",
       listAuthRevoc: null,
       modalMode: "",
       rowEdit: {},
@@ -76,10 +77,11 @@ export default {
       isModalOpen: false,
 
       columnRevocation: [
-        { headerName: "nom", field: "nom" },
+        { headerName: this.namerevoc, field: "nom", width: 300 },
         {
-          headerName: "list of authority certificate",
+          headerName: this.listrevoc,
           field: "list_revoc",
+          width: 400,
         },
         {
           headerName: "Actions",
@@ -90,6 +92,13 @@ export default {
         },
       ],
       rowDataRevocation: null,
+      overlayTemplate:`<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+    </svg></span>`
     };
   },
   watch: {
@@ -97,6 +106,7 @@ export default {
       this.listAuthRevoc = newValue;
 
       if (newValue) {
+        console.log("newValue", newValue);
         let infoRevocCertif = newValue.map((element) => {
           return {
             id: element.id,
@@ -105,18 +115,41 @@ export default {
             list_revoc: element.list_revokation.map((i) => {
               return i.name;
             }),
+            is_private_key: element.is_private_key,
           };
         });
-        this.rowDataRevocation = infoRevocCertif;
+
+        let mapedListAuth = infoRevocCertif.filter((i) => i.is_private_key);
+        this.rowDataRevocation = mapedListAuth;
         setTimeout(() => {
           this.gridApi.setRowData(this.rowDataRevocation);
         }, 5);
       }
     },
+    namerevoc: {
+      handler(val) {
+        this.columnRevocation[0].headerName = val;
+      },
+      immediate: true,
+    }, 
+    listrevoc: {
+      handler(val) {
+        this.columnRevocation[1].headerName = val;
+      },
+      immediate: true,
+    }, 
+  },
+  computed: {
+    namerevoc() {
+      return this.$t("agGrid.name");
+    },
+    listrevoc(){
+      return this.$t("agGrid.Listauthoriy")
+    }
+   
   },
   methods: {
     openModal() {
-      
       this.modalData = {};
       this.isModalOpen = true;
     },
@@ -210,7 +243,6 @@ export default {
           axios
             .post(`/certificates/exportCertAuthListRev/${id}`)
             .then((response) => {
-
               const text = response.data.list_revocation;
               const blob = new Blob([text], {
                 type: "application/x-x509-ca-cert",
@@ -227,8 +259,6 @@ export default {
 
               window.URL.revokeObjectURL(url);
               document.body.removeChild(a);
-
-        
             })
             .catch((i) => {
               this.snackbar = true;

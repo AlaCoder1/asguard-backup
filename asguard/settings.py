@@ -28,7 +28,7 @@ SECRET_KEY = 'mmj@uz23n!%6u4#$b1&%f(7l*rr(9qx%am)wyk@s4ugeuam52m'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1']
+ALLOWED_HOSTS = ['*']
 
 ##appel function to update CSRF_TRUSTED_ORIGINS
 CORS_ALLOWED_ORIGINS = ['https://*']
@@ -47,24 +47,32 @@ INSTALLED_APPS = [
     'encore',
     'rest_framework',
     'corsheaders',
-    'backend.tasks',
-    'backend.managementUsers',
+    "backend.authentification",
+    "backend.clamav",
+    "backend.dashboard",
+    "backend.gateway",
+    "backend.ids_ips",
+    "backend.ipsec",
+    'backend.LdapServer',
+    "backend.managementCertificates",
     'backend.managementGroup',
     'backend.managementKeypairs',
     "backend.managementServers",
-    "backend.managementCertificates",
-    "backend.settings",
-    "backend.authentification",
-    "backend.subscription",
+    'backend.managementUsers',
+    'backend.nat',
     "backend.network",
     "backend.openvpn",
-    "backend.ipsec",
-    "backend.rules",
-    "backend.gateway",
-    "backend.dashboard",
-    "backend.ids_ips",
-    "backend.clamav",
+    'backend.openvpn_monitoring',
     'backend.proxy',
+    'backend.routing',
+    "backend.rules",
+    'backend.sdwan',
+    "backend.settings",
+    "backend.subscription",
+    'backend.tasks',
+    'backend.vlan',
+    'backend.waf',
+    'backend.server_dhcp4',
     'channels',
     'drf_yasg',
 ]
@@ -205,7 +213,7 @@ SWAGGER_SETTINGS = {
 }
 
 # jwt_auth/settings.py
-SESSION_COOKIE_AGE = 600
+# SESSION_COOKIE_AGE = 600
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 SESSION_COOKIE_SECURE= True
 SESSION_COOKIE_HTTPONLY = True
@@ -229,10 +237,20 @@ SSH_HOST = os.getenv('SSH_HOST')
 SSH_PORT = int(os.getenv('SSH_PORT'))
 ASGUARD_VERSION = os.getenv('ASGUARD_VERSION')
 
-USERNAME=None
-PASSWORD=None
 
 EMAIL_HOST = 'smtp.office365.com'
 EMAIL_PORT = 587
 EMAIL_HOST_USER = 'mh.benelghali@numeryx.fr'  
-EMAIL_HOST_PASSWORD = 'Ess4live***'  
+EMAIL_HOST_PASSWORD = 'Ess4live***'
+
+# Celery configuration
+CELERY_BROKER_URL = 'redis://localhost:6379/0'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379/0'
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = '/media/'

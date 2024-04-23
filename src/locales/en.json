@@ -1,23 +1,214 @@
 {
   "form":{
     
-    "username":"Nom d'utilisateur",
-    "password":"Password"
+    "username":"Username",
+    "password":"Password",
+    "confirmPassword":"Confirm password",
+    "fullname":"Fullname",
+    "emailForLdapAuth":"Email for Ldap auth",
+    "roleUser":"Role User",
+    "assignToGroup":"Assign to Group",
+    "desactivateUser":"Desactivate User",
+    "goupname":"Group name",
+    "description":"Description",
+    "server":"Directory Server"
+    
   },
   "buttons":{
-    "login":"login"
+    "login":"login",
+    "save":"Save",
+    "close":"Close",
+    "create":"Create",
+    "update":"Edit",
+    "ajoutauthority":"Add Authorities",
+    "ajoutcertifcat":"Add certificates",
+    "download":"Download",
+    "createauth":"Create new Authority",
+    "updateauth":"Update Authority",
+    "updatecertif":"Update",
+    "createcertif":"Create new"
+
+
   },
+
+  "requiredfield":{
+    "indicatesrequiredfield":"Indicates required field",
+    "attente":"Please Wait...",
+    "download":"Download Validation"
+  },
+
+  "ldap":{
+    "ActivateLdap":"Activate  LDAP",
+    "TLS":"SSL/TLS encryption",
+    "Activateecnryption":"Activate encryption"
+  },
+
+  "errors":{
+    "valueRequired":"Value is required",
+    "invalidPassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
+    "passwordConfirmation":"Your password does not match"
+
+  },
+
   "placeholder":{
     "enterPassword":"Enter password",
     "enterUserName":"Enter user name"
   
   },
+  "sideBar":{
+    "dashboard":"Dashboard",
+    "system":"System",
+    "interfaces":"Interfaces",
+    "firewall":"Firewall",
+    "services":"Services",
+    "reports":"Reports"
+  },
+  "subtitle":{
+    "assistant":"Assistant",
+    "userCertificatemanagement":"Users & Certificate Management",
+    "networkManagement":"Network Management",
+    "systemConfig":"System configuration",
+    "settings":"Settings",
+    "overview":"Overview",
+    "assignations":"Assignations",
+    "differentNetworks":"Different Networks",
+    "diagnostics":"Diagnostics",
+    "listOfInterface":"List of interfaces",
+    "typeOfInterface":"Type of interfaces",
+    "rules":"Rules",
+    "nat":"Nat",
+    "advancedSettings":"Advanced settings",
+    "siteToSiteVpn":"Site to site VPN",
+    "rsaKeyPairs":"RSA Key Pairs",
+    "openVPN":"OPEN VPN",
+    "ipFilterDoubleMasque":"IP Filter double masque",
+    "clamAV":"Clam AV",
+    "DHCPV4":"DHCP V4",
+    "DHCPV6":"DHCP V6",
+    "intrusionDetection":"Intrusion Detection",
+    "proxyWeb":"Proxy Web",
+    "SDWAN":"SDWAN",
+    "WAF":"WAF",
+    "health":"Health",
+    "insight":"Insight",
+    "traffic":"Traffic",
+    "eventLogs":"Event logs",
+    "subscription":"Subscription",
+    "routing":"Routing"
+
+
+  },
+  "header":{
+    "profile":"Profile",
+    "logout":"Logout"
+  },
+
+  "french":"French",
+  "english":"English",
+  "networkAdmins":"Networks admins",
+  "networksGroups":"Networks groups",
+  "networksServers":"Networks Servers",
+
+
+  "delete":{
+    "DeleteConfirmation":"Delete Confirmation",
+    "questionuser": "Are you sure you want to delete this user?",
+    "questiongroup": "Are you sure you want to delete this group?",
+    "questionserver": "Are you sure you want to delete this server?",
+    "questioncertif": "Are you sure you want to delete this authority?",
+    "questioncertificat": "Are you sure you want to delete this certificate?"
+ 
+  },
+     
+  "agGrid":{
+    "name":"Name",
+    "cpuType":"Type CPU",
+    "systemLoad":"System load",
+    "lConfChange":"L.Conf Change",
+    "operatingTime":"Operation Time",
+    "noRowsToShow":"No Rows To Show",
+    "speedUplex":"Speed and uplex",
+    "address":"Address",
+    "status":"Status",
+    "user":"User",
+    "role":"Role",
+    "authority":"Authority",
+    "group":"Group",
+    "server":"Server",
+    "certificates":"Certificates",
+    "distinguishedname":"Distinguished name",
+    "ListRevocation":"List Revocation per authority",
+    "Listauthoriy":"list of certification authorities",
+    "certificat":"certificate"
+
+  },
+
+  "certificat":{
+    "certificatName":"Certificate Name",
+    "method":"Method",
+    "exist_certif":"Import an existing Certificate Authority",
+    "certificat_existant":"Existing certificate",
+    "certificatdata":"Certificat data",
+    "privatekey":"Private key certificate (optional)",
+    "serialnumber":"Serial number certificate",
+    "certificat_auth":"Certificate Authority",
+    "certificatlist":"No data available",
+    "keytype":"key type",
+    "keylength":"Key length",
+    "Hashalgo":"Hash algorithm",
+    "lifetime":"Life time",
+    "country":"Country",
+    "state":"State province",
+    "place":"Place",
+    "organisation":"organization",
+    "communName":"Common name",
+    "certif_new":"Create Certificate Authority",
+    "exist_certificat":"Import an existing Certificate",
+    "certif_intern":"Certification intern",
+    "create_certificat":"Create Certificate"
+
+  },
+
+  "champs":{
+    "indication":"champs can include only letters & Numbers & underscores & hyphens without space.",
+    "champNumber":"champs lifeTime can include only Numbers.",
+    "champletter":"champs state can include only letters.",
+    "champplaceletter":"champs place can include only letters."
+
+  },
+
+  "tabs":{
+    "userManagement":"User Management",
+    "certificateManagement":"Certificate Management"
+
+  },
+  "home":{
+    "systemInformation":"System information",
+    "cpuPercentage":"CPU Percentage (%)",
+    "memoryPercentage":"Memory Percentage (%)"
+  },
+
+  "button":{
+    "addUser":"Add User",
+    "addGroup":"Add Group",
+    "addServer":"Add Server"
+  },
+  "modal":{
+    "create":"Create",
+    "update":"Update"
+
+  },
+
     "PageGeneral": {
       "NetworksServers": "Network Servers",
       "AddServer": "Add Server",
       "ServerName": "Server Name",
       "Type": "Type",
       "HostName": "Host Name",
+      "IPAddress":"IP address",
+      "SearchBase":"Search Base",
+      "ServerType":"Server Type",
+      "UserDN":"User distinguished name",
       "form": {
         "Actions": "Actions",
         "Update": "Update",
@@ -128,5 +319,20 @@
       "PrefixIDIPv6": "IPv6 Prefix ID",
       "ManualConfiguration": "Manual Configuration",
       "AlowManualAdjustmentOfDHCPv6AndRouterAdvertisements": "Allow Manual Adjustment of DHCPv6 and Router Advertisements"
+    },
+    
+    "PageIpsec":{
+      "title":"Phase 1: General Information",
+      "section":"Phase 2 : General Information",
+      "Tunnelsettingsname":"Tunnel settings name",
+      "Connectionmethod":"Connection method",
+      "pardefaut":"default",
+      "keyechange":"Key Exchange version",
+      "internetprotocole":"Internet Protocol",
+      "remotegateway":"Remote gateway",
+      "dynamiquepassrelle":"Dynamic gateway",
+      "allowgateway":" Allow any remote gateway to connect",
+      "localnetwork":"Local Network",
+      "Address":"Address"
     }
   }

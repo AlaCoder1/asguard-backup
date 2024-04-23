@@ -2,6 +2,7 @@ from django.utils import timezone
 from django.db import models
 from backend.managementGroup.models import *
 from backend.subscription.models import *
+from backend.LdapServer.models import ADServer
 from django.contrib.auth.models import (AbstractBaseUser, BaseUserManager)
 # Create your models here.
 
@@ -54,7 +55,7 @@ class MyUserManager(BaseUserManager):
 class User(AbstractBaseUser):
     username = models.CharField(max_length=200, null=True, unique=True)
     password = models.CharField(max_length=800, null=True)
-    email = models.CharField(max_length=800, null=True)
+    email = models.CharField(max_length=800, null=True, unique=True)
     fullname = models.CharField(max_length=800, null=True)
     organisation = models.ForeignKey(
         organization, on_delete=models.CASCADE, null=True)
@@ -68,9 +69,24 @@ class User(AbstractBaseUser):
     objects = MyUserManager()
     USERNAME_FIELD = 'username'
     REQUIRED_FIELDS = ['email']
+    id_server = models.ForeignKey(ADServer, on_delete=models.SET_NULL, null=True)
+    dn_user=models.CharField(max_length=900, null=True)
 
     class Meta:
         db_table = 'user'
 
     # def __str__(self):
     #     return self.username
+
+class Profile(models.Model):
+    user = models.OneToOneField('User', on_delete=models.CASCADE, related_name='profile')
+    phone_number = models.CharField(max_length=20, blank=False,null=True)
+    region = models.CharField(max_length=100, blank=False,null=True)
+    code_postal = models.CharField(max_length=20, blank=True,null=True)
+    address = models.TextField(blank=False,null=True)
+    country = models.CharField(max_length=100, blank=False,null=True)
+    photo_url = models.CharField(blank=True,null=True,default='/media/profile.jpg',max_length=1000)
+    is_enable_2FA = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'profile'

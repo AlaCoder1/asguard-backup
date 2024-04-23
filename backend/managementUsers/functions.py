@@ -49,26 +49,13 @@ def username_exists(username):
 
 
 def addUser(username, password):
-#    try:
-        # Create user with home directory
-    result = subprocess.run(['sudo', 'useradd', '-m', username], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    print(result.stdout.decode())
-    if result.stderr:
-        print(f"Error: {result.stderr.decode()}")
-
-    # Set the password for the user
+    result = subprocess.run(['sudo', 'useradd', '-m', username], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    error_useradd  = result.stderr.decode('utf-8')
+    print({"error_useradd":error_useradd})
     proc = subprocess.Popen(['sudo', 'chpasswd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = proc.communicate(input=f"{username}:{password}".encode())
+    stdout_password, stderr_password = proc.communicate(input=f"{username}:{password}".encode())
 
-    print(stdout.decode())
-    if stderr:
-        print(f"Error: {stderr.decode()}")
-
-    print(f"User {username} created successfully!")
-    return stdout, stderr
-    # except subprocess.CalledProcessError as e:
-    #     print(f"Failed to create user {username}.")
-    #     print(e.output)
+    return error_useradd, stdout_password, stderr_password 
 
 # function to delete user
 

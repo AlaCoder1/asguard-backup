@@ -5,15 +5,19 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
 
-from backend.waf.constant_variables import CONSTANT_WAF_CONFIG
-from backend.waf.list_waf import get_one_waf_config
+from backend.waf.constant_variables import CONSTANT_WAF_CONFIG, CONSTANT_WAF_RULE
+from backend.waf.list_waf import get_list_all_waf, get_one_waf, get_one_waf_config
 from backend.waf.models import ConfigWaf
-from backend.waf.serializers import ConfigWafSerializer
+from backend.waf.serializers import ConfigWafSerializer, RulesWafSerializer
 from backend.waf.utils import change_waf_config_file
-from utils.constant_variables import ERROR_MESSAGES_UPDATING, SUCCESS_MESSAGES_UPDATE
+from backend.waf.utils_system import create_rule_waf_in_system
+from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_UPDATING, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_UPDATE
 from utils.errors_utils import CommandExecutionError
 
 
+########################################
+########## WAF Configuration ###########
+########################################
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET THE WAF CONFIG",)
 @api_view(['GET'])
@@ -67,3 +71,61 @@ def update_config_waf(request, id):
         
     except CommandExecutionError:
         return JsonResponse({"error": ERROR_MESSAGES_UPDATING.format(CONSTANT_WAF_CONFIG)}, status=400)
+
+
+########################################
+############## WAF Rules ###############
+########################################
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL WAF RULES",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_waf_rule(request):
+    """Getting all WAF Rules from database"""
+    list_snat = []
+    list_snat = get_list_all_waf()
+    return JsonResponse(list_snat, safe=False)
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET A WAF RULE",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_waf_rule(request, id):
+    """Getting WAF by id from database"""
+    snat = get_one_waf(id)
+    return JsonResponse(snat, safe=False)
+
+
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO CREATE A WAF RULE", request_body=Schema(
+                         type=TYPE_OBJECT, required=['interface'],
+                         properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
+                                     }
+                                     ))
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def create_waf_rule(request):
+    """Creating a new WAF Rule and adding it to the database"""
+    try:
+        data = request.data
+        
+        serializer_rule_waf = RulesWafSerializer(data=data)
+        if serializer_rule_waf.is_valid():
+
+            rule_waf = create_rule_waf_in_system(data)
+            data["rule_content"] = rule_waf
+            serializer_rule_waf = RulesWafSerializer(data=data)
+            if serializer_rule_waf.is_valid():
+
+                # Add the rule to the database
+                serializer_rule_waf.save()
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_WAF_RULE, "")}, status=201)
+
+        return JsonResponse({"error": list(serializer_rule_waf.errors.values())[0][0]}, status=400)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_WAF_RULE)}, status=400)

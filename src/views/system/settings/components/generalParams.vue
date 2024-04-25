@@ -21,8 +21,6 @@
     </v-overlay>
     <div class="ml-3 mr-3">
       <h4>General Parameters</h4>
-      <br />
-
       <v-divider class="mb-2"></v-divider>
     </div>
     <v-row>
@@ -43,6 +41,9 @@
             density="compact"
             v-model="state.domain"
           ></v-text-field>
+          <p class="error-feedback mb-5" v-if="v$.domain.$errors.length">
+            {{ v$.domain.$errors?.[0].$message }}
+          </p>
           <v-select
             label="Time zone"
             density="compact"
@@ -126,6 +127,8 @@ import VButton from "@/components/VButton.vue";
 import { reactive, onMounted, computed, ref, inject } from "vue";
 import ModalAddEditGateway from "@/components/modals/ModalAddEditGateway.vue";
 import { v4 as uuidv4 } from "uuid";
+import useValidate from "@vuelidate/core";
+import { required, helpers, requiredIf } from "@vuelidate/validators";
 
 export default {
   name: "ConfigurationComponent",
@@ -172,6 +175,7 @@ export default {
       {
         headerName: "Use the gateway",
         field: "gateway",
+        // cellRenderer:actionGateway,
         width: 90,
         minWidth: 50,
         flex: 1,
@@ -207,7 +211,7 @@ export default {
         document.getElementById("app").attributes["time_zone"].value;
       const parsedArray = JSON.parse(timeZone);
 
-          let gatewaySettings =
+      let gatewaySettings =
         document.getElementById("app").attributes["network_info"].value;
       const parsedArray2 = JSON.parse(gatewaySettings);
 
@@ -215,7 +219,15 @@ export default {
         return {
           uuid: uuidv4(),
           dns_server: i.dns_server,
-          gateway: i.gateway
+          gateway: Object.keys(i.gateway).length === 0 ? "" : i.gateway,
+          info:
+            Object.keys(i.gateway).length === 0
+              ? []
+              : {
+                  interface_id: i.interface_id,
+                  metric: i.metric,
+                  name_interface: i.name_interface,
+                },
         };
       });
 
@@ -228,8 +240,6 @@ export default {
       } else {
         console.error("Grid API.");
       }
-      console.log('parsedArray2',parsedArray2)
-
 
       state.timeZoneList = parsedArray;
       let time = state.timeZoneList.filter(
@@ -253,7 +263,8 @@ export default {
         let test = {
           uuid: data.uuid,
           dns_server: data.dns_server,
-          gateway: data.gateway,
+          gateway: data.gateway.address,
+          info: data.gateway.info,
         };
         rowDataGateway.value.push(test);
         if (gridApi.value) {
@@ -280,7 +291,8 @@ export default {
         let test = {
           uuid: data.uuid,
           dns_server: data.dns_server,
-          gateway: data.gateway,
+          gateway: data.gateway.address,
+          info: data.gateway.info,
         };
 
         updateObjectById(data.uuid, test);
@@ -298,56 +310,69 @@ export default {
       });
     });
 
+    // function actionGateway(data) {
+    //   let eGui = document.createElement("div");
+    //   if(Object.keys(data.data.gateway).length === 0) {
+    //     eGui.innerHTML = `--`;
+    //   }
+    //   else {
+    //     eGui.innerHTML = `${data.data.gateway}`;
+    //   }
+    //   return eGui;
+    // }
+
     const submitForm = async () => {
-      console.log("gateway", rowDataGateway.value);
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const result = await v$.value.$validate();
 
-      let payload = {
-        hostname: state.hostName,
-        domain: `${state.domain}.com`,
-        timezone: state.timeZone.name,
+      if (result) {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-    //     "dns_servers":[{
-    //     "dns_server":"1.1.1.2",
-    //     "gateway":"10.1.12.1",
-    //     "interface_id":3,
-    //     "metric":20014
-    // },{
-    //     "dns_server":"1.1.1.5",
-    //     "gateway":"192.168.189.172",
-    //     "interface_id":5,
-    //     "metric":20014
-    // }]
+        let dns_server = rowDataGateway.value.map((i) => {
+          return {
+            dns_server: i.dns_server,
+            gateway: i.gateway ?? "",
+            interface_id: i.info.interface_id ?? i.info.interface ?? null,
+            name_interface:
+              i.info.name_interface ?? i.info.name_interface ?? "",
+            ...(i.gateway ? { metric: i.info.metric ?? "" } : {}),
+          };
+        });
 
-      };
-      console.log("pay", payload);
-      state.loading = true;
-      state.isLoadingDialogue = true;
-      // axios
-      //   .put(`/settings/generale_settings/1`, payload)
-      //   .then((response) => {
-      //     console.log("response", response);
-      //     if (response.status == 200) {
-      //       state.loading = false;
-      //       state.isLoadingDialogue = false;
-      //       state.snackbar = true;
-      //       state.color = "success";
-      //       state.textAlert = "Configuration saved successfully!";
-      //       setTimeout(() => {
-      //         state.snackbar = false;
-      //         location.reload();
-      //       }, 1000);
-      //     }
-      //   })
-      //   .catch((i) => {
-      //     state.loading = false;
-      //     state.isLoadingDialogue = false;
+        let payload = {
+          hostname: state.hostName,
+          domain: `${state.domain}`,
+          timezone: state.timeZone.name,
+          dns_servers: dns_server,
+        };
+        state.loading = true;
+        state.isLoadingDialogue = true;
+        axios
+          .put(`/settings/generale_settings/1`, payload)
+          .then((response) => {
+            if (response.status == 200) {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = "Configuration saved successfully!";
+              setTimeout(() => {
+                state.snackbar = false;
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
 
-      //     state.snackbar = true;
-      //     state.color = "red";
-      //     state.textAlert = i.response.data.msg;
-      //   });
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.msg;
+          });
+      } else {
+        console.log("v$", v$.value);
+      }
     };
 
     const onGridReady = (params) => {
@@ -421,7 +446,22 @@ export default {
     };
     const cancel = () => {};
 
+    const rules = computed(() => {
+      return {
+        domain: {
+          required,
+          isValidDomain: helpers.withMessage(
+            `Format must be like exemple.com`,
+            helpers.regex(/\.com$/)
+          ),
+        },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
+
     return {
+      v$,
       cancel,
       getCookie,
       submitForm,

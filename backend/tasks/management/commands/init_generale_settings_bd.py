@@ -21,12 +21,12 @@ class Command(BaseCommand):
         list_servers = []
         server_dns = {}
         for i in list_dns_servers:
-            print({"i":i})
             server_dns['gateway'] = {}
             server_dns['dns_server'] = i
+            print({"server_dns":server_dns})
             list_servers.append(server_dns)
             server_dns = {}
-        print({"list_dns_servers":list_servers})
+        print({"list_servers":list_servers})
 
         try:
             System.objects.create(hostname=hostname,domaine='localdomain',time_zone =time_zone)

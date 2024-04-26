@@ -28,14 +28,47 @@
                     v-model="state.gateway"
                     label="Gateway"
                     density="compact"
-                    item-title="name"
+                    item-title="address"
                     item-value="id"
                     return-object
                     :items="state.gatwayList"
                     background-color="#fffffff"
                   >
                   </v-select>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.gateway.$errors.length"
+                  >
+                    {{ v$.gateway.$errors?.[0].$message }}
+                  </p>
                 </v-col>
+                <v-container class="mx-0 pt-1" v-if="state.gateway">
+                  <v-radio-group
+                    v-model="state.checkInterface"
+                    inline
+                    :return-object="true"
+                  >
+                    <v-row>
+                      <v-col
+                        cols="6"
+                        v-for="inter in isCombo.info"
+                        :key="isCombo.info.id"
+                      >
+                        <v-radio
+                          :label="inter.name_interface"
+                          :value="inter"
+                        ></v-radio>
+
+                        <p
+                          class="error-feedback mb-5 ml-5"
+                          v-if="v$.checkInterface.$error"
+                        >
+                          {{ v$.checkInterface.$errors[0].$message }}
+                        </p>
+                      </v-col>
+                    </v-row>
+                  </v-radio-group>
+                </v-container>
               </v-row>
             </v-container>
           </v-card-text>
@@ -120,24 +153,43 @@ export default {
     const emitter = inject("emitter");
     onMounted(() => {
       emitter.on("list-gateway", (data) => {
-        console.log("dataGateway", data);
         state.rowList = data;
       });
+
+      let gateway = document.getElementById("app").attributes["gateway"].value;
+      const parsedArrayGateway = JSON.parse(gateway);
+
+      let arr = parsedArrayGateway.map((e) => {
+        return {
+          address: e.gateway.address,
+          id: e.gateway.id,
+          info: e.info,
+        };
+      });
+      state.gatwayList = arr;
+
+      //  let array=[]
+      //  parsedArrayGateway.forEach(element => {
+      //   array.push(element.gateway)
+      //  });
+      //  state.gatwayList = array
     });
 
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      checkInterface: "",
       rowList: [],
       editValue: null,
-      gatwayList: [
-        { id: 1, name: "gateway1" },
-        { id: 2, name: "gateway2" },
-      ],
+      gatwayList: [],
 
       //
       dns_server: "",
       gateway: "",
+    });
+
+    const isCombo = computed(() => {
+      return state.gateway;
     });
 
     const getCookie = (name) => {
@@ -170,13 +222,13 @@ export default {
 
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("editGateway : ", data);
         let filtredGateway = state.gatwayList.filter(
-          (i) => i.name === data.gateway
+          (i) => i.address === data.gateway
         );
         state.editValue = data.uuid;
         state.gateway = filtredGateway[0];
         state.dns_server = data.dns_server;
+        state.checkInterface = state.gateway?.info[0];
       }
     };
 
@@ -195,10 +247,13 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       if (result) {
-        
         let payload = {
           uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
-          gateway: state.gateway.name,
+          gateway: {
+            address: state.gateway?.address,
+            id: state.gateway?.id,
+            info: state.checkInterface,
+          },
           dns_server: state.dns_server,
         };
 
@@ -226,11 +281,34 @@ export default {
     const rules = computed(() => {
       return {
         dns_server: {
-          required,
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(
+              () => modalMode.value === "edit" || modalMode.value === "create"
+            )
+          ),
           isValidDns_server: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            `Champs must be like adresse IP : X.X.X.X`,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
+        },
+        gateway: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(
+              () => modalMode.value === "edit" || modalMode.value === "create"
+            )
+          ),
+        },
+        checkInterface: {
+          requiredIfFuction: helpers.withMessage(
+            "Value is required",
+            requiredIf(
+              () =>
+                state.gateway &&
+                (modalMode.value === "edit" || modalMode.value === "create")
+            )
           ),
         },
       };
@@ -240,6 +318,7 @@ export default {
 
     return {
       state,
+      isCombo,
       emitter,
       v$,
       closeModal,

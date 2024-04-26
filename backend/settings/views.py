@@ -34,10 +34,10 @@ def generale_settings(request,id):
     msg = ''
     if (request.method == 'PUT'):
         system_object = System.objects.get(id=id)
-        network = Network.objects.get(id=id)
+        # network = Network.objects.get(id=id)
+        
         data = request.data
         if change_hostname(data['hostname']) and '.' in data['domain'] and data['domain'][-1] != '.':
-            print('88888')
             system_object.hostname = data['hostname']
             change_domain(data['domain'])
             system_object.domaine = data['domain']
@@ -45,17 +45,27 @@ def generale_settings(request,id):
             set_time_zone(timezone.name)
             system_object.time_zone = timezone
             system_object.save()
-            # for i in data['dns_servers']:
-            #     add_dns_servers(i['dns_server'])
-            #     gateway = Gateway.objects.get(gwaddress = i['gateway'])
-            #     interface = Interface.objects.get(id = i['interface_id'])
-            #     # gateway_interface = GatewayInterface.objects.get(gateway_id = gateway.pk)
+            # if "dns_servers" in data:
+            for i in data['dns_servers']:
+                add_dns_servers(i['dns_server'])
+                if i['gateway'] != "" and i['interface_id'] != "":
+                    gateway = Gateway.objects.get(gwaddress = i['gateway'])
+                    interface = Interface.objects.get(id = i['interface_id'])
+                # gateway_interface = GatewayInterface.objects.get(gateway_id = gateway.pk)
                 
-            #     # print({"metric":gateway_interface.metric})
-            #     # print({"interface_id":gateway_interface.interface_id})
-            #     resultat,error = add_gateway_to_dns_servers(i['dns_server'],gateway.gwaddress,interface.ifname,i['metric'])
+                    resultat,error = add_gateway_to_dns_servers(i['dns_server'],gateway.gwaddress,interface.ifname,i['metric'])
             # network.server_dns = data['dns_servers']
             # network.save()
+            # data['dns_servers'][0]['name_interface'] = interface.name_interface
+            # For adding if the table is empty
+            if not Network.objects.exists():
+                Network.objects.create(server_dns=data['dns_servers'])  # Replace field1, field2, value1, value2 with your actual field names and values
+
+            # For updating if the table is not empty
+            else:
+                instance, created = Network.objects.update_or_create(
+                    defaults={'server_dns': data['dns_servers']},  # Replace field1, field2, new_value1, new_value2 with your updated values
+                )
             msg = "done"
             status = 200
         else:

@@ -57,7 +57,15 @@
                   class="mb-3"
                   style="cursor: pointer"
                 >
-                  <img :src="imageURL" alt="avatar" />
+                  <img
+                    :src="imageURL"
+                    alt="avatar"
+                    style="
+                      width: 100%;
+                      background-size: cover;
+                      overflow: hidden;
+                    "
+                  />
                 </v-avatar>
               </v-badge>
             </div>
@@ -220,7 +228,8 @@ export default {
       this.$refs.file.click();
     },
     onFileChange(fieldName, file) {
-    console.log('test')
+      console.log("file", file);
+      console.log("fieldName", fieldName);
       const { maxSize } = this;
       let imageFile = file[0];
       if (file.length > 0) {
@@ -230,14 +239,16 @@ export default {
           this.errorText = "Please choose an image file";
         } else if (size > 1) {
           this.errorDialog = true;
-          console.log("this.errorDialog", this.errorDialog);
           this.errorText =
             "Your file is too big! Please select an image under 1MB";
         } else {
-          let formData = new FormData();
+          // let formData = new FormData();
           let imageURL = URL.createObjectURL(imageFile);
-          formData.append(fieldName, imageFile);
-          this.$emit("input", { formData, imageURL });
+          // formData.append(fieldName, imageFile);
+          // console.log("formData", formData);
+          console.log("imageURL", imageURL);
+          console.log("file[0]", file[0]);
+          // this.$emit("input", { formData, imageURL });
           this.imageURL = imageURL;
         }
       }

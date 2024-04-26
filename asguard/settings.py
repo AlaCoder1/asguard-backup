@@ -235,15 +235,13 @@ SESSION_COOKIE_SAMESITE= 'Strict'
 load_dotenv()
 
 # SSH settings
-SSH_HOST = os.getenv('SSH_HOST')
-SSH_PORT = int(os.getenv('SSH_PORT'))
 ASGUARD_VERSION = os.getenv('ASGUARD_VERSION')
 
 
 EMAIL_HOST = 'smtp.office365.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'mh.benelghali@numeryx.fr'  
-EMAIL_HOST_PASSWORD = 'Ess4live***'
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 # Celery configuration
 CELERY_BROKER_URL = 'redis://localhost:6379/0'

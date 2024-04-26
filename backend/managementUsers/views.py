@@ -366,112 +366,55 @@ from django.core.exceptions import ValidationError
 @permission_classes([IsAuthenticated])
 def update_profile(request):
     if (request.method == 'PUT'):
-        user = request.user 
-        oldusername = user.username
-        data = request.data
         try:
-            # Update user fields
-            user.username = data.get('username', user.username)
-            user.fullname = data.get('fullname', user.fullname)
-            data['dn_user'] = None
-            email_founded=False
-            if data['password_ad'] != "":
-                    id_server = data['id_server']
-                    ad_server = ADServer.objects.get(id=id_server)
-                    try:
-                        is_password_matched = check_password(data['password_ad'],ad_server.bind_user_password)
-                        if is_password_matched:
-                            ldap_uri = f"{'ldaps' if ad_server.ssl_tls_activation else 'ldap'}://{ad_server.server_url}:{ad_server.port}"
-                            ldap_conn = ldap.initialize(ldap_uri)
-                            ldap_conn.simple_bind_s(ad_server.bind_user_dn,data['password_ad'])
-                            result = ldap_conn.search_s(ad_server.search_base, ldap.SCOPE_SUBTREE, "(|(userPrincipalName=*)(mail=*))", ['userPrincipalName', 'mail'])
-                                # get the list of users email from AD server 
-                            user_principal_names = [entry[1]['userPrincipalName'][0].decode('utf-8') for entry in result if 'userPrincipalName' in entry[1]]
-                                # get the list of users email from openldap server 
-                            user_emails = [entry[1]['mail'][0].decode('utf-8') for entry in result if 'mail' in entry[1]]
-
-                            if data['email'].lower() in [user.lower() for user in user_principal_names]:
-                                user.email = data['email']
-                                email_founded=True
-
-                            if data['email'].lower() in [user.lower() for user in user_emails]:
-                                user.email = data['email']
-                                email_founded=True
-                                for entry in result:
-                                        entry_email = entry[1].get('mail', [''])[0].decode('utf-8').lower()
-                                        if data['email'].lower() == entry_email:
-                                            data['dn_user'] = entry[0]
-                                            break   
-                            if not email_founded:
-                                    return JsonResponse({'msg': "The email doesn't exist in any directory server"}, status=400)
-                            ldap_conn.unbind()
-                        else:
-                            return JsonResponse({'msg': "please verify your password of directory server"},status=400)    
-                    except ldap.SERVER_DOWN:
-                        # LDAP authentication failed
-                        return JsonResponse({'msg': 'directory server is unreachable'},status=500)        
-                    except ldap.LDAPError as e:
-                        return JsonResponse({'msg': "Error connecting to directory server"},status=400)  
-                    
+            data = request.data
+            user = request.user
             if User.objects.filter(email=data['email']).exclude(id=user.id).exists():
                 return JsonResponse({"msg": "Email allready exist"}, status=400)          
-            user.email = data['email']
             userObject = User.objects.get(id=user.id)
             if validInput(user.username):
-                if username_exists(user.username) and  user.username != oldusername:
+                if username_exists(data['username']) and  data['username'] != user.username:
                     msg = f"username or email already Used."
                     return JsonResponse({"msg": msg})
                 else:
-                    userObject.username = user.username
-                    
-                    if checkSameGroupnameWithUsername(oldusername):
-                        changeUsername(user.username, oldusername)
-                        change_groupname_username(oldusername, user.username)
+                    if checkSameGroupnameWithUsername(user.username):
+                        changeUsername(data['username'], user.username)
+                        change_groupname_username(user.username, data['username'])
                         
                         msg = "updated groupname and username succesfully"
                     else:
-                        changeUsername(user.username, oldusername)
+                        changeUsername(data['username'], user.username)
                         msg = "updated only username succesfully"
-                    userObject.fullname = user.fullname
-                    userObject.email = user.email
-                    userObject.dn_user=data['dn_user']
-                    if email_founded:
-                        userObject.id_server=ad_server
-                    else:
-                        userObject.id_server=None
+                    userObject.username = data['username']
+                    userObject.fullname = data['fullname']
+                    userObject.email = data['email']
                     userObject.save()
+                    
             else:
                 msg = "invalid "+ user.username
 
             # Update profile fields
             profile = Profile.objects.get(user=userObject)
-            # profile.phone_number = data.get('phone_number', profile.phone_number)
-            # profile.region = data.get('region', profile.region)
-            # profile.code_postal = data.get('code_postal', profile.code_postal)
-            # profile.address = data.get('address', profile.address)
-            # profile.country = data.get('country', profile.country)
-            
-            # if 'is_enable_2FA' in data:
-            #     profile.is_enable_2FA = data['is_enable_2FA']
 
             if 'photo' in request.FILES:
+                
                 photo = request.FILES['photo']
                 # Create or update the user-specific folder
                 user_folder = os.path.join(settings.MEDIA_ROOT, str(user.id))
                 if not os.path.exists(user_folder):
                     os.makedirs(user_folder)
-
+                
                 photo_path = os.path.join(user_folder, photo.name)
                 photo_url = '/media/'+os.path.relpath(photo_path, settings.MEDIA_ROOT)
-                old_photo_url_path = os.path.join(user_folder, profile.photo_url.split('/')[3])
-                
+                print('photo_url',photo_url)
+                old_photo_url_path = os.path.join(user_folder,profile.photo_url.split('/')[3])
+                print("path:",old_photo_url_path)
                 # Delete the old photo_url file if it exists
                 if os.path.exists(old_photo_url_path):
                     os.remove(old_photo_url_path)
                 with open(photo_path, 'wb+') as destination:
                     for chunk in photo.chunks():
                         destination.write(chunk)
-                
             data['photo_url']  = photo_url
             serializer = ProfileSerializer(profile, data=data, partial=True)
             if serializer.is_valid():
@@ -483,6 +426,8 @@ def update_profile(request):
             return JsonResponse({'msg': e.message}, status=400)
         except Exception as e:
             return JsonResponse({'msg': str(e)}, status=500)
+        
+
 
 @swagger_auto_schema(
     method='PUT',
@@ -532,30 +477,27 @@ def changePasswordByAdmin(request, id):
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
-def changePassword(request, id):
+@permission_classes([IsAuthenticated])
+def changePassword(request):
     msg = ""
     if (request.method == 'PUT'):
-            userObject = User.objects.get(id=id)
-        # if userObject.is_verified == True:
-        #     return JsonResponse({"msg": "your account is verified"})
-        # else:
+            user = request.user
             data = request.data
-            # current_password = data['current_password']
+            current_password = data['current_password']
             new_password = data['new_password']
             confirm_password = data['confirm_password']
-            # if check_password(current_password, userObject.password):
-            #     print('Passwords match!')
+            if check_password(current_password, user.password):
+                print('Passwords match!')
             if new_password != confirm_password:
                 print("Passwords do not match. Please try again.")
                 msg = "Passwords do not match. Please try again."
             else:
-                _, stderr = resetPW (userObject.username,new_password )
+                _, stderr = resetPW (user.username,new_password )
                 # check if password change was successful
                 if stderr == "":
-                    userObject.password = make_password(new_password)
-                    userObject.is_verified = True
-                    userObject.save()
+                    user.password = make_password(new_password)
+                    user.is_verified = True
+                    user.save()
                     print("Password change successful")
                     msg = "Password change successful"
                     status=200
@@ -563,11 +505,7 @@ def changePassword(request, id):
                 else:
                     msg = f"Error changing password"
                     status=400
-
-            # else:
-            #     print('Passwords do not match')
-            #     msg = 'Passwords do not match'
-            #     status=400
+                    
             return JsonResponse({"msg": msg},status=status)
 
 @swagger_auto_schema(

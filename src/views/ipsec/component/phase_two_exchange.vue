@@ -1,14 +1,14 @@
 <template>
   <div class="ml-3 mr-3 mt-5">
-    <h4>Phase 2 proposal (SA/Key Exchange)</h4>
+    <h4>{{$t('PageIpsec.Phase2proposal(SA/Key Exchange)')}}</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-5">
-        <label>Protocol*</label>
+        <label>{{$t('PageIpsec.Protocol')}}*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
-          label="Protocol"
+          :label="$t('PageIpsec.Protocol')"
           v-model="protocol"
           item-title="name"
           item-value="slug"
@@ -25,11 +25,11 @@
       <template v-if="props.isProtocol?.slug === 'ESP'">
         <template v-if="props.keyExchange.slug === 'V1'">
           <v-col cols="4" class="mt-5">
-            <label>Encryption algorithms*</label>
+            <label>{{$t('PageIpsec.Hashalgorithms')}}*</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
-              label="Encryption algorithms1"
+              :label="$t('PageIpsec.Encryptionalgorithms1')"
               v-model= "encryptAlgoExch2"
               item-title="name"
               item-value="slug"
@@ -47,11 +47,11 @@
         </template>
         <template v-else>
           <v-col cols="4" class="mt-5">
-            <label>Encryption algorithms*</label>
+            <label>{{$t('PageIpsec.algorithms_cryptage')}}*</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
-              label="Encryption algorithms2"
+              :label="$t('PageIpsec.Encryptionalgorithms2')"
               v-model="encryptAlgoExchange"
               item-title="name"
               item-value="slug"
@@ -69,11 +69,11 @@
         </template>
       </template>
       <v-col cols="4" class="mt-5">
-        <label>Hash algorithms*</label>
+        <label>{{$t('PageIpsec.Hashalgorithms')}}*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
-          label="Hash algorithms"
+          :label="$t('PageIpsec.Hashalgorithms')"
           v-model="hashAlgoExchange"
           item-title="name"
           item-value="slug"
@@ -90,11 +90,11 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>PFS key group*</label>
+        <label>{{$t('PageIpsec.PFSkeygroup')}}*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
-          label="PFS key group"
+          :label="$t('PageIpsec.PFSkeygroup')"
           v-model="pfsKey"
           item-title="name"
           item-value="slug"
@@ -109,11 +109,11 @@
         </p>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>Lifetime</label>
+        <label>{{$t('PageIpsec.Lifetime')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          label="Lifetime in seconds"
+          :label="$t('PageIpsec.Lifetimeinseconds')"
           v-model="lifetimeExchange"
         ></v-text-field>
         <p

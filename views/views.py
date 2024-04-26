@@ -566,8 +566,8 @@ def setting_page(request):
         network_info.append(i.server_dns)
     time_zone = time_zones(request)
     gateway=gatways_information(request)
-    print({"gateway":gateway})
-    context = {'gateway':gateway,'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings),"network_info":json.dumps(network_info),"gateway":json.dumps(gateway)}
+    context = {'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings),"network_info":json.dumps(network_info),"gateway":json.dumps(gateway)}
+    print({"context ************":context})
     return render(request, 'settings_page.html',context)
 
 @login_required(login_url='/')
@@ -756,9 +756,11 @@ def gatways_information(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
+            interface = Interface.objects.get(id = res[i]['fields']['interface'])
+            res[i]['fields']['name_interface'] = interface.name_interface
             gatways_information.append(res[i]['fields'])
-        
         output_data = defaultdict(list)
+
         for item in gatways_information:
             gateway = item["gateway"]
             fetch_gateway = Gateway.objects.get(id = gateway)

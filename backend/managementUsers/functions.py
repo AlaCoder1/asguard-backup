@@ -89,7 +89,6 @@ def add_user_group(groupname, username):
 
 def checkSameGroupnameWithUsername(username):
     out = os.popen("id "+username).readline().strip('\n').strip()
-    print(out)
     if (out[out.find("groups")+len("groups")+1:len(out)].find(username) != -1):
         return True
     return False

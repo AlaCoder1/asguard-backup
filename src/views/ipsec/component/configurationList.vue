@@ -28,6 +28,7 @@
               :rowData="rowData.value"
               :gridOptions="gridOptions"
               :defaultColDef="defaultColDef"
+              :overlayNoRowsTemplate="overlayTemplate"
               :rowGroupPanelShow="rowGroupPanelShow"
               @grid-ready="onGridReady"
               style="width: 100%; height: 100%"
@@ -38,7 +39,7 @@
                 outlined
                 color="#213E9F"
                 label-color="#ffffff"
-                label="Add New Peer"
+                :label="$t('PageIpsec.addnewpeer')"
                 :isLarge="true"
                 class="ml-2"
                 @click="addServer"
@@ -76,10 +77,11 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, computed, ref } from "vue";
 import { inject } from "vue";
 
 import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
@@ -92,13 +94,36 @@ export default {
     VButton,
   },
   setup() {
+    const { t } = useI18n();
     const emitter = inject("emitter");
     const color = ref(null);
     const snackbar = ref(false);
     const textAlert = ref(false);
     const dialogDelete = ref(false);
+    const overlayTemplate = ref("");
     const currentRowToDelete = ref(null);
     const status = ref(false);
+    const remoteGateway = computed(() => {
+      return t("PageIpsec.remotegateway");
+    });
+    const Phase1Proposal = computed(() => {
+      return t("PageIpsec.Phase1Proposal");
+    });
+    const auth = computed(() => {
+      return t("PageNetwork.Authentication");
+    });
+    const localsubnet = computed(() => {
+      return t("PageIpsec.LocalSubnet");
+    });
+    const Remotesubnet = computed(() => {
+      return t("PageIpsec.Remotesubnet");
+    });
+    const Phase2Proposal = computed(() => {
+      return t("PageIpsec.Phase2Proposal");
+    });
+    const Enable = computed(() => {
+      return t("PageIpsec.Enable");
+    });
     const columns = ref([
       {
         headerName: "Type",
@@ -109,7 +134,7 @@ export default {
         filter: true,
       },
       {
-        headerName: "Remote Gateway",
+        headerName: remoteGateway,
         cellRenderer: RemoteGateway,
         minWidth: 200,
         suppressSizeToFit: true,
@@ -125,7 +150,7 @@ export default {
         filter: true,
       },
       {
-        headerName: "Phase 1 Proposal",
+        headerName: Phase1Proposal,
         cellRenderer: FirstPhaseProposal,
         minWidth: 300,
         suppressSizeToFit: true,
@@ -133,7 +158,7 @@ export default {
         filter: true,
       },
       {
-        headerName: "Authentication",
+        headerName: auth,
         field: "authentication_method",
         minWidth: 150,
         suppressSizeToFit: true,
@@ -141,7 +166,7 @@ export default {
         filter: true,
       },
       {
-        headerName: "Local Subnet",
+        headerName: localsubnet,
         field: "address_local_network",
         minWidth: 150,
         suppressSizeToFit: true,
@@ -149,7 +174,7 @@ export default {
         filter: true,
       },
       {
-        headerName: "Remote subnet",
+        headerName: Remotesubnet,
         field: "address_remote_network",
         minWidth: 150,
         suppressSizeToFit: true,
@@ -157,7 +182,7 @@ export default {
         filter: true,
       },
       {
-        headerName: "Phase 2 Proposal",
+        headerName: Phase2Proposal,
         cellRenderer: SecondPhaseProposal,
         minWidth: 200,
         suppressSizeToFit: true,
@@ -165,7 +190,7 @@ export default {
         filter: true,
       },
       {
-        headerName: "Enable",
+        headerName: Enable,
         minWidth: 100,
         suppressSizeToFit: true,
         field: "enable",
@@ -458,6 +483,15 @@ export default {
       }
     };
     onMounted(async () => {
+      overlayTemplate.value = `
+      <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+     </svg></span>`;
+
       try {
         const serversAttribute =
           document.getElementById("app").attributes["servers"].value;
@@ -504,6 +538,7 @@ export default {
     return {
       status,
       emitter,
+      overlayTemplate,
       color,
       snackbar,
       textAlert,

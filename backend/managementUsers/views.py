@@ -539,6 +539,17 @@ def addPermission(request):
         return JsonResponse(serializer.errors, status=400)
 
 
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET PROFILE LANGUAGE",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_profile_language(request, id):
+    """Getting Profile language"""
+    profile = Profile.objects.get(user=User.objects.get(id=id))
+    return JsonResponse({"language": profile.language})
+
+
 @swagger_auto_schema(
         method='PUT', 
         responses={200: 'Created', 400: 'Bad Request'}, 

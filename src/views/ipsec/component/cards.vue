@@ -10,7 +10,7 @@
           hover
         >
           <v-card-item>
-            <div class="title-card mb-6">Response Time</div>
+            <div class="title-card mb-6">{{$t('monitoringVPN.ResponseTime')}}</div>
           </v-card-item>
           <v-card-text class="content-style">
             <v-row>
@@ -64,7 +64,7 @@
           hover
         >
           <v-card-item>
-            <div class="title-card mb-6">Availablity</div>
+            <div class="title-card mb-6">{{$t('monitoringVPN.Availablity')}}</div>
           </v-card-item>
           <v-card-text class="content-style">
             <v-row>
@@ -94,7 +94,7 @@
           hover
         >
           <v-card-item>
-            <div class="title-card mb-6">Packet Loss</div>
+            <div class="title-card mb-6">{{$t('monitoringVPN.PacketLoss')}}</div>
           </v-card-item>
           <v-card-text class="content-style">
             <v-row>
@@ -124,7 +124,7 @@
           hover
         >
           <v-card-item>
-            <div class="title-card mb-6">Active Sessions</div>
+            <div class="title-card mb-6">{{$t('monitoringVPN.ActiveSessions')}}</div>
           </v-card-item>
           <v-card-text class="content-style">
             <v-row>
@@ -144,7 +144,7 @@
           text-color="white"
         >
           <v-card-item>
-            <div class="title-card-light mb-6">Active SSL Tunnels</div>
+            <div class="title-card-light mb-6">{{$t('monitoringVPN.ActiveSSLTunnels')}}</div>
           </v-card-item>
           <v-card-text class="content-style-light">
             <v-row>

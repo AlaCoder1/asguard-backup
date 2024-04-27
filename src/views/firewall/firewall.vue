@@ -93,21 +93,26 @@ export default {
       }, 6000);
     });
 
-    this.interfaces =
+    let interfaces =
       document.getElementById("app").attributes["interfaces"].value;
-    let validJsonString = this.interfaces
+    let validJsonString = interfaces
       .replace(/'/g, '"')
       .replace(/True/g, "true")
       .replace(/False/g, "false")
       .replace(/None/g, "null");
     let parsedArray = JSON.parse(validJsonString);
-    this.interfaces = parsedArray;
+
+    let filtredInterface = parsedArray.filter(
+      (i) => !i.ifname.startsWith("vlan")
+    );
+
+    this.interfaces = filtredInterface;
 
     let tab = localStorage.getItem("firewall-tab");
     if (tab) {
       this.activeTab = tab;
     } else {
-      this.activeTab = this.tabs[0].name_interface;
+      this.activeTab = this.tabs[0]?.name_interface;
     }
   },
   methods: {

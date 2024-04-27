@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              Create new Interface</span
+              {{ $t("typeInterface.createNewInterface") }} Interface</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              Update Interface</span
+              {{ $t("buttons.update") }} Interface</span
             >
           </v-card-title>
           <v-card-text>
@@ -18,11 +18,12 @@
                   <v-select
                     v-model="state.interface"
                     :readonly="modalMode === 'edit' ? true : false"
-                    label="New interface"
+                    :label="$t('typeInterface.newInterface')"
                     item-title="vlan"
                     item-value="id"
                     :items="state.listVlanAssing"
                     return-object
+                    :no-data-text="$t('certificat.certificatlist')"
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.interface.$error">
                     {{ v$.interface.$errors[0].$message }}
@@ -30,7 +31,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Name Interface"
+                    :label="$t('typeInterface.nameInterface')"
                     v-model="state.name_interface"
                   ></v-text-field>
                   <p
@@ -54,7 +55,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Close</span>
+              <span class="text-white pr-3 pl-3">{{
+                $t("buttons.close")
+              }}</span>
             </v-btn>
 
             <v-btn
@@ -67,7 +70,12 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+                {{ $t("buttons.create") }}</span
+              >
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -86,6 +94,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
@@ -108,6 +117,8 @@ export default {
 
   setup(props) {
     const emitter = inject("emitter");
+    const { t } = useI18n();
+
     onMounted(() => {
       let vlanList =
         document.getElementById("app").attributes["list_vlan"].value;
@@ -277,14 +288,16 @@ export default {
         state.id = null;
       }
     };
-
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
     const rules = computed(() => {
       return {
         interface: {
-          required,
+          required: helpers.withMessage(error, required),
         },
         name_interface: {
-          required,
+          required: helpers.withMessage(error, required),
         },
       };
     });

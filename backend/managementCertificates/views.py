@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from django.http import JsonResponse
 from django.db.models import Q
 from django.db.models.deletion import ProtectedError
+from django.utils.translation import gettext_lazy as _
 from rest_framework.authentication import SessionAuthentication
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
@@ -12,15 +13,28 @@ from backend.managementCertificates.certificate import create_certificate_in_sys
 
 from backend.managementCertificates.certificate_authority import create_ca_in_system, delete_ca_in_system, export_ca_in_system, export_ca_list_rev_in_system, import_ca_in_system
 from backend.managementCertificates.constant_variables import PATH_CA_CRT, PATH_CA_KEY
-from utils.constant_variables import ERROR_MESSAGES_DELETE_USED_CA, ERROR_MESSAGES_DELETE_USED_ITEM, ERROR_MESSAGES_EXPORTING, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_DELETE
 from backend.managementCertificates.list_certificates import get_list_all_cert_auth, get_list_all_certificates, get_one_cert_auth, get_one_certificate
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementCertificates.serializers import CertificateAuthoritySerializer, CertificateSerializer
-from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INEXISTANT
 from utils.errors_utils import CommandExecutionError
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 
-# Create your views here.
+
+# Constants
+CONSTANT_CA = _("Certificate Authority")
+CONSTANT_REVOCATION_LIST = _("revocation list")
+CONSTANT_CERT = _("Certificate")
+CONSTANT_USED_ITEM = _("it's used in")
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+# Error messages
+ERROR_MESSAGES_CREATING = _("Error in creating")
+ERROR_MESSAGES_DELETING = _("Error in deleting")
+ERROR_MESSAGES_EXPORTING = _("Error in exporting")
+ERROR_MESSAGES_DELETING_USED_ITEM = _("Unable to delete")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
+
 
 ##################################################
 ############# Certificates Authority #############
@@ -134,12 +148,11 @@ def create_cert_auth(request):
                 if serializer_ca.is_valid():
                     # Add the server to the database
                     serializer_ca.save()
-                    return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('CA', name)}, status=201)
+                    return JsonResponse({"msg": f"{name} {(SUCCESS_MESSAGES_CREATING)}"}, status=201)
             
             return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
         
         else:
-
             # Importing an existing CA
             certificate_data = method.get("certificate_data", "")
             certificate_private_key = method.get("certificate_key", "")
@@ -163,13 +176,12 @@ def create_cert_auth(request):
                 if serializer_ca.is_valid():
                     
                     serializer_ca.save()
-                    return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('CA', name)}, status=201)
+                    return JsonResponse({"msg": f"{name} {(SUCCESS_MESSAGES_CREATING)}"}, status=201)
                 
             return JsonResponse({"error": list(serializer_ca.errors.values())[0][0]}, status=400)
 
-
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('CA')}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_CA}"}, status=400)
     except ValueError as error:
         return JsonResponse({"error": error.__str__()}, status=400)
 
@@ -191,13 +203,15 @@ def delete_cert_auth(request, id):
             delete_ca_in_system(ca.name)
             # delete from database
             ca.delete()
-            return JsonResponse({"msg": f"delete {ca.name} succesfully"})
-        else:
-            return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_CA}, status=400)
+            return JsonResponse({"msg": f"{ca.name} {(SUCCESS_MESSAGES_DELETING)}"}, status=201)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CA}, {CONSTANT_USED_ITEM} {CONSTANT_CERT}"}, status=400)
+    
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_CA}"}, status=400)
     except ProtectedError:
-        return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_CA}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CA}, {CONSTANT_USED_ITEM} {CONSTANT_CERT}"}, status=400)
     except CertificateAuthority.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_CA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD CERTIFICATE AUTHORITY",
@@ -219,9 +233,9 @@ def export_cert_auth(request, id):
         return JsonResponse({"cert": ca_value}, status=201)
 
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_EXPORTING.format("CA")}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_EXPORTING} {CONSTANT_CA}"}, status=400)
     except CertificateAuthority.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_CA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -237,9 +251,9 @@ def export_cert_auth_list_rev(request, id):
         return JsonResponse({"list_revocation": list_revocation}, status=201)
 
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_EXPORTING.format("revokation list")}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_EXPORTING} {CONSTANT_REVOCATION_LIST}"}, status=400)
     except CertificateAuthority.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_CA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 ##################################################
@@ -369,7 +383,7 @@ def create_certificate(request):
 
                     if serializer_cert.is_valid():
                         serializer_cert.save()
-                        return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('Certificate', name)}, status=201)
+                        return JsonResponse({"msg": f"{name} {(SUCCESS_MESSAGES_CREATING)}"}, status=201)
                 else:
                     return JsonResponse({"error": "Authority valide date is expired"}, status=400)
             
@@ -400,14 +414,14 @@ def create_certificate(request):
                 serializer_cert = CertificateSerializer(data=cert_data)
                 if serializer_cert.is_valid():
                     serializer_cert.save()
-                    return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('Certificate', name)}, status=201)
+                    return JsonResponse({"msg": f"{name} {(SUCCESS_MESSAGES_CREATING)}"}, status=201)
                 
             return JsonResponse({"error": list(serializer_cert.errors.values())[0][0]}, status=400)
 
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('Certificate')}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_CERT}"}, status=400)
     except CertificateAuthority.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format("CA")}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_CA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', request_body=CertificateSerializer, responses={200: 'Created', 400: 'Bad Request'}, 
@@ -430,16 +444,18 @@ def delete_certificate(request, id):
             delete_certificate_in_system(cert.name, cert.certificate_type)
             # delete from database
             cert.delete()
-            return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(cert.name)}, status=201)
-        
+            return JsonResponse({"msg": f"{cert.name} {(SUCCESS_MESSAGES_DELETING)}"}, status=201)
         elif len(list_server_vpn) > 0:
-            return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_ITEM.format("certificate", "openvpn servers")}, status=400)
+            return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CERT}, {CONSTANT_USED_ITEM} OpenVPN Server"}, status=400)
         elif len(list_client_vpn) > 0:
-            return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_ITEM.format("certificate", "openvpn clients")}, status=400)
+            return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CERT}, {CONSTANT_USED_ITEM} Openvpn Client"}, status=400)
         elif len(list_server_ipsec) > 0:
-            return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_ITEM.format("certificate", "IPsec configuration")}, status=400)
+            return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CERT}, {CONSTANT_USED_ITEM} IPsec"}, status=400)
+    
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_CERT}"}, status=400)
     except Certificate.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_CERT} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO REVOKE A CERTIFICATE",
@@ -477,7 +493,7 @@ def revoke_certificate(request, id):
             return JsonResponse({"error": "You can't revoke this imported certificate"}, status=400)
     
     except Certificate.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_CERT} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -499,7 +515,7 @@ def unrevoke_certificate(request, id):
         cert.save()
         return JsonResponse({"msg": f"Certificate {cert.name} is unrevoked and removed from the crl file of the ca {ca.name}"})
     except Certificate.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_CERT} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO DOWNLOAD A CERTIFICATE",
@@ -510,7 +526,7 @@ def unrevoke_certificate(request, id):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def export_cert(request, id):
-    """Creating a new Certificates Authority in system and adding it to the database"""
+    """Exporting a Certificate"""
     try:
         cert = Certificate.objects.get(id=id)
         data = request.data
@@ -525,6 +541,6 @@ def export_cert(request, id):
         return JsonResponse({"cert": cert_value}, status=201)
 
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_EXPORTING.format("CA")}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_EXPORTING} {CONSTANT_CERT}"}, status=400)
     except Certificate.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_CERT} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

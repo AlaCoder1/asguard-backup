@@ -21,6 +21,7 @@ from views.views import *
 from django.conf.urls import handler404
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from django.conf.urls.static import static
 from rest_framework import permissions
 schema_view = get_schema_view(
     openapi.Info(
@@ -48,7 +49,7 @@ urlpatterns = [
     path('interfaces/type-of-interface', interface_type),
     path('system/user-certificat-management', user_certificate_managment_page),
     path('firewall/rules', firewall_page),
-    path('settings/', settings_page),
+    # path('settings/', settings_page),
     path('openvpn/', openvpn_page),
     path('asguard/subscription/', subscription_page),
     path('', include('backend.tasks.urls')),
@@ -68,6 +69,7 @@ urlpatterns = [
     path('ipsec/', ipsec_page),
     path('proxy/', squid_proxy),
     path('sdwan/', sdwan_page),
+    path('settings/', setting_page),
     path('waf/', waf_page),
     path('sdwan/', include('backend.sdwan.urls')),
     path('clamaV/', clamav_page),
@@ -104,4 +106,8 @@ websocket_urlpatterns = [
       
 ]
 
+
 handler404 = 'views.views.error_404_view'
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -16,7 +16,8 @@ from django.contrib.auth.hashers import make_password
 from backend.LdapServer.models import ADServer
 import ldap
 from drf_yasg.utils import swagger_auto_schema
-
+from django.conf import settings
+from rest_framework import status
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF Users",
                      operation_description="API TO GET LIST OF Users",)
@@ -55,13 +56,16 @@ def getUser(request, id):
     if (request.method == 'GET'):
         user = User.objects.filter(id=id)
         userDict = serializers.serialize("json", user)
-        res = json.loads(userDict)
-        res[0].pop('model')
-        id = res[0]['pk']
-        res[0].pop('pk')
-        res[0]['fields'].pop('password')
-        res[0]['fields']['id'] = id
-        userJson = res[0]['fields']
+        res_user = json.loads(userDict)
+        res_user[0]['fields']['id'] = res_user[0]['pk']
+        userJson = res_user[0]['fields']
+        
+        profile=Profile.objects.filter(user_id=id)
+        profile_user=serializers.serialize("json", profile)
+        res_profile = json.loads(profile_user)
+        res_profile[0]['fields']['id'] = res_profile[0]['pk']
+        profileJson = res_profile[0]['fields']
+        userJson['profile']=profileJson
         return JsonResponse(userJson)
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -161,6 +165,7 @@ def createUser(request):
                                 # If okay, save it on the database
                                 serializerUser.save()
                                 serializerGroup.save()
+                                Profile.objects.create(user=serializerUser.save())
                                 # Provide a Json Response with the data that was saved
                                 return JsonResponse({"msg": msg}, status=201)
                             # Provide a Json Response with the necessary error information
@@ -182,14 +187,17 @@ def createUser(request):
                         if serializerUser.is_valid():
                             if serializerGroup.is_valid():
                                 # If okay, save it on the database
+                                
                                 serializerUser.save()
                                 serializerGroup.save()
+                                Profile.objects.create(user=serializerUser.save())
                                 # Provide a Json Response with the data that was saved
                                 return JsonResponse({"msg": msg}, status=201)
                             # Provide a Json Response with the necessary error information
                             return JsonResponse(serializerGroup.errors, status=400)
                         # Provide a Json Response with the necessary error information
                         return JsonResponse(serializerUser.errors, status=400)
+                    
                 else:
                     error_msg = error_useradd.strip()
                     modified_error_msg = " " + error_msg.replace("useradd: ", "")
@@ -339,6 +347,86 @@ def modifyUser(request, id):
             msg = "invalid "+newusername
         
         return JsonResponse({"data": data, "msg": msg})
+    
+from django.core.exceptions import ValidationError
+
+@swagger_auto_schema(
+    method='PUT',
+    request_body=ProfileSerializer,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO UpdateProfile",
+    operation_description="This API help us to update profile of user ",
+)
+
+
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def update_profile(request):
+    if (request.method == 'PUT'):
+        try:
+            data = request.data
+            user = request.user
+            if User.objects.filter(email=data['email']).exclude(id=user.id).exists():
+                return JsonResponse({"msg": "Email allready exist"}, status=400)          
+            userObject = User.objects.get(id=user.id)
+            if validInput(user.username):
+                if username_exists(data['username']) and  data['username'] != user.username:
+                    msg = f"username or email already Used."
+                    return JsonResponse({"msg": msg})
+                else:
+                    if checkSameGroupnameWithUsername(user.username):
+                        changeUsername(data['username'], user.username)
+                        change_groupname_username(user.username, data['username'])
+                        
+                        msg = "updated groupname and username succesfully"
+                    else:
+                        changeUsername(data['username'], user.username)
+                        msg = "updated only username succesfully"
+                    userObject.username = data['username']
+                    userObject.fullname = data['fullname']
+                    userObject.email = data['email']
+                    userObject.save()
+                    
+            else:
+                msg = "invalid "+ user.username
+
+            # Update profile fields
+            profile = Profile.objects.get(user=userObject)
+
+            if 'photo' in request.FILES:
+                
+                photo = request.FILES['photo']
+                # Create or update the user-specific folder
+                user_folder = os.path.join(settings.MEDIA_ROOT, str(user.id))
+                if not os.path.exists(user_folder):
+                    os.makedirs(user_folder)
+                
+                photo_path = os.path.join(user_folder, photo.name)
+                photo_url = '/media/'+os.path.relpath(photo_path, settings.MEDIA_ROOT)
+                print('photo_url',photo_url)
+                old_photo_url_path = os.path.join(user_folder,profile.photo_url.split('/')[3])
+                print("path:",old_photo_url_path)
+                # Delete the old photo_url file if it exists
+                if os.path.exists(old_photo_url_path):
+                    os.remove(old_photo_url_path)
+                with open(photo_path, 'wb+') as destination:
+                    for chunk in photo.chunks():
+                        destination.write(chunk)
+            data['photo_url']  = photo_url
+            serializer = ProfileSerializer(profile, data=data, partial=True)
+            if serializer.is_valid():
+                serializer.save()
+                return JsonResponse({'message': 'Profile updated successfully'})
+            return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+          
+        except ValidationError as e:
+            return JsonResponse({'msg': e.message}, status=400)
+        except Exception as e:
+            return JsonResponse({'msg': str(e)}, status=500)
+        
+
 
 @swagger_auto_schema(
     method='PUT',
@@ -388,30 +476,27 @@ def changePasswordByAdmin(request, id):
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
-#@permission_classes([IsAuthenticated])
-def changePassword(request, id):
+@permission_classes([IsAuthenticated])
+def changePassword(request):
     msg = ""
     if (request.method == 'PUT'):
-            userObject = User.objects.get(id=id)
-        # if userObject.is_verified == True:
-        #     return JsonResponse({"msg": "your account is verified"})
-        # else:
+            user = request.user
             data = request.data
-            # current_password = data['current_password']
+            current_password = data['current_password']
             new_password = data['new_password']
             confirm_password = data['confirm_password']
-            # if check_password(current_password, userObject.password):
-            #     print('Passwords match!')
+            if check_password(current_password, user.password):
+                print('Passwords match!')
             if new_password != confirm_password:
                 print("Passwords do not match. Please try again.")
                 msg = "Passwords do not match. Please try again."
             else:
-                _, stderr = resetPW (userObject.username,new_password )
+                _, stderr = resetPW (user.username,new_password )
                 # check if password change was successful
                 if stderr == "":
-                    userObject.password = make_password(new_password)
-                    userObject.is_verified = True
-                    userObject.save()
+                    user.password = make_password(new_password)
+                    user.is_verified = True
+                    user.save()
                     print("Password change successful")
                     msg = "Password change successful"
                     status=200
@@ -419,11 +504,7 @@ def changePassword(request, id):
                 else:
                     msg = f"Error changing password"
                     status=400
-
-            # else:
-            #     print('Passwords do not match')
-            #     msg = 'Passwords do not match'
-            #     status=400
+                    
             return JsonResponse({"msg": msg},status=status)
 
 @swagger_auto_schema(

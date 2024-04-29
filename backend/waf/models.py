@@ -20,3 +20,18 @@ class ConfigWaf(models.Model):
 
     class Meta:
         db_table = 'config_waf'
+
+
+class RulesWaf(models.Model):
+    name = models.CharField(max_length=300, default=None, null=True, blank=True, unique=True)
+    rule_status = models.BooleanField(default=True)
+    created = models.BooleanField(default=True)
+    rule_id = models.IntegerField(default=None, null=True, unique=True)
+    variables = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    operators = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    transformations = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    actions = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    rule_content = models.CharField(max_length=3000, default=None, null=True, blank=True)
+
+    class Meta:
+        db_table = 'rules_waf'

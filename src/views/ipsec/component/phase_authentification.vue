@@ -1,6 +1,6 @@
 <template>
   <div class="ml-3 mr-3 mt-5">
-    <h4>Phase 1 proposal (Authentication)</h4>
+    <h4>{{$t("PageIpsec.proposal_pahse1")}}</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-5">

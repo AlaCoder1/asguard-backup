@@ -340,7 +340,10 @@
       "dynamiquepassrelle":"Passerelle dynamique",
       "allowgateway":"Autoriser n'importe quelle passerelle distante à se connecter.",
       "localnetwork":"Réseau Local",
-      "Address":"Adresse"
+      "address":"Adresse",
+      "network":"Réseau",
+      "remoteNetwork":"Réseau distant",
+      "proposal_pahse1":"Proposition de phase 1 (Authentification)"
       
     }
   }

@@ -333,6 +333,9 @@
       "dynamiquepassrelle":"Dynamic gateway",
       "allowgateway":" Allow any remote gateway to connect",
       "localnetwork":"Local Network",
-      "Address":"Address"
+      "address":"Address",
+      "network":"Network",
+      "remoteNetwork":"Remote Network",
+      "proposal_pahse1":"Phase 1 proposal (Authentication)"
     }
   }

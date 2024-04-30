@@ -254,6 +254,35 @@
     "network":"Réseau",
     "createRoute":"Créer une nouvelle"
    },
+  "subscription":{
+    "chooseYourPlan":"Choisissez votre plan !",
+    "currentPackage":"Package actuel",
+    "packageExpired":"Votre paquet est expiré",
+    "currentSubscription":"Abonnement actuel",
+    "expired":"Expiré",
+    "ago":"il y a",
+    "nextPaymentDue":"Prochain paiement",
+    "base":"Base",
+    "annual":"Annuel",
+    "monthly":"Mensuel",
+    "firewall":"Pare-feu",
+    "ZTNA":"ZTNA",
+    "LDAP":"LDAP",
+    "custom":"Personnalisé",
+    "premium":"Premium",
+    "doubleMask150Annual":"Double masque 150 €/Annuel",
+    "cASB150Annual":"CASB 150 €/Annuel",
+    "sWG100Annual":"SWG 100 €/Annuel",
+    "antiVirus100Annual":"Anti-virus 100 €/Annuel",
+    "doubleMask":"Double masque",
+    "casb":"CASB​",
+    "SWG":"SWG",
+    "chooseService":"Vous devez choisir au moins un service",
+    "day":"jour",
+    "days":"jours",
+    "byNow":"Acheter"
+
+   },
 
   "champs":{
     "indication":"champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",

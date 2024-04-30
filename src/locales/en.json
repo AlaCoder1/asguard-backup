@@ -26,7 +26,12 @@
     "createauth":"Create new Authority",
     "updateauth":"Update Authority",
     "updatecertif":"Update",
-    "createcertif":"Create new"
+    "createcertif":"Create new",
+    "cancel":"Cancel",
+    "delete":"Delete",
+    "AddVLAN":"Add VLAN",
+    "AddInterface":"Add Interface",
+    "Add":"Add"
 
 
   },
@@ -46,7 +51,9 @@
   "errors":{
     "valueRequired":"Value is required",
     "invalidPassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
-    "passwordConfirmation":"Your password does not match"
+    "passwordConfirmation":"Your password does not match",
+    "ChampIncludeOnlyNumbers":"Champs can include only Numbers",
+    "formatMustBeLikeAdresseIP":"Format must be like adresse IP : X.X.X.X"
 
   },
 
@@ -116,7 +123,8 @@
     "questiongroup": "Are you sure you want to delete this group?",
     "questionserver": "Are you sure you want to delete this server?",
     "questioncertif": "Are you sure you want to delete this authority?",
-    "questioncertificat": "Are you sure you want to delete this certificate?"
+    "questioncertificat": "Are you sure you want to delete this certificate?",
+    "deleteRow":"Are you sure you want to delete this Row"
  
   },
      
@@ -167,6 +175,84 @@
     "certif_intern":"Certification intern",
     "create_certificat":"Create Certificate"
 
+  },
+
+  "interface":{
+    "basicConfiguration":"Basic Configuration",
+    "activate":"Activate",
+    "device":"Device",
+    "genericConfiguration":"Generic Configuration",
+    "blockNetworks":"Block networks",
+    "private":"Private",
+    "blockBogonAddresses":"Block Bogon addresses",
+    "notAssignedByIANA":"Not assigned by IANA",
+    "IPV4SetupType":"IPV4 Setup Type",
+    "MACAddress":"MAC address",
+    "MTU":"MTU (Maximum Transmission Unit)",
+    "MSS":"MSS",
+    "speedAndDuplex":"Speed and Duplex",
+    "staticIPV4AddressConfiguration":"Static IPV4 address configuration",
+    "IPV4Address":"IPV4 address",
+    "add":"Add",
+    "configuringDHCP":"Configuring the DHCP Client",
+    "advancedParameters":"Advanced parameters",
+    "cancel":"Cancel",
+    "save":"Save",
+    "addedSuccessfully":"Gateway added successfully",
+    "savedSuccessfully":"Configuration saved successfully",
+    "addIPv4Gateway":"Add IPv4 Gateway",
+    "gatewayName":"Enter Gateway Name",
+    "GatewayDefault":"Default Gateway",
+    "farGateway":"Far Gateway",
+    "descriptionRequired":"Description is required",
+    "IPV4Required":"IPV4 Setup Type is required",
+    "IPV4AddressRequired":"IPV4 address is required",
+    "netmaskRequired":"Netmask is required",
+    "IPV4GatewayRequired":"IPV4 gateway is required",
+    "addressValid":"Please enter a valid MAC address",
+    "NumberMust":"Number must be between 1500 and 9000",
+    "rejectLeasesFrom":"Reject leases from",
+    "hostname":"Hostname",
+    "overrideMTU":"Override MTU",
+    "protocolTiming":"Protocol Timing",
+    "timeout":"Timeout",
+    "tryAgain":"Try again",
+    "selectExpiration":"Select expiration",
+    "restart":"Restart",
+    "backoffCutoff":"Backoff Cutoff",
+    "initialInterval":"Initial Interval",
+    "leaseRequirements":"Lease Requirements",
+    "sendOptions":"Send options DHCP Client",
+    "sendOptionsLeaseTime":"Send Options lease time",
+    "requestOptions":"Request Options",
+    "requiredOptions":"Required Options",
+    "supersedeDomaineName":"Supersede domaine name",
+    "prependDomainServer":"Prepend domain server"
+
+  },
+  "typeInterface":{
+    "otherTypesOfInterfaces":"Other Types of Interfaces",
+    "VLAN":"VLAN",
+    "createNew":"Create new",
+    "parentInterface":"Parent Interface",
+    "VLANTag":"VLAN Tag",
+    "VlanPriority":"Vlan priority",
+    "assingInterface":"Assing Interface",
+    "networkPort":"Network port",
+    "createNewInterface":"Create new",
+    "newInterface":"New interface",
+    "nameInterface":"Name Interface",
+    "addVXLAN":"Add VXLAN",
+    "device":"Device",
+    "VXLANNetworkIdentifie":"VXLAN Network Identifie",
+    "sourceAddress":"Source Address",
+    "multicastGroup":"Multicast group"
+
+  },
+  "routing":{
+   "staticRouting":"Static Routing",
+   "network":"Network",
+   "createRoute":"Create new"
   },
 
   "champs":{

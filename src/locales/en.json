@@ -26,7 +26,12 @@
     "createauth":"Create new Authority",
     "updateauth":"Update Authority",
     "updatecertif":"Update",
-    "createcertif":"Create new"
+    "createcertif":"Create new",
+    "cancel":"Cancel",
+    "delete":"Delete",
+    "AddVLAN":"Add VLAN",
+    "AddInterface":"Add Interface",
+    "Add":"Add"
 
 
   },
@@ -46,7 +51,9 @@
   "errors":{
     "valueRequired":"Value is required",
     "invalidPassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
-    "passwordConfirmation":"Your password does not match"
+    "passwordConfirmation":"Your password does not match",
+    "ChampIncludeOnlyNumbers":"Champs can include only Numbers",
+    "formatMustBeLikeAdresseIP":"Format must be like adresse IP : X.X.X.X"
 
   },
 
@@ -117,7 +124,8 @@
     "questionserver": "Are you sure you want to delete this server?",
     "questioncertif": "Are you sure you want to delete this authority?",
     "questioncertificat": "Are you sure you want to delete this certificate?",
-    "questionkey":"Are you sure you want to delete this Key ?"
+    "questionkey":"Are you sure you want to delete this Key ?",
+    "deleteRow":"Are you sure you want to delete this Row"
  
   },
      
@@ -169,6 +177,112 @@
     "create_certificat":"Create Certificate"
 
   },
+
+  "interface":{
+    "basicConfiguration":"Basic Configuration",
+    "activate":"Activate",
+    "device":"Device",
+    "genericConfiguration":"Generic Configuration",
+    "blockNetworks":"Block networks",
+    "private":"Private",
+    "blockBogonAddresses":"Block Bogon addresses",
+    "notAssignedByIANA":"Not assigned by IANA",
+    "IPV4SetupType":"IPV4 Setup Type",
+    "MACAddress":"MAC address",
+    "MTU":"MTU (Maximum Transmission Unit)",
+    "MSS":"MSS",
+    "speedAndDuplex":"Speed and Duplex",
+    "staticIPV4AddressConfiguration":"Static IPV4 address configuration",
+    "IPV4Address":"IPV4 address",
+    "add":"Add",
+    "configuringDHCP":"Configuring the DHCP Client",
+    "advancedParameters":"Advanced parameters",
+    "cancel":"Cancel",
+    "save":"Save",
+    "addedSuccessfully":"Gateway added successfully",
+    "savedSuccessfully":"Configuration saved successfully",
+    "addIPv4Gateway":"Add IPv4 Gateway",
+    "gatewayName":"Enter Gateway Name",
+    "GatewayDefault":"Default Gateway",
+    "farGateway":"Far Gateway",
+    "descriptionRequired":"Description is required",
+    "IPV4Required":"IPV4 Setup Type is required",
+    "IPV4AddressRequired":"IPV4 address is required",
+    "netmaskRequired":"Netmask is required",
+    "IPV4GatewayRequired":"IPV4 gateway is required",
+    "addressValid":"Please enter a valid MAC address",
+    "NumberMust":"Number must be between 1500 and 9000",
+    "rejectLeasesFrom":"Reject leases from",
+    "hostname":"Hostname",
+    "overrideMTU":"Override MTU",
+    "protocolTiming":"Protocol Timing",
+    "timeout":"Timeout",
+    "tryAgain":"Try again",
+    "selectExpiration":"Select expiration",
+    "restart":"Restart",
+    "backoffCutoff":"Backoff Cutoff",
+    "initialInterval":"Initial Interval",
+    "leaseRequirements":"Lease Requirements",
+    "sendOptions":"Send options DHCP Client",
+    "sendOptionsLeaseTime":"Send Options lease time",
+    "requestOptions":"Request Options",
+    "requiredOptions":"Required Options",
+    "supersedeDomaineName":"Supersede domaine name",
+    "prependDomainServer":"Prepend domain server"
+
+  },
+  "typeInterface":{
+    "otherTypesOfInterfaces":"Other Types of Interfaces",
+    "VLAN":"VLAN",
+    "createNew":"Create new",
+    "parentInterface":"Parent Interface",
+    "VLANTag":"VLAN Tag",
+    "VlanPriority":"Vlan priority",
+    "assingInterface":"Assing Interface",
+    "networkPort":"Network port",
+    "createNewInterface":"Create new",
+    "newInterface":"New interface",
+    "nameInterface":"Name Interface",
+    "addVXLAN":"Add VXLAN",
+    "device":"Device",
+    "VXLANNetworkIdentifie":"VXLAN Network Identifie",
+    "sourceAddress":"Source Address",
+    "multicastGroup":"Multicast group"
+
+  },
+  "routing":{
+   "staticRouting":"Static Routing",
+   "network":"Network",
+   "createRoute":"Create new"
+  },
+  "subscription":{
+    "chooseYourPlan":"Choose your plan!",
+    "currentPackage":"Current Package",
+    "packageExpired":"Your Package Is Expired",
+    "currentSubscription":"Current Subscription",
+    "expired":"Expired",
+    "ago":"ago",
+    "nextPaymentDue":"Next Payment Due",
+    "base":"Base",
+    "annual":"Annual",
+    "monthly":"Monthly",
+    "firewall":"Firewall",
+    "ZTNA":"ZTNA",
+    "LDAP":"LDAP",
+    "custom":"Custom",
+    "premium":"Premium",
+    "doubleMask150Annual":"Double Mask 150 €/Annual",
+    "cASB150Annual":"CASB 150 €/Annual",
+    "sWG100Annual":"SWG 100 €/Annual",
+    "antiVirus100Annual":"Anti-virus 100 €/Annual",
+    "doubleMask":"Double Mask",
+    "casb":"CASB​",
+    "SWG":"SWG",
+    "chooseService":"You have to choose at least one service",
+    "day":"day",
+    "days":"days",
+    "byNow":"Buy now"
+   },
 
   "champs":{
     "indication":"champs can include only letters & Numbers & underscores & hyphens without space.",

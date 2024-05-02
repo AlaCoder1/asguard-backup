@@ -25,7 +25,12 @@
     "createauth":"Créer une nouvelle autorité",
     "updateauth":"Mettre à jour l'autorité",
     "updatecertif":"Mettre à jour",
-    "createcertif":"Créer un nouveau"
+    "createcertif":"Créer un nouveau",
+    "cancel":"Annuler",
+    "delete":"Supprimer",
+    "AddVLAN":"Ajouter un VLAN",
+    "AddInterface":"Ajouter une Interface",
+    "Add":"Ajouter"
     
   },
 
@@ -45,7 +50,9 @@
   "errors":{
     "valueRequired":"champs est obligatoire",
     "invalidPassword":"Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
-    "passwordConfirmation":"Votre mot de passe ne correspond pas"
+    "passwordConfirmation":"Votre mot de passe ne correspond pas",
+    "ChampIncludeOnlyNumbers":"Champ ne peut inclure que des numéros",
+    "formatMustBeLikeAdresseIP":"Format doit correspondre à l'adresse IP : X.X.X.X"
 
   },
   "placeholder":{
@@ -115,7 +122,8 @@
     "questionserver":"Êtes-vous sûr de vouloir supprimer ce server ?",
     "questioncertif":"Êtes-vous sûr de vouloir supprimer cette autorité ?",
     "questioncertificat":"Êtes-vous sûr de vouloir supprimer ce certificat ?",
-    "questionkey":"Êtes-vous sûr de vouloir supprimer cette clé ?"
+    "questionkey":"Êtes-vous sûr de vouloir supprimer cette clé ?",
+    "deleteRow":"Êtes-vous sûr de vouloir supprimer ce Row"
 
  
   },
@@ -170,6 +178,112 @@
     "create_certificat":"Créer un certificat"
    
   },
+
+  "interface":{
+    "basicConfiguration":"Configuration de base",
+    "activate":"Activer",
+    "device":"Dispositif",
+    "genericConfiguration":"Configuration générique",
+    "blockNetworks":"Blocs de réseaux",
+    "private":"Privé",
+    "blockBogonAddresses":"Bloquer les adresses bogon",
+    "notAssignedByIANA":"Non assigné par l'IANA",
+    "IPV4SetupType":"Type de configuration IPV4",
+    "MACAddress":"Adresse MAC",
+    "MTU":"MTU (Unité de Transmission Maximum)",
+    "MSS":"MSS",
+    "speedAndDuplex":"Vitesse et duplex",
+    "staticIPV4AddressConfiguration":"Configuration de l'adresse IPV4 statique",
+    "IPV4Address":"Adresse IPV4",
+    "add":"Ajouter",
+    "configuringDHCP":"Configuration du client DHCP",
+    "advancedParameters":"Paramètres avancés",
+    "cancel":"Annuler",
+    "save":"sauvegarder",
+    "addedSuccessfully":"Gateway ajoutée avec succès",
+    "savedSuccessfully":"Configuration sauvegardée avec succès",
+    "addIPv4Gateway":"Ajouter IPv4 Gateway",
+    "gatewayName":"Saisir le nom de Gateway",
+    "GatewayDefault":"Gateway par défaut",
+    "farGateway":"Gateway lointaine",
+    "descriptionRequired":"description est obligatoire",
+    "IPV4Required":"type de configuration IPV4 est requis",
+    "IPV4AddressRequired":"adresse IPV4 est requise",
+    "netmaskRequired":"Le masque de réseau est requis",
+    "IPV4GatewayRequired":"gateway IPV4 requise",
+    "addressValid":"Veuillez saisir une adresse MAC valide",
+    "NumberMust":"Nombre doit être compris entre 1500 et 9000",
+    "rejectLeasesFrom":"Refuser les baux de",
+    "hostname":"Nom d'hôte",
+    "overrideMTU":"Ignorer MTU",
+    "protocolTiming":"Durée du protocole",
+    "timeout":"Délai",
+    "tryAgain":"Réessayer",
+    "selectExpiration":"Sélectionner l'expiration",
+    "restart":"Redémarrer",
+    "backoffCutoff":"Coupure rétroactive",
+    "initialInterval":"Intervalle initial",
+    "leaseRequirements":"Exigences du bail",
+    "sendOptions":"Envoi d'options Client DHCP",
+    "sendOptionsLeaseTime":"Durée du bail des options d'envoi",
+    "requestOptions":"Demande d'options",
+    "requiredOptions":"Options obligatoires",
+    "supersedeDomaineName":"Remplacer nom du domaine",
+    "prependDomainServer":"Serveur de domaine en amont"
+},
+  "typeInterface":{
+    "otherTypesOfInterfaces":"Autres types d'interfaces",
+    "VLAN":"VLAN",
+    "createNew":"Créer un nouveau",
+    "parentInterface":"Interface parent",
+    "VLANTag":"Tag VLAN",
+    "VlanPriority":"Priorité Vlan",
+    "assingInterface":"Interface Assing",
+    "networkPort":"Port réseau",
+    "createNewInterface":"Créer une nouvelle",
+    "newInterface":"Nouvelle interface",
+    "nameInterface":"Nom de l'interface",
+    "addVXLAN":"Ajouter un VXLAN",
+    "device":"Dispositif",
+    "VXLANNetworkIdentifie":"Identification du réseau VXLAN",
+    "sourceAddress":"Adresse source",
+    "multicastGroup":"Groupe multicast"
+
+  },
+  "routing":{
+    "staticRouting":"Routage statique",
+    "network":"Réseau",
+    "createRoute":"Créer une nouvelle"
+   },
+  "subscription":{
+    "chooseYourPlan":"Choisissez votre plan !",
+    "currentPackage":"Package actuel",
+    "packageExpired":"Votre paquet est expiré",
+    "currentSubscription":"Abonnement actuel",
+    "expired":"Expiré",
+    "ago":"il y a",
+    "nextPaymentDue":"Prochain paiement",
+    "base":"Base",
+    "annual":"Annuel",
+    "monthly":"Mensuel",
+    "firewall":"Pare-feu",
+    "ZTNA":"ZTNA",
+    "LDAP":"LDAP",
+    "custom":"Personnalisé",
+    "premium":"Premium",
+    "doubleMask150Annual":"Double masque 150 €/Annuel",
+    "cASB150Annual":"CASB 150 €/Annuel",
+    "sWG100Annual":"SWG 100 €/Annuel",
+    "antiVirus100Annual":"Anti-virus 100 €/Annuel",
+    "doubleMask":"Double masque",
+    "casb":"CASB​",
+    "SWG":"SWG",
+    "chooseService":"Vous devez choisir au moins un service",
+    "day":"jour",
+    "days":"jours",
+    "byNow":"Acheter"
+
+   },
 
   "champs":{
     "indication":"champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",

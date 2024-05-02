@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            Please Wait...
+            {{ $t("sdwan.pleaseWait") }}
             <v-progress-linear
               indeterminate
               color="white"
@@ -20,7 +20,7 @@
       </v-dialog>
     </v-overlay>
     <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
-      <h4>SDWAN Rules</h4>
+      <h4>{{ $t("sdwan.SDWANRules") }}</h4>
       <v-divider></v-divider>
       <v-row>
         <v-col cols="12">
@@ -33,6 +33,7 @@
               @grid-ready="onGridReady"
               :columnDefs="columnRules"
               :rowData="rowDataRule.value"
+              :overlayNoRowsTemplate="overlayTemplate"
             />
           </div>
           <div class="d-flex justify-end mt-3 mb-15">
@@ -41,7 +42,7 @@
               outlined
               color="#213E9F"
               label-color="#ffffff"
-              label="Add Key"
+              :label="$t('sdwan.addRule')"
               :isLarge="true"
               type="submit"
               class="ml-2"
@@ -58,14 +59,18 @@
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
-        <v-card-title class="headline">Delete Confirmation</v-card-title>
-        <v-card-text>Are you sure you want to delete this Rule ?</v-card-text>
+        <v-card-title class="headline">{{
+          $t("delete.DeleteConfirmation")
+        }}</v-card-title>
+        <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
-          <v-btn color="blue darken-1" text @click="confirmDelete"
-            >Delete</v-btn
-          >
+          <v-btn color="blue darken-1" text @click="cancelDelete">{{
+            $t("buttons.cancel")
+          }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete">{{
+            $t("buttons.delete")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -81,8 +86,9 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
-import { reactive, ref, onMounted, inject } from "vue";
+import { reactive, ref, onMounted, inject, computed } from "vue";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -99,7 +105,10 @@ export default {
     VButton,
   },
   setup() {
+    const { t } = useI18n();
     const emitter = inject("emitter");
+    const overlayTemplate = ref("");
+
     const state = reactive({
       deleteDialog: false,
       deletedRow: null,
@@ -115,9 +124,22 @@ export default {
       loading: false,
     });
 
-    const columnRules = [
+    const ruleName = computed(() => {
+      return t("sdwan.ruleName");
+    });
+    const sourceAddress = computed(() => {
+      return t("sdwan.sourceAddress");
+    });
+    const area = computed(() => {
+      return t("sdwan.area");
+    });
+    const algorythmType = computed(() => {
+      return t("sdwan.algorythmType");
+    });
+
+    const columnRules = ref([
       {
-        headerName: "Rule Name",
+        headerName: ruleName,
         field: "name",
         sortable: true,
         autoHeight: true,
@@ -127,7 +149,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Source address",
+        headerName: sourceAddress,
         field: "source_address",
         sortable: true,
         filter: true,
@@ -136,7 +158,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Area",
+        headerName: area,
         autoHeight: true,
         field: "area_name",
         sortable: true,
@@ -146,7 +168,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Algorythm type",
+        headerName: algorythmType,
         autoHeight: true,
         field: "algorythme_type",
         sortable: true,
@@ -169,7 +191,7 @@ export default {
         sortable: true,
         filter: true,
       },
-    ];
+    ]);
 
     const rowDataRule = reactive({});
 
@@ -177,7 +199,6 @@ export default {
 
     const onGridReady = (params) => {
       // gridApi.value = params.api;
-
       // gridApi.value.sizeColumnsToFit();
       // window.addEventListener("resize", function () {
       //   setTimeout(function () {
@@ -212,25 +233,23 @@ export default {
           </button>
           `;
       } else {
-        console.log("params", params.data.rule_status);
-
         if (!params.data.rule_status) {
           eGui.innerHTML = `
 
       <button
         id="play"
         class="action-button play"
-        data-action="play" title="Start Server">
+        data-action="play" title=${t("sdwan.startServer")}>
             <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
         </button>
         <button
         class="action-button edit"
-        data-action="edit" title="Edit Server">
+        data-action="edit">
             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         <button
         class="action-button delete"
-        data-action="delete" title="Delete ">
+        data-action="delete">
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
 
@@ -241,17 +260,17 @@ export default {
         <button
         id="stop"
         class="action-button stop"
-        data-action="stop" title="Stop Server">
+        data-action="stop" title=${t("sdwan.stop")}>
             <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
         </button>
         <button
         class="action-button edit"
-        data-action="edit" title="Edit Server">
+        data-action="edit">
             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         <button
         class="action-button delete"
-        data-action="delete" title="Delete ">
+        data-action="delete">
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
 
@@ -348,7 +367,13 @@ export default {
     };
 
     onMounted(() => {
-      console.log("**********", getCookie("csrftoken"));
+      overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+    </svg></span>`;
       emitter.on("closeSdwanModalRule", () => {
         state.isModalOpen = false;
         state.isOpen = false;
@@ -390,6 +415,7 @@ export default {
     return {
       state,
       columnRules,
+      overlayTemplate,
       rowDataRule,
       defaultColDef,
       actionCellRendererArea,

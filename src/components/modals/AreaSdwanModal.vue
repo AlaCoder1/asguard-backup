@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              Create New Area</span
+              {{ $t("sdwan.createNewArea") }}</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              Update Area</span
+              {{ $t("sdwan.updateArea") }}</span
             >
           </v-card-title>
           <v-card-text>
@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Enter Area Name"
+                    :label="$t('sdwan.enterAreaName')"
                     v-model="state.areaName"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.areaName.$error">
@@ -29,7 +29,7 @@
                 <v-col>
                   <v-select
                     v-model="state.interfaces"
-                    label="List WAN"
+                    :label="$t('sdwan.listWAN')"
                     item-title="name"
                     item-value="id"
                     multiple
@@ -45,7 +45,7 @@
                     class="error-feedback mb-5"
                     v-if="state.interfaces.length && !isMoreThanTwo"
                   >
-                    Minimum Two Interfaces
+                    {{ $t("sdwan.minimumTwoInterfaces") }}
                   </p>
                 </v-col>
               </v-row>
@@ -64,7 +64,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3" style="color: #213e9f">Cancel</span>
+              <span class="pr-3 pl-3" style="color: #213e9f">{{
+                $t("buttons.close")
+              }}</span>
             </v-btn>
 
             <v-btn
@@ -78,7 +80,12 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Create</span>
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+                {{ $t("buttons.create") }}</span
+              >
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -97,6 +104,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, watch, reactive, computed, inject, onMounted } from "vue";
@@ -121,6 +129,7 @@ export default {
 
   setup(props) {
     const emitter = inject("emitter");
+    const { t } = useI18n();
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
@@ -266,14 +275,22 @@ export default {
       }
     };
 
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const indication = computed(() => {
+      return t("champs.indication");
+    });
     const rules = computed(() => {
       return {
-        interfaces: { required, isMoreThanTwo },
+        interfaces: {
+          required: helpers.withMessage(error, required),
+          isMoreThanTwo,
+        },
         areaName: {
-          required,
+          required: helpers.withMessage(error, required),
           isValidkeyName: helpers.withMessage(
-            `Champs can include only letters & Numbers & underscores & hyphens without space.`,
-
+            indication,
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },

@@ -84,7 +84,7 @@
     "rules":"Rules",
     "nat":"Nat",
     "advancedSettings":"Paramètres avancés",
-    "siteToSiteVpn":"site à site VPN",
+    "siteToSiteVpn":"Site à site VPN",
     "rsaKeyPairs":"Paires de clés RSA",
     "openVPN":"OPEN VPN",
     "ipFilterDoubleMasque":"Filtre IP double masque",
@@ -281,6 +281,32 @@
     "day":"jour",
     "days":"jours",
     "byNow":"Acheter"
+
+   },
+   "sdwan":{
+    "listOfAreas":"Liste des zones",
+    "addKey":"Ajouter une clé",
+    "areaName":"Nom de la zone",
+    "members":"Membres",
+    "createNewArea":"Créer une nouvelle zone",
+    "updateArea":"Modifier la zone",
+    "enterAreaName":"Saisir le nom de la zone",
+    "listWAN":"Liste WAN",
+    "minimumTwoInterfaces":"Deux interfaces minimum",
+    "pleaseWait":"Veuillez patienter...",
+    "SDWANRules":"Règles SDWAN",
+    "addRule":"Ajouter une règle",
+    "ruleName":"Nom de règle",
+    "sourceAddress":"Adresse source",
+    "area":"Zone",
+    "algorythmType":"Type d'algorythme",
+    "startServer":"Démarrer",
+    "stop":"Arrêter",
+    "createNewRule":"Créer une nouvelle règle",
+    "updateRule":"Modifier la règle",
+    "prefix":"Préfixe",
+    "healthCheckMilliseconds":"Contrôle de santé en millisecondes",
+    "healthCheckTargetMilliseconds":"Objectif du contrôle de santé millisecondes"
 
    },
 

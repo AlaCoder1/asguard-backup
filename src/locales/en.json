@@ -283,6 +283,33 @@
     "byNow":"Buy now"
    },
 
+   "sdwan":{
+    "listOfAreas":"List of areas",
+    "addKey":"Add Key",
+    "areaName":"Area Name",
+    "members":"Members",
+    "createNewArea":"Create New Area",
+    "updateArea":"Update Area",
+    "enterAreaName":"Enter Area Name",
+    "listWAN":"List WAN",
+    "minimumTwoInterfaces":"Minimum Two Interfaces",
+    "pleaseWait":"Please Wait...",
+    "SDWANRules":"SDWAN Rules",
+    "addRule":"Add Rule",
+    "ruleName":"Rule Name",
+    "sourceAddress":"Source address",
+    "area":"Area",
+    "algorythmType":"Algorythm type",
+    "startServer":"Start",
+    "stop":"Stop",
+    "createNewRule":"Create New Rule",
+    "updateRule":"Update Rule",
+    "prefix":"Prefix",
+    "healthCheckMilliseconds":"Health check milliseconds",
+    "healthCheckTargetMilliseconds":"Health check target milliseconds"
+
+   },
+
   "champs":{
     "indication":"champs can include only letters & Numbers & underscores & hyphens without space.",
     "champNumber":"champs lifeTime can include only Numbers.",

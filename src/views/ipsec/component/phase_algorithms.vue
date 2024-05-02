@@ -1,16 +1,16 @@
 <template>
   <div class="ml-3 mr-3 mt-5">
-    <h4>Phase 1 proposal (Algorithms)</h4>
+    <h4>{{$t('PageIpsec.phase1_algorithm')}}</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-5">
-        <label>Encryption algorithm*</label>
+        <label>{{$t('PageIpsec.algorithm_cryptage')}}*</label>
       </v-col>
 
       <template v-if="props.keyExchange.slug === 'V1'">
         <v-col cols="8" class="mb-n6">
           <v-select
-            label="Encryption algorithm"
+            :label="$t('PageIpsec.algorithm_cryptage')"
             v-model="encryptAlgoV1"
             item-title="name"
             item-value="slug"
@@ -29,7 +29,7 @@
       <template v-else>
         <v-col cols="8" class="mb-n6">
           <v-select
-            label="Encryption algorithm"
+            :label="$t('PageIpsec.algorithm_cryptage')"
             v-model="encryptAlgo"
             item-title="name"
             item-value="slug"
@@ -46,11 +46,11 @@
       </template>
 
       <v-col cols="4" class="mt-5">
-        <label>Hash algorithm*</label>
+        <label>{{$t('PageIpsec.Hashalgorithm')}}*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
-          label="Hash algorithm"
+          :label="$t('PageIpsec.Hashalgorithm')"
           v-model="hashAlgo"
           multiple
           item-title="name"
@@ -66,11 +66,11 @@
         </p>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>DH key group*</label>
+        <label>{{$t('PageIpsec.DHkey')}}*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
-          label="DH key group"
+          :label="$t('PageIpsec.DHkey')"
           v-model="dhKey"
           multiple
           item-title="name"
@@ -84,11 +84,11 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>Lifetime</label>
+        <label>{{$t('PageIpsec.Lifetime')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          label="Lifetime in seconds"
+          :label="$t('PageIpsec.Lifetimeinseconds')"
           v-model="lifetime"
         ></v-text-field>
         <p

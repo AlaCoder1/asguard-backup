@@ -141,7 +141,7 @@
             outlined
             color="#ffffff"
             label-color="#213E9F"
-            label="cancel"
+            :label="$t('PageGeneral.form.Cancel')"
             :isLarge="true"
             @click="cancel"
           />
@@ -150,7 +150,7 @@
             outlined
             color="#213E9F"
             label-color="#ffffff"
-            :label="state.isEditState === 'edit' ? 'Edit' : 'Create'"
+            :label="state.isEditState === 'edit' ? $t('PageGeneral.form.Edit') : $t('buttons.create')"
             :isLarge="true"
             class="ml-2"
             @click="save"
@@ -952,19 +952,13 @@ export default {
               slug: i.name_interface,
             };
           });
-          const address = computed(() => {
-             return t("PageIpsec.address");
-          });
-          const network = computed(() => {
-             return t("PageIpsec.network");
-          });
 
           let listInter = [
             {
-              name: address,
+              name: "Address",
               slug: "Address",
             },
-            { name: network, slug: "Network" },
+            { name: "Network", slug: "Network" },
           ]
 
           var combinedArray = [...listInter, ...interfaces];

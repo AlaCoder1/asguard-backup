@@ -4,14 +4,14 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> Create new Key</span>
+            <span class="text-h5">{{$t('KeyPair.createnewkey')}}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Enter Key Name"
+                    :label="$t('KeyPair.EnterKeyName')"
                     v-model="state.keyName"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.keyName.$error">
@@ -22,7 +22,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.type"
-                    label="Select Type"
+                    :label="$t('KeyPair.SelectType')"
                     item-title="name"
                     item-value="slug"
                     :items="listType"
@@ -42,7 +42,7 @@
                   <v-col cols="6" class="mb-n6">
                     <v-select
                       v-model="state.key"
-                      label="Key Length"
+                      :label="$t('KeyPair.KeyLength')"
                       item-title="name"
                       item-value="slug"
                       :items="listKey"
@@ -57,7 +57,7 @@
                 <v-col cols="12" class="mb-n6" v-if="isPublic">
                   <v-select
                     v-model="state.privateKey"
-                    label="Select Private Key"
+                    :label="$t('KeyPair.SelectPrivateKey')"
                     item-title="name"
                     item-value="id"
                     :items="state.mapedListKeyPrivate"
@@ -70,7 +70,7 @@
                 <v-col cols="12" class="mb-n6" v-if="isImport">
                   <v-textarea
                     v-model="state.externKey"
-                    label="Enter Extern Key"
+                    :label="$t('KeyPair.EnterExternKey')"
                     variant="outlined"
                   ></v-textarea>
                   <p class="error-feedback mb-5" v-if="v$.externKey.$error">
@@ -92,7 +92,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Close</span>
+              <span class="text-white pr-3 pl-3">{{$t('buttons.close')}}</span>
             </v-btn>
 
             <v-btn
@@ -106,7 +106,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Create</span>
+              <span class="text-white pr-3 pl-3">{{$t('buttons.create')}}</span>
             </v-btn>
           </v-card-actions>
         </v-card>

@@ -122,6 +122,7 @@
     "questionserver":"Êtes-vous sûr de vouloir supprimer ce server ?",
     "questioncertif":"Êtes-vous sûr de vouloir supprimer cette autorité ?",
     "questioncertificat":"Êtes-vous sûr de vouloir supprimer ce certificat ?",
+    "questionkey":"Êtes-vous sûr de vouloir supprimer cette clé ?",
     "deleteRow":"Êtes-vous sûr de vouloir supprimer ce Row"
 
  
@@ -454,7 +455,92 @@
       "dynamiquepassrelle":"Passerelle dynamique",
       "allowgateway":"Autoriser n'importe quelle passerelle distante à se connecter.",
       "localnetwork":"Réseau Local",
-      "Address":"Adresse"
+      "address":"Adresse",
+      "network":"Réseau",
+      "remoteNetwork":"Réseau distant",
+      "proposal_pahse1":"Proposition de phase 1 (Authentification)",
+      "Authenticationmethod":"Méthode d'authentification",
+      "modenegociation":"Mode de négociation",
+      "mycertificat":"Mon certificat",
+      "RemoteCertificate":"Certificat distant",
+      "SharedKey":"Clé pré-partagée",
+      "LocalKeyPair":"Paire de clés locales",
+      "PeerKeyPair":"Paire de clés de l'autre",
+      "phase1_algorithm":"Proposition de phase 1 (algorithmes)",
+      "algorithm_cryptage":"Algorithme de cryptage",
+      "Hashalgorithm":"Algorithme de hachage",
+      "DHkey":"Groupe de clés DH",
+      "Lifetime":"Durée de vie",
+      "AdvancedOptions":"Options avancées",
+      "Policy":"Politique",
+      "Rekey":"Renouveler la clé",
+      "Reauth":"Réauth",
+      "NATTraversal":"Traversée NAT",
+      "MOBIKE":"MOBIKE",
+      "DeadPeerDetection":"Détection des pairs morts",
+      "Inactivitytimeout":"Délai d'inactivité",
+      "Margintime":"Temps de marge",
+      "Rekeyfuzz":"Rechiffrer fuzz",
+      "Lifetimeinseconds":"Durée de vie en secondes",
+      "Installpolicy":"Installer la politique",
+      "Disablerekey":"Désactiver la reclé",
+      "Disablereauth":"Désactiver la réautorisation",
+      "DisableMOBIKE":"Désactiver MOBIKE",
+      "EnabledeadPeer":"Activer le pair mort",
+      "Seconds":"Secondes",
+      "deadpeeraction":"Action de pair mort",
+      "Inactivitytimeoutinseconds":"Délai d'inactivité en secondes",
+      "Margintimeinseconds":"Temps de marge en secondes",
+      "Rekeyfuzzin(%)":"Rechiffrer fuzz en (%)",
+      "Phase2proposal(SA/Key Exchange)":"Proposition de phase 2 (SA/échange de clés)",
+      "Protocol":"Protocole",
+      "Hashalgorithms":"Algorithmes de hachage",
+      "Encryptionalgorithms1":"Algorithmes de cryptage1",
+      "algorithms_cryptage":"Algorithmes de cryptage",
+      "Encryptionalgorithms2":"Algorithmes de cryptage2",
+      "PFSkeygroup":"Groupe de clés PFS",
+      "Phase1Proposal":"Proposition de phase 1",
+      "LocalSubnet":"Sous-réseau local",
+      "Remotesubnet":"Sous-réseau distant",
+      "Phase2Proposal":"Proposition de phase 2",
+      "Enable":"Activer",
+      "addnewpeer":"Ajouter un nouveau pair"
+    },
+      "monitoringVPN":{
+      "currentstate":"État actuel de tous les moniteurs",
+      "Switch":"Switch",
+      "Router":"Router",
+      "Printer":"Printer",
+      "Availablity":"Disponibilité",
+      "OUTtrafficVPN":"Trafic sortant VPN",
+      "CPU&MemoryVPN":"CPU & Mémoire VPN",
+      "PacketReceivedVPN":"Paquet reçu VPN",
+      "PacketSentVPN":"Paquet envoyé VPN",
+      "ResponseTime":"Temps de réponse",
+      "PacketLoss":"Perte de paquet",
+      "ActiveSessions":"Sessions actives",
+      "ActiveSSLTunnels":"Tunnels SSL actifs",
+      "TUNNELCONFIGURATION":"TUNNEL CONFIGURATION"
+    },
+    "KeyPair":{
+     "ListofKeys":"Liste des clés",
+     "KeyName":"Nom de la clé",
+     "Utility":"Utilité",
+     "KeySize":"Taille de la clé",
+     "FingerPrint":"Empreinte digitale",
+     "addkey":"Ajouter une clé",
+     "createnewkey":"Créer une nouvelle clé",
+     "EnterKeyName":"Entrez le nom de la clé",
+     "SelectType":"Sélectionner un type",
+     "KeyLength":"Longueur de clé",
+     "SelectPrivateKey":"Sélectionnez Clé privée",
+     "EnterExternKey":"Entrez la clé externe"
+
+    
+
+
+    
+
       
     }
   }

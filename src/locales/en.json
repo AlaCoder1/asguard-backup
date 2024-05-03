@@ -53,7 +53,8 @@
     "invalidPassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
     "passwordConfirmation":"Your password does not match",
     "ChampIncludeOnlyNumbers":"Champs can include only Numbers",
-    "formatMustBeLikeAdresseIP":"Format must be like adresse IP : X.X.X.X"
+    "formatMustBeLikeAdresseIP":"Format must be like adresse IP : X.X.X.X",
+    "minimumOneRange":"Minimum One Range"
 
   },
 
@@ -308,6 +309,22 @@
     "prefix":"Prefix",
     "healthCheckMilliseconds":"Health check milliseconds",
     "healthCheckTargetMilliseconds":"Health check target milliseconds"
+
+   },
+   "dhcpV4":{
+    "generalInformation":"General information",
+    "DHCPServer":"DHCP Server",
+    "enableDHCPServer":"Enable DHCP server on this interface",
+    "subnetAddress":"Subnet Address",
+    "subnetMask":"Subnet Mask",
+    "availableRange":"Available Range",
+    "dnsServer":"DNS server",
+    "gateway":"Gateway",
+    "domainName":"Domain name",
+    "rangeFrom":"Range From",
+    "rangeTo":"Range To",
+    "addRange":"Add Range",
+    "editRange":"Edit Range"
 
    },
 

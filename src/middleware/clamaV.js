@@ -21,9 +21,14 @@ const vuetify = createVuetify({
 });
 const emitter = mitt()
 app.provide('emitter', emitter)
+let lang = localStorage.getItem("lang");
+if (lang) {
+  var langLocle = JSON.parse(lang);
+}
 
 const i18n = new createI18n({
-  locale: "en",
+  legacy: false,
+  locale: langLocle ? langLocle[0].lang.toLowerCase() : "en",
   messages: {
     en: enJson,
     fr: frJson,

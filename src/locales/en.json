@@ -327,6 +327,26 @@
     "editRange":"Edit Range"
 
    },
+   "clamaV":{
+    "virusScan":"Virus Scan",
+    "fullVirusScan":"Full virus scan",
+    "scanYourEntireDevice":"Scan your entire device",
+    "scanNow":"Scan now",
+    "successfullyScan":"Successfully Scan",
+    "error":"Error",
+    "scanResult":"Scan result",
+    "knownViruses":"known viruses",
+    "engineVersion":"engine version",
+    "scannedDirectories":"Scanned directories",
+    "scannedFiles":"Scanned files",
+    "infectedFiles":"Infected files",
+    "dataScanned":"Data scanned",
+    "dataRead":"Data Read",
+    "time":"Time",
+    "startDate":"Start date",
+    "endDate":"End date"
+
+   },
 
   "champs":{
     "indication":"champs can include only letters & Numbers & underscores & hyphens without space.",

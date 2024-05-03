@@ -327,6 +327,26 @@
     "editRange":"Modifier la plage"
 
    },
+   "clamaV":{
+    "virusScan":"Analyse de virus",
+    "fullVirusScan":"Analyse antivirus complète",
+    "scanYourEntireDevice":"Scannez l'intégralité de votre appareil",
+    "scanNow":"Scanner maintenant",
+    "successfullyScan":"Scanner avec succès",
+    "error":"Erreur",
+    "scanResult":"Résultat de Scan",
+    "knownViruses":"Virus connus",
+    "engineVersion":"Version du moteur",
+    "scannedDirectories":"Répertoires scannés",
+    "scannedFiles":"Fichiers scannés",
+    "infectedFiles":"Fichiers infectés",
+    "dataScanned":"Données scannées",
+    "dataRead":"Données lues",
+    "time":"Temps",
+    "startDate":"Date de début",
+    "endDate":"Date de fin"
+
+   },
 
   "champs":{
     "indication":"champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",

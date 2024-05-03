@@ -573,7 +573,7 @@ def setting_page(request):
 @login_required(login_url='/')
 def clamav_page(request):
     config= getclamavconfigurations()
-    # context = {'config':config}
+    context = {'config':config}
     # print('******************** :',context)
     return render(request, 'clamaV_page.html',context)
 

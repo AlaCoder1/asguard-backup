@@ -14,4 +14,5 @@ urlpatterns = [
     path('userChangePW', views.changePassword, name="userChangePW"),
     # path('userChangePW/<int:id>', views.changePassword, name="userChangePW"),
     path('update_profile',views.update_profile, name='update_profile'),
+    path('modifyLanguage/<int:id>',views.change_language, name='modifyLanguage'),
 ]

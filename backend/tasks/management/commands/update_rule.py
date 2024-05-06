@@ -6,6 +6,7 @@ from backend.network.models import Interface
 
 class Command(BaseCommand):
     def add_arguments(self, parser):
+        parser.add_argument('-r', '--rule', type=str, help='Define a rule')
         parser.add_argument('-tp', '--type_rule', type=str, help='Define a type rule')
         parser.add_argument('-po', '--policy', type=str, help='Define a policy')
         parser.add_argument('-pr', '--protocol', type=str, help='Define a protocol')
@@ -17,6 +18,7 @@ class Command(BaseCommand):
         parser.add_argument('-d', '--description', type=str, help='Define a description')
     def handle(self, *args, **options):
         try:
+            rule = options.get('rule')
             type_rule = options.get('type_rule')
             policy = options.get('policy')
             protocol = options.get('protocol')
@@ -31,16 +33,20 @@ class Command(BaseCommand):
             interface = options.get('interface')
             description = options.get('description')
             description = description.replace("-"," ")
+            rule = rule.replace("-"," ")
             print({"source_address":source_address})
             print({"source_port":source_port})
             print({"destination_address":destination_address})
             print({"destination_port":destination_port})
             print({"interface":interface})
             print({"description":description})
+            print({"rule":rule})
             print(type(source_port))
             
             
             missing_arguments = []
+            if rule is None:
+                missing_arguments.append('--rule')
             if type_rule is None:
                 missing_arguments.append('--type_rule')
             if policy is None:
@@ -76,34 +82,32 @@ class Command(BaseCommand):
                 destination_port = None
             interface_id = Interface.objects.get(ifname=interface)
             print({"interface_id":interface_id.id})
-            return_init_file_nftables = init_file_nftables(interface)
-            print({"return_init_file_nftables":return_init_file_nftables})
-            if return_init_file_nftables:
-                rule=return_rule(policy,source_address,destination_address,source_port,destination_port,protocol,type_rule)
-                saddr_db=calculate_subnet_address(source_address)
-                daddr_db=calculate_subnet_address(destination_address)
-                rule_db=return_rule(policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
-                print({"rule":rule})
-                if not Rule.objects.filter(
-                    Q(rule=rule_db) & (
-                        (Q(interface_id=interface_id.id) ) &
-                        (Q(type_rule=type_rule))
-                    )
-                ).exists():
-                    return_add_rule=add_rule_remote(rule,interface,type_rule)
-                    print({"return_add_rule":return_add_rule})
-                    if return_add_rule is True:
-                        
-                        print({"rule_db":rule_db})
+            ruleupdate=return_rule(policy,source_address,destination_address,source_port,destination_port,protocol,type_rule)
+            handle=get_handle_rule(interface,type_rule,rule)
+            if handle is not None:
+                return_delete_rule_remote=delete_rule_remote(interface,type_rule,handle)
+                if return_delete_rule_remote is True:
+                    return_add_rule=add_rule_remote(ruleupdate,interface,type_rule)
+                    if  return_add_rule is True:
+                        saddr_db=calculate_subnet_address(source_address)
+                        daddr_db=calculate_subnet_address(destination_address)
+                        rule_db_update=return_rule(policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
                         try:
-                            rule = Rule.objects.create(rule=rule_db, rule_status=True, type_rule=type_rule, policy=policy, rule_description=description, protocol=protocol, saddr=source_address, sport=source_port, daddr=destination_address, dport=destination_port, interface=interface_id)
-                            return "rule added succesffuly"
+                            rule = Rule.objects.get(rule=rule)
+                            rule.rule = rule_db_update
+                            rule.rule_status=True 
+                            rule.policy=policy 
+                            rule.rule_description=description 
+                            rule.protocol=protocol 
+                            rule.saddr=source_address 
+                            rule.sport=source_port 
+                            rule.daddr=destination_address 
+                            rule.dport=destination_port 
+                            rule.save()
+                            return "rule updated succesffuly"
                             
-                            # If you reach this point, creation was successful
                         except IntegrityError as e:
-                            # Handle the integrity error, maybe log it or perform some other action
                             print("Error occurred:", e)
-                        # rule=Rule.objects.create(rule=rule_db, rule_status=True, type_rule = type_rule, policy = policy, rule_description = description, protocol = protocol, saddr = saddr_db, sport = source_port, daddr = daddr_db, dport = destination_port, interface = interface_id)
                 else:
                     return "exist"
         except IntegrityError as e:

@@ -1,0 +1,51 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-06 14:45+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: backend/routing/views.py:20
+msgid "Route"
+msgstr "Routage"
+
+#: backend/routing/views.py:22
+msgid "is created"
+msgstr "est créé"
+
+#: backend/routing/views.py:23
+msgid "is deleted"
+msgstr "est supprimé"
+
+#: backend/routing/views.py:24
+msgid "is updated"
+msgstr "est modifié"
+
+#: backend/routing/views.py:26
+msgid "Error in creating"
+msgstr "Erreur lors de la création de"
+
+#: backend/routing/views.py:27
+msgid "Error in deleting"
+msgstr "Erreur lors de la suppression de"
+
+#: backend/routing/views.py:28
+msgid "Error in updating"
+msgstr "Erreur lors de la modification de"
+
+#: backend/routing/views.py:29
+msgid "does not exist"
+msgstr "n'existe pas"

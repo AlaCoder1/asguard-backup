@@ -2,17 +2,17 @@
   <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
     <v-row>
       <v-col cols="12">
-        <h4>Rules</h4>
+        <h4>{{ $t("subtitle.rules") }}</h4>
         <v-divider class="mt-2"></v-divider>
         <v-row class="mt-5">
           <v-col cols="12" md="6">
             <v-text-field
               id="filter-text-box"
               density="compact"
-              class="w-25"
+              class="w-75"
               variant="solo"
               rounded
-              label="Search"
+              :label="$t('squid.search')"
               append-inner-icon="mdi-magnify"
               single-line
               hide-details
@@ -32,8 +32,10 @@
               :rowDrag="true"
               :defaultColDef="defaultColDef"
               style="width: 100%"
+              :localeText="paginationLocalization"
+              :overlayNoRowsTemplate="overlayTemplate"
               :pagination="true"
-              :paginationPageSize="10"
+              :paginationPageSize="4"
             >
             </ag-grid-vue>
           </div>
@@ -48,7 +50,7 @@
           outlined
           color="#213E9F"
           label-color="#ffffff"
-          label="Add"
+          :label="$t('buttons.Add')"
           :isLarge="true"
           class="ml-2"
           @click="openModalRule"
@@ -57,14 +59,18 @@
     </v-row>
     <v-dialog v-model="state.deleteDialogRule" max-width="500px">
       <v-card>
-        <v-card-title class="headline">Delete Confirmation</v-card-title>
-        <v-card-text>Are you sure you want to delete this rule ?</v-card-text>
+        <v-card-title class="headline">{{
+          $t("delete.DeleteConfirmation")
+        }}</v-card-title>
+        <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
-          <v-btn color="blue darken-1" text @click="confirmDelete"
-            >Delete</v-btn
-          >
+          <v-btn color="blue darken-1" text @click="cancelDelete">{{
+            $t("buttons.cancel")
+          }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete">{{
+            $t("buttons.delete")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -86,8 +92,9 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
-import { reactive, ref, onMounted, inject } from "vue";
+import { reactive, ref, onMounted, inject, computed } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
@@ -105,7 +112,9 @@ export default {
     CertAllowStatus,
   },
   setup() {
+    const { t } = useI18n();
     const emitter = inject("emitter");
+    const overlayTemplate = ref("");
     const state = reactive({
       deleteDialogRule: false,
       deletedRow: null,
@@ -120,29 +129,63 @@ export default {
     });
     const rowDataRules = reactive({});
     const gridColumnApi = ref(null);
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const textAlert = ref(null);
     const gridApi = ref(null);
     const defaultColDef = ref({
-      flex: 1,
+      // flex: 1,
       cellDataType: false,
     });
-    const columnRules = [
+
+    const ruleName = computed(() => {
+      return t("sdwan.ruleName");
+    });
+    const routageType = computed(() => {
+      return t("squid.routageType");
+    });
+    const value = computed(() => {
+      return t("squid.value");
+    });
+    const allowedByAuth = computed(() => {
+      return t("squid.allowedByAuth");
+    });
+    const start = computed(() => {
+      return t("squid.start");
+    });
+    const end = computed(() => {
+      return t("squid.end");
+    });
+    const status = computed(() => {
+      return t("squid.status");
+    });
+    const columnRules = ref([
       {
-        headerName: "Rule name",
+        headerName: ruleName,
         field: "rule_name",
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
 
       {
-        headerName: "Routage Type",
+        headerName: routageType,
         field: "type",
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
-        headerName: "Value",
+        headerName: value,
         field: "value",
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
 
       {
-        headerName: "Allowed by auth",
+        headerName: allowedByAuth,
         field: "allow_by_auth",
         cellRendererSelector: function (params) {
           const allow_by_auth = {
@@ -151,17 +194,27 @@ export default {
           };
           return allow_by_auth;
         },
+        width: 90,
+        minWidth: 150,
+        flex: 1,
+        autoHeight: true,
       },
       {
-        headerName: "Start",
+        headerName: start,
         field: "time_from",
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
-        headerName: "End",
+        headerName: end,
         field: "time_to",
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
-        headerName: "Status",
+        headerName: status,
         field: "status",
         cellRendererSelector: function (params) {
           const status = {
@@ -170,23 +223,20 @@ export default {
           };
           return status;
         },
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: "Actions",
+        width: 150,
         cellRenderer: actionCellRenderer,
       },
-    ];
+    ]);
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
       gridColumnApi.value = params.columnApi;
-
-      gridApi.value.sizeColumnsToFit();
-      window.addEventListener("resize", function () {
-        setTimeout(function () {
-          gridApi.value.sizeColumnsToFit();
-        });
-      });
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataRules.value);
       } else {
@@ -262,8 +312,20 @@ export default {
     };
 
     onMounted(() => {
+      overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+    </svg></span>`;
+
       emitter.on("closeAddRuleModal", () => {
         state.isModalOpenRule = false;
+        state.modalDataRule = {};
+        state.modalModeRule = "";
+        state.editRowRule = {}
+        
       });
 
       const proxyRuleAttribute =
@@ -337,11 +399,13 @@ export default {
       columnRules,
       gridColumnApi,
       rowDataRules,
+      overlayTemplate,
       onGridReady,
       emitter,
       openModalRule,
       actionCellRenderer,
       defaultColDef,
+      paginationLocalization,
       onFilterTextBoxChanged,
     };
   },

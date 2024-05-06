@@ -21,7 +21,7 @@ def normal_connect(request,data):
     if (user is not None):
         userObject = User.objects.get(username=data['username'])
         userDict = userObject.__dict__
-        CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
+        CurrentUser = {"id": userDict["id"], "username":userDict['username'], "email":userDict['email'], "role":userDict['role']}
         settings.CurrentUserId = userDict['id']
         profile = Profile.objects.get(user=userObject.pk)
         if profile.is_enable_2FA is False:

@@ -16,6 +16,7 @@
             :pagination="true"
             :paginationPageSize="5"
             :overlayNoRowsTemplate="overlayTemplate"
+            :localeText="paginationLocalization"
           />
         </div>
         <div class="d-flex justify-end mt-3">
@@ -97,6 +98,9 @@ export default {
       modalMode: "create",
     });
     const overlayTemplate = ref("");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
 
     onMounted(() => {
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
@@ -293,6 +297,7 @@ export default {
     return {
       state,
       overlayTemplate,
+      paginationLocalization,
       columnVlan,
       rowDataVlan,
       defaultColDef,

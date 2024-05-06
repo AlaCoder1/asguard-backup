@@ -6,7 +6,7 @@
           v-model="state.serverStatus"
           density="compact"
           type="warning"
-          title="Please restart the service for the modifications to take effect."
+          :title="$t('squid.restart')"
         ></v-alert>
         <div class="mr-6 ml-3">
           <general_info />
@@ -51,3 +51,8 @@ export default {
   },
 };
 </script>
+<style>
+.ag-paging-row-summary-panel {
+  display: none;
+}
+</style>

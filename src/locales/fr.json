@@ -10,7 +10,9 @@
     "desactivateUser":"Désactiver l'utilisateur",
     "goupname":"Nom de groupe",
     "description":"Description",
-    "server":"Serveur d'annuaire"
+    "server":"Serveur d'annuaire",
+    "LoginTime":"Temps de connexion"
+
 
   },
   "buttons":{
@@ -30,7 +32,8 @@
     "delete":"Supprimer",
     "AddVLAN":"Ajouter un VLAN",
     "AddInterface":"Ajouter une Interface",
-    "Add":"Ajouter"
+    "Add":"Ajouter",
+    "Load":"charger"
     
   },
 
@@ -48,11 +51,12 @@
 
 
   "errors":{
-    "valueRequired":"champs est obligatoire",
+    "valueRequired":"Champs est obligatoire",
     "invalidPassword":"Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation":"Votre mot de passe ne correspond pas",
     "ChampIncludeOnlyNumbers":"Champ ne peut inclure que des numéros",
-    "formatMustBeLikeAdresseIP":"Format doit correspondre à l'adresse IP : X.X.X.X"
+    "formatMustBeLikeAdresseIP":"Format doit correspondre à l'adresse IP : X.X.X.X",
+    "minimumOneRange":"Minimum Une Plage"
 
   },
   "placeholder":{
@@ -81,7 +85,7 @@
     "diagnostics":"Diagnostiques",
     "listOfInterface":"Liste des interfaces",
     "typeOfInterface":"Type des interfaces",
-    "rules":"Rules",
+    "rules":"Règles",
     "nat":"Nat",
     "advancedSettings":"Paramètres avancés",
     "siteToSiteVpn":"Site à site VPN",
@@ -108,7 +112,7 @@
     "logout":"Déconnexion"
   },
 
-  "frensh":"Français",
+  "french":"Français",
   "english":"Anglais",
   "networkAdmins":"Administrateurs de réseaux",
   "networksGroups":"Groupes de réseaux",
@@ -123,7 +127,8 @@
     "questioncertif":"Êtes-vous sûr de vouloir supprimer cette autorité ?",
     "questioncertificat":"Êtes-vous sûr de vouloir supprimer ce certificat ?",
     "questionkey":"Êtes-vous sûr de vouloir supprimer cette clé ?",
-    "deleteRow":"Êtes-vous sûr de vouloir supprimer ce Row"
+    "deleteRow":"Êtes-vous sûr de vouloir supprimer ce Row",
+    "Delete" : "Êtes-vous sûr de vouloir supprimer ceci ?"
 
  
   },
@@ -147,7 +152,8 @@
     "distinguishedname":"Nom Distingué",
     "ListRevocation":"Liste de révocation par autorité",
     "Listauthoriy":"liste des autorités de certification",
-    "certificat":"certificat"
+    "certificat":"certificat",
+    "agGridOf":"de"
     
     
 
@@ -310,12 +316,101 @@
     "healthCheckTargetMilliseconds":"Objectif du contrôle de santé millisecondes"
 
    },
+   "dhcpV4":{
+    "generalInformation":"Informations générales",
+    "DHCPServer":"Serveur DHCP",
+    "enableDHCPServer":"Activer le serveur DHCP sur cette interface",
+    "subnetAddress":"Adresse de sous-réseau",
+    "subnetMask":"Masque de sous-réseau",
+    "availableRange":"Plage disponible",
+    "dnsServer":"Serveur DNS",
+    "gateway":"Passerelle",
+    "domainName":"Nom de domaine",
+    "rangeFrom":"Plage de",
+    "rangeTo":"Plage à",
+    "addRange":"Ajouter une plage",
+    "editRange":"Modifier la plage"
+
+   },
+   "clamaV":{
+    "virusScan":"Analyse de virus",
+    "fullVirusScan":"Analyse antivirus complète",
+    "scanYourEntireDevice":"Scannez l'intégralité de votre appareil",
+    "scanNow":"Scanner maintenant",
+    "successfullyScan":"Scanner avec succès",
+    "error":"Erreur",
+    "scanResult":"Résultat de Scan",
+    "knownViruses":"Virus connus",
+    "engineVersion":"Version du moteur",
+    "scannedDirectories":"Répertoires scannés",
+    "scannedFiles":"Fichiers scannés",
+    "infectedFiles":"Fichiers infectés",
+    "dataScanned":"Données scannées",
+    "dataRead":"Données lues",
+    "time":"Temps",
+    "startDate":"Date de début",
+    "endDate":"Date de fin"
+
+   },
+
+   "squid":{
+     "restart":"Veuillez redémarrer le service pour que les modifications soient prises en compte.",
+     "proxyPort":"Port du proxy",
+     "etesVouSur":"Êtes-vous sûr de vouloir",
+     "thisRule":"cette règle ?",
+     "squidAuthentification":"Authentification de Squid",
+     "disable":"Désactiver",
+     "addUser":"Ajouter un utilisateur",
+     "createNewProxyUser":"Créer un nouvel utilisateur proxy",
+     "editUserProxy":"Modifier le proxy utilisateur",
+     "search":"Recherche",
+     "routageType":"Type de routage",
+     "value":"Valeur",
+     "allowedByAuth":"Autorisé par auth",
+     "start":"Début",
+     "end":"Fin",
+     "status":"Statut",
+     "allowedAuthentification":"Autorisé par authentification",
+     "activateAllowed":"Activation Autorisée par authentification",
+     "activateRule":"Activer la règle",
+     "byTime":"Par période",
+     "blockTime":"bloc par temps",
+     "days":"Jours",
+     "from":"de",
+     "to":"à",
+     "aclList":"Liste ACL",
+     "listName":"Nom de la liste",
+     "noAdult":"Pas d'adulte pour l'instant",
+     "changeGroup":"Modifier Statut",
+     "editBlackList":"Modifier la liste Noire",
+     "aclName":"Nom d'Acl",
+     "pleaseType":"Veuillez taper...",
+     "selectItem":"Sélectionner un élément"
+   
+    
+   },
+   "Start":"Démarrer",
+   "Stop":"Arrêter",
+   "Restart":"Redémarrer",
+   "Disable":"Désactiver",
+   "Enable":"Activer",
+   "Blocked":"Bloqué",
+   "Unblocked":"Débloqué",
+
+  "Monday": "Lundi" ,
+  "Tuesday": "Mardi" ,
+  "Wednesday": "Mercredi" ,
+  "Thursday": "Jeudi" ,
+  "Friday": "Vendredi" ,
+  "Saturday": "Samedi" ,
+  "Sunday": "Dimanche" ,
 
   "champs":{
     "indication":"champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",
     "champNumber":"champs lifeTime ne peuvent inclure que des nombres.",
     "champletter":"champs d'etat ne peut inclure que des lettres.",
-    "champplaceletter":"champs Lieu peut inclure que des lettres."
+    "champplaceletter":"champs Lieu peut inclure que des lettres.",
+    "validAddress":"Veuillez saisir une adresse e-mail valide."
 
   },
 
@@ -334,7 +429,8 @@
   "button":{
     "addUser":"Ajouter Utilisateur",
     "addGroup":"Ajouter Groupe",
-    "addServer":"Ajouter Serveur"
+    "addServer":"Ajouter Serveur",
+    "addClient":"Ajouter Client"
     
     
 
@@ -561,12 +657,104 @@
      "KeyLength":"Longueur de clé",
      "SelectPrivateKey":"Sélectionnez Clé privée",
      "EnterExternKey":"Entrez la clé externe"
-
-    
-
-
-    
-
-      
+ 
+    },
+    "openvpn":{
+      "Generalinformation":"Informations générales",
+      "Servername":"Nom du serveur",
+      "Servermode":"Mode serveur",
+      "DeviceMode":"Mode de l'appareil",
+      "Localport":"Port local",
+      "CryptographicSettings":"Paramètres cryptographiques",
+      "TLSAuthentication":"Authentification TLS",
+      "automatiquegen":"Générer automatiquement une clé d'authentification TLS partagée",
+      "peercertif":"Autorité de certification pair",
+      "ServeurCertificate":"Certificat de serveur",
+      "DHparamerters":"Paramètres DH Longueur algorithme",
+      "Auth_diagest":"Algorithme Auth Digest",
+      "sharedTLS":"TLS partagé",
+      "algorithm":"Algorithme",
+      "TunnelSettings":"Paramètres du tunnel",
+      "IPv4TunnelNetwork":"Réseau tunnel IPv4",
+      "IPv6TunnelNetwork":"Réseau tunnel IPv6",
+      "Gateway":"Passerelle",
+      "redirectGateway":"Rediriger la passerelle",
+      "Bridge":"Pont",
+      "DHCPbridge":"Pont DHCP",
+      "Interfacebridge":"Pont d'interface",
+      "StartDHCPbridge":"Démarrer le pont DHCP",
+      "EndDHCPbridge":"Fin du pont DHCP",
+      "Concurrentconnections":"Connexions simultanées",
+      "Typeofservice":"Type de service",
+      "Activethetypeofservice":"Activer le type de service",
+      "Connections":"Connexions",
+      "Duplicateconnections":"Dupliquer les connexions",
+      "Disable":"Désactiver",
+      "Communicationinterclients":"Communication entre les clients",
+      "IPv4LocalNetwork":"Réseau local IPv4",
+      "IPv6LocalNetwork":"Réseau local IPv6",
+      "IPv4RemoteNetwork":"Réseau distant IPv4",
+      "IPv6RemoteNetwork":"Réseau distant IPv6",
+      "ClientSettings":"Paramètres client",
+      "DynamicIP":"IP dynamique",
+      "ActiveDynamicIP":"Activer IP dynamiques",
+      "AdressPool":"Pool d'adresse",
+      "ActiveAdresspool":"Activer Pool d'adresse",
+      "DNSDefaultDomain":"Domaine DNS par défaut",
+      "ActiveDNSDefaultDomain":"Activer Domaine DNS par défaut",
+      "DNSServers":"Serveurs DNS",
+      "DNSServers1":"Serveurs DNS 1",
+      "DNSServers2":"Serveurs DNS 2",
+      "ActiveDNSServers":"Activer Serveurs DNS",
+      "ForceDNScacheupdate":"Forcer la mise à jour du cache DNS",
+      "ActiveForceDNScacheupdate":"Forcer la mise à jour du cache DNS",
+      "NTPServers":"Serveurs NTP",
+      "ActiveNTPServers":"Activer NTP Servers",
+      "ClientManagementPort":"Port de gestion du client",
+      "ActiveClientManagementPort":"Activer Port de gestion des clients",
+      "newPassword":"Nouveau mot de passe",
+      "VerbosityLevel":"Niveau de verbosité",
+      "end":"Fin",
+      "NTPServers1":"Serveurs NTP 1",
+      "NTPServers2":"Serveurs NTP 2",
+      "Clientname":"Nom du client",
+      "RetryDNSresolution":"Réessayer la résolution DNS",
+      "Infinitelyresolveremoteserver":"Résolution infinie du serveur distant",
+      "Proxyhostoraddress":"Adresse ou hôte du proxy",
+      "Proxyport":"Port du proxy",
+      "Proxyauthenticationextraoptions":"Options supplémentaires d'authentification par proxy",
+      "AdvancedConfiguration":"Configuration avancée",
+      "Remoteserver":"Serveur distant"
+     
+    },
+    "Clientsopenvpn":{
+      "UserAuthenticationSettings":"Paramètres d'authentification de l'utilisateur",
+      "Renegotiatetime":"Renégocier le temps",
+      "TLSkey":"Clé TLS",
+      "ClientCertificate":"Certificat du client",
+      "Limitoutgoingbandwidth":"Limiter la bande passante sortante",
+      "Type-of-Service":"Type-de-service",
+      "Activetypeofservice":"Activer le type de service",
+      "pullroutes":"Extraire les routes",
+      "Dontpullroutes":"Ne pas extraire les routes",
+      "Add/removeroutes":"Ajouter/supprimer des routes",
+      "Dontadd/removeroutes":"Ne pas ajouter/supprimer de routes",
+      "Hostoraddress":"Hôte ou adresse",
+      "Protocol/Port":"Protocole / Port",
+      "Capacity":"Capacité",
+      "Transferred":"Transféré",
+      "Today":"Aujourd'hui",
+      "Received":"Reçue",
+      "Users":"Utilisateurs",
+      "ActiveUsers":"Utilisateurs actifs",
+      "of":"De",
+      "Server":"Serveur",
+      "TopTraffic":"Trafic le plus élevé",
+      "Trafficdistribution":"Distribution du trafic",
+      "Top2ClientNetworkActivity":"Activité réseau des 2 principaux clients",
+      "ListServers":"Liste des serveurs",
+      "ListClients":"Liste des clients",
+      "NetworkTunnel":"Tunnel du réseau",
+      "CertificatStatus":"Statut du certificat"
     }
   }

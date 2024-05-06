@@ -82,7 +82,7 @@ def authentification(request):
                 profile = Profile.objects.get(user=userObject.pk)
                 if profile.is_enable_2FA is False:
                     login(request, user_session)
-                    CurrentUser = {"username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
+                    CurrentUser = {"id": userDict['id'], "username":userDict['username'],"email":userDict['email'],"role":userDict['role']}
                     settings.CurrentUserId = userDict['id']
                     ldap_conn.unbind()
                     return JsonResponse({'message': 'Success Authentification ',"currentUser":CurrentUser},status=200)

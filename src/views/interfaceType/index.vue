@@ -31,3 +31,8 @@ export default {
   },
 };
 </script>
+<style>
+.ag-paging-row-summary-panel {
+  display: none;
+}
+</style>

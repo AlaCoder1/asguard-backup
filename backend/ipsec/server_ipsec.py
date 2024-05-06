@@ -1,12 +1,11 @@
 import time
-from backend.ipsec.constant_variables import PATH_IPSEC_CONF, PATH_IPSEC_SECRETS
+from backend.ipsec.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_RSA, PATH_IPSEC_CONF, PATH_IPSEC_SECRETS
 from backend.ipsec.models import ServerIPsec
 from backend.ipsec.utils import up_ipsec_conn
 from backend.ipsec.utils_config import comment_conn_in_config_file, edit_conn_in_config_file, uncomment_conn_in_config_file
 from backend.ipsec.utils_secrets import comment_line_in_secrets_file, create_line_secrets, edit_line_in_secrets_file, uncomment_line_in_secrets_file
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_KEY
 from backend.managementKeypairs.models import PublicKey
-from backend.openvpn.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_RSA
 from utils.commands_utils import execute_command_without_arguments
 from utils.constant_variables import SUCCESS_MESSAGES_START, SUCCESS_MESSAGES_STOP
 

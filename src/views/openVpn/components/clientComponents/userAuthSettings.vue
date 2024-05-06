@@ -1,14 +1,14 @@
 <template>
-  <h4>User Authentication Settings</h4>
+  <h4>{{$t('Clientsopenvpn.UserAuthenticationSettings')}}</h4>
   <v-divider class="mt-2"></v-divider>
   <v-col align-self="center" cols="4">
-    <label>Username</label>
+    <label>{{$t('form.username')}}</label>
   </v-col>
   <v-col align-self="center" cols="8" class="mb-n6">
-    <v-text-field label="Username" v-model="username"></v-text-field>
+    <v-text-field :label="$t('form.username')" v-model="username"></v-text-field>
   </v-col>
   <v-col class="mt-5"  cols="4">
-    <label>Password</label>
+    <label>{{$t('form.password')}}</label>
   </v-col>
   <v-col
     :cols="props.modeState === 'edit' ? 4 : 8"
@@ -19,7 +19,7 @@
       @click:append-inner="show1 = !show1"
       :type="show1 ? 'text' : 'password'"
       type="password"
-      label="Password"
+      :label="$t('form.password')"
       v-model="password"
     ></v-text-field>
     <p
@@ -39,7 +39,7 @@
       @click:append-inner="show2 = !show2"
       :type="show2 ? 'text' : 'password'"
       type="password"
-      label="New Password"
+      :label="$t('openvpn.newPassword')"
       v-model="NewUserPassword"
     ></v-text-field>
     <p
@@ -51,7 +51,7 @@
   </v-col>
 
   <v-col align-self="center" cols="4">
-    <label>Renegotiate time</label>
+    <label>{{$t('Clientsopenvpn.Renegotiatetime')}}</label>
   </v-col>
   <v-col align-self="center" cols="8" class="mb-n6">
     <v-text-field

@@ -36,6 +36,7 @@ SUCCESS_MESSAGES_UPDATING = _("is updated")
 SUCCESS_MESSAGES_STARTING = _("is started")
 SUCCESS_MESSAGES_RESTARTING = _("is restarted")
 SUCCESS_MESSAGES_STOPING = _("is stoped")
+# Error messages
 ERROR_MESSAGES_CREATING = _("Error in creating")
 ERROR_MESSAGES_DELETING = _("Error in deleting")
 ERROR_MESSAGES_UPDATING = _("Error in updating")

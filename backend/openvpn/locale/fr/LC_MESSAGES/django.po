@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-06 10:04+0000\n"
+"POT-Creation-Date: 2024-05-06 13:29+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -66,38 +66,38 @@ msgstr "est redémarré"
 msgid "is stoped"
 msgstr "est arrêté"
 
-#: backend/openvpn/views.py:39
+#: backend/openvpn/views.py:40
 msgid "Error in creating"
 msgstr "Erreur lors de la création de"
 
-#: backend/openvpn/views.py:40
+#: backend/openvpn/views.py:41
 msgid "Error in deleting"
 msgstr "Erreur lors de la suppression de"
 
-#: backend/openvpn/views.py:41
+#: backend/openvpn/views.py:42
 msgid "Error in updating"
 msgstr "Erreur lors de la modification de"
 
-#: backend/openvpn/views.py:42
+#: backend/openvpn/views.py:43
 msgid "Error in starting"
 msgstr "Erreur lors de démarrage de"
 
-#: backend/openvpn/views.py:43
+#: backend/openvpn/views.py:44
 msgid "Error in restarting"
 msgstr "Erreur lors de redémarrage de"
 
-#: backend/openvpn/views.py:44
+#: backend/openvpn/views.py:45
 msgid "Error in stoping"
 msgstr "Erreur lors de l'arrêt de"
 
-#: backend/openvpn/views.py:45
+#: backend/openvpn/views.py:46
 msgid "Error in exporting"
 msgstr "Erreur lors de l'exportation de"
 
-#: backend/openvpn/views.py:46
+#: backend/openvpn/views.py:47
 msgid "Unable to delete"
 msgstr "Impossible de supprimer"
 
-#: backend/openvpn/views.py:47
+#: backend/openvpn/views.py:48
 msgid "does not exist"
 msgstr "n'existe pas"

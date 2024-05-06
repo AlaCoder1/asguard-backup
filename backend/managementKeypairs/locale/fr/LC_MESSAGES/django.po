@@ -27,7 +27,7 @@ msgstr "Clé Public"
 
 #: backend/managementKeypairs/views.py:20
 msgid "it's used in"
-msgstr "elle est utilisé dans"
+msgstr "il est utilisé dans"
 
 #: backend/managementKeypairs/views.py:22
 msgid "is created"

@@ -31,7 +31,7 @@ msgstr "Certificat"
 
 #: backend/managementCertificates/views.py:27
 msgid "it's used in"
-msgstr "elle est utilisé dans"
+msgstr "elle est utilisée dans"
 
 #: backend/managementCertificates/views.py:29
 msgid "is created"

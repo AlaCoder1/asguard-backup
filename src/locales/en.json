@@ -11,7 +11,10 @@
     "desactivateUser":"Desactivate User",
     "goupname":"Group name",
     "description":"Description",
-    "server":"Directory Server"
+    "server":"Directory Server",
+    "LoginTime":"Login Time"
+    
+    
     
   },
   "buttons":{
@@ -31,7 +34,8 @@
     "delete":"Delete",
     "AddVLAN":"Add VLAN",
     "AddInterface":"Add Interface",
-    "Add":"Add"
+    "Add":"Add",
+    "Load":"Load"
 
 
   },
@@ -125,7 +129,8 @@
     "questioncertif": "Are you sure you want to delete this authority?",
     "questioncertificat": "Are you sure you want to delete this certificate?",
     "questionkey":"Are you sure you want to delete this Key ?",
-    "deleteRow":"Are you sure you want to delete this Row"
+    "deleteRow":"Are you sure you want to delete this Row",
+    "Delete":"Are you sure you want to delete this"
  
   },
      
@@ -333,7 +338,8 @@
   "button":{
     "addUser":"Add User",
     "addGroup":"Add Group",
-    "addServer":"Add Server"
+    "addServer":"Add Server",
+    "addClient":"Add Client"
   },
   "modal":{
     "create":"Create",
@@ -559,8 +565,109 @@
      "SelectPrivateKey":"Select Private Key",
      "EnterExternKey":"Enter Extern Key"
 
-     
+
+    },
+    "openvpn":{
+      "Generalinformation":"General information",
+      "Servername":"Server name",
+      "Servermode":"Server mode",
+      "DeviceMode":"Device Mode",
+      "Localport":"Local port",
+      "CryptographicSettings":"Cryptographic Settings",
+      "TLSAuthentication":"TLS Authentication",
+      "automatiquegen":"Automatically generate a shared TLS authentication key",
+      "peercertif":"Peer Certificate Authority",
+      "ServeurCertificate":"Server Certificate",
+      "DHparamerters":"DH Parameters Length algorithm",
+      "Auth_diagest":"Auth Digest Algorithm",
+      "sharedTLS":"shared TLS",
+      "algorithm":"Algorithm",
+      "TunnelSettings":"Tunnel Settings",
+      "IPv4TunnelNetwork":"IPv4 Tunnel Network ",
+      "IPv6TunnelNetwork":"IPv6 Tunnel Network ",
+      "Gateway":"Gateway",
+      "redirectGateway":"Redirect Gateway",
+      "Bridge":"Bridge",
+      "DHCPbridge":"DHCP bridge",
+      "Interfacebridge":"Interface bridge",
+      "StartDHCPbridge":"Start DHCP bridge",
+      "EndDHCPbridge":"End DHCP bridge",
+      "Concurrentconnections":"Concurrent connections",
+      "Typeofservice":"Type of service",
+      "Activethetypeofservice":"Active the type of service",
+      "Connections":"Connections",
+      "Duplicateconnections":"Duplicate the connections",
+      "Disable":"Disable",
+      "Communicationinterclients":"Communication inter clients",
+      "IPv4LocalNetwork":"IPv4 Local Network",
+      "IPv6LocalNetwork":"IPv6 Local Network",
+      "IPv4RemoteNetwork":"IPv4 Remote Network",
+      "IPv6RemoteNetwork":"IPv6 Remote Network",
+      "ClientSettings":"Client Settings",
+      "DynamicIP":"Dynamic IP",
+      "ActiveDynamicIP":"Active Dynamic IP",
+      "AdressPool":"Adress Pool",
+      "ActiveAdresspool":"Active Adress pool",
+      "DNSDefaultDomain":"DNS Default Domain",
+      "ActiveDNSDefaultDomain":"Active DNS Default Domain",
+      "DNSServers":"DNS Servers",
+      "DNSServers1":"DNS Servers 1",
+      "DNSServers2":"DNS Servers 2",
+      "ActiveDNSServers":"Active DNS Servers",
+      "ForceDNScacheupdate":"Force DNS cache update",
+      "ActiveForceDNScacheupdate":"Force DNS cache update",
+      "NTPServers":"NTP Servers",
+      "ActiveNTPServers":"Active NTP Servers",
+      "ClientManagementPort":"Client Management Port",
+      "ActiveClientManagementPort":"Active Client Management Port",
+      "newPassword":"New Password",
+      "VerbosityLevel":"Verbosity Level",
+      "end":"End",
+      "NTPServers1":"NTP Servers 1",
+      "NTPServers2":"NTP Servers 2",
+      "Clientname":"Client Name",
+      "RetryDNSresolution":"Retry DNS resolution",
+      "Infinitelyresolveremoteserver":"Infinitely resolve remote server",
+      "Proxyhostoraddress":"Proxy host or address",
+      "Proxyport":"Proxy port",
+      "Proxyauthenticationextraoptions":"Proxy authentication extra options",
+      "AdvancedConfiguration":"Advanced Configuration",
+      "Remoteserver":"Remote Server"
+      
+
+    },
+    "Clientsopenvpn":{
+      "UserAuthenticationSettings":"User Authentication Settings",
+      "Renegotiatetime":"Renegotiate time",
+      "TLSkey":"TLS key",
+      "ClientCertificate":"Client Certificate",
+      "Limitoutgoingbandwidth":"Limit outgoing bandwidth",
+      "Type-of-Service":"Type-of-Service",
+      "Activetypeofservice":"Active type of service",
+      "pullroutes":"Pull Routes",
+      "Dontpullroutes":"Don't pull routes",
+      "Add/removeroutes":"Add/remove routes",
+      "Dontadd/removeroutes":"Don't add/remove routes",
+      "Hostoraddress":"Host or address",
+      "Protocol/Port":"Protocol / Port",
+      "Capacity":"Capacity",
+      "Transferred":"Transferred",
+      "Today":"Today",
+      "Received":"Received",
+      "Users":"Users",
+      "ActiveUsers":"Active Users",
+      "of":"Of",
+      "Server":"Server",
+      "TopTraffic":"Top Traffic",
+      "Trafficdistribution":"Traffic distribution",
+      "Top2ClientNetworkActivity":"Top 2 Client Network Activity",
+      "ListServers":"List Servers",
+      "ListClients":"List Clients",
+      "NetworkTunnel":"Network Tunnel",
+      "CertificatStatus":"Certificat Status"
+
 
     }
+
 
   }

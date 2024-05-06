@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            Please Wait...
+            {{ $t("sdwan.pleaseWait") }}
             <v-progress-linear
               indeterminate
               color="white"
@@ -21,11 +21,11 @@
     </v-overlay>
     <v-row>
       <v-col cols="12">
-        <h4>Virus Scan</h4>
+        <h4>{{ $t("clamaV.virusScan") }}</h4>
         <v-divider></v-divider>
       </v-col>
     </v-row>
- 
+
     <div id="boxes" class="mt-10">
       <div id="leftbox">
         <!-- <img
@@ -48,7 +48,7 @@
           <span>Scan now</span>
         </v-btn> -->
       </div>
- 
+
       <div id="middlebox" class="mb-5">
         <!-- <img
           src="../../assets/images/Fichier 1icone-Asguard-scanFolder 1.svg"
@@ -75,27 +75,30 @@
             </template>
           </v-text-field>
         </div> -->
- 
+
         <img
           src="../../assets/images/Fichier 2icone-Sasyx-supp 1.svg"
           style="margin-bottom: -7px"
         />
-        <h5 class="title mr-2">Full virus scan</h5>
-        <span class="mb-5 subtitle">Scan your entire device</span><br />
- 
+        <h5 class="title mr-2">{{ $t("clamaV.fullVirusScan") }}</h5>
+        <span class="mb-5 subtitle">{{
+          $t("clamaV.scanYourEntireDevice")
+        }}</span
+        ><br />
+
         <v-btn
           rounded
           outlined
           color="#213E9F"
           label-color="#ffffff"
-          class="ml-2 mt-5 btn-scan"
+          class="mt-5 btn-scan"
           size="large"
           @click="save"
         >
-          <span>Scan now</span>
+          <span>{{ $t("clamaV.scanNow") }}</span>
         </v-btn>
       </div>
- 
+
       <div id="rightbox">
         <!-- <img src="../../assets/images/Group 182.svg" />
         <h5 class="title mr-2">Full virus scan</h5>
@@ -116,15 +119,15 @@
         </v-btn> -->
       </div>
     </div>
- 
+
     <v-row class="mb-10" id="newRow">
       <v-col cols="12">
-        <scanUpdate :rowDataLog="state.rowDataLog"/>
+        <scanUpdate :rowDataLog="state.rowDataLog" />
       </v-col>
     </v-row>
- 
+
     <ModalScanResult :isOpen="state.isModalOpen" :rowData="state.rowData" />
- 
+
     <v-snackbar
       :timeout="2000"
       v-model="state.snackbar"
@@ -132,12 +135,13 @@
       :color="state.color"
     >
       {{ state.textAlert }}
- 
+
       <template v-slot:actions> </template>
     </v-snackbar>
   </div>
 </template>
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import { reactive, onMounted, inject } from "vue";
 import VButton from "@/components/VButton.vue";
@@ -153,10 +157,11 @@ export default {
     ModalScanResult,
     VButton,
   },
- 
+
   setup() {
     const emitter = inject("emitter");
- 
+    const { t } = useI18n();
+
     const state = reactive({
       rowData: {},
       rowDataLog: {},
@@ -167,7 +172,7 @@ export default {
       loading: false,
       isLoadingDialogue: false,
     });
- 
+
     const getCookie = (name) => {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {
@@ -182,7 +187,7 @@ export default {
       }
       return cookieValue;
     };
- 
+
     const save = () => {
       state.loading = true;
       state.isLoadingDialogue = true;
@@ -192,10 +197,10 @@ export default {
         .get("/clamaV/Fullscan")
         .then((response) => {
           if (response.status == "200") {
-            console.log('response',response)
+            console.log("response", response);
             state.snackbar = true;
             state.color = "success";
-            state.textAlert = 'Success Scan';
+            state.textAlert = t("clamaV.successfullyScan");
             state.loading = false;
             state.isLoadingDialogue = false;
             state.rowData = response.data.result;
@@ -208,7 +213,7 @@ export default {
           state.loading = false;
           state.isLoadingDialogue = false;
           state.color = "red";
-          state.textAlert = 'Error';
+          state.textAlert = t("clamaV.error");
         });
     };
     onMounted(() => {
@@ -242,21 +247,21 @@ export default {
   text-align: center;
   color: #213e9f;
 }
- 
+
 #leftbox {
   float: left;
   width: 25%;
   text-align: center;
   height: 280px;
 }
- 
+
 #middlebox {
   float: left;
   width: 50%;
   height: 280px;
   text-align: center;
 }
- 
+
 #rightbox {
   float: right;
   width: 25%;

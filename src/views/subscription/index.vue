@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Subscription">
+    <base-layout :title="$t('subtitle.subscription')">
       <template #content>
         <v-row class="justify-center mt-5 mb-4 ml-15" v-if="subInfo">
           <v-col cols="1"> </v-col>
@@ -11,10 +11,11 @@
               border-color="indigo accent-4"
               elevation="2"
             >
-              <span class="title">Current Package</span> <br />
+              <span class="title">{{ $t("subscription.currentPackage") }}</span>
+              <br />
               <span class="soutitle" style="color: #26a69a !important">{{
                 statusPackage
-                  ? "Your Package Is Expired"
+                  ? $t("subscription.packageExpired")
                   : subscriptionInfo.type_pack
               }}</span>
             </v-alert>
@@ -26,10 +27,18 @@
               border-color="warning accent-4"
               elevation="2"
             >
-              <span class="title">Current Subscription </span><br />
+              <span class="title"
+                >{{ $t("subscription.currentSubscription") }} </span
+              ><br />
               <span class="soutitle">{{
                 statusPackage
-                  ? "Expired " + ExpiredDays + " " + dayString + " ago"
+                  ? $t("subscription.expired") +
+                    "" +
+                    ExpiredDays +
+                    " " +
+                    dayString +
+                    +"" +
+                    $t("subscription.ago")
                   : formatedDate
               }}</span>
             </v-alert>
@@ -41,7 +50,10 @@
               border-color="success accent-4"
               elevation="2"
             >
-              <span class="title">Next Payment Due </span> <br />
+              <span class="title"
+                >{{ $t("subscription.nextPaymentDue") }}
+              </span>
+              <br />
               <span class="soutitle">{{
                 statusPackage ? "--" : formatedNextPayment
               }}</span>
@@ -52,7 +64,9 @@
         <v-row class="mt-5">
           <v-col cols="2" />
           <v-col cols="8">
-            <h1 class="d-flex justify-center">Choose your plan!</h1>
+            <h1 class="d-flex justify-center">
+              {{ $t("subscription.chooseYourPlan") }}
+            </h1>
             <div class="subscription-cards">
               <SubscriptionTypeCard
                 v-for="card in subscriptionCards"
@@ -75,6 +89,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import BaseLayout from "@/layouts/layout.vue";
 import SubscriptionTypeCard from "./components/subscriptionTypeCard.vue";
 import { onMounted, inject, ref, computed } from "vue";
@@ -86,46 +101,97 @@ export default {
     SubscriptionTypeCard,
   },
   setup() {
+    const { t } = useI18n();
     const emitter = inject("emitter");
+
+    const base = computed(() => {
+      return t("subscription.base");
+    });
+    const annual = computed(() => {
+      return t("subscription.annual");
+    });
+    const monthly = computed(() => {
+      return t("subscription.monthly");
+    });
+    const custom = computed(() => {
+      return t("subscription.custom");
+    });
+    const premium = computed(() => {
+      return t("subscription.premium");
+    });
+    const doubleMask150Annual = computed(() => {
+      return t("subscription.doubleMask150Annual");
+    });
+    const cASB150Annual = computed(() => {
+      return t("subscription.cASB150Annual");
+    });
+    const sWG100Annual = computed(() => {
+      return t("subscription.sWG100Annual");
+    });
+    const antiVirus100Annual = computed(() => {
+      return t("subscription.antiVirus100Annual");
+    });
+    const doubleMask = computed(() => {
+      return t("subscription.doubleMask");
+    });
+    const casb = computed(() => {
+      return t("subscription.casb");
+    });
+    const SWG = computed(() => {
+      return t("subscription.SWG");
+    });
+
     const subscriptionCards = ref([
       {
-        title: "Base",
+        title: base,
         prices: [
-          { label: "Annual", amount: 1200 },
-          { label: "Monthly", amount: 100 },
+          { label: annual, amount: 1200 },
+          { label: monthly, amount: 100 },
         ],
-        communservices: ["Firewall", "ZTNA", "LDAP"],
+        communservices: [
+          "subscription.firewall",
+          "subscription.ZTNA",
+          "subscription.LDAP",
+        ],
         services: ["", "", "", "", "", "", "", "", "", "", ""],
         backgroundColor: "#213E9F",
         buttonColor: "#213E9F",
       },
       {
-        title: "Custom",
+        title: custom,
         prices: [
-          { label: "Annual", amount: 1200 },
-          { label: "Monthly", amount: 150 },
+          { label: annual, amount: 1200 },
+          { label: monthly, amount: 150 },
         ],
-        communservices: ["Firewall", "ZTNA", "LDAP"],
+        communservices: [
+          "subscription.firewall",
+          "subscription.ZTNA",
+          "subscription.LDAP",
+        ],
         services: [
-          { name: "Double Mask 150 €/Annual", slug: "double 150", price: 150 },
-          { name: "CASB 150 €/Annual", slug: "casb 150", price: 150 },
-          { name: "SWG 100 €/Annual", slug: "swg 100", price: 100 },
-          { name: "Anti-virus 100 €/Annual", slug: "anti 100", price: 100 },
+          { name: doubleMask150Annual, slug: "double 150", price: 150 },
+          { name: cASB150Annual, slug: "casb 150", price: 150 },
+          { name: sWG100Annual, slug: "swg 100", price: 100 },
+          { name: antiVirus100Annual, slug: "anti 100", price: 100 },
         ],
         backgroundColor: "#FFC300",
         buttonColor: "#FFC300",
       },
       {
-        title: "Premium",
+        title: premium,
         prices: [
-          { label: "Annual", amount: 1700 },
-          { label: "Monthly", amount: 150 },
+          { label: annual, amount: 1700 },
+          { label: monthly, amount: 150 },
         ],
-        communservices: ["Firewall", "ZTNA", "LDAP"],
+        communservices: [
+          "subscription.firewall",
+          "subscription.ZTNA",
+          "subscription.LDAP",
+        ],
         services: [
-          { name: "Double Mask", slug: "double" },
-          { name: "CASB​", slug: "casb" },
-          { name: "SWG", slug: "swg" },
+          { name: doubleMask, slug: "double" },
+          { name: casb, slug: "casb" },
+          { name: SWG, slug: "swg" },
           { name: "Anti-virus", slug: "anti" },
         ],
         backgroundColor: "#213E9F",
@@ -145,7 +211,7 @@ export default {
           dayjs(subscriptionInfo.value.date_start).format("DD, MM YYYY") ?? "";
         let to =
           dayjs(subscriptionInfo.value.end_at).format("DD, MM YYYY") ?? "";
-        return `${from}  to ${to} `;
+        return `${from}  ->  ${to} `;
       }
     });
     const formatedNextPayment = computed(() => {
@@ -177,8 +243,8 @@ export default {
           let Difference_In_Days = Math.round(
             Difference_In_Time / (1000 * 3600 * 24)
           );
-          if (Difference_In_Days === 1) dayString.value = "day";
-          else if (Difference_In_Days > 1) dayString.value = "days";
+          if (Difference_In_Days === 1) dayString.value = t("subscription.day");
+          else if (Difference_In_Days > 1) dayString.value = t("subscription.days");
           ExpiredDays.value = Difference_In_Days;
         } else if (dateLocal < expireDate) {
           statusPackage.value = false;

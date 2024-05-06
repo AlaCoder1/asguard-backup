@@ -1,6 +1,6 @@
 <template>
   <div class="ml-3 mr-3">
-    <h4>General information phase2</h4>
+    <h4>{{ $t("PageIpsec.section") }}</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-5">
@@ -10,7 +10,7 @@
         <v-select
           label="Mode"
           v-model="mode"
-          item-title="name"
+          item-title="name" 
           item-value="slug"
           return-object
           :items="props.modeList"
@@ -70,7 +70,7 @@
         "
       >
         <v-col cols="12">
-          <h4>Local network</h4>
+          <h4>{{ $t("PageIpsec.localnetwork") }}</h4>
           <v-divider class="mt-2"></v-divider>
         </v-col>
 
@@ -95,13 +95,13 @@
         </v-col>
 
         <v-col class="mt-5" cols="4">
-          <label>{{ props.isTypeWAn ? "Address" : "Address*" }}</label>
+          <label>{{ props.isTypeWAn ? $t('PageIpsec.address')  : $t('PageIpsec.address')}}*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-row>
             <v-col cols="7">
               <v-text-field
-                label="Address"
+                :label="$t('PageIpsec.address')"
                 :readonly="props.isTypeWAn"
                 v-model="localNetworkAddress"
               ></v-text-field>
@@ -134,7 +134,7 @@
         </v-col>
 
         <v-col cols="12">
-          <h4>Remote Network</h4>
+          <h4>{{$t('PageIpsec.remoteNetwork')}}</h4>
           <v-divider class="mt-2"></v-divider>
         </v-col>
 
@@ -159,13 +159,13 @@
         </v-col>
 
         <v-col class="mt-5" cols="4">
-          <label>Address*</label>
+          <label> {{ $t('PageIpsec.address')}} *</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-row>
             <v-col cols="7">
               <v-text-field
-                label="Address"
+                :label="$t('PageIpsec.address')"
                 v-model="remoteNetworkAddress"
               ></v-text-field>
 

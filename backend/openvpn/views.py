@@ -1,5 +1,6 @@
 import time
 from django.http import JsonResponse
+from django.utils.translation import gettext_lazy as _
 from django.db.models.deletion import ProtectedError
 from django.contrib.auth.hashers import check_password, make_password
 from drf_yasg.utils import swagger_auto_schema
@@ -12,7 +13,6 @@ from rest_framework.permissions import IsAuthenticated
 from backend.network.models import IP4Config, Interface
 from backend.openvpn.constant_variables import PATH_SERVER_STATIC
 from backend.openvpn.list_servers_clients import get_list_all_client_openvpn, get_list_all_server_openvpn, get_one_client_openvpn, get_one_server_openvpn
-from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_DELETE_USED_SERVER, ERROR_MESSAGES_EXPORTING, ERROR_MESSAGES_INEXISTANT, ERROR_MESSAGES_STATUS_OPENVPN_SERVER, IPV4_CONFIG, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_DELETE, SUCCESS_MESSAGES_STATUS_OPENVPN_SERVER, SUCCESS_MESSAGES_UPDATE
 from utils.errors_utils import CommandExecutionError
 from .servers_status import change_status_server_openvpn
 from .models import ServerOpenvpn, ClientOpenvpn
@@ -21,7 +21,32 @@ from .utils import json_to_str_client, json_to_str_server
 from .server_openvpn import install_server_openvpn_in_system, delete_server_openvpn_in_system, update_server_openvpn_in_system
 from .client_openvpn import delete_client_openvpn_in_system, export_client_in_system, install_client_openvpn_in_system, update_client_openvpn_in_system
 
-# Create your views here.
+
+# Constants
+CONSTANT_OPENVPN_SERVER = _('openvpn server')
+CONSTANT_OPENVPN_CLIENT = _('openvpn client')
+CONSTANT_IPV4_CONFIG = _("IPv4 config")
+CONSTANT_INTERFACE = _("interface")
+CONSTANT_CA = _("Certificate Authority")
+CONSTANT_USED_ITEM = _("it's used in")
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+SUCCESS_MESSAGES_UPDATING = _("is updated")
+SUCCESS_MESSAGES_STARTING = _("is started")
+SUCCESS_MESSAGES_RESTARTING = _("is restarted")
+SUCCESS_MESSAGES_STOPING = _("is stoped")
+# Error messages
+ERROR_MESSAGES_CREATING = _("Error in creating")
+ERROR_MESSAGES_DELETING = _("Error in deleting")
+ERROR_MESSAGES_UPDATING = _("Error in updating")
+ERROR_MESSAGES_STARTING = _("Error in starting")
+ERROR_MESSAGES_RESTARTING = _("Error in restarting")
+ERROR_MESSAGES_STOPING = _("Error in stoping")
+ERROR_MESSAGES_EXPORTING = _("Error in exporting")
+ERROR_MESSAGES_DELETING_USED_ITEM = _("Unable to delete")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
+
 
 ########################################
 ################ Server ################
@@ -240,16 +265,16 @@ def create_server_openvpn(request):
 
             # Add the server to the database
             serializer_server.save()
-            return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('Server', name)}, status=201)
+            return JsonResponse({"msg": f"{name} {SUCCESS_MESSAGES_CREATING}"}, status=201)
         
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
     
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('openvpn server')}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_OPENVPN_SERVER}"}, status=400)
     except Interface.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('interface')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -274,11 +299,13 @@ def delete_server_openvpn(request, id):
 
         # delete from database
         server.delete()
-        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(server.name)}, status=201)
+        return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
     except ProtectedError:
-        return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_SERVER}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_OPENVPN_SERVER}, {CONSTANT_USED_ITEM} {CONSTANT_OPENVPN_CLIENT}"}, status=400)
     except ServerOpenvpn.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_OPENVPN_SERVER}"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN OPENVPN SERVER (same as creation API)",
@@ -444,15 +471,17 @@ def update_server_openvpn(request, id):
 
             #updating the server in database
             serializer_server.save()
-            return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(server.name)}, status=201)
+            return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
         
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
     except ServerOpenvpn.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except Interface.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('interface')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_OPENVPN_SERVER}"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -466,12 +495,12 @@ def start_server_openvpn(request, id):
         server = ServerOpenvpn.objects.get(id=id)
         change_status_server_openvpn(server_name=server.name, server_status='start')
         time.sleep(3)
-        return JsonResponse({"msg": SUCCESS_MESSAGES_STATUS_OPENVPN_SERVER.format(server.name, 'started')}, status=201)
+        return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_STARTING}"}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_STATUS_OPENVPN_SERVER.format('starting')}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_OPENVPN_SERVER}"}, status=400)
     except ServerOpenvpn.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -485,12 +514,12 @@ def restart_server_openvpn(request, id):
         server = ServerOpenvpn.objects.get(id=id)
         change_status_server_openvpn(server_name=server.name, server_status='restart')
         time.sleep(3)
-        return JsonResponse({"msg": SUCCESS_MESSAGES_STATUS_OPENVPN_SERVER.format(server.name, 'restarted')}, status=201)
+        return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_RESTARTING}"}, status=201)
     
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_STATUS_OPENVPN_SERVER.format('starting')}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_RESTARTING} {CONSTANT_OPENVPN_SERVER}"}, status=400)
     except ServerOpenvpn.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -504,12 +533,12 @@ def stop_server_openvpn(request, id):
         server = ServerOpenvpn.objects.get(id=id)
         change_status_server_openvpn(server_name=server.name, server_status='stop')
         time.sleep(3)
-        return JsonResponse({"msg": SUCCESS_MESSAGES_STATUS_OPENVPN_SERVER.format(server.name, 'stoped')}, status=201)
+        return JsonResponse({"msg": f"{server.name} {SUCCESS_MESSAGES_STOPING}"}, status=201)
     
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_STATUS_OPENVPN_SERVER.format('stoping')}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_OPENVPN_SERVER}"}, status=400)
     except ServerOpenvpn.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 ########################################
@@ -672,15 +701,15 @@ def create_client_openvpn(request):
 
             # Add the client to the database
             client_serializer.save()
-            return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('Client', data['name'])}, status=201)
+            return JsonResponse({"msg": f"{data['name']} {SUCCESS_MESSAGES_CREATING}"}, status=201)
         else:
             return JsonResponse({"error": list(client_serializer.errors.values())[0][0]}, status=400)
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('client for openvpn server')}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_OPENVPN_CLIENT}"}, status=400)
     except ServerOpenvpn.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -699,10 +728,12 @@ def delete_client_openvpn(request, id):
 
         # Delete the client from database
         client.delete()
-        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(client.name)}, status=201)
+        return JsonResponse({"msg": f"{client.name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
     
     except ClientOpenvpn.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Client')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_OPENVPN_CLIENT} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_OPENVPN_CLIENT}"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN OPENVPN Client (same as create)",
@@ -821,16 +852,18 @@ def update_client_openvpn(request, id):
 
             # Updating the client in database
             client_serializer.save()
-            return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(client.name)}, status=201)
+            return JsonResponse({"msg": f"{client.name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
         
         return JsonResponse({"error": list(client_serializer.errors.values())[0][0]}, status=400)
         
     except ClientOpenvpn.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Client')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_OPENVPN_CLIENT} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except ServerOpenvpn.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_OPENVPN_CLIENT}"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -850,9 +883,9 @@ def export_client_openvpn(request, id):
         return JsonResponse({"client": config_input}, status=201)
 
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_EXPORTING.format("openvpn client")}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_EXPORTING} {CONSTANT_OPENVPN_CLIENT}"}, status=400)
     except ClientOpenvpn.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_CA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO GENERATE AN OPENVPN Client FROM A SERVER",
@@ -956,12 +989,12 @@ def generate_client_openvpn(request, id):
 
             # Add the client to the database
             client_serializer.save()
-            return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('Client', data['name'])}, status=201)
+            return JsonResponse({"msg": f"{data['name']} {SUCCESS_MESSAGES_CREATING}"}, status=201)
         else:
             return JsonResponse({"error": list(client_serializer.errors.values())[0][0]}, status=400)
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('client for openvpn server')}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_OPENVPN_CLIENT}"}, status=400)
     except ServerOpenvpn.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_OPENVPN_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

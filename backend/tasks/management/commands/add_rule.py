@@ -14,6 +14,7 @@ class Command(BaseCommand):
         parser.add_argument('-daddr', '--destination_address', type=str, help='Define a destination address')
         parser.add_argument('-dport', '--destination_port', type=str, help='Define a destination port')
         parser.add_argument('-i', '--interface', type=str, help='Define a interface')
+        parser.add_argument('-d', '--description', type=str, help='Define a description')
     def handle(self, *args, **options):
         try:
             type_rule = options.get('type_rule')
@@ -28,6 +29,17 @@ class Command(BaseCommand):
             destination_address = options.get('destination_address')
             destination_port = options.get('destination_port')
             interface = options.get('interface')
+            description = options.get('description')
+            description = description.replace("-"," ")
+            print({"source_address":source_address})
+            print({"source_port":source_port})
+            print({"destination_address":destination_address})
+            print({"destination_port":destination_port})
+            print({"interface":interface})
+            print({"description":description})
+            print(type(source_port))
+            
+            
             missing_arguments = []
             if type_rule is None:
                 missing_arguments.append('--type_rule')
@@ -45,10 +57,21 @@ class Command(BaseCommand):
                 missing_arguments.append('--destination_port')
             if interface is None:
                 missing_arguments.append('--interface')
-
+            if description is None:
+                missing_arguments.append('--description')
+                
+            if source_address.lower() == 'all':
+                source_address = None
+            if destination_address.lower() == 'all':
+                destination_address = None
+                
             if missing_arguments:
                 for arg in missing_arguments:
                     print(arg)
+                if source_port is not None and source_port.lower() == 'all':
+                    source_port = None
+                if destination_port is not None and destination_port.lower() == 'all':
+                    destination_port = None
                 source_port = None
                 destination_port = None
             interface_id = Interface.objects.get(ifname=interface)
@@ -72,8 +95,15 @@ class Command(BaseCommand):
                     if return_add_rule is True:
                         
                         print({"rule_db":rule_db})
-                        rule=Rule.objects.create(rule=rule_db, rule_status=True, type_rule = type_rule, policy = policy, rule_description = "Rule from MENU", protocol = protocol, saddr = saddr_db, sport = source_port, daddr = daddr_db, dport = destination_port, interface = interface_id)
-                        return "rule added succesffuly"
+                        try:
+                            rule = Rule.objects.create(rule=rule_db, rule_status=True, type_rule=type_rule, policy=policy, rule_description=description, protocol=protocol, saddr=saddr_db, sport=source_port, daddr=daddr_db, dport=destination_port, interface=interface_id)
+                            return "rule added succesffuly"
+                            
+                            # If you reach this point, creation was successful
+                        except IntegrityError as e:
+                            # Handle the integrity error, maybe log it or perform some other action
+                            print("Error occurred:", e)
+                        # rule=Rule.objects.create(rule=rule_db, rule_status=True, type_rule = type_rule, policy = policy, rule_description = description, protocol = protocol, saddr = saddr_db, sport = source_port, daddr = daddr_db, dport = destination_port, interface = interface_id)
                 else:
                     return "exist"
         except IntegrityError as e:

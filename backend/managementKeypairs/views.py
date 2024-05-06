@@ -1,19 +1,32 @@
 from django.http import JsonResponse
+from django.utils.translation import gettext_lazy as _
 from rest_framework.authentication import SessionAuthentication
 from django.db.models.deletion import ProtectedError
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
+
 from backend.managementKeypairs.key_pairs import create_private_key_in_system, create_public_key_in_system, delete_private_key_in_system, delete_public_key_in_system, import_public_key
 from backend.managementKeypairs.list_key_pairs import get_list_all_private_key, get_list_all_public_key, get_one_private_key, get_one_public_key
 from backend.managementKeypairs.models import PrivateKey, PublicKey
 from backend.managementKeypairs.serializers import PrivateKeySerializer, PublicKeySerializer
-from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_DELETE_USED_PRIVATE_KEY, ERROR_MESSAGES_INEXISTANT, CONSTANT_PRIVATE_KEY, CONSTANT_PUBLIC_KEY, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_DELETE
-
 from utils.errors_utils import CommandExecutionError
 
-# Create your views here.
+
+# Constants
+CONSTANT_PRIVATE_KEY = _("Private Key")
+CONSTANT_PUBLIC_KEY = _("Public Key")
+CONSTANT_USED_ITEM = _("it's used in")
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+# Error messages
+ERROR_MESSAGES_CREATING = _("Error in creating")
+ERROR_MESSAGES_DELETING = _("Error in deleting")
+ERROR_MESSAGES_DELETING_USED_ITEM = _("Unable to delete")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
+
 
 ##################################################
 ############# Private Key #############
@@ -68,12 +81,12 @@ def create_private_key(request):
             
             # Add the server to the database
             serializer_private_key.save()
-            return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_PRIVATE_KEY, data["name"])}, status=201)
+            return JsonResponse({"msg": f"""{data["name"]} {SUCCESS_MESSAGES_CREATING}"""}, status=201)
         
         return JsonResponse({"error": list(serializer_private_key.errors.values())[0][0]}, status=400)
 
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_PRIVATE_KEY)}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_PRIVATE_KEY}"}, status=400)
     except ValueError as error:
         return JsonResponse({"error": error.__str__()}, status=400)
 
@@ -91,11 +104,14 @@ def delete_private_key(request, id):
         delete_private_key_in_system(private_key.name)
         # delete from database
         private_key.delete()
-        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(private_key.name)}, status=201)
+        return JsonResponse({"msg": f"{private_key.name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+    
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_PRIVATE_KEY}"}, status=400)
     except ProtectedError:
-        return JsonResponse({"error": ERROR_MESSAGES_DELETE_USED_PRIVATE_KEY}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_PRIVATE_KEY}, {CONSTANT_USED_ITEM} {CONSTANT_PUBLIC_KEY}"}, status=400)
     except PrivateKey.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_PRIVATE_KEY)}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_PRIVATE_KEY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 ##################################################
@@ -162,7 +178,7 @@ def create_public_key(request):
                 
                 # Add the server to the database
                 serializer_public_key.save()
-                return JsonResponse({"msg":  SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_PUBLIC_KEY, data["name"])}, status=201)
+                return JsonResponse({"msg":  f"""{data["name"]} {SUCCESS_MESSAGES_CREATING}"""}, status=201)
                 
                 
             return JsonResponse({"error": list(serializer_public_key.errors.values())[0][0]}, status=400)
@@ -178,16 +194,16 @@ def create_public_key(request):
                 if serializer_public_key.is_valid():
                     # Add the server to the database
                     serializer_public_key.save()
-                    return JsonResponse({"msg":  SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_PUBLIC_KEY, data["name"])}, status=201)
+                    return JsonResponse({"msg":  f"""{data["name"]} {SUCCESS_MESSAGES_CREATING}"""}, status=201)
                                 
             return JsonResponse({"error": list(serializer_public_key.errors.values())[0][0]}, status=400)
 
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('PublicKey')}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_PUBLIC_KEY}"}, status=400)
     except ValueError as error:
         return JsonResponse({"error": error.__str__()}, status=400)
     except PrivateKey.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_PRIVATE_KEY)}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_PRIVATE_KEY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -203,7 +219,9 @@ def delete_public_key(request, id):
         delete_public_key_in_system(public_key.name)
         # delete from database
         public_key.delete()
-        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(public_key.name)}, status=201)
+        return JsonResponse({"msg": f"{public_key.name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
         
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_PUBLIC_KEY}"}, status=400)
     except PublicKey.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Public Key')}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_PUBLIC_KEY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

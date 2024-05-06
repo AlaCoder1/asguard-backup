@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              Create new VLAN</span
+              {{ $t("typeInterface.createNew") }} VLAN</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              Update VLAN</span
+              {{ $t("buttons.update") }} VLAN</span
             >
           </v-card-title>
           <v-card-text>
@@ -17,11 +17,12 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.interface"
-                    label="Parent Interface"
+                    :label="$t('typeInterface.parentInterface')"
                     item-title="name"
                     item-value="slug"
                     :items="state.listInterfaces"
                     return-object
+                    :no-data-text="$t('certificat.certificatlist')"
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.interface.$error">
                     {{ v$.interface.$errors[0].$message }}
@@ -29,7 +30,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="VLAN Tag"
+                    :label="$t('typeInterface.VLANTag')"
                     v-model="state.vlanTag"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.vlanTag.$error">
@@ -39,11 +40,12 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.vlanPriority"
-                    label="Vlan priority"
+                    :label="$t('typeInterface.VlanPriority')"
                     item-title="name"
                     item-value="slug"
                     :items="state.listPriority"
                     return-object
+                    :no-data-text="$t('certificat.certificatlist')"
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.vlanPriority.$error">
                     {{ v$.vlanPriority.$errors[0].$message }}
@@ -72,7 +74,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Close</span>
+              <span class="text-white pr-3 pl-3">{{
+                $t("buttons.close")
+              }}</span>
             </v-btn>
 
             <v-btn
@@ -85,7 +89,12 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+                {{ $t("buttons.create") }}</span
+              >
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -104,6 +113,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
@@ -129,6 +139,7 @@ export default {
     onMounted(() => {
       getInterface();
     });
+    const { t } = useI18n();
 
     const { isOpen, editRow, modalMode } = toRefs(props);
 
@@ -305,26 +316,30 @@ export default {
         state.description = "";
       }
     };
-
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const champInclude = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
     const rules = computed(() => {
       return {
         vlanTag: {
           isValidVlanTag: helpers.withMessage(
-            `Champs can include only Numbers.`,
-
+            champInclude,
             helpers.regex(/^[0-9]+$/)
           ),
         },
 
         vlanPriority: {
-          required,
+          required: helpers.withMessage(error, required),
         },
 
         interface: {
-          required,
+          required: helpers.withMessage(error, required),
         },
         description: {
-          required,
+          required: helpers.withMessage(error, required),
         },
       };
     });

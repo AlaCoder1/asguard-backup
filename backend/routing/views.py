@@ -1,4 +1,5 @@
 from django.http import JsonResponse
+from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
 
@@ -7,15 +8,25 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated
 from backend.gateway.models import Gateway, GatewayInterface
 
-
-from backend.routing.constant_variables import CONSTANT_ROUTE
 from backend.routing.list_routing import get_list_all_gateway, get_list_all_routing, get_one_gateway, get_one_routing
 from backend.routing.models import Routing
 from backend.routing.serializers import RoutingSerializer
 from backend.routing.utils import create_gateway
 from backend.routing.utils_system import routing_in_system
-from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_DELETING, ERROR_MESSAGES_INEXISTANT, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_DELETE, SUCCESS_MESSAGES_UPDATE
 from utils.errors_utils import CommandExecutionError
+
+
+# Constants
+CONSTANT_ROUTE = _("Route")
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+SUCCESS_MESSAGES_UPDATING = _("is updated")
+# Error messages
+ERROR_MESSAGES_CREATING = _("Error in creating")
+ERROR_MESSAGES_DELETING = _("Error in deleting")
+ERROR_MESSAGES_UPDATING = _("Error in updating")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -103,12 +114,12 @@ def create_routing(request):
         serializer_routing = RoutingSerializer(data=data)
         if serializer_routing.is_valid():
             serializer_routing.save()
-            return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_ROUTE, "")}, status=201)
+            return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_routing.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_ROUTE)}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ROUTE}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -128,12 +139,12 @@ def delete_routing(request, id):
 
         # delete rule from database
         routing.delete()
-        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(CONSTANT_ROUTE)}, status=201)
+        return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_DELETING.format(CONSTANT_ROUTE)}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_ROUTE}"}, status=400)
     except Routing.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_ROUTE)}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -185,11 +196,11 @@ def update_routing(request, id):
         serializer_routing = RoutingSerializer(routing, data=data)
         if serializer_routing.is_valid():
             serializer_routing.save()
-            return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(CONSTANT_ROUTE)}, status=201)
+            return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_routing.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_ROUTE)}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_UPDATING}"}, status=400)
     except Routing.DoesNotExist:
-        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_ROUTE)}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

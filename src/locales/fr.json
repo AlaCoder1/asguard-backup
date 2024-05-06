@@ -55,7 +55,8 @@
     "invalidPassword":"Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation":"Votre mot de passe ne correspond pas",
     "ChampIncludeOnlyNumbers":"Champ ne peut inclure que des numéros",
-    "formatMustBeLikeAdresseIP":"Format doit correspondre à l'adresse IP : X.X.X.X"
+    "formatMustBeLikeAdresseIP":"Format doit correspondre à l'adresse IP : X.X.X.X",
+    "minimumOneRange":"Minimum Une Plage"
 
   },
   "placeholder":{
@@ -111,7 +112,7 @@
     "logout":"Déconnexion"
   },
 
-  "frensh":"Français",
+  "french":"Français",
   "english":"Anglais",
   "networkAdmins":"Administrateurs de réseaux",
   "networksGroups":"Groupes de réseaux",
@@ -312,6 +313,42 @@
     "prefix":"Préfixe",
     "healthCheckMilliseconds":"Contrôle de santé en millisecondes",
     "healthCheckTargetMilliseconds":"Objectif du contrôle de santé millisecondes"
+
+   },
+   "dhcpV4":{
+    "generalInformation":"Informations générales",
+    "DHCPServer":"Serveur DHCP",
+    "enableDHCPServer":"Activer le serveur DHCP sur cette interface",
+    "subnetAddress":"Adresse de sous-réseau",
+    "subnetMask":"Masque de sous-réseau",
+    "availableRange":"Plage disponible",
+    "dnsServer":"Serveur DNS",
+    "gateway":"Passerelle",
+    "domainName":"Nom de domaine",
+    "rangeFrom":"Plage de",
+    "rangeTo":"Plage à",
+    "addRange":"Ajouter une plage",
+    "editRange":"Modifier la plage"
+
+   },
+   "clamaV":{
+    "virusScan":"Analyse de virus",
+    "fullVirusScan":"Analyse antivirus complète",
+    "scanYourEntireDevice":"Scannez l'intégralité de votre appareil",
+    "scanNow":"Scanner maintenant",
+    "successfullyScan":"Scanner avec succès",
+    "error":"Erreur",
+    "scanResult":"Résultat de Scan",
+    "knownViruses":"Virus connus",
+    "engineVersion":"Version du moteur",
+    "scannedDirectories":"Répertoires scannés",
+    "scannedFiles":"Fichiers scannés",
+    "infectedFiles":"Fichiers infectés",
+    "dataScanned":"Données scannées",
+    "dataRead":"Données lues",
+    "time":"Temps",
+    "startDate":"Date de début",
+    "endDate":"Date de fin"
 
    },
 

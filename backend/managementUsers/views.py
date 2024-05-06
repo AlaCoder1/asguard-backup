@@ -16,6 +16,7 @@ from django.contrib.auth.hashers import make_password
 from backend.LdapServer.models import ADServer
 import ldap
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_STRING
 from django.conf import settings
 from rest_framework import status
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -536,3 +537,36 @@ def addPermission(request):
             return JsonResponse({"msg": msg}, status=201)
             # provide a Json Response with the necessary error information
         return JsonResponse(serializer.errors, status=400)
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET PROFILE LANGUAGE",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_profile_language(request, id):
+    """Getting Profile language"""
+    profile = Profile.objects.get(user=User.objects.get(id=id))
+    return JsonResponse({"language": profile.language})
+
+
+@swagger_auto_schema(
+        method='PUT', 
+        responses={200: 'Created', 400: 'Bad Request'}, 
+        operation_summary="API TO UPDATE PROFILE LANGUAGE",
+        request_body=Schema(type=TYPE_OBJECT, required=['language'], properties={'language': Schema(type=TYPE_STRING)}))
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def change_language(request, id):
+    """Update profile language"""
+    try:
+        data = request.data
+        profile = Profile.objects.get(user=User.objects.get(id=id))
+        serializer_profile = ProfileSerializer(profile, data=data, partial=True)
+        if serializer_profile.is_valid():
+            serializer_profile.save()
+            return JsonResponse({"msg": "Language is updated"}, status=200)
+        return JsonResponse({"error": list(serializer_profile.errors.values())[0][0]}, status=400)
+    except (User.DoesNotExist, Profile.DoesNotExist):
+        return JsonResponse({"error": "User does not exist"}, status=400)

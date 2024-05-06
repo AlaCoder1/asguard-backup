@@ -57,7 +57,8 @@
     "invalidPassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
     "passwordConfirmation":"Your password does not match",
     "ChampIncludeOnlyNumbers":"Champs can include only Numbers",
-    "formatMustBeLikeAdresseIP":"Format must be like adresse IP : X.X.X.X"
+    "formatMustBeLikeAdresseIP":"Format must be like adresse IP : X.X.X.X",
+    "minimumOneRange":"Minimum One Range"
 
   },
 
@@ -313,6 +314,42 @@
     "prefix":"Prefix",
     "healthCheckMilliseconds":"Health check milliseconds",
     "healthCheckTargetMilliseconds":"Health check target milliseconds"
+
+   },
+   "dhcpV4":{
+    "generalInformation":"General information",
+    "DHCPServer":"DHCP Server",
+    "enableDHCPServer":"Enable DHCP server on this interface",
+    "subnetAddress":"Subnet Address",
+    "subnetMask":"Subnet Mask",
+    "availableRange":"Available Range",
+    "dnsServer":"DNS server",
+    "gateway":"Gateway",
+    "domainName":"Domain name",
+    "rangeFrom":"Range From",
+    "rangeTo":"Range To",
+    "addRange":"Add Range",
+    "editRange":"Edit Range"
+
+   },
+   "clamaV":{
+    "virusScan":"Virus Scan",
+    "fullVirusScan":"Full virus scan",
+    "scanYourEntireDevice":"Scan your entire device",
+    "scanNow":"Scan now",
+    "successfullyScan":"Successfully Scan",
+    "error":"Error",
+    "scanResult":"Scan result",
+    "knownViruses":"known viruses",
+    "engineVersion":"engine version",
+    "scannedDirectories":"Scanned directories",
+    "scannedFiles":"Scanned files",
+    "infectedFiles":"Infected files",
+    "dataScanned":"Data scanned",
+    "dataRead":"Data Read",
+    "time":"Time",
+    "startDate":"Start date",
+    "endDate":"End date"
 
    },
 

@@ -1,9 +1,5 @@
 CONSTANT_COMP_LZO = "comp-lzo"
 CONSTANT_COMPRESS_MIGRATE = "compress migrate"
-CONSTANT_METHOD_PSK = "Mutual PSK"
-CONSTANT_METHOD_RSA = "Mutual RSA"
-CONSTANT_METHOD_PUBLIC_KEY = "Mutual Public key"
-
 PATH_DH_FILES = '/asguard/newdms/DH_files/dh_{}.pem'
 PATH_OPENVPN = '/etc/openvpn/'
 

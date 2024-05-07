@@ -1,13 +1,14 @@
 from django.http import JsonResponse
 from django.shortcuts import render
-from .functions import *
-from rest_framework.decorators import api_view, authentication_classes, parser_classes
+from backend.dashboard.functions import get_system_infomations, service_action, update_sevice_DB
+from rest_framework.decorators import api_view, authentication_classes
 from rest_framework.authentication import SessionAuthentication
+
 
 # API to set actions service
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
-def set_actions_service(request,service,action):
+def set_actions_service(request, service, action):
     if (request.method == 'PUT'):
         match action.lower():
             case "enable":
@@ -38,9 +39,9 @@ def set_actions_service(request,service,action):
             msg=aux
             status=400
            
-        return JsonResponse({"msg:": msg},status=status)    
+        return JsonResponse({"msg:": msg}, status=status)    
 
 
 def monitoring(request):
-    context=get_system_infomations()
+    get_system_infomations()
     return render(request, 'basedashboard.html')

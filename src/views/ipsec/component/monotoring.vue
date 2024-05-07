@@ -14,7 +14,7 @@
         <v-card class="mx-auto ml-3" height=" 400px" hover>
           <v-card-item>
             <div class="title-card-light mb-6">
-              Current Status of all Monitors
+              {{$t('monitoringVPN.currentstate')}}
             </div>
           </v-card-item>
           <v-card-text class="content-style">
@@ -28,7 +28,7 @@
                   class="monitor-status-card"
                 >
                   <v-card-text class="content-style">
-                    1F <br />Switch
+                    1F <br />{{$t('monitoringVPN.Switch')}}
                   </v-card-text>
                 </v-card>
               </v-col>
@@ -41,7 +41,7 @@
                   class="monitor-status-card"
                 >
                   <v-card-text class="content-style">
-                    Router <br />
+                    {{$t('monitoringVPN.Router')}} <br />
                     03
                   </v-card-text>
                 </v-card>
@@ -56,7 +56,7 @@
                 >
                   <v-card-text class="content-style">
                     2F <br />
-                    Switch
+                    {{$t('monitoringVPN.Switch')}}
                   </v-card-text>
                 </v-card>
               </v-col>
@@ -69,7 +69,7 @@
                   class="monitor-status-card"
                 >
                   <v-card-text class="content-style">
-                    Printer <br />03
+                    {{$t('monitoringVPN.Printer')}} <br />03
                   </v-card-text>
                 </v-card>
               </v-col>
@@ -83,7 +83,7 @@
                 >
                   <v-card-text class="content-style">
                     3F <br />
-                    Switch
+                    {{$t('monitoringVPN.Switch')}}
                   </v-card-text>
                 </v-card>
               </v-col>
@@ -96,7 +96,7 @@
                   class="monitor-status-card"
                 >
                   <v-card-text class="content-style">
-                    Printer <br />
+                    {{$t('monitoringVPN.Printer')}} <br />
                     2F
                   </v-card-text>
                 </v-card>
@@ -110,7 +110,7 @@
                   class="monitor-status-card"
                 >
                   <v-card-text class="content-style">
-                    Printer <br />
+                    {{$t('monitoringVPN.Printer')}} <br />
                     3F
                   </v-card-text>
                 </v-card>
@@ -122,7 +122,7 @@
       <v-col cols="4">
         <v-card class="mx-auto ml-3" height=" 400px" hover>
           <v-card-item>
-            <div class="title-card-light mb-6">Availablity</div>
+            <div class="title-card-light mb-6">{{$t('monitoringVPN.Availablity')}}</div>
           </v-card-item>
           <v-card-text class="content-style">
             <Apexchart
@@ -137,7 +137,7 @@
       <v-col cols="4">
         <v-card class="mx-auto ml-3" height=" 400px" hover>
           <v-card-item>
-            <div class="title-card-light mb-6">OUT traffic VPN</div>
+            <div class="title-card-light mb-6">{{$t('monitoringVPN.OUTtrafficVPN')}}</div>
           </v-card-item>
           <v-card-text class="content-style">
             <Apexchart
@@ -154,7 +154,7 @@
       <v-col cols="4">
         <v-card class="mx-auto ml-3" height=" 400px" hover>
           <v-card-item>
-            <div class="title-card-light mb-6">CPU & Memory VPN</div>
+            <div class="title-card-light mb-6">{{$t('monitoringVPN.CPU&MemoryVPN')}}</div>
           </v-card-item>
           <v-card-text class="content-style">
             <Apexchart
@@ -169,7 +169,7 @@
       <v-col cols="4">
         <v-card class="mx-auto ml-3" height=" 400px" hover>
           <v-card-item>
-            <div class="title-card-light mb-6">Packet Received VPN</div>
+            <div class="title-card-light mb-6">{{$t('monitoringVPN.PacketReceivedVPN')}}</div>
           </v-card-item>
           <v-card-text class="content-style">
             <Apexchart
@@ -184,7 +184,7 @@
       <v-col cols="4">
         <v-card class="mx-auto ml-3" height=" 400px" hover>
           <v-card-item>
-            <div class="title-card-light mb-6">Packet Sent VPN</div>
+            <div class="title-card-light mb-6">{{$t('monitoringVPN.PacketSentVPN')}}</div>
           </v-card-item>
           <v-card-text class="content-style">
             <Apexchart

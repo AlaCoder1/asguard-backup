@@ -10,7 +10,7 @@ class Command(BaseCommand):
         try:
             execute_command_without_arguments(["mkdir", "-p", PATH_RULESET_NAT_DIRECTORY])
             with open(PATH_NFTABLES_CONF, "w") as nftables_file:
-                nftables_file.write(f"include \"{PATH_RULESET_NFT}\";")
+                nftables_file.write(f"include \"{PATH_RULESET_NFT}\";\n")
             with open(PATH_RULESET_NFT, "w") as ruleset_file:
                 ruleset_file.write(INIT_NAT_FILE_CONTENT)
             execute_command_without_arguments(["sudo", "systemctl", "restart", "nftables"])

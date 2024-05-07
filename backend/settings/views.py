@@ -15,6 +15,7 @@ from .function import *
 from django.core import serializers
 from collections import defaultdict
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
+from rest_framework.permissions import IsAuthenticated
 # Create your views here.
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE generale settings",
@@ -419,3 +420,36 @@ def createSystem(request):
     
     
 ############################################   createNetwork ############################################################
+
+
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET SYSTEM LANGUAGE",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_language(request):
+    """Getting System language"""
+    system = System.objects.get()
+    return JsonResponse({"language": system.language})
+
+
+@swagger_auto_schema(
+        method='PUT', 
+        responses={200: 'Created', 400: 'Bad Request'}, 
+        operation_summary="API TO UPDATE SYSTEM LANGUAGE",
+        request_body=Schema(type=TYPE_OBJECT, required=['language'], properties={'language': Schema(type=TYPE_STRING)}))
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def change_language(request, id):
+    """Update profile language"""
+    try:
+        data = request.data
+        system = System.objects.get()
+        serializer_system = SystemSerializer(system, data=data, partial=True)
+        if serializer_system.is_valid():
+            serializer_system.save()
+            return JsonResponse({"msg": "Language is updated"}, status=200)
+        return JsonResponse({"error": list(serializer_system.errors.values())[0][0]}, status=400)
+    except (System.DoesNotExist):
+        return JsonResponse({"error": "No systm configuration exist"}, status=400)

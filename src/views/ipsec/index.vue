@@ -1,31 +1,23 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Site to Site VPN" active-menu="activeTab">
+    <base-layout :title="$t('subtitle.siteToSiteVpn')">
       <template #content>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">
-            <span style="color: #020202">{{ tab.label }}</span>
+            <span style="color: #020202">{{ $t(tab.label) }}</span>
           </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
           <v-window-item
-            v-for="tab in tabs"
-            :key="tab.id"
-            value="TUNNEL CONFIGURATION"
+            v-for="(tab, index) in tabs"
+            :key="index"
+            :value="tab.label"
           >
             <v-card>
-              <v-card-text><ipsecAdvancedParams :dataServer="dataServer" /></v-card-text>
-            </v-card>
-          </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="IPSEC PEERS">
-            <v-card>
-              <v-card-text><ConfigurationList /></v-card-text>
-            </v-card>
-          </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="MONITORING">
-            <v-card> 
-              <v-card-text><Monotoring /></v-card-text>
+              <v-card-text>
+                <component :is="tab.component" :dataServer="dataServer" />
+              </v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -51,15 +43,27 @@ export default {
   inject: ["emitter"],
   data() {
     return {
-      activeTab: "TUNNEL CONFIGURATION",
+      activeTab: "",
       tabs: [
-        { id: 1, label: "TUNNEL CONFIGURATION" },
-        { id: 2, label: "IPSEC PEERS" },
-        { id: 3, label: "MONITORING" },
+        {
+          id: 1,
+          label: "tabs.tunnelConfig",
+          component: ipsecAdvancedParams,
+        },
+        {
+          id: 2,
+          label: "tabs.ipsecPeers",
+          component: ConfigurationList,
+        },
+        {
+          id: 3,
+          label: "tabs.monitoring",
+          component: Monotoring,
+        },
       ],
       rowDataServers: [],
       serverInfo: null,
-      dataServer:null
+      dataServer: null,
     };
   },
   watch: {
@@ -69,25 +73,27 @@ export default {
     },
   },
   mounted: async function () {
-    let tab = localStorage.getItem("ipsec-tab") || "TUNNEL CONFIGURATION";
-    this.activeTab = tab;
+    this.emitter.on("reload-tabs", () => {
+      let tab = localStorage.getItem("ipsec-tab") || "tabs.tunnelConfig";
+
+      if (tab) this.activeTab = tab;
+    });
+
+    let ids = localStorage.getItem("ipsec-tab") || "tabs.tunnelConfig";
+    if (ids) this.activeTab = ids;
 
     this.serverInfo =
       document.getElementById("app").attributes["servers"].value;
     this.emitter.on("add-serverIpsec", () => {
-      this.activeTab = "TUNNEL CONFIGURATION";
+      this.activeTab = "tabs.tunnelConfig";
     });
     this.emitter.on("open-listingIpsec", () => {
-      this.activeTab = "IPSEC PEERS";
+      this.activeTab = "tabs.ipsecPeers";
     });
 
     this.rowDataServers =
       document.getElementById("app").attributes["servers"].value;
     let validJsonString = this.rowDataServers;
-    // .replace(/'/g, '"')
-    // .replace(/True/g, "true")
-    // .replace(/False/g, "false")
-    // .replace(/None/g, "null");
     let parsedArray = JSON.parse(validJsonString);
     this.rowDataServers = parsedArray;
   },

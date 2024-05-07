@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            Please Wait...
+            {{$t("requiredfield.attente")}}
             <v-progress-linear
               indeterminate
               color="white"
@@ -21,7 +21,7 @@
     </v-overlay>
     <v-row>
       <v-col cols="12">
-        <h4>List Servers</h4>
+        <h4>{{$t("Clientsopenvpn.ListServers")}}</h4>
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column">
           <ag-grid-vue
@@ -33,6 +33,7 @@
             :rowData="rowDataServers.value"
             :defaultColDef="defaultColDef"
             :rowGroupPanelShow="rowGroupPanelShow"
+            :overlayNoRowsTemplate="overlayTemplate"
             @grid-ready="onGridReady"
           />
           <div class="d-flex justify-end mt-3">
@@ -41,7 +42,7 @@
               outlined
               color="#213E9F"
               label-color="#ffffff"
-              label="Add Server"
+              :label="$t('button.addServer')"
               :isLarge="true"
               type="submit"
               class="ml-2"
@@ -53,7 +54,7 @@
     </v-row>
     <v-row>
       <v-col cols="12">
-        <h4>List Clients</h4>
+        <h4>{{$t("Clientsopenvpn.ListClients")}}</h4>
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column">
           <ag-grid-vue
@@ -65,6 +66,7 @@
             :rowData="rowDataClients.value"
             :defaultColDef="defaultColDef"
             :rowGroupPanelShow="rowGroupPanelShow"
+            :overlayNoRowsTemplate="overlayTemplate"
           />
           <div class="d-flex justify-end mt-3">
             <VButton
@@ -72,7 +74,7 @@
               outlined
               color="#213E9F"
               label-color="#ffffff"
-              label="Add Client"
+              :label="$t('button.addClient')"
               :isLarge="true"
               type="submit"
               class="ml-2"
@@ -85,19 +87,19 @@
 
       <v-dialog v-model="dialogDelete" max-width="500px">
         <v-card>
-          <v-card-title class="headline">Delete Confirmation</v-card-title>
+          <v-card-title class="headline">{{$t("delete.DeleteConfirmation")}}</v-card-title>
           <v-card-text
-            >Are you sure you want to delete this
-            {{ isDeletedType === "server" ? "Server" : "Client" }}
+            >{{$t("delete.Delete")}}
+            {{ isDeletedType === "server" ? $t('agGrid.server') : "Client" }}
             ?</v-card-text
           >
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="blue darken-1" text @click="dialogDelete = false"
-              >Cancel</v-btn
+              >{{$t("buttons.cancel")}}</v-btn
             >
             <v-btn color="blue darken-1" text @click="confirmDelete"
-              >Delete</v-btn
+              >{{$t("buttons.delete")}}</v-btn
             >
           </v-card-actions>
         </v-card>
@@ -122,10 +124,11 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref,computed } from "vue";
 import { inject } from "vue";
 import CertStatusRenderVue from "./agGridCustomRender/CertStatusRenderVue.vue";
 import "ag-grid-community/styles/ag-grid.css";
@@ -143,7 +146,9 @@ export default {
     ModalListClient,
   },
   setup() {
+    const { t } = useI18n();
     const emitter = inject("emitter");
+    const overlayTemplate = ref("");
     const dialogDelete = ref(false);
     const isDeletedType = ref("");
     const rowID = ref("");
@@ -159,10 +164,39 @@ export default {
       isModalOpenListView: false,
       editRow: {},
     });
+    const ServerNam = computed(() => {
+      return t("PageGeneral.ServerName");
+    });
+    const Protocol = computed(() => {
+      return t("Clientsopenvpn.Protocol/Port");
+    });
+    const Protocol1 = computed(() => {
+      return t("Clientsopenvpn.Protocol/Port");
+    });
+    const NetworkTunnel = computed(() => {
+      return t("Clientsopenvpn.NetworkTunnel");
+    });
+    const CertificatStatus = computed(() => {
+      return t("Clientsopenvpn.CertificatStatus");
+    });
+    const CertificatStatus1 = computed(() => {
+      return t("Clientsopenvpn.CertificatStatus");
+    });
+    const Clientname = computed(() => {
+      return t("openvpn.Clientname");
+    });
 
-    const columnServers = [
+    const server = computed(() => {
+      return t("Clientsopenvpn.Server");
+    });
+
+
+
+
+
+    const columnServers = ref([
       {
-        headerName: "Server Name",
+        headerName: ServerNam,
         field: "name",
 
         sortable: true,
@@ -170,14 +204,14 @@ export default {
         checkboxSelection: true,
       },
       {
-        headerName: "Protocole / Port",
+        headerName: Protocol,
 
         cellRenderer: formatedProtocServer,
         sortable: true,
         filter: true,
       },
       {
-        headerName: "Network Tunnel",
+        headerName: NetworkTunnel,
         field: "ipv4_tunnel_network",
         sortable: true,
         filter: true,
@@ -189,7 +223,7 @@ export default {
         filter: true,
       },
       {
-        headerName: "Certificat status",
+        headerName: CertificatStatus,
         field: "cert_status",
         sortable: true,
         filter: true,
@@ -209,10 +243,10 @@ export default {
         sortable: true,
         filter: true,
       },
-    ];
-    const columnClients = [
+    ]);
+    const columnClients = ref([
       {
-        headerName: "Client Name",
+        headerName: Clientname,
         field: "name",
         sortable: true,
         autoHeight: true,
@@ -220,13 +254,13 @@ export default {
         checkboxSelection: true,
       },
       {
-        headerName: "Protocole / Port",
+        headerName: Protocol1,
         cellRenderer: formatedProtocClient,
         sortable: true,
         filter: true,
       },
       {
-        headerName: "Server",
+        headerName: server,
         autoHeight: true,
         cellRenderer: formatedServer,
         sortable: true,
@@ -239,7 +273,7 @@ export default {
         filter: true,
       },
       {
-        headerName: "Certificat status",
+        headerName: CertificatStatus1,
         field: "cert_status",
         sortable: true,
         filter: true,
@@ -259,7 +293,7 @@ export default {
         sortable: true,
         filter: true,
       },
-    ];
+    ]);
     const rowDataServers = reactive({});
     const rowDataClients = reactive({});
     const gridApi = ref(null);
@@ -671,6 +705,14 @@ export default {
       emitter.on("closeModalClient", () => {
         state.isModalOpenListView = false;
       });
+      overlayTemplate.value = `
+      <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+     </svg></span>`;
       emitter.on("closeModalCreateClient", () => {
         state.isModalOpen = false;
       });
@@ -759,6 +801,7 @@ export default {
       rowID,
       isDeletedType,
       dialogDelete,
+      overlayTemplate,
       loading,
       isLoadingDialogue,
       columnServers,

@@ -4,12 +4,11 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5"
-              >{{
-                modalMode === "create"
-                  ? "Create New Proxy User"
-                  : "Edit User Proxy "
-              }}
+            <span class="text-h5" v-if="modalMode === 'create'">
+              {{ $t("squid.createNewProxyUser") }}</span
+            >
+            <span class="text-h5" v-if="modalMode === 'edit'">
+              {{ $t("squid.editUserProxy") }}
             </span>
           </v-card-title>
           <v-card-text>
@@ -31,7 +30,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Username"
+                    :label="$t('form.username')"
                     v-model="state.formData.userName"
                   ></v-text-field>
                   <p
@@ -45,7 +44,7 @@
               <v-row>
                 <v-col cols="6">
                   <v-text-field
-                    label="Password"
+                    :label="$t('form.password')"
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
@@ -59,7 +58,7 @@
 
                 <v-col cols="6">
                   <v-text-field
-                    label="Confirm password"
+                    :label="$t('form.confirmPassword')"
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
@@ -85,7 +84,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Close</span>
+              <span class="text-white pr-3 pl-3">{{
+                $t("buttons.close")
+              }}</span>
             </v-btn>
 
             <v-btn
@@ -99,9 +100,12 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{
-                modalMode === "create" ? "Create" : "Edit"
-              }}</span>
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+                {{ $t("buttons.create") }}</span
+              >
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -119,6 +123,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import {
@@ -153,6 +158,7 @@ export default {
     },
   },
   setup(props) {
+    const { t } = useI18n();
     const { isOpen, editRow, modalMode } = toRefs(props);
     const emitter = inject("emitter");
     const state = reactive({
@@ -167,42 +173,55 @@ export default {
       color: "",
       snackbar: false,
     });
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const champInclude = computed(() => {
+      return t("champs.indication");
+    });
+    const validAddress = computed(() => {
+      return t("champs.validAddress");
+    });
+    const confirmation = computed(() => {
+      return t("errors.passwordConfirmation");
+    });
+
     const rules = computed(() => {
       return {
         formData: {
           password: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(() => modalMode.value === "create")
             ),
           },
           confirm_password: {
             sameAsPassword: helpers.withMessage(
-              "Your password does not match",
+              confirmation,
 
               sameAs(state.formData.password)
             ), // can be a reference to a field or computed property
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(() => modalMode.value === "create")
             ),
           },
           userName: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(() => modalMode.value === "create")
             ),
             isValiduserName: helpers.withMessage(
-              `Champs can include only letters in lowerCase & Numbers & underscores & hyphens without space.`,
+              champInclude,
               helpers.regex(/^[^A-Z\s]+$/)
             ),
           },
           email: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(() => modalMode.value === "create")
             ),
-            email,
+            email: helpers.withMessage(validAddress, email),
           },
         },
       };

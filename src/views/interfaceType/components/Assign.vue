@@ -16,6 +16,7 @@
             :pagination="true"
             :paginationPageSize="5"
             :overlayNoRowsTemplate="overlayTemplate"
+            :localeText="paginationLocalization"
           />
         </div>
         <div class="d-flex justify-end mt-3">
@@ -87,6 +88,9 @@ export default {
     const { t } = useI18n();
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
 
     const state = reactive({
       deleteDialog: false,
@@ -284,6 +288,7 @@ export default {
       columnAssign,
       rowDataAssign,
       defaultColDef,
+      paginationLocalization,
       emitter,
       actionCellRendererKeys,
       openModalAdd,

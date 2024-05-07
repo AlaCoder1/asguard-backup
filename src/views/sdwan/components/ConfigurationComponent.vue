@@ -10,8 +10,12 @@ import SdwanRules from "./SdwanRules.vue";
 export default {
   components: {
     ListArea,
-    SdwanRules
-
+    SdwanRules,
   },
 };
 </script>
+<style>
+.ag-paging-row-summary-panel {
+  display: none;
+}
+</style>

@@ -154,7 +154,8 @@
     "distinguishedname":"Distinguished name",
     "ListRevocation":"List Revocation per authority",
     "Listauthoriy":"list of certification authorities",
-    "certificat":"certificate"
+    "certificat":"certificate",
+    "agGridOf":"of"
 
   },
 
@@ -332,6 +333,57 @@
     "editRange":"Edit Range"
 
    },
+   "squid":{
+    "restart":"Please restart the service for the modifications to take effect.",
+    "proxyPort":"Proxy port",
+    "etesVouSur":"Are you sure you want to",
+    "thisRule":"this rule ?",
+    "squidAuthentification":"Squid authentification",
+    "disable":"Disable",
+    "addUser":"Add User",
+    "createNewProxyUser":"Create New Proxy User",
+    "editUserProxy":"Edit User Proxy",
+    "search":"Search",
+    "routageType":"Routage Type",
+    "value":"Value",
+    "allowedByAuth":"Allowed by auth",
+    "start":"Start",
+    "end":"End",
+    "status":"Status",
+    "allowedAuthentification":"Allowed by authentification",
+    "activateAllowed":"Activate Allowed by authentification",
+    "activateRule":"Activate rule",
+    "byTime":"By time",
+    "blockTime":"block by time",
+    "days":"Days",
+    "from":"From",
+    "to":"To",
+    "aclList":"ACL List",
+    "listName":"List name",
+    "noAdult":"No Adult For Instance",
+    "changeGroup":"Change Status",
+    "editBlackList":"Edit Black List",
+    "aclName":"Acl Name",
+    "pleaseType":"Please type...",
+    "selectItem":"Select Item"
+    
+
+  },
+  "Start":"Start",
+  "Stop":"Stop",
+  "Restart":"Restart",
+  "Disable":"Disable",
+  "Enable":"Enable",
+  "Blocked":"Blocked",
+  "Unblocked":"Unblocked",
+
+  "Monday": "Monday" ,
+  "Tuesday": "Tuesday" ,
+  "Wednesday": "Wednesday" ,
+  "Thursday": "Thursday" ,
+  "Friday": "Friday" ,
+  "Saturday": "Saturday" ,
+  "Sunday": "Sunday" ,
    "clamaV":{
     "virusScan":"Virus Scan",
     "fullVirusScan":"Full virus scan",
@@ -357,7 +409,8 @@
     "indication":"champs can include only letters & Numbers & underscores & hyphens without space.",
     "champNumber":"champs lifeTime can include only Numbers.",
     "champletter":"champs state can include only letters.",
-    "champplaceletter":"champs place can include only letters."
+    "champplaceletter":"champs place can include only letters.",
+    "validAddress":"Please enter a valid email address."
 
   },
 

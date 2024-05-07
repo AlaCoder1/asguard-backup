@@ -51,7 +51,7 @@
 
 
   "errors":{
-    "valueRequired":"champs est obligatoire",
+    "valueRequired":"Champs est obligatoire",
     "invalidPassword":"Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation":"Votre mot de passe ne correspond pas",
     "ChampIncludeOnlyNumbers":"Champ ne peut inclure que des numéros",
@@ -85,7 +85,7 @@
     "diagnostics":"Diagnostiques",
     "listOfInterface":"Liste des interfaces",
     "typeOfInterface":"Type des interfaces",
-    "rules":"Rules",
+    "rules":"Règles",
     "nat":"Nat",
     "advancedSettings":"Paramètres avancés",
     "siteToSiteVpn":"Site à site VPN",
@@ -152,7 +152,8 @@
     "distinguishedname":"Nom Distingué",
     "ListRevocation":"Liste de révocation par autorité",
     "Listauthoriy":"liste des autorités de certification",
-    "certificat":"certificat"
+    "certificat":"certificat",
+    "agGridOf":"de"
     
     
 
@@ -352,11 +353,64 @@
 
    },
 
+   "squid":{
+     "restart":"Veuillez redémarrer le service pour que les modifications soient prises en compte.",
+     "proxyPort":"Port du proxy",
+     "etesVouSur":"Êtes-vous sûr de vouloir",
+     "thisRule":"cette règle ?",
+     "squidAuthentification":"Authentification de Squid",
+     "disable":"Désactiver",
+     "addUser":"Ajouter un utilisateur",
+     "createNewProxyUser":"Créer un nouvel utilisateur proxy",
+     "editUserProxy":"Modifier le proxy utilisateur",
+     "search":"Recherche",
+     "routageType":"Type de routage",
+     "value":"Valeur",
+     "allowedByAuth":"Autorisé par auth",
+     "start":"Début",
+     "end":"Fin",
+     "status":"Statut",
+     "allowedAuthentification":"Autorisé par authentification",
+     "activateAllowed":"Activation Autorisée par authentification",
+     "activateRule":"Activer la règle",
+     "byTime":"Par période",
+     "blockTime":"bloc par temps",
+     "days":"Jours",
+     "from":"de",
+     "to":"à",
+     "aclList":"Liste ACL",
+     "listName":"Nom de la liste",
+     "noAdult":"Pas d'adulte pour l'instant",
+     "changeGroup":"Modifier Statut",
+     "editBlackList":"Modifier la liste Noire",
+     "aclName":"Nom d'Acl",
+     "pleaseType":"Veuillez taper...",
+     "selectItem":"Sélectionner un élément"
+   
+    
+   },
+   "Start":"Démarrer",
+   "Stop":"Arrêter",
+   "Restart":"Redémarrer",
+   "Disable":"Désactiver",
+   "Enable":"Activer",
+   "Blocked":"Bloqué",
+   "Unblocked":"Débloqué",
+
+  "Monday": "Lundi" ,
+  "Tuesday": "Mardi" ,
+  "Wednesday": "Mercredi" ,
+  "Thursday": "Jeudi" ,
+  "Friday": "Vendredi" ,
+  "Saturday": "Samedi" ,
+  "Sunday": "Dimanche" ,
+
   "champs":{
     "indication":"champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",
     "champNumber":"champs lifeTime ne peuvent inclure que des nombres.",
     "champletter":"champs d'etat ne peut inclure que des lettres.",
-    "champplaceletter":"champs Lieu peut inclure que des lettres."
+    "champplaceletter":"champs Lieu peut inclure que des lettres.",
+    "validAddress":"Veuillez saisir une adresse e-mail valide."
 
   },
 

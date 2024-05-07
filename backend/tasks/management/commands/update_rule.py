@@ -41,44 +41,13 @@ class Command(BaseCommand):
             print({"interface":interface})
             print({"description":description})
             print({"rule":rule})
-            print(type(source_port))
-            
-            
-            missing_arguments = []
-            if rule is None:
-                missing_arguments.append('--rule')
-            if type_rule is None:
-                missing_arguments.append('--type_rule')
-            if policy is None:
-                missing_arguments.append('--policy')
-            if protocol is None:
-                missing_arguments.append('--protocol')
-            if source_address is None:
-                missing_arguments.append('--source_address')
-            if source_port is None:
-                missing_arguments.append('--source_port')
-            if destination_address is None:
-                missing_arguments.append('--destination_address')
-            if destination_port is None:
-                missing_arguments.append('--destination_port')
-            if interface is None:
-                missing_arguments.append('--interface')
-            if description is None:
-                missing_arguments.append('--description')
-                
             if source_address.lower() == 'all':
                 source_address = None
             if destination_address.lower() == 'all':
                 destination_address = None
-                
-            if missing_arguments:
-                for arg in missing_arguments:
-                    print(arg)
-                if source_port is not None and source_port.lower() == 'all':
-                    source_port = None
-                if destination_port is not None and destination_port.lower() == 'all':
-                    destination_port = None
+            if source_port.lower() == 'all':
                 source_port = None
+            if destination_port.lower() == 'all':
                 destination_port = None
             interface_id = Interface.objects.get(ifname=interface)
             print({"interface_id":interface_id.id})

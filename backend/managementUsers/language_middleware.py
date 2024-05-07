@@ -6,7 +6,6 @@ from backend.managementUsers.models import Profile
 class SetLanguageMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-        print("get_response= ", get_response)
 
     def __call__(self, request):
         try:
@@ -18,6 +17,5 @@ class SetLanguageMiddleware:
         activate(user_language)
 
         response = self.get_response(request)
-        # print("response= ", response)
 
         return response

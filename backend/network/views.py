@@ -101,10 +101,10 @@ def conf(request,name_interface):
                             if multiWan_aux:
                                 for i in allGatewayInterface:
                                     list_metric.append(i.metric)
-                                metric=differentMetric(list_metric)
+                                metric=different_metric(list_metric)
                             cmdgw4=return_gateway_system(uuid,addrgw4,far_aux,multiWan_aux,metric)
                             ipv4_gw_interface=True
-                            addGatewayInterfaceDB(GatewayObject,name_interface,metric,ipv4_gw_interface)
+                            add_gateway_interface_db(GatewayObject,name_interface,metric,ipv4_gw_interface)
                             #call function to convert address to static
                             commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,uuid,ip_address4,netmask4,cmdgw4)
                             jsonIPV4={
@@ -203,10 +203,10 @@ def conf(request,name_interface):
                                 if multiWan_aux:
                                     for i in allGatewayInterface:
                                         list_metric.append(i.metric)
-                                    metric=differentMetric(list_metric)
+                                    metric=different_metric(list_metric)
                                 cmdgw6=return_gateway6_system(uuid,addrgw6,far_aux6,multiWan_aux6,metric)
                                 ipv4_gw_interface=False
-                                addGatewayInterfaceDB(GatewayObject6,name_interface,metric,ipv4_gw_interface)
+                                add_gateway_interface_db(GatewayObject6,name_interface,metric,ipv4_gw_interface)
                                 #call function to convert address to static
                                 commandes,output_service,cmd_final_ipv6=update_conn_static_IPV6(output_service,ifname,uuid,ip_address6,netmask6,cmdgw6)
                                 jsonIPV6={

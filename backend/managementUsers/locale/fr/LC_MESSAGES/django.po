@@ -1,0 +1,103 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-08 15:06+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: backend/managementUsers/views.py:28
+msgid "User"
+msgstr "Utilisateur"
+
+#: backend/managementUsers/views.py:29
+msgid "username"
+msgstr "nom d'utilisateur"
+
+#: backend/managementUsers/views.py:30
+msgid "password"
+msgstr "mot de passe"
+
+#: backend/managementUsers/views.py:31
+msgid "permission"
+msgstr "permission"
+
+#: backend/managementUsers/views.py:32
+msgid "groupname"
+msgstr "nom du group"
+
+#: backend/managementUsers/views.py:33
+msgid "directory server"
+msgstr "serveur d'annuaire"
+
+#: backend/managementUsers/views.py:34
+msgid "with their email in directory server"
+msgstr "avec son email dans le serveur d'annuaire"
+
+#: backend/managementUsers/views.py:35
+msgid "with simple System email"
+msgstr "avec simple email de system"
+
+#: backend/managementUsers/views.py:36
+msgid "or"
+msgstr "ou"
+
+#: backend/managementUsers/views.py:37
+msgid "and"
+msgstr "et"
+
+#: backend/managementUsers/views.py:39
+msgid "is created"
+msgstr "est créé"
+
+#: backend/managementUsers/views.py:40
+msgid "is deleted"
+msgstr "est supprimé"
+
+#: backend/managementUsers/views.py:41
+msgid "is updated"
+msgstr "est modifié"
+
+#: backend/managementUsers/views.py:43
+msgid "Error in creating"
+msgstr "Erreur lors de la création de"
+
+#: backend/managementUsers/views.py:44
+msgid "Error in deleting"
+msgstr "Erreur lors de la suppression de"
+
+#: backend/managementUsers/views.py:45
+msgid "Error in updating"
+msgstr "Erreur lors de la modification de"
+
+#: backend/managementUsers/views.py:46
+msgid "already exist"
+msgstr "existe déjà"
+
+#: backend/managementUsers/views.py:47
+msgid "does not exist"
+msgstr "n'existe pas"
+
+#: backend/managementUsers/views.py:48
+msgid "Invalid credentials"
+msgstr "les informations d'identification invalides"
+
+#: backend/managementUsers/views.py:49
+msgid "Invalid password"
+msgstr "Mot de passe invalide"
+
+#: backend/managementUsers/views.py:50
+msgid "Error connecting to directory server"
+msgstr "Erreur lors de la connection au ser d'annuaire"

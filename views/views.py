@@ -9,7 +9,7 @@ from backend.LdapServer.list_Remote_servers import get_list_ad_servers
 from backend.managementGroup.models import Group
 from backend.managementUsers.models import User
 from backend.managementServers.models import Type, Server
-from backend.managementUsers.views import getAllUsers
+from backend.managementUsers.views import get_all_users
 from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat
 from backend.network.models import GenericConfig, IP4Config, IP6Config, Interface 
 from backend.routing.list_routing import get_list_all_gateway, get_list_all_routing

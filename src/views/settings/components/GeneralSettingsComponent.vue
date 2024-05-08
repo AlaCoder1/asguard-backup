@@ -3,35 +3,35 @@
         <v-row>
             <v-col cols="6">
                 <div class="ml-3 mr-3">
-                    <h3>GENERAL PARAMETERS</h3>
+                    <h3>{{$t("settings.GENERALPARAMETERS")}}</h3>
                     <v-divider class="mt-1"></v-divider>
-                    <h3>System</h3>
+                    <h3>{{$t("settings.System")}}</h3>
                     <v-divider class="mt-1"></v-divider>
-                    <v-text-field label="Host name" style="background-color: #eff4f6; margin-left: 2px;"
+                    <v-text-field :label="$t('settings.Hostname')" style="background-color: #eff4f6; margin-left: 2px;"
                         class="mt-2"></v-text-field>
-                    <v-text-field label="Domain" style="background-color: #eff4f6; margin-left: 2px;"></v-text-field>
-                    <v-select label="Time zone" :items="timeZones"
+                    <v-text-field :label="$t('settings.Domain')" style="background-color: #eff4f6; margin-left: 2px;"></v-text-field>
+                    <v-select :label="$t('settings.Timezone')" :items="timeZones"
                         style="background-color: #eff4f6; margin-left: 2px;"></v-select>
-                    <h3 class="mt-3">Network</h3>
+                    <h3 class="mt-3">{{$t("settings.Network")}}</h3>
                     <v-divider class="mt-1"></v-divider>
                     <v-row class="mt-2">
                         <v-col cols="6">
                         </v-col>
                         <v-col cols="6">
                             <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer">
-                            <label for="dnsServer">Prefer to use IPv4 even if IPv6 is available</label>
+                            <label for="dnsServer">{{$t("settings.PreferIPv4")}}</label>
                         </v-col>
                     </v-row>
                     <v-row class="mt-2">
                         <v-col cols="4">
-                            <h4 class="text-color">DNS Server</h4>
+                            <h4 class="text-color">{{$t("settings.DNSServer")}}</h4>
                             <v-text-field style="background-color: #eff4f6; margin-left: 2px;">
                             </v-text-field>
                             <v-text-field style="background-color: #eff4f6; margin-left: 2px; margin-bottom: 2px;">
                             </v-text-field>
                         </v-col>
                         <v-col cols="6">
-                            <h4 class="text-color">Use the gateway</h4>
+                            <h4 class="text-color">{{$t("settings.Usethegateway")}}</h4>
                             <v-select style="background-color: #eff4f6; margin-left: 2px; margin-bottom: 2px;"></v-select>
                             <v-select style="background-color: #eff4f6; margin-left: 2px; margin-bottom: 2px;"></v-select>
                         </v-col>
@@ -50,7 +50,7 @@
                             <div style="margin-top: 30px !important;">
                                 <v-btn class="btn btn-primary button-color" color="primary" text>
                                     <i class="fas fa-plus"></i>
-                                    <span class="ml-2">Add</span>
+                                    <span class="ml-2">{{$t("buttons.Add")}}</span>
                                 </v-btn>
                             </div>
                         </v-col>
@@ -58,54 +58,53 @@
                     <v-row class="mt-2">
                         <v-col cols="6">
                             <p>
-                                Options du serveur DNS
+                                {{$t("settings.DNSServerOptions")}}
                             </p>
                         </v-col>
                         <v-col cols="6">
                             <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer">
-                            <label for="dnsServer">Allow remplacement of DNS servers with those obtained by DHCP/PP on the
-                                WAN</label>
+                            <label for="dnsServer">{{$t("settings.allowreplacement")}}</label>
                             <br />
                             <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer">
-                            <label for="dnsServer">Do not use the local DNS service as a nameserver</label>
+                            <label for="dnsServer">{{$t("settings.dnsservice")}}</label>
                         </v-col>
                     </v-row>
                     <v-row>
                         <v-col cols="6">
-                            <p>Gateway Failover</p>
+                            <p>{{$t("settings.GatewayFailover")}}</p>
                         </v-col>
                         <v-col cols="6">
-                            <v-select label="Exclude interfaces"
+                            <v-select :label="$t('settings.Excludeinterfaces')"
                                 style="background-color: #eff4f6; margin-bottom: 2px;"></v-select>
                             <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer" class="mt-2">
-                            <label for="dnsServer">Allow default gateway failover</label>
+                            <label for="dnsServer">{{$t("settings.Allowgatewayfailover")}}</label>
                         </v-col>
                     </v-row>
                     <v-row class="d-flex mb-2 text-center justify-end" style="height: 100%;">
                         <v-btn large rounded color="primary">
-                            <span class="mr-2 c-o">Save</span>
+                            <span class="mr-2 c-o">{{$t("buttons.save")}}</span>
                         </v-btn>
                     </v-row>
                 </div>
             </v-col>
             <v-col cols="6">
                 <div class="ml-3 mr-3">
-                    <h3>SERVEURS RESEAU</h3>
+                    <h3>{{$t("settings.NETWORKSERVERS")}}</h3>
                     <v-divider class="mt-1"></v-divider>
-                    <h3>Local Logging Options</h3>
+                    <h3>{{$t("settings.LocalLogging")}}</h3>
                     <v-divider class="mt-1"></v-divider>
                     <v-row class="mt-2">
                         <v-col cols="6">
-                            <p>Circular logs</p>
+                            <p>{{$t("settings.Circularlogs")}}</p>
                         </v-col>
                         <v-col cols="6">
                             <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer">
-                            <label for="dnsServer">Disable</label>
+                            <label for="dnsServer">{{$t("openvpn.Disable")}}</label>
                         </v-col>
                     </v-row>
                     <v-row>
                         <v-col cols="6">
-                            <p>Size of log files (Bytes)</p>
+                            <p>{{$t("settings.Sizeoflogfiles")}}</p>
                         </v-col>
                         <v-col cols="6">
                             <v-text-field style="background-color: #eff4f6; margin-left: 2px;"></v-text-field>
@@ -113,24 +112,23 @@
                     </v-row>
                     <v-row>
                         <v-col cols="6">
-                            <p>Log firewall default blocks</p>
+                            <p>{{$t("settings.Logfirewalldefault")}}</p>
                         </v-col>
                         <v-col cols="6">
                             <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer" class="mb-3">
-                            <label for="dnsServer">Log packets matching the default blocking rules put in the
-                                ruleset</label>
+                            <label for="dnsServer">{{$t("settings.ruleset")}}</label>
                             <br />
                             <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer" class="mb-3">
-                            <label for="dnsServer">Log packets that match the ruleset's default forwarding rules</label>
+                            <label for="dnsServer">{{$t("settings.forwardingrules")}}</label>
                             <br />
                             <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer" class="mb-3">
-                            <label for="dnsServer">Log packets blocked by 'Block private networks' rules</label>
+                            <label for="dnsServer">{{$t("settings.logpackets")}}</label>
                             <br />
                         </v-col>
                     </v-row>
                     <v-row class="mt-2">
                         <v-col cols="6">
-                            <p>Web server process errors</p>
+                            <p>{{$t("settings.Webserverprocesserrors")}}</p>
                         </v-col>
                         <v-col cols="6">
                             <input type="checkbox" id="dnsServer" name="dnsServer" value="dnsServer">
@@ -139,11 +137,11 @@
                     </v-row>
                     <v-row style="height: 100%;">
                         <v-col cols="6">
-                            <p>Event logs</p>
+                            <p>{{$t("settings.Eventlogs")}}</p>
                         </v-col>
                         <v-col cols="6">
                             <button class="reset-style" @click="handleReset">
-                                <span class="mr-2 c-o">Reset</span>
+                                <span class="mr-2 c-o">{{$t("settings.Reset")}}</span>
                             </button>
                         </v-col>
                     </v-row>
@@ -151,13 +149,13 @@
                         <span class="justify-start">
                             <i class="fas fa-check-circle "></i>
                         </span>
-                        <span class="c-o ml-3">Log files have been reset.</span>
+                        <span class="c-o ml-3">{{$t("settings.Logfilesreset")}}</span>
                         <span class="ml-16" style="margin-top: 20px !important;">
                             <i class="fas fa-times justify-end cursor" @click="handleRemove"></i></span>
                     </v-alert>
                     <v-row class="d-flex mb-2 mt-2 mr-2 text-center justify-end" style="height: 100%;">
                         <v-btn large rounded color="primary">
-                            <span class="mr-2 c-o">Save</span>
+                            <span class="mr-2 c-o">{{$t("buttons.save")}}</span>
                         </v-btn>
                     </v-row>
                 </div>

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-08 00:52+0000\n"
+"POT-Creation-Date: 2024-05-08 18:26+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,23 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
-#: backend/clamav/views.py:14
-msgid "Config File updated successfully"
-msgstr ""
+
+#: backend/clamav/views.py:16
+msgid "Config file"
+msgstr "Fichier de Config"
+
+#: backend/clamav/views.py:17
+msgid "Freshclam"
+msgstr "Freshclam"
+
+#: backend/clamav/views.py:19
+msgid "is updated"
+msgstr "est modifié"
+
+#: backend/clamav/views.py:21
+msgid "Error in updating"
+msgstr "Erreur lors de la modification de"
+
+#: backend/clamav/views.py:22
+msgid "Error in scaning"
+msgstr "Erreur lors de la scanning"

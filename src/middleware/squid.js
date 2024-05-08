@@ -13,6 +13,10 @@ import { createI18n } from "vue-i18n";
 import enJson from "../locales/en.json";
 import frJson from "../locales/fr.json";
 
+import "dayjs/locale/fr";
+import fr from "element-plus/es/locale/lang/fr";
+import en from "element-plus/es/locale/lang/en";
+
 const app = createApp(squid);
 const vuetify = createVuetify({
   components,
@@ -41,5 +45,11 @@ function hrefPath() {
 
 hrefPath();
 startTimer();
-
-app.use(ElementPlus).use(store).use(i18n).use(vuetify).mount("#app");
+app
+  .use(ElementPlus, {
+    locale: langLocle ? (langLocle[0].lang === "Fr" ? fr : en) : en,
+  })
+  .use(store)
+  .use(i18n)
+  .use(vuetify)
+  .mount("#app");

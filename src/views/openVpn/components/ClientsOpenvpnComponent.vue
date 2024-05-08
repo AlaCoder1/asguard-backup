@@ -1,17 +1,18 @@
++
 <template>
   <div class="mt-3">
     <v-row>
       <v-col align-self="center" cols="6">
         <div class="ml-3 mr-3">
-          <h4>General information</h4>
+          <h4>{{ $t("openvpn.Generalinformation") }}</h4>
           <v-divider class="mt-2"></v-divider>
           <v-row class="mt-2">
             <v-col align-self="center" cols="4">
-              <label>Client name*</label>
+              <label>{{ $t("openvpn.Clientname") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
-                label="Client name"
+                :label="$t('openvpn.Clientname')"
                 v-model="state.clientName"
               ></v-text-field>
               <p
@@ -31,11 +32,11 @@
               ></v-text-field>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>Server mode*</label>
+              <label>{{ $t("openvpn.Servermode") }}*</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-select
-                label="Server mode"
+                :label="$t('openvpn.Servermode')"
                 v-model="state.server_mode"
                 :items="serverMode"
                 item-title="name"
@@ -50,11 +51,11 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>Protocol*</label>
+              <label>{{ $t("PageIpsec.Protocol") }}*</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-select
-                label="Protocol"
+                :label="$t('PageIpsec.Protocol')"
                 v-model="state.protocol"
                 :items="protocols"
                 item-title="name"
@@ -66,11 +67,11 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>Device Mode*</label>
+              <label>{{ $t("openvpn.DeviceMode") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
-                label="Device Mode"
+                :label="$t('openvpn.DeviceMode')"
                 v-model="state.device_mode"
                 :items="deviceMode"
                 item-title="name"
@@ -99,19 +100,21 @@
               ></v-select>
             </v-col> -->
             <v-col align-self="center" cols="4">
-              <label>Retry DNS resolution</label>
+              <label>{{ $t("openvpn.RetryDNSresolution") }}</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <input type="checkbox" v-model="state.resolv_retry" />
-              <label class="ml-2">Infinitely resolve remote server</label>
+              <label class="ml-2">{{
+                $t("openvpn.Infinitelyresolveremoteserver")
+              }}</label>
             </v-col>
 
             <v-col align-self="center" cols="4">
-              <label>Proxy host or address</label>
+              <label>{{ $t("openvpn.Proxyhostoraddress") }}</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-text-field
-                label="Proxy host or address"
+                :label="$t('openvpn.Proxyhostoraddress')"
                 v-model="state.proxy_host"
               ></v-text-field>
               <p
@@ -122,11 +125,11 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>Proxy port</label>
+              <label>{{ $t("openvpn.Proxyport") }}</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-text-field
-                label="Proxy port"
+                :label="$t('openvpn.Proxyport')"
                 v-model="state.proxy_port"
               ></v-text-field>
               <p
@@ -138,11 +141,11 @@
             </v-col>
 
             <v-col align-self="center" cols="4" class="mt-1">
-              <label>Proxy authentication extra options</label>
+              <label>{{ $t("openvpn.Proxyauthenticationextraoptions") }}</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
-                label="Proxy authentication extra options"
+                :label="$t('openvpn.Proxyauthenticationextraoptions')"
                 v-model="state.proxyAuthenticationExtraOptions"
                 :items="proxyAuthenticationExtraOptionsList"
                 item-title="name"
@@ -157,7 +160,7 @@
               <v-col align-self="center" cols="4"> <label> </label></v-col>
               <v-col align-self="center" cols="8" class="mb-n6">
                 <v-text-field
-                  label="Username"
+                  :label="$t('form.username')"
                   v-model="state.username"
                 ></v-text-field>
                 <p
@@ -177,7 +180,7 @@
                   @click:append-inner="state.showpassword = !state.showpassword"
                   :type="state.showpassword ? 'text' : 'password'"
                   type="password"
-                  label="Password"
+                  :label="$t('form.password')"
                   v-model="state.password"
                 ></v-text-field>
                 <p
@@ -197,7 +200,7 @@
                   "
                   :type="state.showNewpassword ? 'text' : 'password'"
                   type="password"
-                  label="New Password"
+                  :label="$t('openvpn.newPassword')"
                   v-model="state.NewProxyPassword"
                 ></v-text-field>
                 <p
@@ -211,11 +214,11 @@
           </v-row>
           <v-row>
             <v-col align-self="center" cols="4">
-              <label>Local port</label>
+              <label>{{ $t("openvpn.Localport") }}</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
-                label="Local port"
+                :label="$t('openvpn.Localport')"
                 v-model="state.local_port"
               ></v-text-field>
               <p
@@ -275,15 +278,15 @@
             />
           </v-row>
           <div class="mt-3">
-            <h4 class="mt-6">Advanced Configuration</h4>
+            <h4 class="mt-6">{{ $t("openvpn.AdvancedConfiguration") }}</h4>
             <v-divider class="mt-2"></v-divider>
             <v-row class="mt-2">
               <v-col align-self="center" cols="4">
-                <label>Verbosity level</label>
+                <label>{{ $t("openvpn.VerbosityLevel") }}</label>
               </v-col>
               <v-col align-self="center" cols="8" class="mb-n6">
                 <v-select
-                  label="Verbosity level"
+                  :label="$t('openvpn.VerbosityLevel')"
                   v-model="state.verbosityLevel"
                   :items="verbosityLevelList"
                   item-title="name"
@@ -294,7 +297,7 @@
             </v-row>
           </div>
           <div class="mt-2">
-            <h4 class="mt-6">Remote server</h4>
+            <h4 class="mt-6">{{ $t("openvpn.Remoteserver") }}</h4>
             <v-divider class="mt-2"></v-divider>
             <v-row class="mt-2">
               <v-row class="mb-5 ml-1">
@@ -313,7 +316,7 @@
                       class="mt-3 btn-add"
                       @click="addNewRow"
                     >
-                      <span class="text-white">Add</span>
+                      <span class="text-white">{{ $t("buttons.Add") }}</span>
                     </v-btn>
                   </div>
 
@@ -327,7 +330,11 @@
                     :defaultColDef="defaultColDef"
                     :rowData="rowDataCertificats.value"
                     style="width: 100%; height: 100%"
+                    :overlayNoRowsTemplate="overlayTemplate"
                     @grid-ready="onGridReady"
+                    :pagination="true"
+                    :paginationPageSize="4"
+                    :localeText="paginationLocalization"
                   />
                 </v-col>
               </v-row>
@@ -345,7 +352,7 @@
             outlined
             color="#ffffff"
             label-color="#213E9F"
-            label="cancel"
+            :label="$t('buttons.cancel')"
             :isLarge="true"
             @click="cancel"
           />
@@ -354,7 +361,7 @@
             outlined
             color="#213E9F"
             label-color="#ffffff"
-            label="save"
+            :label="$t('buttons.save')"
             :isLarge="true"
             class="ml-2"
             @click="save"
@@ -376,6 +383,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import { inject, toRefs } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import useValidate from "@vuelidate/core";
@@ -399,8 +407,13 @@ export default {
   },
   props: ["dataClient"],
   setup(props) {
+    const { t } = useI18n();
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const { dataClient } = toRefs(props);
     const emitter = inject("emitter");
+    const overlayTemplate = ref("");
     const color = ref(null);
     const snackbar = ref(false);
     const textAlert = ref(false);
@@ -520,6 +533,14 @@ export default {
       getAllCertAuth();
       getAllClientCertif();
       protocolsList.value = protocols;
+      overlayTemplate.value = `
+      <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+     </svg></span>`;
 
       emitter.on("edit-client", (data) => {
         console.log("clinet-edit", data);
@@ -798,7 +819,7 @@ export default {
       return cookieValue;
     };
     const defaultColDef = ref({
-      flex: 1,
+      // flex: 1,
       editable: true,
       cellDataType: false,
     });
@@ -852,28 +873,35 @@ export default {
           break;
       }
     };
+    const Hostoraddress = computed(() => {
+      return t("Clientsopenvpn.Hostoraddress");
+    });
+    const Protocole = computed(() => {
+      return t("Clientsopenvpn.Protocol/Port");
+    });
 
     const columnCertificats = ref([
       {
-        headerName: "Host or address",
+        headerName: Hostoraddress,
         field: "host",
-        minWidth: 150,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
         editable: true,
       },
       {
-        headerName: "Protocole / Port",
+        headerName: Protocole,
         field: "port",
-        minWidth: 250,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
         editable: true,
       },
       {
         headerName: "Actions",
         cellRenderer: actionCellRenderer,
-        minWidth: 150,
-        editable: false,
-        sortable: false,
-        filter: false,
-        resizable: true,
+        width:150,
+        editable: false
       },
     ]);
 
@@ -1323,6 +1351,7 @@ export default {
       cryptoSettings,
       tunnelSettings,
       onGridReady,
+      overlayTemplate,
       getAllClientCertif,
       getAllCertAuth,
       rowDataCertificats,
@@ -1348,6 +1377,7 @@ export default {
       v$,
       save,
       emitter,
+      paginationLocalization
     };
   },
 };

@@ -119,6 +119,9 @@
                 :columnDefs="columnRanges"
                 :rowData="rowDataRanges.value"
                 :overlayNoRowsTemplate="overlayTemplate"
+                :pagination="true"
+                :paginationPageSize="5"
+                :localeText="paginationLocalization"
               />
             </div>
           </v-col>
@@ -297,6 +300,9 @@ export default {
   setup(props) {
     const { t } = useI18n();
     const overlayTemplate = ref("");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const emitter = inject("emitter");
     const switchValue = ref(false);
     const state = reactive({
@@ -701,6 +707,7 @@ export default {
       addRow,
       removeRow,
       columnRanges,
+      paginationLocalization,
       state,
       handleRemove,
       emitter,

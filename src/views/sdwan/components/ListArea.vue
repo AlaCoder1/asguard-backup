@@ -16,6 +16,7 @@
               :rowData="rowDataArea.value"
               :gridOptions="gridOptions"
               :overlayNoRowsTemplate="overlayTemplate"
+              :localeText="paginationLocalization"
             />
           </div>
           <div class="d-flex justify-end mt-3">
@@ -90,6 +91,9 @@ export default {
     const { t } = useI18n();
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const state = reactive({
       deleteDialog: false,
       deletedRow: null,
@@ -129,7 +133,6 @@ export default {
         headerName: members,
         field: "members",
         autoHeight: true,
-        resizable: true,
         width: 90,
         minWidth: 50,
         flex: 1,
@@ -138,6 +141,7 @@ export default {
         headerName: "Actions",
         cellRenderer: actionCellRendererArea,
         field: "action",
+        width:150
       },
     ]);
 
@@ -299,6 +303,7 @@ export default {
       state,
       gridOptions,
       overlayTemplate,
+      paginationLocalization,
       columnArea,
       emitter,
       rowDataArea,

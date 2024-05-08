@@ -1,6 +1,6 @@
 <template>
   <div class="ml-3 mr-3">
-    <h4>Tunnel Settings</h4>
+    <h4>{{$t('openvpn.TunnelSettings')}}</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col
@@ -8,11 +8,11 @@
         cols="4"
         align-self="center"
       >
-        <label>IPv4 Tunnel Network*</label>
+        <label>{{$t('openvpn.IPv4TunnelNetwork')}}*</label>
       </v-col>
       <v-col v-if="!props.addressPool && !isBridge" cols="8" class="mb-n6">
         <v-text-field
-          label="IPv4 Tunnel Network"
+          :label= "$t('openvpn.IPv4TunnelNetwork')"
           v-model="ip4Tunnel"
         ></v-text-field>
         <p
@@ -23,36 +23,36 @@
         </p>
       </v-col>
       <v-col cols="4" align-self="center">
-        <label>IPv6 Tunnel Network</label>
+        <label>{{$t('openvpn.IPv6TunnelNetwork')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          label="IPv6 Tunnel Network"
+          :label="$t('openvpn.IPv6TunnelNetwork')"
           v-model="ip6Tunnel"
         ></v-text-field>
       </v-col>
       <v-col cols="4" align-self="center">
-        <label>Gateway</label>
+        <label>{{$t('openvpn.Gateway')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="isGateway" />
-        <label class="ml-2">redirect Gateway</label>
+        <label class="ml-2">{{$t('openvpn.redirectGateway')}}</label>
       </v-col>
 
       <v-col cols="4" v-if="deviceMode === 'tap'" align-self="center">
-        <label>Bridge</label>
+        <label>{{$t('openvpn.Bridge')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6" v-if="deviceMode === 'tap'">
         <input type="checkbox" v-model="isBridge" />
-        <label class="ml-2">DHCP bridge</label>
+        <label class="ml-2">{{$t('openvpn.DHCPbridge')}}</label>
       </v-col>
 
       <v-col cols="4" v-if="isBridge" align-self="center">
-        <label>Interface bridge*</label>
+        <label>{{$t('openvpn.Interfacebridge')}}*</label>
       </v-col>
       <v-col cols="8" class="mb-n6" v-if="isBridge">
         <v-select
-          label="Interface bridge"
+         :label="$t('openvpn.Interfacebridge')"
           v-model="interfaceBridge"
           item-title="name"
           item-value="id"
@@ -68,11 +68,11 @@
       </v-col>
 
       <v-col cols="4" v-if="isBridge" align-self="center">
-        <label>Start DHCP bridge</label>
+        <label>{{$t('openvpn.StartDHCPbridge')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6" v-if="isBridge">
         <v-text-field
-          label="Start DHCP bridge"
+          :label="$t('openvpn.StartDHCPbridge')"
           v-model="startDHCPBridge"
         ></v-text-field>
         <p
@@ -83,11 +83,11 @@
         </p>
       </v-col>
       <v-col cols="4" v-if="isBridge" align-self="center">
-        <label>End DHCP bridge</label>
+        <label>E{{$t('openvpn.EndDHCPbridge')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6" v-if="isBridge">
         <v-text-field
-          label="End DHCP bridge"
+          :label="$t('openvpn.EndDHCPbridge')"
           v-model="endDHCPBridge"
         ></v-text-field>
         <p
@@ -101,14 +101,14 @@
         <label>
           {{
             isBridge || props.addressPool
-              ? "IPv4 Local Network"
-              : "IPv4 Local Network*"
+              ? $t('openvpn.IPv4LocalNetwork')
+              : $t('openvpn.IPv4LocalNetwork') + '*'
           }}
         </label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          label="IPv4 Local Network"
+          :label="$t('openvpn.IPv4LocalNetwork')"
           v-model="iPv4Local"
         ></v-text-field>
         <p
@@ -119,20 +119,20 @@
         </p>
       </v-col>
       <v-col cols="4" align-self="center">
-        <label>IPv6 Local Network</label>
+        <label>{{$t('openvpn.IPv6LocalNetwork')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          label="IPv6 Local Network"
+          :label="$t('openvpn.IPv6LocalNetwork')"
           v-model="iPv6Local"
         ></v-text-field>
       </v-col>
       <v-col cols="4" align-self="center">
-        <label>IPv4 Remote Network</label>
+        <label>{{$t('openvpn.IPv4RemoteNetwork')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          label="IPv4 Remote Network"
+          :label="$t('openvpn.IPv4RemoteNetwork')"
           v-model="iPv4Remote"
         ></v-text-field>
         <p
@@ -143,20 +143,20 @@
         </p>
       </v-col>
       <v-col cols="4" align-self="center">
-        <label>IPv6 Remote Network</label>
+        <label>{{$t('openvpn.IPv6RemoteNetwork')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          label="IPv6 Remote Network"
+          :label="$t('openvpn.IPv6RemoteNetwork')"
           v-model="iPv6Remote"
         ></v-text-field>
       </v-col>
       <v-col cols="4" align-self="center">
-        <label>Concurrent connections</label>
+        <label>{{$t('openvpn.Concurrentconnections')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          label="Concurrent connections"
+          :label="$t('openvpn.Concurrentconnections')"
           v-model="concurrentConnections"
         ></v-text-field>
       </v-col>
@@ -179,32 +179,32 @@
       </v-col>
 
       <v-col cols="4" align-self="center">
-        <label>Type of service</label>
+        <label>{{$t('openvpn.Typeofservice')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="typefService" />
-        <label class="ml-2">Active type of service</label>
+        <label class="ml-2">{{$t('openvpn.Activethetypeofservice')}}</label>
       </v-col>
       <v-col cols="4" align-self="center">
-        <label>Connections</label>
+        <label>{{$t('openvpn.Connections')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="Connections" />
-        <label class="ml-2">Duplicate connections</label>
+        <label class="ml-2">{{$t('openvpn.Duplicateconnections')}}</label>
       </v-col>
       <v-col cols="4" align-self="center">
         <label>IPv6</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="IPv6" />
-        <label class="ml-2">Disable IPv6</label>
+        <label class="ml-2">{{$t("openvpn.Disable")}} IPv6</label>
       </v-col>
       <v-col cols="4" align-self="center">
         <label>Inter clients</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="interClients" />
-        <label class="ml-2">Communication inter clients</label>
+        <label class="ml-2">{{$t('openvpn.Communicationinterclients')}}</label>
       </v-col>
     </v-row>
   </div>

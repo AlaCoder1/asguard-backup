@@ -34,6 +34,9 @@
               :columnDefs="columnRules"
               :rowData="rowDataRule.value"
               :overlayNoRowsTemplate="overlayTemplate"
+              :pagination="true"
+              :paginationPageSize="5"
+              :localeText="paginationLocalization"
             />
           </div>
           <div class="d-flex justify-end mt-3 mb-15">
@@ -108,6 +111,9 @@ export default {
     const { t } = useI18n();
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
 
     const state = reactive({
       deleteDialog: false,
@@ -188,6 +194,7 @@ export default {
         headerName: "Actions",
         cellRenderer: actionCellRendererArea,
         field: "action",
+        width:150,
         sortable: true,
         filter: true,
       },
@@ -417,6 +424,7 @@ export default {
       columnRules,
       overlayTemplate,
       rowDataRule,
+      paginationLocalization,
       defaultColDef,
       actionCellRendererArea,
       openModalAdd,

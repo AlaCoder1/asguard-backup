@@ -16,6 +16,7 @@
             :pagination="true"
             :paginationPageSize="5"
             :overlayNoRowsTemplate="overlayTemplate"
+            :localeText="paginationLocalization"
           />
         </div>
         <div class="d-flex justify-end mt-3">
@@ -97,6 +98,9 @@ export default {
       modalMode: "create",
     });
     const overlayTemplate = ref("");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
 
     onMounted(() => {
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
@@ -164,6 +168,7 @@ export default {
         headerName: "Actions",
         cellRenderer: actionCellRendererKeys,
         field: "action",
+        width:150,
         sortable: true,
         filter: true,
       },
@@ -225,12 +230,12 @@ export default {
         eGui.innerHTML = `
           <button
                 class="action-button edit"
-                data-action="edit" title="Edit Server">
+                data-action="edit">
                    <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
                 <button
                 class="action-button delete"
-                data-action="delete" title="Delete ">
+                data-action="delete">
                   <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>`;
       }
@@ -293,6 +298,7 @@ export default {
     return {
       state,
       overlayTemplate,
+      paginationLocalization,
       columnVlan,
       rowDataVlan,
       defaultColDef,

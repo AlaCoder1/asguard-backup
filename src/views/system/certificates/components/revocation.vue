@@ -203,7 +203,7 @@ export default {
           </button>
           <button
            class="action-button download"
-           data-action="export" title="download CRL">
+           data-action="export" title="CRL">
               <span class="mdi mdi-download-circle fa-lg" style="color: #086eae;  font-size: 22px;"></span>
            </button>
         `;

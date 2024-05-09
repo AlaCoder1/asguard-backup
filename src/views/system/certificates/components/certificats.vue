@@ -452,17 +452,17 @@ export default {
            </button>
            <button
            class="action-button download"
-           data-action="exportP12" title="download P12 file">
+           data-action="exportP12" title="P12">
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="export" title="download CRT">
+           data-action="export" title="CRT">
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="exportKey" title="download Private Key">
+           data-action="exportKey" title=${this.$t('titleAgGrid.privateKey')}>
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
@@ -487,12 +487,12 @@ export default {
             </button>
             <button
             class="action-button download"
-            data-action="exportP12" title="download P12 file">
+            data-action="exportP12" title="P12">
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
             </button>
             <button
             class="action-button download"
-            data-action="export" title="download CRT">
+            data-action="export" title="CRT">
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
             </button>
             <button
@@ -513,17 +513,17 @@ export default {
          </button>
          <button
            class="action-button download"
-           data-action="exportP12"  title="download P12 file">
+           data-action="exportP12"  title="P12">
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="export" title="download CRT">
+           data-action="export" title="CRT">
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="exportKey" title="download Private Key">
+           data-action="exportKey" title=${this.$t('titleAgGrid.privateKey')}>
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
@@ -541,12 +541,12 @@ export default {
          </button>
          <button
            class="action-button download"
-           data-action="exportP12"  title="download P12 file">
+           data-action="exportP12"  title="P12">
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="export" title="download CRT">
+           data-action="export" title="CRT">
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
@@ -565,17 +565,17 @@ export default {
         eGui.innerHTML = `
          <button
            class="action-button download"
-           data-action="exportP12" title="download P12 file">
+           data-action="exportP12" title="P12">
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="export" title="download CRT">
+           data-action="export" title="CRT">
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="exportKey" title="download Private Key">
+           data-action="exportKey" title=${this.$t('titleAgGrid.privateKey')}>
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button
@@ -592,12 +592,12 @@ export default {
         eGui.innerHTML = `
          <button
            class="action-button download"
-           data-action="exportP12" title="download P12 file">
+           data-action="exportP12" title="P12">
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
            class="action-button download"
-           data-action="export" title="download CRT">
+           data-action="export" title="CRT">
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
            <button

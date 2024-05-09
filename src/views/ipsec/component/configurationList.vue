@@ -67,11 +67,15 @@
   <!-- Dialog for delete confirmation -->
   <v-dialog v-model="dialogDelete" max-width="500">
     <v-card>
-      <v-card-title>Delete Confirmation</v-card-title>
-      <v-card-text>Are you sure you want to delete this server?</v-card-text>
+      <v-card-title>{{ $t("delete.DeleteConfirmation") }}</v-card-title>
+      <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
       <v-card-actions>
-        <v-btn color="error" text @click="deleteItem">Delete</v-btn>
-        <v-btn text @click="dialogDelete = false">Cancel</v-btn>
+        <v-btn color="error" text @click="deleteItem">{{
+          $t("buttons.delete")
+        }}</v-btn>
+        <v-btn text @click="dialogDelete = false">{{
+          $t("buttons.cancel")
+        }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -420,12 +424,12 @@ export default {
         eGui.innerHTML = `
             <button
             class="action-button editClient"
-            data-action="edit" title="Edit">
+            data-action="edit">
               <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
             </button>
             <button
             class="action-button delete"
-            data-action="delete" title="Delete">
+            data-action="delete">
               <i class="mdi mdi-delete" style="color: #086EAE; font-size: 20px;"></i>
             </button>
         `;

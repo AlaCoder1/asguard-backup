@@ -400,18 +400,18 @@ export default {
         <button
           id="play"
           class="action-button play"
-          data-action="play" title="Start Server">
+          data-action="play" title=${t('sdwan.startServer')}>
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
 
           <button
           class="action-button edit"
-          data-action="edit" title="Edit Server">
+          data-action="edit">
              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
           <button
           class="action-button delete"
-          data-action="delete" title="Delete Server">
+          data-action="delete">
              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
 
@@ -433,25 +433,25 @@ export default {
           <button
           id="restart"
           class="action-button restart"
-          data-action="restart" title="Restart Server">
+          data-action="restart" title=${t('interface.restart')}>
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
         
        <button
           id="stop"
           class="action-button stop"
-          data-action="stop" title="Stop Server">
+          data-action="stop" title=${t('sdwan.stop')}>
              <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
           </button>
 
           <button
           class="action-button edit"
-          data-action="edit" title="Edit Server">
+          data-action="edit">
              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
           <button
           class="action-button delete"
-          data-action="delete" title="Delete Server">
+          data-action="delete">
              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
        `;
@@ -603,17 +603,17 @@ export default {
     
           <button
           class="action-button download"
-          data-action="download" title="download">
+          data-action="download">
              <i class="mdi mdi-download-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
           <button
           class="action-button editClient"
-          data-action="editClient" title="Edit Client">
+          data-action="editClient">
              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
           <button
           class="action-button delete"
-          data-action="delete" title="Delete Server">
+          data-action="delete">
              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
 

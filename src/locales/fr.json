@@ -465,6 +465,12 @@
     "alerts":"ALERTS"
 
   },
+  "titleAgGrid":{
+    "privateKey":"Clé.privée",
+    "publicKey":"Copier.Clé.publique",
+    "pK":"Clé.publique"
+
+  },
   "home":{
     "systemInformation":"Informations sur le système",
     "cpuPercentage":"Pourcentage de CPU (%)",

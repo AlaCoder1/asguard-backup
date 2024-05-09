@@ -89,7 +89,7 @@
           color="indigo-darken-3"
           @click="serve"
         >
-          <span class="text-white pr-3 pl-3">{{$t('buttons.Load')}}</span>
+          <span class="text-white pr-3 pl-3">{{ $t("buttons.Load") }}</span>
         </v-btn>
       </v-col>
     </v-row>
@@ -101,7 +101,9 @@
           </v-row>
           <v-row class="mt-2 mb-10">
             <v-col cols="6">
-              <v-card-title> {{$t('Clientsopenvpn.TopTraffic')}} </v-card-title>
+              <v-card-title>
+                {{ $t("Clientsopenvpn.TopTraffic") }}
+              </v-card-title>
               <v-card-item>
                 <apexchart
                   ref="apexChart"
@@ -114,7 +116,9 @@
             </v-col>
             <v-col cols="6">
               <v-card elevation="0">
-                <v-card-title> {{$t('Clientsopenvpn.Trafficdistribution')}} </v-card-title>
+                <v-card-title>
+                  {{ $t("Clientsopenvpn.Trafficdistribution") }}
+                </v-card-title>
                 <v-card-item style="margin-left: -19%">
                   <apexchart
                     ref="chartTraffic"
@@ -133,7 +137,9 @@
               />
             </v-col> -->
             <v-col cols="12">
-              <v-card-title> {{$t('Clientsopenvpn.Top2ClientNetworkActivity')}} </v-card-title>
+              <v-card-title>
+                {{ $t("Clientsopenvpn.Top2ClientNetworkActivity") }}
+              </v-card-title>
               <v-card-item>
                 <apexchart
                   ref="apexChartNetwork"
@@ -156,6 +162,9 @@
             :rowData="rowData.value"
             :overlayNoRowsTemplate="overlayTemplate"
             @grid-ready="onGridReady"
+            :localeText="paginationLocalization"
+            :pagination="true"
+            :paginationPageSize="4"
           />
         </div>
       </v-col>
@@ -195,6 +204,9 @@ export default {
   setup() {
     const { t } = useI18n();
     const overlayTemplate = ref("");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const state = reactive({
       show1: false,
       server: "",
@@ -336,7 +348,6 @@ export default {
     const address = computed(() => {
       return t("agGrid.address");
     });
-
 
     const columns = ref([
       {
@@ -588,6 +599,7 @@ export default {
       rowData,
       columns,
       gridApi,
+      paginationLocalization,
       onGridReady,
       serve,
       cancel,

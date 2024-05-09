@@ -32,6 +32,7 @@
               :rowGroupPanelShow="rowGroupPanelShow"
               @grid-ready="onGridReady"
               style="width: 100%; height: 100%"
+              :localeText="paginationLocalization"
             />
             <div class="justify-end d-flex mr-3 mt-3 mb-3">
               <VButton
@@ -95,6 +96,9 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const emitter = inject("emitter");
     const color = ref(null);
     const snackbar = ref(false);
@@ -545,6 +549,7 @@ export default {
       dialogDelete,
       currentRowToDelete,
       columns,
+      paginationLocalization,
       rowData,
       defaultColDef,
       rowGroupPanelShow,

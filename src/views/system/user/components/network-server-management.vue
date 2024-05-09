@@ -15,6 +15,7 @@
               :columnDefs="columnDefs"
               :rowData="rowData.value"
               :gridOptions="gridOptions"
+              :localeText="paginationLocalization"
             />
           </div>
           <div class="d-flex justify-end">
@@ -86,6 +87,9 @@ export default {
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
 
     const state = reactive({
       deleteDialog: false,
@@ -261,6 +265,7 @@ export default {
     return {
       state,
       t,
+      paginationLocalization,
       gridOptions,
       columnDefs,
       emitter,

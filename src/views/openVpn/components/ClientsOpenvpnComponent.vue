@@ -1,13 +1,14 @@
-+<template>
++
+<template>
   <div class="mt-3">
     <v-row>
       <v-col align-self="center" cols="6">
         <div class="ml-3 mr-3">
-          <h4>{{$t("openvpn.Generalinformation")}}</h4>
+          <h4>{{ $t("openvpn.Generalinformation") }}</h4>
           <v-divider class="mt-2"></v-divider>
           <v-row class="mt-2">
             <v-col align-self="center" cols="4">
-              <label>{{$t("openvpn.Clientname")}}*</label>
+              <label>{{ $t("openvpn.Clientname") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
@@ -31,7 +32,7 @@
               ></v-text-field>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>{{$t("openvpn.Servermode")}}*</label>
+              <label>{{ $t("openvpn.Servermode") }}*</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-select
@@ -50,7 +51,7 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>{{$t("PageIpsec.Protocol")}}*</label>
+              <label>{{ $t("PageIpsec.Protocol") }}*</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-select
@@ -66,7 +67,7 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>{{$t("openvpn.DeviceMode")}}*</label>
+              <label>{{ $t("openvpn.DeviceMode") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
@@ -99,15 +100,17 @@
               ></v-select>
             </v-col> -->
             <v-col align-self="center" cols="4">
-              <label>{{$t("openvpn.RetryDNSresolution")}}</label>
+              <label>{{ $t("openvpn.RetryDNSresolution") }}</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <input type="checkbox" v-model="state.resolv_retry" />
-              <label class="ml-2">{{$t("openvpn.Infinitelyresolveremoteserver")}}</label>
+              <label class="ml-2">{{
+                $t("openvpn.Infinitelyresolveremoteserver")
+              }}</label>
             </v-col>
 
             <v-col align-self="center" cols="4">
-              <label>{{$t("openvpn.Proxyhostoraddress")}}</label>
+              <label>{{ $t("openvpn.Proxyhostoraddress") }}</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-text-field
@@ -122,7 +125,7 @@
               </p>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label>{{$t("openvpn.Proxyport")}}</label>
+              <label>{{ $t("openvpn.Proxyport") }}</label>
             </v-col>
             <v-col align-self="center" cols="8" class="mb-n6">
               <v-text-field
@@ -138,7 +141,7 @@
             </v-col>
 
             <v-col align-self="center" cols="4" class="mt-1">
-              <label>{{$t("openvpn.Proxyauthenticationextraoptions")}}</label>
+              <label>{{ $t("openvpn.Proxyauthenticationextraoptions") }}</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
@@ -211,7 +214,7 @@
           </v-row>
           <v-row>
             <v-col align-self="center" cols="4">
-              <label>{{$t("openvpn.Localport")}}</label>
+              <label>{{ $t("openvpn.Localport") }}</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
@@ -275,11 +278,11 @@
             />
           </v-row>
           <div class="mt-3">
-            <h4 class="mt-6">{{$t("openvpn.AdvancedConfiguration")}}</h4>
+            <h4 class="mt-6">{{ $t("openvpn.AdvancedConfiguration") }}</h4>
             <v-divider class="mt-2"></v-divider>
             <v-row class="mt-2">
               <v-col align-self="center" cols="4">
-                <label>{{$t("openvpn.VerbosityLevel")}}</label>
+                <label>{{ $t("openvpn.VerbosityLevel") }}</label>
               </v-col>
               <v-col align-self="center" cols="8" class="mb-n6">
                 <v-select
@@ -294,7 +297,7 @@
             </v-row>
           </div>
           <div class="mt-2">
-            <h4 class="mt-6">{{$t("openvpn.Remoteserver")}}</h4>
+            <h4 class="mt-6">{{ $t("openvpn.Remoteserver") }}</h4>
             <v-divider class="mt-2"></v-divider>
             <v-row class="mt-2">
               <v-row class="mb-5 ml-1">
@@ -313,7 +316,7 @@
                       class="mt-3 btn-add"
                       @click="addNewRow"
                     >
-                      <span class="text-white">{{$t("buttons.Add")}}</span>
+                      <span class="text-white">{{ $t("buttons.Add") }}</span>
                     </v-btn>
                   </div>
 
@@ -329,6 +332,9 @@
                     style="width: 100%; height: 100%"
                     :overlayNoRowsTemplate="overlayTemplate"
                     @grid-ready="onGridReady"
+                    :pagination="true"
+                    :paginationPageSize="4"
+                    :localeText="paginationLocalization"
                   />
                 </v-col>
               </v-row>
@@ -402,6 +408,9 @@ export default {
   props: ["dataClient"],
   setup(props) {
     const { t } = useI18n();
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const { dataClient } = toRefs(props);
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
@@ -810,7 +819,7 @@ export default {
       return cookieValue;
     };
     const defaultColDef = ref({
-      flex: 1,
+      // flex: 1,
       editable: true,
       cellDataType: false,
     });
@@ -875,23 +884,24 @@ export default {
       {
         headerName: Hostoraddress,
         field: "host",
-        minWidth: 150,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
         editable: true,
       },
       {
         headerName: Protocole,
         field: "port",
-        minWidth: 250,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
         editable: true,
       },
       {
         headerName: "Actions",
         cellRenderer: actionCellRenderer,
-        minWidth: 150,
-        editable: false,
-        sortable: false,
-        filter: false,
-        resizable: true,
+        width:150,
+        editable: false
       },
     ]);
 
@@ -1367,6 +1377,7 @@ export default {
       v$,
       save,
       emitter,
+      paginationLocalization
     };
   },
 };

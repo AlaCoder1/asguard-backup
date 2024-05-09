@@ -176,12 +176,12 @@ export default {
          
               <button
                 class="action-button edit"
-                data-action="edit" title="Edit Server">
+                data-action="edit">
                    <i class="far fa-edit" style="color: #086EAE;"></i>
                 </button>
                 <button
                 class="action-button delete"
-                data-action="delete" title="Delete ">
+                data-action="delete">
                   <i class="fas fa-times" style="color: #086EAE;"></i>
                 </button>
       

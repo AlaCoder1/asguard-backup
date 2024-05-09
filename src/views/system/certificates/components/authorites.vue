@@ -122,7 +122,7 @@ export default {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,
           editable: false,
-          width:150,
+          width: 150,
           sortable: false,
           filter: false,
         },
@@ -255,12 +255,12 @@ export default {
         
         <button 
           class="action-button download"
-          data-action="export" title="download CRT">
+          data-action="export" title="CRT">
              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
           </button>
           <button 
           class="action-button download"
-          data-action="exportKey" title="download Private Key">
+          data-action="exportKey" title=${this.$t('titleAgGrid.privateKey')}>
              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
           </button>
         <button 
@@ -274,7 +274,7 @@ export default {
         
         <button 
           class="action-button download"
-          data-action="export" title="download CRT">
+          data-action="export" title="CRT">
              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
           </button>
        

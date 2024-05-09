@@ -274,24 +274,24 @@ export default {
           eGui.innerHTML = `
           <button
            class="action-button copy"
-           data-action="copy"  title="Copy Public Key">
+           data-action="copy"  title=${t('titleAgGrid.publicKey')}>
               <i class="mdi mdi-content-copy" style="color: #086eae;font-size: 20px;"></i>
            </button>
           <button
            class="action-button download"
-           data-action="export"  title="Download Public Key">
+           data-action="export"  title=${t('titleAgGrid.pK')}>
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
           class="action-button delete"
-          data-action="delete" title="Delete Server">
+          data-action="delete">
             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>`;
         } else {
           eGui.innerHTML = `
           <button
           class="action-button delete"
-          data-action="delete" title="Delete Server">
+          data-action="delete">
             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
 

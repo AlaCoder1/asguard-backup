@@ -1,22 +1,21 @@
 <template>
   <div class="mt-5">
     <div class="container">
-      <h4>Outbound rules</h4>
+      <h4>{{$t("firewall.outbound")}}</h4>
       <v-divider></v-divider>
       <v-dialog v-model="deleteDialog" max-width="500px">
         <v-card>
-          <v-card-title class="headline">Delete Confirmation</v-card-title>
+          <v-card-title class="headline">{{$t("firewall.delete_confirm")}}</v-card-title>
           <v-card-text
-            >Are you sure you want to delete this rule from the
-            Firewall?</v-card-text
+            >{{$t("firewall.msg_confirm_delete")}}</v-card-text
           >
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="blue darken-1" text @click="cancelDelete"
-              >Cancel</v-btn
+              >{{$t("firewall.cancel")}}</v-btn
             >
             <v-btn color="blue darken-1" text @click="confirmDelete"
-              >Delete</v-btn
+              >{{$t("firewall.delete")}}</v-btn
             >
           </v-card-actions>
         </v-card>
@@ -34,7 +33,7 @@
           <v-text-field
             id="filter-text-box"
             v-model="filterText"
-            placeholder="Search"
+            :placeholder="$t('firewall.search')"
             density="compact"
             rounded
             variant="solo"
@@ -47,7 +46,7 @@
         <v-col cols="12" md="6" class="d-flex justify-end">
           <v-btn class="ml-3 mt-2" @click="openModalAdd">
             <i class="fas fa-plus" style="color: #086eae"></i>
-            <span class="ml-2" style="color: #086eae">Add</span>
+            <span class="ml-2" style="color: #086eae">{{$t("firewall.add")}}</span>
           </v-btn>
         </v-col>
       </v-row>
@@ -93,10 +92,10 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
-import { onMounted, reactive, ref, watch, defineComponent, inject } from "vue";
+import { onMounted, reactive, ref, watch, defineComponent, inject,computed } from "vue";
 import VButton from "../../../components/VButton.vue";
 import ModalFirewallRuleOutbound from "../../../components/modals/ModalFirewallRuleOutbound.vue";
-
+import { useI18n } from "vue-i18n";
 export default defineComponent({
   name: "FirewallComponentRuleOutbound",
   components: {
@@ -109,6 +108,8 @@ export default defineComponent({
     activeTab: String,
   },
   setup(props) {
+    const { t } = useI18n();
+    const overlayTemplate = ref("");
     const emitter = inject("emitter");
     const state = reactive({
       // deleteDialogSquid: false,
@@ -123,10 +124,34 @@ export default defineComponent({
       isModalOpen: false,
       editRow: {},
     });
-
+    const policy = computed(() => {
+      return t("firewall.policy");
+    });
+    const description = computed(() => {
+      return t("firewall.description");
+    });
+    const protocol = computed(() => {
+      return t("firewall.protocol");
+    });
+    const saddr = computed(() => {
+      return t("firewall.saddr");
+    });
+    const sport = computed(() => {
+      return t("firewall.sport");
+    });
+    const daddr = computed(() => {
+      return t("firewall.daddr");
+    });
+    const dport = computed(() => {
+      return t("firewall.dport");
+    });
+    const action = computed(() => {
+      return t("firewall.action");
+    });
+   
     const alert = ref(false);
     const mode = ref("create");
-    const columnDefs = [
+    const columnDefs =ref([
       {
         width: 50,
         minWidth: 50,
@@ -144,7 +169,7 @@ export default defineComponent({
       },
       {
         field: "policy",
-        headerName: "Policy",
+        headerName: policy,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: {
           values: ["accept", "drop"],
@@ -152,14 +177,13 @@ export default defineComponent({
       },
       {
         field: "rule_description",
-        headerName: "Rule Description",
-        headerName: "Rule Description",
+        headerName: description,
         sortable: true,
         filter: true,
       },
       {
         field: "protocol",
-        headerName: "Protocol",
+        headerName: protocol,
         cellEditor: "agSelectCellEditor",
         cellEditorParams: {
           values: [
@@ -176,20 +200,20 @@ export default defineComponent({
 
       {
         field: "saddr",
-        headerName: "Src Address",
+        headerName: saddr,
         cellRenderer: formatedLineSadd,
         sortable: true,
         filter: true,
       },
       {
         field: "sport",
-        headerName: "Src Port",
+        headerName: sport,
         cellRenderer: formatedLineSport,
         sortable: true,
         filter: true,
       },
       {
-        headerName: "Dst Address",
+        headerName: daddr,
         field: "daddr",
         cellRenderer: formatedLineDaddr,
         sortable: true,
@@ -197,17 +221,17 @@ export default defineComponent({
       },
       {
         field: "dport",
-        headerName: "Dst Port",
+        headerName: dport,
         cellRenderer: formatedLineDport,
         sortable: true,
         filter: true,
       },
       {
-        headerName: "Action",
+        headerName: action,
         field: "action",
         cellRenderer: actionCellRenderer,
       },
-    ];
+    ]);
 
     function formatedLineSport(data) {
       const rslt = data.data.sport ? data.data.sport : "--";
@@ -271,6 +295,13 @@ export default defineComponent({
     };
 
     const onGridReady = (params) => {
+      overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+    </svg></span>`;
       gridApi.value = params.api;
       gridColumnApi.value = params.columnApi;
 
@@ -446,6 +477,13 @@ export default defineComponent({
     };
 
     onMounted(() => {
+      overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+    </svg></span>`;
       emitter.on("closFirewallOutboundModal", () => {
         state.isModalOpen = false;
         state.isOpen = false;
@@ -514,6 +552,7 @@ export default defineComponent({
       alert,
       mode,
       last_Subscription,
+      overlayTemplate,
       onGridReady,
       setGridApi,
       onFirstDataRendered,

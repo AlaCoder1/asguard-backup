@@ -3,7 +3,7 @@
     class="certificats-management"
     style="display: flex; flex-direction: column; height: 100%"
   >
-    <h4>{{$t("agGrid.ListRevocation")}}</h4>
+    <h4>{{ $t("agGrid.ListRevocation") }}</h4>
     <v-divider></v-divider>
 
     <div style="height: 100%">
@@ -17,6 +17,9 @@
             :overlayNoRowsTemplate="overlayTemplate"
             style="width: 100%; height: 100%"
             @grid-ready="onGridReady"
+            :pagination="true"
+            :paginationPageSize="4"
+            :localeText="paginationLocalization"
           />
         </div>
       </div>
@@ -67,6 +70,9 @@ export default {
 
   data() {
     return {
+      paginationLocalization: {
+        of: "/",
+      },
       snackbar: false,
       color: "",
       textAlert: "",
@@ -77,28 +83,37 @@ export default {
       isModalOpen: false,
 
       columnRevocation: [
-        { headerName: this.namerevoc, field: "nom", width: 300 },
+        {
+          headerName: this.namerevoc,
+          field: "nom",
+          width: 90,
+          minWidth: 50,
+          flex: 1,
+        },
         {
           headerName: this.listrevoc,
           field: "list_revoc",
-          width: 400,
+          width: 90,
+          minWidth: 50,
+          flex: 1,
         },
         {
           headerName: "Actions",
           cellRenderer: this.actionCellRenderer,
           editable: false,
+          width: 150,
           sortable: false,
           filter: false,
         },
       ],
       rowDataRevocation: null,
-      overlayTemplate:`<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      overlayTemplate: `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
         d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
         style="fill: #E8EAF6"
         data-name="Unbox"
       />
-    </svg></span>`
+    </svg></span>`,
     };
   },
   watch: {
@@ -131,22 +146,21 @@ export default {
         this.columnRevocation[0].headerName = val;
       },
       immediate: true,
-    }, 
+    },
     listrevoc: {
       handler(val) {
         this.columnRevocation[1].headerName = val;
       },
       immediate: true,
-    }, 
+    },
   },
   computed: {
     namerevoc() {
       return this.$t("agGrid.name");
     },
-    listrevoc(){
-      return this.$t("agGrid.Listauthoriy")
-    }
-   
+    listrevoc() {
+      return this.$t("agGrid.Listauthoriy");
+    },
   },
   methods: {
     openModal() {
@@ -159,15 +173,6 @@ export default {
     onGridReady(params) {
       this.gridApi = params.api;
       this.gridColumnApi = params.columnApi;
-
-      params.api.sizeColumnsToFit();
-      window.addEventListener("resize", function () {
-        setTimeout(function () {
-          params.api.sizeColumnsToFit();
-        });
-      });
-
-      params.api.sizeColumnsToFit();
     },
 
     actionCellRenderer(params) {

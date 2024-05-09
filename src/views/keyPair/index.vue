@@ -21,6 +21,9 @@
                     :columnDefs="columnKeys"
                     :rowData="rowDataKeys.value"
                     :overlayNoRowsTemplate="overlayTemplate"
+                    :pagination="true"
+                    :paginationPageSize="4"
+                    :localeText="paginationLocalization"
                   />
                 </div>
                 <div class="d-flex justify-end mt-3">
@@ -91,6 +94,9 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
     const state = reactive({
@@ -209,6 +215,7 @@ export default {
       },
       {
         headerName: "Action",
+        width:150,
         cellRenderer: actionCellRendererKeys,
         field: "action",
       },
@@ -225,7 +232,7 @@ export default {
     const defaultColDef = {
       sortable: true,
       filter: true,
-      flex: 1,
+      // flex: 1,
     };
 
     const getCookie = (name) => {
@@ -404,6 +411,7 @@ export default {
       overlayTemplate,
       defaultColDef,
       emitter,
+      paginationLocalization,
       actionCellRendererKeys,
       openModalAdd,
       onGridReady,

@@ -52,6 +52,7 @@
                   style="width: 100%; height: 100%"
                   :pagination="true"
                   :paginationPageSize="4"
+                  :localeText="paginationLocalization"
                   @grid-ready="onGridReady"
                 />
               </v-col>
@@ -73,6 +74,7 @@
                   :alwaysShowVerticalScroll="false"
                   :pagination="true"
                   :paginationPageSize="4"
+                  :localeText="paginationLocalization"
                   :overlayNoRowsTemplate="overlayTemplate"
                   style="width: 100%; height: 100%"
                 />
@@ -93,6 +95,7 @@
                   :alwaysShowVerticalScroll="false"
                   :pagination="true"
                   :paginationPageSize="4"
+                  :localeText="paginationLocalization"
                   :overlayNoRowsTemplate="overlayTemplate"
                   style="width: 100%; height: 100%"
                 />
@@ -125,6 +128,9 @@ export default {
   setup() {
     const { t } = useI18n();
     const overlayTemplate = ref("");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const state = reactive({
       information: null,
       infoParser: null,
@@ -239,6 +245,7 @@ export default {
       },
       {
         headerName: "Actions",
+        width: 150,
         lockPosition: "right",
         cellClass: "locked-col",
         cellRenderer: actionCellRendererService,
@@ -465,6 +472,7 @@ export default {
       columnGateways,
       actionCpuType,
       gridApi,
+      paginationLocalization,
       apexChart,
       gridOptions,
       actionCellRenderer,

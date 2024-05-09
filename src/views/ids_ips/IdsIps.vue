@@ -1,13 +1,10 @@
 <template>
   <v-app id="inspire">
-    <base-layout
-      :title="$t('subtitle.intrusionDetection')"
-      active-menu="CONFIGURATION"
-    >
+    <base-layout :title="$t('subtitle.intrusionDetection')">
       <template #content>
         <v-tabs v-model="activeTab">
-          <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">
-            <span style="color: #020202">{{ tab.label }}</span>
+          <v-tab v-for="tab in tabs" :key="tab.id" :value="$t(tab.label)">
+            <span style="color: #020202">{{ $t(tab.label) }}</span>
           </v-tab>
         </v-tabs>
 
@@ -15,20 +12,32 @@
           <v-window-item
             v-for="tab in tabs"
             :key="tab.id"
-            value="CONFIGURATION"
+            :value="
+              $t(tab.label) === 'CONFIGURATION'
+                ? 'CONFIGURATION'
+                : 'CONFIGURATION'
+            "
           >
             <v-card>
               <v-card-text> <ConfigurationComponent /></v-card-text>
             </v-card>
           </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="RULES">
+          <v-window-item
+            v-for="tab in tabs"
+            :key="tab.id"
+            :value="$t(tab.label) === 'RULES' ? 'RULES' : 'REGLES'"
+          >
             <v-card>
               <v-card-text>
                 <RulesComponent :configInfo="configurationInfo"
               /></v-card-text>
             </v-card>
           </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="ALERTS">
+          <v-window-item
+            v-for="tab in tabs"
+            :key="tab.id"
+            :value="$t(tab.label) === 'ALERTS' ? 'ALERTS' : 'ALERTS'"
+          >
             <v-card>
               <v-card-text>
                 <AlertsComponent :configInfo="configurationInfo"
@@ -58,25 +67,41 @@ export default {
   inject: ["emitter"],
   data() {
     return {
-      activeTab: "CONFIGURATION",
+      activeTab: "",
       tabs: [
-        { id: 1, label: "CONFIGURATION" },
-        { id: 2, label: "RULES" },
-        { id: 3, label: "ALERTS" },
+        { id: 1, label: "tabs.configuration" },
+        { id: 2, label: "tabs.rules" },
+        { id: 3, label: "tabs.alerts" },
       ],
       configurationInfo: null,
     };
   },
   watch: {
     activeTab(newVal) {
-      localStorage.setItem("ids", newVal);
+      let tabs = newVal.split(" ");
+      if (tabs.includes("CONFIGURATION") || tabs.includes("CONFIGURATION")) {
+        localStorage.setItem("ids", "tabs.configuration");
+      } else if (tabs.includes("RULES") || tabs.includes("REGLES")) {
+        localStorage.setItem("ids", "tabs.rules");
+      } else {
+        localStorage.setItem("ids", "tabs.alerts");
+      }
     },
   },
   methods: {},
 
   mounted: async function () {
-    let ids = localStorage.getItem("ids") || "CONFIGURATION";
-    this.activeTab = ids;
+    this.emitter.on("reload-tabs", () => {
+      let tab = this.$t(
+        localStorage.getItem("ids") || this.$t("tabs.configuration")
+      );
+      if (tab) this.activeTab = tab;
+    });
+
+    let ids = this.$t(
+      localStorage.getItem("ids") || this.$t("tabs.configuration")
+    );
+    if (ids) this.activeTab = ids;
     this.rowDataConfiguration =
       document.getElementById("app").attributes[
         "general_config_suricata"
@@ -88,7 +113,6 @@ export default {
     let parsedArray = JSON.parse(validJsonString);
     this.rowDataConfiguration = parsedArray;
     this.configurationInfo = this.rowDataConfiguration.configuration.id;
-    console.log(this.rowDataConfiguration);
   },
 };
 </script>

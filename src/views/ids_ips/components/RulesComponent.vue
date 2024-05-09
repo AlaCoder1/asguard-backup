@@ -157,7 +157,7 @@
 import { useI18n } from "vue-i18n";
 import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
-import { onMounted, reactive, ref } from "vue";
+import { onMounted, reactive, ref, computed } from "vue";
 import { inject } from "vue";
 
 import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
@@ -188,6 +188,17 @@ export default {
       textAlert: "",
       messages: [],
     });
+
+    const protocol = computed(() => {
+      return t("suricata.protocol");
+    });
+    const revision = computed(() => {
+      return t("suricata.revision");
+    });
+    const status = computed(() => {
+      return t("squid.status");
+    });
+
     const columnRules = ref([
       {
         width: 50,
@@ -248,7 +259,7 @@ export default {
         sortable: false,
       },
       {
-        headerName: "Protocol",
+        headerName: protocol,
         field: "protocol",
         editable: true,
         cellEditor: "agSelectCellEditor",
@@ -315,7 +326,7 @@ export default {
       },
 
       {
-        headerName: "Revision",
+        headerName: revision,
         field: "rev",
         // editable: true,
         minWidth: 125,
@@ -323,7 +334,7 @@ export default {
       },
 
       {
-        headerName: "Status",
+        headerName: status,
         field: "activate_rule",
         editable: true,
         minWidth: 100,
@@ -472,7 +483,7 @@ export default {
           // state.messages=response.data.message
           showMessage({
             color: "success",
-            text: "All rules saved successfully!!",
+            text: t("suricata.allRulesSaved"),
           });
         } else {
           state.loading = false;
@@ -480,7 +491,7 @@ export default {
           state.snackbar = true;
           showMessage({
             color: "error",
-            text: "Failed to update rule!",
+            text: t("suricata.failedToUpdate"),
           });
         }
       } catch (error) {
@@ -529,12 +540,12 @@ export default {
             if (rule.status === 200) {
               showMessage({
                 color: "success",
-                text: "Rule saved successfully!",
+                text: t("suricata.rulesavedSuccessfully"),
               });
             } else {
               showMessage({
                 color: "error",
-                text: "Failed to save rule!",
+                text: t("suricata.failed"),
               });
             }
           });
@@ -542,7 +553,7 @@ export default {
       } catch (error) {
         showMessage({
           color: "error",
-          text: "Failed to save rule!",
+          text: t("suricata.failed"),
         });
       }
     };
@@ -619,19 +630,19 @@ export default {
               if (response.status === 200) {
                 showMessage({
                   color: "success",
-                  text: "Delete rule Successfully!",
+                  text: t("suricata.deleteRuleSuccessfully"),
                 });
               } else {
                 showMessage({
                   color: "error",
-                  text: "Failed to delete rule!",
+                  text: t("suricata.failedToDeleteRule"),
                 });
               }
             })
             .catch((error) => {
               showMessage({
                 color: "error",
-                text: "Failed to delete rule!",
+                text: t("suricata.failedToDeleteRule"),
               });
             });
         } else {
@@ -661,7 +672,7 @@ export default {
       eGui.innerHTML = `
         <button
           class="action-button delete"
-          data-action="delete" title="Delete Rule">
+          data-action="delete">
              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
 

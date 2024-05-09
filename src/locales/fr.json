@@ -418,7 +418,18 @@
     "afPack":"Pack AF",
     "InterfaceName":"Interface Name exist déja",
     "ClusterIdExist":"Cluster-Id exist déja",
-    "servicesIntrusion":"Intrusion Detection Services"
+    "servicesIntrusion":"Intrusion Detection Services",
+    "protocol":"Protocole",
+    "revision":"Révision",
+    "allRulesSaved ":"Toutes les règles sont sauvegardées avec succès !",
+    "failedToUpdate":"Échec de la mise à jour de la règle !",
+    "rulesavedSuccessfully":"Règle sauvegardée avec succès !",
+    "deleteRuleSuccessfully":"Supprimer la règle avec succès !",
+    "failedToDeleteRule":"Échec de la suppression de la règle !",
+    "listOfAlerts":"Liste des alertes",
+    "severity":"Sévérité",
+    "LINUXTimestamp":"Horodatage LINUX",
+    "allAlertsuccessfully":"Toutes les alertes ont été sauvegardées avec succès !"
 
   },
    "Start":"Démarrer",
@@ -448,7 +459,10 @@
 
   "tabs":{
     "userManagement":"Gestion des utilisateurs",
-    "certificateManagement":"Gestion des certificats"
+    "certificateManagement":"Gestion des certificats",
+    "configuration":"CONFIGURATION",
+    "rules":"REGLES",
+    "alerts":"ALERTS"
 
   },
   "home":{

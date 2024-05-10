@@ -371,6 +371,49 @@
     
 
   },
+  "suricata":{
+    "suricata":"Suricata",
+    "enableIDS":"Enable IDS system",
+    "EnableIntrusion ":"Enable intrusion detection system.",
+    "IPSMode":"IPS Mode",
+    "enableIPS":"Enable IPS",
+    "promisuousMode":"Promisuous Mode",
+    "enablePromisuousMode":"Enable Promisuous Mode",
+    "enableSyslogAlerts":"Enable syslog alerts",
+    "enableEveSyslogOutput":"Enable eve syslog output",
+    "patternMatcher":"Pattern matcher",
+    "detectProfile":"Detect Profile",
+    "updateSuricata":"Update suricata rules",
+    "makeYourUpdates":"Update",
+    "thread":"Thread",
+    "clusterId":"Cluster Id",
+    "clusterType":"Cluster Type",
+    "copyMode":"Copy Mode",
+    "copyIface":"Copy Iface",
+    "bufferSize":"Buffer Size",
+    "useMmap":"Use Mmap",
+    "rulesSavedSuccessfully":"Rules saved successfully!",
+    "failed":"Failed to save rule!",
+    "configurationSuccess":"Configuration saved successfully!",
+    "failedToSaveConfiguration":"Failed to save configuration!",
+    "MinimumOneInter":"Minimum One Interface In AF Packet",
+    "afPack":"AF Pack",
+    "InterfaceName":"Interface Name already exists",
+    "ClusterIdExist":"Cluster-Id already exists",
+    "servicesIntrusion":"Services Intrusion Detection",
+    "protocol":"Protocol",
+    "revision":"Revision",
+    "allRulesSaved ":"All rules saved successfully !",
+    "failedToUpdate":"Failed to update rule !",
+    "rulesavedSuccessfully":"Rule saved successfully!",
+    "deleteRuleSuccessfully":"Delete rule Successfully!",
+    "failedToDeleteRule":"Failed to delete rule!",
+    "listOfAlerts":"List of alerts",
+    "severity":"Severity",
+    "LINUXTimestamp":"LINUX Timestamp",
+    "allAlertsuccessfully":"All alerts saved successfully!!"
+
+  },
   "Start":"Start",
   "Stop":"Stop",
   "Restart":"Restart",
@@ -418,7 +461,16 @@
 
   "tabs":{
     "userManagement":"User Management",
-    "certificateManagement":"Certificate Management"
+    "certificateManagement":"Certificate Management",
+    "configuration":"CONFIGURATION",
+    "rules":"RULES",
+    "alerts":"ALERTS"
+
+  },
+  "titleAgGrid":{
+    "privateKey":"Private.key",
+    "publicKey":"Copy.Public.Key",
+    "pK":"Public.Key"
 
   },
   "home":{

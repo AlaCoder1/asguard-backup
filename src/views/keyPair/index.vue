@@ -21,6 +21,9 @@
                     :columnDefs="columnKeys"
                     :rowData="rowDataKeys.value"
                     :overlayNoRowsTemplate="overlayTemplate"
+                    :pagination="true"
+                    :paginationPageSize="4"
+                    :localeText="paginationLocalization"
                   />
                 </div>
                 <div class="d-flex justify-end mt-3">
@@ -91,6 +94,9 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
     const state = reactive({
@@ -209,6 +215,7 @@ export default {
       },
       {
         headerName: "Action",
+        width:150,
         cellRenderer: actionCellRendererKeys,
         field: "action",
       },
@@ -225,7 +232,7 @@ export default {
     const defaultColDef = {
       sortable: true,
       filter: true,
-      flex: 1,
+      // flex: 1,
     };
 
     const getCookie = (name) => {
@@ -267,24 +274,24 @@ export default {
           eGui.innerHTML = `
           <button
            class="action-button copy"
-           data-action="copy"  title="Copy Public Key">
+           data-action="copy"  title=${t('titleAgGrid.publicKey')}>
               <i class="mdi mdi-content-copy" style="color: #086eae;font-size: 20px;"></i>
            </button>
           <button
            class="action-button download"
-           data-action="export"  title="Download Public Key">
+           data-action="export"  title=${t('titleAgGrid.pK')}>
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
           class="action-button delete"
-          data-action="delete" title="Delete Server">
+          data-action="delete">
             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>`;
         } else {
           eGui.innerHTML = `
           <button
           class="action-button delete"
-          data-action="delete" title="Delete Server">
+          data-action="delete">
             <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
 
@@ -404,6 +411,7 @@ export default {
       overlayTemplate,
       defaultColDef,
       emitter,
+      paginationLocalization,
       actionCellRendererKeys,
       openModalAdd,
       onGridReady,

@@ -390,6 +390,49 @@
    
     
    },
+   "suricata":{
+    "suricata":"Suricata",
+    "enableIDS":"Activer le système IDS",
+    "EnableIntrusion ":"Activer le système de détection d'intrusions.",
+    "IPSMode":"Mode IPS",
+    "enableIPS":"Activer l'IPS",
+    "promisuousMode":"Mode prometteur",
+    "enablePromisuousMode":"Activer le mode Promisuous",
+    "enableSyslogAlerts":"Activer les alertes syslog",
+    "enableEveSyslogOutput":"Activer la sortie syslog d'eve",
+    "patternMatcher":"Correspondance de motifs",
+    "detectProfile":"Profil de détection",
+    "updateSuricata":"Modifier les règles de suricata",
+    "makeYourUpdates":"Mise à jour",
+    "thread":"Fil",
+    "clusterId":"ID de cluster",
+    "clusterType":"Type de cluster",
+    "copyMode":"Mode Copie",
+    "copyIface":"Copie Iface",
+    "bufferSize":"Taille du buffer",
+    "useMmap":"Utiliser Mmap",
+    "rulesSavedSuccessfully":"Règles sauvegardées avec succès !",
+    "failed":"Échec de la sauvegarde de la règle !",
+    "configurationSuccess":"Configuration sauvegardée avec succès !",
+    "failedToSaveConfiguration":"Échec de la sauvegarde de la configuration !",
+    "MinimumOneInter":"Une interface au minimum dans le paquet AF",
+    "afPack":"Pack AF",
+    "InterfaceName":"Interface Name exist déja",
+    "ClusterIdExist":"Cluster-Id exist déja",
+    "servicesIntrusion":"Intrusion Detection Services",
+    "protocol":"Protocole",
+    "revision":"Révision",
+    "allRulesSaved ":"Toutes les règles sont sauvegardées avec succès !",
+    "failedToUpdate":"Échec de la mise à jour de la règle !",
+    "rulesavedSuccessfully":"Règle sauvegardée avec succès !",
+    "deleteRuleSuccessfully":"Supprimer la règle avec succès !",
+    "failedToDeleteRule":"Échec de la suppression de la règle !",
+    "listOfAlerts":"Liste des alertes",
+    "severity":"Sévérité",
+    "LINUXTimestamp":"Horodatage LINUX",
+    "allAlertsuccessfully":"Toutes les alertes ont été sauvegardées avec succès !"
+
+  },
    "Start":"Démarrer",
    "Stop":"Arrêter",
    "Restart":"Redémarrer",
@@ -417,7 +460,16 @@
 
   "tabs":{
     "userManagement":"Gestion des utilisateurs",
-    "certificateManagement":"Gestion des certificats"
+    "certificateManagement":"Gestion des certificats",
+    "configuration":"CONFIGURATION",
+    "rules":"REGLES",
+    "alerts":"ALERTS"
+
+  },
+  "titleAgGrid":{
+    "privateKey":"Clé.privée",
+    "publicKey":"Copier.Clé.publique",
+    "pK":"Clé.publique"
 
   },
   "home":{

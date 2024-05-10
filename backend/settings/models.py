@@ -13,6 +13,7 @@ class System(models.Model):
     domaine = models.CharField(max_length=200, null=True)
     time_zone =  models.ForeignKey(
         Timezone, on_delete=models.CASCADE, null=True)
+    language = models.CharField(max_length=100, default='en', null=True, blank=True)
     
     class Meta:
         db_table = 'system'

@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Personal informations">
+    <base-layout :title="$t('profil.Personalinformations')">
       <template #content>
         <div>
           <div>
@@ -97,49 +97,49 @@
           </div>
           <v-row class="d-flex justify-center align-center mt-5">
             <v-col cols="4" class="mb-n6">
-              <v-text-field label="Username System"></v-text-field>
+              <v-text-field :label="$t('profil.Username')"></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
-              <v-text-field label="Address"></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row class="d-flex justify-center align-center mt-5">
-            <v-col cols="4" class="mb-n6">
-              <v-text-field label="Firstname"></v-text-field>
-            </v-col>
-            <v-col cols="4" class="mb-n6">
-              <v-text-field label="Region"></v-text-field>
+              <v-text-field :label="$t('profil.Address')"></v-text-field>
             </v-col>
           </v-row>
           <v-row class="d-flex justify-center align-center mt-5">
             <v-col cols="4" class="mb-n6">
-              <v-text-field label="Phone number"></v-text-field>
+              <v-text-field :label="$t('profil.Firstname')"></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
-              <v-text-field label="Country"></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row class="d-flex justify-center align-center mt-5">
-            <v-col cols="4" class="mb-n6">
-              <v-text-field label="Email Ldap"></v-text-field>
-            </v-col>
-            <v-col cols="4" class="mb-n6">
-              <v-text-field label="Postal code"></v-text-field>
+              <v-text-field :label="$t('profil.Region')"></v-text-field>
             </v-col>
           </v-row>
           <v-row class="d-flex justify-center align-center mt-5">
             <v-col cols="4" class="mb-n6">
-              <v-text-field label="LastName"></v-text-field>
+              <v-text-field :label="$t('profil.Phonenumber')"></v-text-field>
+            </v-col>
+            <v-col cols="4" class="mb-n6">
+              <v-text-field :label="$t('profil.Country')"></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row class="d-flex justify-center align-center mt-5">
+            <v-col cols="4" class="mb-n6">
+              <v-text-field :label="$t('profil.Email')"></v-text-field>
+            </v-col>
+            <v-col cols="4" class="mb-n6">
+              <v-text-field :label="$t('profil.Postalcode')"></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row class="d-flex justify-center align-center mt-5">
+            <v-col cols="4" class="mb-n6">
+              <v-text-field :label="$t('profil.Lastname')"></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
               <v-row>
                 <v-col cols="8">
-                  <label>Activate 2 factor authentification </label>
+                  <label>{{$t('profil.2FA')}} </label>
                 </v-col>
                 <v-spacer></v-spacer>
                 <v-col cols="4" class="mb-n6">
                   <input type="checkbox" hide-details />
-                  <label class="ml-1"> Activate OTP </label>
+                  <label class="ml-1">{{$t('profil.ActivateOTP')}} </label>
                 </v-col>
               </v-row>
             </v-col>
@@ -153,7 +153,7 @@
                   outlined
                   color="#213E9F"
                   label-color="#ffffff"
-                  label="Update"
+                  :label="$t('profil.Update')"
                   :isLarge="true"
                 />
               </div>
@@ -162,16 +162,16 @@
 
           <v-row class="d-flex justify-center align-center mt-0">
             <v-col cols="8" class="mb-n6">
-              <v-text-field label="Old password"></v-text-field>
+              <v-text-field :label="$t('profil.Oldpassword')"></v-text-field>
             </v-col>
           </v-row>
 
           <v-row class="d-flex justify-center align-center">
             <v-col cols="4" class="mb-n6">
-              <v-text-field label="New passowrd"></v-text-field>
+              <v-text-field :label="$t('profil.Newpassowrd')"></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
-              <v-text-field label="Confirm New passowrd"></v-text-field>
+              <v-text-field :label="$t('profil.ConfirmNewpassowrd')"></v-text-field>
             </v-col>
           </v-row>
           <v-row class="flex py-8 mb-10">
@@ -182,7 +182,7 @@
                   outlined
                   color="#213E9F"
                   label-color="#ffffff"
-                  label="Change Password"
+                  :label="$t('profil.ChangePassword')"
                   :isLarge="true"
                 />
               </div>

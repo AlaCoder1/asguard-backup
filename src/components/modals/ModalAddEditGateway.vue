@@ -4,14 +4,14 @@
       <form ref="myForm" @submit.prevent="submitForm" style="overflow: auto">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> Gateway</span>
+            <span class="text-h5"> {{$t('openvpn.Gateway')}}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="DNS Server"
+                    :label="$t('settings.DNSServer')"
                     density="compact"
                     v-model="state.dns_server"
                   ></v-text-field>
@@ -26,13 +26,14 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.gateway"
-                    label="Gateway"
+                    :label="$t('openvpn.Gateway')"
                     density="compact"
                     item-title="address"
                     item-value="id"
                     return-object
                     :items="state.gatwayList"
                     background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')"
                   >
                   </v-select>
                   <p
@@ -84,7 +85,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3">Close</span>
+              <span class="pr-3 pl-3">{{$t("buttons.close")}}</span>
             </v-btn>
 
             <v-btn
@@ -98,7 +99,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Add</span>
+              <span class="text-white pr-3 pl-3">{{$t("buttons.Add")}}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -117,6 +118,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import {
@@ -150,6 +152,7 @@ export default {
   },
 
   setup(props) {
+    const { t } = useI18n();
     const emitter = inject("emitter");
     onMounted(() => {
       emitter.on("list-gateway", (data) => {
@@ -277,25 +280,30 @@ export default {
       state.dns_server = "";
       state.gateway = "";
     };
-
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
     const rules = computed(() => {
       return {
         dns_server: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(
               () => modalMode.value === "edit" || modalMode.value === "create"
             )
           ),
           isValidDns_server: helpers.withMessage(
-            `Champs must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         gateway: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(
               () => modalMode.value === "edit" || modalMode.value === "create"
             )
@@ -303,7 +311,7 @@ export default {
         },
         checkInterface: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(
               () =>
                 state.gateway &&

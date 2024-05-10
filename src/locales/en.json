@@ -58,7 +58,9 @@
     "passwordConfirmation":"Your password does not match",
     "ChampIncludeOnlyNumbers":"Champs can include only Numbers",
     "formatMustBeLikeAdresseIP":"Format must be like adresse IP : X.X.X.X",
-    "minimumOneRange":"Minimum One Range"
+    "minimumOneRange":"Minimum One Range",
+    "Formatdomain":"Format must be like exemple.com"
+    
 
   },
 
@@ -756,8 +758,93 @@
       "NetworkTunnel":"Network Tunnel",
       "CertificatStatus":"Certificat Status"
 
+    },
+    "Waf":{
+      "Ruleengineinitialization":"Rule engine initialization",
+      "Accessrequestbodies":"Access request bodies",
+      "EnableAccessrequestbodies":"Enable Access request bodies",
+      "XMLrequestbodyparser":"XML request body parser",
+      "EnableXMLrequestbodyparser":"Enable XML request body parser",
+      "JSONrequestbodyparser":"JSON request body parser",
+      "EnableJSONrequestbodyparser":"Enable JSON request body parser",
+      "Maximumrequestbodysize":"Maximum request body size",
+      "Requestbodysizefilesexcluded":"Request body size files excluded",
+      "RequestBodyLimitAction":"Request Body Limit Action",
+      "MaximumparsingdepthforJSON":"Maximum parsing depth for JSON",
+      "Maximumnumberofargs/request":"Maximum number of args/request",
+      "PcreMatchLimit":"Pcre Match Limit",
+      "PcreMatchLimitRecursion":"Pcre Match Limit Recursion",
+      "ResponseBodyAccess":"Response Body Access",
+      "Enableaccessresponsebodies":"Enable access response bodies",
+      "ResponseBodyMimeType":"Response Body MimeType",
+      "ResponseBodyLimit":"Response Body Limit",
+      "ResponseBodyLimitAction":"Response Body Limit Action",
+      "Ruleengine":"Rule engine",
+      "Requestbodysizefiles":"Request body size files",
+      "Maximumparsingdepth":"Maximum parsing depth",
+      "RequestAction":"Request Action",
+      "Rule":"Rule",
+      "Status":"Status"
 
+    },
+    "settings":{
+      "GENERALPARAMETERS":"GENERAL PARAMETERS",
+      "System":"System",
+      "Network":"Network",
+      "Hostname":"Host name",
+      "Domain":"Domain",
+      "Timezone":"Time zone",
+      "PreferIPv4":"Prefer to use IPv4 even if IPv6 is available",
+      "DNSServer":"DNS Server",
+      "Usethegateway":"Use the gateway",
+      "DNSServerOptions":"DNS Server Options",
+      "allowreplacement":"Allow replacement of DNS servers with those obtained by DHCP/PP on the WAN",
+      "dnsservice":"Do not use the local DNS service as a nameserver",
+      "GatewayFailover":"Gateway Failover",
+      "Allowgatewayfailover":"Allow default gateway failover",
+      "NETWORKSERVERS":"NETWORK SERVERS",
+      "LocalLogging":"Local Logging Options",
+      "Circularlogs":"Circular logs",
+      "Sizeoflogfiles":"Size of log files (Bytes)",
+      "Logfirewalldefault":"Log firewall default blocks",
+      "ruleset":"Log packets matching the default blocking rules put in the ruleset",
+      "forwardingrules":"Log packets that match the ruleset's default forwarding rules",
+      "logpackets":"Log packets blocked by 'Block private networks' rules",
+      "Webserverprocesserrors":"Web server process errors",
+      "Trace":"Trace",
+      "Eventlogs":"Event logs",
+      "Reset":"Reset",
+      "Logfilesreset":"Log files have been reset",
+      "Excludeinterfaces":"Exclude interfaces"
+
+    
+    },
+    "profil":{
+      "Personalinformations":"Personal informations",
+      "Username":"Username",
+      "Address":"Address",
+      "Firstname":"First name",
+      "Lastname":"Last name",
+      "Region":"Region",
+      "Phonenumber":"Phone Number",
+      "Country":"Country",
+      "Email":"Email",
+      "Postalcode":"Postal code",
+      "2FA":"Activate 2 factor authentification",
+      "ActivateOTP":"Activate OTP",
+      "Oldpassword":"Old password",
+      "Newpassowrd":"New passowrd",
+      "ConfirmNewpassowrd":"Confirm New passowrd",
+      "ChangePassword":"Change Password",
+      "Update":"Update"
     }
+
+
+
+
+
+    
+    
 
 
   }

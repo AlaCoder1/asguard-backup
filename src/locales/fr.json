@@ -56,7 +56,8 @@
     "passwordConfirmation":"Votre mot de passe ne correspond pas",
     "ChampIncludeOnlyNumbers":"Champ ne peut inclure que des numéros",
     "formatMustBeLikeAdresseIP":"Format doit correspondre à l'adresse IP : X.X.X.X",
-    "minimumOneRange":"Minimum Une Plage"
+    "minimumOneRange":"Minimum Une Plage",
+    "Formatdomain":"Le format doit être comme exemple.com"
 
   },
   "placeholder":{
@@ -756,5 +757,87 @@
       "ListClients":"Liste des clients",
       "NetworkTunnel":"Tunnel du réseau",
       "CertificatStatus":"Statut du certificat"
+    },
+    "Waf":{
+      "Ruleengineinitialization":"Initialisation du moteur de règles",
+      "Accessrequestbodies":"Accès aux corps des requêtes",
+      "EnableAccessrequestbodies":"Activer l'accès aux corps des requêtes",
+      "XMLrequestbodyparser":"Analyseur de corps de requête XML",
+      "EnableXMLrequestbodyparser":"Activer l'analyseur de corps de requête XML",
+      "JSONrequestbodyparser":"Analyseur de corps de requête JSON",
+      "EnableJSONrequestbodyparser":"Activer l'analyseur de corps de requête JSON",
+      "Maximumrequestbodysize":"Taille maximale du corps de la requête",
+      "Requestbodysizefilesexcluded":"Taille du corps de la requête excluant les fichiers",
+      "RequestBodyLimitAction":"Action de limitation de la taille du corps de la requête",
+      "MaximumparsingdepthforJSON":"Profondeur maximale d'analyse pour les données JSON",
+      "Maximumnumberofargs/request":"Nombre maximal d'arguments par requête",
+      "PcreMatchLimit":"Limite de correspondance PCRE",
+      "PcreMatchLimitRecursion":"Limite de récursion de la correspondance PCRE",
+      "ResponseBodyAccess":"Accès au corps de la réponse",
+      "Enableaccessresponsebodies":"Activer l'accès aux corps de réponse",
+      "ResponseBodyMimeType":"Type MIME du corps de la réponse",
+      "ResponseBodyLimit":"Limite du corps de la réponse",
+      "ResponseBodyLimitAction":"Action limite corps réponse",
+      "Ruleengine":"moteur de règles",
+      "Requestbodysizefiles":"taille des fichiers du corps de la requête",
+      "Maximumparsingdepth":"Profondeur maximale d'analyse",
+      "RequestAction":"Demande d'action",
+      "Rule":"Règle",
+      "Status":"Statut"
+
+    },
+    "settings":{
+      "GENERALPARAMETERS":"PARAMÈTRES GÉNÉRAUX",
+      "System":"Système",
+      "Network":"Réseau",
+      "Hostname":"Nom d'hôte",
+      "Domain":"Domaine",
+      "Timezone":"Fuseau horaire",
+      "PreferIPv4":"Préférer utiliser IPv4 même si IPv6 est disponible",
+      "DNSServer":"Serveur DNS",
+      "Usethegateway":"Utiliser la passerelle",
+      "DNSServerOptions":"Options du serveur DNS",
+      "allowreplacement":"Autoriser le remplacement des serveurs DNS par ceux obtenus par DHCP/PP sur le WAN",
+      "dnsservice":"Ne pas utiliser le service DNS local comme serveur de noms",
+      "GatewayFailover":"Défaillance de la passerelle",
+      "Allowgatewayfailover":"Autoriser la défaillance de la passerelle par défaut",
+      "NETWORKSERVERS":"SERVEURS RÉSEAU",
+      "LocalLogging":"Options de journalisation locale",
+      "Circularlogs":"Journaux circulaires",
+      "Sizeoflogfiles":"Taille des fichiers journaux (octets)",
+      "Logfirewalldefault":"Journaliser les blocages par défaut du pare-feu",
+      "ruleset":"Journaliser les paquets correspondant aux règles de blocage par défaut définies dans le jeu de règles",
+      "forwardingrules":"Journaliser les paquets correspondant aux règles de transfert par défaut définies dans le jeu de règles",
+      "logpackets":"Journaliser les paquets bloqués par les règles 'Bloquer les réseaux privés'",
+      "Webserverprocesserrors":"Erreurs du processus de serveur Web",
+      "Trace":"Trace",
+      "Eventlogs":"Journaux d'événements",
+      "Reset":"Réinitialiser",
+      "Logfilesreset":"Les fichiers journaux ont été réinitialisés",
+      "Excludeinterfaces":"Exclure les interfaces"
+
+
+    
+    },
+    "profil":{
+      "Personalinformations":"Informations personnelles",
+      "Username":"Nom d'utilisateur",
+      "Address":"Adresse",
+      "Firstname":"Prénom",
+      "Lastname":"Nom de famille",
+      "Region":"Région",
+      "Phonenumber":"Numéro de téléphone",
+      "Country":"Pays",
+      "Email":"Email",
+      "Postalcode":"Code postal",
+      "2FA":"Activer l'authentification à 2 facteurs",
+      "ActivateOTP":"Activer l'OTP",
+      "Oldpassword":"Ancien mot de passe",
+      "Newpassowrd":"Nouveau mot de passe",
+      "ConfirmNewpassowrd":"Confirmer le nouveau mot de passe",
+      "ChangePassword":"Changer mot de passe",
+      "Update":"Mettre à jour"
     }
+    
+    
   }

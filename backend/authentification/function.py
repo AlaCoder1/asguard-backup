@@ -1,37 +1,43 @@
 from rest_framework import status
 from django.contrib.auth import authenticate, login
 from django.conf import settings
-from backend.managementUsers.models import User,Profile
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+from django.utils.translation import gettext_lazy as _
+from backend.managementUsers.models import User, Profile
 from email.message import EmailMessage
-from email.mime.image import MIMEImage
 from datetime import datetime, timedelta 
-from .serializers import *
 from .models import VerificationCode
 import smtplib
 import random
 import string
 import qrcode
-import time
 import os
+
+
+# Constants
+CONSTANT_VERIFIFCATION_CODE = _("verification code")
+# Success messages
+SUCCESS_MESSAGES_LOGIN = _("Success Authentication")
+SUCCESS_MESSAGES_SENT = _("is sent successfully")
+# Error messages
+ERROR_MESSAGES_INVALID_CREDENTIALS = _("Invalid credentials")
+
 
 def normal_connect(request,data):
     user = authenticate(request, username=data['username'], password=data['password'])
-    if (user is not None):
-        userObject = User.objects.get(username=data['username'])
-        userDict = userObject.__dict__
-        CurrentUser = {"id": userDict["id"], "username":userDict['username'], "email":userDict['email'], "role":userDict['role']}
-        settings.CurrentUserId = userDict['id']
-        profile = Profile.objects.get(user=userObject.pk)
+    if user:
+        user_object = User.objects.get(username=data['username'])
+        user_dict = user_object.__dict__
+        current_user = {"id": user_dict["id"], "username":user_dict['username'], "email":user_dict['email'], "role":user_dict['role']}
+        settings.CurrentUserId = user_dict['id']
+        profile = Profile.objects.get(user=user_object.pk)
         if profile.is_enable_2FA is False:
             login(request, user)
-            return 'Success Authentification',CurrentUser, status.HTTP_200_OK,False
+            return SUCCESS_MESSAGES_LOGIN, current_user, status.HTTP_200_OK
         else:
-            if send_verification_code(userDict['email'],userDict['username']):
-                return "Verification code sent successfully",CurrentUser, status.HTTP_200_OK,True
+            if send_verification_code(user_dict['email'], user_dict['username']):
+                return f"{CONSTANT_VERIFIFCATION_CODE} {SUCCESS_MESSAGES_SENT}", current_user, status.HTTP_200_OK
     else:
-        return 'Invalid credentiels',None,status.HTTP_401_UNAUTHORIZED,False
+        return ERROR_MESSAGES_INVALID_CREDENTIALS, None, status.HTTP_401_UNAUTHORIZED
     
 def exist_user_email(username):
     try:

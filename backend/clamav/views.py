@@ -7,6 +7,7 @@ from backend.authentification.views import *
 from .serializers import ClamavSerializer,FreshclamDatabaseSerializer
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
 from django.db.models import Q
 from backend.clamav.functions_sys import update_clamav_config,execute_cmd

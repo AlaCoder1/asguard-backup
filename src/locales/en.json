@@ -464,7 +464,13 @@
     "certificateManagement":"Certificate Management",
     "configuration":"CONFIGURATION",
     "rules":"RULES",
-    "alerts":"ALERTS"
+    "alerts":"ALERTS",
+    "tunnelConfig":"TUNNEL CONFIGURATION",
+    "ipsecPeers":"IPSEC PEERS",
+    "monitoring":"MONITORING",
+    "servers":"SERVERS",
+    "clients":"CLIENTS",
+    "listing":"LISTING"
 
   },
   "titleAgGrid":{

@@ -6,7 +6,6 @@ import * as components from "vuetify/components";
 import * as directives from "vuetify/directives";
 import mitt from "mitt";
 import openvpn from "../views/openVpn/openvpn";
-import ClientsOpenvpnComponent from "../views/openVpn/components/ClientsOpenvpnComponent.vue";
 import { startTimer } from "../mixins/timer_token.js";
 import { createI18n } from "vue-i18n";
 import enJson from "../locales/en.json";
@@ -15,7 +14,6 @@ const emitter = mitt();
 
 const app = createApp(openvpn);
 
-app.component("ClientsOpenvpnComponent", ClientsOpenvpnComponent);
 app.provide("emitter", emitter);
 
 const vuetify = createVuetify({

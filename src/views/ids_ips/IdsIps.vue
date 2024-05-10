@@ -3,45 +3,24 @@
     <base-layout :title="$t('subtitle.intrusionDetection')">
       <template #content>
         <v-tabs v-model="activeTab">
-          <v-tab v-for="tab in tabs" :key="tab.id" :value="$t(tab.label)">
+          <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">
             <span style="color: #020202">{{ $t(tab.label) }}</span>
           </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
           <v-window-item
-            v-for="tab in tabs"
-            :key="tab.id"
-            :value="
-              $t(tab.label) === 'CONFIGURATION'
-                ? 'CONFIGURATION'
-                : 'CONFIGURATION'
-            "
-          >
-            <v-card>
-              <v-card-text> <ConfigurationComponent /></v-card-text>
-            </v-card>
-          </v-window-item>
-          <v-window-item
-            v-for="tab in tabs"
-            :key="tab.id"
-            :value="$t(tab.label) === 'RULES' ? 'RULES' : 'REGLES'"
+            v-for="(tab, index) in tabs"
+            :key="index"
+            :value="tab.label"
           >
             <v-card>
               <v-card-text>
-                <RulesComponent :configInfo="configurationInfo"
-              /></v-card-text>
-            </v-card>
-          </v-window-item>
-          <v-window-item
-            v-for="tab in tabs"
-            :key="tab.id"
-            :value="$t(tab.label) === 'ALERTS' ? 'ALERTS' : 'ALERTS'"
-          >
-            <v-card>
-              <v-card-text>
-                <AlertsComponent :configInfo="configurationInfo"
-              /></v-card-text>
+                <component
+                  :is="tab.component"
+                  :configInfo="configurationInfo"
+                />
+              </v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -69,39 +48,34 @@ export default {
     return {
       activeTab: "",
       tabs: [
-        { id: 1, label: "tabs.configuration" },
-        { id: 2, label: "tabs.rules" },
-        { id: 3, label: "tabs.alerts" },
+        {
+          id: 1,
+          label: "tabs.configuration",
+          component: ConfigurationComponent,
+        },
+        { id: 2, label: "tabs.rules", component: RulesComponent },
+        { id: 3, label: "tabs.alerts", component: AlertsComponent },
       ],
       configurationInfo: null,
     };
   },
   watch: {
     activeTab(newVal) {
-      let tabs = newVal.split(" ");
-      if (tabs.includes("CONFIGURATION") || tabs.includes("CONFIGURATION")) {
-        localStorage.setItem("ids", "tabs.configuration");
-      } else if (tabs.includes("RULES") || tabs.includes("REGLES")) {
-        localStorage.setItem("ids", "tabs.rules");
-      } else {
-        localStorage.setItem("ids", "tabs.alerts");
-      }
+      localStorage.setItem("ids", newVal);
     },
   },
   methods: {},
 
   mounted: async function () {
     this.emitter.on("reload-tabs", () => {
-      let tab = this.$t(
-        localStorage.getItem("ids") || this.$t("tabs.configuration")
-      );
+      let tab = localStorage.getItem("ids") || "tabs.configuration";
       if (tab) this.activeTab = tab;
     });
 
-    let ids = this.$t(
-      localStorage.getItem("ids") || this.$t("tabs.configuration")
-    );
+    let ids = localStorage.getItem("ids") || "tabs.configuration";
+
     if (ids) this.activeTab = ids;
+
     this.rowDataConfiguration =
       document.getElementById("app").attributes[
         "general_config_suricata"

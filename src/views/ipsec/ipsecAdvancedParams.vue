@@ -497,7 +497,7 @@ export default {
     watch(
       () => dataServer.value,
       (newValue) => {
-        if (newValue != "TUNNEL CONFIGURATION") {
+        if (newValue != "tabs.tunnelConfig") {
           state.isEditState = "";
           cancel();
         }

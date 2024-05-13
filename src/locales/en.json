@@ -59,8 +59,11 @@
     "ChampIncludeOnlyNumbers":"Champs can include only Numbers",
     "formatMustBeLikeAdresseIP":"Format must be like adresse IP : X.X.X.X",
     "minimumOneRange":"Minimum One Range",
-    "Formatdomain":"Format must be like exemple.com"
-    
+    "Formatdomain":"Format must be like exemple.com",
+    "specificform":"Champ must be at least 32 characters, including at least one uppercase,one lowercase, one number, and one special character",
+    "portform":"The local Port field can only include Numbers min 4 and max 5",
+    "formsepcificpassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character",
+    "startwithletter":"The name can contain letters, digits, underscores, and hyphens, must begin with a letter, and can be up to 32 characters long"
 
   },
 

@@ -260,6 +260,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import { inject, ref, toRefs } from "vue";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
@@ -282,6 +283,7 @@ export default {
   },
   props: ["dataServer"],
   setup(props) {
+    const { t } = useI18n();
     const { dataServer } = toRefs(props);
     const emitter = inject("emitter");
 
@@ -361,94 +363,121 @@ export default {
         slug: "1",
       },
     });
+    const champ = computed(() => {
+      return t("champs.indication");
+    });
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const portform = computed(() => {
+      return t("errors.portform");
+    });
+    const formatMustBeLikeAdresseIP = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
+    const specificform = computed(() => {
+      return t("errors.formsepcificpassword");
+    });
 
     const rules = computed(() => {
       return {
         clientName: {
-          required,
+          required: helpers.withMessage(error, required),
           isValidClientName: helpers.withMessage(
-            `champs can include only letters & Numbers & underscores & hyphens without space.`,
+            champ ,
 
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },
 
-        serverMode: { required },
-        protocol: { required },
-        deviceMode: { required },
-        interface: { required },
+        serverMode: { required: helpers.withMessage(error, required) },
+        protocol: { required: helpers.withMessage(error, required)},
+        deviceMode: { required: helpers.withMessage(error, required) },
+        interface: { required: helpers.withMessage(error, required) },
 
         localPort: {
-          required,
+          required: helpers.withMessage(error, required),
           isValidlifeTime: helpers.withMessage(
-            `champs local Port can include only Numbers min 4 and max 5.`,
+            portform,
 
             helpers.regex(/^[0-9]{4,5}$/)
           ),
         },
         //Cryptographic Settings
         tlsGenerate: {
+          required: helpers.withMessage(error, required),
           requiredIfFuction: requiredIf(() => !state.isEnableAuth),
         },
-        peerCertif: { required },
-        serverCertif: { required },
-        dhParameters: { required },
-        encryptAlgo: { required },
-        authDigest: { required },
+        peerCertif: { required: helpers.withMessage(error, required)},
+        serverCertif: { required: helpers.withMessage(error, required)},
+        dhParameters: { required: helpers.withMessage(error, required)},
+        encryptAlgo: { required: helpers.withMessage(error, required)},
+        authDigest: { required: helpers.withMessage(error, required)},
 
         //Tunnel Settings
 
         ip4Tunnel: {
+          required: helpers.withMessage(error, required),
           requiredIfFuction: requiredIf(
             () => !state.isBridge && !state.adressPool
           ),
           isValidIp4Tunnel: helpers.withMessage(
-            `Format must be like : X.X.X.X/X`,
+            formatMustBeLikeAdresseIP,
 
             helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
         iPv4Local: {
+          required: helpers.withMessage(error, required),
           requiredIfFuction: requiredIf(
             () => !state.isBridge && !state.adressPool
           ),
           isValidIPv4Local: helpers.withMessage(
-            `Format must be like : X.X.X.X/X`,
+            formatMustBeLikeAdresseIP,
 
             helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
         iPv4Remote: {
+          required: helpers.withMessage(error, required),
           isValidIPv4Remote: helpers.withMessage(
-            `Format must be like : X.X.X.X/X`,
+            formatMustBeLikeAdresseIP,
 
             helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
         interfaceBridge: {
+          required: helpers.withMessage(error, required),
           requiredIfFuction: requiredIf(() => state.isBridge),
         },
 
         //Client Settings
         startAddressPool: {
+          required: helpers.withMessage(error, required),
           requiredIfFuction: requiredIf(() => state.adressPool),
         },
         endAddressPool: {
+          required: helpers.withMessage(error, required),
           requiredIfFuction: requiredIf(() => state.adressPool),
         },
         startDHCPBridge: {
+          required: helpers.withMessage(error, required),
           requiredIfFuction: requiredIf(() => state.isBridge),
           isValidStartDHCPBridge: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formatMustBeLikeAdresseIP,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         endDHCPBridge: {
+          required: helpers.withMessage(error, required),
           requiredIfFuction: requiredIf(() => state.isBridge),
 
           isValidEndDHCPBridge: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formatMustBeLikeAdresseIP,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -456,7 +485,7 @@ export default {
         activeDnsDefault: {
           requiredIfFuction: requiredIf(() => state.dnsDefaultDomain),
           isValidActiveDnsDefault: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formatMustBeLikeAdresseIP,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -465,21 +494,21 @@ export default {
           requiredIfFuction: requiredIf(() => state.dnsServers),
 
           isValidActiveDnsServer1: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formatMustBeLikeAdresseIP,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         activeDnsServer2: {
           isValidActiveDnsServer2: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formatMustBeLikeAdresseIP,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         activeNtpServer2: {
           isValidActiveNtpServer2: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formatMustBeLikeAdresseIP,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -488,7 +517,7 @@ export default {
           requiredIfFuction: requiredIf(() => state.ntpServers),
 
           isValidActiveNtpServer1: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formatMustBeLikeAdresseIP,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -497,7 +526,7 @@ export default {
         portClient: {
           requiredIfFuction: requiredIf(() => state.clientPort),
           isValidPortClient: helpers.withMessage(
-            `Champs can include only Numbers`,
+            onlynumbers,
             helpers.regex(/^[0-9]+$/)
           ),
         },
@@ -509,7 +538,7 @@ export default {
               (state.serverModeState === "edit" && state.NewPasswordClient)
           ),
           isValidPassword: helpers.withMessage(
-            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+            specificform,
 
             helpers.regex(
               /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
@@ -521,7 +550,7 @@ export default {
             () => state.serverModeState === "edit" && state.passwordClient
           ),
           isValidPassword: helpers.withMessage(
-            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+            specificform,
 
             helpers.regex(
               /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/

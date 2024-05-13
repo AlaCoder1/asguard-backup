@@ -755,8 +755,8 @@ export default {
 
           requiredIfFuction: requiredIf(
             () =>
-              state.proxyAuthenticationExtraOptions.slug === "basic" &&
-              state.modeState === "create" ||
+              (state.proxyAuthenticationExtraOptions.slug === "basic" &&
+                state.modeState === "create") ||
               (state.modeState === "edit" && state.NewProxyPassword)
           ),
         },
@@ -798,7 +798,7 @@ export default {
     watch(
       () => dataClient.value,
       (newValue) => {
-        if (newValue != "CLIENTS") {
+        if (newValue != "tabs.clients") {
           cancel();
         }
       }
@@ -914,8 +914,8 @@ export default {
       {
         headerName: "Actions",
         cellRenderer: actionCellRenderer,
-        width:150,
-        editable: false
+        width: 150,
+        editable: false,
       },
     ]);
 
@@ -1391,7 +1391,7 @@ export default {
       v$,
       save,
       emitter,
-      paginationLocalization
+      paginationLocalization,
     };
   },
 };

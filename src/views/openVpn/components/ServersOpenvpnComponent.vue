@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            {{$t('requiredfield.attente')}}
+            {{ $t("requiredfield.attente") }}
             <v-progress-linear
               indeterminate
               color="white"
@@ -23,11 +23,11 @@
     <v-row>
       <v-col cols="6">
         <div class="ml-3 mr-3">
-          <h4>{{$t('openvpn.Generalinformation')}}</h4>
+          <h4>{{ $t("openvpn.Generalinformation") }}</h4>
           <v-divider class="mt-2"></v-divider>
           <v-row class="mt-2">
             <v-col cols="4" align-self="center">
-              <label>{{$t('openvpn.Servername')}}*</label>
+              <label>{{ $t("openvpn.Servername") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
@@ -43,7 +43,7 @@
               </p>
             </v-col>
             <v-col cols="4" align-self="center">
-              <label>{{$t("form.description")}}</label>
+              <label>{{ $t("form.description") }}</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
@@ -52,7 +52,7 @@
               ></v-text-field>
             </v-col>
             <v-col cols="4" align-self="center">
-              <label>{{$t("openvpn.Servermode")}}*</label>
+              <label>{{ $t("openvpn.Servermode") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
@@ -78,7 +78,7 @@
             </v-col>
 
             <v-col cols="4" align-self="center">
-              <label>{{$t('PageIpsec.Protocol')}}*</label>
+              <label>{{ $t("PageIpsec.Protocol") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
@@ -95,7 +95,7 @@
             </v-col>
 
             <v-col cols="4" align-self="center">
-              <label>{{$t('openvpn.DeviceMode')}}*</label>
+              <label>{{ $t("openvpn.DeviceMode") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
@@ -132,7 +132,7 @@
             </v-col>
 
             <v-col cols="4" align-self="center">
-              <label>{{$t('openvpn.Localport')}}*</label>
+              <label>{{ $t("openvpn.Localport") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
@@ -764,7 +764,8 @@ export default {
     watch(
       () => dataServer.value,
       (newValue) => {
-        if (newValue != "SERVERS") {
+        console.log("newValueserver000", newValue);
+        if (newValue != "tabs.servers") {
           cancel();
         }
       }

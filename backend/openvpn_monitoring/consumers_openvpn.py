@@ -11,6 +11,13 @@ from .functions_client import *
 import pyshark
 from django.core import serializers
 from django.contrib.auth.hashers import  check_password
+from django.utils.translation import gettext_lazy as _
+
+
+# Constants
+ERROR_MESSAGES_INVALID_PASSWORD = _("Invalid password")
+
+
 logger = logging.getLogger(__name__)
 class OpenVpnConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -227,5 +234,4 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
             }
             return data
         else:
-            return "Check your password!"
-        
+            return ERROR_MESSAGES_INVALID_PASSWORD

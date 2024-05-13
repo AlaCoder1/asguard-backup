@@ -292,6 +292,7 @@ import useValidate from "@vuelidate/core";
 import { toRefs, watch, reactive, computed, inject, onMounted, ref } from "vue";
 import { required, helpers, requiredIf } from "@vuelidate/validators";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { useI18n } from "vue-i18n";
 
 export default {
   props: {
@@ -310,6 +311,7 @@ export default {
   },
 
   setup(props) {
+    const { t } = useI18n();
     const emitter = inject("emitter");
     const { isOpen, editRow, modalMode } = toRefs(props);
     const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
@@ -627,57 +629,67 @@ export default {
       } else {
         console.log("v$", v$.value);
       }
-    };
+    }; 
+    
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
 
     const rules = computed(() => {
       return {
-        interface: { required },
+        interface: { required: helpers.withMessage(error, required)},
         translationAddressFrom: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.checkInterface === "Static")
           ),
           isValidDestinationAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         port: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error ,
             requiredIf(() => state.sourcePort?.slug === "other")
           ),
         },
         specificPort: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error ,
             requiredIf(() => state.destinationPort?.slug === "other")
           ),
         },
         sourcePrefix: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error ,
             requiredIf(() => state.sourceAddress)
           ),
         },
         destinationPrefix: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error ,
             requiredIf(() => state.destinationAddress)
           ),
         },
 
         sourceAddress: {
           isValidSourceAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         destinationAddress: {
           isValidDestinationAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -685,7 +697,7 @@ export default {
 
         translationAddressTo: {
           isValidDestinationAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),

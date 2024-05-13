@@ -4,16 +4,17 @@
       <v-card>
         <v-card-title>
           <span class="headline" v-if="modalMode === 'create'">
-            Add new Rule</span
+            {{$t("firewall.add_rule")}} </span
           >
           <span class="headline" v-if="modalMode === 'edit'">
-            Update new Rule</span
+            {{$t("firewall.update_rule")}} </span
           >
         </v-card-title>
         <v-card-text>
           <v-select
             :items="policyList"
-            label="Policy"
+            :label="$t('firewall.policy')"
+            :no-data-text="$t('nat.msg_no_data')"
             v-model="state.formData.policy"
           ></v-select>
           <p class="error-feedback mb-5" v-if="v$.formData.policy.$error">
@@ -25,7 +26,7 @@
             row-height="15"
             class="mt-3"
             v-model="state.formData.rule_description"
-            label="Rule Description"
+            :label="$t('firewall.description')"
             variant="outlined"
           ></v-textarea>
 
@@ -38,7 +39,8 @@
           <v-select
             :items="protocolList"
             v-model="state.formData.protocol"
-            label="Protocol"
+            :no-data-text="$t('nat.msg_no_data')"
+            :label="$t('firewall.protocol')"
             outlined
           ></v-select>
           <p class="error-feedback mb-5" v-if="v$.formData.protocol.$error">
@@ -47,7 +49,7 @@
           <v-row>
             <v-col :cols="state.isAll ? 12 : 6" class="mb-n6">
               <v-text-field
-                label="Src Address"
+                :label="$t('firewall.saddr')"
                 v-model="state.formData.saddr"
                 outlined
               ></v-text-field>
@@ -59,7 +61,7 @@
               <v-text-field
                 v-if="!state.isAll"
                 :readonly="state.isAll"
-                label="Src Port"
+                :label="$t('firewall.sport')"
                 v-model="state.formData.sport"
                 outlined
               ></v-text-field>
@@ -71,7 +73,7 @@
           <v-row>
             <v-col :cols="state.isAll ? 12 : 6">
               <v-text-field
-                label="Dst Address"
+                :label="$t('firewall.daddr')"
                 v-model="state.formData.daddr"
                 outlined
               ></v-text-field>
@@ -83,7 +85,7 @@
               <v-text-field
                 v-if="!state.isAll"
                 :readonly="state.isAll"
-                label="Dst Port"
+                :label="$t('firewall.dport')"
                 v-model="state.formData.dport"
                 outlined
               ></v-text-field>
@@ -103,7 +105,7 @@
                 border-color="'#213E9F'"
                 color="#ffffff"
                 label-color="#213E9F"
-                label="cancel"
+                :label="$t('firewall.cancel')"
                 :isLarge="true"
                 @click="closeModal"
               />
@@ -112,7 +114,7 @@
                 outlined
                 color="#213E9F"
                 label-color="#ffffff"
-                label="save"
+                :label="$t('firewall.save')"
                 :isLarge="true"
                 class="ml-2"
                 @click="submitForm"

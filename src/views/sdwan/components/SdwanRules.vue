@@ -194,6 +194,7 @@ export default {
         headerName: "Actions",
         cellRenderer: actionCellRendererArea,
         field: "action",
+        width:150,
         sortable: true,
         filter: true,
       },

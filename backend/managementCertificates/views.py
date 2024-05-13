@@ -203,7 +203,7 @@ def delete_cert_auth(request, id):
             delete_ca_in_system(ca.name)
             # delete from database
             ca.delete()
-            return JsonResponse({"msg": f"{ca.name} {(SUCCESS_MESSAGES_DELETING)}"}, status=201)
+            return JsonResponse({"msg": f"{ca.name} {(SUCCESS_MESSAGES_DELETING)}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_CA}, {CONSTANT_USED_ITEM} {CONSTANT_CERT}"}, status=400)
     
     except CommandExecutionError:

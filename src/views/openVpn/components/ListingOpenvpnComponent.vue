@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            {{$t("requiredfield.attente")}}
+            {{ $t("requiredfield.attente") }}
             <v-progress-linear
               indeterminate
               color="white"
@@ -21,7 +21,7 @@
     </v-overlay>
     <v-row>
       <v-col cols="12">
-        <h4>{{$t("Clientsopenvpn.ListServers")}}</h4>
+        <h4>{{ $t("Clientsopenvpn.ListServers") }}</h4>
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column">
           <ag-grid-vue
@@ -35,6 +35,9 @@
             :rowGroupPanelShow="rowGroupPanelShow"
             :overlayNoRowsTemplate="overlayTemplate"
             @grid-ready="onGridReady"
+            :pagination="true"
+            :paginationPageSize="4"
+            :localeText="paginationLocalization"
           />
           <div class="d-flex justify-end mt-3">
             <VButton
@@ -54,7 +57,7 @@
     </v-row>
     <v-row>
       <v-col cols="12">
-        <h4>{{$t("Clientsopenvpn.ListClients")}}</h4>
+        <h4>{{ $t("Clientsopenvpn.ListClients") }}</h4>
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column">
           <ag-grid-vue
@@ -67,6 +70,9 @@
             :defaultColDef="defaultColDef"
             :rowGroupPanelShow="rowGroupPanelShow"
             :overlayNoRowsTemplate="overlayTemplate"
+            :pagination="true"
+            :paginationPageSize="4"
+            :localeText="paginationLocalization"
           />
           <div class="d-flex justify-end mt-3">
             <VButton
@@ -87,20 +93,22 @@
 
       <v-dialog v-model="dialogDelete" max-width="500px">
         <v-card>
-          <v-card-title class="headline">{{$t("delete.DeleteConfirmation")}}</v-card-title>
+          <v-card-title class="headline">{{
+            $t("delete.DeleteConfirmation")
+          }}</v-card-title>
           <v-card-text
-            >{{$t("delete.Delete")}}
-            {{ isDeletedType === "server" ? $t('agGrid.server') : "Client" }}
+            >{{ $t("delete.Delete") }}
+            {{ isDeletedType === "server" ? $t("agGrid.server") : "Client" }}
             ?</v-card-text
           >
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="dialogDelete = false"
-              >{{$t("buttons.cancel")}}</v-btn
-            >
-            <v-btn color="blue darken-1" text @click="confirmDelete"
-              >{{$t("buttons.delete")}}</v-btn
-            >
+            <v-btn color="blue darken-1" text @click="dialogDelete = false">{{
+              $t("buttons.cancel")
+            }}</v-btn>
+            <v-btn color="blue darken-1" text @click="confirmDelete">{{
+              $t("buttons.delete")
+            }}</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -128,7 +136,7 @@ import { useI18n } from "vue-i18n";
 import axios from "axios";
 import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
-import { onMounted, reactive, ref,computed } from "vue";
+import { onMounted, reactive, ref, computed } from "vue";
 import { inject } from "vue";
 import CertStatusRenderVue from "./agGridCustomRender/CertStatusRenderVue.vue";
 import "ag-grid-community/styles/ag-grid.css";
@@ -147,6 +155,9 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
     const dialogDelete = ref(false);
@@ -190,14 +201,13 @@ export default {
       return t("Clientsopenvpn.Server");
     });
 
-
-
-
-
     const columnServers = ref([
       {
         headerName: ServerNam,
         field: "name",
+        width: 90,
+        minWidth: 50,
+        flex: 1,
 
         sortable: true,
         filter: true,
@@ -205,6 +215,9 @@ export default {
       },
       {
         headerName: Protocol,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
 
         cellRenderer: formatedProtocServer,
         sortable: true,
@@ -215,12 +228,18 @@ export default {
         field: "ipv4_tunnel_network",
         sortable: true,
         filter: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: "Description",
         field: "description",
         sortable: true,
         filter: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: CertificatStatus,
@@ -234,11 +253,14 @@ export default {
           };
           return cert_status;
         },
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: "Action",
         cellRenderer: actionCellRenderer,
-        minWidth: 150,
+        width: 150,
         field: "action",
         sortable: true,
         filter: true,
@@ -252,12 +274,18 @@ export default {
         autoHeight: true,
         filter: true,
         checkboxSelection: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: Protocol1,
         cellRenderer: formatedProtocClient,
         sortable: true,
         filter: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: server,
@@ -265,12 +293,18 @@ export default {
         cellRenderer: formatedServer,
         sortable: true,
         filter: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: "Description",
         field: "description",
         sortable: true,
         filter: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: CertificatStatus1,
@@ -284,11 +318,14 @@ export default {
           };
           return cert_status;
         },
+        width: 90,
+        minWidth: 50,
+        flex: 1,
       },
       {
         headerName: "Action",
         cellRenderer: actionCellRendererClient,
-        minWidth: 150,
+        width: 150,
         field: "action",
         sortable: true,
         filter: true,
@@ -304,7 +341,7 @@ export default {
     const defaultColDef = {
       sortable: true,
       filter: true,
-      flex: 1,
+      // flex: 1,
     };
 
     const rowGroupPanelShow = ref("always");
@@ -363,18 +400,18 @@ export default {
         <button
           id="play"
           class="action-button play"
-          data-action="play" title="Start Server">
+          data-action="play" title=${t('sdwan.startServer')}>
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
 
           <button
           class="action-button edit"
-          data-action="edit" title="Edit Server">
+          data-action="edit">
              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
           <button
           class="action-button delete"
-          data-action="delete" title="Delete Server">
+          data-action="delete">
              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
 
@@ -396,25 +433,25 @@ export default {
           <button
           id="restart"
           class="action-button restart"
-          data-action="restart" title="Restart Server">
+          data-action="restart" title=${t('interface.restart')}>
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
         
        <button
           id="stop"
           class="action-button stop"
-          data-action="stop" title="Stop Server">
+          data-action="stop" title=${t('sdwan.stop')}>
              <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
           </button>
 
           <button
           class="action-button edit"
-          data-action="edit" title="Edit Server">
+          data-action="edit">
              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
           <button
           class="action-button delete"
-          data-action="delete" title="Delete Server">
+          data-action="delete">
              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
        `;
@@ -566,17 +603,17 @@ export default {
     
           <button
           class="action-button download"
-          data-action="download" title="download">
+          data-action="download">
              <i class="mdi mdi-download-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
           <button
           class="action-button editClient"
-          data-action="editClient" title="Edit Client">
+          data-action="editClient">
              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
           <button
           class="action-button delete"
-          data-action="delete" title="Delete Server">
+          data-action="delete">
              <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
           </button>
 
@@ -810,6 +847,7 @@ export default {
       rowDataClients,
       defaultColDef,
       rowGroupPanelShow,
+      paginationLocalization,
       emitter,
       color,
       snackbar,

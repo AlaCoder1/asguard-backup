@@ -181,6 +181,7 @@ export default {
         headerName: "Actions",
         cellRenderer: actionCellRendererKeys,
         field: "action",
+        width:150,
         sortable: true,
         filter: true,
       },
@@ -242,12 +243,12 @@ export default {
         eGui.innerHTML = `
           <button
                 class="action-button edit"
-                data-action="edit" title="Edit Server">
+                data-action="edit">
                    <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
                 <button
                 class="action-button delete"
-                data-action="delete" title="Delete ">
+                data-action="delete">
                   <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>`;
       }

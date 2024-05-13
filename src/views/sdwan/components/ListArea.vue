@@ -133,7 +133,6 @@ export default {
         headerName: members,
         field: "members",
         autoHeight: true,
-        resizable: true,
         width: 90,
         minWidth: 50,
         flex: 1,
@@ -142,6 +141,7 @@ export default {
         headerName: "Actions",
         cellRenderer: actionCellRendererArea,
         field: "action",
+        width:150
       },
     ]);
 

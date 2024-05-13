@@ -77,7 +77,7 @@ def read_config(data):
         status_enabled = False
     data_output={
         "HOME_NET": data['vars']['address-groups']['HOME_NET'], 
-        "promisc": data['dpdk']['interfaces'][0],
+        "promisc": data['dpdk']['interfaces'][0]['promisc'],
         "eve-log-enabled":data['outputs'][1]["eve-log"]['enabled'], 
         "syslog-enabled":  data['outputs'][-5]['syslog']['enabled'],
         "mpm-algo": data['mpm-algo'], 

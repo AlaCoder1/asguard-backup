@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              Create New One To One Rule</span
+             {{$t("nat.create_msg_one") }}</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              Update One To One Rule</span
+              {{$t("nat.update_msg_one")}}</span
             >
           </v-card-title>
           <v-card-text>
@@ -17,7 +17,8 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.interface"
-                    label="Interface"
+                    :label="$t('nat.interface')"
+                    :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="id"
                     :items="state.mapedInterface"
@@ -31,7 +32,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    label="Enter source address"
+                  :label="$t('nat.ent_saddr')"
                     v-model="state.sourceAddress"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.sourceAddress.$error">
@@ -43,8 +44,9 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    label="Prefix"
+                  :label="$t('nat.prefix')"
                     v-model="state.sourcePrefix"
+                    :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.sourcePrefix.$error">
@@ -54,7 +56,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    label="Enter Translation address"
+                    :label="$t('nat.ent_tran_add')"
                     v-model="state.translationAddress"
                   ></v-text-field>
                   <p
@@ -69,8 +71,9 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    label="Prefix"
+                    :label="$t('nat.prefix')"
                     v-model="state.translationPrefix"
+                    :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
                   ></v-select>
                   <p
@@ -83,7 +86,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    label="Enter destination address"
+                  :label="$t('nat.ent_daddr')"
                     v-model="state.destinationAddress"
                   ></v-text-field>
                   <p
@@ -98,8 +101,9 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    label="Prefix"
+                  :label="$t('nat.prefix')"
                     v-model="state.destinationAddressPrefix"
+                    :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
                     clearable
                   ></v-select>
@@ -113,7 +117,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Description"
+                  :label="$t('nat.description')"
                     v-model="state.description"
                   ></v-text-field>
                 </v-col>
@@ -133,7 +137,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3" style="color: #213e9f">Cancel</span>
+            <span class="pr-3 pl-3" style="color: #213e9f">{{$t("firewall.cancel")}}</span>
             </v-btn>
 
             <v-btn
@@ -147,7 +151,12 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
+            <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+                {{ $t("buttons.create") }}</span
+              >
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>

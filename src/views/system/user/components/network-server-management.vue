@@ -15,6 +15,7 @@
               :columnDefs="columnDefs"
               :rowData="rowData.value"
               :gridOptions="gridOptions"
+              :localeText="paginationLocalization"
             />
           </div>
           <div class="d-flex justify-end">
@@ -86,6 +87,9 @@ export default {
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
 
     const state = reactive({
       deleteDialog: false,
@@ -172,12 +176,12 @@ export default {
          
               <button
                 class="action-button edit"
-                data-action="edit" title="Edit Server">
+                data-action="edit">
                    <i class="far fa-edit" style="color: #086EAE;"></i>
                 </button>
                 <button
                 class="action-button delete"
-                data-action="delete" title="Delete ">
+                data-action="delete">
                   <i class="fas fa-times" style="color: #086EAE;"></i>
                 </button>
       
@@ -261,6 +265,7 @@ export default {
     return {
       state,
       t,
+      paginationLocalization,
       gridOptions,
       columnDefs,
       emitter,

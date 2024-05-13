@@ -7,17 +7,17 @@
             <v-col cols="12">
               <v-text-field
                 :model-value="ipAddress"
-                label="IPV4 address"
+                :label="$t('interface.IPV4Address')"
                 variant="outlined"
                 readonly
               ></v-text-field>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label class="ml-2">IPV4 address</label>
+              <label class="ml-2">{{ $t("interface.IPV4Address") }}</label>
             </v-col>
             <v-col cols="4" class="mb-n6">
               <v-text-field
-                label="Enter IPV4 address"
+                :label="$t('interface.IPV4Address')"
                 v-model="alias_add"
                 class="ip-address-style"
               ></v-text-field>
@@ -26,31 +26,35 @@
               <v-select
                 v-model="alias_mask"
                 :items="netmasks"
+                :no-data-text="$t('certificat.certificatlist')"
                 class="ml-3 netmask-select-style"
               ></v-select>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label class="ml-2">Reject leases from</label>
+              <label class="ml-2">{{ $t("interface.rejectLeasesFrom") }}</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
-                label="Reject leases from"
+                :label="$t('interface.rejectLeasesFrom')"
                 v-model="rejectLeases"
               ></v-text-field>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label class="ml-2">Hostname</label>
+              <label class="ml-2">{{ $t("interface.hostname") }}</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
-              <v-text-field label="Hostname" v-model="hostname"></v-text-field>
+              <v-text-field
+                :label="$t('interface.hostname')"
+                v-model="hostname"
+              ></v-text-field>
             </v-col>
             <v-col align-self="center" cols="4">
-              <label class="ml-2">Override MTU</label>
+              <label class="ml-2">{{ $t("interface.overrideMTU") }}</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-checkbox
                 v-model="overrideMTU"
-                label="Override MTU"
+                :label="$t('interface.overrideMTU')"
               ></v-checkbox>
             </v-col>
           </v-row>

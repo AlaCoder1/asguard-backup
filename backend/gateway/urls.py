@@ -3,12 +3,12 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('addStaticGateway', views.addStaticGateway, name="addStaticGateway"),
-    path('updateGateway/<int:id>', views.updateGateway, name="updateGateway"),
-    path('deleteGateway/<int:id>', views.deleteGateway, name="deleteGateway"),
-    path('getGatewayById/<int:id>', views.getGatewayById, name="getGatewayById"),
-    path('getStaticGateways', views.getAllStaticGateways, name="getStaticGateways"),
-    path('getAllGateways', views.getAllGateways, name="getAllGateways"),
+    path('addStaticGateway', views.add_static_gateway, name="addStaticGateway"),
+    path('updateGateway/<int:id>', views.update_gateway, name="updateGateway"),
+    path('deleteGateway/<int:id>', views.delete_gateway, name="deleteGateway"),
+    path('getGatewayById/<int:id>', views.get_gateway_by_id, name="getGatewayById"),
+    path('getStaticGateways', views.get_all_static_gateways, name="getStaticGateways"),
+    path('getAllGateways', views.get_all_gateways, name="getAllGateways"),
     
     
     

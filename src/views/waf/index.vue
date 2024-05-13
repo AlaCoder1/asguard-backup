@@ -1,31 +1,22 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Waf" :active-menu="activeTab">
+    <base-layout title="Waf">
       <template #content>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">
-            <span style="color: #020202">{{ tab.label }}</span>
+            <span style="color: #020202">{{ $t(tab.label) }}</span>
           </v-tab>
         </v-tabs>
-
         <v-window v-model="activeTab">
           <v-window-item
-            v-for="tab in tabs"
-            :key="tab.id"
-            value="Configuration"
+            v-for="(tab, index) in tabs"
+            :key="index"
+            :value="tab.label"
           >
             <v-card>
-              <v-card-text> <wafConfiguration /> </v-card-text>
-            </v-card>
-          </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="RULES">
-            <v-card>
-              <v-card-text><wafRules /> </v-card-text>
-            </v-card>
-          </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="ALERTS">
-            <v-card>
-              <v-card-text> </v-card-text>
+              <v-card-text>
+                <component :is="tab.component" />
+              </v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -46,13 +37,14 @@ export default {
     wafConfiguration,
     wafRules,
   },
+  inject: ["emitter"],
   data() {
     return {
-      activeTab: "Configuration",
+      activeTab: "",
       tabs: [
-        { id: 1, label: "Configuration" },
-        { id: 2, label: "RULES" },
-        { id: 3, label: "ALERTS" },
+        { id: 1, label: "tabs.configuration", component: wafConfiguration },
+        { id: 2, label: "tabs.rules", component: wafRules },
+        { id: 3, label: "tabs.alerts" },
       ],
     };
   },
@@ -63,8 +55,13 @@ export default {
   },
 
   mounted: async function () {
-    let tab = localStorage.getItem("waf-tab") || "Configuration";
+    let tab = localStorage.getItem("waf-tab") || "tabs.configuration";
     this.activeTab = tab;
+
+    this.emitter.on("reload-tabs", () => {
+      let tab = localStorage.getItem("waf-tab") || "tabs.configuration";
+      if (tab) this.activeTab = tab;
+    });
   },
 };
 </script>

@@ -1,16 +1,15 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Rules">
+    <base-layout :title="$t('firewall.rules')">
       <template #content>
         <v-alert v-model="isFirewallSubscribe" density="compact" type="warning"
           ><span style="font-size: 19px"
-            >You are currently in Free Mode, unlocking this feature requires
-            payment. Go to
+            >{{$t("firewall.msg_subscription")}}
           </span>
           <span
             style="cursor: pointer; text-decoration: underline; font-size: 19px"
             @click="goToSub"
-            >subscription page</span
+            >{{$t("firewall.sub_page")}}</span
           >
         </v-alert>
         <v-tabs
@@ -93,21 +92,26 @@ export default {
       }, 6000);
     });
 
-    this.interfaces =
+    let interfaces =
       document.getElementById("app").attributes["interfaces"].value;
-    let validJsonString = this.interfaces
+    let validJsonString = interfaces
       .replace(/'/g, '"')
       .replace(/True/g, "true")
       .replace(/False/g, "false")
       .replace(/None/g, "null");
     let parsedArray = JSON.parse(validJsonString);
-    this.interfaces = parsedArray;
+
+    let filtredInterface = parsedArray.filter(
+      (i) => !i.ifname.startsWith("vlan")
+    );
+
+    this.interfaces = filtredInterface;
 
     let tab = localStorage.getItem("firewall-tab");
     if (tab) {
       this.activeTab = tab;
     } else {
-      this.activeTab = this.tabs[0].name_interface;
+      this.activeTab = this.tabs[0]?.name_interface;
     }
   },
   methods: {

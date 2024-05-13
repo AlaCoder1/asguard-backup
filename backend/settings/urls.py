@@ -32,5 +32,7 @@ urlpatterns = [
     path('get_generale_settings/<int:id>', views.get_generale_settings, name="get_generale_settings"),
     path('time_zones', views.time_zones, name="time_zones"),
     path('gatways_information', views.gatways_information, name="gatways_information"),
+    path('getLanguage/<int:id>',views.get_language, name='getLanguage'),
+    path('modifyLanguage/<int:id>',views.change_language, name='modifyLanguage'),
     
 ]

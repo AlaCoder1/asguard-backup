@@ -4,35 +4,25 @@
       <template #content>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">
-            <span style="color: #020202">{{ tab.label }}</span>
+            <span style="color: #020202">{{ $t(tab.label) }}</span>
           </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="SERVERS">
+          <v-window-item
+            v-for="(tab, index) in tabs"
+            :key="index"
+            :value="tab.label"
+          >
             <v-card>
               <v-card-text>
-                <ServersOpenvpnComponent :dataServer="dataServer"
-              /></v-card-text>
-            </v-card>
-          </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="CLIENTS">
-            <v-card>
-              <v-card-text>
-                <ClientsOpenvpnComponent :dataClient="dataClient"
-              /></v-card-text>
-            </v-card>
-          </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="MONITORING">
-            <v-card>
-              <v-card-text> <MonotoringOpenvpnComponent /></v-card-text>
-            </v-card>
-          </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="LISTING">
-            <v-card>
-              <v-card-text>
-                <ListingOpenvpnComponent :serverInfo="serverInfo"
-              /></v-card-text>
+                <component
+                  :is="tab.component"
+                  :serverInfo="serverInfo"
+                  :dataClient="dataClient"
+                  :dataServer="dataServer"
+                />
+              </v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -46,6 +36,7 @@ import BaseLayout from "@/layouts/layout.vue";
 import ServersOpenvpnComponent from "./components/ServersOpenvpnComponent.vue";
 import MonotoringOpenvpnComponent from "./components/MonotoringOpenvpnComponent.vue";
 import ListingOpenvpnComponent from "./components/ListingOpenvpnComponent.vue";
+import ClientsOpenvpnComponent from "./components/ClientsOpenvpnComponent.vue";
 
 export default {
   name: "OpenvpnComponent",
@@ -54,18 +45,23 @@ export default {
     ServersOpenvpnComponent,
     MonotoringOpenvpnComponent,
     ListingOpenvpnComponent,
+    ClientsOpenvpnComponent,
   },
   inject: ["emitter"],
   data() {
     return {
-      activeTab: "SERVERS",
+      activeTab: "",
       dataClient: null,
       dataServer: null,
       tabs: [
-        { id: 1, label: "SERVERS" },
-        { id: 2, label: "CLIENTS" },
-        { id: 3, label: "MONITORING" },
-        { id: 4, label: "LISTING" },
+        { id: 1, label: "tabs.servers", component: ServersOpenvpnComponent },
+        { id: 2, label: "tabs.clients", component: ClientsOpenvpnComponent },
+        {
+          id: 3,
+          label: "tabs.monitoring",
+          component: MonotoringOpenvpnComponent,
+        },
+        { id: 4, label: "tabs.listing", component: ListingOpenvpnComponent },
       ],
       rowDataServers: [],
       rowDataClients: [],
@@ -81,19 +77,25 @@ export default {
   },
 
   mounted: async function () {
-    let tab = localStorage.getItem("openvpn-tab") || "SERVERS";
+    let tab = localStorage.getItem("openvpn-tab") || "tabs.servers";
     this.activeTab = tab;
+
+    this.emitter.on("reload-tabs", () => {
+      let tab = localStorage.getItem("openvpn-tab") || "tabs.servers";
+
+      if (tab) this.activeTab = tab;
+    });
 
     this.serverInfo =
       document.getElementById("app").attributes["servers"].value;
     this.emitter.on("add-server", () => {
-      this.activeTab = "SERVERS";
+      this.activeTab = "tabs.servers";
     });
     this.emitter.on("add-client", () => {
-      this.activeTab = "CLIENTS";
+      this.activeTab = "tabs.clients";
     });
     this.emitter.on("open-listing", () => {
-      this.activeTab = "LISTING";
+      this.activeTab = "tabs.listing";
     });
     this.rowDataServers =
       document.getElementById("app").attributes["servers"].value;

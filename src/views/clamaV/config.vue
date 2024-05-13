@@ -2,7 +2,7 @@
   <div class="mt-3">
     <v-row>
       <v-col cols="12">
-        <h4>General Information</h4>
+        <h4>{{ $t("dhcpV4.generalInformation") }}</h4>
         <v-divider></v-divider>
       </v-col>
     </v-row>

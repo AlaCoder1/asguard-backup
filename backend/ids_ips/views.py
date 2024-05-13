@@ -119,7 +119,7 @@ def update_suricata_configuration(request, id):
             msg= f"{ERROR_MESSAGES_UPDATING} {CONSTANT_CONFIGURATION}"
             status=400
         return JsonResponse({'msg': msg}, status=status) 
-
+        
 
 #################################### RULES ############################################################
 @api_view(['POST'])
@@ -165,7 +165,7 @@ def activer_suricata_update(request, id):
             return JsonResponse({"message": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
         else:
             return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"},status=400)
-            
+
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -341,7 +341,7 @@ def delete_rule(request, sid):
                             message = f"{ERROR_MESSAGES_DELETING} {CONSTANT_RULE}"
                             status=400
                 else:
-                    message=f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_RULE}"
+                    message = f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_RULE}"
                     status=400
             else:
                 message = f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
@@ -351,9 +351,9 @@ def delete_rule(request, sid):
             return JsonResponse({"message": message},status=status)
         except Exception as e:
             return JsonResponse({"error": str(e)},status=400)
+        
 
-
-####################################  ALERTES  ####################################
+####################################  ALERTS  ####################################
 
 #Ajouter les alertes dans la BD//
 @api_view(['POST'])
@@ -394,7 +394,7 @@ def add_alerts_to_database(request,id):
                     alert.delete()
                 else:
                     return JsonResponse({"message": f"{CONSTANT_ALERT} {ERROR_MESSAGES_INEXISTANT}"},status=400)
-        return JsonResponse({"message": f"{CONSTANT_ALERT} {SUCCESS_MESSAGES_UPDATING}"},status=200)           
+        return JsonResponse({"message": f"{CONSTANT_ALERT} {SUCCESS_MESSAGES_UPDATING}"},status=200) 
 
     
 #Afficher les alertes de la BD avec la pagination//
@@ -423,4 +423,4 @@ def get_alerts_from_database(request,num):
             alerts_list.append(fields)
         nbpage=math.ceil(len(alerts_from_db)/10)
         # Renvoyer la liste des règles au format JSON
-        return JsonResponse({"alerts": alerts_list, "nombrePageAlerts":nbpage}, status=200)
+        return JsonResponse({"alerts": alerts_list, "nombrePageAlerts": nbpage}, status=200)

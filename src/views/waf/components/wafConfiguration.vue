@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            Please Wait...
+            {{$t('requiredfield.attente')}}
             <v-progress-linear
               indeterminate
               color="white"
@@ -20,7 +20,7 @@
       </v-dialog>
     </v-overlay>
     <div class="ml-3 mr-3 mt-5">
-      <h4>General information</h4>
+      <h4> {{$t('openvpn.Generalinformation')}}</h4>
 
       <v-divider class="mb-2"></v-divider>
     </div>
@@ -28,12 +28,12 @@
       <v-col cols="6">
         <v-row class="mt-2">
           <v-col cols="4" class="mt-5">
-            <label>Rule engine initialization</label>
+            <label> {{$t('Waf.Ruleengineinitialization')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
               v-model="state.rule_engine"
-              label="Rule engine"
+              :label="$t('Waf.Ruleengine')"
               item-title="name"
               item-value="slug"
               clearable
@@ -46,7 +46,7 @@
           </v-col>
 
           <v-col cols="4">
-            <label>Access request bodies</label>
+            <label> {{$t('Waf.Accessrequestbodies')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input
@@ -54,31 +54,31 @@
               hide-details
               v-model="state.access_request"
             />
-            <label class="ml-2"> Enable Access request bodies</label>
+            <label class="ml-2"> {{$t('Waf.EnableAccessrequestbodies')}}</label>
           </v-col>
 
           <v-col cols="4">
-            <label>XML request body parser</label>
+            <label>{{$t('Waf.XMLrequestbodyparser')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input type="checkbox" hide-details v-model="state.xml_request" />
-            <label class="ml-2"> Enable XML request body parser</label>
+            <label class="ml-2">{{$t('Waf.EnableXMLrequestbodyparser')}}</label>
           </v-col>
 
           <v-col cols="4">
-            <label>JSON request body parser</label>
+            <label>{{$t('Waf.JSONrequestbodyparser')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input type="checkbox" hide-details v-model="state.json_request" />
-            <label class="ml-2">Enable JSON request body parser</label>
+            <label class="ml-2">{{$t('Waf.EnableJSONrequestbodyparser')}}</label>
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>Maximum request body size</label>
+            <label>{{$t('Waf.Maximumrequestbodysize')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              label="Maximum request body size"
+              :label="$t('Waf.Maximumrequestbodysize')"
               v-model="state.maximum_request"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.maximum_request.$error">
@@ -87,11 +87,11 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>Request body size files excluded</label>
+            <label>{{$t('Waf.Requestbodysizefilesexcluded')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              label="Request body size files"
+              :label="$t('Waf.Requestbodysizefiles')"
               v-model="state.size_file"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.size_file.$error">
@@ -100,12 +100,12 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>Request Body Limit Action </label>
+            <label>{{$t('Waf.RequestBodyLimitAction')}} </label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
               v-model="state.limit_action"
-              label="Request Body Limit Action"
+              :label="$t('Waf.RequestBodyLimitAction')"
               item-title="name"
               item-value="slug"
               clearable
@@ -118,11 +118,11 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>Maximum parsing depth for JSON </label>
+            <label>{{$t('Waf.MaximumparsingdepthforJSON')}} </label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              label="Maximum parsing depth"
+              :label="$t('Waf.Maximumparsingdepth')"
               v-model="state.max_parsing"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.max_parsing.$error">
@@ -131,11 +131,11 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>Maximum number of args/request</label>
+            <label>{{$t('Waf.Maximumnumberofargs/request')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              label="Maximum number of args/request"
+              :label="$t('Waf.Maximumnumberofargs/request')"
               v-model="state.max_number"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.max_number.$error">
@@ -144,11 +144,11 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>Pcre Match Limit</label>
+            <label>{{$t('Waf.PcreMatchLimit')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              label="Pcre Match Limit"
+              :label="$t('Waf.PcreMatchLimit')"
               v-model="state.pcre_match_limit"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.pcre_match_limit.$error">
@@ -157,11 +157,11 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>Pcre Match Limit Recursion</label>
+            <label>{{$t('Waf.PcreMatchLimitRecursion')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              label="Pcre Match Limit Recursion"
+              :label="$t('Waf.PcreMatchLimitRecursion')"
               v-model="state.pcre_limit_recursion"
             ></v-text-field>
             <p
@@ -173,20 +173,20 @@
           </v-col>
 
           <v-col cols="4">
-            <label>Response Body Access</label>
+            <label>{{$t('Waf.ResponseBodyAccess')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input type="checkbox" hide-details v-model="state.access_bodies" />
-            <label class="ml-2"> Enable access response bodies</label>
+            <label class="ml-2"> {{$t('Waf.Enableaccessresponsebodies')}}</label>
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>Response Body MimeType</label>
+            <label>{{$t('Waf.ResponseBodyMimeType')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
               v-model="state.body_mimetype"
-              label="Response Body MimeType"
+              :label="$t('Waf.ResponseBodyMimeType')"
               item-title="name"
               item-value="slug"
               clearable
@@ -199,11 +199,11 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>Response Body Limit</label>
+            <label>{{$t('Waf.ResponseBodyLimit')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              label="Response Body Limit"
+              :label="$t('Waf.ResponseBodyLimit')"
               v-model="state.response_body_limit"
             ></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.response_body_limit.$error">
@@ -212,12 +212,12 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>Response Body Limit Action</label>
+            <label>{{$t('Waf.ResponseBodyLimitAction')}}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
               v-model="state.response_limit_action"
-              label="Response Body Limit Action"
+              :label="$t('Waf.ResponseBodyLimitAction')"
               item-title="name"
               item-value="slug"
               clearable
@@ -244,7 +244,7 @@
             outlined
             color="#ffffff"
             label-color="#213E9F"
-            label="cancel"
+            :label="$t('buttons.cancel')"
             :isLarge="true"
             @click="cancel"
           />
@@ -253,7 +253,7 @@
             outlined
             color="#213E9F"
             label-color="#ffffff"
-            label="save"
+            :label="$t('buttons.save')"
             :isLarge="true"
             class="ml-2"
             @click="submitForm"
@@ -274,6 +274,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import VButton from "@/components/VButton.vue";
 import { reactive, onMounted, ref, inject, computed } from "vue";
@@ -286,6 +287,7 @@ export default {
     VButton,
   },
   setup() {
+    const { t } = useI18n();
     const emitter = inject("emitter");
     const state = reactive({
       loading: false,
@@ -381,65 +383,72 @@ export default {
       state.response_body_limit = "";
       state.response_limit_action = null;
     };
+    const champonlyNumber = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
+    const champ = computed(() => {
+      return t("errors.valueRequired");
+    });
 
     const rules = computed(() => {
       return {
         limit_action: { required },
         size_file: {
-          required,
+          required: helpers.withMessage(champ, required),
           isValidSizeFile: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            champonlyNumber,
 
             helpers.regex(/^[0-9]+$/)
           ),
         },
         rule_engine: { required },
         maximum_request: {
-          required,
+          required: helpers.withMessage(champ, required),
           isValidMaxRequest: helpers.withMessage(
-            `Champs can include only Numbers.`,
-
+            champonlyNumber,
+         
             helpers.regex(/^[0-9]+$/)
           ),
         },
         max_parsing: {
-          required,
+          required: helpers.withMessage(champ, required),
           isValidMaxParsing: helpers.withMessage(
-            `Champs can include only Numbers.`,
-
+            champonlyNumber,
+     
             helpers.regex(/^[0-9]+$/)
           ),
         },
         body_mimetype: { required },
         response_limit_action: { required },
         response_body_limit: {
-          required,
+          required: helpers.withMessage(champ, required),
           isValidResponseBodyLimit: helpers.withMessage(
-            `Champs can include only Numbers.`,
-
+            champonlyNumber,
+           
             helpers.regex(/^[0-9]+$/)
           ),
         },
         max_number: {
-          required,
+          required: helpers.withMessage(champ, required),
           isValidMaxNumber: helpers.withMessage(
-            `Champs can include only Numbers.`,
-
+            champonlyNumber,
+        
             helpers.regex(/^[0-9]+$/)
           ),
         },
         pcre_limit_recursion: {
-          required,
+          required: helpers.withMessage(champ, required),
           isValidPcreLimitRecursion: helpers.withMessage(
-            `Champs can include only Numbers.`,
-
+            champonlyNumber,
+         
             helpers.regex(/^[0-9]+$/)
           ),
         },
         pcre_match_limit: {
-          required,
+          required: helpers.withMessage(champ, required),
           isValidPcreMatchLimit: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            champonlyNumber,
+            
 
             helpers.regex(/^[0-9]+$/)
           ),

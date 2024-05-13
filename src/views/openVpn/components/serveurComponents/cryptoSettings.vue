@@ -1,19 +1,19 @@
 <template>
-  <h4>Cryptographic Settings</h4>
+  <h4>{{$t("openvpn.CryptographicSettings")}}</h4>
   <v-divider class="mt-3"></v-divider>
   <v-col cols="4">
-    <label>TLS Authentification</label>
+    <label>{{$t("openvpn.TLSAuthentication")}}</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
     <input type="checkbox" v-model="isEnableAuth" />
 
     <label class="ml-2"
-      >Automatically generate a shared TLS authentication key</label
+      >{{$t("openvpn.automatiquegen")}}</label
     >
     <v-textarea
       class="mt-3"
       v-model="tlsGenerate"
-      label="shared TLS"
+      :label="$t('openvpn.sharedTLS')"
       variant="outlined"
       v-if="!isEnableAuth"
     ></v-textarea>
@@ -26,15 +26,16 @@
   </v-col>
 
   <v-col cols="4" align-self="center">
-    <label>Peer Certificate Authority*</label>
+    <label>{{$t("openvpn.peercertif")}}*</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
     <v-select
-      label="Peer Certificate Authority"
+      :label="$t('openvpn.peercertif')"
       v-model="peerCertif"
       item-title="name"
       item-value="id"
-      :items="props.mapedCertifAuth"
+      :no-data-text="$t('certificat.certificatlist')"
+      :items="props.mapedCertifAuth"  
       return-object
     ></v-select>
     <p
@@ -45,15 +46,16 @@
     </p>
   </v-col>
   <v-col cols="4" align-self="center">
-    <label>Serveur Certificate*</label>
+    <label>{{$t("openvpn.ServeurCertificate")}}*</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
     <v-select
-      label="Serveur Certificate"
+      :label="$t('openvpn.ServeurCertificate')"
       v-model="serverCertif"
       item-title="name"
       item-value="id"
       :items="props.mapedCertifServer"
+      :no-data-text="$t('certificat.certificatlist')"
       return-object
     ></v-select>
     <p
@@ -64,7 +66,7 @@
     </p>
   </v-col>
   <v-col cols="4" align-self="center">
-    <label>DH Parameters Length algorithm*</label>
+    <label>{{$t('openvpn.DHparamerters')}}*</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
     <v-select
@@ -80,11 +82,11 @@
     </p>
   </v-col>
   <v-col cols="4" align-self="center">
-    <label>Encryption algorithm*</label>
+    <label>{{$t("PageIpsec.algorithm_cryptage")}}*</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
     <v-select
-      label="Algorithm"
+      :label="$t('openvpn.algorithm')"
       v-model="encryptAlgo"
       :items="['AES-256-GCM', 'AES-128-GCM', 'CHACHA20-POLY1305']"
     ></v-select>
@@ -96,11 +98,11 @@
     </p>
   </v-col>
   <v-col cols="4" align-self="center">
-    <label>Auth Digest Algorithm*</label>
+    <label>{{$t("openvpn.Auth_diagest")}}*</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
     <v-select
-      label="Auth Digest Algorithm"
+      :label="$t('openvpn.Auth_diagest')"
       v-model="authDigest"
       item-title="name"
       item-value="slug"

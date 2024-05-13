@@ -1,43 +1,47 @@
-from .models import *
-from .serializers import *
 # this import to run this on local machine
-from backend.network.functions import *
+from backend.gateway.models import Gateway, GatewayInterface
+from backend.gateway.serializers import GatewaySerializer
+from backend.network.models import Interface
+from backend.network.functions import run_command
 from django.db.models import Q
 
+
 # this import to run this on macine distant
-# from network.Remotefunctions import *
-########### 
-def add_gateway_DB(data):
-    Gatewayerializer = GatewaySerializer(data=data)
-    if Gatewayerializer.is_valid():
-            Gatewayerializer.save()
-            return True
-    return Gatewayerializer.errors
-#####
-def update_gateway_DB(data,id):
-    gateways = Gateway.objects.get(id=id)
-    Gatewayerializer = GatewaySerializer(gateways,data=data)
-    if Gatewayerializer.is_valid():
-        Gatewayerializer.save()
+def add_gateway_db(data):
+    gateway_serializer = GatewaySerializer(data=data)
+    if gateway_serializer.is_valid():
+        gateway_serializer.save()
         return True
-    return Gatewayerializer.errors
-##########
-###function to add gateway to interface in DB
-def addGatewayInterfaceDB(GatewayObject,name_interface,metric,ipv4_gw_interface):
+    return gateway_serializer.errors
+
+
+def update_gateway_db(data,id):
+    gateways = Gateway.objects.get(id=id)
+    gateway_serializer = GatewaySerializer(gateways, data=data)
+    if gateway_serializer.is_valid():
+        gateway_serializer.save()
+        return True
+    return gateway_serializer.errors
+
+
+def add_gateway_interface_db(gateway_object, name_interface, metric, ipv4_gw_interface):
+    """function to add gateway to interface in DB"""
     id_interface = Interface.objects.get(name_interface=name_interface).id
     if GatewayInterface.objects.filter(Q(interface=id_interface)& Q(ipv4_gw_interface=ipv4_gw_interface)).exists():
-        id_GatewayInterface = GatewayInterface.objects.get(Q(interface=id_interface)& Q(ipv4_gw_interface=ipv4_gw_interface)).id
-        gatewayInterface = GatewayInterface.objects.get(id=id_GatewayInterface)
-        gatewayInterface.gateway = Gateway.objects.get(id=GatewayObject.id)  
+        id_gateway_interface = GatewayInterface.objects.get(Q(interface=id_interface)& Q(ipv4_gw_interface=ipv4_gw_interface)).id
+        gateway_interface = GatewayInterface.objects.get(id=id_gateway_interface)
+        gateway_interface.gateway = Gateway.objects.get(id=gateway_object.id)  
     else:
-        gatewayInterface = GatewayInterface()
-        gatewayInterface.gateway=Gateway.objects.get(id=GatewayObject.id)
-        gatewayInterface.interface=Interface.objects.get(name_interface=name_interface)
-    gatewayInterface.metric=metric  
-    gatewayInterface.ipv4_gw_interface=ipv4_gw_interface  
-    gatewayInterface.save()
-### get different metric
-def differentMetric(exclude_list):
+        gateway_interface = GatewayInterface()
+        gateway_interface.gateway=Gateway.objects.get(id=gateway_object.id)
+        gateway_interface.interface=Interface.objects.get(name_interface=name_interface)
+    gateway_interface.metric=metric  
+    gateway_interface.ipv4_gw_interface=ipv4_gw_interface  
+    gateway_interface.save()
+
+
+def different_metric(exclude_list):
+    """get different metric"""
     if exclude_list ==[]:
         exclude_list = [0]
         
@@ -48,25 +52,29 @@ def differentMetric(exclude_list):
         else:
             return num_start
     return max(exclude_list)+1
-#######
-### function to return gateway wwith choices
-def return_gateway_system(uuid,addrgw,far_aux,multiWan_aux,metric):
+
+
+def return_gateway_system(uuid,addrgw, far_aux, multiwan_aux, metric):
+    """function to return gateway wwith choices"""
     cmd=""
-    if addrgw is not None :
+    if addrgw:
         cmd= "sudo nmcli connection modify {} ipv4.gateway {} ".format(uuid,addrgw)
         ##test multiwan is true
-        if multiWan_aux:
+        if multiwan_aux:
             cmd+=" ipv4.route-metric {}".format(metric)
     return cmd
-### function to return gateway6 wwith choices
-def return_gateway6_system(uuid,addrgw,far_aux,multiWan_aux,metric):
+
+
+def return_gateway6_system(uuid,addrgw, far_aux, multiwan_aux, metric):
+    """function to return gateway6 wwith choices"""
     cmd=""
-    if addrgw is not None :
+    if addrgw:
         cmd= "sudo nmcli connection modify {} ipv6.gateway {} ".format(uuid,addrgw)
         ##test multiwan is true
-        if multiWan_aux:
+        if multiwan_aux:
             cmd+=" ipv6.route-metric {}".format(metric)
     return cmd
+
 
 ###########DHCP
 def get_gateway_dhcp(ifname,aux_ip):
@@ -86,34 +94,33 @@ def get_gateway_dhcp(ifname,aux_ip):
         metric=int(metric)
         multi_aux=True
     if output.find('onlink')!=-1:
-           far_aux = True
+        far_aux = True
     return gwaddr,metric,default_aux,far_aux,multi_aux
-   
+
+
 ####
 def save_gateways_database(gwaddr,name_interface,default_aux,far_aux,multiwan_aux,metric,ipv4_gw_interface,ipv4_gw):
-    if gwaddr is not None:
-        dataGw={
-        "gwname":"DHCP_GW_{}".format(gwaddr),
-        "gwaddress":"{}".format(gwaddr),
-        "description":"DHCP gateway generated automatically ",
-        "default_aux":default_aux,
-        "far_aux":far_aux,
-        "multiwan_aux":multiwan_aux,
-        "ipv4_gw":ipv4_gw
-            }
+    if gwaddr:
+        data_gw = {"gwname":"DHCP_GW_{}".format(gwaddr),
+                   "gwaddress":"{}".format(gwaddr),
+                   "description":"DHCP gateway generated automatically ",
+                   "default_aux":default_aux,
+                   "far_aux":far_aux,
+                   "multiwan_aux":multiwan_aux,
+                   "ipv4_gw":ipv4_gw}
         aux_exist=Gateway.objects.filter(Q(gwaddress=gwaddr) & Q(staticgw=False)).exists()
         if not aux_exist:
-            aux_GW=add_gateway_DB(dataGw)
+            aux_gw=add_gateway_db(data_gw)
         else:
-            GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr) & Q(staticgw=False) )
-            idGW=GatewayObject.id
-            aux_GW=update_gateway_DB(dataGw,idGW)
-        if aux_GW is True:
-            GatewayObject=Gateway.objects.get(Q(gwaddress=gwaddr) & Q(staticgw=False) )
-            addGatewayInterfaceDB(GatewayObject,name_interface,metric,ipv4_gw_interface)  
+            gateway_object=Gateway.objects.get(Q(gwaddress=gwaddr) & Q(staticgw=False) )
+            id_gw=gateway_object.id
+            aux_gw=update_gateway_db(data_gw,id_gw)
+        if aux_gw:
+            gateway_object=Gateway.objects.get(Q(gwaddress=gwaddr) & Q(staticgw=False) )
+            add_gateway_interface_db(gateway_object,name_interface,metric,ipv4_gw_interface)  
             return True
         else:
-            msg=aux_GW
+            msg=aux_gw
            
     else:
             msg="Gateway DHCP not found!"

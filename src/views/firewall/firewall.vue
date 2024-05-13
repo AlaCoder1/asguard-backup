@@ -38,10 +38,12 @@
               <v-card-text>
                 <FirewallComponent
                   :id="tab.name_interface"
+                  :uuid="tab.uuid"
                   :activeTab="activeTab"
                 />
                 <FirewallComponentOutbound
                   :id="tab.name_interface"
+                  :uuid="tab.uuid"
                   :activeTab="activeTab"
                 />
               </v-card-text>
@@ -54,6 +56,7 @@
 </template>
 
 <script>
+import { v4 as uuidv4 } from "uuid";
 import BaseLayout from "../../layouts/layout.vue";
 import FirewallComponent from "../../views/firewall/rules/FirewallComponent.vue";
 import FirewallComponentOutbound from "../../views/firewall/rules/FirewallComponentOutbound.vue";
@@ -80,6 +83,7 @@ export default {
   computed: {
     tabs() {
       return this.interfaces.map((element) => ({
+        uuid:uuidv4(),
         name_interface: element.name_interface,
       }));
     },

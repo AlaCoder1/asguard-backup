@@ -1,22 +1,22 @@
 <template>
-  <div class="mt-5">
+  <div class="mt-5 mb-10">
     <div class="container">
-      <h4>{{$t("firewall.outbound")}}</h4>
+      <h4>{{ $t("firewall.outbound") }}</h4>
       <v-divider></v-divider>
       <v-dialog v-model="deleteDialog" max-width="500px">
         <v-card>
-          <v-card-title class="headline">{{$t("firewall.delete_confirm")}}</v-card-title>
-          <v-card-text
-            >{{$t("firewall.msg_confirm_delete")}}</v-card-text
-          >
+          <v-card-title class="headline">{{
+            $t("firewall.delete_confirm")
+          }}</v-card-title>
+          <v-card-text>{{ $t("firewall.msg_confirm_delete") }}</v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="cancelDelete"
-              >{{$t("firewall.cancel")}}</v-btn
-            >
-            <v-btn color="blue darken-1" text @click="confirmDelete"
-              >{{$t("firewall.delete")}}</v-btn
-            >
+            <v-btn color="blue darken-1" text @click="cancelDelete">{{
+              $t("firewall.cancel")
+            }}</v-btn>
+            <v-btn color="blue darken-1" text @click="confirmDelete">{{
+              $t("firewall.delete")
+            }}</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -46,16 +46,19 @@
         <v-col cols="12" md="6" class="d-flex justify-end">
           <v-btn class="ml-3 mt-2" @click="openModalAdd">
             <i class="fas fa-plus" style="color: #086eae"></i>
-            <span class="ml-2" style="color: #086eae">{{$t("firewall.add")}}</span>
+            <span class="ml-2" style="color: #086eae">{{
+              $t("firewall.add")
+            }}</span>
           </v-btn>
         </v-col>
       </v-row>
       <!-- </v-card-title> -->
       <!-- <v-card-text> -->
+   
       <ag-grid-vue
         id="grid-wrapper"
         domLayout="autoHeight"
-        class="ag-theme-alpine mb-15"
+        class="ag-theme-alpine"
         :columnDefs="columnDefs"
         :rowData="rowData.value"
         @grid-ready="onGridReady"
@@ -72,6 +75,18 @@
         :rowSelection="'multiple'"
       >
       </ag-grid-vue>
+      <div class="d-flex justify-end ml-3 mb-5 mt-3">
+        <v-btn
+          rounded
+          outlined
+          color="#213E9F"
+          label-color="#ffffff"
+          :isLarge="false"
+          @click="save"
+        >
+          <span class="text-white pr-3 pl-3">{{ $t("buttons.save") }}</span>
+        </v-btn>
+      </div>
 
       <v-snackbar
         :timeout="2000"
@@ -92,10 +107,19 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
-import { onMounted, reactive, ref, watch, defineComponent, inject,computed } from "vue";
+import {
+  onMounted,
+  reactive,
+  ref,
+  watch,
+  defineComponent,
+  inject,
+  computed,
+} from "vue";
 import VButton from "../../../components/VButton.vue";
 import ModalFirewallRuleOutbound from "../../../components/modals/ModalFirewallRuleOutbound.vue";
 import { useI18n } from "vue-i18n";
+import { v4 as uuidv4 } from "uuid";
 export default defineComponent({
   name: "FirewallComponentRuleOutbound",
   components: {
@@ -105,6 +129,7 @@ export default defineComponent({
   },
   props: {
     id: String,
+    uuid: String,
     activeTab: String,
   },
   setup(props) {
@@ -148,10 +173,10 @@ export default defineComponent({
     const action = computed(() => {
       return t("firewall.action");
     });
-   
+
     const alert = ref(false);
     const mode = ref("create");
-    const columnDefs =ref([
+    const columnDefs = ref([
       {
         width: 50,
         minWidth: 50,
@@ -284,14 +309,16 @@ export default defineComponent({
     const rowDataToDelete = ref(null);
 
     const openModalAdd = () => {
-      if (last_Subscription.value.includes("Firewall")) {
-        state.modalData = {};
-        state.modalMode = "create";
-        state.isModalOpen = true;
-      } else {
-        emitter.emit("firewal-subscription");
-        window.scrollTo(0, 0);
-      }
+      // if (last_Subscription.value.includes("Firewall")) {
+      state.modalData = {};
+      state.modalMode = "create";
+      state.isModalOpen = true;
+      emitter.emit("interfaceOut-uuid", props.uuid);
+      // }
+      //  else {
+      //   emitter.emit("firewal-subscription");
+      //   window.scrollTo(0, 0);
+      // }
     };
 
     const onGridReady = (params) => {
@@ -476,6 +503,16 @@ export default defineComponent({
       showAddModal.value = false;
     };
 
+    function updateObjectById(uuid, updatedObject) {
+      const index = rowData.value.findIndex((obj) => obj.uuid === uuid);
+      if (index !== -1) {
+        rowData.value[index] = {
+          ...rowData.value[index],
+          ...updatedObject,
+        };
+      }
+    }
+
     onMounted(() => {
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
@@ -504,6 +541,58 @@ export default defineComponent({
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
+
+      emitter.on("add-firewallRuleOut", (data) => {
+        if (data.interUuid === props.uuid) {
+          if (!rowData.value) {
+            rowData.value = [];
+          }
+
+          let ruleOuTbound = {
+            uuid: data.uuid,
+            daddr: data.daddr,
+            policy: data.policy,
+            protocol: data.protocol,
+            rule_description: data.rule_description,
+            saddr: data.saddr,
+            sport: data.sport,
+            dport: data.dport,
+            type_rule: data.type_rule,
+          };
+          rowData.value.push(ruleOuTbound);
+          if (gridApi.value) {
+            gridApi.value.setRowData(rowData.value);
+          } else {
+            console.error("Grid API.");
+          }
+        }
+      });
+
+      emitter.on("edit-firewallRuleOut", (data) => {
+        let ruleOuTbound = {
+          uuid: data.uuid,
+          daddr: data.daddr,
+          policy: data.policy,
+          protocol: data.protocol,
+          rule_description: data.rule_description,
+          saddr: data.saddr,
+          sport: data.sport,
+          dport: data.dport,
+          type_rule: data.type_rule,
+        };
+
+        updateObjectById(data.uuid, ruleOuTbound);
+
+        if (!rowData.value) {
+          rowData.value = [];
+        }
+
+        if (gridApi.value) {
+          gridApi.value.setRowData(rowData.value);
+        } else {
+          console.error("Grid API.");
+        }
+      });
     });
 
     watch(

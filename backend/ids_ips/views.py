@@ -1,5 +1,7 @@
 import math
-from django.utils.translation import gettext_lazy as _
+from django.shortcuts import render
+# Create your views here.
+import ast
 from .models import *
 from backend.network.serializers import *
 from django.http import JsonResponse
@@ -16,27 +18,7 @@ from django.core import serializers
 from django.core.paginator import Paginator, EmptyPage
 from django.core.serializers import serialize
 import ruamel.yaml
-
-
-# Constants
-CONSTANT_CONFIGURATION = _("Configuration")
-CONSTANT_RULE = _("Rule")
-CONSTANT_PAGE = _("Page")
-CONSTANT_SURICATA_FILE = _("Suricata File")
-CONSTANT_ALERT = _("Alert")
-# Success messages
-SUCCESS_MESSAGES_CREATING = _("is created")
-SUCCESS_MESSAGES_DELETING = _("is deleted")
-SUCCESS_MESSAGES_UPDATING = _("is updated")
-# Error messages
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
-ERROR_MESSAGES_DELETING_USED_ITEM = _("Unable to delete")
-ERROR_MESSAGES_EXISTANT = _("already exist")
-ERROR_MESSAGES_INEXISTANT = _("does not exist")
-
-
-#################################### SURICATA.YAML FGENERAL CONFIGURATION ####################################
+#################################### SURICATA.YAML CONFIGURATION GENERALE ############################################################
 @swagger_auto_schema(
     method='PUT',
     request_body=SuricataFileSerializer,
@@ -88,7 +70,7 @@ def update_suricata_configuration(request, id):
         data_output=update_suricata_config(data_input,home_net_value_sys,new_promisc, new_eve_log,new_syslog, new_mpm_algo,new_profile,data_af_packet,new_mode_inline)
         save_in_yaml(suricata_yaml_path,data_output,yaml_class) 
         aux_update_system=update_config(status_enabled)
-        if aux_update_system:
+        if aux_update_system is True:
         # Ensuite, mettez à jour les enregistrements dans la base de données
             suricata_instance = suricatafile.objects.get(id=id)
             data_updated={
@@ -106,31 +88,34 @@ def update_suricata_configuration(request, id):
             if suricata_serializer.is_valid():
                 suricata_serializer.save()
                 aux_update=save_suricata_interface(id,interface_ids_input)
-                if aux_update:
-                    msg = f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_UPDATING}"
+                if aux_update is True:
+                    msg = "Configuration updated Successfully!!"
                     status=200
                 else:
                     msg= aux_update
                     status=400
             else:
-                msg= list(suricata_serializer.errors.values())[0][0]
+                msg= "Failed to save configuration in database !"
                 status=400
         else:
-            msg= f"{ERROR_MESSAGES_UPDATING} {CONSTANT_CONFIGURATION}"
-            status=400
+                msg= aux_update_system
+                status=400
         return JsonResponse({'msg': msg}, status=status) 
+        
 
 
-#################################### RULES ############################################################
+#################################### FIN SURICATA.YAML CONFIGURATION GENERALE ############################################################
+
+#################################### LES REGLES ############################################################
+#Ajouter les régles par défaut dans la BD//
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def activer_suricata_update(request, id):
-    """Add default suricata rules in database"""
     if request.method=="POST":
         cmd="sudo suricata-update"
         _,error=execute_cmd(cmd)
         if error.strip()=="":
-            rules_db = ids_ips_rule.objects.all()  # Retrieve all alerts from the database
+            rules_db = ids_ips_rule.objects.all()  # Récupérer toutes les alertes de la base de données
             rules_sys = get_suricata_default_rules()
             rules_add=[]
             rules_delete=[]
@@ -139,14 +124,14 @@ def activer_suricata_update(request, id):
             rules_list=serializer.data
             rules_list=[l['sid'] for l in rules_list]
             rules_sys_list=[l['sid'] for l in prepare_rule_attribut(rules_sys)]
-            if len(list(set(rules_list)-set(rules_sys_list))) != 0:
+            if len(list(set(rules_list)-set(rules_sys_list)))!=0:
                 rules_add = [log for log in rules_sys if log not in rules_list]
                 rules_delete = [log for log in rules_list if log not in rules_sys]   
-                if len(rules_add) != 0:
-                    rules_add = prepare_rule_attribut(rules_add)
-                    # Browse the retrieved logs and add them to the database
+                if len(rules_add)!=0:
+                    rules_add=prepare_rule_attribut(rules_add)
+                    # Parcourir les logs récupérés et ajoutez-les à la base de données
                     for rule in rules_add:
-                        rule['suricatafile'] = int(id)
+                        rule['suricatafile']=int(id)
                         if not ids_ips_rule.objects.filter(sid=rule['sid']).exists():
                             serializer_rules = RuleIdsIpsSerializer(data=rule)
                             if serializer_rules.is_valid():
@@ -161,27 +146,27 @@ def activer_suricata_update(request, id):
                             rule = ids_ips_rule.objects.get(sid=l['sid'])
                             rule.delete()
                         else:
-                            return JsonResponse({"message": f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"},status=400)
-            return JsonResponse({"message": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
+                            return JsonResponse({"message": "Rule not found!"},status=400)
+            return JsonResponse({"message": "Rules updated successfully!"},status=200)
         else:
-            return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"},status=400)
+            return JsonResponse({"message":error},status=400)
             
-
+#//Récupérer les règles de la base de données //
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def get_rules_from_database(request, num):
-    """Get rules from database"""
     if request.method == "GET":
+        # Récupérer toutes les règles de la base de données
         rules_from_db = ids_ips_rule.objects.all().order_by('id')
 
-        # Paginate rules
+        # Paginer les règles
         paginator = Paginator(rules_from_db, 10)
         try:
             rules_page = paginator.page(num)
         except EmptyPage:
-            return JsonResponse({"error": f"{CONSTANT_PAGE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+            return JsonResponse({"error": "Page not found"}, status=404)
 
-        # Serialize the rules of the current page
+        # Sérialiser les règles de la page actuelle
         rule_suricata = serialize("json", rules_page, use_natural_primary_keys=True)
         res = json.loads(rule_suricata)
 
@@ -191,8 +176,8 @@ def get_rules_from_database(request, num):
             fields['id'] = res[i]['pk']
             rules_list.append(fields)
         nbpage=len(rules_from_db)/10
-        # Return the list of rules in JSON format
-        return JsonResponse({"rules": rules_list, "nombrePageRules": math.ceil(nbpage)}, status=200)
+        # Renvoyer la liste des règles au format JSON
+        return JsonResponse({"rules": rules_list,"nombrePageRules":math.ceil(nbpage)},status=200)
 
 
 ## fonction pour sauvegarder une règle (ajout ou mise à jour )
@@ -229,7 +214,7 @@ def save_rules_suricata(request, id):
             try:
                 suricatafile_obj = suricatafile.objects.get(id=id)
             except suricatafile.DoesNotExist:
-                return Response({"message": f"{CONSTANT_SURICATA_FILE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+                return Response({"message": "SuricataFile non trouvé"}, status=400)
             contenu = {
                     "action": action,
                     "protocol": protocol,
@@ -253,7 +238,7 @@ def save_rules_suricata(request, id):
             if id_rule is None:
                 data["default_rule"]=False
                 if ids_ips_rule.objects.filter(sid=sid).exists():
-                    message = f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
+                    message="Règle existe déjà "
                     status=400
                 else:
                     output, rule,error = add_rule_remote(must_be_comment, contenu,file_path)
@@ -263,7 +248,7 @@ def save_rules_suricata(request, id):
                         rules_serializer = RuleIdsIpsSerializer(data=data)
                         if rules_serializer.is_valid():
                             rules_serializer.save()
-                            message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_CREATING}"
+                            message = "Règle ajoutée avec succès " + output
                             status=200
                         else:
                             message = rules_serializer.errors
@@ -292,13 +277,13 @@ def save_rules_suricata(request, id):
                         ids_ips_rule_from_db.activate_rule = activate_rule
                         ids_ips_rule_from_db.rule=rule
                         ids_ips_rule_from_db.save()
-                        message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"
+                        message = "Mise à jour réussie!!"
                         status=200
                     else:
                         message = error
                         status=400
                 else:
-                    message = f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
+                    message="Règle non trouvée!!"
                     status=400
             list_msg.append({"message":message,"status":status,"sid":sid})
         # Retourne une réponse JSON avec le message de statut
@@ -332,28 +317,34 @@ def delete_rule(request, sid):
                         if delete_line_in_remote_file(file_path_to_search, l.rstrip()):
             # Suppression de la règle de la base de données
                             rule.delete()
-                            message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
+                            message = "Rule deleted successfully!"
                             status=200
                         else:
-                            message = f"{ERROR_MESSAGES_DELETING} {CONSTANT_RULE}"
+                            message = "Failed to delete rule from remote file."
                             status=400
                     else:
-                            message = f"{ERROR_MESSAGES_DELETING} {CONSTANT_RULE}"
+                            message = "Failed to delete rule from remote file."
                             status=400
                 else:
-                    message=f"{ERROR_MESSAGES_DELETING_USED_ITEM} {CONSTANT_RULE}"
+                    message="Vous n'avez pas le droit de supprimer une régle par défaut"
                     status=400
             else:
-                message = f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
+                message = "Rule not found."
                 status=400
                 
        # Retourne une réponse JSON avec le message de statut
             return JsonResponse({"message": message},status=status)
         except Exception as e:
             return JsonResponse({"error": str(e)},status=400)
+        
 
 
-####################################  ALERTES  ####################################
+
+#################################### Fin LES REGLES ############################################################
+
+
+
+#################################### LES ALERTES  ############################################################
 
 #Ajouter les alertes dans la BD//
 @api_view(['POST'])
@@ -361,7 +352,7 @@ def delete_rule(request, sid):
 def add_alerts_to_database(request,id):
     if request.method=="POST":
         logs = read_suricata_log()
-        alerts = Alert.objects.all()  # Get alerts from database
+        alerts = Alert.objects.all()  # Récupérer toutes les alertes de la base de données
         logs_add=[]
         logs_delete=[]
         if len(alerts)==0:
@@ -375,9 +366,10 @@ def add_alerts_to_database(request,id):
             logs_add=prepare_alert_attribut(logs_add)
             logs_delete = [log for log in alert_list if log not in logs]   
             
-        if len(logs_add) != 0:
-            # Looping throw the retrieved logs and add them to the database
+        if len(logs_add)!=0:
+            # Parcourir les logs récupérés et ajoutez-les à la base de données
             for log in logs_add:
+                # print("data to add ==>",log['alert'])
                 suricatafile_obj = suricatafile.objects.get(pk=id)  
                 log['suricatafile']=int(suricatafile_obj.id)
                 if not Alert.objects.filter(alert=log['alert']).exists():
@@ -393,8 +385,8 @@ def add_alerts_to_database(request,id):
                     alert = Alert.objects.get(alert=l)
                     alert.delete()
                 else:
-                    return JsonResponse({"message": f"{CONSTANT_ALERT} {ERROR_MESSAGES_INEXISTANT}"},status=400)
-        return JsonResponse({"message": f"{CONSTANT_ALERT} {SUCCESS_MESSAGES_UPDATING}"},status=200)           
+                    return JsonResponse({"message": "Alert not found!!"},status=400)
+        return JsonResponse({"message":"Alerts updated successfully!!"},status=200)           
 
     
 #Afficher les alertes de la BD avec la pagination//
@@ -410,7 +402,7 @@ def get_alerts_from_database(request,num):
         try:
            alerts_page = paginator.page(num)
         except EmptyPage:
-            return JsonResponse({"error": f"{CONSTANT_PAGE} {ERROR_MESSAGES_INEXISTANT}"}, status=404)
+            return JsonResponse({"error": "Page not found"}, status=404)
 
         # Sérialiser les règles de la page actuelle
         rule_suricata = serialize("json", alerts_page, use_natural_primary_keys=True)
@@ -423,4 +415,6 @@ def get_alerts_from_database(request,num):
             alerts_list.append(fields)
         nbpage=math.ceil(len(alerts_from_db)/10)
         # Renvoyer la liste des règles au format JSON
-        return JsonResponse({"alerts": alerts_list, "nombrePageAlerts":nbpage}, status=200)
+        return JsonResponse({"alerts": alerts_list,"nombrePageAlerts":nbpage},status=200)
+       
+#################################### Fin LES ALERTES  ############################################################

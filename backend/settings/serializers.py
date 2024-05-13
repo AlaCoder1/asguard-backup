@@ -1,10 +1,12 @@
 from rest_framework import serializers
-from .models import *
+
+from backend.settings.models import Network, ServerReseau, System, Timezone
+
 
 class SystemSerializer(serializers.ModelSerializer):
     class Meta:
         model = System
-        fields =  ('hostname', 'domaine','time_zone')
+        fields =  ('hostname', 'domaine','time_zone', 'language')
         
         
 class NetworkSerializer(serializers.ModelSerializer):
@@ -24,4 +26,3 @@ class TimezoneSerializer(serializers.ModelSerializer):
     class Meta:
         model = Timezone
         fields =  ('name', )
-        

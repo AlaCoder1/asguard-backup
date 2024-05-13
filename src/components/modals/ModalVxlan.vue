@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              Create new VXLAN</span
+              {{ $t("typeInterface.createNew") }} VXLAN</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              Update VXLAN</span
+              {{ $t("buttons.update") }} VXLAN</span
             >
           </v-card-title>
           <v-card-text>
@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="VXLAN Network Identifie"
+                    :label="$t('typeInterface.VXLANNetworkIdentifie')"
                     v-model="state.vni"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.vni.$error">
@@ -26,7 +26,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Source Address"
+                    :label="$t('typeInterface.sourceAddress')"
                     v-model="state.sourceAddress"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.sourceAddress.$error">
@@ -35,7 +35,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Multicast group"
+                    :label="$t('typeInterface.multicastGroup')"
                     v-model="state.multicast"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.multicast.$error">
@@ -45,11 +45,12 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.device"
-                    label="Device"
+                    :label="$t('typeInterface.device')"
                     item-title="name"
                     item-value="slug"
                     :items="state.listDevice"
                     return-object
+                    :no-data-text="$t('certificat.certificatlist')"
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.device.$error">
                     {{ v$.device.$errors[0].$message }}
@@ -69,7 +70,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">Close</span>
+              <span class="text-white pr-3 pl-3">{{
+                $t("buttons.close")
+              }}</span>
             </v-btn>
 
             <v-btn
@@ -82,7 +85,12 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+                {{ $t("buttons.create") }}</span
+              >
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>

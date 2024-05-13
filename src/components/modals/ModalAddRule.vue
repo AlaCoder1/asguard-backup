@@ -4,7 +4,11 @@
       v-model="state.openModalRule"
       :close-on-click-modal="false"
       :show-close="false"
-      :title="modalModeRule === 'create' ? 'Create New Rule' : 'Edit Rule'"
+      :title="
+        modalModeRule === 'create'
+          ? $t('sdwan.createNewRule')
+          : $t('sdwan.updateRule')
+      "
       width="600"
     >
       <form ref="myForm" @submit.prevent="submitForm">
@@ -12,7 +16,7 @@
           <v-row>
             <v-col cols="12" class="mb-n6">
               <v-text-field
-                label="Enter Rule Name"
+                :label="$t('sdwan.ruleName')"
                 v-model="state.formData.ruleName"
               ></v-text-field>
               <p class="error-feedback mb-5" v-if="v$.formData.ruleName.$error">
@@ -24,7 +28,7 @@
             <template v-if="!state.formData.time">
               <v-col cols="12" class="mb-n6">
                 <v-select
-                  label="Enter Routage Type"
+                  :label="$t('squid.routageType')"
                   v-model="state.formData.routageType"
                   item-title="name"
                   item-value="slug"
@@ -43,7 +47,7 @@
             <template v-else>
               <v-col cols="12" class="mb-n6">
                 <v-select
-                  label="Enter Routage Type"
+                  :label="$t('squid.routageType')"
                   v-model="state.formData.routageTypeDomain"
                   item-title="name"
                   item-value="slug"
@@ -64,7 +68,7 @@
                 <v-row>
                   <v-col cols="7">
                     <v-text-field
-                      label="Value"
+                      :label="$t('squid.value')"
                       v-model="state.formData.value"
                     ></v-text-field>
 
@@ -80,7 +84,7 @@
                   </v-col>
                   <v-col cols="4">
                     <v-text-field
-                      label="Prefix"
+                      :label="$t('sdwan.prefix')"
                       v-model="state.formData.prefix"
                     ></v-text-field>
                     <p
@@ -97,7 +101,7 @@
             <template v-if="isDomains">
               <v-col cols="12" class="mb-n6">
                 <v-text-field
-                  label="Value"
+                  :label="$t('squid.value')"
                   v-model="state.formData.value2"
                 ></v-text-field>
 
@@ -112,7 +116,7 @@
             <template v-if="isIps">
               <v-col cols="12" class="mb-n6">
                 <v-text-field
-                  label="Value"
+                  :label="$t('squid.value')"
                   v-model="state.formData.valueIp"
                 ></v-text-field>
 
@@ -127,7 +131,7 @@
             <template v-if="isTimeAndDomains && state.formData.time">
               <v-col cols="12" class="mb-n6">
                 <v-text-field
-                  label="Value"
+                  :label="$t('squid.value')"
                   v-model="state.formData.valueDomainTime"
                 ></v-text-field>
 
@@ -145,29 +149,29 @@
         <v-row>
           <template v-if="!state.formData.time">
             <v-col cols="6">
-              <label>Allowed by authentification</label>
+              <label>{{ $t("squid.allowedAuthentification") }}</label>
             </v-col>
             <v-col cols="6" class="mb-n6">
               <input type="checkbox" v-model="state.formData.allodwedAuth" />
-              <label class="ml-2">Activate Allowed by authentification</label>
+              <label class="ml-2">{{ $t("squid.activateAllowed") }}</label>
             </v-col>
             <v-col cols="6">
-              <label>Status</label>
+              <label>{{ $t("squid.status") }}</label>
             </v-col>
             <v-col cols="6" class="mb-n6">
               <input type="checkbox" v-model="state.formData.status" />
-              <label class="ml-2">Activate rule</label>
+              <label class="ml-2">{{ $t("squid.activateRule") }}</label>
             </v-col>
           </template>
           <template
             v-if="!state.formData.allodwedAuth && modalModeRule === 'create'"
           >
             <v-col cols="6">
-              <label>By time</label>
+              <label>{{ $t("squid.byTime") }}</label>
             </v-col>
             <v-col cols="6" class="mb-n6">
               <input type="checkbox" v-model="state.formData.time" />
-              <label class="ml-2">block by time</label>
+              <label class="ml-2">{{ $t("squid.blockTime") }}</label>
             </v-col>
           </template>
 
@@ -175,7 +179,7 @@
             <v-col cols="12" class="mb-n6">
               <v-select
                 v-model="state.formData.days"
-                label="Days"
+                :label="$t('squid.days')"
                 multiple
                 :items="daysArray"
                 item-title="name"
@@ -190,7 +194,7 @@
                 class="w-100"
                 size="large"
                 format="HH:mm"
-                placeholder="From"
+                :placeholder="$t('squid.from')"
               />
             </v-col>
             <v-col cols="6">
@@ -200,7 +204,7 @@
                 class="w-100"
                 size="large"
                 format="HH:mm"
-                placeholder="To"
+                :placeholder="$t('squid.to')"
               />
             </v-col>
           </template>
@@ -219,7 +223,7 @@
             @click="closeModal"
             class="mt-3 btn-add"
           >
-            <span class="text-white pr-3 pl-3">Close</span>
+            <span class="text-white pr-3 pl-3">{{ $t("buttons.close") }}</span>
           </v-btn>
 
           <v-btn
@@ -233,9 +237,15 @@
             variant="flat"
             class="mt-3 ml-2 btn-add"
           >
-            <span class="text-white pr-3 pl-3">{{
-              modalModeRule === "create" ? "Create" : "Edit"
-            }}</span>
+            <span
+              class="text-white pr-3 pl-3"
+              v-if="modalModeRule === 'create'"
+            >
+              {{ $t("buttons.create") }}</span
+            >
+            <span class="text-white pr-3 pl-3" v-if="modalModeRule === 'edit'">
+              {{ $t("buttons.update") }}</span
+            >
           </v-btn>
         </span>
       </template>
@@ -253,6 +263,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import dayjs from "dayjs";
 import useValidate from "@vuelidate/core";
@@ -275,13 +286,13 @@ export default {
       required: true,
     },
     modalModeRule: {
-      type: Object,
-      Array,
       String,
       required: true,
     },
   },
+  
   setup(props) {
+    const { t } = useI18n();
     const { isOpenModal, editRowRule, modalModeRule } = toRefs(props);
     const emitter = inject("emitter");
     const state = reactive({
@@ -315,29 +326,61 @@ export default {
     ]);
     const routagTypeDomain = ref([{ name: "domains", slug: "domain" }]);
 
+    const Monday = computed(() => {
+      return t("Monday");
+    });
+    const Tuesday = computed(() => {
+      return t("Tuesday");
+    });
+    const Wednesday = computed(() => {
+      return t("Wednesday");
+    });
+    const Thursday = computed(() => {
+      return t("Thursday");
+    });
+    const Friday = computed(() => {
+      return t("Friday");
+    });
+    const Saturday = computed(() => {
+      return t("Saturday");
+    });
+    const Sunday = computed(() => {
+      return t("Sunday");
+    });
+
     const daysArray = ref([
-      { name: "Monday", slug: "M" },
-      { name: "Tuesday", slug: "T" },
-      { name: "Wednesday", slug: "W" },
-      { name: "Thursday", slug: "H" },
-      { name: "Friday", slug: "F" },
-      { name: "Saturday", slug: "A" },
-      { name: "Sunday", slug: "S" },
+      { name: Monday, slug: "M" },
+      { name: Tuesday, slug: "T" },
+      { name: Wednesday, slug: "W" },
+      { name: Thursday, slug: "H" },
+      { name: Friday, slug: "F" },
+      { name: Saturday, slug: "A" },
+      { name: Sunday, slug: "S" },
     ]);
+
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const champInclude = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
+    const formatMustBeLikeAdresseIP = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
 
     const rules = computed(() => {
       return {
         formData: {
           ruleName: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(() => modalModeRule.value === "create")
             ),
           },
 
           value: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
                   modalModeRule.value === "create" &&
@@ -345,7 +388,7 @@ export default {
               )
             ),
             isValidValue: helpers.withMessage(
-              `Format must be like adresse IP : X.X.X.X`,
+              formatMustBeLikeAdresseIP,
 
               helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
             ),
@@ -353,7 +396,7 @@ export default {
 
           value2: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
                   modalModeRule.value === "create" &&
@@ -363,7 +406,7 @@ export default {
           },
           valueIp: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
                   modalModeRule.value === "create" &&
@@ -371,14 +414,14 @@ export default {
               )
             ),
             isValidValueIp: helpers.withMessage(
-              `Format must be like adresse IP : X.X.X.X`,
+              formatMustBeLikeAdresseIP,
 
               helpers.regex(/^[0-9.]+$/)
             ),
           },
           valueDomainTime: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
                   modalModeRule.value === "create" &&
@@ -388,7 +431,7 @@ export default {
           },
           routageType: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () => modalModeRule.value === "create" && !state.formData.time
               )
@@ -396,7 +439,7 @@ export default {
           },
           routageTypeDomain: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () => modalModeRule.value === "create" && state.formData.time
               )
@@ -404,7 +447,7 @@ export default {
           },
           prefix: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               requiredIf(
                 () =>
                   modalModeRule.value === "create" &&
@@ -412,7 +455,7 @@ export default {
               )
             ),
             isValidPrefix: helpers.withMessage(
-              `Champs can include only Numbers.`,
+              champInclude,
 
               helpers.regex(/^[0-9]+$/)
             ),
@@ -479,38 +522,45 @@ export default {
     watch(
       () => editRowRule.value,
       (val) => {
-        console.log("val", val);
-        state.rowEdit = val;
-        state.formData.status = val.status === "Disable" ? false : true;
-        state.formData.allodwedAuth =
-          val.allow_by_auth === "Disable" ? false : true;
+        populate(val);
       }
     );
     watch(
       () => modalModeRule.value,
       (val) => {
-        console.log("modalModeRule", val);
         if (val === "create") {
           state.formData.allodwedAuth = false;
           state.formData.status = false;
         }
       }
     );
+
+    const populate = (val) => {
+      if (modalModeRule.value === "edit") {
+        state.rowEdit = val;
+        state.formData.status = val.status === "Disable" ? false : true;
+        state.formData.allodwedAuth =
+          val.allow_by_auth === "Disable" ? false : true;
+      }
+    };
+
     const closeModal = () => {
       emitter.emit("closeAddRuleModal");
       v$.value.$reset();
 
-      state.formData.days = null;
-      state.formData.time = null;
-      state.formData.from = null;
-      state.formData.to = null;
-      state.formData.routageType = "";
-      state.formData.routageTypeDomain = "";
-      state.formData.value = "";
-      state.formData.value2 = "";
-      state.formData.valueIp = "";
-      state.formData.ruleName = null;
-      state.formData.prefix = "";
+      if (modalModeRule.value === "create") {
+        state.formData.days = null;
+        state.formData.time = null;
+        state.formData.from = null;
+        state.formData.to = null;
+        state.formData.routageType = "";
+        state.formData.routageTypeDomain = "";
+        state.formData.value = "";
+        state.formData.value2 = "";
+        state.formData.valueIp = "";
+        state.formData.ruleName = null;
+        state.formData.prefix = "";
+      }
     };
     const getCookie = (name) => {
       let cookieValue = null;
@@ -535,7 +585,6 @@ export default {
 
       if (result) {
         if (modalModeRule.value === "edit") {
-          console.log("oui");
           let payload = {
             status: state.formData.status,
             allow_by_auth: state.formData.allodwedAuth,

@@ -1,0 +1,99 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-06 13:33+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: backend/nat/views.py:23
+msgid "SNAT rule"
+msgstr "régle SNAT"
+
+#: backend/nat/views.py:24
+msgid "OneToOneNat rule"
+msgstr "régle OneToOneNat"
+
+#: backend/nat/views.py:25
+msgid "DNAT rule"
+msgstr "régle DNAT"
+
+#: backend/nat/views.py:26
+msgid "SNAT rule position"
+msgstr "position du régle SNAT"
+
+#: backend/nat/views.py:27
+msgid "OneToOneNat rule position"
+msgstr "position du régle OneToOneNat"
+
+#: backend/nat/views.py:28
+msgid "DNAT rule position"
+msgstr "position du régle DNAT"
+
+#: backend/nat/views.py:30
+msgid "is created"
+msgstr "est créé"
+
+#: backend/nat/views.py:31
+msgid "is deleted"
+msgstr "est supprimé"
+
+#: backend/nat/views.py:32
+msgid "is updated"
+msgstr "est modifié"
+
+#: backend/nat/views.py:33
+msgid "is started"
+msgstr "est démarré"
+
+#: backend/nat/views.py:34
+msgid "is stoped"
+msgstr "est arrêté"
+
+#: backend/nat/views.py:35
+msgid "is changed"
+msgstr "est changé"
+
+#: backend/nat/views.py:37
+msgid "Error in creating"
+msgstr "Erreur lors de la création de"
+
+#: backend/nat/views.py:38
+msgid "Error in deleting"
+msgstr "Erreur lors de la suppression de"
+
+#: backend/nat/views.py:39
+msgid "Error in updating"
+msgstr "Erreur lors de la modification de"
+
+#: backend/nat/views.py:40
+msgid "Error in starting"
+msgstr "Erreur lors de la démarrage de"
+
+#: backend/nat/views.py:41
+msgid "Error in stoping"
+msgstr "Erreur lors de l'arrêt de"
+
+#: backend/nat/views.py:42
+msgid "Error in changing"
+msgstr "Erreur lors du changement de"
+
+#: backend/nat/views.py:43
+msgid "Unable to delete"
+msgstr "Impossible de supprimer"
+
+#: backend/nat/views.py:44
+msgid "does not exist"
+msgstr "n'existe pas"

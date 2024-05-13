@@ -1,24 +1,31 @@
-from django.shortcuts import render
+from datetime import datetime
 from .models import ClamAV,FreshclamDatabase
 from django.http import JsonResponse
-import json
-from django.http import JsonResponse
-from backend.authentification.views import *
+from django.utils.translation import gettext_lazy as _
 from .serializers import ClamavSerializer,FreshclamDatabaseSerializer
-from rest_framework.response import Response
 from rest_framework import status
-from django.core import serializers
-from django.db.models import Q
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import api_view, permission_classes, authentication_classes
+from drf_yasg.utils import swagger_auto_schema
 from backend.clamav.functions_sys import update_clamav_config,execute_cmd
 from backend.clamav.list_configurations import getclamavconfigurations,clamav_full_scan_result
 
+
+# Constants
+CONSTANT_CONFIG_FILE = _("Config file")
+CONSTANT_FRESHCLAM = _("Freshclam")
+# Success messages
+SUCCESS_MESSAGES_UPDATING = _("is updated")
+# Error messages
+ERROR_MESSAGES_UPDATING = _("Error in updating")
+ERROR_MESSAGES_SCANING = _("Error in scaning")
 
 
 ################ Get the clamav configurations data from the database #############
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO GET LIST OF Clamav Configurations",)
-
+                     operation_summary="API TO GET LIST OF Clamav Configurations")
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 def getconfiguratiosnfromdatabase(request):
@@ -28,17 +35,14 @@ def getconfiguratiosnfromdatabase(request):
         return JsonResponse(configurations_clamav, safe=False)
 
 
-
 ############### Update ApI to modify the file configuration system and saved the changes on database ##########################
 
 @swagger_auto_schema(
     method='PUT',
     request_body=ClamavSerializer,
     responses={200: 'Created', 400: 'Bad Request'},
-    operation_summary="API TO update_Clamav_configuration  ",
-    operation_description="API TO update_Clamav_configuration  ",
-)  
-
+    operation_summary="API TO update_Clamav_configuration",
+    operation_description="API TO update_Clamav_configuration")  
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -46,7 +50,6 @@ def update_clamav_configuration(request, id):
     if request.method=="PUT":
         """Update clamav configurations in config and freshclam file"""
         try:
-            # print("Request Data:", request.data)
             # Retrieve ClamAV object from the database using the id
             clamav_object = ClamAV.objects.get(pk=id)
 
@@ -86,10 +89,8 @@ def update_clamav_configuration(request, id):
             # Call the update_clamav_config function
             result = update_clamav_config(maxfiles,maxfilesize,scanhtml,scanarchive,scanxmldocs,scanmail,scanhwp3,scanpdf,scanole2,disablecache,scanelf,scanpe,alertole2macros,alertencryptedarchive,alertbrokenexecutables,followdirectorysymlinks,followfilesymlinks,freshclamdatabasemirror,freshclamconnectiontimeout,tcpport,tcpsocket,maxqueue,maxrecursion,proxyport,maxscansize,maxdirectoryrecursion,idletimeout,clamd_enabled,freshclam_enabled,logverbose,maxthreads)
             
-           
-            print("result:", result)
 
-            if result is True:
+            if result:
             # Save the updated ClamAV object
                 clamav_object.logverbose = logverbose
                 clamav_object.tcpport = tcpport
@@ -124,13 +125,12 @@ def update_clamav_configuration(request, id):
                 clamav_object.freshclam_enabled = freshclam_enabled
                 clamav_object.save()
                 
-                return JsonResponse({'success': True, 'msg': 'Config File updated successfully !!!'},status=200)
-            else:
-                    return JsonResponse({'success': False, 'msg': 'Failed to Update.'}, status=500) 
+                return JsonResponse({'success': True, 'msg': f"{CONSTANT_CONFIG_FILE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
+            return JsonResponse({'success': False, 'msg': f"{ERROR_MESSAGES_UPDATING} {CONSTANT_CONFIG_FILE}"}, status=400)
                       
         except Exception as e:
-  
-         return JsonResponse({"status": "error", "message": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
 
 ############################ API For Update the frechclam database ##################################
 
@@ -139,9 +139,7 @@ def update_clamav_configuration(request, id):
     request_body=FreshclamDatabaseSerializer,
     responses={200: 'Created', 400: 'Bad Request'},
     operation_summary="API Update Freshclam Database ",
-    operation_description="API Update Freshclam Database ",
-)  
-
+    operation_description="API Update Freshclam Database ")  
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -151,7 +149,6 @@ def update_freshclam_database(request):
         clamav = ClamAV.objects.first()
         
         result = execute_cmd('freshclam')
-        print(result)
 
         freshclam_entry = FreshclamDatabase.objects.first()
 
@@ -160,12 +157,10 @@ def update_freshclam_database(request):
             freshclam_entry.line = '\n'.join(result)
             freshclam_entry.date = datetime.now()
             freshclam_entry.save()
-            message = 'Freshclam updated successfully'
         else:
             # Create a new entry
             freshclam_data = FreshclamDatabase(clamav=clamav, process_type='Update', line='\n'.join(result), date=datetime.now())
             freshclam_data.save()
-            message = 'Freshclam updated successfully'
 
      
         # Retrieve all entries from FreshclamDatabase
@@ -180,12 +175,12 @@ def update_freshclam_database(request):
             for entry in freshclam_entries
         ]
 
-        return JsonResponse({'message': message, 'data': serialized_data})
+        return JsonResponse({'message': f"{CONSTANT_FRESHCLAM} {SUCCESS_MESSAGES_UPDATING}", 'data': serialized_data})
     
-    return JsonResponse({'error': 'Invalid request method'})
+    return JsonResponse({'error': f"{ERROR_MESSAGES_UPDATING} {CONSTANT_FRESHCLAM}"})
+
 
 ############################ API Full scan clamav #################################
-
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -193,8 +188,8 @@ def update_freshclam_database(request):
 def clamavscanview(request):
     """Getting Result of full scan"""
     if (request.method == 'GET'):
-        aggregated_summary, log_files = clamav_full_scan_result()
-        return JsonResponse({'result': aggregated_summary, 'log_files': log_files}, safe=False)
-
-
-
+        try:
+            aggregated_summary, log_files = clamav_full_scan_result()
+            return JsonResponse({'result': aggregated_summary, 'log_files': log_files}, safe=False)
+        except Exception:
+                return JsonResponse({"message": ERROR_MESSAGES_SCANING}, status=400)

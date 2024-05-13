@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              Create New SNAT Rule</span
+             {{$t("nat.create_msg_snat") }}</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              Update SNAT Rule</span
+              {{$t("nat.update_msg_snat")}}</span
             >
           </v-card-title>
           <v-card-text>
@@ -24,7 +24,8 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.interface"
-                    label="Interface"
+                    :label="$t('nat.interface')"
+                    :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="id"
                     :items="state.mapedInterface"
@@ -37,7 +38,8 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.tcpIpVersion"
-                    label="Select TCP/IP version"
+                    :label="$t('nat.select_version')"
+                    :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="slug"
                     :items="state.versionList"
@@ -48,7 +50,8 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.protocol"
-                    label="Select Protocol"
+                    :label="$t('nat.select_protocol')"
+                    :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="slug"
                     :items="state.protocolList"
@@ -70,7 +73,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    label="Enter source address"
+                    :label="$t('nat.ent_saddr')"
                     v-model="state.sourceAddress"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.sourceAddress.$error">
@@ -82,8 +85,9 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    label="Prefix"
+                  :label="$t('nat.prefix')"
                     v-model="state.sourcePrefix"
+                    :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
                     clearable
                   ></v-select>
@@ -95,7 +99,8 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.sourcePort"
-                    label="select source port"
+                    :label="$t('nat.ent_sport')"
+                    :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="slug"
                     :items="state.listPort"
@@ -105,7 +110,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6" v-if="isSourceOther">
                   <v-text-field
-                    label="port"
+                    :label="$t('nat.port')"
                     v-model="state.port"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.port.$error">
@@ -125,7 +130,7 @@
                 </v-col> -->
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    label="Enter destination address"
+                  :label="$t('nat.ent_daddr')"
                     v-model="state.destinationAddress"
                   ></v-text-field>
                   <p
@@ -140,8 +145,9 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    label="Prefix"
+                  :label="$t('nat.prefix')"
                     v-model="state.destinationPrefix"
+                    :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
                     clearable
                   ></v-select>
@@ -155,7 +161,8 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.destinationPort"
-                    label="select destination port"
+                    :label="$t('nat.ent_dport')"
+                    :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="slug"
                     :items="state.listPort"
@@ -165,7 +172,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6" v-if="isDestinationOther">
                   <v-text-field
-                    label="port"
+                    :label="$t('nat.port')"
                     v-model="state.specificPort"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.specificPort.$error">
@@ -190,7 +197,7 @@
                 <template v-if="state.checkInterface === 'Static'">
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
-                      label="Enter Translation address from"
+                    :label="$t('nat.tran_add_from')"
                       v-model="state.translationAddressFrom"
                     ></v-text-field>
                     <p
@@ -202,7 +209,7 @@
                   </v-col>
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
-                      label="Enter Translation address to"
+                    :label="$t('nat.tran_add_to')"
                       v-model="state.translationAddressTo"
                     ></v-text-field>
                     <p
@@ -214,7 +221,7 @@
                   </v-col>
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
-                      label="Translation port"
+                    :label="$t('nat.ent_trans_port')"
                       v-model="state.translationPort"
                     ></v-text-field>
                   </v-col>
@@ -222,7 +229,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Description"
+                  :label="$t('nat.description')"
                     v-model="state.description"
                   ></v-text-field>
                 </v-col>
@@ -242,7 +249,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3" style="color: #213e9f">Cancel</span>
+              <span class="pr-3 pl-3" style="color: #213e9f">{{$t("firewall.cancel")}}</span>
             </v-btn>
 
             <v-btn
@@ -256,7 +263,12 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
+            <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+                {{ $t("buttons.create") }}</span
+              >
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>

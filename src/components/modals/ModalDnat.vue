@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              Create New DNAT Rule</span
+              {{$t("nat.create_msg_dnat") }}</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              Update DNAT Rule</span
+              {{$t("nat.update_msg_dnat") }}</span
             >
           </v-card-title>
           <v-card-text>
@@ -17,7 +17,8 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.interface"
-                    label="Interface"
+                    :label="$t('nat.interface')"
+                    :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="id"
                     :items="state.mapedInterface"
@@ -30,7 +31,8 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.tcpIpVersion"
-                    label="Select TCP/IP version"
+                    :label="$t('nat.select_protocol')"
+                    :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="id"
                     :items="state.versionList"
@@ -41,7 +43,8 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.protocol"
-                    label="Select Protocol"
+                    :label="$t('nat.select_protocol')"
+                    :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="id"
                     :items="state.protocolList"
@@ -52,7 +55,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    label="Enter source address"
+                  :label="$t('nat.ent_saddr')"
                     v-model="state.sourceAddress"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.sourceAddress.$error">
@@ -64,7 +67,7 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    label="Prefix"
+                  :label="$t('nat.prefix')"
                     v-model="state.sourcePrefix"
                     :items="numberList"
                   ></v-select>
@@ -74,12 +77,13 @@
                 </v-col>
 
                 <v-col cols="6" class="mb-n6 mt-3">
-                  <span>Source Port Range </span>
+                  <span>{{$t('nat.sport_range')}} </span>
                 </v-col>
                 <v-col cols="3" class="mb-n6">
                   <v-select
-                    label="From"
+                   :label="$t('nat.from')"
                     v-model="state.sourceRangeFrom"
+                    :no-data-text="$t('nat.msg_no_data')"
                     :items="state.listPort"
                     item-title="name"
                     item-value="slug"
@@ -87,7 +91,7 @@
                   ></v-select>
                   <v-text-field
                     v-if="state.sourceRangeFrom.slug === 'other'"
-                    label="From"
+                    :label="$t('nat.from')"
                     v-model="state.specificSourceFrom"
                   ></v-text-field>
                   <p
@@ -99,9 +103,10 @@
                 </v-col>
                 <v-col cols="3" class="mb-n6">
                   <v-select
-                    label="To"
+                  :label="$t('nat.to')"
                     v-model="state.sourceRangeTo"
                     :items="state.listPortSourceTo"
+                    :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="slug"
                     return-object
@@ -126,12 +131,12 @@
                     !isHightSpecificSource
                   "
                 >
-                  Port To must me greater than or equal to Port from
+                {{$t("nat.msg_validation_port") }}
                 </p>
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Enter External address"
+                    :label="$t('nat.ent_ext_add')"
                     v-model="state.externalAddress"
                   ></v-text-field>
                   <p
@@ -144,7 +149,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Enter Internal address"
+                    :label="$t('nat.ent_int_add')"
                     v-model="state.internalAddress"
                   ></v-text-field>
                   <p
@@ -166,11 +171,12 @@
                 </v-col>
                 <template v-if="state.checkInterface === 'Port Frowardin'">
                   <v-col cols="6" class="mb-n6 mt-3">
-                    <span>destination port range</span>
+                    <span>{{$t("nat.dport_range") }}</span>
                   </v-col>
                   <v-col cols="3" class="mb-n6">
                     <v-select
-                      label="From"
+                      :label="$t('nat.from')"
+                      :no-data-text="$t('nat.msg_no_data')"
                       v-model="state.destinationRangeFrom"
                       :items="state.listPort"
                       item-title="name"
@@ -179,7 +185,7 @@
                     ></v-select>
                     <v-text-field
                       v-if="state.destinationRangeFrom.slug === 'other'"
-                      label="From"
+                      :label="$t('nat.from')"
                       v-model="state.specificDestinationFrom"
                     ></v-text-field>
                     <p
@@ -198,16 +204,17 @@
                   </v-col>
                   <v-col cols="3" class="mb-n6">
                     <v-select
-                      label="To"
+                    :label="$t('nat.to')"
                       v-model="state.destinationRangeTo"
                       :items="state.listPortDestinationTo"
+                      :no-data-text="$t('nat.msg_no_data')"
                       item-title="name"
                       item-value="slug"
                       return-object
                     ></v-select>
                     <v-text-field
                       v-if="state.destinationRangeTo.slug === 'other'"
-                      label="To"
+                      :label="$t('nat.to')"
                       v-model="state.specificDestinationTo"
                     ></v-text-field>
                     <p
@@ -233,13 +240,14 @@
                       !isHightSpecificDestination
                     "
                   >
-                    Port To must me greater than or equal to Port from
+                  {{$t("nat.msg_validation_port") }}
                   </p>
 
                   <v-col cols="12" class="mb-n6">
                     <v-select
-                      label="Port"
+                      :label="$t('nat.port')"
                       v-model="state.port"
+                      :no-data-text="$t('nat.msg_no_data')"
                       :items="state.listPort"
                       item-title="name"
                       item-value="slug"
@@ -248,7 +256,7 @@
 
                     <v-text-field
                       v-if="state.port.slug === 'other'"
-                      label="Port"
+                      :label="$t('nat.port')"
                       v-model="state.specificPort"
                     ></v-text-field>
                     <p
@@ -266,7 +274,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Description"
+                  :label="$t('nat.description')"
                     v-model="state.description"
                   ></v-text-field>
                 </v-col>
@@ -286,7 +294,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3" style="color: #213e9f">Cancel</span>
+              <span class="pr-3 pl-3" style="color: #213e9f">{{$t("firewall.cancel") }}</span>
             </v-btn>
 
             <v-btn
@@ -301,7 +309,12 @@
               class="mt-3 btn-add"
               :disabled="isfalse || isfalseSpecific"
             >
-              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
+            <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+                {{ $t("buttons.create") }}</span
+              >
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>

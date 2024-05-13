@@ -1,24 +1,24 @@
 <template>
   <div class="mt-3">
-    <h4 class="mt-6">{{$t('openvpn.ClientSettings')}}</h4>
+    <h4 class="mt-6">Client Settings</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" align-self="center">
-        <label>{{$t('openvpn.DynamicIP')}}</label>
+        <label>Dynamic IP</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="dynamicIP" />
-        <label class="ml-2">{{$t('openvpn.ActiveDynamicIP')}}</label>
+        <label class="ml-2">Active Dynamic IP</label>
       </v-col>
       <v-col v-if="props.deviceMode === 'tun'" cols="4">
-        <label>{{$t('openvpn.AdressPool')}} </label>
+        <label>Adress Pool </label>
       </v-col>
       <v-col v-if="props.deviceMode === 'tun'" cols="8" class="mb-n6">
         <input type="checkbox" v-model="adressPool" />
-        <label class="ml-2">{{$t('openvpn.ActiveAdresspool')}}</label>
+        <label class="ml-2">Active Adress pool</label>
         <v-text-field
           class="mt-3 mb-n6"
-          :label="$t('sdwan.startServer')"
+          label="Start"
           v-model="startAddressPool"
           v-if="adressPool"
         ></v-text-field>
@@ -30,7 +30,7 @@
         </p>
         <v-text-field
           class="mt-3"
-          :label="$t('openvpn.end')"
+          label="End"
           v-model="endAddressPool"
           v-if="adressPool"
         ></v-text-field>
@@ -49,15 +49,15 @@
         <label class="ml-2">Active toplogy</label>
       </v-col> -->
       <v-col cols="4">
-        <label>{{$t('openvpn.DNSDefaultDomain')}}</label>
+        <label>DNS Default Domain</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="dnsDefaultDomain" />
-        <label class="ml-2">{{$t('openvpn.ActiveDNSDefaultDomain')}} </label>
+        <label class="ml-2">Active DNS Default Domain </label>
         <v-text-field
           class="mt-3"
           v-model="activeDnsDefault"
-          :label="$t('openvpn.DNSDefaultDomain')"
+          label="DNS Default Domain"
           v-if="dnsDefaultDomain"
         ></v-text-field>
         <p
@@ -68,15 +68,15 @@
         </p>
       </v-col>
       <v-col cols="4">
-        <label>{{$t('openvpn.DNSServers')}}</label>
+        <label>DNS Servers</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="dnsServers" />
-        <label class="ml-2">{{$t('openvpn.ActiveDNSServers')}}</label>
+        <label class="ml-2">Active DNS Servers </label>
         <v-text-field
           class="mt-3 mb-n6"
           v-model="activeDnsServer1"
-          :label="$t('openvpn.DNSServers1')"
+          label="DNS Servers 1"
           v-if="dnsServers"
         ></v-text-field>
         <p
@@ -87,7 +87,7 @@
         </p>
         <v-text-field
           class="mt-3"
-          :label="$t('openvpn.DNSServers2')"
+          label="DNS Servers 2"
           v-model="activeDnsServer2"
           v-if="dnsServers"
         ></v-text-field>
@@ -99,21 +99,21 @@
         </p>
       </v-col>
       <v-col cols="4" align-self="center">
-        <label>{{$t('openvpn.ForceDNScacheupdate')}}</label>
+        <label>Force DNS cache update</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="forceDNS" />
-        <label class="ml-2">{{$t('openvpn.ActiveForceDNScacheupdate')}}</label>
+        <label class="ml-2">Active Force DNS cache update </label>
       </v-col>
       <v-col cols="4">
-        <label>{{$t('openvpn.NTPServers')}}</label>
+        <label>NTP Servers</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="ntpServers" />
-        <label class="ml-2">{{$t('openvpn.ActiveNTPServers')}}</label>
+        <label class="ml-2">Active NTP Servers</label>
         <v-text-field
           class="mt-3 mb-n6"
-          :label="$t('openvpn.NTPServers1')"
+          label="NTP Servers 1"
           v-model="activeNtpServer1"
           v-if="ntpServers"
         ></v-text-field>
@@ -125,7 +125,7 @@
         </p>
         <v-text-field
           class="mt-3"
-          :label="$t('openvpn.NTPServers2')"
+          label="NTP Servers 2"
           v-model="activeNtpServer2"
           v-if="ntpServers"
         ></v-text-field>
@@ -137,11 +137,11 @@
         </p>
       </v-col>
       <v-col cols="4" align-self="center">
-        <label>{{$t('openvpn.ClientManagementPort')}}</label>
+        <label>Client Management Port</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="clientPort" />
-        <label class="ml-2">{{$t('openvpn.ActiveClientManagementPort')}}</label>
+        <label class="ml-2">Active Client Management Port</label>
       </v-col>
 
       <template v-if="clientPort">
@@ -159,11 +159,11 @@
           </p>
         </v-col>
         <v-col cols="4" class="mt-3">
-          <label>{{$t('form.password')}}</label>
+          <label>Password</label>
         </v-col>
         <v-col :cols="props.serverModeState === 'edit' ? 4 : 8" class="mb-n6">
           <v-text-field
-            :label="$t('form.password')"
+            label="Password"
             :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
             @click:append-inner="show1 = !show1"
             :type="show1 ? 'text' : 'password'"
@@ -178,7 +178,7 @@
         </v-col>
         <v-col cols="4" class="mb-n6" v-if="props.serverModeState === 'edit'">
           <v-text-field
-            :label="$t('openvpn.newPassword')"
+            label="New Password"
             :append-inner-icon="showClientNewPass ? 'mdi-eye' : 'mdi-eye-off'"
             @click:append-inner="showClientNewPass = !showClientNewPass"
             :type="showClientNewPass ? 'text' : 'password'"
@@ -194,11 +194,11 @@
       </template>
 
       <v-col align-self="center" cols="4" class="mb-5">
-        <label>{{$t('openvpn.VerbosityLevel')}}</label>
+        <label>Verbosity Level</label>
       </v-col>
       <v-col cols="8">
         <v-select
-          :label="$t('openvpn.VerbosityLevel')"
+          label="Verbosity Level"
           v-model="verbLevel"
           :items="verbosityLevelList"
           item-title="name"

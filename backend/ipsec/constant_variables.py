@@ -7,6 +7,3 @@ PATH_IPSEC_D_CERTS = '/etc/ipsec.d/certs/'
 PATH_IPSEC_D_FINGER_PRINTS = '/etc/ipsec.d/finger_prints/'
 
 IPV4_CONFIG = 'IPv4 config'
-CONSTANT_METHOD_PSK = "Mutual PSK"
-CONSTANT_METHOD_RSA = "Mutual RSA"
-CONSTANT_METHOD_PUBLIC_KEY = "Mutual Public key"

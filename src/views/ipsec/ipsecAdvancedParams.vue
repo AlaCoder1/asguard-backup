@@ -141,7 +141,7 @@
             outlined
             color="#ffffff"
             label-color="#213E9F"
-            :label="$t('PageGeneral.form.Cancel')"
+            label="cancel"
             :isLarge="true"
             @click="cancel"
           />
@@ -150,7 +150,7 @@
             outlined
             color="#213E9F"
             label-color="#ffffff"
-            :label="state.isEditState === 'edit' ? $t('PageGeneral.form.Edit') : $t('buttons.create')"
+            :label="state.isEditState === 'edit' ? 'Edit' : 'Create'"
             :isLarge="true"
             class="ml-2"
             @click="save"
@@ -179,14 +179,13 @@ import { inject, ref, toRefs } from "vue";
 import useValidate from "@vuelidate/core";
 import VButton from "@/components/VButton.vue";
 import { required, requiredIf, helpers } from "@vuelidate/validators";
-import { reactive, onMounted, computed, watch} from "vue";
+import { reactive, onMounted, computed, watch } from "vue";
 import generalInfoPhaseOne from "./component/general_info_phase_one.vue";
 import phaseAuth from "./component/phase_authentification.vue";
 import phaseAlgo from "./component/phase_algorithms.vue";
 import advancedOption from "./component/advancedOptions.vue";
 import generalInfoPhaseTwo from "./component/general_info_phase_two.vue";
 import phaseTwoExchange from "./component/phase_two_exchange.vue";
-import { useI18n } from "vue-i18n";
 
 export default {
   name: "IpsecComponent",
@@ -201,7 +200,6 @@ export default {
   },
   props: ["dataServer"],
   setup(props) {
-    const { t } = useI18n();
     const emitter = inject("emitter");
 
     const { dataServer } = toRefs(props);
@@ -324,7 +322,6 @@ export default {
       pingHost: "",
       spdEntries: "",
     });
-    
 
     const connectionMethodList = ref([
       {
@@ -497,7 +494,7 @@ export default {
     watch(
       () => dataServer.value,
       (newValue) => {
-        if (newValue != "tabs.tunnelConfig") {
+        if (newValue != "TUNNEL CONFIGURATION") {
           state.isEditState = "";
           cancel();
         }
@@ -959,7 +956,7 @@ export default {
               slug: "Address",
             },
             { name: "Network", slug: "Network" },
-          ]
+          ];
 
           var combinedArray = [...listInter, ...interfaces];
           mapedInterfaceType.value = combinedArray;

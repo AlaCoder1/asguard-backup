@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
 
@@ -14,25 +13,8 @@ from backend.sdwan.models import Area, SdwanRules
 from backend.sdwan.serializers import AreaSerializer, SdwanRulesSerializer
 from backend.sdwan.utils import routing_table_id
 from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, stop_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
+from utils.constant_variables import CONSTANT_SDWAN_RULE, ERROR_MESSAGES_CREATING, ERROR_MESSAGES_DELETING, ERROR_MESSAGES_INEXISTANT, ERROR_MESSAGES_START, ERROR_MESSAGES_STOP, ERROR_MESSAGES_UPDATING, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_DELETE, SUCCESS_MESSAGES_START, SUCCESS_MESSAGES_STOP, SUCCESS_MESSAGES_UPDATE
 from utils.errors_utils import CommandExecutionError
-
-
-# Constants
-CONSTANT_SDWAN_RULE = _("SDwan rule")
-CONSTANT_AREA = _("Area")
-# Success messages
-SUCCESS_MESSAGES_CREATING = _("is created")
-SUCCESS_MESSAGES_DELETING = _("is deleted")
-SUCCESS_MESSAGES_UPDATING = _("is updated")
-SUCCESS_MESSAGES_STARTING = _("is started")
-SUCCESS_MESSAGES_STOPING = _("is stoped")
-# Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
-ERROR_MESSAGES_STARTING = _("Error in starting")
-ERROR_MESSAGES_STOPING = _("Error in stoping")
-ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
 ########################################
@@ -81,7 +63,7 @@ def create_area(request):
         # Add the server to the database
         serializer_area.save()
 
-        return JsonResponse({"msg": f"{data['name']} {SUCCESS_MESSAGES_CREATING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format('Area', data["name"])}, status=201)
     
     return JsonResponse({"error": list(serializer_area.errors.values())[0][0]}, status=400)
 
@@ -98,10 +80,10 @@ def delete_area(request, id):
 
         # delete from database
         area.delete()
-        return JsonResponse({"msg": f"{area.name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(area.name)}, status=201)
     
     except Area.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Area')}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN AREA",
@@ -125,12 +107,12 @@ def update_area(request, id):
 
             # Add the server to the database
             serializer_area.save()
-            return JsonResponse({"msg": f"{area.name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+            return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format('Area', area.name)}, status=201)
         else:
             return JsonResponse({"error": list(serializer_area.errors.values())[0][0]}, status=400)
     
     except Area.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Area')}, status=400)
 
 
 ########################################
@@ -191,12 +173,12 @@ def create_sdwan_rule(request):
 
             # Add the rule to the database
             serializer_sdwan_rule.save()
-            return JsonResponse({"msg": f"{data['name']} {SUCCESS_MESSAGES_CREATING}"}, status=201)
+            return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_SDWAN_RULE, data["name"])}, status=201)
         
         return JsonResponse({"error": list(serializer_sdwan_rule.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SDWAN_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_SDWAN_RULE)}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -214,12 +196,12 @@ def delete_sdwan_rule(request, id):
 
         # delete rule from database
         sdwan_rule.delete()
-        return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(sdwan_rule.name)}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SDWAN_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_DELETING.format(CONSTANT_SDWAN_RULE)}, status=400)
     except SdwanRules.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_AREA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_SDWAN_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -264,18 +246,18 @@ def update_sdwan_rule(request, id):
                 sdwan_rule.rule_status = True
                 serializer_sdwan_rule.save()
                 start_sdwan_rule_in_system(id)
-                return JsonResponse({"msg": f"{data['name']} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+                return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(data["name"])}, status=201)
 
             # Update the rule in the database
             serializer_sdwan_rule.save()
-            return JsonResponse({"msg": f"{data['name']} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+            return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(data["name"])}, status=201)
         
         return JsonResponse({"error": list(serializer_sdwan_rule.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SDWAN_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_UPDATING.format(CONSTANT_SDWAN_RULE)}, status=400)
     except SdwanRules.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_SDWAN_RULE)}, status=400)
 
 
 @api_view(['PUT'])
@@ -290,12 +272,12 @@ def start_sdwan_rule(request, id):
         
         start_sdwan_rule_in_system(id)
         
-        return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_STARTING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_START.format(CONSTANT_SDWAN_RULE, sdwan_rule.name)}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_START.format(CONSTANT_SDWAN_RULE)}, status=400)
     except SdwanRules.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_SDWAN_RULE)}, status=400)
 
 
 @api_view(['PUT'])
@@ -309,9 +291,9 @@ def stop_sdwan_rule(request, id):
         sdwan_rule.save()
         stop_sdwan_rule_in_system()
         
-        return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_STOPING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_STOP.format(CONSTANT_SDWAN_RULE, sdwan_rule.name)}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_SDWAN_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_STOP.format(CONSTANT_SDWAN_RULE)}, status=400)
     except SdwanRules.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_SDWAN_RULE)}, status=400)

@@ -49,7 +49,7 @@
                 />
               </svg>
             </v-icon>
-            <span class="ml-2">{{ $t(service) }}</span>
+            <span class="ml-2">{{ service }}</span>
           </v-row>
           <v-row
             v-for="service in services"
@@ -57,7 +57,7 @@
             class="text-center ml-14 mb-1"
             style="display: flex"
           >
-            <template v-if="title === 'Custom' || title === 'Personnalisé'">
+            <template v-if="title === 'Custom'">
               <input
                 type="checkbox"
                 :id="'checkbox_'"
@@ -92,7 +92,7 @@
                 outlined
                 :color="buttonColor"
                 label-color="#ffffff"
-                :label="$t('subscription.byNow')"
+                label="By now"
                 :isLarge="true"
                 class="ml-2"
                 @click="submitForm"
@@ -115,7 +115,6 @@
 </template>
 
 <script>
-import { useI18n } from "vue-i18n";
 import VButton from "@/components/VButton.vue";
 import { ref, watch, inject, reactive } from "vue";
 import axios from "axios";
@@ -135,7 +134,6 @@ export default {
   },
 
   setup(props) {
-    const { t } = useI18n();
     const emitter = inject("emitter");
     const selectedServices = ref([]);
 
@@ -176,17 +174,17 @@ export default {
         emitter.emit("changePrice", sum);
       }
     );
-
     const submitForm = async () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       const subscriptionId = getPackId();
+      console.log('subscriptionId',subscriptionId)
 
       if (!subscriptionId) {
         state.snackbar = true;
         state.color = "red";
-        state.textAlert = t("subscription.chooseService");
+        state.textAlert = "You have to choose at least one service";
         return;
       }
       try {

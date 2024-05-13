@@ -21,7 +21,7 @@
               :rowData="rowData.value"
               :overlayNoRowsTemplate="overlayTemplate"
               style="width: 100%; height: 100%"
-              @grid-ready="onGridReadyInfo"
+              @grid-ready="onGridReady"
             />
           </div>
           <div id="chart" class="mt-3 mr-2">
@@ -50,9 +50,6 @@
                   :rowData="rowDataServices.value"
                   :overlayNoRowsTemplate="overlayTemplate"
                   style="width: 100%; height: 100%"
-                  :pagination="true"
-                  :paginationPageSize="4"
-                  :localeText="paginationLocalization"
                   @grid-ready="onGridReady"
                 />
               </v-col>
@@ -72,9 +69,6 @@
                   @grid-ready="onGridReady"
                   :alwaysShowHorizontalScroll="false"
                   :alwaysShowVerticalScroll="false"
-                  :pagination="true"
-                  :paginationPageSize="4"
-                  :localeText="paginationLocalization"
                   :overlayNoRowsTemplate="overlayTemplate"
                   style="width: 100%; height: 100%"
                 />
@@ -93,9 +87,6 @@
                   @grid-ready="onGridReady"
                   :alwaysShowHorizontalScroll="false"
                   :alwaysShowVerticalScroll="false"
-                  :pagination="true"
-                  :paginationPageSize="4"
-                  :localeText="paginationLocalization"
                   :overlayNoRowsTemplate="overlayTemplate"
                   style="width: 100%; height: 100%"
                 />
@@ -128,9 +119,6 @@ export default {
   setup() {
     const { t } = useI18n();
     const overlayTemplate = ref("");
-    const paginationLocalization = reactive({
-      of: "/",
-    });
     const state = reactive({
       information: null,
       infoParser: null,
@@ -229,60 +217,24 @@ export default {
       },
     ]);
     const columnsService = ref([
-      {
-        headerName: "Service",
-        field: "service",
-        width: 90,
-        minWidth: 50,
-        flex: 1,
-      },
-      {
-        headerName: "Description",
-        field: "description",
-        width: 90,
-        minWidth: 50,
-        flex: 1,
-      },
+      { headerName: "Service", field: "service" },
+      { headerName: "Description", field: "description" },
       {
         headerName: "Actions",
-        width: 150,
         lockPosition: "right",
         cellClass: "locked-col",
         cellRenderer: actionCellRendererService,
       },
     ]);
     const columnInterfaces = ref([
-      {
-        headerName: name,
-        field: "name_interface",
-        width: 90,
-        minWidth: 50,
-        flex: 1,
-      },
-      {
-        headerName: speed,
-        field: "speed_duplex",
-        width: 90,
-        minWidth: 50,
-        flex: 1,
-      },
-      {
-        headerName: address,
-        field: "ip_address",
-        width: 150,
-        minWidth: 50,
-      },
+      { headerName: name, field: "name_interface" },
+      { headerName: speed, field: "speed_duplex" },
+      { headerName: address, field: "ip_address" },
     ]);
     const columnGateways = ref([
-      { headerName: name, field: "name", width: 90, minWidth: 50, flex: 1 },
-      {
-        headerName: address,
-        field: "address",
-        width: 90,
-        minWidth: 50,
-        flex: 1,
-      },
-      { headerName: status, field: "status", width: 150, minWidth: 50 },
+      { headerName: name, field: "name" },
+      { headerName: address, field: "address" },
+      { headerName: status, field: "status" },
     ]);
     const gridApi = ref(null);
 
@@ -343,14 +295,20 @@ export default {
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
-    };
-    const onGridReadyInfo = (params) => {
-      gridApi.value = params.api;
-      if (gridApi.value) {
-        gridApi.value.setRowData(rowData.value);
-      } else {
-        console.error("Grid API.");
-      }
+      // gridApi.value.sizeColumnsToFit();
+      // window.addEventListener("resize", function () {
+      //   setTimeout(function () {
+      //     gridApi.value.sizeColumnsToFit();
+      //   });
+      // });
+
+      // gridApi.value.sizeColumnsToFit();
+
+      // if (gridApi.value) {
+      //   gridApi.value.setRowData(rowDataServices.value);
+      // } else {
+      //   console.error("Grid API.");
+      // }
     };
     const defaultColDef = {
       // flex: 2,
@@ -413,6 +371,20 @@ export default {
         console.log("WebSocket connection closed.");
       };
     };
+    const getCookie = (name) => {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    };
 
     onMounted(async () => {
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
@@ -453,7 +425,16 @@ export default {
         };
       });
       rowDataGateways.value = infoGateways;
+
       let parsedArray = JSON.parse(interfaces);
+
+      // let infoInterfaces = parsedArray.map((element) => {
+      //   return {
+      //     name: element.name_interface,
+      //     speed_uplex: element.speed_duplex,
+      //     address: element.ip_address,
+      //   };
+      // });
       rowDataInterfaces.value = parsedArray;
     });
 
@@ -472,15 +453,14 @@ export default {
       columnGateways,
       actionCpuType,
       gridApi,
-      paginationLocalization,
       apexChart,
       gridOptions,
       actionCellRenderer,
       onGridReady,
-      onGridReadyInfo,
       columnInterfaces,
       initializeWebSocket,
       actionCellRendererService,
+      getCookie,
     };
   },
 };

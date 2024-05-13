@@ -1,6 +1,6 @@
 <template>
   <div class="mt-3">
-    <h4>{{$t('openvpn.Generalinformation')}}</h4>
+    <h4>General information</h4>
     <v-divider class="mb-2"></v-divider>
     <div style="overflow: hidden; flex-grow: 1">
       <ag-grid-vue
@@ -12,7 +12,6 @@
         :columnDefs="columnRules"
         :rowData="rowDataRules.value"
         :gridOptions="gridOptions"
-        :overlayNoRowsTemplate="overlayTemplate"
       />
     </div>
     <div class="d-flex justify-end mt-3">
@@ -21,7 +20,7 @@
         outlined
         color="#213E9F"
         label-color="#ffffff"
-        :label="$t('buttons.Add')"
+        label="Add"
         :isLarge="true"
         type="submit"
         class="ml-2"
@@ -41,12 +40,11 @@
 </template>
 
 <script>
-import { useI18n } from "vue-i18n";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import VButton from "@/components/VButton.vue";
-import { reactive, ref,computed,onMounted} from "vue";
+import { reactive, ref } from "vue";
 
 export default {
   name: "Rules",
@@ -55,24 +53,13 @@ export default {
     AgGridVue,
   },
   setup() {
-    const { t } = useI18n();
     const state = reactive({
       snackbar: false,
       color: "",
       textAlert: "",
     });
 
-
-    const RequestAction = computed(() => {
-      return t("Waf.RequestAction");
-    });
-    const Rule = computed(() => {
-      return t("Waf.Rule");
-    });
-    const Status = computed(() => {
-      return t("Waf.Status");
-    });
-    const columnRules = ref([
+    const columnRules = [
       {
         headerName: "ID",
         field: "ID",
@@ -82,7 +69,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: RequestAction,
+        headerName: "Request Action",
         field: "request_action",
         autoHeight: true,
         width: 90,
@@ -91,7 +78,7 @@ export default {
       },
 
       {
-        headerName: Rule,
+        headerName: "Rule",
         field: "Rule",
         autoHeight: true,
         resizable: true,
@@ -100,7 +87,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: Status,
+        headerName: "Status",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -111,10 +98,9 @@ export default {
         headerName: "Actions",
         field: "action",
       },
-    ]);
+    ];
     const rowDataRules = reactive({});
     const gridApi = ref(null);
-    const overlayTemplate = ref("");
     const gridOptions = ref({
       pagination: true,
       paginationPageSize: 5,
@@ -130,18 +116,6 @@ export default {
         console.error("Grid API.");
       }
     };
-    onMounted(() => {
-      
-      overlayTemplate.value = `
-      <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
-      <path
-        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
-        style="fill: #E8EAF6"
-        data-name="Unbox"
-      />
-     </svg></span>`;
-
-    });
 
     return {
       state,
@@ -149,7 +123,6 @@ export default {
       columnRules,
       rowDataRules,
       gridOptions,
-      overlayTemplate,
     };
   },
 };

@@ -76,14 +76,13 @@ export default {
 };
 </script>
 
-<style>
+<style scoped>
 /* .v-main {
   padding-top: 0px;
   left: 0;
   right: 0;
   
 } */
-
 
 .asguard_toolbar {
   background-color: #f8f8f8;
@@ -96,10 +95,5 @@ export default {
   left: 0;
   right: 0;
   display: flex;
-}
-
-
-.ag-paging-row-summary-panel {
-  display: none;
 }
 </style>

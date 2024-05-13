@@ -1,9 +1,6 @@
 <template>
   <v-app id="inspire">
-    <base-layout
-      :title="$t('typeInterface.otherTypesOfInterfaces')"
-      active-menu="interface"
-    >
+    <base-layout title="Other Types of Interfaces" active-menu="interface">
       <template #content>
         <div class="mr-3">
           <vlan />
@@ -31,8 +28,3 @@ export default {
   },
 };
 </script>
-<style>
-.ag-paging-row-summary-panel {
-  display: none;
-}
-</style>

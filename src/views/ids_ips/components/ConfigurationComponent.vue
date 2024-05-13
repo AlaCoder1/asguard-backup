@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            {{ $t("sdwan.pleaseWait") }}
+            Please Wait...
             <v-progress-linear
               indeterminate
               color="white"
@@ -21,7 +21,7 @@
     </v-overlay>
     <div class="ml-3 mr-3">
       <!-- <div class="container" style="display: flex;"> -->
-      <h4>{{ $t("dhcpV4.generalInformation") }}</h4>
+      <h4>General information</h4>
       <br />
       <!-- <div style="margin-left: auto; color: orange; margin-top: -17px;text: bold">
                 <v-switch id="mySwitch" 
@@ -33,56 +33,54 @@
     <v-row class="ml-3 mr-3">
       <v-col cols="6">
         <v-row class="mt-2">
-          <v-col cols="4">
-            <label>{{ $t("suricata.suricata") }}</label>
+          <v-col cols="4" align-self="center">
+            <label>Suricata</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input type="checkbox" v-model="state.status_enabled" />
-            <label class="ml-2"> {{ $t("suricata.enableIDS") }}</label>
-            <!-- <br />
+            <label class="ml-2"> Enable IDS system</label>
+            <br />
             <small class="ml-5 error-feedback" v-show="switchValue"
               >Enable intrusion detection system.</small
-            > -->
+            >
           </v-col>
-          <v-col cols="4">
-            <label>{{ $t("suricata.IPSMode") }}</label>
+          <v-col cols="4" align-self="center">
+            <label>IPS Mode</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input type="checkbox" v-model="state.mode_inline" />
-            <label class="ml-2">{{ $t("suricata.enableIPS") }} </label>
-            <!-- <br />
+            <label class="ml-2">Enable IPS </label>
+            <br />
             <small class="ml-5 error-feedback" v-show="switchValue"
               >In IPS mode, Suricata actively blocks traffic according
             </small>
             <br />
             <small class="ml-5 error-feedback" v-show="switchValue">
               to intrusion detection rules.</small
-            > -->
+            >
           </v-col>
-          <v-col cols="4">
-            <label>{{ $t("suricata.promisuousMode") }}</label>
+          <v-col cols="4" align-self="center">
+            <label>Promisuous Mode</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input type="checkbox" v-model="state.promisc" />
-            <label class="ml-2"
-              >{{ $t("suricata.enablePromisuousMode") }}
-            </label>
-            <!-- <br />
+            <label class="ml-2">Enable Promisuous Mode </label>
+            <br />
             <small class="ml-5 error-feedback" v-show="switchValue"
               >Promiscuous mode allows Suricata to capture
             </small>
             <br />
             <small class="ml-5 error-feedback" v-show="switchValue">
               and analyze all traffic on the network interface.</small
-            > -->
+            >
           </v-col>
-          <v-col cols="4">
-            <label>{{ $t("suricata.enableSyslogAlerts") }}</label>
+          <v-col cols="4" align-self="center">
+            <label>Enable syslog alerts</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input type="checkbox" v-model="state.syslog" />
-            <label class="ml-2">{{ $t("suricata.enableSyslogAlerts") }}</label>
-            <!-- <br />
+            <label class="ml-2">Enable syslog alerts</label>
+            <br />
             <small class="ml-5 error-feedback" v-show="switchValue"
               >Send alerts to system log in fast log format.</small
             >
@@ -93,17 +91,15 @@
             <br />
             <small class="ml-5 error-feedback" v-show="switchValue">
               used by the product itself.</small
-            > -->
+            >
           </v-col>
-          <v-col cols="4" class="mb-n6">
-            <label>{{ $t("suricata.enableEveSyslogOutput") }}</label>
+          <v-col cols="4">
+            <label>Enable eve syslog output</label>
           </v-col>
-          <v-col cols="8">
+          <v-col cols="8" class="mb-n6">
             <input type="checkbox" v-model="state.eve_log" />
-            <label class="ml-2">{{
-              $t("suricata.enableEveSyslogOutput")
-            }}</label>
-            <!-- <br />
+            <label class="ml-2">Enable syslog output</label>
+            <br />
             <small class="ml-5 error-feedback" v-show="switchValue"
               >Enable Suricata to output events(logs) in EVE.</small
             >
@@ -118,15 +114,14 @@
             <br />
             <small class="ml-5 error-feedback" v-show="switchValue">
               to analyze security events.</small
-            > -->
+            >
           </v-col>
-
-          <v-col cols="4" class="mt-5">
-            <label>{{ $t("suricata.patternMatcher") }}</label>
+          <v-col cols="4" align-self="center">
+            <label>Pattern matcher</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
-              :label="$t('suricata.patternMatcher')"
+              label="Pattern matcher"
               v-model="state.mpm_algo"
               item-title="name"
               item-value="slug"
@@ -134,12 +129,12 @@
               :items="state.algoLists"
             ></v-select>
           </v-col>
-          <v-col cols="4" class="mt-5">
-            <label>{{ $t("suricata.detectProfile") }}</label>
+          <v-col cols="4" align-self="center">
+            <label>Detect Profile</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
-              :label="$t('suricata.detectProfile')"
+              label="Detect Profile"
               v-model="state.profile"
               item-title="name"
               item-value="slug"
@@ -158,7 +153,7 @@
             outlined
             color="#213E9F"
             label-color="#ffffff"
-            :label="$t('buttons.Add')"
+            label="Add"
             :isLarge="true"
             type="submit"
             class="ml-2"
@@ -174,10 +169,6 @@
             @grid-ready="onGridReady"
             :columnDefs="columnAF"
             :rowData="rowDataAF.value"
-            :pagination="true"
-            :paginationPageSize="4"
-            :localeText="paginationLocalization"
-            :overlayNoRowsTemplate="overlayTemplate"
           />
         </div>
       </v-col>
@@ -191,7 +182,7 @@
             outlined
             color="#ffffff"
             label-color="#213E9F"
-            :label="$t('buttons.cancel')"
+            label="cancel"
             :isLarge="true"
             @click="cancel"
           />
@@ -200,7 +191,7 @@
             outlined
             color="#213E9F"
             label-color="#ffffff"
-            :label="$t('buttons.save')"
+            label="save"
             :isLarge="true"
             class="ml-2"
             @click="submitForm"
@@ -209,14 +200,14 @@
       </v-col>
     </v-row>
   </div>
-  <ModalAddInterface :isOpen="state.isModalOpen" :modalMode="state.modalMode" />
+  <ModalAddInterface :isOpen="state.isModalOpen" :modalMode="state.modalMode"  />
   <!-- <ModalAddInterface
     :isOpen="state.isModalOpen"
     :editRow="state.editRow"
     :modalMode="state.modalMode"
     :rowDataList="rowDataAF.value"
   /> -->
-  <h4>{{ $t("suricata.updateSuricata") }}</h4>
+  <h4>Update suricata rules</h4>
   <v-divider class="mt-2"></v-divider>
   <v-row class="flex py-8 mb-5">
     <v-col cols="4"> </v-col>
@@ -227,7 +218,7 @@
           outlined
           color="#213E9F"
           label-color="#ffffff"
-          :label="$t('suricata.makeYourUpdates')"
+          label="Make your updates"
           :isLarge="true"
           class="ml-2"
           @click="reloadData"
@@ -252,7 +243,6 @@
 </template>
 
 <script>
-import { useI18n } from "vue-i18n";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -275,14 +265,9 @@ export default {
   },
 
   setup() {
-    const { t } = useI18n();
     const emitter = inject("emitter");
     const rowDataInterfaces = reactive({});
-    const overlayTemplate = ref("");
     const switchValue = ref(false);
-    const paginationLocalization = reactive({
-      of: "/",
-    });
     const state = reactive({
       interId: null,
       profileLists: [
@@ -356,113 +341,74 @@ export default {
     });
     const gridApi = ref(null);
 
-    const thread = computed(() => {
-      return t("suricata.thread");
-    });
-    const cludtedId = computed(() => {
-      return t("suricata.clusterId");
-    });
-    const clusterType = computed(() => {
-      return t("suricata.clusterType");
-    });
-    const copyMode = computed(() => {
-      return t("suricata.copyMode");
-    });
-    const copyIface = computed(() => {
-      return t("suricata.copyIface");
-    });
-    const bufferSize = computed(() => {
-      return t("suricata.bufferSize");
-    });
-    const useMmap = computed(() => {
-      return t("suricata.useMmap");
-    });
-
-    const columnAF = ref([
+    const columnAF = [
       {
         headerName: "Interface",
         field: "name_interface",
         // cellRenderer: actionCopyInterface,
-
+        sortable: true,
         autoHeight: true,
-        resizable: true,
-        width: 100,
-        minWidth: 150,
-        flex: 1,
+        filter: true,
       },
       {
-        headerName: thread,
+        headerName: "Thread",
         field: "threads",
-        width: 100,
-        minWidth: 150,
-        flex: 1,
-        resizable: true,
+        sortable: true,
+        filter: true,
       },
       {
         headerName: "Defrag",
         autoHeight: true,
         field: "defrag",
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-        resizable: true,
+        sortable: true,
+        filter: true,
       },
       {
-        headerName: cludtedId,
+        headerName: "Cluster Id",
         field: "cluster_id",
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-        resizable: true,
+        sortable: true,
+        filter: true,
       },
       {
-        headerName: clusterType,
+        headerName: "Cluster Type",
         field: "cluster_type",
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-        resizable: true,
+        sortable: true,
+        filter: true,
       },
       {
-        headerName: copyMode,
+        headerName: "Copy Mode",
         field: "copy_mode",
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-        resizable: true,
+        sortable: true,
+        filter: true,
       },
       {
-        headerName: copyIface,
+        headerName: "Copy Iface",
         field: "copy_iface",
         // cellRenderer: actionCopyIface,
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-        resizable: true,
+        sortable: true,
+        filter: true,
       },
       {
-        headerName: bufferSize,
+        headerName: "Buffer Size",
         field: "ring_size",
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-        resizable: true,
+        sortable: true,
+        filter: true,
       },
       {
-        headerName: useMmap,
+        headerName: "Use Mmap",
         field: "use_mmap",
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-        resizable: true,
+        sortable: true,
+        filter: true,
       },
       {
         headerName: "Actions",
         cellRenderer: actionCellRenderer,
-        width: 150,
+        minWidth: 150,
         field: "action",
+        sortable: true,
+        filter: true,
       },
-    ]);
+    ];
     const rowDataAF = reactive({});
     const clearInterface = (selectedInterface) => {
       // Remove the selected interface from the state
@@ -558,7 +504,7 @@ export default {
       <button
         class="action-button delete"
         data-action="delete">
-          <i class="fas fa-times" style="color: #086eae; margin-left: 10px;"></i>
+          <i class="fas fa-times" style="color: #086eae;"></i>
       </button>
       `;
 
@@ -615,7 +561,7 @@ export default {
           state.isLoadingDialogue = false;
           state.snackbar = true;
           state.color = "success";
-          state.textAlert = t("suricata.rulesSavedSuccessfully");
+          state.textAlert = "Rules saved successfully!";
           // Automatically close the snackbar after 3000 milliseconds (3 seconds)
           setTimeout(() => {
             state.snackbar = false;
@@ -625,7 +571,7 @@ export default {
           state.isLoadingDialogue = false;
           state.snackbar = true;
           state.color = "error";
-          state.textAlert = t("suricata.failed");
+          state.textAlert = "Failed to save rule!";
           // Automatically close the snackbar after 3000 milliseconds (3 seconds)
           setTimeout(() => {
             state.snackbar = false;
@@ -647,13 +593,6 @@ export default {
     };
 
     onMounted(async () => {
-      overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
-      <path
-        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
-        style="fill: #E8EAF6"
-        data-name="Unbox"
-      />
-    </svg></span>`;
       await getInterface();
       emitter.on("closeModalAddInterface", () => {
         state.isModalOpen = false;
@@ -738,12 +677,8 @@ export default {
       state.status_enabled = rowConfig.configuration.status_enabled;
       state.mode_inline = rowConfig.configuration?.mode_inline;
       state.promisc = rowConfig.configuration.promisc;
-      state.syslog = rowConfig.configuration.syslog
-        ? rowConfig.configuration.syslog.toLowerCase() === "yes"
-        : "";
-      state.eve_log = rowConfig.configuration.eve_log
-        ? rowConfig.configuration.eve_log.toLowerCase() === "yes"
-        : "";
+      state.syslog = rowConfig.configuration.syslog.toLowerCase() === "yes";
+      state.eve_log = rowConfig.configuration.eve_log.toLowerCase() === "yes";
 
       state.interId = rowConfig.configuration.id;
 
@@ -795,6 +730,13 @@ export default {
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
+
+      gridApi.value.sizeColumnsToFit();
+      window.addEventListener("resize", function () {
+        setTimeout(function () {
+          gridApi.value.sizeColumnsToFit();
+        });
+      });
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataAF.value);
       } else {
@@ -862,7 +804,7 @@ export default {
               state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = t("suricata.configurationSuccess");
+              state.textAlert = "Configuration saved successfully!";
               // Automatically close the snackbar after 3000 milliseconds (3 seconds)
               setTimeout(() => {
                 state.snackbar = false;
@@ -873,7 +815,7 @@ export default {
               state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "error";
-              state.textAlert = t("suricata.failedToSaveConfiguration");
+              state.textAlert = "Failed to save configuration!";
               // Automatically close the snackbar after 3000 milliseconds (3 seconds)
               setTimeout(() => {
                 state.snackbar = false;
@@ -895,7 +837,7 @@ export default {
       } else {
         state.snackbar = true;
         state.color = "error";
-        state.textAlert = t("suricata.MinimumOneInter");
+        state.textAlert = "Minimum One Interface In AF Packet";
         setTimeout(() => {
           state.snackbar = false;
         }, 2000);
@@ -917,8 +859,6 @@ export default {
       onGridReady,
       rowDataAF,
       emitter,
-      overlayTemplate,
-      paginationLocalization,
       openModalAdd,
     };
   },

@@ -189,7 +189,7 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         all_client=ClientOpenvpn.objects.all().count()
         check_match=check_password(password,  vpn_db.client_management_password)
         if check_match:
-            cfg=[{'host': 'localhost', 'port': vpn_db.client_management_port, 'name':name_server, 'password': vpn_db.client_management_password, 'show_disconnect': False,"server_status":vpn_db.server_status} ]
+            cfg=[{'host': 'localhost', 'port': vpn_db.client_management_port, 'name':name_server, 'password':password, 'show_disconnect': False,"server_status":vpn_db.server_status} ]
             vpn = OpenvpnMgmtInterface(cfg).vpns
             vpn=vpn[0]
             client_active=vpn['stats']['nclients'] if 'stats' in vpn and 'nclients' in vpn['stats'] else 0

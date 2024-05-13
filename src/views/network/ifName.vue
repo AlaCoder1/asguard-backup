@@ -1,15 +1,12 @@
 <template>
   <v-app id="inspire">
-    <base-layout
-      :title="$t('subtitle.listOfInterface')"
-      active-menu="activeTab"
-    >
+    <base-layout title="List of interface" active-menu="activeTab">
       <template #content>
         <v-tabs
           v-model="activeTab"
           background-color="#f5f5f5"
           color="black"
-          :class="{ 'elevation-0': true }"
+          :class="{'elevation-0': true}"
           :slider-color="'#FFC300'"
         >
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.name_interface">
@@ -23,7 +20,10 @@
             :key="tab.name_interface"
             :value="tab.name_interface"
           >
-            <IfNameComponent :id="tab.name_interface" :activeTab="activeTab" />
+            <IfNameComponent
+              :id="tab.name_interface"
+              :activeTab="activeTab"
+            />
           </v-window-item>
         </v-window>
       </template>
@@ -73,7 +73,7 @@ export default {
     let parsedArray = JSON.parse(validJsonString);
     this.interfaces = parsedArray;
 
-    let tab = localStorage.getItem("network-tab");
+    let tab = localStorage.getItem("network-tab")
     if (tab) {
       this.activeTab = tab;
     } else {

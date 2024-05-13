@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("routing.createRoute") }} Route</span
+              Create new Route</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("buttons.update") }} Route</span
+              Update Route</span
             >
           </v-card-title>
           <v-card-text>
@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('routing.network')"
+                    label="Network"
                     v-model="state.network"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.network.$error">
@@ -32,7 +32,6 @@
                     item-value="id"
                     :items="state.listGateway"
                     return-object
-                    :no-data-text="$t('certificat.certificatlist')"
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.gateway.$error">
                     {{ v$.gateway.$errors[0].$message }}
@@ -59,7 +58,6 @@
                       item-value="slug"
                       :items="state.listInterfaces"
                       return-object
-                      :no-data-text="$t('certificat.certificatlist')"
                     ></v-select>
                     <p class="error-feedback mb-5" v-if="v$.interface.$error">
                       {{ v$.interface.$errors[0].$message }}
@@ -97,9 +95,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{
-                $t("buttons.close")
-              }}</span>
+              <span class="text-white pr-3 pl-3">Close</span>
             </v-btn>
 
             <v-btn
@@ -112,12 +108,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span
-              >
-              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
-              >
+              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -136,7 +127,6 @@
 </template>
 
 <script>
-import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
@@ -158,7 +148,6 @@ export default {
   },
 
   setup(props) {
-    const { t } = useI18n();
     const emitter = inject("emitter");
     onMounted(() => {
       getInterface();
@@ -385,38 +374,33 @@ export default {
         state.interface = "";
       }
     };
-    const error = computed(() => {
-      return t("errors.valueRequired");
-    });
-    const addressForma = computed(() => {
-      return t("errors.formatMustBeLikeAdresseIP");
-    });
 
     const rules = computed(() => {
       return {
         network: {
-          required: helpers.withMessage(error, required),
+          required,
           isValidlNetwork: helpers.withMessage(
-            addressForma,
+            `Format must be like adresse IP : X.X.X.X`,
+
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
 
         gateway: {
-          required: helpers.withMessage(error, required),
+          required,
         },
 
         //
 
         gatewayAddress: {
           requiredIfFuction: helpers.withMessage(
-            error,
+            "Value is required",
             requiredIf(() => state.gateway.name === "Other")
           ),
         },
         interface: {
           requiredIfFuction: helpers.withMessage(
-            error,
+            "Value is required",
             requiredIf(() => state.gateway.name === "Other")
           ),
         },
@@ -427,7 +411,7 @@ export default {
           //   helpers.regex(/^[0-9]+$/)
           // ),
           requiredIfFuction: helpers.withMessage(
-            error,
+            "Value is required",
             requiredIf(() => state.gateway.name === "Other")
           ),
         },

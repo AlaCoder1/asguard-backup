@@ -4,14 +4,14 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> {{ $t("squid.editBlackList") }} </span>
+            <span class="text-h5"> Edit Black List </span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('squid.aclName')"
+                    label="Acl Name"
                     v-model="state.formData.aclName"
                     :readonly="true"
                   ></v-text-field>
@@ -21,8 +21,8 @@
                   <v-autocomplete
                     v-model="state.formData.urlList"
                     :items="state.formData.secondAclList"
-                    :no-data-text="$t('squid.pleaseType')"
-                    :label="$t('squid.selectItem')"
+                    no-data-text="Please type..."
+                    label="Select Item"
                     chips
                     closable-chips
                     item-title="url"
@@ -80,9 +80,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{
-                $t("buttons.close")
-              }}</span>
+              <span class="text-white pr-3 pl-3">Close</span>
             </v-btn>
 
             <v-btn
@@ -96,9 +94,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">
-                {{ $t("buttons.update") }}</span
-              >
+              <span class="text-white pr-3 pl-3">Edit</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -225,6 +221,7 @@ export default {
 
         let mapedItem = filtredItem.map(([url, status]) => ({ url, status }));
         state.formData.secondAclList = mapedItem;
+        console.log("mapedItem", mapedItem);
       }
     };
     const saveAcl = async () => {
@@ -232,6 +229,8 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const result = await v$.value.$validate();
       if (result) {
+        console.log("state", state);
+
         const changeFormArray = state.formData.urlList.map(
           ({ url, status }) => [url, status]
         );

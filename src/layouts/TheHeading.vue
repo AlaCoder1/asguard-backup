@@ -60,7 +60,6 @@
 
 <script>
 import axios from "axios";
-import { getCookie } from "@/mixins/csrftoken.js";
 import { reactive, onMounted, ref } from "vue";
 export default {
   name: "ToolbarComponent",
@@ -260,37 +259,27 @@ export default {
         console.error("Error during logout:", error);
       }
     };
+    const profilRedirect = async () => {
+      console.log("test");
+    };
+
     return {
       state,
       langs,
       selectedLang,
       logout,
+      profilRedirect,
     };
   },
 
   watch: {
     selectedLang(val) {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       if (val.length) {
         let lang = JSON.stringify(val);
         localStorage.setItem("lang", lang);
         localStorage.setItem("lang-slug", val[0].lang);
         let choosedLang = val[0].lang;
         this.changeLang(choosedLang);
-
-        let payload = {
-          language: val[0].lang.toLowerCase(),
-        };
-
-        axios
-          .put(`/users/modifyLanguage/${this.state.currentInfo.id}`, payload)
-          .then((response) => {
-            console.log("response", response);
-          })
-          .catch((i) => {
-            console.log("resp", i.response);
-          });
       } else {
         let getLang = localStorage.getItem("lang");
         if (getLang) this.selectedLang = JSON.parse(getLang);

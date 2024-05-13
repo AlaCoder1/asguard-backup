@@ -1,14 +1,14 @@
 <template>
   <div class="ml-3 mr-3 mt-5">
-    <h4>{{$t("PageIpsec.proposal_pahse1")}}</h4>
+    <h4>Phase 1 proposal (Authentication)</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-5">
-        <label>{{$t('PageIpsec.Authenticationmethod')}}*</label>
+        <label>Authentication method*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
-          :label="$t('PageIpsec.Authenticationmethod')"
+          label="Authentication method"
           v-model="authMethod"
           item-title="name"
           item-value="slug"
@@ -24,11 +24,11 @@
       </v-col>
       <template v-if="props.keyExchange?.slug === 'V1'">
         <v-col cols="4" class="mt-5">
-          <label>{{$t('PageIpsec.modenegociation')}}*</label>
+          <label>Negotiation mode*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select
-            :label="$t('PageIpsec.modenegociation')"
+            label="Negotiation mode"
             v-model="negotiationMode"
             item-title="name"
             item-value="slug"
@@ -45,7 +45,7 @@
       </template>
       <template v-if="props.authMethodItem?.slug === 'Mutual PSK'">
         <v-col cols="4" class="mt-6">
-          <label>{{$t('PageIpsec.SharedKey')}}*</label>
+          <label>Pre-Shared Key*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-textarea
@@ -53,7 +53,7 @@
             row-height="15"
             class="mt-3"
             v-model="sharedKey"
-            :label="$t('PageIpsec.SharedKey')"
+            label="Pre-Shared Key"
             variant="outlined"
           ></v-textarea>
           <p
@@ -66,15 +66,14 @@
       </template>
       <template v-if="props.authMethodItem?.slug === 'Mutual RSA'">
         <v-col cols="4" class="mt-5">
-          <label>{{$t('PageIpsec.mycertificat')}}*</label>
+          <label>My Certificate*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select
             v-model="certificate"
-            :label="$t('PageIpsec.mycertificat')"
+            label="My Certificate"
             item-title="name"
             item-value="id"
-            :no-data-text="$t('certificat.certificatlist')"
             :items="props.CertificateList"
             return-object
           ></v-select>
@@ -87,15 +86,14 @@
         </v-col>
 
         <v-col cols="4" class="mt-5">
-          <label>{{$t('PageIpsec.RemoteCertificate')}}* <br /> </label>
+          <label>Remote Certificate* <br /> </label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select
             v-model="peerIdentifier"
-            :label="$t('PageIpsec.RemoteCertificate')"
+            label="Remote Certificate"
             item-title="name"
             item-value="id"
-            :no-data-text="$t('certificat.certificatlist')"
             :items="props.CertificateListRemote"
             return-object
           ></v-select>
@@ -110,15 +108,14 @@
       </template>
       <template v-if="props.authMethodItem?.slug === 'Mutual Public key'">
         <v-col cols="4" class="mt-5">
-          <label>{{ $t('PageIpsec.LocalKeyPair') }}*</label>
+          <label>Local Key Pair*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select
             v-model="localKey"
-            :label="$t('PageIpsec.LocalKeyPair')"
+            label="Local Key Pair"
             item-title="name"
             item-value="id"
-            :no-data-text="$t('certificat.certificatlist')"
             :items="props.mapedKeyPublic"
             return-object
           ></v-select>
@@ -130,15 +127,14 @@
           </p>
         </v-col>
         <v-col cols="4" class="mt-5">
-          <label>{{$t('PageIpsec.PeerKeyPair')}}*</label>
+          <label>Peer Key Pair*</label>
         </v-col>
         <v-col cols="8" class="mb-n6">
           <v-select
             v-model="keyPair"
-            :label="$t('PageIpsec.PeerKeyPair')"
+            label="Peer Key Pair"
             item-title="name"
             item-value="id"
-            :no-data-text="$t('certificat.certificatlist')"
             :items="props.mapedKeyPublic"
             return-object
           ></v-select>

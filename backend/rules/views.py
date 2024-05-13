@@ -73,13 +73,7 @@ def add_rule(request,name_interface):
     if return_init_file_nftables:
       #appel la fonction pour retourner rule à ajouter 
       rule=return_rule(policy,saddr,daddr,sport,dport,protocol,type_rule)
-      # if not Rule.objects.filter(Q(rule=rule) & ((Q(interface_id=interface_object.pk)& Q(type_rule!=type_rule ) )|(Q(interface_id!=interface_object.pk) & Q(type_rule=type_rule )))).exists():
-      if not Rule.objects.filter(
-            Q(rule=rule) & (
-                (Q(interface_id=interface_object.pk) ) &
-                (Q(type_rule=type_rule))
-            )
-        ).exists():
+      if not Rule.objects.filter(Q(rule=rule) | Q(rule_description=rule_description)).exists():
       #appel la fonction pour ajouter rule dans le système
         return_add_rule=add_rule_remote(rule,ifname,type_rule)
         if return_add_rule is True:

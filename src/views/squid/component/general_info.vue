@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            {{ $t("sdwan.pleaseWait") }}
+            Please Wait...
             <v-progress-linear
               indeterminate
               color="white"
@@ -22,25 +22,25 @@
     <v-row>
       <v-col cols="6">
         <h4>
-          {{ $t("dhcpV4.generalInformation") }}
+          General information
           <i
             v-if="!state.enableState"
             class="mdi mdi-play-circle"
             style="color: #4caf50; font-size: 20px; cursor: pointer"
-            :title="$t('sdwan.startServer')"
+            title="Start Server"
             @click="startStopRestartServer('Start')"
           ></i>
           <i
             v-if="state.enableState"
             class="mdi mdi-stop-circle"
-            :title="$t('sdwan.stop')"
+            title="Stop Server"
             style="color: #b00020; font-size: 20px; cursor: pointer"
             @click="startStopRestartServer('Stop')"
           ></i>
           <i
             v-if="state.enableState"
             class="mdi mdi-reload"
-            :title="$t('interface.restart')"
+            title="Restart Server"
             style="color: #4caf50; font-size: 20px; cursor: pointer"
             @click="startStopRestartServer('Restart')"
           ></i>
@@ -49,11 +49,11 @@
         <v-card class="mt-3">
           <v-row class="mt-1 ml-1">
             <v-col cols="4" class="mt-7">
-              <label>{{ $t("squid.proxyPort") }}</label>
+              <label>Proxy port</label>
             </v-col>
             <v-col cols="5" class="mt-3">
               <v-text-field
-                :label="$t('squid.proxyPort')"
+                label="Proxy Port"
                 v-model="state.proxyPort"
               ></v-text-field>
               <p class="error-feedback mb-5" v-if="v$.proxyPort.$error">
@@ -68,7 +68,7 @@
                 outlined
                 color="#213E9F"
                 label-color="#ffffff"
-                :label="$t('buttons.save')"
+                label="Save"
                 :isLarge="true"
                 class="mr-4"
                 @click="saveGeneralInfo"
@@ -82,11 +82,11 @@
       <v-dialog v-model="state.dialogServer" max-width="500px">
         <v-card>
           <v-card-title class="headline"
-            >{{ $t(state.statusServer) }}</v-card-title
+            >{{ state.statusServer }} Confirmation</v-card-title
           >
           <v-card-text
-            >{{ $t("squid.etesVouSur") }} {{ $t(state.statusServer) }}
-            {{ $t("squid.thisRule") }}</v-card-text
+            >Are you sure you want to {{ state.statusServer }} this rule
+            ?</v-card-text
           >
           <v-card-actions>
             <v-spacer></v-spacer>
@@ -94,10 +94,10 @@
               color="blue darken-1"
               text
               @click="state.dialogServer = false"
-              >{{ $t("buttons.cancel") }}</v-btn
+              >Cancel</v-btn
             >
             <v-btn color="blue darken-1" text @click="confirmationServerState"
-              >{{ $t(state.statusServer) }}
+              >{{ state.statusServer }}
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -117,12 +117,11 @@
 </template>
 
 <script>
-import { useI18n } from "vue-i18n";
 import { reactive, computed, onMounted } from "vue";
 import axios from "axios";
 import squid_auth from "./squid_auth.vue";
 import useValidate from "@vuelidate/core";
-import { required, helpers } from "@vuelidate/validators";
+import { required } from "@vuelidate/validators";
 import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
@@ -135,7 +134,6 @@ export default {
     squid_auth,
   },
   setup() {
-    const { t } = useI18n();
     const state = reactive({
       dialogServer: false,
       statusServer: null,
@@ -154,13 +152,9 @@ export default {
       isLoadingDialogue: false,
     });
 
-    const error = computed(() => {
-      return t("errors.valueRequired");
-    });
-
     const rules = computed(() => {
       return {
-        proxyPort: { required: helpers.withMessage(error, required) },
+        proxyPort: { required },
       };
     });
 
@@ -168,8 +162,10 @@ export default {
 
     const saveGeneralInfo = async () => {
       const result = await v$.value.$validate();
+      console.log("result", result);
 
       if (result) {
+        console.log("state", state);
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
         state.loading = true;

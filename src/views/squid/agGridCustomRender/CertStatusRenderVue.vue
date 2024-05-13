@@ -4,10 +4,10 @@
       color="green"
       text-color="white"
       v-if="params.data.status === 'Enable'"
-      >{{ $t(params.data.status) }}</v-chip
+      >{{ params.data.status }}</v-chip
     >
     <v-chip color="red" text-color="white" v-else>
-      {{ $t(params.data.status) }}</v-chip
+      {{ params.data.status }}</v-chip
     >
   </div>
 </template>

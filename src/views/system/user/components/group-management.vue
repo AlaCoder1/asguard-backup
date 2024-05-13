@@ -12,7 +12,6 @@
             :rowData="rowData"
             :gridOptions="gridOptions"
             @grid-ready="onGridReady"
-            :localeText="paginationLocalization"
           />
         </div>
       </div>
@@ -112,9 +111,6 @@ export default {
         pagination: true,
         paginationPageSize: 5,
         rowSelection: "single",
-      },
-      paginationLocalization: {
-        of: "/",
       },
     };
   },

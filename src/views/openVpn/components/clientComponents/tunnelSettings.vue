@@ -1,14 +1,14 @@
 <template>
   <div class="ml-3 mr-3">
-    <h4>{{$t('openvpn.TunnelSettings')}}</h4>
+    <h4>Tunnel Settings</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col align-self="center" cols="4">
-        <label>{{$t('openvpn.IPv4TunnelNetwork')}}</label>
+        <label>IPv4 Tunnel Network</label>
       </v-col>
       <v-col align-self="center" cols="8" class="mb-n6">
         <v-text-field
-          :label="$t('openvpn.IPv4TunnelNetwork')"
+          label="IPv4 Tunnel Network"
           v-model="ipv4TunnelNetwork"
         ></v-text-field>
         <p
@@ -19,20 +19,20 @@
         </p>
       </v-col>
       <v-col align-self="center" cols="4">
-        <label>{{$t('openvpn.IPv6TunnelNetwork')}}</label>
+        <label>IPv6 Tunnel Network</label>
       </v-col>
       <v-col align-self="center" cols="8" class="mb-n6">
         <v-text-field
-          :label="$t('openvpn.IPv6TunnelNetwork')"
+          label="IPv6 Tunnel Network"
           v-model="ipv6TunnelNetwork"
         ></v-text-field>
       </v-col>
       <v-col align-self="center" cols="4">
-        <label>{{$t('openvpn.IPv4RemoteNetwork')}}</label>
+        <label>IPv4 Remote Network</label>
       </v-col>
       <v-col align-self="center" cols="8" class="mb-n6">
         <v-text-field
-          :label="$t('openvpn.IPv4RemoteNetwork')"
+          label="IPv4 Remote Network"
           v-model="ipv4RemoteNetwork"
         ></v-text-field>
         <p
@@ -43,20 +43,20 @@
         </p>
       </v-col>
       <v-col align-self="center" cols="4">
-        <label>{{$t('openvpn.IPv6RemoteNetwork')}}</label>
+        <label>IPv6 Remote Network</label>
       </v-col>
       <v-col align-self="center" cols="8" class="mb-n6">
         <v-text-field
-          :label="$t('openvpn.IPv6RemoteNetwork')"
+          label="IPv6 Remote Network"
           v-model="ipv6RemoteNetwork"
         ></v-text-field>
       </v-col>
       <v-col align-self="center" cols="4">
-        <label>{{$t('Clientsopenvpn.Limitoutgoingbandwidth')}}</label>
+        <label>Limit outgoing bandwidth</label>
       </v-col>
       <v-col align-self="center" cols="8" class="mb-n6">
         <v-text-field
-          :label="$t('Clientsopenvpn.Limitoutgoingbandwidth')"
+          label="Limit outgoing bandwidth"
           v-model="limit_outgoing_bandwidth"
         ></v-text-field>
       </v-col>
@@ -74,32 +74,32 @@
         ></v-select>
       </v-col>
       <v-col cols="4">
-        <label>{{$t('Clientsopenvpn.Type-of-Service')}}</label>
+        <label>Type-of-Service</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="typeOfService" />
-        <label class="ml-2">{{$t('Clientsopenvpn.Activetypeofservice')}}</label>
+        <label class="ml-2">Active type of service</label>
       </v-col>
       <v-col cols="4">
         <label>IPv6</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="ipv6" />
-        <label class="ml-2">{{$t('openvpn.Disable')}} IPv6</label>
+        <label class="ml-2">Disable IPv6</label>
       </v-col>
       <v-col cols="4">
-        <label> {{$t('Clientsopenvpn.pullroutes')}}</label>
+        <label> pull routes</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="pullRoutes" />
-        <label class="ml-2">{{$t('Clientsopenvpn.Dontpullroutes')}}</label>
+        <label class="ml-2">Don't pull routes</label>
       </v-col>
       <v-col cols="4">
-        <label>{{$t('Clientsopenvpn.Add/removeroutes')}}</label>
+        <label>Add/remove routes</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="addRemoveRoutes" />
-        <label class="ml-2">{{$t('Clientsopenvpn.Dontadd/removeroutes')}}</label>
+        <label class="ml-2">Don't add/remove routes</label>
       </v-col>
     </v-row>
   </div>

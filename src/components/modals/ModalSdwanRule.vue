@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("sdwan.createNewRule") }}</span
+              Create New Rule</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("sdwan.updateRule") }}</span
+              Update Rule</span
             >
           </v-card-title>
           <v-card-text>
@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('sdwan.ruleName')"
+                    label="Rule Name"
                     v-model="state.ruleName"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.ruleName.$error">
@@ -38,7 +38,7 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    :label="$t('sdwan.prefix')"
+                    label="Prefix"
                     v-model="state.sourcePrefix"
                     :items="numberList"
                   ></v-select>
@@ -63,7 +63,7 @@
                   <v-col cols="12" class="mb-n6">
                     <v-select
                       v-model="state.area"
-                      :label="$t('sdwan.area')"
+                      label="Area"
                       item-title="name"
                       item-value="slug"
                       :items="state.mapeArea"
@@ -78,7 +78,7 @@
                   <v-col cols="12" class="mb-n6">
                     <v-select
                       v-model="state.area"
-                      :label="$t('sdwan.area')"
+                      label="Area"
                       item-title="name"
                       item-value="slug"
                       :items="state.KlonaArea"
@@ -112,7 +112,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     v-model="state.checkMilliseconds"
-                    :label="$t('sdwan.healthCheckMilliseconds')"
+                    label="Health check milliseconds"
                   ></v-text-field>
 
                   <p
@@ -125,7 +125,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     v-model="state.checkTargetMilliseconds"
-                    :label="$t('sdwan.healthCheckTargetMilliseconds')"
+                    label="Health check target milliseconds"
                   ></v-text-field>
 
                   <p
@@ -172,9 +172,7 @@
               @click="closeModal"
               class="btn-add"
             >
-              <span class="pr-3 pl-3" style="color: #213e9f">
-                {{ $t("buttons.close") }}</span
-              >
+              <span class="pr-3 pl-3" style="color: #213e9f"> Cancel</span>
             </v-btn>
 
             <v-btn
@@ -188,12 +186,7 @@
               variant="flat"
               class="btn-add"
             >
-              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span
-              >
-              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
-              >
+              <span class="text-white pr-3 pl-3">Create</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -212,7 +205,6 @@
 </template>
 
 <script>
-import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
@@ -236,7 +228,6 @@ export default {
 
   setup(props) {
     const emitter = inject("emitter");
-    const { t } = useI18n();
     onMounted(() => {
       let allArea = document.getElementById("app").attributes["allArea"].value;
       let parsedArray = JSON.parse(allArea);
@@ -452,52 +443,40 @@ export default {
       }
     };
 
-    const error = computed(() => {
-      return t("errors.valueRequired");
-    });
-    const indication = computed(() => {
-      return t("champs.indication");
-    });
-    const ChampIncludeOnlyNumbers = computed(() => {
-      return t("errors.ChampIncludeOnlyNumbers");
-    });
-    const formatMustBeLikeAdresseIP = computed(() => {
-      return t("errors.formatMustBeLikeAdresseIP");
-    });
-
     const rules = computed(() => {
       return {
-        area: { required: helpers.withMessage(error, required) },
-        algo: { required: helpers.withMessage(error, required) },
+        area: { required },
+        algo: { required },
 
         checkInterface: {
           requiredIfFuction: helpers.withMessage(
-            error,
+            "Value is required",
             requiredIf(() => state.algo.slug === "failover")
           ),
         },
 
         checkTargetMilliseconds: {
-          required: helpers.withMessage(error, required),
+          required,
           isValidCheckTargetMilliseconds: helpers.withMessage(
-            formatMustBeLikeAdresseIP,
+            `Format must be like adresse IP : X.X.X.X`,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
 
         ruleName: {
-          required: helpers.withMessage(error, required),
+          required,
           isValidruleName: helpers.withMessage(
-            indication,
+            `Champs can include only letters & Numbers & underscores & hyphens without space.`,
+
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },
 
         source: {
-          required: helpers.withMessage(error, required),
+          required,
           isValidSource: helpers.withMessage(
-            formatMustBeLikeAdresseIP,
+            `Format must be like adresse IP : X.X.X.X`,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -506,9 +485,9 @@ export default {
         sourcePrefix: { required },
 
         checkMilliseconds: {
-          required: helpers.withMessage(error, required),
+          required,
           isValidlifeTime: helpers.withMessage(
-            ChampIncludeOnlyNumbers,
+            `champs can include only Numbers.`,
 
             helpers.regex(/^[0-9]+$/)
           ),

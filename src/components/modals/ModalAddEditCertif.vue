@@ -703,7 +703,7 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         let payload = {};
-        if (this.state.formData.method.name == "Create Certificate" || this.state.formData.method.name == "Créer un certificat") {
+        if (this.state.formData.method.name == "Create Certificate") {
           payload = {
             name: this.state.formData?.certifName,
             activation: "True",

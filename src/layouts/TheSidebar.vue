@@ -162,12 +162,6 @@ export default {
             //   active: "System configuration",
             // },
             {
-              title: "subtitle.rsaKeyPairs",
-              icon: "",
-              href: "/key_pairs",
-              active: "RSA Key Pairs",
-            },
-            {
               title: "subtitle.settings",
               icon: "",
               href: "/settings",
@@ -274,7 +268,12 @@ export default {
               href: "/ipsec",
               active: "Site to site VPN",
             },
-
+            {
+              title: "subtitle.rsaKeyPairs",
+              icon: "",
+              href: "/key_pairs",
+              active: "RSA Key Pairs",
+            },
             {
               title: "subtitle.openVPN",
               icon: "",

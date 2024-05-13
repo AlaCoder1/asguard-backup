@@ -1,11 +1,12 @@
 """This file is for utils functions of the IPsec secrets file"""
 
 
-from backend.ipsec.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_RSA, PATH_IPSEC_SECRETS
+from backend.ipsec.constant_variables import PATH_IPSEC_SECRETS
 from backend.ipsec.models import ServerIPsec
 from backend.ipsec.utils import reorganize_file
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_KEY
 from backend.managementKeypairs.models import PublicKey
+from backend.openvpn.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_RSA
 
 
 def create_line_secrets(secret_config:str, server:ServerIPsec):

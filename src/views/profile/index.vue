@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <base-layout :title="$t('profil.Personalinformations')">
+    <base-layout title="Personal informations">
       <template #content>
         <div>
           <div>
@@ -57,15 +57,7 @@
                   class="mb-3"
                   style="cursor: pointer"
                 >
-                  <img
-                    :src="imageURL"
-                    alt="avatar"
-                    style="
-                      width: 100%;
-                      background-size: cover;
-                      overflow: hidden;
-                    "
-                  />
+                  <img :src="imageURL" alt="avatar" />
                 </v-avatar>
               </v-badge>
             </div>
@@ -97,49 +89,49 @@
           </div>
           <v-row class="d-flex justify-center align-center mt-5">
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Username')"></v-text-field>
+              <v-text-field label="Username System"></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Address')"></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row class="d-flex justify-center align-center mt-5">
-            <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Firstname')"></v-text-field>
-            </v-col>
-            <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Region')"></v-text-field>
+              <v-text-field label="Address"></v-text-field>
             </v-col>
           </v-row>
           <v-row class="d-flex justify-center align-center mt-5">
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Phonenumber')"></v-text-field>
+              <v-text-field label="Firstname"></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Country')"></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row class="d-flex justify-center align-center mt-5">
-            <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Email')"></v-text-field>
-            </v-col>
-            <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Postalcode')"></v-text-field>
+              <v-text-field label="Region"></v-text-field>
             </v-col>
           </v-row>
           <v-row class="d-flex justify-center align-center mt-5">
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Lastname')"></v-text-field>
+              <v-text-field label="Phone number"></v-text-field>
+            </v-col>
+            <v-col cols="4" class="mb-n6">
+              <v-text-field label="Country"></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row class="d-flex justify-center align-center mt-5">
+            <v-col cols="4" class="mb-n6">
+              <v-text-field label="Email Ldap"></v-text-field>
+            </v-col>
+            <v-col cols="4" class="mb-n6">
+              <v-text-field label="Postal code"></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row class="d-flex justify-center align-center mt-5">
+            <v-col cols="4" class="mb-n6">
+              <v-text-field label="LastName"></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
               <v-row>
                 <v-col cols="8">
-                  <label>{{$t('profil.2FA')}} </label>
+                  <label>Activate 2 factor authentification </label>
                 </v-col>
                 <v-spacer></v-spacer>
                 <v-col cols="4" class="mb-n6">
                   <input type="checkbox" hide-details />
-                  <label class="ml-1">{{$t('profil.ActivateOTP')}} </label>
+                  <label class="ml-1"> Activate OTP </label>
                 </v-col>
               </v-row>
             </v-col>
@@ -153,7 +145,7 @@
                   outlined
                   color="#213E9F"
                   label-color="#ffffff"
-                  :label="$t('profil.Update')"
+                  label="Update"
                   :isLarge="true"
                 />
               </div>
@@ -162,16 +154,16 @@
 
           <v-row class="d-flex justify-center align-center mt-0">
             <v-col cols="8" class="mb-n6">
-              <v-text-field :label="$t('profil.Oldpassword')"></v-text-field>
+              <v-text-field label="Old password"></v-text-field>
             </v-col>
           </v-row>
 
           <v-row class="d-flex justify-center align-center">
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Newpassowrd')"></v-text-field>
+              <v-text-field label="New passowrd"></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.ConfirmNewpassowrd')"></v-text-field>
+              <v-text-field label="Confirm New passowrd"></v-text-field>
             </v-col>
           </v-row>
           <v-row class="flex py-8 mb-10">
@@ -182,7 +174,7 @@
                   outlined
                   color="#213E9F"
                   label-color="#ffffff"
-                  :label="$t('profil.ChangePassword')"
+                  label="Change Password"
                   :isLarge="true"
                 />
               </div>
@@ -228,8 +220,7 @@ export default {
       this.$refs.file.click();
     },
     onFileChange(fieldName, file) {
-      console.log("file", file);
-      console.log("fieldName", fieldName);
+    console.log('test')
       const { maxSize } = this;
       let imageFile = file[0];
       if (file.length > 0) {
@@ -239,16 +230,14 @@ export default {
           this.errorText = "Please choose an image file";
         } else if (size > 1) {
           this.errorDialog = true;
+          console.log("this.errorDialog", this.errorDialog);
           this.errorText =
             "Your file is too big! Please select an image under 1MB";
         } else {
-          // let formData = new FormData();
+          let formData = new FormData();
           let imageURL = URL.createObjectURL(imageFile);
-          // formData.append(fieldName, imageFile);
-          // console.log("formData", formData);
-          console.log("imageURL", imageURL);
-          console.log("file[0]", file[0]);
-          // this.$emit("input", { formData, imageURL });
+          formData.append(fieldName, imageFile);
+          this.$emit("input", { formData, imageURL });
           this.imageURL = imageURL;
         }
       }

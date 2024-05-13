@@ -3,20 +3,17 @@
     <v-form @submit.prevent="handleSubmit(onSubmit)">
       <v-row class="fill-height ml-3">
         <v-col cols="12" sm="6">
-          <v-card-title class="title-text">{{
-            $t("interface.basicConfiguration")
-          }}</v-card-title>
+          <v-card-title class="title-text">Basic Configuration</v-card-title>
           <v-divider class="ml-3"></v-divider>
           <v-row class="ml-3 mt-3">
             <div style="color: black">Interface</div>
             <input type="checkbox" class="ml-5" v-model="activate" />
-            <label class="ml-2">{{ $t("interface.activate") }}</label>
+            <label class="ml-2">Activate</label>
           </v-row>
           <div class="ml-3" style="background-color: #f6f6f6">
             <v-row class="ml-3 mt-5">
               <v-col class="device-style"
-                >{{ $t("interface.device")
-                }}<span style="color: red">*</span></v-col
+                >Device<span style="color: red">*</span></v-col
               >
             </v-row>
             <v-row class="ml-3 mr-3">
@@ -32,41 +29,39 @@
             <v-row class="ml-3 mr-3">
               <v-text-field
                 v-model="description"
-                :rules="[(v) => !!v || $t('interface.descriptionRequired')]"
+                :rules="[(v) => !!v || 'Description is required']"
                 required
               ></v-text-field>
             </v-row>
           </div>
-          <v-card-title class="title-text mt-5">{{
-            $t("interface.genericConfiguration")
-          }}</v-card-title>
+          <v-card-title class="title-text mt-5"
+            >Generic configuration</v-card-title
+          >
           <v-divider class="ml-3 mb-5"></v-divider>
           <table class="ml-3">
             <tbody>
               <tr>
                 <td>
-                  <div>{{ $t("interface.blockNetworks") }}</div>
+                  <div>Block networks</div>
                 </td>
                 <td>
                   <input type="checkbox" v-model="private_aux" class="ml-5" />
-                  <label>{{ $t("interface.private") }}</label>
+                  <label>Private</label>
                 </td>
               </tr>
               <tr>
                 <td>
-                  <div class="mt-5">
-                    {{ $t("interface.blockBogonAddresses") }}
-                  </div>
+                  <div class="mt-5">Block Bogon addresses</div>
                 </td>
                 <td>
                   <input type="checkbox" v-model="bogon_aux" class="ml-5" />
-                  <label>{{ $t("interface.notAssignedByIANA") }}</label>
+                  <label>Not assigned by IANA</label>
                 </td>
               </tr>
               <tr>
                 <td>
                   <div>
-                    {{ $t("interface.IPV4SetupType") }}
+                    IPV4 Setup Type
                     <span style="color: red">*</span>
                   </div>
                 </td>
@@ -76,20 +71,17 @@
                     v-model="setuptypeip4"
                     :items="items.map((item) => item.value)"
                     class="ml-3"
-                    :rules="[(v) => !!v || $t('interface.IPV4Required')]"
-                    :no-data-text="$t('certificat.certificatlist')"
+                    :rules="[(v) => !!v || 'IPV4 Setup Type is required']"
                   ></v-select>
                 </td>
               </tr>
               <tr>
                 <td>
-                  <div style="color: #020202">
-                    {{ $t("interface.MACAddress") }}
-                  </div>
+                  <div style="color: #020202">MAC address</div>
                 </td>
                 <td>
                   <v-text-field
-                    :label="$t('interface.MACAddress')"
+                    label="Enter MAC address"
                     class="ml-3"
                     v-model="addmac"
                     :rules="[macAddressValidation]"
@@ -98,11 +90,11 @@
               </tr>
               <tr>
                 <td>
-                  <div>{{ $t("interface.MTU") }}</div>
+                  <div>MTU (Maximum Transmission Unit)</div>
                 </td>
                 <td>
                   <v-text-field
-                    :label="$t('interface.MTU')"
+                    label="Enter MTU"
                     class="ml-3"
                     v-model="mtuv"
                     :rules="[validateRange]"
@@ -111,11 +103,11 @@
               </tr>
               <tr>
                 <td>
-                  <div>{{ $t("interface.MSS") }}</div>
+                  <div>MSS</div>
                 </td>
                 <td>
                   <v-text-field
-                    :label="$t('interface.MSS')"
+                    label="Enter MSS"
                     class="ml-3"
                     v-model="mssv"
                   ></v-text-field>
@@ -123,16 +115,13 @@
               </tr>
               <tr>
                 <td>
-                  <span style="color: #020202">{{
-                    $t("interface.speedAndDuplex")
-                  }}</span>
+                  <span style="color: #020202">Speed and Duplex</span>
                 </td>
                 <td>
                   <v-select
                     v-model="speed_duplex"
                     :items="speedDuplexItems.map((item) => item)"
                     class="ml-3 speed-duplex-style"
-                    :no-data-text="$t('certificat.certificatlist')"
                   ></v-select>
                 </td>
               </tr>
@@ -141,23 +130,23 @@
         </v-col>
         <v-col cols="12" sm="6">
           <div v-if="setuptypeip4 === 'static'">
-            <v-card-title class="title-text">{{
-              $t("interface.staticIPV4AddressConfiguration")
-            }}</v-card-title>
+            <v-card-title class="title-text"
+              >Static IPV4 address configuration</v-card-title
+            >
             <v-divider class="ml-3 mr-3"></v-divider>
             <div class="mr-2 ml-2">
               <v-row class="mt-2">
                 <v-col align-self="center" cols="4">
-                  <label>{{ $t("interface.IPV4Address") }}</label>
+                  <label>IPV4 address</label>
                   <small style="color: red">*</small>
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-text-field
-                    :label="$t('interface.IPV4Address')"
+                    label="Enter IPV4 address"
                     v-model="value_setup_Ipv4.ip_address4"
                     class="ip-address-style"
                     :rules="[
-                      (v) => !!v || $t('interface.IPV4AddressRequired'),
+                      (v) => !!v || 'IPV4 address is required',
                       () => ipAddressValidation(value_setup_Ipv4.ip_address4),
                     ]"
                   ></v-text-field>
@@ -167,8 +156,7 @@
                     v-model="value_setup_Ipv4.netmask4"
                     :items="netmaskItems"
                     class="ml-3 netmask-select-style"
-                    :rules="[(v) => !!v || $t('interface.netmaskRequired')]"
-                    :no-data-text="$t('certificat.certificatlist')"
+                    :rules="[(v) => !!v || 'Netmask is required']"
                   ></v-select>
                 </v-col>
                 <v-col align-self="center" cols="4">
@@ -211,26 +199,23 @@
                         />
                       </g>
                     </svg>
-                    <span class="ml-2" style="color: #086eae">{{
-                      $t("interface.add")
-                    }}</span>
+                    <span class="ml-2" style="color: #086eae">Add</span>
                   </v-btn>
                 </v-col>
                 <v-col cols="6" class="mb-n6">
                   <v-select
                     v-model="value_setup_Ipv4.gateway4.value"
                     :items="allStaticGatewaysAddresses"
-                    :rules="[(v) => !!v || $t('interface.IPV4GatewayRequired')]"
-                    :no-data-text="$t('certificat.certificatlist')"
+                    :rules="[(v) => !!v || 'IPV4 gateway is required']"
                   ></v-select>
                 </v-col>
               </v-row>
             </div>
           </div>
           <div v-if="setuptypeip4 === 'dhcp'">
-            <v-card-title class="title-text">{{
-              $t("interface.configuringDHCP")
-            }}</v-card-title>
+            <v-card-title class="title-text"
+              >Configuring the DHCP Client</v-card-title
+            >
             <v-divider class="ml-3"></v-divider>
             <ConfigDHCPv4
               :ipAddress="value_setup_Ipv4.ip_address4"
@@ -241,9 +226,7 @@
               v-model:overrideMTU="interface.overrideMTU"
             />
             <v-row class="advanced-parameters-style">
-              <label class="ml-3">{{
-                $t("interface.advancedParameters")
-              }}</label>
+              <label class="ml-3">Advanced parameters</label>
               <input
                 type="checkbox"
                 id="advancedParameters"
@@ -280,7 +263,7 @@
           outlined
           color="#FFFF"
           label-color="#213E9F"
-          :label="$t('interface.cancel')"
+          label="cancel"
           :isLarge="true"
           @click="cancel"
         />
@@ -290,7 +273,7 @@
           outlined
           color="#213E9F"
           label-color="#ffff"
-          :label="$t('interface.save')"
+          label="save"
           :isLarge="true"
           type="submit"
           class="ml-2"
@@ -307,7 +290,7 @@
         v-if="showAlertGateway"
         :style="alertStyle"
       >
-        {{ $t("interface.addedSuccessfully") }}
+        Gateway added successfully
       </v-alert>
       <v-alert
         type="success"
@@ -319,7 +302,7 @@
         v-if="showAlert"
         :style="alertStyle"
       >
-        {{ $t("interface.savedSuccessfully") }}
+        Configuration saved successfully
       </v-alert>
       <v-dialog
         v-model="showGatewayDialog"
@@ -328,41 +311,37 @@
       >
         <v-card class="ml-3 mr-3">
           <v-card-title class="title-text">
-            <span class="headline font-weight-bold">
-              {{ $t("interface.addIPv4Gateway") }}
-            </span>
+            <span class="headline font-weight-bold">Add IPv4 Gateway</span>
           </v-card-title>
           <v-card-text>
             <v-form>
               <v-container>
                 <v-row>
                   <v-text-field
-                    :label="$t('interface.gatewayName')"
+                    label="Enter Gateway Name"
                     v-model="gateway.gwname"
                   ></v-text-field>
                 </v-row>
                 <v-row>
                   <v-text-field
-                    label="Gateway IPV4"
+                    label="Enter Gateway IPV4"
                     clsas="w-100"
                     v-model="gateway.gwaddress"
                   ></v-text-field>
                 </v-row>
                 <v-row>
                   <v-text-field
-                    label="Description"
+                    label="Enter Description"
                     v-model="gateway.description"
                   ></v-text-field
                 ></v-row>
                 <v-row>
                   <input type="checkbox" v-model="gateway.default_aux" />
-                  <label class="ml-3">{{
-                    $t("interface.GatewayDefault")
-                  }}</label>
+                  <label class="ml-3">Default Gateway</label>
                 </v-row>
                 <v-row>
                   <input type="checkbox" v-model="gateway.far_aux" />
-                  <label class="ml-3">{{ $t("interface.farGateway") }}</label>
+                  <label class="ml-3">Far Gateway</label>
                 </v-row>
                 <v-row>
                   <input type="checkbox" v-model="gateway.multiwan_aux" />
@@ -378,7 +357,7 @@
               outlined
               color="#FFFF"
               label-color="#213E9F"
-              :label="$t('interface.cancel')"
+              label="cancel"
               :isLarge="true"
               @click="cancelGateway"
             />
@@ -388,7 +367,7 @@
               outlined
               color="#213E9F"
               label-color="#ffff"
-              :label="$t('interface.save')"
+              label="save"
               :isLarge="true"
               type="submit"
               class="ml-2"
@@ -513,7 +492,7 @@ export default {
       }
 
       if (num < 1500 || num > 9000) {
-        return this.$t("interface.NumberMust");
+        return "Number must be between 1500 and 9000";
       }
 
       return true; // Return true when the value is within the range
@@ -529,7 +508,7 @@ export default {
 
       // Validate the input value against the regex
       if (!macRegex.test(value)) {
-        return this.$t("interface.addressValid"); // Error message for invalid MAC address
+        return "Please enter a valid MAC address"; // Error message for invalid MAC address
       }
       return true; // Return true when the input is valid
     },
@@ -809,7 +788,7 @@ export default {
     let filtredInterface = parsedArrayInterface.filter(
       (i) => i.name_interface === tab
     );
-    if (filtredInterface[0]?.ifname.startsWith("vlan")) {
+    if (filtredInterface[0].ifname.startsWith("vlan")) {
       this.items.push({ id: 1, value: "static" });
     } else {
       this.items.push({ id: 1, value: "static" }, { id: 2, value: "dhcp" });

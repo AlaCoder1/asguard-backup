@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("dhcpV4.addRange") }}</span
+              Add Range</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("dhcpV4.editRange") }}</span
+              Edit Range</span
             >
           </v-card-title>
           <v-card-text>
@@ -16,7 +16,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('dhcpV4.rangeFrom')"
+                    label="Range From"
                     v-model="state.rangeFrom"
                   ></v-text-field>
                   <p
@@ -28,7 +28,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('dhcpV4.rangeTo')"
+                    label="Range To"
                     v-model="state.rangeTo"
                   ></v-text-field>
                   <p
@@ -53,7 +53,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3">{{ $t("buttons.close") }}</span>
+              <span class="pr-3 pl-3">Close</span>
             </v-btn>
 
             <v-btn
@@ -67,12 +67,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span
-              >
-              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
-              >
+              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -91,7 +86,6 @@
 </template>
 
 <script>
-import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
@@ -117,7 +111,6 @@ export default {
 
   setup(props) {
     const emitter = inject("emitter");
-    const { t } = useI18n();
     onMounted(() => {
       emitter.on("id-range", (id) => {
         console.log("id", id);
@@ -196,32 +189,27 @@ export default {
       state.rangeTo = "";
       state.rangeFrom = "";
     };
-    const error = computed(() => {
-      return t("errors.valueRequired");
-    });
-    const formatMustBeLikeAdresseIP = computed(() => {
-      return t("errors.formatMustBeLikeAdresseIP");
-    });
+
     const rules = computed(() => {
       return {
         rangeFrom: {
           requiredIfFuction: helpers.withMessage(
-            error,
+            "Value is required",
             requiredIf(() => modalMode.value === "create")
           ),
           isValidlRangeFrom: helpers.withMessage(
-            formatMustBeLikeAdresseIP,
+            `Format must be like adresse IP : X.X.X.X`,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         rangeTo: {
           requiredIfFuction: helpers.withMessage(
-            error,
+            "Value is required",
             requiredIf(() => modalMode.value === "create")
           ),
           isValidlRangeTo: helpers.withMessage(
-            formatMustBeLikeAdresseIP,
+            `Format must be like adresse IP : X.X.X.X`,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),

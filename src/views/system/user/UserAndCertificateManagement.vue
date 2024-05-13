@@ -8,21 +8,36 @@
           color="#FFC300"
           dark
         >
-          <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.value">
+          <v-tab v-for="tab in tabs" :key="tab.id" :value="$t(tab.value)">
             <span style="color: #020202">{{ $t(tab.value) }} </span>
           </v-tab>
         </v-tabs>
 
         <v-window v-model="selectedTab">
           <v-window-item
-            v-for="(tab, index) in tabs"
-            :key="index"
-            :value="tab.value"
+            v-for="tab in tabs"
+            :key="tab.id"
+            :value="
+              $t(tab.value) === 'User Management'
+                ? 'User Management'
+                : 'Gestion des utilisateurs'
+            "
           >
             <v-card>
-              <v-card-text>
-                <component :is="tab.component" />
-              </v-card-text>
+              <v-card-text><data-managment /></v-card-text>
+            </v-card>
+          </v-window-item>
+          <v-window-item
+            v-for="tab in tabs"
+            :key="tab.id"
+            :value="
+              $t(tab.value) === 'Certificate Management'
+                ? 'Certificate Management'
+                : 'Gestion des certificats'
+            "
+          >
+            <v-card>
+              <v-card-text><certificats-management /></v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -49,12 +64,8 @@ export default {
     return {
       localStorageValue: localStorage.getItem("lang-slug"),
       tabs: [
-        { id: 1, value: "tabs.userManagement", component: DataManagment },
-        {
-          id: 2,
-          value: "tabs.certificateManagement",
-          component: CertificatsManagement,
-        },
+        { id: 1, value: "tabs.userManagement" },
+        { id: 2, value: "tabs.certificateManagement" },
       ],
       selectedTab: "",
 
@@ -66,7 +77,12 @@ export default {
   },
   watch: {
     selectedTab(val) {
-      localStorage.setItem("user-tab", val);
+      let tabs = val.split(" ");
+      if (tabs.includes("utilisateurs") || tabs.includes("User")) {
+        localStorage.setItem("user-tab", "tabs.userManagement");
+      } else {
+        localStorage.setItem("user-tab", "tabs.certificateManagement");
+      }
     },
   },
   methods: {
@@ -83,12 +99,14 @@ export default {
   },
   mounted() {
     this.emitter.on("reload-tabs", () => {
-      let tab = localStorage.getItem("user-tab") || "tabs.userManagement";
-
-      if (tab) this.activeTab = tab;
+      let tab = this.$t(
+        localStorage.getItem("user-tab") || this.$t("tabs.userManagement")
+      );
+      if (tab) this.selectedTab = tab;
     });
-
-    let tab = localStorage.getItem("user-tab") || "tabs.userManagement";
+    let tab = this.$t(
+      localStorage.getItem("user-tab") || this.$t("tabs.userManagement")
+    );
     if (tab) this.selectedTab = tab;
   },
 

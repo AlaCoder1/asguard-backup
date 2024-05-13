@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            {{ $t("requiredfield.attente") }}
+            Please Wait...
             <v-progress-linear
               indeterminate
               color="white"
@@ -23,15 +23,15 @@
     <v-row>
       <v-col cols="6">
         <div class="ml-3 mr-3">
-          <h4>{{ $t("openvpn.Generalinformation") }}</h4>
+          <h4>General information</h4>
           <v-divider class="mt-2"></v-divider>
           <v-row class="mt-2">
             <v-col cols="4" align-self="center">
-              <label>{{ $t("openvpn.Servername") }}*</label>
+              <label>Server name*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
-                :label="$t('openvpn.Servername')"
+                label="Server name"
                 v-model="state.clientName"
               ></v-text-field>
 
@@ -43,20 +43,20 @@
               </p>
             </v-col>
             <v-col cols="4" align-self="center">
-              <label>{{ $t("form.description") }}</label>
+              <label>Description</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
-                :label="$t('form.description')"
+                label="Description"
                 v-model="state.description"
               ></v-text-field>
             </v-col>
             <v-col cols="4" align-self="center">
-              <label>{{ $t("openvpn.Servermode") }}*</label>
+              <label>Server mode*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
-                :label="$t('openvpn.Servermode')"
+                label="Server mode"
                 v-model="state.serverMode"
                 item-title="name"
                 item-value="slug"
@@ -78,11 +78,11 @@
             </v-col>
 
             <v-col cols="4" align-self="center">
-              <label>{{ $t("PageIpsec.Protocol") }}*</label>
+              <label>Protocol*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
-                :label="$t('PageIpsec.Protocol')"
+                label="Protocol"
                 v-model="state.protocol"
                 item-title="name"
                 item-value="slug"
@@ -95,12 +95,12 @@
             </v-col>
 
             <v-col cols="4" align-self="center">
-              <label>{{ $t("openvpn.DeviceMode") }}*</label>
+              <label>Device Mode*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-select
                 v-model="state.deviceMode"
-                :label="$t('openvpn.DeviceMode')"
+                label="Device Mode"
                 item-title="name"
                 item-value="id"
                 return-object
@@ -132,11 +132,11 @@
             </v-col>
 
             <v-col cols="4" align-self="center">
-              <label>{{ $t("openvpn.Localport") }}*</label>
+              <label>Local port*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
               <v-text-field
-                :label="$t('openvpn.Localport')"
+                label="Local port"
                 v-model="state.localPort"
               ></v-text-field>
               <p class="error-feedback mb-5" v-if="v$.localPort.$errors.length">
@@ -229,7 +229,7 @@
             outlined
             color="#ffffff"
             label-color="#213E9F"
-            :label="$t('buttons.cancel')"
+            label="cancel"
             :isLarge="true"
             @click="cancel"
           />
@@ -238,7 +238,7 @@
             outlined
             color="#213E9F"
             label-color="#ffffff"
-            :label="$t('buttons.save')"
+            label="save"
             :isLarge="true"
             class="ml-2"
             @click="submitForm"
@@ -591,10 +591,7 @@ export default {
       axios.get("/network/AllInterfaces").then(
         (response) => {
           let filtredInterface = response.data.filter(
-            (i) =>
-              !i.ifname.startsWith("tun_") &&
-              !i.ifname.startsWith("tap_") &&
-              !i.ifname.startsWith("vlan")
+            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
           );
 
           let interfaces = filtredInterface.map((i) => {
@@ -735,8 +732,7 @@ export default {
     watch(
       () => dataServer.value,
       (newValue) => {
-        console.log("newValueserver000", newValue);
-        if (newValue != "tabs.servers") {
+        if (newValue != "SERVERS") {
           cancel();
         }
       }

@@ -1,15 +1,14 @@
 <template>
   <div class="ml-3 mr-3">
-    <h4> {{ $t("PageIpsec.title") }}</h4>
+    <h4>General information phase1</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-5">
-        <label> {{ $t("PageIpsec.Tunnelsettingsname")}}*</label>
+        <label>Tunnel settings name*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-        
-          :label="$t('PageIpsec.Tunnelsettingsname')"
+          label="Tunnel settings name"
           v-model="tunnelSettings"
         ></v-text-field>
         <p
@@ -20,11 +19,11 @@
         </p>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>{{ $t("PageIpsec.Connectionmethod") }}*</label>
+        <label>Connection method*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
-          :label="$t('PageIpsec.Connectionmethod')"
+          label="Connection method"
           v-model="connectionMethod"
           item-title="name"
           item-value="slug"
@@ -39,15 +38,15 @@
         </p>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>{{ $t("PageIpsec.keyechange") }}*</label>
+        <label>Key Exchange version*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
-            :label="$t('PageIpsec.keyechange')"
-            v-model="keyExchange"
-            item-title="name"
-            item-value="slug"
-            return-object
+          label="Key Exchange version"
+          v-model="keyExchange"
+          item-title="name"
+          item-value="slug"
+          return-object
           :items="props.exchangeList"
         ></v-select>
         <p
@@ -59,11 +58,11 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>{{ $t("PageIpsec.internetprotocole") }}*</label>
+        <label>Internet Protocol*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
-          :label="$t('PageIpsec.internetprotocole')"
+          label="Internet Protocol"
           v-model="internetProtocol"
           item-title="name"
           item-value="slug"
@@ -99,11 +98,11 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>{{ $t("PageIpsec.remotegateway") }}*</label>
+        <label>Remote gateway*</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          :label="$t('PageIpsec.remotegateway')"
+          label="Remote gateway"
           v-model="remoteGateway"
         ></v-text-field>
         <p
@@ -115,11 +114,11 @@
       </v-col>
 
       <v-col cols="4" class="mt-0">
-        <label>{{ $t("PageIpsec.dynamiquepassrelle") }}</label>
+        <label>Dynamic gateway</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="remoteConnect" />
-        <label class="ml-2"> {{ $t("PageIpsec.allowgateway") }}</label>
+        <label class="ml-2"> Allow any remote gateway to connect</label>
       </v-col>
       <v-col cols="4" class="mt-5">
         <label>Description</label>

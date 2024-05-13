@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            {{$t('requiredfield.attente')}}
+            Please Wait...
             <v-progress-linear
               indeterminate
               color="white"
@@ -20,24 +20,24 @@
       </v-dialog>
     </v-overlay>
     <div class="ml-3 mr-3">
-      <h4>{{$t("settings.GENERALPARAMETERS")}}</h4>
+      <h4>General Parameters</h4>
       <v-divider class="mb-2"></v-divider>
     </div>
     <v-row>
       <v-col cols="10">
         <v-col cols="8" class="mb-n6">
-          <h4>{{$t("settings.System")}}</h4>
+          <h4>System</h4>
 
           <v-divider class="mb-2"></v-divider>
 
           <v-text-field
-            :label="$t('settings.Hostname')"
+            label="Host name"
             density="compact"
             v-model="state.hostName"
           ></v-text-field>
 
           <v-text-field
-            :label="$t('settings.Domain')"
+            label="Domain"
             density="compact"
             v-model="state.domain"
           ></v-text-field>
@@ -45,7 +45,7 @@
             {{ v$.domain.$errors?.[0].$message }}
           </p>
           <v-select
-            :label="$t('settings.Timezone')" 
+            label="Time zone"
             density="compact"
             v-model="state.timeZone"
             item-title="name"
@@ -56,7 +56,7 @@
         </v-col>
 
         <v-col cols="8" class="mb-n6">
-          <h4>{{$t("settings.Network")}}</h4>
+          <h4>Network</h4>
 
           <v-divider class="mb-2"></v-divider>
           <div class="d-flex justify-end mt-3">
@@ -66,7 +66,7 @@
               color="#213E9F"
               density="comfortable"
               rounded
-              >{{$t("buttons.Add")}}</v-btn
+              >Add</v-btn
             >
           </div>
           <div style="overflow: hidden; flex-grow: 1">
@@ -78,7 +78,6 @@
               @grid-ready="onGridReady"
               :columnDefs="columnGateway"
               :rowData="rowDataGateway.value"
-              :overlayNoRowsTemplate="overlayTemplate"
             />
           </div>
         </v-col>
@@ -100,7 +99,7 @@
             outlined
             color="#213E9F"
             label-color="#ffffff"
-            :label="$t('buttons.save')"
+            label="save"
             :isLarge="true"
             class="ml-2"
             @click="submitForm"
@@ -120,7 +119,6 @@
 </template>
 
 <script>
-import { useI18n } from "vue-i18n";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -141,8 +139,6 @@ export default {
   },
 
   setup() {
-    const { t } = useI18n();
-    const overlayTemplate = ref("");
     const emitter = inject("emitter");
     const state = reactive({
       timeZoneList: [],
@@ -167,17 +163,9 @@ export default {
     });
     const gridApi = ref(null);
 
-    const DNSServer = computed(() => {
-      return t("settings.DNSServer");
-    });
-    const Usethegateway = computed(() => {
-      return t("settings.Usethegateway");
-    });
-
-
-    const columnGateway =ref([
+    const columnGateway = [
       {
-        headerName: DNSServer,
+        headerName: "DNS Server",
         field: "dns_server",
         autoHeight: true,
         width: 90,
@@ -185,7 +173,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: Usethegateway,
+        headerName: "Use the gateway",
         field: "gateway",
         // cellRenderer:actionGateway,
         width: 90,
@@ -197,7 +185,7 @@ export default {
         headerName: "Actions",
         cellRenderer: actionCellRenderer,
       },
-    ]);
+    ];
     const rowDataGateway = reactive({});
 
     const getCookie = (name) => {
@@ -216,15 +204,6 @@ export default {
     };
 
     onMounted(() => {
-      overlayTemplate.value = `
-      <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
-      <path
-        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
-        style="fill: #E8EAF6"
-        data-name="Unbox"
-      />
-     </svg></span>`;
-
       let generaleSettings =
         document.getElementById("app").attributes["generale_settings"].value;
       const parsedArray1 = JSON.parse(generaleSettings);
@@ -466,18 +445,13 @@ export default {
       emitter.emit("list-gateway", rowDataGateway.value);
     };
     const cancel = () => {};
-    const Formatdomain = computed(() => {
-      return t("errors.Formatdomain");
-    });
-    const error = computed(() => {
-      return t("errors.valueRequired");
-    });
+
     const rules = computed(() => {
       return {
         domain: {
-          required: helpers.withMessage(error, required),
+          required,
           isValidDomain: helpers.withMessage(
-            Formatdomain,
+            `Format must be like exemple.com`,
             helpers.regex(/\.com$/)
           ),
         },
@@ -498,7 +472,6 @@ export default {
       columnGateway,
       onGridReady,
       openModalAdd,
-      overlayTemplate,
     };
   },
 };

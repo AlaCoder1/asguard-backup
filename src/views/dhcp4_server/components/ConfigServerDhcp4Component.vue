@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            {{ $t("sdwan.pleaseWait") }}
+            Please Wait...
             <v-progress-linear
               indeterminate
               color="white"
@@ -20,7 +20,7 @@
       </v-dialog>
     </v-overlay>
     <div class="ml-3 mr-3 mt-5">
-      <h4>{{ $t("dhcpV4.generalInformation") }}</h4>
+      <h4>General information</h4>
 
       <v-divider class="mb-2"></v-divider>
     </div>
@@ -28,7 +28,7 @@
       <v-col cols="6">
         <v-row class="mt-2">
           <v-col cols="4" align-self="center">
-            <label>{{ $t("dhcpV4.DHCPServer") }}</label>
+            <label>DHCPServer</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input
@@ -37,14 +37,14 @@
               disabled
               v-model="state.enable_dhcpv4"
             />
-            <label class="ml-2"> {{ $t("dhcpV4.enableDHCPServer") }}</label>
+            <label class="ml-2"> Enable DHCP server on this interface</label>
           </v-col>
           <v-col cols="4" align-self="center">
-            <label>{{ $t("dhcpV4.subnetAddress") }}</label>
+            <label>Subnet Address</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              :label="$t('dhcpV4.subnetAddress')"
+              label="Subnet Address"
               v-model="state.subnet_addr"
               required
               readonly
@@ -54,12 +54,12 @@
             </p>
           </v-col>
           <v-col cols="4" align-self="center">
-            <label>{{ $t("dhcpV4.subnetMask") }}</label>
+            <label>Subnet Mask</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <!-- <label class="ml-2"> {{state.subnet_mask}}</label> -->
             <v-text-field
-              :label="$t('dhcpV4.subnetMask')"
+              label="Subnet Mask"
               v-model="state.subnet_mask"
               required
               readonly
@@ -69,11 +69,11 @@
             </p>
           </v-col>
           <v-col cols="4" align-self="center">
-            <label>{{ $t("dhcpV4.availableRange") }}</label>
+            <label>Available Range</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              :label="$t('dhcpV4.availableRange')"
+              label="Available Range"
               v-model="state.available_range"
               required
               readonly
@@ -102,7 +102,7 @@
                 outlined
                 color="#213E9F"
                 label-color="#ffffff"
-                :label="$t('buttons.Add')"
+                label="Add"
                 :isLarge="true"
                 type="submit"
                 class="ml-2"
@@ -118,15 +118,11 @@
                 @grid-ready="onGridReady"
                 :columnDefs="columnRanges"
                 :rowData="rowDataRanges.value"
-                :overlayNoRowsTemplate="overlayTemplate"
-                :pagination="true"
-                :paginationPageSize="5"
-                :localeText="paginationLocalization"
               />
             </div>
           </v-col>
           <v-col cols="4" align-self="center">
-            <label>{{ $t("dhcpV4.dnsServer") }}</label>
+            <label>DNS server</label>
           </v-col>
           <template
             v-for="(row, index) in state.rows"
@@ -136,7 +132,7 @@
             <v-col cols="4" align-self="center" v-if="index > 0"> </v-col>
             <v-col :cols="index !== 0 ? '7' : '8'" class="mb-n6">
               <v-text-field
-                :label="$t('dhcpV4.dnsServer')"
+                label="DNS server"
                 v-model="row.dns_server"
               ></v-text-field>
             </v-col>
@@ -188,18 +184,16 @@
                   />
                 </g>
               </svg>
-              <span class="ml-2" style="color: #086eae">{{
-                $t("buttons.Add")
-              }}</span>
+              <span class="ml-2" style="color: #086eae">Add</span>
             </v-btn>
           </v-col>
 
           <v-col cols="4" align-self="center">
-            <label>{{ $t("dhcpV4.gateway") }}</label>
+            <label>Gateway</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              :label="$t('dhcpV4.gateway')"
+              label="Gateway"
               v-model="state.gateway"
               required
             ></v-text-field>
@@ -209,11 +203,11 @@
           </v-col>
 
           <v-col cols="4" align-self="center">
-            <label>{{ $t("dhcpV4.domainName") }}</label>
+            <label>Domain name</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
-              :label="$t('dhcpV4.domainName')"
+              label="Domain name"
               v-model="state.domain_name"
               required
             ></v-text-field>
@@ -238,7 +232,7 @@
             outlined
             color="#ffffff"
             label-color="#213E9F"
-            :label="$t('buttons.cancel')"
+            label="cancel"
             :isLarge="true"
             @click="cancel"
           />
@@ -247,7 +241,7 @@
             outlined
             color="#213E9F"
             label-color="#ffffff"
-            :label="$t('buttons.save')"
+            label="save"
             :isLarge="true"
             class="ml-2"
             @click="submitForm"
@@ -273,7 +267,6 @@
 </template>
 
 <script>
-import { useI18n } from "vue-i18n";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -298,11 +291,6 @@ export default {
     configInfo: {},
   },
   setup(props) {
-    const { t } = useI18n();
-    const overlayTemplate = ref("");
-    const paginationLocalization = reactive({
-      of: "/",
-    });
     const emitter = inject("emitter");
     const switchValue = ref(false);
     const state = reactive({
@@ -334,16 +322,9 @@ export default {
 
     const gridApi = ref(null);
 
-    const rangeFrom = computed(() => {
-      return t("dhcpV4.rangeFrom");
-    });
-    const rangeTo = computed(() => {
-      return t("dhcpV4.rangeTo");
-    });
-
-    const columnRanges = ref([
+    const columnRanges = [
       {
-        headerName: rangeFrom,
+        headerName: "Range From",
         field: "range_from",
         autoHeight: true,
         width: 90,
@@ -351,7 +332,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: rangeTo,
+        headerName: "Range To",
         field: "range_to",
         width: 90,
         minWidth: 50,
@@ -360,10 +341,12 @@ export default {
       {
         headerName: "Actions",
         cellRenderer: actionCellRenderer,
-        field: "actions",
-        width: 150,
+        minWidth: 150,
+        field: "action",
+        sortable: true,
+        filter: true,
       },
-    ]);
+    ];
     const rowDataRanges = reactive({});
     // state.enable_dhcpv4 = props.configInfo.enable_dhcpv4;
     state.subnet_addr = props.configInfo.subnet_addr;
@@ -403,14 +386,6 @@ export default {
     };
 
     onMounted(async () => {
-      overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
-      <path
-        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
-        style="fill: #E8EAF6"
-        data-name="Unbox"
-      />
-    </svg></span>`;
-
       emitter.on("closeModalAddRange", () => {
         state.isModalOpen = false;
         state.isOpen = false;
@@ -497,21 +472,14 @@ export default {
       }
     });
 
-    const formatBeLike = computed(() => {
-      return t("errors.formatMustBeLikeAdresseIP");
-    });
-    const error = computed(() => {
-      return t("errors.valueRequired");
-    });
-
     const rules = computed(() => {
       return {
-        available_range: { required: helpers.withMessage(error, required) },
-        subnet_mask: { required: helpers.withMessage(error, required) },
-        subnet_addr: { required: helpers.withMessage(error, required) },
+        available_range: { required },
+        subnet_mask: { required },
+        subnet_addr: { required },
         gateway: {
           isValidlRemoteGateway: helpers.withMessage(
-            formatBeLike,
+            `Format must be like adresse IP : X.X.X.X`,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -530,6 +498,13 @@ export default {
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
+
+      gridApi.value.sizeColumnsToFit();
+      window.addEventListener("resize", function () {
+        setTimeout(function () {
+          gridApi.value.sizeColumnsToFit();
+        });
+      });
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataRanges.value);
       } else {
@@ -604,7 +579,7 @@ export default {
       if (rowDataRanges.value.length === 0) {
         state.snackbar = true;
         state.color = "error";
-        state.textAlert = t("errors.minimumOneRange");
+        state.textAlert = "Minimum One Range";
         setTimeout(() => {
           state.snackbar = false;
         }, 2000);
@@ -617,7 +592,8 @@ export default {
         if (hasEmptyElement) {
           state.snackbar = true;
           state.color = "error";
-          state.textAlert = t("errors.formatMustBeLikeAdresseIP");
+          state.textAlert =
+            "Format DNS server must be like adresse IP : X.X.X.X";
           setTimeout(() => {
             state.snackbar = false;
           }, 2000);
@@ -686,7 +662,8 @@ export default {
         if (hasEmptyElement) {
           state.snackbar = true;
           state.color = "error";
-          state.textAlert = t("errors.formatMustBeLikeAdresseIP");
+          state.textAlert =
+            "Format DNS server must be like adresse IP : X.X.X.X";
           setTimeout(() => {
             state.snackbar = false;
           }, 2000);
@@ -697,7 +674,6 @@ export default {
 
     return {
       switchValue,
-      overlayTemplate,
       v$,
       getCookie,
       submitForm,
@@ -707,7 +683,6 @@ export default {
       addRow,
       removeRow,
       columnRanges,
-      paginationLocalization,
       state,
       handleRemove,
       emitter,

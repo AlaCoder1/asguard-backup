@@ -4,11 +4,11 @@
       <v-card-item>
         <v-row>
           <v-col cols="7">
-            <div class="title-card mb-2">{{$t('Clientsopenvpn.Capacity')}}</div>
+            <div class="title-card mb-2">Capacity</div>
             <span class="mb-1 soutitle" style="font-size: 17px"
-              >{{$t('Clientsopenvpn.Transferred')}}</span
+              >Transferred</span
             >
-            <h6 class="daysTitle">{{$t('Clientsopenvpn.Today')}}</h6>
+            <h6 class="daysTitle">Today</h6>
           </v-col>
           <v-col class="mt-4" cols="5" align-self="center">
             <span class="numberTitle">{{ state.transferred }}</span>
@@ -16,8 +16,8 @@
         </v-row>
         <v-row>
           <v-col cols="7">
-            <span class="mb-1 soutitle" style="font-size: 17px">{{$t('Clientsopenvpn.Received')}}</span>
-            <h6 class="daysTitle">{{$t('Clientsopenvpn.Today')}}</h6>
+            <span class="mb-1 soutitle" style="font-size: 17px">Recieved</span>
+            <h6 class="daysTitle">Today</h6>
           </v-col>
           <v-col cols="5" align-self="center">
             <span class="mb-1 numberTitle">{{ state.recieved }}</span>
@@ -29,7 +29,7 @@
   <v-col cols="6">
     <v-card class="mx-auto">
       <v-card-item>
-        <div class="title-card mb-4">{{$t('Clientsopenvpn.Users')}}</div>
+        <div class="title-card mb-4">Users</div>
         <v-row class="mb-5 d-flex justify-center align-center">
           <v-col cols="6">
             <div class="text-h6 mb-1">
@@ -45,10 +45,10 @@
                     {{ state.activeClient }}
                   </v-progress-circular>
                 </v-col>
-                <span class="subTitle"> {{$t('Clientsopenvpn.of')}} {{ state.allClient }}</span>
+                <span class="subTitle"> of {{ state.allClient }}</span>
               </v-row>
             </div>
-            <div class="text-caption">{{$t('Clientsopenvpn.ActiveUsers')}}</div>
+            <div class="text-caption">Active Users</div>
           </v-col>
           <!-- <v-col cols="6">
             <div class="text-h6 mb-1">

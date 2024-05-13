@@ -1,35 +1,35 @@
 <template>
   <div class="ml-3 mr-3">
-    <h4>{{$t('PageIpsec.AdvancedOptions')}}</h4>
+    <h4>Advanced Options</h4>
     <v-divider class="mt-2"></v-divider>
     <v-row class="mt-2">
       <v-col cols="4" class="mt-0">
-        <label>{{$t('PageIpsec.Policy')}}</label>
+        <label>Policy</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="policy" />
-        <label class="ml-2">{{$t('PageIpsec.Installpolicy')}}</label>
+        <label class="ml-2">Install policy</label>
       </v-col>
       <v-col cols="4" class="mt-0">
-        <label>{{$t('PageIpsec.Rekey')}}</label>
+        <label>Rekey</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="rekey" />
-        <label class="ml-2">{{$t('PageIpsec.Disablerekey')}}</label>
+        <label class="ml-2">Disable rekey</label>
       </v-col>
       <v-col cols="4" class="mt-0">
-        <label>{{$t('PageIpsec.Reauth')}}</label>
+        <label>Reauth</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="reauth" />
-        <label class="ml-2">{{$t('PageIpsec.Disablereauth')}}</label>
+        <label class="ml-2">Disable reauth</label>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>{{$t('PageIpsec.NATTraversal')}}</label>
+        <label>NAT Traversal</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-select
-          :label="$t('PageIpsec.NATTraversal')"
+          label="NAT Traversal"
           v-model="natTraversal"
           item-title="name"
           item-value="slug"
@@ -38,22 +38,22 @@
         ></v-select>
       </v-col>
       <v-col cols="4">
-        <label>{{$t('PageIpsec.MOBIKE')}}</label>
+        <label>MOBIKE</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="mobike" />
-        <label class="ml-2">{{$t('PageIpsec.DisableMOBIKE')}}</label>
+        <label class="ml-2">Disable MOBIKE</label>
       </v-col>
       <v-col cols="4">
-        <label>{{$t('PageIpsec.DeadPeerDetection')}}</label>
+        <label>Dead Peer Detection</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <input type="checkbox" v-model="deadPeer" />
-        <label class="ml-2">{{$t('PageIpsec.EnabledeadPeer')}}</label>
+        <label class="ml-2">Enable dead Peer</label>
         <template v-if="props.isdeadPeer">
           <v-text-field
             class="mt-3"
-            :label="$t('PageIpsec.Seconds')"
+            label="Seconds"
             v-model="seconds"
           ></v-text-field>
           <v-text-field
@@ -61,7 +61,7 @@
             v-model="retries"
           ></v-text-field>
           <v-select
-            :label="$t('PageIpsec.deadpeeraction')"
+            label="Dead Peer Action"
             v-model="selectDear"
             item-title="name"
             item-value="slug"
@@ -72,11 +72,11 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>{{$t('PageIpsec.Inactivitytimeout')}}</label>
+        <label>Inactivity timeout</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          :label="$t('PageIpsec.Inactivitytimeoutinseconds')"
+          label="Inactivity timeout in seconds"
           v-model="interactivityTimout"
         ></v-text-field>
         <p
@@ -114,11 +114,11 @@
       </v-col>
 
       <v-col cols="4" class="mt-5">
-        <label>{{$t('PageIpsec.Margintime')}}</label>
+        <label>Margin time</label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          :label="$t('PageIpsec.Margintimeinseconds')"
+          label="Margin time in seconds"
           v-model="marginTime"
         ></v-text-field>
         <p
@@ -129,11 +129,11 @@
         </p>
       </v-col>
       <v-col cols="4" class="mt-5">
-        <label>{{$t('PageIpsec.Rekeyfuzz')}} </label>
+        <label>Rekey fuzz </label>
       </v-col>
       <v-col cols="8" class="mb-n6">
         <v-text-field
-          :label="$t('PageIpsec.Rekeyfuzzin(%)')"
+          label="Rekey fuzz in (%)"
           v-model="rekeyFuzz"
         ></v-text-field>
         <p

@@ -1,12 +1,12 @@
 import time
 from django.http import JsonResponse
-from django.utils.translation import gettext_lazy as _
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING
 
+from backend.ipsec.constant_variables import IPV4_CONFIG
 from backend.ipsec.utils import json_to_str_server_ipsec, up_ipsec_conn
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_one_server_ipsec, get_status_ipsec
 from backend.ipsec.serializers import ServerIPsecSerializer
@@ -14,29 +14,11 @@ from backend.ipsec.server_ipsec import change_status_conn, change_status_ipsec_i
 from backend.managementCertificates.models import Certificate, CertificateAuthority
 from backend.managementKeypairs.models import PublicKey
 from backend.network.models import IP4Config, Interface
-from backend.ipsec.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA
+from backend.openvpn.constant_variables import CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA
+from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INEXISTANT, SUCCESS_MESSAGES_CONFIGURATION, SUCCESS_MESSAGES_DELETE
 from utils.errors_utils import CommandExecutionError
+
 from .models import ServerIPsec
-
-
-# Constants
-CONSTANT_IPSEC_CONFIGURATION = _("IPsec configuration")
-CONSTANT_IPV4_CONFIG = _("IPv4 config")
-CONSTANT_INTERFACE = _("interface")
-CONSTANT_CA = _("Certificate Authority")
-CONSTANT_CERT = _("Certificate")
-CONSTANT_PUBLIC_KEY = _("Public Key")
-# Success messages
-SUCCESS_MESSAGES_CREATING = _("is created")
-SUCCESS_MESSAGES_DELETING = _("is deleted")
-SUCCESS_MESSAGES_UPDATING = _("is updated")
-SUCCESS_MESSAGES_ENABLED = _("is enabled")
-SUCCESS_MESSAGES_DISABLED = _("is disabled")
-# Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UP_CONFIG = _("Error in up ipsec")
-ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -185,12 +167,13 @@ def create_server_ipsec(request):
         pfs_key_group = sa_key_exchange.get("pfs_key_group", "")
         lifetime_ph2 = data.get("lifetime_ph2", "")
 
-        interface = 'Any'
         if interface_name != 'Any':
             interface = Interface.objects.get(name_interface=interface_name)
             interface = interface.pk
             interface_address = IP4Config.objects.get(interface_id=interface)
             data["interface_address"] = f'{interface_address.ip_address}'
+        else:
+            interface = 'Any'
 
         server_data = {"conn_name": conn_name,
                         "connection_method": connection_method,
@@ -316,21 +299,21 @@ def create_server_ipsec(request):
             serializer_server.save()
             up_ipsec_status = up_ipsec_conn(conn_name)
             if up_ipsec_status:
-                return JsonResponse({"msg": f"{conn_name} {SUCCESS_MESSAGES_CREATING}"}, status=201)
-            return JsonResponse({"error": ERROR_MESSAGES_UP_CONFIG}, status=400)
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(conn_name, 'created')}, status=201)
+            return JsonResponse({"error": "Error in up ipsec"}, status=400)
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_IPSEC_CONFIGURATION}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format('ipsec server')}, status=400)
     except Interface.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('interface')}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
     except CertificateAuthority.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_CA} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('CA')}, status=400)
     except Certificate.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_CERT} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Certificate')}, status=400)
     except PublicKey.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_PUBLIC_KEY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Public Key')}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -346,75 +329,73 @@ def delete_server_ipsec(request, id):
         delete_server_ipsec_in_system(server)
         # delete from database
         server.delete()
-        return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(server.conn_name)}, status=201)
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
-    except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_IPSEC_CONFIGURATION}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE AN IPSEC (same as create)",
                      request_body=Schema(type=TYPE_OBJECT, 
-                                         required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 
-                                                   'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 
-                                                   'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 
-                                                   'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 
-                                                   'local_network', 'remote_network', 'sa_key_exchange'], 
-                                         properties={'conn_name': Schema(type=TYPE_STRING),
-                                                     'connection_method': Schema(type=TYPE_STRING, enum=["default", "Respond Only", "Start on traffic", "Start immediate"]),
-                                                     'key_exchange': Schema(type=TYPE_OBJECT, required=['key_exchange_version'], properties={'key_exchange_version': Schema(type=TYPE_STRING, default="auto", enum=["auto", "V1", "V2"]), 'negotiation_mode': Schema(type=TYPE_STRING, description="When Key version is V1", enum=["Main", "Aggressive"])}),
-                                                     'internet_protocol': Schema(type=TYPE_STRING, enum=["IPv4", "IPv6"]),
-                                                     'interface_name': Schema(type=TYPE_STRING, description="Interface name like LAN or WAN or Any"),
-                                                     'remote_gateway': Schema(type=TYPE_STRING, description="Remote address like 10.1.12.22"),
-                                                     'dynamic_gateway': Schema(type=TYPE_BOOLEAN, default=False),
-                                                     'description_ph1': Schema(type=TYPE_STRING),
-                                                     'authentication': Schema(type=TYPE_OBJECT, required=['authentication'], 
-                                                                              properties={'authentication': Schema(type=TYPE_STRING, default=CONSTANT_METHOD_PSK, enum=[CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA]),
-                                                                                          'pre_shared_key': Schema(type=TYPE_STRING, description="required when authentication_method is Mutual PSK"),
-                                                                                          'local_key_pair': Schema(type=TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
-                                                                                          'peer_key_pair': Schema(type=TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
-                                                                                          'cert': Schema(type=TYPE_STRING, description="Certificate (has a private key) name from list of certificates, required when authentication_method is Mutual RSA"),
-                                                                                          'remote_cert': Schema(type=TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA")}),
-                                                     'encryption_algorithm_ph1': Schema(type=TYPE_STRING, enum=["128", "192", "256", "aes128", "aes192", "aes256"]),
-                                                     'hash_algorithm_ph1': Schema(type=TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like sha256 or sha384. Example: [sha256,sha512]", items=Schema(type=TYPE_STRING)),
-                                                     'dh_key_group': Schema(type=TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072. Example: [15:3072,20:384]", items=Schema(type=TYPE_STRING)),
-                                                     'lifetime_ph1': Schema(type=TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
-                                                     'policy': Schema(type=TYPE_BOOLEAN, default=True),
-                                                     'rekey': Schema(type=TYPE_BOOLEAN, default=False),
-                                                     'reauth': Schema(type=TYPE_BOOLEAN, default=False),
-                                                     'nat_traversal': Schema(type=TYPE_STRING, default="auto", enum=["Disable", "E,able", "Force"]),
-                                                     'mobike': Schema(type=TYPE_BOOLEAN, default=False),
-                                                     'deed_peer': Schema(type=TYPE_OBJECT, description="Deed Peer block", required=['disable'],
-                                                                         properties={'disable': Schema(type=TYPE_BOOLEAN, default=False),
-                                                                                     'deed_peer_delay': Schema(type=TYPE_STRING, pattern=r"(\d+)", description="set deed peer delay like 10, required when selecting deed peer"),
-                                                                                     'deed_peer_timeout': Schema(type=TYPE_STRING, pattern=r"(\d+)", description="set deed peer timeout like 160, required when selecting deed peer"),
-                                                                                     'deed_peer_action': Schema(type=TYPE_STRING, enum=["default", "Restart the tunnel", "Stop the tunnel"], default="default", description="set deed peer action, required when selecting deed peer")}),
-                                                     'inactivity_timeout': Schema(type=TYPE_STRING, description="set inactivity timeout like 10", pattern=r"(\d+)"),
-                                                     'margin_time': Schema(type=TYPE_STRING, description="set margin time like 10", pattern=r"(\d+)"),
-                                                     'rekey_fuzz': Schema(type=TYPE_STRING, description="set rekey_fuzz like 10", pattern=r"(\d+)"),
-                                                     'mode_ph2': Schema(type=TYPE_OBJECT, description="General information of phase 2", required=['mode'], 
-                                                                        properties={'mode': Schema(type=TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Route-based", "Transport"]),
-                                                                                    'local_address': Schema(type=TYPE_STRING, description="Local Address, required when selecting Route-based"),
-                                                                                    'remote_address': Schema(type=TYPE_STRING, description="Remote Address, required when selecting Route-based"),}),
-                                                     'description_ph2': Schema(type=TYPE_STRING),
-                                                     'local_network': Schema(type=TYPE_OBJECT, description="Local network block", required=['type_local_network'],
-                                                                             properties={'type_local_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network", "WAN subnet", "LAN subnet"]),
-                                                                                         'address_local_network': Schema(type=TYPE_STRING, description="Address of local network like 10.1.12.0, required when selecting Address or Network"),
-                                                                                         'mask': Schema(type=TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
-                                                     'remote_network': Schema(type=TYPE_OBJECT, description="Remote network block", required=['type_remote_network', 'address_remote_network'], 
-                                                                              properties={'type_remote_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network"]),
-                                                                                          'address_remote_network': Schema(type=TYPE_STRING, description="Address of remote network like 51.68.170.149"),
-                                                                                          'mask': Schema(type=TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
-                                                     'sa_key_exchange': Schema(type=TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'],
-                                                                               properties={'protocol': Schema(type=TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
-                                                                                           'encryption_algorithm_ph2': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING), description="User can choose more than one. Example: [128,256,sha192]"),
-                                                                                           'hash_algorithm_ph2': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like sha256. Example: [sha256,sha384]"),
-                                                                                           'pfs_key_group': Schema(type=TYPE_STRING, description="If not off should be group:key like 15:3072. Example: 15:3072")}),
-                                                     'lifetime_ph2': Schema(type=TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
-                                                    }
-                                                    ))
+                                                 required=['conn_name', 'connection_method', 'key_exchange', 'internet_protocol', 'interface_name', 'remote_gateway', 'dynamic_gateway', 'authentication', 'encryption_algorithm_ph1', 'hash_algorithm_ph1', 'dh_key_group', 'policy', 'rekey', 'reauth', 'nat_traversal', 'mobike', 'deed_peer', 'mode_ph2', 'local_network', 'remote_network', 'sa_key_exchange'],
+                                                 properties={'conn_name': Schema(type=TYPE_STRING),
+                                                             'connection_method': Schema(type=TYPE_STRING, enum=["default", "Respond Only", "Start on traffic", "Start immediate"]),
+                                                             'key_exchange': Schema(type=TYPE_OBJECT, required=['key_exchange_version'], 
+                                                                                    properties={'key_exchange_version': Schema(type=TYPE_STRING, default="auto", enum=["auto", "V1", "V2"]),
+                                                                                                'negotiation_mode': Schema(type=TYPE_STRING, description="When Key version is V1", enum=["Main", "Aggressive"])}),
+                                                             'internet_protocol': Schema(type=TYPE_STRING, enum=["IPv4", "IPv6"]),
+                                                             'interface_name': Schema(type=TYPE_STRING, description="Interface name like LAN or WAN or Any"),
+                                                             'remote_gateway': Schema(type=TYPE_STRING, description="Remote address like 10.1.12.22"),
+                                                             'dynamic_gateway': Schema(type=TYPE_BOOLEAN, default=False),
+                                                             'description_ph1': Schema(type=TYPE_STRING),
+                                                             'authentication': Schema(type=TYPE_OBJECT, required=['authentication'], 
+                                                                                      properties={'authentication': Schema(type=TYPE_STRING, default=CONSTANT_METHOD_PSK, enum=[CONSTANT_METHOD_PSK, CONSTANT_METHOD_PUBLIC_KEY, CONSTANT_METHOD_RSA]),
+                                                                                                  'pre_shared_key': Schema(type=TYPE_STRING, description="required when authentication_method is Mutual PSK"),
+                                                                                                  'local_key_pair': Schema(type=TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
+                                                                                                  'peer_key_pair': Schema(type=TYPE_STRING, description="required when authentication_method is Mutual Public Key"),
+                                                                                                  'cert': Schema(type=TYPE_STRING, description="Certificate (has a private key) name from list of certificates, required when authentication_method is Mutual RSA"),
+                                                                                                  'remote_cert': Schema(type=TYPE_STRING, description="Certificate name from list of certificates, required when authentication_method is Mutual RSA")}),
+                                                             'encryption_algorithm_ph1': Schema(type=TYPE_STRING, enum=["128", "192", "256", "aes128", "aes192", "aes256"]),
+                                                             'hash_algorithm_ph1': Schema(type=TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like sha256 or sha384. Example: [sha256,sha512]",
+                                                                                          items=Schema(type=TYPE_STRING)),
+                                                             'dh_key_group': Schema(type=TYPE_ARRAY, description="User can choose more than one.Every choosed algorithm should be like group:key like 15:3072. Example: [15:3072,20:384]",
+                                                                                    items=Schema(type=TYPE_STRING)),
+                                                             'lifetime_ph1': Schema(type=TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
+                                                             'policy': Schema(type=TYPE_BOOLEAN, default=True),
+                                                             'rekey': Schema(type=TYPE_BOOLEAN, default=False),
+                                                             'reauth': Schema(type=TYPE_BOOLEAN, default=False),
+                                                             'nat_traversal': Schema(type=TYPE_STRING, default="auto", enum=["Disable", "E,able", "Force"]),
+                                                             'mobike': Schema(type=TYPE_BOOLEAN, default=False),
+                                                             'deed_peer': Schema(type=TYPE_OBJECT, description="Deed Peer block", required=['disable'], 
+                                                                                 properties={'disable': Schema(type=TYPE_BOOLEAN, default=False),
+                                                                                             'deed_peer_delay': Schema(type=TYPE_STRING, pattern=r"(\d+)", description="set deed peer delay like 10, required when selecting deed peer"),
+                                                                                             'deed_peer_timeout': Schema(type=TYPE_STRING, pattern=r"(\d+)", description="set deed peer timeout like 160, required when selecting deed peer"),
+                                                                                             'deed_peer_action': Schema(type=TYPE_STRING, enum=["default", "Restart the tunnel", "Stop the tunnel"], default="default", description="set deed peer action, required when selecting deed peer")}),
+                                                             'inactivity_timeout': Schema(type=TYPE_STRING, description="set inactivity timeout like 10", pattern=r"(\d+)"),
+                                                             'margin_time': Schema(type=TYPE_STRING, description="set margin time like 10", pattern=r"(\d+)"),
+                                                             'rekey_fuzz': Schema(type=TYPE_STRING, description="set rekey_fuzz like 10", pattern=r"(\d+)"),
+                                                             'mode_ph2': Schema(type=TYPE_OBJECT, description="General information of phase 2", required=['mode'], 
+                                                                                properties={'mode': Schema(type=TYPE_STRING, default="Tunnel IPv4", enum=["Tunnel IPv4", "Tunnel IPv6", "Route-based", "Transport"]),
+                                                                                            'local_address': Schema(type=TYPE_STRING, description="Local Address, required when selecting Route-based"),
+                                                                                            'remote_address': Schema(type=TYPE_STRING, description="Remote Address, required when selecting Route-based"),}),
+                                                             'description_ph2': Schema(type=TYPE_STRING),
+                                                             'local_network': Schema(type=TYPE_OBJECT, description="Local network block", required=['type_local_network'], 
+                                                                                     properties={'type_local_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network", "WAN subnet", "LAN subnet"]),
+                                                                                                 'address_local_network': Schema(type=TYPE_STRING, description="Address of local network like 10.1.12.0, required when selecting Address or Network"),
+                                                                                                 'mask': Schema(type=TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
+                                                             'remote_network': Schema(type=TYPE_OBJECT, description="Remote network block", required=['type_remote_network', 'address_remote_network'], 
+                                                                                      properties={'type_remote_network': Schema(type=TYPE_STRING, default="Address", enum=["Address", "Network"]),
+                                                                                                  'address_remote_network': Schema(type=TYPE_STRING, description="Address of remote network like 51.68.170.149"),
+                                                                                                  'mask': Schema(type=TYPE_STRING, description="Address mask like 24, required when selecting Network"),}),
+                                                             'sa_key_exchange': Schema(type=TYPE_OBJECT, description="Key Exchange block", required=['protocol', 'hash_algorithm_ph2', 'pfs_key_group'], 
+                                                                                       properties={'protocol': Schema(type=TYPE_STRING, default="ESP", enum=["ESP", "AH"]),
+                                                                                                   'encryption_algorithm_ph2': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING), description="User can choose more than one. Example: [128,256,sha192]"),
+                                                                                                   'hash_algorithm_ph2': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING), description="User can choose more than one.Every choosed algorithm should be like sha256. Example: [sha256,sha384]"),
+                                                                                                   'pfs_key_group': Schema(type=TYPE_STRING, description="If not off should be group:key like 15:3072. Example: 15:3072")}),
+                                                             'lifetime_ph2': Schema(type=TYPE_STRING, description="set lifetime like 3600", pattern=r"(\d+)"),
+                                                             }
+                                                             ))
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -558,16 +539,17 @@ def update_server_ipsec(request, id):
             serializer_server.save()
             up_ipsec_status = up_ipsec_conn(server.conn_name)
             if up_ipsec_status:
-                return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
-            return JsonResponse({"error": ERROR_MESSAGES_UP_CONFIG}, status=400)
-        return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CONFIGURATION.format(server.conn_name, 'updated')}, status=201)
+            return JsonResponse({"error": "Error in up ipsec"}, status=400)
+        else:
+            return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
     except Interface.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('interface')}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -587,13 +569,14 @@ def status_server_ipsec(request, id):
         server.save()
 
         if enable:
-            return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_ENABLED}"})
-        return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_DISABLED}"})
+            return JsonResponse({"msg": f"{server.conn_name} is enabled"})
+        else:
+            return JsonResponse({"msg": f"{server.conn_name} is disabled"})
         
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -612,6 +595,6 @@ def status_ipsec(request):
             return JsonResponse({"msg": status_ipsec})
         
     except ServerIPsec.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPSEC_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format('Server')}, status=400)
     except IP4Config.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(IPV4_CONFIG)}, status=400)

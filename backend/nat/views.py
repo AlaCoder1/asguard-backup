@@ -1,5 +1,4 @@
 from django.http import JsonResponse
-from django.utils.translation import gettext_lazy as _
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
 
@@ -7,6 +6,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 
+from backend.nat.contant_variables import CONSTANT_DNAT_RULE, CONSTANT_SNAT_RULE, CONSTANT_ONE_TO_ONE_NAT_RULE
 from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat, get_one_dnat, get_one_one_to_one_nat, get_one_snat
 from backend.nat.models import DNat, OneToOneNat, SNat
 from backend.nat.serializers import DNatSerializer, OneToOneNatSerializer, SNatSerializer
@@ -16,32 +16,8 @@ from backend.nat.utils_one_to_one_nat_system import create_one_to_one_nat_rule_i
 from backend.nat.utils_snat_system import create_snat_rule_in_system, delete_snat_rule_in_system, update_snat_rule_in_system
 
 from backend.network.models import Interface
+from utils.constant_variables import ERROR_MESSAGES_CHANGE, ERROR_MESSAGES_CREATING, ERROR_MESSAGES_DELETING, ERROR_MESSAGES_INEXISTANT, ERROR_MESSAGES_START, ERROR_MESSAGES_STOP, ERROR_MESSAGES_UPDATING, SUCCESS_MESSAGES_CHANGE, SUCCESS_MESSAGES_CREATING_ITEM, SUCCESS_MESSAGES_DELETE, SUCCESS_MESSAGES_START, SUCCESS_MESSAGES_STOP, SUCCESS_MESSAGES_UPDATE
 from utils.errors_utils import CommandExecutionError
-
-
-# Constants
-CONSTANT_SNAT_RULE = _("SNAT rule")
-CONSTANT_ONE_TO_ONE_NAT_RULE = _("OneToOneNat rule")
-CONSTANT_DNAT_RULE = _("DNAT rule")
-CONSTANT_SNAT_RULE_POSITION = _("SNAT rule position")
-CONSTANT_ONE_TO_ONE_NAT_RULE_POSITION = _("OneToOneNat rule position")
-CONSTANT_DNAT_RULE_POSITION = _("DNAT rule position")
-# Success messages
-SUCCESS_MESSAGES_CREATING = _("is created")
-SUCCESS_MESSAGES_DELETING = _("is deleted")
-SUCCESS_MESSAGES_UPDATING = _("is updated")
-SUCCESS_MESSAGES_STARTING = _("is started")
-SUCCESS_MESSAGES_STOPING = _("is stoped")
-SUCCESS_MESSAGES_CHANGE = _("is changed")
-# Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
-ERROR_MESSAGES_STARTING = _("Error in starting")
-ERROR_MESSAGES_STOPING = _("Error in stoping")
-ERROR_MESSAGES_CHANGING = _("Error in changing")
-ERROR_MESSAGES_DELETING_USED_ITEM = _("Unable to delete")
-ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
 ########################################
@@ -130,12 +106,12 @@ def create_snat(request):
                 # Add the rule to the database
                 serializer_snat.save()
                 update_position_nat()
-                return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_SNAT_RULE, "")}, status=201)
 
         return JsonResponse({"error": list(serializer_snat.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SNAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_SNAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -157,17 +133,17 @@ def delete_snat(request, id):
             for snat_rule in SNat.objects.filter(snat_position__gt=snat.snat_position).order_by("snat_position"):
                 snat_rule.snat_position -= 1
                 snat_rule.save()
-            return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+            return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(CONSTANT_SNAT_RULE)}, status=201)
 
         # delete rule from database
         snat.delete()
         update_position_nat()
-        return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(CONSTANT_SNAT_RULE)}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SNAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_DELETING.format(CONSTANT_SNAT_RULE)}, status=400)
     except SNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_SNAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -232,18 +208,18 @@ def update_snat(request, id):
 
                     # Update the rule in the database
                     serializer_snat.save()
-                    return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+                    return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(CONSTANT_SNAT_RULE)}, status=201)
                 return JsonResponse({"error": list(serializer_snat.errors.values())[0][0]}, status=400)
             
             serializer_snat.save()
-            return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+            return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(CONSTANT_SNAT_RULE)}, status=201)
         
         return JsonResponse({"error": list(serializer_snat.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SNAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_UPDATING.format(CONSTANT_SNAT_RULE)}, status=400)
     except SNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_SNAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -275,12 +251,12 @@ def start_snat(request, id):
         snat.save()
         update_position_nat()
         
-        return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_STARTING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_START.format(CONSTANT_SNAT_RULE, "")}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SNAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_START.format(CONSTANT_SNAT_RULE)}, status=400)
     except SNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_SNAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -303,12 +279,12 @@ def stop_snat(request, id):
         snat.save()
         update_position_nat()
         
-        return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE} {SUCCESS_MESSAGES_STOPING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_STOP.format(CONSTANT_SNAT_RULE, "")}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_SNAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_STOP.format(CONSTANT_SNAT_RULE)}, status=400)
     except SNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_SNAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -385,12 +361,12 @@ def change_snat_position(request, id):
         snat.save()
         update_position_nat()
         
-        return JsonResponse({"msg": f"{CONSTANT_SNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_CHANGE.format(CONSTANT_SNAT_RULE, "position")}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_CHANGING} {CONSTANT_SNAT_RULE_POSITION}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_CHANGE.format(f'{CONSTANT_SNAT_RULE} position')}, status=400)
     except SNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_SNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_SNAT_RULE)}, status=400)
 
 
 ########################################
@@ -461,12 +437,12 @@ def create_one_to_one_nat(request):
                 # Add the rule to the database
                 serializer_one_to_one_nat.save()
                 update_position_nat()
-                return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_ONE_TO_ONE_NAT_RULE, "")}, status=201)
 
         return JsonResponse({"error": list(serializer_one_to_one_nat.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ONE_TO_ONE_NAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -487,17 +463,17 @@ def delete_one_to_one_nat(request, id):
             for one_to_one_nat_rule in OneToOneNat.objects.filter(one_to_one_nat_position__gt=one_to_one_nat.one_to_one_nat_position).order_by("one_to_one_nat_position"):
                 one_to_one_nat_rule.one_to_one_nat_position -= 1
                 one_to_one_nat_rule.save()
-            return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+            return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=201)
 
         # delete rule from database
         one_to_one_nat.delete()
         update_position_nat()
-        return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_ONE_TO_ONE_NAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_DELETING.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
     except OneToOneNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -542,16 +518,16 @@ def update_one_to_one_nat(request, id):
 
                     # Add the rule to the database
                     serializer_one_to_one_nat.save()
-                    return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+                    return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=201)
                 return JsonResponse({"error": list(serializer_one_to_one_nat.errors.values())[0][0]}, status=400)
         
             serializer_one_to_one_nat.save()
-            return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+            return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=201)
 
         return JsonResponse({"error": list(serializer_one_to_one_nat.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ONE_TO_ONE_NAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -586,12 +562,12 @@ def start_one_to_one_nat(request, id):
         one_to_one_nat.save()
         update_position_nat()
         
-        return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_STARTING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_START.format(CONSTANT_ONE_TO_ONE_NAT_RULE, "")}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_ONE_TO_ONE_NAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_START.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
     except OneToOneNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -613,12 +589,12 @@ def stop_one_to_one_nat(request, id):
         one_to_one_nat.save()
         update_position_nat()
         
-        return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {SUCCESS_MESSAGES_STOPING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_STOP.format(CONSTANT_ONE_TO_ONE_NAT_RULE, "")}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_ONE_TO_ONE_NAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_STOP.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
     except OneToOneNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -706,12 +682,12 @@ def change_one_to_one_nat_position(request, id):
         one_to_one_nat.save()
         update_position_nat()
         
-        return JsonResponse({"msg": f"{CONSTANT_ONE_TO_ONE_NAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_CHANGE.format(CONSTANT_ONE_TO_ONE_NAT_RULE, "position")}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_CHANGING} {CONSTANT_ONE_TO_ONE_NAT_RULE_POSITION}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_CHANGE.format(f'{CONSTANT_ONE_TO_ONE_NAT_RULE} position')}, status=400)
     except OneToOneNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_ONE_TO_ONE_NAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_ONE_TO_ONE_NAT_RULE)}, status=400)
 
 
 ########################################
@@ -800,12 +776,12 @@ def create_dnat(request):
                 # Add the rule to the database
                 serializer_dnat.save()
                 update_position_nat("prerouting")
-                return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
+                return JsonResponse({"msg": SUCCESS_MESSAGES_CREATING_ITEM.format(CONSTANT_DNAT_RULE, "")}, status=201)
 
         return JsonResponse({"error": list(serializer_dnat.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_DNAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_CREATING.format(CONSTANT_DNAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -827,17 +803,17 @@ def delete_dnat(request, id):
             for dnat_rule in DNat.objects.filter(dnat_position__gt=dnat.dnat_position).order_by("dnat_position"):
                 dnat_rule.dnat_position -= 1
                 dnat_rule.save()
-            return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+            return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(CONSTANT_DNAT_RULE)}, status=201)
 
         # delete rule from database
         dnat.delete()
         update_position_nat("prerouting")
-        return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_DELETE.format(CONSTANT_DNAT_RULE)}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_DNAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_DELETING.format(CONSTANT_DNAT_RULE)}, status=400)
     except DNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_DNAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -904,16 +880,16 @@ def update_dnat(request, id):
 
                     # Update the rule in the database
                     serializer_dnat.save()
-                    return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+                    return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(CONSTANT_DNAT_RULE)}, status=201)
             serializer_dnat.save()
-            return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+            return JsonResponse({"msg": SUCCESS_MESSAGES_UPDATE.format(CONSTANT_DNAT_RULE)}, status=201)
         
         return JsonResponse({"error": list(serializer_dnat.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_DNAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_UPDATING.format(CONSTANT_DNAT_RULE)}, status=400)
     except DNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_DNAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -945,12 +921,12 @@ def start_dnat(request, id):
         dnat.save()
         update_position_nat("prerouting")
         
-        return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_STARTING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_START.format(CONSTANT_DNAT_RULE, "")}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_DNAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_START.format(CONSTANT_DNAT_RULE)}, status=400)
     except DNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_DNAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -972,12 +948,12 @@ def stop_dnat(request, id):
         dnat.save()
         update_position_nat("prerouting")
         
-        return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE} {SUCCESS_MESSAGES_STOPING}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_STOP.format(CONSTANT_DNAT_RULE, "")}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_DNAT_RULE}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_STOP.format(CONSTANT_DNAT_RULE)}, status=400)
     except DNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_DNAT_RULE)}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -1052,9 +1028,9 @@ def change_dnat_position(request, id):
         dnat.save()
         update_position_nat("prerouting")
         
-        return JsonResponse({"msg": f"{CONSTANT_DNAT_RULE_POSITION} {SUCCESS_MESSAGES_CHANGE}"}, status=201)
+        return JsonResponse({"msg": SUCCESS_MESSAGES_CHANGE.format(CONSTANT_DNAT_RULE, "position")}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_CHANGING} {CONSTANT_DNAT_RULE_POSITION}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_CHANGE.format(f'{CONSTANT_DNAT_RULE} position')}, status=400)
     except DNat.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_DNAT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_INEXISTANT.format(CONSTANT_DNAT_RULE)}, status=400)

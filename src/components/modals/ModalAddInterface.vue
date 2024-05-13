@@ -4,7 +4,7 @@
       <form ref="myForm" @submit.prevent="submitForm" style="overflow: auto">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> {{ $t("suricata.afPack") }}</span>
+            <span class="text-h5"> AF Pack</span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -28,7 +28,7 @@
                   </p>
 
                   <p class="error-feedback mb-5" v-if="isExist">
-                    {{ $t("suricata.InterfaceName") }}
+                    Interface Name exist déja
                   </p>
                   <!-- <small class="ml-5 error-feedback" v-show="switchValue"
                     >Specify the network interfaces on which Suricata</small
@@ -40,7 +40,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('suricata.thread')"
+                    label="Thread"
                     v-model="state.thread"
                   ></v-text-field>
                   <p
@@ -72,11 +72,11 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('suricata.clusterId')"
+                    label="Cluster Id"
                     v-model="state.clusterId"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="isExistClusterId">
-                    {{ $t("suricata.ClusterIdExist") }}
+                    Cluster-Id exist déja
                   </p>
                   <p
                     class="error-feedback mb-5"
@@ -88,7 +88,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.clusterType"
-                    :label="$t('suricata.clusterType')"
+                    label="Cluster Type"
                     item-title="name"
                     item-value="slug"
                     return-object
@@ -107,7 +107,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.copyMode"
-                    :label="$t('suricata.copyMode')"
+                    label="Copy Mode"
                     item-title="name"
                     item-value="slug"
                     return-object
@@ -120,7 +120,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.copyIface"
-                    :label="$t('suricata.copyIface')"
+                    label="Copy Iface"
                     item-title="name"
                     item-value="id"
                     return-object
@@ -132,7 +132,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('suricata.bufferSize')"
+                    label="Buffer Size"
                     v-model="state.bufferSize"
                   ></v-text-field>
                   <p
@@ -146,7 +146,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.useNmp"
-                    :label="$t('suricata.useMmap')"
+                    label="Use Nmp"
                     item-title="name"
                     item-value="slug"
                     return-object
@@ -176,7 +176,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3">{{ $t("buttons.close") }}</span>
+              <span class="pr-3 pl-3">Close</span>
             </v-btn>
 
             <v-btn
@@ -191,9 +191,7 @@
               class="mt-3 btn-add"
               :disabled="isExist || isExistClusterId"
             >
-              <span class="text-white pr-3 pl-3">{{
-                $t("buttons.create")
-              }}</span>
+              <span class="text-white pr-3 pl-3">Create</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -212,7 +210,6 @@
 </template>
 
 <script>
-import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import {
@@ -251,7 +248,6 @@ export default {
 
   setup(props) {
     const emitter = inject("emitter");
-    const { t } = useI18n();
     onMounted(() => {
       getInterface();
 
@@ -506,38 +502,32 @@ export default {
       state.useNmp = "";
       state.copyModeList = [];
     };
-    const error = computed(() => {
-      return t("errors.valueRequired");
-    });
-    const champInclude = computed(() => {
-      return t("errors.ChampIncludeOnlyNumbers");
-    });
 
     const rules = computed(() => {
       return {
-        interface: { required: helpers.withMessage(error, required) },
+        interface: { required },
         bufferSize: {
-          required: helpers.withMessage(error, required),
+          required,
           isValidBufferSize: helpers.withMessage(
-            champInclude,
+            `Champs can include only Numbers.`,
 
             helpers.regex(/^[0-9]+$/)
           ),
         },
 
         clusterId: {
-          required: helpers.withMessage(error, required),
+          required,
           isValidClusterId: helpers.withMessage(
-            champInclude,
+            `Champs can include only Numbers.`,
 
             helpers.regex(/^[0-9]+$/)
           ),
         },
 
-        clusterType: { required: helpers.withMessage(error, required) },
-        defrag: { required: helpers.withMessage(error, required) },
-        thread: { required: helpers.withMessage(error, required) },
-        useNmp: { required: helpers.withMessage(error, required) },
+        clusterType: { required },
+        defrag: { required },
+        thread: { required },
+        useNmp: { required },
       };
     });
 

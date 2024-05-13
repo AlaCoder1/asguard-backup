@@ -1,40 +1,54 @@
 import os
 import subprocess
 import sys
+import base64
+import logging
+import traceback
+from django.conf import settings
+from cryptography.fernet import Fernet
 import re
 
+# function to get UID from system
 
-def get_uid_user():
-    """function to get UID from system"""
+
+def getUidUser():
     return subprocess.run(["getent", "passwd"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
 
 
-def valid_input(var):
-    """function to test name validation of group and users (must content char and int)"""
+# validation name of group and users (must content char and int)
+
+
+def validInput(var):
     regexp = re.compile('[^0-9a-zA-Z-_]+')
     if regexp.search(var):
         return False
-    return True
+    else:
+        return True
+
+# validation password mustn't conetent " or '
 
 
-def valid_password(password):
-    """function to test validation password must not contain " or ' """
+def validPassword(password):
     if re.findall(r'["|\'|;|\|]', password):
         return False
-    return True
+    else:
+        return True
+
+# function to test if username exit
 
 
 def username_exists(username):
-    """function to test if username exists in the /etc/passwd file"""
+    # Check if the username exists in the /etc/passwd file
     with open("/etc/passwd", "r") as passwd_file:
         for line in passwd_file:
             if line.startswith(username + ":"):
                 return True
     return False
 
+# function to add user
 
-def add_user(username, password):
-    """function to add user"""
+
+def addUser(username, password):
     result = subprocess.run(['sudo', 'useradd', '-m', username], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     error_useradd  = result.stderr.decode('utf-8')
     print({"error_useradd":error_useradd})
@@ -43,68 +57,93 @@ def add_user(username, password):
 
     return error_useradd, stdout_password, stderr_password 
 
+# function to delete user
 
-def delete_user_in_system(username):
-    """function to delete user"""
+
+def deleteUser(username):
     cmd = "userdel " + "-r " + username
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout
     error = completed_process.stderr
-    return output, error
+    return output,error
+    # return os.system("userdel " + "-r " + username)
+
+# functio to change username
 
 
-def change_username(newusername, oldusername):
-    """functio to change username"""
+def changeUsername(newusername, oldusername):
     return os.system("usermod -l " + newusername + " "+oldusername)
+
+# function to add user in group
 
 
 def add_user_group(groupname, username):
-    """function to add user in group"""
     try:
         return os.system("usermod -aG " + groupname + " "+username)
     except:
-        print("Failed to add user in group.")
+        print(f"Failed to add user in group.")
         sys.exit(1)
 
+# function  to check if username=groupname
 
-def check_same_groupname_with_username(username):
-    """function  to check if username=groupname"""
+
+def checkSameGroupnameWithUsername(username):
     out = os.popen("id "+username).readline().strip('\n').strip()
+    print(out)
     if (out[out.find("groups")+len("groups")+1:len(out)].find(username) != -1):
         return True
     return False
 
 
+# function to delete user from group
+
+
 def delete_user_group(groupname, username):
-    """function to delete user from group"""
     return os.system("gpasswd -d "+username+" "+groupname)
 
 
+# function to add user to group
+
+
 def add_user_group(groupname, username):
-    """function to add user to group"""
     return os.system("gpasswd -a "+username+" "+groupname)
 
 
-def add_mail_spool(username):
-    """function to auth"""
-    cmd=[f"touch /var/mail/{username}",
-         f"chown {username}:mail /var/mail/{username}",
-         f"chmod 660 /var/mail/{username}"]
+# function to auth
+def addMailSpool(username):
+    cmd=["touch /var/mail/"+username,"chown "+username+":mail /var/mail/"+username,"chmod 660 /var/mail/"+username]
     for i in cmd:
         os.system(i)
 
-
-def change_password_by_admin(new_password, username):
+def changePW_byAdmin(newPassword, username):
     # run 'passwd' command to change password
-    cmd = f"echo '{new_password}\n{new_password}\n' | sudo passwd {username}"
+    cmd = f"echo '{newPassword}\n{newPassword}\n' | sudo passwd {username}"
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout.split("\n")
     error = completed_process.stderr
     return output,error
 
+def changePW(currentPassword, newPassword, username):
+    # Use the subprocess module to run the passwd command
+    process = subprocess.Popen(['sudo','passwd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
-def reset_password(username, new_password):
-    cmd = f"echo '{username}:{new_password}' | sudo chpasswd"
+    # Provide the current and new passwords
+    process.stdin.write(currentPassword + '\n')
+    process.stdin.write(newPassword + '\n')
+    process.stdin.write(newPassword + '\n')
+
+    # Close the stdin to signal the end of input
+    process.stdin.close()
+
+    # Wait for the command to complete
+    process.wait()
+    stdout, stderr = process.communicate()
+    print({"str from function":stderr})
+    print({"std from function":stdout})
+    return stdout, stderr
+
+def resetPW(username,newPassword):
+    cmd = f"echo '{username}:{newPassword}' | sudo chpasswd"
     process = subprocess.Popen(
             cmd,
             shell=True,  

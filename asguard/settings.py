@@ -90,9 +90,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'django.middleware.locale.LocaleMiddleware',
-    "whitenoise.middleware.WhiteNoiseMiddleware",
-    'backend.managementUsers.language_middleware.SetLanguageMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",  # Here
 ]
 
 ROOT_URLCONF = 'asguard.urls'
@@ -154,7 +152,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGES = [('en', 'English'), ('fr', 'French')]
+LANGUAGE_CODE = 'en-us'
 
 TIME_ZONE = 'UTC'
 
@@ -235,13 +233,15 @@ SESSION_COOKIE_SAMESITE= 'Strict'
 load_dotenv()
 
 # SSH settings
+SSH_HOST = os.getenv('SSH_HOST')
+SSH_PORT = int(os.getenv('SSH_PORT'))
 ASGUARD_VERSION = os.getenv('ASGUARD_VERSION')
 
 
 EMAIL_HOST = 'smtp.office365.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = 'mh.benelghali@numeryx.fr'  
+EMAIL_HOST_PASSWORD = 'Ess4live***'
 
 # Celery configuration
 CELERY_BROKER_URL = 'redis://localhost:6379/0'

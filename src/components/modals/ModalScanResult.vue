@@ -4,7 +4,7 @@
       <form>
         <v-card>
           <v-card-title class="card-title">
-            <span class="text-h5">{{ $t("clamaV.scanResult") }}</span>
+            <span class="text-h5">Résultat de Scan</span>
             <v-spacer></v-spacer>
             <i
               class="mdi mdi-close mt-1"
@@ -15,7 +15,6 @@
           <v-card-text>
             <v-container>
               <v-row
-                class="mb-5"
                 justify="center"
                 style="
                   border-radius: 10px;
@@ -25,41 +24,30 @@
               >
                 <v-col cols="6" style="background-color: #213e9f">
                   <span class="resultTitle" style="color: #fff"
-                    >{{ $t("clamaV.knownViruses") }} </span
-                  ><br />
-                  <span class="resultTitle" style="color: #fff">{{
-                    $t("clamaV.engineVersion")
-                  }}</span
-                  ><br />
-                  <span class="resultTitle" style="color: #fff">{{
-                    $t("clamaV.scannedDirectories")
-                  }}</span
-                  ><br />
-                  <span class="resultTitle" style="color: #fff">{{
-                    $t("clamaV.scannedFiles")
-                  }}</span
+                    >known viruses </span
                   ><br />
                   <span class="resultTitle" style="color: #fff"
-                    >{{ $t("clamaV.infectedFiles") }} </span
+                    >engine version</span
                   ><br />
                   <span class="resultTitle" style="color: #fff"
-                    >{{ $t("clamaV.dataScanned") }} </span
+                    >Scanned directories</span
                   ><br />
-                  <span class="resultTitle" style="color: #fff">{{
-                    $t("clamaV.dataRead")
-                  }}</span
+                  <span class="resultTitle" style="color: #fff"
+                    >Scanned files</span
                   ><br />
-                  <span class="resultTitle" style="color: #fff">{{
-                    $t("clamaV.time")
-                  }}</span
+                  <span class="resultTitle" style="color: #fff"
+                    >Infected files </span
                   ><br />
-                  <span class="resultTitle" style="color: #fff">{{
-                    $t("clamaV.startDate")
-                  }}</span
+                  <span class="resultTitle" style="color: #fff"
+                    >Data scanned </span
                   ><br />
-                  <span class="resultTitle" style="color: #fff">{{
-                    $t("clamaV.endDate")
-                  }}</span>
+                  <span class="resultTitle" style="color: #fff">Data Read</span
+                  ><br />
+                  <span class="resultTitle" style="color: #fff">Time</span
+                  ><br />
+                  <span class="resultTitle" style="color: #fff">Start date</span
+                  ><br />
+                  <span class="resultTitle" style="color: #fff">End date</span>
                 </v-col>
                 <v-col cols="6" style="background-color: #fff">
                   <span class="resultTitle" style="color: #213e9f">{{
@@ -105,6 +93,26 @@
               </v-row>
             </v-container>
           </v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn
+              :rounded="true"
+              class="mt-3 btn-add text-white"
+              color="blue-darken-1"
+              variant="text"
+              type="submit"
+            >
+              <span class="text-white">Save</span>
+            </v-btn>
+            <v-btn
+              :rounded="true"
+              class="mt-3 btn-add text-white"
+              color="blue-darken-1"
+              variant="text"
+            >
+              <span class="text-white">Close</span>
+            </v-btn>
+          </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
@@ -154,16 +162,17 @@ export default {
     watch(
       () => rowData.value,
       (val) => {
-        state.known = val.known_viruses;
-        state.engine = val.engine_version;
-        state.directories = val.scanned_directories;
-        state.scannedFiles = val.scanned_files;
-        state.infectedFiles = val.infected_files;
-        state.dataScanned = `${val.data_scanned.value} ${val.data_scanned.unit}`;
-        state.dataRead = val.known_viruses;
-        state.time = `${val.scan_time.value} ${val.scan_time.unit}`;
-        state.startDate = val.start_date;
-        state.endDate = val.end_date;
+        console.log("valRowData", val);
+        state.known= val.known_viruses;
+        state.engine= val.engine_version;
+        state.directories= val.scanned_directories;
+        state.scannedFiles= val.scanned_files;
+        state.infectedFiles= val.infected_files;
+        state.dataScanned= `${val.data_scanned.value} ${val.data_scanned.unit}`;
+        state.dataRead= val.known_viruses;
+        state.time= `${val.scan_time.value} ${val.scan_time.unit}`;
+        state.startDate= val.start_date;
+        state.endDate= val.end_date;
       }
     );
 

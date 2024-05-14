@@ -4,7 +4,18 @@ from backend.rules.serializers import *
 from django.conf import settings
 from backend.authentification.views import *
 import socket
+from django.db.models import Q
 
+def customize_error_msg(serializer):
+    """function to custom error message serializer"""
+    error_messages = [
+    f"{field}: {error}"
+    for field, errors in serializer.errors.items()
+    for error in errors
+]
+    concatenated_error_message = "\n".join(error_messages)
+    concatenated_error_message+="!"
+    return concatenated_error_message
 ######function to run commande
 def run_command(command):
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
@@ -175,3 +186,130 @@ def calculate_subnet_address(addr_prefix):
          return str(ip_address)
    else:
       return None
+   
+   
+   
+###
+def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object):
+   """function to add rule in system and database"""
+   msg=''
+   id_rule=None
+   #appel la fonction pour initialiser les fichies nftables.conf
+   return_init_file_nftables = init_file_nftables(ifname)
+   if return_init_file_nftables:
+      saddr_db=calculate_subnet_address(saddr)
+      daddr_db=calculate_subnet_address(daddr)
+      #appel la fonction pour retourner rule à ajouter 
+      rule=return_rule(policy,saddr_db,daddr_db,sport,dport,protocol,type_rule)
+      # if not Rule.objects.filter(Q(rule=rule) & ((Q(interface_id=interface_object.pk)& Q(type_rule!=type_rule ) )|(Q(interface_id!=interface_object.pk) & Q(type_rule=type_rule )))).exists():
+      if not Rule.objects.filter(
+            Q(rule=rule) & (
+                  (Q(interface_id=interface_object.pk) ) &
+                  (Q(type_rule=type_rule)) 
+                  # Q(rule_description=rule_description)
+            )
+         ).exists():
+      #appel la fonction pour ajouter rule dans le système
+         return_add_rule=add_rule_remote(rule,ifname,type_rule)
+         if return_add_rule is True:
+            data = {
+               'policy': policy,
+               'saddr':saddr,
+               'daddr': daddr,
+               'sport': sport,
+               'dport': dport,
+               'protocol': protocol,
+               'type_rule': type_rule,
+               'rule_description': rule_description
+               }
+            data['interface']=interface_object.id
+            #appel la fonction pour ajouter rule dans la base de données 
+            data={key: value for key, value in data.items() if value is not None}
+            data['rule']=rule
+            data["rule_status"]=True
+            data["type_rule"]=type_rule
+            rule_serializer = RuleSerializer(data=data)
+            # rule_serializer.is_valid(raise_exception=True)
+            if rule_serializer.is_valid():
+               rule_instance=rule_serializer.save()
+               id_rule=rule_instance.id
+               msg = "Rule added Successfully!!"
+               status=201
+            else:
+               msg=customize_error_msg(rule_serializer)
+               status=400
+         else:
+            msg = return_add_rule
+            status=400
+      else:
+         msg="Rule already exist!"
+         status=400
+   else:
+      msg = return_init_file_nftables
+      status=400
+   return msg,status,id_rule
+
+##
+def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description):
+      if (id is not None and Rule.objects.filter(id=id).exists()):
+         rules_object = Rule.objects.get(id=id)
+         rule=rules_object.rule
+         type_rules=rules_object.type_rule
+         #appel la fonction pour retourner rule à ajouter 
+         saddr_db=calculate_subnet_address(saddr)
+         daddr_db=calculate_subnet_address(daddr)
+         #appel la fonction pour retourner rule à ajouter 
+         ruleupdate=return_rule(policy,saddr_db,daddr_db,sport,dport,protocol,type_rules)
+         handle=get_handle_rule(ifname,type_rules,rule)
+         if handle is not None: 
+            if not Rule.objects.filter(
+                  Q(rule=ruleupdate) & (
+                  (Q(interface_id=rules_object.interface_id) ) &
+                  (Q(type_rule=type_rules))
+                  # & Q (rule_description=rule_description)
+                  )
+               ).exists():
+               return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
+               if return_delete_rule_remote is True:
+                  return_add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
+                  if  return_add_rule is True:
+                        data = {
+                        "id":id,
+                        'policy': policy,
+                        'saddr':saddr,
+                        'daddr': daddr,
+                        'sport': sport,
+                        'dport': dport,
+                        'protocol': protocol,
+                        'rule_description': rule_description
+                        }
+                        
+                        #appel la fonction pour update rule dans la base de données 
+                        data['interface']=rules_object.interface_id
+                        data['rule']=ruleupdate
+                        rule_serializer = RuleSerializer(rules_object,data=data)
+                        if rule_serializer.is_valid():
+                           rule_serializer.save()
+                           msg = "Rule updated Successfully!!"
+                           status=200
+                        else:
+                           msg=customize_error_msg(rule_serializer)
+                           status=400
+                  else:
+                        msg=return_add_rule
+                        status=400
+               else:
+                  msg=return_delete_rule_remote
+                  status=400
+            else:
+               msg="Nothing to change !"
+               status=400
+         else:
+               msg="Rule not exist!"
+               status=404
+              
+      else:
+         msg="Failed to update rule !"
+         status=400
+         
+      return msg,status

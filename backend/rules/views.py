@@ -46,6 +46,37 @@ def delete_rule(request,id):
           status=400
         return JsonResponse({"msg": msg},status=status)
       
+####
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+def save_rules(request,name_interface):
+  msg=''
+  responses=[]
+  if (request.method == 'POST'):
+    # parse the incoming information
+    data_list=request.data
+    #get object of interface type
+    interface_object= Interface.objects.get(name_interface=name_interface)
+    #get interface name to execute command systeme
+    ifname=interface_object.ifname
+    for data in data_list:
+        id_rule= None if data.get('id', None) == None else data.get('id', None)
+        policy = data.get('policy', None)
+        saddr = None if data.get('saddr', None) == "ALL" else data.get('saddr', None)
+        daddr = None if data.get('daddr', None) =="ALL" else data.get('daddr', None)
+        sport = None if data.get('sport', None) == "ALL" else data.get('sport', None)
+        dport = None if data.get('dport', None) == "ALL" else data.get('dport', None)
+        protocol = None if data.get('protocol', None) == "ALL" else data.get('protocol', None)
+        type_rule = data.get('type_rule', None)
+        rule_description= None if data.get('rule_description', None) == "" else data.get('rule_description', None)
+        if id_rule is None:
+            msg,status,id_rule=add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object)
+        else:
+            msg,status=update_rule_db(id_rule,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description)
+        responses.append({"id":id_rule,"msg":msg,"status":status})
+    return JsonResponse({"response": responses},status=status)  
+        
+            
 
     
 @api_view(['POST'])

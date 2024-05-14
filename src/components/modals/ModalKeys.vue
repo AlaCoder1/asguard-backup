@@ -125,6 +125,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed,inject } from "vue";
@@ -138,6 +139,7 @@ export default {
   },
 
   setup(props) {
+    const { t } = useI18n();
     const emitter = inject("emitter");
     onMounted(() => {
       let privateKeyAttribute =
@@ -329,15 +331,21 @@ export default {
     const closeModal = () => {
       emitter.emit("closeKeyPairModal");
     };
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const indication = computed(() => {
+      return t("champs.indication");
+    });
 
     const rules = computed(() => {
       return {
-        type: { required },
+        type: { required: helpers.withMessage(error, required)},
 
         keyName: {
-          required,
+          required: helpers.withMessage(error, required),
           isValidkeyName: helpers.withMessage(
-            `Champs can include only letters & Numbers & underscores & hyphens without space.`,
+            indication,
 
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
@@ -345,20 +353,20 @@ export default {
 
         key: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.type.slug === "Create Private Key")
           ),
         },
         privateKey: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.type.slug === "create")
           ),
         },
 
         externKey: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.type.slug === "import")
           ),
         },

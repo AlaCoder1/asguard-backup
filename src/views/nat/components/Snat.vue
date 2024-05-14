@@ -1,7 +1,7 @@
 <template>
   <div class="mr-3">
     <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
-      <h4>SNAt</h4>
+      <h4>SNAT</h4>
       <v-divider></v-divider>
       <v-row>
         <v-col cols="12">
@@ -15,9 +15,11 @@
               :columnDefs="columnSnat"
               :rowData="rowDataSnat.value"
               :gridOptions="gridOptions"
+              :overlayNoRowsTemplate="overlayTemplate"
               :rowDragManaged="true"
               :rowDragEntireRow="true"
               @row-drag-end="onRowDragEnd"
+              :localeText="paginationLocalization"
             />
           </div>
           <div class="d-flex justify-end mt-3">
@@ -26,7 +28,7 @@
               outlined
               color="#213E9F"
               label-color="#ffffff"
-              label="Add"
+              :label="$t('firewall.add')"
               :isLarge="true"
               type="submit"
               class="ml-2"
@@ -43,13 +45,13 @@
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
-        <v-card-title class="headline">Delete Confirmation</v-card-title>
-        <v-card-text>Are you sure you want to delete this Row ?</v-card-text>
+        <v-card-title class="headline">{{$t("firewall.delete_confirm")}}</v-card-title>
+        <v-card-text>{{$t("nat.msg_confirm_delete")}}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="cancelDelete">Cancel</v-btn>
+          <v-btn color="blue darken-1" text @click="cancelDelete">{{$t("firewall.cancel")}}</v-btn>
           <v-btn color="blue darken-1" text @click="confirmDelete"
-            >Delete</v-btn
+            >{{$t("firewall.delete")}}</v-btn
           >
         </v-card-actions>
       </v-card>
@@ -67,7 +69,7 @@
 
 <script>
 import axios from "axios";
-import { reactive, ref, onMounted, inject, onBeforeMount } from "vue";
+import { reactive, ref, onMounted, inject, onBeforeMount ,computed } from "vue";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -75,6 +77,8 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import SnatModal from "@/components/modals/SnatModal.vue";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { useI18n } from "vue-i18n";
+
 export default {
   name: "SNAT",
   components: {
@@ -84,6 +88,11 @@ export default {
     VButton,
   },
   setup() {
+    const { t } = useI18n();
+    const overlayTemplate = ref("");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const emitter = inject("emitter");
     const state = reactive({
       mapedInterface: [],
@@ -98,6 +107,39 @@ export default {
       isOpen: null,
       editRow: {},
     });
+    const interface_row = computed(() => {
+      return t("nat.interface");
+    });
+    const protocol = computed(() => {
+      return t("nat.protocol");
+    });
+    const saddr = computed(() => {
+      return t("nat.saddr");
+    });
+    const sport = computed(() => {
+      return t("nat.sport");
+    });
+    const daddr = computed(() => {
+      return t("nat.daddr");
+    });
+    const dport = computed(() => {
+      return t("firewall.dport");
+    });
+    const trans_addr = computed(() => {
+      return t("nat.trans_addr");
+    });
+    const trans_port = computed(() => {
+      return t("nat.trans_port");
+    });
+    const description = computed(() => {
+      return t("nat.description");
+    });
+    const status = computed(() => {
+      return t("nat.status");
+    });
+    const action = computed(() => {
+      return t("nat.action");
+    });
 
     const gridOptions = ref({
       pagination: true,
@@ -105,9 +147,9 @@ export default {
       rowSelection: "single",
     });
 
-    const columnSnat = [
+    const columnSnat = ref([
       {
-        headerName: "Interface",
+        headerName: interface_row,
         field: "interface_name",
         autoHeight: true,
         resizable: true,
@@ -116,7 +158,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Protocol",
+        headerName: protocol,
         field: "protocol",
         autoHeight: true,
         resizable: true,
@@ -125,7 +167,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "S.address",
+        headerName: saddr,
         field: "source_address",
         autoHeight: true,
         resizable: true,
@@ -134,7 +176,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Ports",
+        headerName: sport,
         field: "source_port",
         autoHeight: true,
         resizable: true,
@@ -143,7 +185,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "D.Address",
+        headerName: daddr,
         field: "destination_address",
         autoHeight: true,
         resizable: true,
@@ -152,7 +194,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Ports",
+        headerName: dport,
         field: "destination_port",
         autoHeight: true,
         resizable: true,
@@ -161,7 +203,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Transalation IP",
+        headerName: trans_addr,
         field: "tcp_ip",
         autoHeight: true,
         resizable: true,
@@ -170,7 +212,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Ports",
+        headerName: trans_port,
         field: "translation_port",
         autoHeight: true,
         resizable: true,
@@ -179,7 +221,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Description",
+        headerName: description,
         field: "description",
         autoHeight: true,
         resizable: true,
@@ -188,7 +230,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Status",
+        headerName: status,
         // field: "rule_status",
         cellRenderer: checkboxRender,
         autoHeight: true,
@@ -199,11 +241,11 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Actions",
+        headerName: action,
         cellRenderer: actionCellRendererArea,
         field: "action",
       },
-    ];
+    ]);
 
     const onRowDragEnd = (event) => {
       const csrfToken = getCookie("csrftoken");
@@ -415,6 +457,13 @@ export default {
       getInterface();
     }),
       onMounted(() => {
+        overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+    </svg></span>`;
         emitter.on("closeSnatModal", () => {
           state.isModalAreaOpen = false;
           state.isOpen = false;
@@ -493,6 +542,8 @@ export default {
       onGridReady,
       cancelDelete,
       confirmDelete,
+      overlayTemplate,
+      paginationLocalization
     };
   },
 };

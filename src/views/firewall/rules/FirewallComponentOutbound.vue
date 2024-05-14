@@ -73,6 +73,7 @@
         :pagination="true"
         :paginationPageSize="4"
         :rowSelection="'multiple'"
+        :localeText="paginationLocalization"
       >
       </ag-grid-vue>
       <div class="d-flex justify-end ml-3 mb-5 mt-3">
@@ -135,6 +136,9 @@ export default defineComponent({
   setup(props) {
     const { t } = useI18n();
     const overlayTemplate = ref("");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const emitter = inject("emitter");
     const state = reactive({
       // deleteDialogSquid: false,
@@ -642,6 +646,7 @@ export default defineComponent({
       mode,
       last_Subscription,
       overlayTemplate,
+      paginationLocalization,
       onGridReady,
       setGridApi,
       onFirstDataRendered,

@@ -138,6 +138,7 @@
 
 <script>
 import axios from "axios";
+import { useI18n } from "vue-i18n";
 import useValidate from "@vuelidate/core";
 import {
   sameAs,
@@ -174,7 +175,7 @@ export default {
   setup(props) {
     const { isOpen, editRow, modalMode } = toRefs(props);
     const emitter = inject("emitter");
-
+    const { t } = useI18n();
     const policyList = ref(["accept", "drop", "reject"]);
     const protocolList = ref([
       "tcp",
@@ -204,17 +205,26 @@ export default {
       snackbar: false,
       editValue: null,
     });
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
     const rules = computed(() => {
       return {
         formData: {
           policy: {
-            required,
+            required: helpers.withMessage(error, required),
           },
           protocol: {
-            required,
+            required: helpers.withMessage(error, required),
           },
           rule_description: {
-            required,
+            required: helpers.withMessage(error, required),
           },
 
           sport: {
@@ -224,7 +234,7 @@ export default {
             // ),
 
             isValidSport: helpers.withMessage(
-              `Champs can include only Numbers.`,
+              onlynumbers,
 
               helpers.regex(/^[0-9]+$/)
             ),
@@ -237,7 +247,7 @@ export default {
             //   helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
             // ),
             isValidDaddr: helpers.withMessage(
-              `Format must be like : X.X.X.X/X`,
+              formaaddress,
               helpers.regex(
                 /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
               )
@@ -246,7 +256,7 @@ export default {
 
           saddr: {
             isValidSaddr: helpers.withMessage(
-              `Format must be like : X.X.X.X/X`,
+              formaaddress,
               helpers.regex(
                 /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
               )
@@ -262,7 +272,7 @@ export default {
 
           dport: {
             isValidSport: helpers.withMessage(
-              `Champs can include only Numbers.`,
+              onlynumbers,
 
               helpers.regex(/^[0-9]+$/)
             ),

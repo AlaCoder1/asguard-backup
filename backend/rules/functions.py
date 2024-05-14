@@ -1,18 +1,18 @@
 import ipaddress
 import subprocess
-from backend.rules.serializers import *
-from django.conf import settings
-from backend.authentification.views import *
 import socket
 
-######function to run commande
+
 def run_command(command):
+    """function to run commande"""
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
     output = completed_process.stdout
     error = completed_process.stderr
-    return output, error 
-##function initial nftables.conf et /rules/ifname/nftables.conf
+    return output, error
+
+
 def init_file_nftables(ifname):
+   """function initial nftables.conf et /rules/ifname/nftables.conf"""
    #declare this line to be added in central  file nftables.conf
    include_rules='include "/etc/rules/{}/nftables.conf";'.format(ifname)
    #declare empty values of rules to initial secondary file /ifname/nftables.conf
@@ -50,21 +50,21 @@ EOF""".format(ifname,rules),
    return True
 
 
-###function to return rule  outbound
 def return_rule(policy,saddr,daddr,sport,dport,protocol,type_rule):
+   """function to return rule  outbound"""
    #initialiser une chaine vide
    rule=''
    #concatener tous les addresses à bloquer
    ##cas inbound
    if type_rule=='inbound' :
-      if not protocol.upper()=="ALL":
+      if protocol.upper() != "ALL":
          rule='ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(saddr,daddr,protocol,sport,protocol,dport,policy)
       else:
          rule='ip saddr {} ip daddr {} {}'.format(saddr,daddr,policy)
          
     ##cas outbound
    elif type_rule=='outbound' :
-      if not protocol.upper()=="ALL":
+      if protocol.upper() != "ALL":
          rule='ip daddr {} ip saddr {} {} sport {} {} dport {} {}'.format(daddr,saddr,protocol,sport,protocol,dport,policy)
       else:
          rule='ip daddr {} ip saddr {} {}'.format(daddr,saddr,policy)
@@ -90,8 +90,8 @@ def return_rule(policy,saddr,daddr,sport,dport,protocol,type_rule):
    return rule
 
 
-#### function to get file config contenu
 def get_config_file(ifname):
+   """function to get file config contenu"""
    cmd="cat /etc/rules/{}/nftables.conf".format(ifname)
    output,error=run_command("sudo "+cmd)
    # print(output)
@@ -99,14 +99,14 @@ def get_config_file(ifname):
       return error
    return output.splitlines()
    
-###function to add rule
-###function to add rule
+
 def add_rule_remote(rule,ifname,type_rule):
-   ##initialiser les commanndes pour ajouter une règle et l'entregistrer 
+      """function to add rule"""
+      ##initialiser les commanndes pour ajouter une règle et l'entregistrer 
       commandes=[
          "sudo nft add rule inet filter_{} {} {}".format(ifname,type_rule,rule),
-        'sudo nft list table inet filter_{} > /etc/rules/{}/nftables.conf'.format(ifname,ifname)
-   ]
+         "sudo nft list table inet filter_{} > /etc/rules/{}/nftables.conf".format(ifname,ifname)
+         ]
       ###executer ces commandes
       for cmd in commandes:
          _,error=run_command(cmd)
@@ -114,8 +114,9 @@ def add_rule_remote(rule,ifname,type_rule):
             return error
       return True
 
-###function to get handle rule   
+
 def get_handle_rule(ifname,type_rule,rule):
+   """function to get handle rule"""
    # if not(rule.find('sport')==-1 and rule.find('dport')==-1):
    if 'sport' not in rule and 'dport' not in rule:
       if rule.find('ip protocol')!=-1 and rule.find("type")==-1 :
@@ -135,8 +136,9 @@ def get_handle_rule(ifname,type_rule,rule):
    else:
       return output[1].strip().split("\n")[0]
 
-###function to delete rule
+
 def delete_rule_remote(ifname,type_rule,handle):
+   """function to delete rule"""
    ##initialiser les commanndes pour supprimer une règle et l'entregistrer dans nftables.conf
    commandes=[
       "sudo nft delete rule inet filter_{} {} {}".format(ifname,type_rule,handle),
@@ -150,8 +152,8 @@ def delete_rule_remote(ifname,type_rule,handle):
    return True
 
    
-### function to get protocol
 def get_protocol_number(protocol_name):
+    """function to get protocol"""
     try:
         protocol_number = socket.getprotobyname(protocol_name)
         return protocol_number
@@ -163,7 +165,7 @@ def calculate_subnet_address(addr_prefix):
    if addr_prefix is not None:
       ip_address=addr_prefix.split("/")[0]
       prefix=addr_prefix.split("/")[1]
-   # Validate input IP address
+      # Validate input IP address
       try:
          ip_address = ipaddress.IPv4Address(ip_address)
       except ValueError as e:
@@ -171,7 +173,5 @@ def calculate_subnet_address(addr_prefix):
       if prefix!="32":
          network = ipaddress.IPv4Network(f"{ip_address}/{prefix}", strict=False)
          return str(network.network_address)+"/"+prefix
-      else:
-         return str(ip_address)
-   else:
-      return None
+      return str(ip_address)
+   return None

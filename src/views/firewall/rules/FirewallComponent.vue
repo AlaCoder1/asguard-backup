@@ -73,7 +73,6 @@
         :paginationPageSize="4"
         :rowSelection="'multiple'"
         :localeText="paginationLocalization"
-        
       >
       </ag-grid-vue>
 
@@ -100,9 +99,9 @@
                     ` ${rule.type_rule} ${rule.policy} ${rule.protocol}  ${
                       rule.rule_description
                     } ${rule.saddr} ${
-                      rule.sport === undefined ? "-" : rule.sport
+                      rule.sport === undefined ? "" : rule.sport
                     } ${rule.daddr} ${
-                      rule.dport === undefined ? "-" : rule.dport
+                      rule.dport === undefined ? "" : rule.dport
                     }   `
                   }}</span
                 >
@@ -169,7 +168,6 @@ export default defineComponent({
     activeTab: String,
   },
   setup(props) {
-    
     const { t } = useI18n();
     const paginationLocalization = reactive({
       of: "/",
@@ -554,6 +552,42 @@ export default defineComponent({
     };
     const saveRules = () => {
       console.log("agGridRow", rowData);
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let payload = rowData.value.map((e) => {
+        return {
+          policy: e.policy,
+          saddr: e.saddr,
+          daddr: e.daddr,
+          sport: e.sport,
+          dport: e.dport,
+          protocol: e.protocol,
+          type_rule: e.type_rule,
+          rule_description: e.rule_description,
+        };
+      });
+      console.log("payload", payload);
+
+      axios
+        .post(`/rules/saveRules/${props.activeTab}`, payload)
+        .then((response) => {
+          console.log("re", response);
+          if (response.status == "200") {
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.response;
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          }
+        })
+        .catch((i) => {
+          console.log("res", i.response);
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.response;
+        });
     };
     const cancel = () => {
       showAddModal.value = false;
@@ -570,16 +604,15 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      
-    //   overlayTemplate.value = `
-    //   <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
-    //   <path
-    //     d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
-    //     style="fill: #E8EAF6"
-    //     data-name="Unbox"
-    //   />
-    //  </svg></span>`;
-    // console.log(overlayTemplate.valye)
+      //   overlayTemplate.value = `
+      //   <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      //   <path
+      //     d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+      //     style="fill: #E8EAF6"
+      //     data-name="Unbox"
+      //   />
+      //  </svg></span>`;
+      // console.log(overlayTemplate.valye)
       emitter.on("closFirewallInboundModal", () => {
         state.isModalOpen = false;
         state.isOpen = false;
@@ -731,7 +764,6 @@ export default defineComponent({
       confirmDelete,
       saveModal,
       cancel,
-    
     };
   },
 });

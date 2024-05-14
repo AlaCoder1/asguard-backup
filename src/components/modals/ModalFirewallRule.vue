@@ -290,8 +290,8 @@ export default {
           state.formData.protocol === "icmp type echo-reply"
         ) {
           state.isAll = true;
-          state.formData.sport = "";
-          state.formData.dport = "";
+          state.formData.sport = "ALL";
+          state.formData.dport = "ALL";
         } else {
           state.isAll = false;
         }
@@ -299,8 +299,7 @@ export default {
         if (state.formData.sport === "") state.formData.sport = "ALL";
         if (state.formData.daddr === "") state.formData.daddr = "ALL";
         if (state.formData.dport === "") state.formData.dport = "ALL";
-
-      
+        console.log("state", state);
       },
       { immediate: true }
     );

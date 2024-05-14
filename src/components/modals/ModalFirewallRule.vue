@@ -138,6 +138,7 @@
 
 <script>
 import axios from "axios";
+import { useI18n } from "vue-i18n";
 import useValidate from "@vuelidate/core";
 import {
   sameAs,
@@ -172,7 +173,7 @@ export default {
   setup(props) {
     const { isOpen, editRow, modalMode } = toRefs(props);
     const emitter = inject("emitter");
-
+    const { t } = useI18n();
     const policyList = ref(["accept", "drop", "reject"]);
     const protocolList = ref([
       "tcp",
@@ -202,17 +203,26 @@ export default {
       snackbar: false,
       editValue: null,
     });
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
     const rules = computed(() => {
       return {
         formData: {
           policy: {
-            required,
+            required: helpers.withMessage(error, required),
           },
           protocol: {
-            required,
+            required: helpers.withMessage(error, required),
           },
           rule_description: {
-            required,
+            required: helpers.withMessage(error, required),
           },
 
           // sport: {

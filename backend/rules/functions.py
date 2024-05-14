@@ -239,7 +239,7 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
                rule_instance=rule_serializer.save()
                id_rule=rule_instance.id
                msg = "Rule added Successfully!!"
-               status=201
+               status=200
             else:
                msg=customize_error_msg(rule_serializer)
                status=400

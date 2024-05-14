@@ -5,7 +5,7 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 
 from backend.network.models import Interface
-from backend.rules.functions import add_rule_remote, calculate_subnet_address, delete_rule_remote, get_handle_rule, init_file_nftables, return_rule
+from backend.rules.functions import add_rule_db, add_rule_remote, calculate_subnet_address, delete_rule_remote, get_handle_rule, init_file_nftables, return_rule, update_rule_db
 from backend.rules.models import Rule
 from backend.rules.serializers import RuleSerializer
 
@@ -41,17 +41,56 @@ def delete_rule(request,id):
              #appel la fonction pour retrouver handle rule à supprimer
             handle=get_handle_rule(ifname,type_rules,rule)
              #appel la fonction pour supprimer  rule avec handle déjà retrouvé(système)
-            if handle:
-                #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
-                return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
-                if return_delete_rule_remote:
-                    #appel la fonction pour supprimer  rule de la base de données 
-                    rules.delete()
-                    return JsonResponse({"msg": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
-                return JsonResponse({"msg": f"{ERROR_MESSAGES_DELETING} {CONSTANT_RULE}"}, status=400)
-            return JsonResponse({"msg": f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
-        return JsonResponse({"msg": f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
-
+            if handle is not None:
+              #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
+              return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
+              if return_delete_rule_remote is True:
+                #appel la fonction pour supprimer  rule de la base de données 
+                rules.delete()
+                msg="delete rule Successfully!!"
+                status=200
+              else:
+                msg=return_delete_rule_remote
+                status=400 
+            else:
+              msg="Rule not exist in system!!"
+              status=400 
+        else:
+          msg="Rule not exist in database!!"
+          status=400
+        return JsonResponse({"msg": msg},status=status)
+      
+####
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+def save_rules(request,name_interface):
+  msg=''
+  responses=[]
+  if (request.method == 'POST'):
+    # parse the incoming information
+    data_list=request.data
+    #get object of interface type
+    interface_object= Interface.objects.get(name_interface=name_interface)
+    #get interface name to execute command systeme
+    ifname=interface_object.ifname
+    for data in data_list:
+        id_rule= None if data.get('id', None) == None else data.get('id', None)
+        policy = data.get('policy', None)
+        saddr = None if data.get('saddr', None) == "ALL" else data.get('saddr', None)
+        daddr = None if data.get('daddr', None) =="ALL" else data.get('daddr', None)
+        sport = None if data.get('sport', None) == "ALL" else data.get('sport', None)
+        dport = None if data.get('dport', None) == "ALL" else data.get('dport', None)
+        protocol = None if data.get('protocol', None) == "ALL" else data.get('protocol', None)
+        type_rule = data.get('type_rule', None)
+        rule_description= None if data.get('rule_description', None) == "" else data.get('rule_description', None)
+        if id_rule is None:
+            msg,status,id_rule=add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object)
+        else:
+            msg,status=update_rule_db(id_rule,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description)
+        responses.append({"id":id_rule,"msg":msg,"status":status})
+    return JsonResponse({"response": responses},status=status)  
+        
+            
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])

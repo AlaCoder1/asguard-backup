@@ -82,7 +82,6 @@
           color="#213E9F"
           label-color="#ffffff"
           :isLarge="false"
-          @click="save"
         >
           <span class="text-white pr-3 pl-3">{{ $t("buttons.save") }}</span>
         </v-btn>

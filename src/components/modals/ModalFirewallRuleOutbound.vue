@@ -4,11 +4,11 @@
       <v-card>
         <v-card-title>
           <span class="headline" v-if="modalMode === 'create'">
-            {{$t("firewall.add_rule")}} </span
-          >
+            {{ $t("firewall.add_rule") }}
+          </span>
           <span class="headline" v-if="modalMode === 'edit'">
-            {{$t("firewall.update_rule")}} </span
-          >
+            {{ $t("firewall.update_rule") }}
+          </span>
         </v-card-title>
         <v-card-text>
           <v-select
@@ -72,7 +72,7 @@
           <v-row>
             <v-col :cols="state.isAll ? 12 : 6">
               <v-text-field
-              :label="$t('firewall.daddr')"
+                :label="$t('firewall.daddr')"
                 v-model="state.formData.daddr"
                 outlined
               ></v-text-field>
@@ -164,9 +164,7 @@ export default {
       required: true,
     },
     modalMode: {
-      type: Object,
-      Array,
-      String,
+      type: String,
       required: true,
     },
   },
@@ -314,7 +312,6 @@ export default {
         console.log("uuid", uuid);
         state.interUuid = uuid;
       });
-
     });
     const closeModal = () => {
       emitter.emit("closFirewallOutboundModal");
@@ -384,7 +381,7 @@ export default {
             saddr: state.formData.saddr,
             daddr: state.formData.daddr,
             id: modalMode.value === "edit" ? state.id : "",
-            interUuid:state.interUuid
+            interUuid: state.interUuid,
           };
         } else {
           payload = {
@@ -398,11 +395,11 @@ export default {
             daddr: state.formData.daddr,
             dport: state.formData.dport,
             id: modalMode.value === "edit" ? state.id : "",
-            interUuid:state.interUuid
+            interUuid: state.interUuid,
           };
         }
         if (modalMode.value === "edit") {
-               // axios
+          // axios
           //   .put(`/rules/updateRule/${state.nameInter}`, payload)
           //   .then((response) => {
           //     console.log("re", response);
@@ -442,7 +439,7 @@ export default {
           //     state.textAlert = i.response.data.response;
           //   });
         } else if (modalMode.value === "create") {
-               // axios
+          // axios
           //   .put(`/rules/updateRule/${state.nameInter}`, payload)
           //   .then((response) => {
           //     console.log("re", response);

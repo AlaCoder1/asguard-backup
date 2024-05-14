@@ -74,6 +74,41 @@
         :rowSelection="'multiple'"
       >
       </ag-grid-vue>
+
+      <v-row class="mt-5 justify-center">
+        <v-col cols="4" v-if="rowDataLength">
+          <v-card>
+            <v-card-text>
+              <v-card-title>Changes</v-card-title>
+            </v-card-text>
+          </v-card>
+        </v-col>
+        <v-col cols="4" v-if="rowDataLength">
+          <v-card>
+            <v-card-title>Changes</v-card-title>
+            <v-card-text>
+              <v-row v-for="rule in rowData.value" :key="rule.uuid">
+                <span
+                  :style="{
+                    color: rule?.status === 'new' ? ' #4CCD99' : '  #4CCD99',
+                    margin: '10px',
+                  }"
+                  ><span> {{ `${rule?.status === "new" ? "+++" : "+-"}` }}</span
+                  >{{
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol}  ${
+                      rule.rule_description
+                    } ${rule.saddr} ${
+                      rule.sport === undefined ? "-" : rule.sport
+                    } ${rule.daddr} ${
+                      rule.dport === undefined ? "-" : rule.dport
+                    }   `
+                  }}</span
+                >
+              </v-row>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
       <div class="d-flex justify-end ml-3 mt-3 mb-n6">
         <v-btn
           rounded
@@ -81,7 +116,7 @@
           color="#213E9F"
           label-color="#ffffff"
           :isLarge="false"
-          @click="save"
+          @click="saveRules"
         >
           <span class="text-white pr-3 pl-3">{{ $t("buttons.save") }}</span>
         </v-btn>
@@ -147,7 +182,13 @@ export default defineComponent({
       modalMode: "",
       isModalOpen: false,
       editRow: {},
+      rowDataId: null,
     });
+
+    const rowDataLength = computed(() => {
+      return !rowData.value || rowData.value.length == 0 ? false : true;
+    });
+
     const policy = computed(() => {
       return t("firewall.policy");
     });
@@ -390,6 +431,7 @@ export default defineComponent({
         case "delete":
           rowDataToDelete.value = rowData;
           deleteDialog.value = true;
+          state.rowDataId = rowData.uuid;
           break;
         case "update":
           mode.value = "update";
@@ -466,29 +508,46 @@ export default defineComponent({
       deleteDialog.value = false;
     };
     const confirmDelete = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const index = rowData.value.findIndex(
+        (item) => item.uuid === state.rowDataId
+      );
 
-      axios
-        .delete(`/rules/deleteRule/${rowDataToDelete.value.id}`)
-        .then((response) => {
-          if (response.status == "200") {
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          }
-        })
-        .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.response;
-        });
+      if (index !== -1) {
+        rowData.value.splice(index, 1);
+        deleteDialog.value = false;
+        if (gridApi.value) {
+          gridApi.value.setRowData(rowData.value);
+        } else {
+          console.error("Grid API.");
+        }
+      }
+
+      // const csrfToken = getCookie("csrftoken");
+      // axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      // axios
+      //   .delete(`/rules/deleteRule/${rowDataToDelete.value.id}`)
+      //   .then((response) => {
+      //     if (response.status == "200") {
+      //       state.snackbar = true;
+      //       state.color = "success";
+      //       state.textAlert = response.data.msg;
+      //       setTimeout(() => {
+      //         location.reload();
+      //       }, 1000);
+      //     }
+      //   })
+      //   .catch((i) => {
+      //     state.snackbar = true;
+      //     state.color = "red";
+      //     state.textAlert = i.response.data.response;
+      //   });
     };
     const saveModal = () => {
       showAddModal.value = false;
+    };
+    const saveRules = () => {
+      console.log("agGridRow", rowData);
     };
     const cancel = () => {
       showAddModal.value = false;
@@ -529,7 +588,6 @@ export default defineComponent({
         .replace(/None/g, "null");
       let parsedArray = JSON.parse(validJsonString);
       rules.value = parsedArray;
-      console.log("rules.value", rules.value);
 
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
@@ -552,6 +610,7 @@ export default defineComponent({
             sport: data.sport,
             dport: data.dport,
             type_rule: data.type_rule,
+            status: data.status,
           };
           rowData.value.push(ruleInbound);
           if (gridApi.value) {
@@ -573,6 +632,7 @@ export default defineComponent({
           sport: data.sport,
           dport: data.dport,
           type_rule: data.type_rule,
+          status: data.status,
         };
 
         updateObjectById(data.uuid, ruleInbound);
@@ -616,10 +676,21 @@ export default defineComponent({
       //   }
       // }
     );
+    watch(
+      () => rowData.value,
+      (newValue, oldValue) => {
+        console.log("oldValue", oldValue);
+        console.log("newValue", newValue);
+      },
+      { immediate: true },
+      { deep: true }
+    );
 
     return {
       openModalAdd,
+      saveRules,
       emitter,
+      rowDataLength,
       columnDefs,
       state,
       gridApi,

@@ -53,9 +53,9 @@
                 v-model="state.formData.saddr"
                 outlined
               ></v-text-field>
-              <p class="error-feedback mb-5" v-if="v$.formData.saddr.$error">
+              <!-- <p class="error-feedback mb-5" v-if="v$.formData.saddr.$error">
                 {{ v$.formData.saddr.$errors[0].$message }}
-              </p>
+              </p> -->
             </v-col>
             <v-col cols="6" class="mb-n6">
               <v-text-field
@@ -65,9 +65,9 @@
                 v-model="state.formData.sport"
                 outlined
               ></v-text-field>
-              <p class="error-feedback mb-5" v-if="v$.formData.sport.$error">
+              <!-- <p class="error-feedback mb-5" v-if="v$.formData.sport.$error">
                 {{ v$.formData.sport.$errors[0].$message }}
-              </p>
+              </p> -->
             </v-col>
           </v-row>
           <v-row>
@@ -77,9 +77,9 @@
                 v-model="state.formData.daddr"
                 outlined
               ></v-text-field>
-              <p class="error-feedback mb-5" v-if="v$.formData.daddr.$error">
+              <!-- <p class="error-feedback mb-5" v-if="v$.formData.daddr.$error">
                 {{ v$.formData.daddr.$errors[0].$message }}
-              </p>
+              </p> -->
             </v-col>
             <v-col cols="6">
               <v-text-field
@@ -89,9 +89,9 @@
                 v-model="state.formData.dport"
                 outlined
               ></v-text-field>
-              <p class="error-feedback mb-5" v-if="v$.formData.dport.$error">
+              <!-- <p class="error-feedback mb-5" v-if="v$.formData.dport.$error">
                 {{ v$.formData.dport.$errors[0].$message }}
-              </p>
+              </p> -->
             </v-col>
           </v-row>
         </v-card-text>
@@ -165,9 +165,7 @@ export default {
       required: true,
     },
     modalMode: {
-      type: Object,
-      Array,
-      String,
+      type: String,
       required: true,
     },
   },
@@ -193,10 +191,10 @@ export default {
         policy: "",
         rule_description: "",
         protocol: "",
-        saddr: "",
-        sport: "",
-        daddr: "",
-        dport: "",
+        saddr: "ALL",
+        sport: "ALL",
+        daddr: "ALL",
+        dport: "ALL",
       },
       openModal: false,
       textAlert: "",
@@ -217,56 +215,56 @@ export default {
             required,
           },
 
-          sport: {
-            // requiredIfFuction: helpers.withMessage(
-            //   "Value is required",
-            //   requiredIf(() => state.formData.protocol !== "all")
-            // ),
+          // sport: {
+          //   // requiredIfFuction: helpers.withMessage(
+          //   //   "Value is required",
+          //   //   requiredIf(() => state.formData.protocol !== "all")
+          //   // ),
 
-            isValidSport: helpers.withMessage(
-              `Champs can include only Numbers.`,
+          //   isValidSport: helpers.withMessage(
+          //     `Champs can include only Numbers.`,
 
-              helpers.regex(/^[0-9]+$/)
-            ),
-          },
-
-          daddr: {
-            // isValidDaddr: helpers.withMessage(
-            //   `Format must be like adresse IP : X.X.X.X`,
-
-            //   helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
-            // ),
-            isValidDaddr: helpers.withMessage(
-              `Format must be like : X.X.X.X/X`,
-              helpers.regex(
-                /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
-              )
-            ),
-          },
-
-          saddr: {
-            isValidSaddr: helpers.withMessage(
-              `Format must be like : X.X.X.X/X`,
-              helpers.regex(
-                /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
-              )
-            ),
-          },
-          // saddr: {
-          //   isValidSaddr: helpers.withMessage(
-          //     `Format must be like adresse IP : X.X.X.X`,
-
-          //     helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          //     helpers.regex(/^[0-9]+$/)
           //   ),
           // },
 
-          dport: {
-            isValidSport: helpers.withMessage(
-              `Champs can include only Numbers.`,
+          // daddr: {
+          //   // isValidDaddr: helpers.withMessage(
+          //   //   `Format must be like adresse IP : X.X.X.X`,
 
-              helpers.regex(/^[0-9]+$/)
-            ),
-          },
+          //   //   helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          //   // ),
+          //   isValidDaddr: helpers.withMessage(
+          //     `Format must be like : X.X.X.X/X`,
+          //     helpers.regex(
+          //       /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
+          //     )
+          //   ),
+          // },
+
+          // saddr: {
+          //   isValidSaddr: helpers.withMessage(
+          //     `Format must be like : X.X.X.X/X`,
+          //     helpers.regex(
+          //       /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
+          //     )
+          //   ),
+          // },
+          // // saddr: {
+          // //   isValidSaddr: helpers.withMessage(
+          // //     `Format must be like adresse IP : X.X.X.X`,
+
+          // //     helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          // //   ),
+          // // },
+
+          // dport: {
+          //   isValidSport: helpers.withMessage(
+          //     `Champs can include only Numbers.`,
+
+          //     helpers.regex(/^[0-9]+$/)
+          //   ),
+          // },
         },
       };
     });
@@ -287,6 +285,12 @@ export default {
         } else {
           state.isAll = false;
         }
+        if (state.formData.saddr === "") state.formData.saddr = "ALL";
+        if (state.formData.sport === "") state.formData.sport = "ALL";
+        if (state.formData.daddr === "") state.formData.daddr = "ALL";
+        if (state.formData.dport === "") state.formData.dport = "ALL";
+
+      
       },
       { immediate: true }
     );
@@ -305,10 +309,10 @@ export default {
           state.formData.policy = "";
           state.formData.rule_description = "";
           state.formData.protocol = "";
-          state.formData.saddr = "";
-          state.formData.sport = "";
-          state.formData.daddr = "";
-          state.formData.dport = "";
+          state.formData.saddr = "ALL";
+          state.formData.sport = "ALL";
+          state.formData.daddr = "ALL";
+          state.formData.dport = "ALL";
         }
       }
     );
@@ -328,9 +332,6 @@ export default {
         console.log("uuid", uuid);
         state.interUuid = uuid;
       });
-
-     
-
     });
     const closeModal = () => {
       emitter.emit("closFirewallInboundModal");
@@ -338,15 +339,14 @@ export default {
         state.formData.policy = "";
         state.formData.rule_description = "";
         state.formData.protocol = "";
-        state.formData.saddr = "";
-        state.formData.sport = "";
-        state.formData.daddr = "";
-        state.formData.dport = "";
+        state.formData.saddr = "ALL";
+        state.formData.sport = "ALL";
+        state.formData.daddr = "ALL";
+        state.formData.dport = "ALL";
       }
     };
     const populate = (data) => {
       if (modalMode.value === "edit") {
-    
         state.id = data.id;
         let filtredPolicy = policyList.value.filter((i) => i === data?.policy);
         let filtredProtocol = protocolList.value.filter(
@@ -400,7 +400,8 @@ export default {
             saddr: state.formData.saddr,
             daddr: state.formData.daddr,
             id: modalMode.value === "edit" ? state.id : "",
-            interUuid:state.interUuid
+            interUuid: state.interUuid,
+            status: modalMode.value === "create" ? "new" : "old",
           };
         } else {
           payload = {
@@ -414,7 +415,8 @@ export default {
             daddr: state.formData.daddr,
             dport: state.formData.dport,
             id: modalMode.value === "edit" ? state.id : "",
-            interUuid:state.interUuid
+            interUuid: state.interUuid,
+            status: modalMode.value === "create" ? "new" : "old",
           };
         }
         if (modalMode.value === "edit") {

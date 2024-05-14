@@ -148,6 +148,7 @@ import {
 } from "@vuelidate/validators";
 import { reactive, computed, toRefs, watch, inject, onMounted, ref } from "vue";
 import VButton from "@/components/VButton.vue";
+import { v4 as uuidv4 } from "uuid";
 export default {
   name: "Modal_User_Squid",
   components: {
@@ -187,6 +188,7 @@ export default {
       isAll: false,
       id: "",
       nameInter: "",
+      interUuid: "",
       formData: {
         policy: "",
         rule_description: "",
@@ -319,6 +321,12 @@ export default {
     onMounted(() => {
       let nameInterface = localStorage.getItem("firewall-tab");
       state.nameInter = nameInterface;
+
+      emitter.on("interfaceOut-uuid", (uuid) => {
+        console.log("uuid", uuid);
+        state.interUuid = uuid;
+      });
+
     });
     const closeModal = () => {
       emitter.emit("closFirewallOutboundModal");
@@ -338,7 +346,7 @@ export default {
         state.id = data.id;
         let filtredPolicy = policyList.value.filter((i) => i === data?.policy);
         let filtredProtocol = protocolList.value.filter(
-          (i) => i === data?.protocol[0]
+          (i) => i === data?.protocol
         );
 
         state.formData.policy = filtredPolicy[0];
@@ -348,6 +356,7 @@ export default {
         state.formData.sport = data.sport;
         state.formData.daddr = data.daddr;
         state.formData.dport = data.dport;
+        state.editValue = data.uuid;
       }
     };
     const getCookie = (name) => {
@@ -379,6 +388,7 @@ export default {
           state.formData.protocol === "icmp type echo-reply"
         ) {
           payload = {
+            uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
             type_rule: "outbound",
             policy: state.formData.policy,
             rule_description: state.formData.rule_description,
@@ -386,9 +396,11 @@ export default {
             saddr: state.formData.saddr,
             daddr: state.formData.daddr,
             id: modalMode.value === "edit" ? state.id : "",
+            interUuid:state.interUuid
           };
         } else {
           payload = {
+            uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
             type_rule: "outbound",
             policy: state.formData.policy,
             rule_description: state.formData.rule_description,
@@ -398,49 +410,93 @@ export default {
             daddr: state.formData.daddr,
             dport: state.formData.dport,
             id: modalMode.value === "edit" ? state.id : "",
+            interUuid:state.interUuid
           };
         }
         if (modalMode.value === "edit") {
-          axios
-            .put(`/rules/updateRule/${state.nameInter}`, payload)
-            .then((response) => {
-              console.log("re", response);
-              if (response.status == "200") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.response;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              console.log("res", i.response);
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.response;
-            });
+               // axios
+          //   .put(`/rules/updateRule/${state.nameInter}`, payload)
+          //   .then((response) => {
+          //     console.log("re", response);
+          //     if (response.status == "200") {
+          //       state.snackbar = true;
+          //       state.color = "success";
+          //       state.textAlert = response.data.response;
+          //       setTimeout(() => {
+          //         location.reload();
+          //       }, 1000);
+          //     }
+          //   })
+          //   .catch((i) => {
+          //     console.log("res", i.response);
+          //     state.snackbar = true;
+          //     state.color = "red";
+          //     state.textAlert = i.response.data.response;
+          //   });
+          emitter.emit("edit-firewallRuleOut", payload);
+          // axios
+          //   .put(`/rules/updateRule/${state.nameInter}`, payload)
+          //   .then((response) => {
+          //     console.log("re", response);
+          //     if (response.status == "200") {
+          //       state.snackbar = true;
+          //       state.color = "success";
+          //       state.textAlert = response.data.response;
+          //       setTimeout(() => {
+          //         location.reload();
+          //       }, 1000);
+          //     }
+          //   })
+          //   .catch((i) => {
+          //     console.log("res", i.response);
+          //     state.snackbar = true;
+          //     state.color = "red";
+          //     state.textAlert = i.response.data.response;
+          //   });
         } else if (modalMode.value === "create") {
-          axios
-            .post(`/rules/addRule/${state.nameInter}`, payload)
-            .then((response) => {
-              console.log("re", response);
-              if (response.status == "200") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.response;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              console.log("res", i.response);
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.response;
-            });
+               // axios
+          //   .put(`/rules/updateRule/${state.nameInter}`, payload)
+          //   .then((response) => {
+          //     console.log("re", response);
+          //     if (response.status == "200") {
+          //       state.snackbar = true;
+          //       state.color = "success";
+          //       state.textAlert = response.data.response;
+          //       setTimeout(() => {
+          //         location.reload();
+          //       }, 1000);
+          //     }
+          //   })
+          //   .catch((i) => {
+          //     console.log("res", i.response);
+          //     state.snackbar = true;
+          //     state.color = "red";
+          //     state.textAlert = i.response.data.response;
+          //   });
+          emitter.emit("add-firewallRuleOut", payload);
+          // axios
+          //   .post(`/rules/addRule/${state.nameInter}`, payload)
+          //   .then((response) => {
+          //     console.log("re", response);
+          //     if (response.status == "200") {
+          //       state.snackbar = true;
+          //       state.color = "success";
+          //       state.textAlert = response.data.response;
+          //       setTimeout(() => {
+          //         location.reload();
+          //       }, 1000);
+          //     }
+          //   })
+          //   .catch((i) => {
+          //     console.log("res", i.response);
+          //     state.snackbar = true;
+          //     state.color = "red";
+          //     state.textAlert = i.response.data.response;
+          //   });
         }
+
+        closeModal();
+        v$.value.$reset();
       } else {
         console.log("error", v$.value);
       }

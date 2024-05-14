@@ -609,26 +609,40 @@ export default {
     const CertificateListRemote = ref([]);
     const mapedInterfaceType = ref([]);
     const mapedKeyPublic = ref([]);
-
+    const champ = computed(() => {
+      return t("champs.indication");
+    });
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
+    const specificform = computed(() => {
+      return t("errors.specificform");
+    });
     const rules = computed(() => {
       return {
         //General information Phase 1
 
         tunnelSettings: {
-          required,
+          required: helpers.withMessage(error, required),
           isValidTunnelSettings: helpers.withMessage(
-            `champs can include only letters & Numbers & underscores & hyphens without space.`,
+            champ,
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },
-        connectionMethod: { required },
-        keyExchange: { required },
-        internetProtocol: { required },
+        connectionMethod: { required: helpers.withMessage(error, required) },
+        keyExchange: { required: helpers.withMessage(error, required) },
+        internetProtocol: { required: helpers.withMessage(error, required) },
 
         remoteGateway: {
-          required,
+          required: helpers.withMessage(error, required),
           isValidlRemoteGateway: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -636,58 +650,57 @@ export default {
 
         lifetime: {
           isValidlifeTime: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            onlynumbers,
 
             helpers.regex(/^[0-9]+$/)
           ),
         },
         lifetimeExchange: {
           isValidlifetimeExchange: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            onlynumbers,
 
             helpers.regex(/^[0-9]+$/)
           ),
         },
         interactivityTimout: {
           isValidInteractivityTimout: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            onlynumbers,
 
             helpers.regex(/^[0-9]+$/)
           ),
         },
         marginTime: {
           isValidMarginTime: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            onlynumbers,
 
             helpers.regex(/^[0-9]+$/)
           ),
         },
         rekeyFuzz: {
           isValidRekeyFuzz: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            onlynumbers,
 
             helpers.regex(/^[0-9]+$/)
           ),
         },
 
-        generalinterface: { required },
+        generalinterface: { required: helpers.withMessage(error, required) },
         // phase Auth
-        authMethod: { required },
+        authMethod: {required: helpers.withMessage(error, required)},
         negotiationMode: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error ,
             requiredIf(() => state.keyExchange.slug === "V1")
           ),
         },
 
         sharedKey: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error ,
             requiredIf(() => state.authMethod.slug === "Mutual PSK")
           ),
           isValidKey: helpers.withMessage(
-            `There must be at least 32 characters, including at least one uppercase,one lowercase, one number, and one special character.`,
-
+            specificform,
             helpers.regex(
               /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~\\]{32,128}$/
             )
@@ -696,28 +709,28 @@ export default {
 
         certificate: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.authMethod.slug === "Mutual RSA")
           ),
         },
 
         keyPair: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.authMethod.slug === "Mutual Public key")
           ),
         },
 
         localKey: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.authMethod.slug === "Mutual Public key")
           ),
         },
 
         peerIdentifier: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.authMethod.slug === "Mutual RSA")
           ),
         },
@@ -726,28 +739,28 @@ export default {
 
         encryptAlgo: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.keyExchange.slug === "V2")
           ),
         },
 
         encryptAlgoV1: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.keyExchange.slug === "V1")
           ),
         },
         encryptAlgoExch2: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.keyExchange.slug === "V1")
           ),
         },
 
-        hashAlgo: { required },
-        dhKey: { required },
+        hashAlgo: { required:helpers.withMessage(error, required) },
+        dhKey: { required:helpers.withMessage(error, required) },
         // general info phase 2
-        mode: { required },
+        mode: { required:helpers.withMessage(error, required) },
         // remoteTunnelAddress: {
         //   required,
         //   isValidRemoteTunnelAddress: helpers.withMessage(
@@ -759,18 +772,18 @@ export default {
 
         type: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.mode.slug === "Tunnel IPv4")
           ),
         },
 
         remoteNetworkAddress: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.mode.slug === "Tunnel IPv4")
           ),
           isValidremoteNetworkAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -778,7 +791,7 @@ export default {
 
         selectAddressNetwork: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.type.slug === "Network")
           ),
         },
@@ -793,7 +806,7 @@ export default {
 
         localNetworkAddress: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(
               () =>
                 (state.type.slug === "Network" ||
@@ -802,7 +815,7 @@ export default {
             )
           ),
           isValidlocalNetworkAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -810,7 +823,7 @@ export default {
 
         selectRemoteAddressNetwork: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error ,
             requiredIf(
               () =>
                 state.typeRemoteNetwork.slug === "Network" &&
@@ -821,22 +834,22 @@ export default {
 
         typeRemoteNetwork: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.mode.slug === "Tunnel IPv4")
           ),
         },
         //exchange
-        protocol: { required },
+        protocol: { required: helpers.withMessage(error, required) },
 
         encryptAlgoExchange: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.protocol.slug === "ESP")
           ),
         },
 
-        hashAlgoExchange: { required },
-        pfsKey: { required },
+        hashAlgoExchange: {required: helpers.withMessage(error, required) },
+        pfsKey: { required: helpers.withMessage(error, required) },
         // pingHost: { required },
         // spdEntries: { required },
       };

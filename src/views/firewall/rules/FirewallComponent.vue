@@ -1,22 +1,22 @@
 <template>
   <div class="mt-5">
     <div class="container">
-      <h4>{{$t("firewall.inbound")}}</h4>
+      <h4>{{ $t("firewall.inbound") }}</h4>
       <v-divider></v-divider>
       <v-dialog v-model="deleteDialog" max-width="500px">
         <v-card>
-          <v-card-title class="headline">{{$t("firewall.delete_confirm")}}</v-card-title>
-          <v-card-text
-            >{{$t("firewall.msg_confirm_delete")}}</v-card-text
-          >
+          <v-card-title class="headline">{{
+            $t("firewall.delete_confirm")
+          }}</v-card-title>
+          <v-card-text>{{ $t("firewall.msg_confirm_delete") }}</v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="cancelDelete"
-              >{{$t("firewall.cancel")}}</v-btn
-            >
-            <v-btn color="blue darken-1" text @click="confirmDelete"
-              >{{$t("firewall.delete")}}</v-btn
-            >
+            <v-btn color="blue darken-1" text @click="cancelDelete">{{
+              $t("firewall.cancel")
+            }}</v-btn>
+            <v-btn color="blue darken-1" text @click="confirmDelete">{{
+              $t("firewall.delete")
+            }}</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
@@ -46,7 +46,9 @@
         <v-col cols="12" md="6" class="d-flex justify-end">
           <v-btn class="ml-3 mt-2" @click="openModalAdd">
             <i class="fas fa-plus" style="color: #086eae"></i>
-            <span class="ml-2" style="color: #086eae">{{$t("firewall.add")}}</span>
+            <span class="ml-2" style="color: #086eae">{{
+              $t("firewall.add")
+            }}</span>
           </v-btn>
         </v-col>
       </v-row>
@@ -70,8 +72,22 @@
         :pagination="true"
         :paginationPageSize="4"
         :rowSelection="'multiple'"
+        :localeText="paginationLocalization"
+        
       >
       </ag-grid-vue>
+      <div class="d-flex justify-end ml-3 mt-3 mb-n6">
+        <v-btn
+          rounded
+          outlined
+          color="#213E9F"
+          label-color="#ffffff"
+          :isLarge="false"
+          @click="save"
+        >
+          <span class="text-white pr-3 pl-3">{{ $t("buttons.save") }}</span>
+        </v-btn>
+      </div>
 
       <v-snackbar
         :timeout="2000"
@@ -91,10 +107,19 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
-import { onMounted, reactive, ref, watch, defineComponent, inject,computed } from "vue";
+import {
+  onMounted,
+  reactive,
+  ref,
+  watch,
+  defineComponent,
+  inject,
+  computed,
+} from "vue";
 import VButton from "../../../components/VButton.vue";
 import ModalFirewallRule from "../../../components/modals/ModalFirewallRule.vue";
 import { useI18n } from "vue-i18n";
+import { v4 as uuidv4 } from "uuid";
 
 export default defineComponent({
   name: "FirewallComponent",
@@ -105,11 +130,16 @@ export default defineComponent({
   },
   props: {
     id: String,
+    uuid: String,
     activeTab: String,
   },
   setup(props) {
+    
     const { t } = useI18n();
-    const overlayTemplate = ref("");
+    const paginationLocalization = reactive({
+      of: "/",
+    });
+    //const overlayTemplate = ref("");
     const emitter = inject("emitter");
     const state = reactive({
       // deleteDialogSquid: false,
@@ -151,7 +181,7 @@ export default defineComponent({
     const alert = ref(false);
     const mode = ref("create");
     const last_Subscription = ref([]);
-    const columnDefs =ref([
+    const columnDefs = ref([
       {
         width: 50,
         minWidth: 50,
@@ -283,25 +313,27 @@ export default defineComponent({
     const rowDataToDelete = ref(null);
 
     const openModalAdd = () => {
-      if (last_Subscription.value.includes("Firewall")) {
-        state.modalData = {};
-        state.modalMode = "create";
-        state.isModalOpen = true;
-      } else {
-        emitter.emit("firewal-subscription");
-        window.scrollTo(0, 0);
-      }
+      // if (last_Subscription.value.includes("Firewall")) {
+      state.modalData = {};
+      state.modalMode = "create";
+      state.isModalOpen = true;
+      emitter.emit("interface-uuid", props.uuid);
+      // }
+      //  else {
+      //   emitter.emit("firewal-subscription");
+      //   window.scrollTo(0, 0);
+      // }
     };
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
       gridColumnApi.value = params.columnApi;
 
-      if (rowData.value && rowData.value.length > 0) {
-        gridApi.value.forEachNode((node) =>
-          node.setSelected(node.rowIndex === 0)
-        );
-      }
+      // if (rowData.value && rowData.value.length > 0) {
+      //   gridApi.value.forEachNode((node) =>
+      //     node.setSelected(node.rowIndex === 0)
+      //   );
+      // }
     };
 
     const setGridApi = (api) => {
@@ -468,15 +500,26 @@ export default defineComponent({
       showAddModal.value = false;
     };
 
+    function updateObjectById(uuid, updatedObject) {
+      const index = rowData.value.findIndex((obj) => obj.uuid === uuid);
+      if (index !== -1) {
+        rowData.value[index] = {
+          ...rowData.value[index],
+          ...updatedObject,
+        };
+      }
+    }
+
     onMounted(() => {
       
-      overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
-      <path
-        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
-        style="fill: #E8EAF6"
-        data-name="Unbox"
-      />
-    </svg></span>`;
+    //   overlayTemplate.value = `
+    //   <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+    //   <path
+    //     d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+    //     style="fill: #E8EAF6"
+    //     data-name="Unbox"
+    //   />
+    //  </svg></span>`;
     // console.log(overlayTemplate.valye)
       emitter.on("closFirewallInboundModal", () => {
         state.isModalOpen = false;
@@ -484,7 +527,7 @@ export default defineComponent({
         state.modalMode = "";
         state.editRow = {};
       });
-     
+
       const rulesAttribute =
         document.getElementById("app").attributes["rules"].value;
       let validJsonString = rulesAttribute
@@ -494,11 +537,64 @@ export default defineComponent({
         .replace(/None/g, "null");
       let parsedArray = JSON.parse(validJsonString);
       rules.value = parsedArray;
+      console.log("rules.value", rules.value);
 
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
+
+      emitter.on("add-firewallRule", (data) => {
+        if (data.interUuid === props.uuid) {
+          if (!rowData.value) {
+            rowData.value = [];
+          }
+
+          let ruleInbound = {
+            uuid: data.uuid,
+            daddr: data.daddr,
+            policy: data.policy,
+            protocol: data.protocol,
+            rule_description: data.rule_description,
+            saddr: data.saddr,
+            sport: data.sport,
+            dport: data.dport,
+            type_rule: data.type_rule,
+          };
+          rowData.value.push(ruleInbound);
+          if (gridApi.value) {
+            gridApi.value.setRowData(rowData.value);
+          } else {
+            console.error("Grid API.");
+          }
+        }
+      });
+
+      emitter.on("edit-firewallRule", (data) => {
+        let ruleInbound = {
+          uuid: data.uuid,
+          daddr: data.daddr,
+          policy: data.policy,
+          protocol: data.protocol,
+          rule_description: data.rule_description,
+          saddr: data.saddr,
+          sport: data.sport,
+          dport: data.dport,
+          type_rule: data.type_rule,
+        };
+
+        updateObjectById(data.uuid, ruleInbound);
+
+        if (!rowData.value) {
+          rowData.value = [];
+        }
+
+        if (gridApi.value) {
+          gridApi.value.setRowData(rowData.value);
+        } else {
+          console.error("Grid API.");
+        }
+      });
     });
 
     watch(
@@ -510,23 +606,23 @@ export default defineComponent({
           rowData.value = [];
         }
       },
-      { immediate: true },
+      { immediate: true }
 
-      (newValue, oldValue) => {
-        if (newValue) {
-          if (mode.value === "create") {
-            rowData.value.push(newValue);
-            gridApi.value.forEachNode((node) =>
-              node.setSelected(node.rowIndex === rowData.value.length - 1)
-            );
-          } else {
-            const selectedNode = gridApi.value.getSelectedNodes()[0];
-            if (selectedNode) {
-              selectedNode.setData(newValue);
-            }
-          }
-        }
-      }
+      // (newValue, oldValue) => {
+      //   if (newValue) {
+      //     if (mode.value === "create") {
+      //       rowData.value.push(newValue);
+      //       gridApi.value.forEachNode((node) =>
+      //         node.setSelected(node.rowIndex === rowData.value.length - 1)
+      //       );
+      //     } else {
+      //       const selectedNode = gridApi.value.getSelectedNodes()[0];
+      //       if (selectedNode) {
+      //         selectedNode.setData(newValue);
+      //       }
+      //     }
+      //   }
+      // }
     );
 
     return {
@@ -544,6 +640,7 @@ export default defineComponent({
       deleteDialog,
       rowDataToDelete,
       showAddModal,
+      paginationLocalization,
       alert,
       mode,
       last_Subscription,
@@ -563,7 +660,7 @@ export default defineComponent({
       confirmDelete,
       saveModal,
       cancel,
-      overlayTemplate,
+    
     };
   },
 });

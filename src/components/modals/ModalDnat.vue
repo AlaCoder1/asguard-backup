@@ -338,6 +338,7 @@ import useValidate from "@vuelidate/core";
 import { toRefs, watch, reactive, computed, inject, onMounted, ref } from "vue";
 import { required, helpers, requiredIf } from "@vuelidate/validators";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { useI18n } from "vue-i18n";
 
 export default {
   props: {
@@ -356,6 +357,7 @@ export default {
   },
 
   setup(props) {
+    const { t } = useI18n();
     const emitter = inject("emitter");
     const { isOpen, editRow, modalMode } = toRefs(props);
     const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
@@ -799,14 +801,23 @@ export default {
         console.log("v$", v$.value);
       }
     };
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
 
     const rules = computed(() => {
       return {
-        interface: { required },
+        interface: { required: helpers.withMessage(error, required)},
 
         sourceAddress: {
           isValidSourceAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -814,23 +825,23 @@ export default {
 
         sourcePrefix: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.sourceAddress)
           ),
         },
 
         internalAddress: {
-          required,
+          required: helpers.withMessage(error, required),
           isValidSourceAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         externalAddress: {
-          required,
+          required: helpers.withMessage(error, required),
           isValidSourceAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
@@ -838,78 +849,78 @@ export default {
 
         destinationRangeFrom: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.checkInterface === "Port Frowardin")
           ),
         },
         destinationRangeTo: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.checkInterface === "Port Frowardin")
           ),
         },
         port: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.checkInterface === "Port Frowardin")
           ),
         },
 
         specificSourceFrom: {
           isValidSpecificSourceFrom: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            onlynumbers,
 
             helpers.regex(/^[0-9]+$/)
           ),
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            onlynumbers,
             requiredIf(() => state.sourceRangeFrom.slug === "other")
           ),
         },
 
         specificSourceTo: {
           isValidSpecificSourceTo: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            onlynumbers,
 
             helpers.regex(/^[0-9]+$/)
           ),
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.sourceRangeTo.slug === "other")
           ),
         },
 
         specificDestinationFrom: {
           isValidSpecificSourceTo: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            onlynumbers,
 
             helpers.regex(/^[0-9]+$/)
           ),
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.destinationRangeFrom.slug === "other")
           ),
         },
         specificDestinationTo: {
           isValidSpecificSourceTo: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            onlynumbers,
 
             helpers.regex(/^[0-9]+$/)
           ),
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.destinationRangeTo.slug === "other")
           ),
         },
 
         specificPort: {
           isValidSpecificSourceTo: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            onlynumbers,
 
             helpers.regex(/^[0-9]+$/)
           ),
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.port.slug === "other")
           ),
         },

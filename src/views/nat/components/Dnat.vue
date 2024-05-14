@@ -19,6 +19,7 @@
               :rowDragManaged="true"
               :rowDragEntireRow="true"
               @row-drag-end="onRowDragEnd"
+              :localeText="paginationLocalization"
             />
           </div>
           <div class="d-flex justify-end mt-3">
@@ -88,7 +89,9 @@ export default {
   setup() {
     const { t } = useI18n();
     const overlayTemplate = ref("");
-
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const emitter = inject("emitter");
     const state = reactive({
       deleteDialog: false,
@@ -553,6 +556,7 @@ export default {
       confirmDelete,
       onRowDragEnd,
       overlayTemplate,
+      paginationLocalization
     };
   },
 };

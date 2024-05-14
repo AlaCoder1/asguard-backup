@@ -4,11 +4,11 @@
       <v-card>
         <v-card-title>
           <span class="headline" v-if="modalMode === 'create'">
-            {{$t("firewall.add_rule")}} </span
-          >
+            {{ $t("firewall.add_rule") }}
+          </span>
           <span class="headline" v-if="modalMode === 'edit'">
-            {{$t("firewall.update_rule")}} </span
-          >
+            {{ $t("firewall.update_rule") }}
+          </span>
         </v-card-title>
         <v-card-text>
           <v-select
@@ -138,6 +138,7 @@
 
 <script>
 import axios from "axios";
+import { useI18n } from "vue-i18n";
 import useValidate from "@vuelidate/core";
 import {
   sameAs,
@@ -148,6 +149,7 @@ import {
 } from "@vuelidate/validators";
 import { reactive, computed, toRefs, watch, inject, onMounted, ref } from "vue";
 import VButton from "@/components/VButton.vue";
+import { v4 as uuidv4 } from "uuid";
 export default {
   name: "Modal_User_Squid",
   components: {
@@ -173,7 +175,7 @@ export default {
   setup(props) {
     const { isOpen, editRow, modalMode } = toRefs(props);
     const emitter = inject("emitter");
-
+    const { t } = useI18n();
     const policyList = ref(["accept", "drop", "reject"]);
     const protocolList = ref([
       "tcp",
@@ -186,6 +188,7 @@ export default {
     const state = reactive({
       isAll: false,
       id: "",
+      interUuid: "",
       nameInter: "",
       formData: {
         policy: "",
@@ -200,18 +203,28 @@ export default {
       textAlert: "",
       color: "",
       snackbar: false,
+      editValue: null,
+    });
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
     });
     const rules = computed(() => {
       return {
         formData: {
           policy: {
-            required,
+            required: helpers.withMessage(error, required),
           },
           protocol: {
-            required,
+            required: helpers.withMessage(error, required),
           },
           rule_description: {
-            required,
+            required: helpers.withMessage(error, required),
           },
 
           sport: {
@@ -221,7 +234,7 @@ export default {
             // ),
 
             isValidSport: helpers.withMessage(
-              `Champs can include only Numbers.`,
+              onlynumbers,
 
               helpers.regex(/^[0-9]+$/)
             ),
@@ -234,7 +247,7 @@ export default {
             //   helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
             // ),
             isValidDaddr: helpers.withMessage(
-              `Format must be like : X.X.X.X/X`,
+              formaaddress,
               helpers.regex(
                 /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
               )
@@ -243,7 +256,7 @@ export default {
 
           saddr: {
             isValidSaddr: helpers.withMessage(
-              `Format must be like : X.X.X.X/X`,
+              formaaddress,
               helpers.regex(
                 /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
               )
@@ -259,7 +272,7 @@ export default {
 
           dport: {
             isValidSport: helpers.withMessage(
-              `Champs can include only Numbers.`,
+              onlynumbers,
 
               helpers.regex(/^[0-9]+$/)
             ),
@@ -320,6 +333,14 @@ export default {
     onMounted(() => {
       let nameInterface = localStorage.getItem("firewall-tab");
       state.nameInter = nameInterface;
+
+      emitter.on("interface-uuid", (uuid) => {
+        console.log("uuid", uuid);
+        state.interUuid = uuid;
+      });
+
+     
+
     });
     const closeModal = () => {
       emitter.emit("closFirewallInboundModal");
@@ -335,10 +356,11 @@ export default {
     };
     const populate = (data) => {
       if (modalMode.value === "edit") {
+    
         state.id = data.id;
         let filtredPolicy = policyList.value.filter((i) => i === data?.policy);
         let filtredProtocol = protocolList.value.filter(
-          (i) => i === data?.protocol[0]
+          (i) => i === data?.protocol
         );
 
         state.formData.policy = filtredPolicy[0];
@@ -348,6 +370,7 @@ export default {
         state.formData.sport = data.sport;
         state.formData.daddr = data.daddr;
         state.formData.dport = data.dport;
+        state.editValue = data.uuid;
       }
     };
     const getCookie = (name) => {
@@ -379,6 +402,7 @@ export default {
           state.formData.protocol === "icmp type echo-reply"
         ) {
           payload = {
+            uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
             type_rule: "inbound",
             policy: state.formData.policy,
             rule_description: state.formData.rule_description,
@@ -386,9 +410,11 @@ export default {
             saddr: state.formData.saddr,
             daddr: state.formData.daddr,
             id: modalMode.value === "edit" ? state.id : "",
+            interUuid:state.interUuid
           };
         } else {
           payload = {
+            uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
             type_rule: "inbound",
             policy: state.formData.policy,
             rule_description: state.formData.rule_description,
@@ -398,49 +424,56 @@ export default {
             daddr: state.formData.daddr,
             dport: state.formData.dport,
             id: modalMode.value === "edit" ? state.id : "",
+            interUuid:state.interUuid
           };
         }
         if (modalMode.value === "edit") {
-          axios
-            .put(`/rules/updateRule/${state.nameInter}`, payload)
-            .then((response) => {
-              console.log("re", response);
-              if (response.status == "200") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.response;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              console.log("res", i.response);
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.response;
-            });
+          // axios
+          //   .put(`/rules/updateRule/${state.nameInter}`, payload)
+          //   .then((response) => {
+          //     console.log("re", response);
+          //     if (response.status == "200") {
+          //       state.snackbar = true;
+          //       state.color = "success";
+          //       state.textAlert = response.data.response;
+          //       setTimeout(() => {
+          //         location.reload();
+          //       }, 1000);
+          //     }
+          //   })
+          //   .catch((i) => {
+          //     console.log("res", i.response);
+          //     state.snackbar = true;
+          //     state.color = "red";
+          //     state.textAlert = i.response.data.response;
+          //   });
+          emitter.emit("edit-firewallRule", payload);
         } else if (modalMode.value === "create") {
-          axios
-            .post(`/rules/addRule/${state.nameInter}`, payload)
-            .then((response) => {
-              console.log("re", response);
-              if (response.status == "200") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.response;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              console.log("res", i.response);
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.response;
-            });
+          // axios
+          //   .post(`/rules/addRule/${state.nameInter}`, payload)
+          //   .then((response) => {
+          //     console.log("re", response);
+          //     if (response.status == "200") {
+          //       state.snackbar = true;
+          //       state.color = "success";
+          //       state.textAlert = response.data.response;
+          //       setTimeout(() => {
+          //         location.reload();
+          //       }, 1000);
+          //     }
+          //   })
+          //   .catch((i) => {
+          //     console.log("res", i.response);
+          //     state.snackbar = true;
+          //     state.color = "red";
+          //     state.textAlert = i.response.data.response;
+          //   });
+          emitter.emit("add-firewallRule", payload);
+          console.log("payload : ", payload);
         }
+
+        closeModal();
+        v$.value.$reset();
       } else {
         console.log("error", v$.value);
       }

@@ -13,6 +13,7 @@
         :rowData="rowDataRules.value"
         :gridOptions="gridOptions"
         :overlayNoRowsTemplate="overlayTemplate"
+        :localeText="paginationLocalization"
       />
     </div>
     <div class="d-flex justify-end mt-3">
@@ -56,6 +57,9 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const state = reactive({
       snackbar: false,
       color: "",
@@ -150,6 +154,7 @@ export default {
       rowDataRules,
       gridOptions,
       overlayTemplate,
+      paginationLocalization
     };
   },
 };

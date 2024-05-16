@@ -20,8 +20,8 @@ class Command(BaseCommand):
                     # Créer une instance du modèle suricatafile
                     suricata_config = SuricataFileSerializer(data=file)
                     if suricata_config.is_valid():
-                        suricata_config.save()
-                        id_conf=suricata_config.pk
+                        suricata_conf=suricata_config.save()
+                        id_conf=suricata_conf.id
                     
                     if id_conf is not None:
                         _,error=execute_cmd("python manage.py init_rules_suricata -id {}".format(id_conf))

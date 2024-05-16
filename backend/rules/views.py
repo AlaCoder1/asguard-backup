@@ -1,27 +1,28 @@
 from django.http import JsonResponse
 from django.db.models import Q
-from django.utils.translation import gettext_lazy as _
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 
+from backend.ids_ips.views import CONSTANT_RULE, ERROR_MESSAGES_EXISTANT, SUCCESS_MESSAGES_CREATING
 from backend.network.models import Interface
-from backend.rules.functions import add_rule_db, add_rule_remote, calculate_subnet_address, delete_rule_remote, get_handle_rule, init_file_nftables, return_rule, update_rule_db
+from backend.rules.functions import ERROR_MESSAGES_DELETING, SUCCESS_MESSAGES_DELETING, SUCCESS_MESSAGES_UPDATING, add_rule_db, add_rule_remote, calculate_subnet_address, delete_rule_remote, get_handle_rule, init_file_nftables, return_rule, update_rule_db
 from backend.rules.models import Rule
 from backend.rules.serializers import RuleSerializer
+from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INEXISTANT, ERROR_MESSAGES_UPDATING
 
 
-# Constants
-CONSTANT_RULE = _('Rule')
-# Success messages
-SUCCESS_MESSAGES_CREATING = _("is created")
-SUCCESS_MESSAGES_DELETING = _("is deleted")
-SUCCESS_MESSAGES_UPDATING = _("is updated")
-# Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
-ERROR_MESSAGES_EXISTANT = _("already exist")
-ERROR_MESSAGES_INEXISTANT = _("does not exist")
+# # Constants
+# CONSTANT_RULE = _('Rule')
+# # Success messages
+# SUCCESS_MESSAGES_CREATING = _("is created")
+# SUCCESS_MESSAGES_DELETING = _("is deleted")
+# SUCCESS_MESSAGES_UPDATING = _("is updated")
+# # Error messages
+# ERROR_MESSAGES_CREATING = _("Error in creating")
+# ERROR_MESSAGES_DELETING = _("Error in deleting")
+# ERROR_MESSAGES_UPDATING = _("Error in updating")
+# ERROR_MESSAGES_EXISTANT = _("already exist")
+# ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
 @api_view(['DELETE'])
@@ -47,16 +48,16 @@ def delete_rule(request,id):
               if return_delete_rule_remote is True:
                 #appel la fonction pour supprimer  rule de la base de données 
                 rules.delete()
-                msg="delete rule Successfully!!"
+                msg=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
                 status=200
               else:
-                msg=return_delete_rule_remote
+                msg=f"{ERROR_MESSAGES_DELETING} {CONSTANT_RULE}"
                 status=400 
             else:
-              msg="Rule not exist in system!!"
+              msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
               status=400 
         else:
-          msg="Rule not exist in database!!"
+          msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
           status=400
         return JsonResponse({"msg": msg},status=status)
       

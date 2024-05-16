@@ -7,7 +7,25 @@ from backend.network.serializers import InterfaceSerializer
 from backend.vlan.functions import add_vlan_sys, convert_priority, delete_vlan_sys, save_in_db, update_vlan_sys
 from backend.vlan.models import Vlan
 from django.core import serializers
+from django.utils.translation import gettext_lazy as _
 from backend.vlan.serializers import VlanSerializer
+
+
+# Constants
+CONSTANT_VLAN_CONFIG = _('Configuration VLAN')
+CONSTANT_VLAN_INTERFACE = _('Interface VLAN')
+
+# Success messages
+SUCCESS_MESSAGES_SAVED = _("Saved")
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+
+
+# Error messages
+ERROR_MESSAGES_EXISTANT = _("Already exist")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
+
+
 # Create your views here.
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -36,7 +54,7 @@ def add_vlan(request):
         vlan_serializer=VlanSerializer(data=data_input)
         if vlan_serializer.is_valid():
             vlan_serializer.save()
-            msg="Vlan added Successfully!"
+            msg= f"{CONSTANT_VLAN_CONFIG} {SUCCESS_MESSAGES_CREATING}"
             status=200
         else:
             msg=str(next(iter(vlan_serializer.errors.values()))[0]).strip('.')+"!"
@@ -76,7 +94,7 @@ def update_vlan(request,id):
                         msg=aux_save
                         status=400
                 else:
-                    msg="Configuration VLAN saved successfully!"
+                    msg=f"{CONSTANT_VLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}"
                     status=200
                 vlan_serializer.save()
             else:
@@ -84,7 +102,7 @@ def update_vlan(request,id):
                 status=400
       
         else:
-            msg="Vlan not exist!"
+            msg=f"{CONSTANT_VLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
             status=400
     return JsonResponse({"msg": msg},status=status) 
 
@@ -105,10 +123,10 @@ def delete_vlan(request,id):
                 if aux_delete:
                     interface_object.delete()
             vlan_object.delete()
-            msg="Vlan deleted Successfully!"
+            msg=f"{CONSTANT_VLAN_CONFIG} {SUCCESS_MESSAGES_DELETING}"
             status=200
         else:
-            msg="Vlan not exist!"
+            msg=f"{CONSTANT_VLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
             status=400
     return JsonResponse({"msg": msg},status=status)  
 
@@ -143,10 +161,10 @@ def assign_vlan_interface(request):
                     msg=aux_save
                     status=400
             else:
-                msg="Vlan interface already exist!"
+                msg=f"{CONSTANT_VLAN_INTERFACE} {ERROR_MESSAGES_EXISTANT}"
                 status=400
         else:
-            msg="Vlan not exist!"
+            msg=f"{CONSTANT_VLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"
             status=400
     return JsonResponse({"msg": msg},status=status)  
 
@@ -181,7 +199,7 @@ def update_vlan_interface(request,id_interface):
                 msg=aux_save
                 status=400
         else:
-            msg="Vlan not exist!"
+            msg=f"{CONSTANT_VLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"
             status=400
     return JsonResponse({"msg": msg},status=status)  
     
@@ -196,13 +214,13 @@ def delete_vlan_interface(request,id_interface):
             aux_delete=delete_vlan_sys(vlan_name)
             if aux_delete:
                 vlan_object.delete()
-                msg="Interface vlan deleted successfully!"
+                msg=f"{CONSTANT_VLAN_INTERFACE} {SUCCESS_MESSAGES_DELETING}"
                 status=200
             else:
                 msg=aux_delete
                 status=400
         else:
-            msg="Vlan interface not exist!"
+            msg=f"{CONSTANT_VLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"
             status=400
       
     return JsonResponse({"msg": msg},status=status) 

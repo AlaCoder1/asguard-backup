@@ -1,7 +1,14 @@
 import subprocess
 from backend.network.models import Interface
 from backend.network.serializers import InterfaceSerializer
+from django.utils.translation import gettext_lazy as _
 
+
+#Constants
+CONSTANT_VLAN_CONFIG = _('Configuration VLAN')
+
+#Success messages
+SUCCESS_MESSAGES_SAVED = _("Saved")
 
 
 def execute_cmd(command):
@@ -77,7 +84,7 @@ def convert_priority(priority):
 def save_in_db(aux_save,interface_serializer):
     if aux_save and interface_serializer.is_valid():
         interface_serializer.save()
-        msg="Configuration VLAN saved successfully!"
+        msg=f"{CONSTANT_VLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}"
         status=200
     else:
         msg=str(next(iter(interface_serializer.errors.values()))[0]).strip('.')+"!"

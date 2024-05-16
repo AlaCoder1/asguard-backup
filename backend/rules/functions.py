@@ -2,9 +2,20 @@ import ipaddress
 import subprocess
 import socket
 from django.db.models import Q
-
+from django.utils.translation import gettext_lazy as _
 from backend.rules.models import Rule
 from backend.rules.serializers import RuleSerializer
+CONSTANT_RULE = _('Rule')
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+SUCCESS_MESSAGES_UPDATING = _("is updated")
+# Error messages
+ERROR_MESSAGES_CREATING = _("Error in creating")
+ERROR_MESSAGES_DELETING = _("Error in deleting")
+ERROR_MESSAGES_UPDATING = _("Error in updating")
+ERROR_MESSAGES_EXISTANT = _("already exist")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 def customize_error_msg(serializer):
     """function to custom error message serializer"""
@@ -70,6 +81,10 @@ def return_rule(policy,saddr,daddr,sport,dport,protocol,type_rule):
    rule=''
    #concatener tous les addresses à bloquer
    ##cas inbound
+   if policy=="reject" and not protocol.startswith("icmp"):
+      policy="reject with icmp port-unreachable"
+   elif policy=="reject" and  protocol.startswith("icmp"):
+      policy="reject with icmp type port-unreachable"
    if type_rule=='inbound' :
       if protocol.upper() != "ALL":
          rule='ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(saddr,daddr,protocol,sport,protocol,dport,policy)
@@ -132,6 +147,7 @@ def add_rule_remote(rule,ifname,type_rule):
 def get_handle_rule(ifname,type_rule,rule):
    """function to get handle rule"""
    # if not(rule.find('sport')==-1 and rule.find('dport')==-1):
+   rule=rule.replace("port-unreachable","3")
    if 'sport' not in rule and 'dport' not in rule:
       if rule.find('ip protocol')!=-1 and rule.find("type")==-1 :
          rule=rule.replace("icmp","1")
@@ -238,19 +254,20 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
             if rule_serializer.is_valid():
                rule_instance=rule_serializer.save()
                id_rule=rule_instance.id
-               msg = "Rule added Successfully!!"
+   
+               msg = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_CREATING}"
                status=200
             else:
                msg=customize_error_msg(rule_serializer)
                status=400
          else:
-            msg = return_add_rule
+            msg = f"{ERROR_MESSAGES_CREATING} {CONSTANT_RULE}"
             status=400
       else:
-         msg="Rule already exist!"
+         msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
          status=400
    else:
-      msg = return_init_file_nftables
+      msg = f"{ERROR_MESSAGES_CREATING} {CONSTANT_RULE}"
       status=400
    return msg,status,id_rule
 
@@ -268,6 +285,7 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
          handle=get_handle_rule(ifname,type_rules,rule)
          if handle is not None: 
             if not Rule.objects.filter(
+                 ~Q(id=id)& 
                   Q(rule=ruleupdate) & (
                   (Q(interface_id=rules_object.interface_id) ) &
                   (Q(type_rule=type_rules))
@@ -295,26 +313,26 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
                         rule_serializer = RuleSerializer(rules_object,data=data)
                         if rule_serializer.is_valid():
                            rule_serializer.save()
-                           msg = "Rule updated Successfully!!"
+                           msg = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"
                            status=200
                         else:
                            msg=customize_error_msg(rule_serializer)
                            status=400
                   else:
-                        msg=return_add_rule
+                        msg=f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"
                         status=400
                else:
-                  msg=return_delete_rule_remote
+                  msg=f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"
                   status=400
             else:
-               msg="Nothing to change !"
+               msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
                status=400
          else:
-               msg="Rule not exist!"
+               msg= f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
                status=404
               
       else:
-         msg="Failed to update rule !"
+         msg=f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"
          status=400
          
       return msg,status

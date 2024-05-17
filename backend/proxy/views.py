@@ -671,7 +671,7 @@ def allGroups(request):
         rslt = get_line_from_file(config_file_path,target_line)
         list_groups.append({"name":i,"status":rslt})
     return JsonResponse({"groups":list_groups},status = 200)
-    return JsonResponse({"groups":groups},status = 200)
+    
 
 @swagger_auto_schema(
     method='POST',

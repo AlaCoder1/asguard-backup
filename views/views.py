@@ -498,7 +498,7 @@ def firewall_page(request):
     rules=get_all_rules(request)
     interfaces=get_all_interfaces(request)
     last_subscription=list_features_about_last_subscription(request)
-    context = {'rules':rules, 'interfaces':interfaces,'last_subscription':json.dumps(last_subscription)}
+    context = {'rules':json.dumps(rules), 'interfaces':interfaces,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'firewall_page.html',context)
 
 @login_required(login_url='/')

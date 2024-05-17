@@ -99,26 +99,39 @@
           <div class="row justify-content-center">
             <br />
             <div class="col-12 d-flex justify-center">
-              <VButton
+              <v-btn
                 rounded
                 outlined
-                border-color="'#213E9F'"
-                color="#ffffff"
-                label-color="#213E9F"
-                :label="$t('firewall.cancel')"
+                color="#213E9F"
                 :isLarge="true"
+                variant="outlined"
+                class="ml-2"
                 @click="closeModal"
-              />
-              <VButton
+              >
+                <span style="color: #213e9f" class="pr-3 pl-3">{{
+                  $t("buttons.close")
+                }}</span>
+              </v-btn>
+              <v-btn
                 rounded
                 outlined
                 color="#213E9F"
                 label-color="#ffffff"
-                :label="$t('firewall.save')"
+                :disabled="equal"
                 :isLarge="true"
                 class="ml-2"
                 @click="submitForm"
-              />
+              >
+                <span
+                  class="text-white pr-3 pl-3"
+                  v-if="modalMode === 'create'"
+                >
+                  {{ $t("buttons.create") }}</span
+                >
+                <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                  {{ $t("buttons.update") }}</span
+                >
+              </v-btn>
             </div>
           </div>
         </div>
@@ -202,6 +215,8 @@ export default {
       color: "",
       snackbar: false,
       editValue: null,
+      type_rule: "",
+      status: "",
     });
     const error = computed(() => {
       return t("errors.valueRequired");
@@ -299,7 +314,6 @@ export default {
         if (state.formData.sport === "") state.formData.sport = "ALL";
         if (state.formData.daddr === "") state.formData.daddr = "ALL";
         if (state.formData.dport === "") state.formData.dport = "ALL";
-        console.log("state", state);
       },
       { immediate: true }
     );
@@ -313,7 +327,6 @@ export default {
     watch(
       () => modalMode.value,
       (val) => {
-        console.log("modalMode", val);
         if (val === "create") {
           state.formData.policy = "";
           state.formData.rule_description = "";
@@ -333,12 +346,65 @@ export default {
       }
     );
 
+    const equal = computed(() => {
+      // let obj1 = { ...editRow.value };
+      let obj1 = {
+        daddr: editRow.value.daddr ?? "ALL",
+        dport: editRow.value.dport ?? "ALL",
+        saddr: editRow.value.saddr ?? "ALL",
+        sport: editRow.value.sport ?? "ALL",
+        policy: editRow.value.policy,
+        protocol: editRow.value.protocol,
+        rule_description: editRow.value.rule_description,
+        id: editRow.value.id,
+        uuid: editRow.value.uuid,
+        type_rule: editRow.value.type_rule,
+        status: editRow.value.status,
+      };
+      let obj2 = {
+        daddr: state.formData.daddr ?? "ALL",
+        dport: state.formData.dport ?? "ALL",
+        saddr: state.formData.saddr ?? "ALL",
+        sport: state.formData.sport ?? "ALL",
+        policy: state.formData.policy,
+        protocol: state.formData.protocol,
+        rule_description: state.formData.rule_description,
+        id: state.id,
+        uuid: state.editValue,
+        type_rule: state.type_rule,
+        status: state.status,
+      };
+
+      const deepEqual = (obj1, obj2) => {
+        const keys1 = Object.keys(obj1);
+        const keys2 = Object.keys(obj2);
+
+        if (keys1.length !== keys2.length) {
+          return false;
+        }
+
+        for (const key of keys1) {
+          if (typeof obj1[key] === "object" && typeof obj2[key] === "object") {
+            if (!deepEqual(obj1[key], obj2[key])) {
+              return false;
+            }
+          } else {
+            if (obj1[key] !== obj2[key]) {
+              return false;
+            }
+          }
+        }
+        return true;
+      };
+
+      return deepEqual(obj1, obj2);
+    });
+
     onMounted(() => {
       let nameInterface = localStorage.getItem("firewall-tab");
       state.nameInter = nameInterface;
 
       emitter.on("interface-uuid", (uuid) => {
-        console.log("uuid", uuid);
         state.interUuid = uuid;
       });
     });
@@ -370,6 +436,8 @@ export default {
         state.formData.daddr = data.daddr;
         state.formData.dport = data.dport;
         state.editValue = data.uuid;
+
+        (state.status = data.status), (state.type_rule = data.type_rule);
       }
     };
     const getCookie = (name) => {
@@ -390,7 +458,6 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const result = await v$.value.$validate();
-      console.log("result", result);
 
       if (result) {
         let payload = {};
@@ -449,6 +516,7 @@ export default {
           //     state.textAlert = i.response.data.response;
           //   });
           emitter.emit("edit-firewallRule", payload);
+          emitter.emit("old-row", editRow.value);
         } else if (modalMode.value === "create") {
           // axios
           //   .post(`/rules/addRule/${state.nameInter}`, payload)
@@ -470,7 +538,6 @@ export default {
           //     state.textAlert = i.response.data.response;
           //   });
           emitter.emit("add-firewallRule", payload);
-          console.log("payload : ", payload);
         }
 
         closeModal();
@@ -482,6 +549,7 @@ export default {
 
     return {
       state,
+      equal,
       policyList,
       protocolList,
       v$,

@@ -34,13 +34,6 @@ class Command(BaseCommand):
             description = options.get('description')
             description = description.replace("-"," ")
             rule = rule.replace("-"," ")
-            print({"source_address":source_address})
-            print({"source_port":source_port})
-            print({"destination_address":destination_address})
-            print({"destination_port":destination_port})
-            print({"interface":interface})
-            print({"description":description})
-            print({"rule":rule})
             if source_address.lower() == 'all':
                 source_address = None
             if destination_address.lower() == 'all':
@@ -50,7 +43,6 @@ class Command(BaseCommand):
             if destination_port.lower() == 'all':
                 destination_port = None
             interface_id = Interface.objects.get(ifname=interface)
-            print({"interface_id":interface_id.id})
             ruleupdate=return_rule(policy,source_address,destination_address,source_port,destination_port,protocol,type_rule)
             handle=get_handle_rule(interface,type_rule,rule)
             if handle is not None:

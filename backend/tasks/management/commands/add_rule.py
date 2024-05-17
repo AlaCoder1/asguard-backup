@@ -31,12 +31,6 @@ class Command(BaseCommand):
             interface = options.get('interface')
             description = options.get('description')
             description = description.replace("-"," ")
-            print({"source_address":source_address})
-            print({"source_port":source_port})
-            print({"destination_address":destination_address})
-            print({"destination_port":destination_port})
-            print({"interface":interface})
-            print({"description":description})
             if source_address.lower() == 'all':
                 source_address = None
             if destination_address.lower() == 'all':
@@ -46,15 +40,12 @@ class Command(BaseCommand):
             if destination_port.lower() == 'all':
                 destination_port = None
             interface_id = Interface.objects.get(ifname=interface)
-            print({"interface_id":interface_id.id})
             return_init_file_nftables = init_file_nftables(interface)
-            print({"return_init_file_nftables":return_init_file_nftables})
             if return_init_file_nftables:
                 rule=return_rule(policy,source_address,destination_address,source_port,destination_port,protocol,type_rule)
                 saddr_db=calculate_subnet_address(source_address)
                 daddr_db=calculate_subnet_address(destination_address)
                 rule_db=return_rule(policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
-                print({"rule":rule})
                 if not Rule.objects.filter(
                     Q(rule=rule_db) & (
                         (Q(interface_id=interface_id.id) ) &
@@ -62,19 +53,12 @@ class Command(BaseCommand):
                     )
                 ).exists():
                     return_add_rule=add_rule_remote(rule,interface,type_rule)
-                    print({"return_add_rule":return_add_rule})
                     if return_add_rule is True:
-                        
-                        print({"rule_db":rule_db})
                         try:
                             rule = Rule.objects.create(rule=rule_db, rule_status=True, type_rule=type_rule, policy=policy, rule_description=description, protocol=protocol, saddr=source_address, sport=source_port, daddr=destination_address, dport=destination_port, interface=interface_id)
                             return "rule added succesffuly"
-                            
-                            # If you reach this point, creation was successful
                         except IntegrityError as e:
-                            # Handle the integrity error, maybe log it or perform some other action
                             print("Error occurred:", e)
-                        # rule=Rule.objects.create(rule=rule_db, rule_status=True, type_rule = type_rule, policy = policy, rule_description = description, protocol = protocol, saddr = saddr_db, sport = source_port, daddr = daddr_db, dport = destination_port, interface = interface_id)
                     else:
                         return return_add_rule
                 else:

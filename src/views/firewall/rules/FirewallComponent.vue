@@ -52,6 +52,16 @@
           </v-btn>
         </v-col>
       </v-row>
+      <v-alert
+        v-model="state.snackbar"
+        v-for="(error, index) in state.textAlert"
+        :key="index"
+        :type="error.status === 400 ? 'error' : 'success'"
+        :color="state.color"
+        style="margin-bottom: 10px"
+      >
+        {{ error.msg }}
+      </v-alert>
       <!-- </v-card-title> -->
       <!-- <v-card-text> -->
       <ag-grid-vue
@@ -60,22 +70,89 @@
         class="ag-theme-alpine"
         :columnDefs="columnDefs"
         :rowData="rowData.value"
+        :gridOptions="gridOptions"
         @grid-ready="onGridReady"
-        :rowDrag="true"
         :defaultColDef="defaultColDef"
         style="width: 100%"
-        :animateRows="true"
-        @column-row-group-changed="onColumnRowGroupChanged"
-        @column-row-drag-end="onColumnRowDragEnd"
-        @firstDataRendered="onFirstDataRendered"
-        @row-drag-end="onRowDragEnd"
         :pagination="true"
         :paginationPageSize="4"
-        :rowSelection="'multiple'"
         :localeText="paginationLocalization"
-        
       >
+        <!-- @column-row-group-changed="onColumnRowGroupChanged"
+             @firstDataRendered="onFirstDataRendered"
+        @column-row-drag-end="onColumnRowDragEnd" -->
+        <!-- @row-drag-end="onRowDragEnd" -->
       </ag-grid-vue>
+
+      <v-card v-if="changes" class="mt-3">
+        <v-card-title>Changes</v-card-title>
+        <v-card-text>
+          <v-row class="mt-5 justify-center">
+            <v-col cols="5" v-if="oldRow.length">
+              <!-- <span v-if="oldRow.length === 0"
+                >-----------------------------</span
+              > -->
+              <v-row v-for="rule in sortedrray" :key="rule.id">
+                <span
+                  v-if="
+                    (rule.id && rule.status === 'initial') ||
+                    (rule.id && rule.status === 'old')
+                  "
+                  style="color: #ef233c; margin: 10px"
+                >
+                  <span>--</span>
+                  {{
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol}  ${
+                      rule.rule_description
+                    } ${rule.saddr} ${
+                      rule.sport === undefined ? "" : rule.sport
+                    } ${rule.daddr} ${
+                      rule.dport === undefined ? "" : rule.dport
+                    }   `
+                  }}
+                </span>
+                <del
+                  v-if="rule.id && rule.status === 'deleted'"
+                  style="color: #ef233c; margin: 10px"
+                >
+                  <span>--</span>
+                  {{
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol}  ${
+                      rule.rule_description
+                    } ${rule.saddr} ${
+                      rule.sport === undefined ? "" : rule.sport
+                    } ${rule.daddr} ${
+                      rule.dport === undefined ? "" : rule.dport
+                    }   `
+                  }}
+                </del>
+              </v-row>
+            </v-col>
+            <v-col cols="5">
+              <v-row v-for="rule in rowData.value" :key="rule.uuid">
+                <span
+                  v-if="rule.status === 'new' || rule.status === 'old'"
+                  :style="{
+                    color: rule?.status === 'new' ? ' #4CCD99' : '  #4CCD99',
+                    margin: '10px',
+                  }"
+                >
+                  <span> {{ `${rule?.status === "new" ? "+++" : "+-"}` }}</span>
+                  {{
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol}  ${
+                      rule.rule_description
+                    } ${rule.saddr} ${
+                      rule.sport === undefined ? "" : rule.sport
+                    } ${rule.daddr} ${
+                      rule.dport === undefined ? "" : rule.dport
+                    }   `
+                  }}</span
+                >
+              </v-row>
+            </v-col>
+          </v-row>
+        </v-card-text>
+      </v-card>
       <div class="d-flex justify-end ml-3 mt-3 mb-n6">
         <v-btn
           rounded
@@ -83,7 +160,8 @@
           color="#213E9F"
           label-color="#ffffff"
           :isLarge="false"
-          @click="save"
+          :disabled="!rowDataLength"
+          @click="saveRules"
         >
           <span class="text-white pr-3 pl-3">{{ $t("buttons.save") }}</span>
         </v-btn>
@@ -91,22 +169,20 @@
 
       <v-snackbar
         :timeout="2000"
-        v-model="state.snackbar"
+        v-model="state.snackbarDelete"
         location="bottom right"
         :color="state.color"
       >
-        {{ state.textAlert }}
+        {{ state.textAlertDelete }}
       </v-snackbar>
-      <!-- </v-card-text>
-        </v-card> -->
     </div>
   </div>
 </template>
 <script>
-import "ag-grid-community/styles/ag-grid.css";
-import "ag-grid-community/styles/ag-theme-alpine.css";
 import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
+import "ag-grid-community/styles/ag-grid.css";
+import "ag-grid-community/styles/ag-theme-alpine.css";
 import {
   onMounted,
   reactive,
@@ -134,26 +210,43 @@ export default defineComponent({
     activeTab: String,
   },
   setup(props) {
-    
     const { t } = useI18n();
     const paginationLocalization = reactive({
       of: "/",
     });
-    //const overlayTemplate = ref("");
     const emitter = inject("emitter");
     const state = reactive({
       // deleteDialogSquid: false,
       // deletedRow: null,
       snackbar: false,
       color: "",
-      textAlert: "",
+      textAlert: [],
+      textAlertDelete: "",
+      snackbarDelete: false,
       enable: false,
       modalData: {},
       isOpen: null,
       modalMode: "",
       isModalOpen: false,
       editRow: {},
+      rowDataId: null,
     });
+    const gridOptions = {
+      overlayNoRowsTemplate: `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+      <path
+        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+        style="fill: #E8EAF6"
+        data-name="Unbox"
+      />
+    </svg></span>`,
+    };
+
+    const changes = ref(false);
+
+    const rowDataLength = computed(() => {
+      return !rowData.value || rowData.value.length == 0 ? false : true;
+    });
+
     const policy = computed(() => {
       return t("firewall.policy");
     });
@@ -175,6 +268,9 @@ export default defineComponent({
     const dport = computed(() => {
       return t("firewall.dport");
     });
+    const sortedrray = computed(() => {
+      return oldRow.value.slice().sort((a, b) => a.id - b.id);
+    });
     const action = computed(() => {
       return t("firewall.action");
     });
@@ -186,7 +282,6 @@ export default defineComponent({
         width: 50,
         minWidth: 50,
         maxWidth: 50,
-        rowDrag: true,
         editable: false,
       },
       {
@@ -268,7 +363,7 @@ export default defineComponent({
       let eGui = document.createElement("div");
       eGui.innerHTML = `${rslt}
         `;
-      eGui.style.lineHeight = "2";
+      eGui.style.lineHeight = "-4";
       return eGui;
     }
     function formatedLineSadd(data) {
@@ -276,7 +371,7 @@ export default defineComponent({
       let eGui = document.createElement("div");
       eGui.innerHTML = `${rslt}
         `;
-      eGui.style.lineHeight = "2";
+      eGui.style.lineHeight = "-4";
       return eGui;
     }
     function formatedLineDaddr(data) {
@@ -284,7 +379,7 @@ export default defineComponent({
       let eGui = document.createElement("div");
       eGui.innerHTML = `${rslt}
         `;
-      eGui.style.lineHeight = "2";
+      eGui.style.lineHeight = "-4";
       return eGui;
     }
     function formatedLineDport(data) {
@@ -292,18 +387,19 @@ export default defineComponent({
       let eGui = document.createElement("div");
       eGui.innerHTML = `${rslt}
         `;
-      eGui.style.lineHeight = "2";
+      eGui.style.lineHeight = "-4";
       return eGui;
     }
 
     const gridApi = ref(null);
     const gridColumnApi = ref(null);
     const defaultColDef = ref({
-      flex: 1,
-      editable: false,
-      cellDataType: false,
+      // flex: 1,
+      // editable: false,
+      // cellDataType: false,
     });
     const rowData = reactive([]);
+    const oldRow = ref([]);
     const rules = reactive([]);
     const filterText = ref(null);
     const columnOrder = ref([]);
@@ -327,7 +423,7 @@ export default defineComponent({
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
-      gridColumnApi.value = params.columnApi;
+      // gridColumnApi.value = params.columnApi;
 
       // if (rowData.value && rowData.value.length > 0) {
       //   gridApi.value.forEachNode((node) =>
@@ -336,12 +432,12 @@ export default defineComponent({
       // }
     };
 
-    const setGridApi = (api) => {
-      gridApi.value = api;
-    };
-    const onFirstDataRendered = (params) => {
-      params.api.sizeColumnsToFit();
-    };
+    // const setGridApi = (api) => {
+    //   gridApi.value = api;
+    // };
+    // const onFirstDataRendered = (params) => {
+    //   params.api.sizeColumnsToFit();
+    // };
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
       let editingCells = params.api.getEditingCells();
@@ -350,13 +446,13 @@ export default defineComponent({
       });
       if (isCurrentRowEditing) {
         eGui.innerHTML = `
-         <button 
+         <button
           class="action-button update"
           data-action="update"
           >
             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
-        <button 
+        <button
           class="action-button delete"
           data-action="delete"
           >
@@ -365,13 +461,13 @@ export default defineComponent({
         `;
       } else {
         eGui.innerHTML = `
-        <button 
+        <button
           class="action-button update"
           data-action="update"
           >
             <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
-        <button 
+        <button
           class="action-button delete"
           data-action="delete">
                        <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -396,6 +492,7 @@ export default defineComponent({
         case "delete":
           rowDataToDelete.value = rowData;
           deleteDialog.value = true;
+          state.rowDataId = rowData.uuid;
           break;
         case "update":
           mode.value = "update";
@@ -403,49 +500,41 @@ export default defineComponent({
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
-          // showAddModal.value = true;
-          // policy.value = rowData.policy;
-          // rule_description.value = rowData.rule_description;
-          // protocol.value = rowData.protocol;
-          // saddr.value = rowData.saddr;
-          // sport.value = rowData.sport;
-          // daddr.value = rowData.daddr;
-          // dport.value = rowData.dport;
           break;
         default:
           break;
       }
     };
 
-    const arrayMove = (arr, fromIndex, toIndex) => {
-      const element = arr[fromIndex];
-      arr.splice(fromIndex, 1);
-      arr.splice(toIndex, 0, element);
-      return arr.slice();
-    };
-    const onRowDragEnd = (event) => {
-      const updatedRows =
-        event.overIndex !== undefined
-          ? arrayMove(rowData.value, event.node.rowIndex, event.overIndex)
-          : rowData.value;
+    // const arrayMove = (arr, fromIndex, toIndex) => {
+    //   const element = arr[fromIndex];
+    //   arr.splice(fromIndex, 1);
+    //   arr.splice(toIndex, 0, element);
+    //   return arr.slice();
+    // };
+    // const onRowDragEnd = (event) => {
+    //   const updatedRows =
+    //     event.overIndex !== undefined
+    //       ? arrayMove(rowData.value, event.node.rowIndex, event.overIndex)
+    //       : rowData.value;
 
-      rowData.value = updatedRows;
-    };
-    const onColumnRowGroupChanged = (event) => {
-      const newColumnOrder = event.columns.map((column) => column.colId);
-      gridApi.value.setColumnDefs(columnDefs.value);
-      gridApi.value.setColumnOrder(newColumnOrder);
-    };
-    const onColumnRowDragEnd = (event) => {
-      if (event && event.columns) {
-        columnOrder.value = event.columns.map((column) => column.colId);
+    //   rowData.value = updatedRows;
+    // };
+    // const onColumnRowGroupChanged = (event) => {
+    //   const newColumnOrder = event.columns.map((column) => column.colId);
+    //   gridApi.value.setColumnDefs(columnDefs.value);
+    //   gridApi.value.setColumnOrder(newColumnOrder);
+    // };
+    // const onColumnRowDragEnd = (event) => {
+    //   if (event && event.columns) {
+    //     columnOrder.value = event.columns.map((column) => column.colId);
 
-        gridApi.value.setColumnDefs(columnDefs.value);
-        gridApi.value.setColumnOrder(columnOrder.value);
-      } else {
-        console.log("event.columns is undefined or null");
-      }
-    };
+    //     gridApi.value.setColumnDefs(columnDefs.value);
+    //     gridApi.value.setColumnOrder(columnOrder.value);
+    //   } else {
+    //     console.log("event.columns is undefined or null");
+    //   }
+    // };
     const handleRemove = () => {
       alert.value = false;
     };
@@ -474,14 +563,148 @@ export default defineComponent({
     const confirmDelete = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      if (oldRow.value.length === 0 && rowDataToDelete.value.id) {
+        const index = rowData.value.findIndex(
+          (item) => item.id === rowDataToDelete.value.id
+        );
+        if (index !== -1) {
+          rowData.value.splice(index, 1);
+
+          axios
+            .delete(`/rules/deleteRule/${rowDataToDelete.value.id}`)
+            .then((response) => {
+              if (response.status == "200") {
+                // state.snackbar = true;
+                // state.color = "success";
+                // state.textAlert = response.data.msg;
+                // setTimeout(() => {
+                //   location.reload();
+                // }, 1000);
+                state.color = "success";
+                state.snackbarDelete = true;
+                state.textAlertDelete = response.data.msg;
+                // setTimeout(() => {
+                //   location.reload();
+                // }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbarDelete = true;
+              state.color = "red";
+              state.textAlertDelete = i.response.data.response;
+              setTimeout(() => {
+                state.snackbar = false;
+              }, 1000);
+            });
+
+          if (rowData.value.length === 0) changes.value = true;
+          deleteDialog.value = false;
+          oldRow.value.push({ ...rowDataToDelete.value, status: "deleted" });
+
+          if (gridApi.value) {
+            gridApi.value.setRowData(rowData.value);
+          } else {
+            console.error("Grid API.");
+          }
+        }
+      } else if (oldRow.value.length != 0 && rowDataToDelete.value.id) {
+        const index = oldRow.value.findIndex(
+          (obj) => obj.id === rowDataToDelete.value.id
+        );
+        if (index !== -1) {
+          oldRow.value[index].status = "deleted";
+        } else {
+          oldRow.value.push({ ...rowDataToDelete.value, status: "deleted" });
+        }
+        const index2 = rowData.value.findIndex(
+          (item) => item.id === rowDataToDelete.value.id
+        );
+
+        if (index2 !== -1) {
+          rowData.value.splice(index, 1);
+
+          deleteDialog.value = false;
+          if (gridApi.value) {
+            axios
+              .delete(`/rules/deleteRule/${rowDataToDelete.value.id}`)
+              .then((response) => {
+                if (response.status == "200") {
+                  // state.snackbar = true;
+                  // state.color = "success";
+                  // state.textAlert = response.data.msg;
+                  // setTimeout(() => {
+                  //   location.reload();
+                  // }, 1000);
+                  state.color = "success";
+                  state.snackbarDelete = true;
+                  state.textAlertDelete = response.data.msg;
+                  // setTimeout(() => {
+                  //   location.reload();
+                  // }, 1000);
+                }
+              })
+              .catch((i) => {
+                state.snackbarDelete = true;
+                state.color = "red";
+                state.textAlertDelete = i.response.data.response;
+                setTimeout(() => {
+                  state.snackbar = false;
+                }, 1000);
+              });
+            gridApi.value.setRowData(rowData.value);
+          } else {
+            console.error("Grid API.");
+          }
+        }
+      }
+
+      if (!rowDataToDelete.value.id) {
+        const index = rowData.value.findIndex(
+          (item) => item.uuid === state.rowDataId
+        );
+
+        if (index !== -1) {
+          rowData.value.splice(index, 1);
+
+          if (rowData.value.length === 0) changes.value = false;
+
+          deleteDialog;
+          deleteDialog.value = false;
+          if (gridApi.value) {
+            gridApi.value.setRowData(rowData.value);
+          } else {
+            console.error("Grid API.");
+          }
+        }
+      }
+    };
+    const saveModal = () => {
+      showAddModal.value = false;
+    };
+    const saveRules = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let payload = rowData.value.map((e) => {
+        return {
+          policy: e.policy,
+          saddr: e.saddr,
+          daddr: e.daddr,
+          sport: e.sport,
+          dport: e.dport,
+          protocol: e.protocol,
+          type_rule: e.type_rule,
+          rule_description: e.rule_description,
+        };
+      });
 
       axios
-        .delete(`/rules/deleteRule/${rowDataToDelete.value.id}`)
+        .post(`/rules/saveRules/${props.activeTab}`, payload)
         .then((response) => {
           if (response.status == "200") {
             state.snackbar = true;
             state.color = "success";
-            state.textAlert = response.data.msg;
+            state.textAlert = response.data.response;
             setTimeout(() => {
               location.reload();
             }, 1000);
@@ -491,10 +714,11 @@ export default defineComponent({
           state.snackbar = true;
           state.color = "red";
           state.textAlert = i.response.data.response;
+
+          setTimeout(() => {
+            state.snackbar = false;
+          }, 1000);
         });
-    };
-    const saveModal = () => {
-      showAddModal.value = false;
     };
     const cancel = () => {
       showAddModal.value = false;
@@ -507,37 +731,29 @@ export default defineComponent({
           ...rowData.value[index],
           ...updatedObject,
         };
+        changes.value = true;
       }
     }
 
     onMounted(() => {
-      
-    //   overlayTemplate.value = `
-    //   <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
-    //   <path
-    //     d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
-    //     style="fill: #E8EAF6"
-    //     data-name="Unbox"
-    //   />
-    //  </svg></span>`;
-    // console.log(overlayTemplate.valye)
       emitter.on("closFirewallInboundModal", () => {
         state.isModalOpen = false;
         state.isOpen = false;
         state.modalMode = "";
         state.editRow = {};
+        if (gridApi.value) {
+          gridApi.value.setRowData(rowData.value);
+        } else {
+          console.error("Grid API.");
+        }
       });
 
       const rulesAttribute =
         document.getElementById("app").attributes["rules"].value;
-      let validJsonString = rulesAttribute
-        .replace(/'/g, '"')
-        .replace(/True/g, "true")
-        .replace(/False/g, "false")
-        .replace(/None/g, "null");
-      let parsedArray = JSON.parse(validJsonString);
+
+      let parsedArray = JSON.parse(rulesAttribute);
+
       rules.value = parsedArray;
-      console.log("rules.value", rules.value);
 
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
@@ -557,17 +773,54 @@ export default defineComponent({
             protocol: data.protocol,
             rule_description: data.rule_description,
             saddr: data.saddr,
-            sport: data.sport,
-            dport: data.dport,
+            sport: data.sport ?? "ALL",
+            dport: data.dport ?? "ALL",
             type_rule: data.type_rule,
+            status: data.status,
           };
           rowData.value.push(ruleInbound);
+          console.log("or", oldRow.value);
+          changes.value = true;
           if (gridApi.value) {
             gridApi.value.setRowData(rowData.value);
           } else {
             console.error("Grid API.");
           }
         }
+      });
+
+      emitter.on("old-row", (oldObject) => {
+        const array1AsArray = [oldObject];
+        function testObjectEquality() {
+          for (const obj1 of array1AsArray) {
+            const obj2 = rowData.value.find((item) => item.id === obj1.id);
+
+            if (obj2) {
+              let equal = true;
+              for (const key in obj1) {
+                if (obj1.hasOwnProperty(key) && obj1[key] !== obj2[key]) {
+                  equal = false;
+                  break;
+                }
+              }
+              if (!equal) {
+                const index = oldRow.value.findIndex(
+                  (item) => item.id === obj1.id
+                );
+                if (index !== -1) {
+                  oldRow.value.splice(index, 1);
+                  oldRow.value.push(obj1);
+                } else {
+                  if (oldObject.id) oldRow.value.push(obj1);
+                }
+              }
+            }
+            // else {
+            //   oldRow.value.push(obj1);
+            // }
+          }
+        }
+        testObjectEquality();
       });
 
       emitter.on("edit-firewallRule", (data) => {
@@ -581,6 +834,7 @@ export default defineComponent({
           sport: data.sport,
           dport: data.dport,
           type_rule: data.type_rule,
+          status: data.status,
         };
 
         updateObjectById(data.uuid, ruleInbound);
@@ -601,7 +855,21 @@ export default defineComponent({
       () => rules.value,
       (newValue, oldValue) => {
         if (newValue) {
-          rowData.value = rules.value[props.activeTab]["inbound"];
+          rowData.value = rules.value[props.activeTab]["inbound"]?.map((e) => {
+            return {
+              uuid: uuidv4(),
+              id: e.id,
+              policy: e.policy,
+              saddr: e.saddr ?? "ALL",
+              daddr: e.daddr ?? "ALL",
+              sport: e.sport ?? "ALL",
+              dport: e.dport ?? "ALL",
+              protocol: e.protocol[0],
+              type_rule: e.type_rule,
+              rule_description: e.rule_description,
+              status: "initial",
+            };
+          });
         } else {
           rowData.value = [];
         }
@@ -624,10 +892,33 @@ export default defineComponent({
       //   }
       // }
     );
+    // watch(
+    //   () => rowData.value,
+    //   (newValue, oldValue) => {
+    //     if (rowData.value.length) {
+    //       console.log("oldValue10", oldValue);
+    //       console.log("newValue10", newValue);
+    //     }
+    //   },
+    //   { immediate: true }
+    // );
+    // watch(
+    //   () => rowData.value?.slice(),
+    //   (newArray, oldArray) => {
+    //     // console.log("oldValue", oldArray);
+    //     // console.log("newValue", newArray);
+    //     // oldRow.value = oldArray
+    //   },
+    //   { deep: true }
+    // );
 
     return {
+      changes,
       openModalAdd,
+      saveRules,
+      oldRow,
       emitter,
+      rowDataLength,
       columnDefs,
       state,
       gridApi,
@@ -645,14 +936,14 @@ export default defineComponent({
       mode,
       last_Subscription,
       onGridReady,
-      setGridApi,
-      onFirstDataRendered,
+      // setGridApi,
+      // onFirstDataRendered,
       actionCellRenderer,
       onFilterTextBoxChanged,
-      arrayMove,
-      onRowDragEnd,
-      onColumnRowGroupChanged,
-      onColumnRowDragEnd,
+      // arrayMove,
+      // onRowDragEnd,
+      // onColumnRowGroupChanged,
+      // onColumnRowDragEnd,
       handleRemove,
       showDeleteModal,
       handleAction,
@@ -660,7 +951,8 @@ export default defineComponent({
       confirmDelete,
       saveModal,
       cancel,
-    
+      gridOptions,
+      sortedrray,
     };
   },
 });

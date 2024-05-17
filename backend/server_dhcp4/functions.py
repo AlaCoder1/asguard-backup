@@ -7,6 +7,12 @@ from backend.server_dhcp4.serializers import DHCP4ServerSerializer
 from backend.vlan.functions import execute_cmd
 from django.db.models import Q
 from django.core import serializers
+from django.utils.translation import gettext_lazy as _
+
+
+CONSTANT_DHCP_SERVER = _('DHCP server')
+SUCCESS_MESSAGES_SAVED = _("Saved")
+
 
 def customize_error_msg(serializer):
     """function to custom error message serializer"""
@@ -187,8 +193,8 @@ def parse_range_address(data_input):
     ranges_to=[]
     if len(ranges_address)>0:
         for addr in ranges_address:
-            ranges_from.append(addr['range_from'])
-            ranges_to.append(addr['range_to'])
+            ranges_from.append(addr['range_from'].strip())
+            ranges_to.append(addr['range_to'].strip())
         
     return available_range,ranges_from,ranges_to
 
@@ -196,13 +202,13 @@ def save_server_db(data,ranges_from,ranges_to,server_object):
     """function to save changes of config server in database """
     range_from = ' , '.join(filter(None, ranges_from)) if len(ranges_from)!=0 else None
     range_to = ' , '.join(filter(None, ranges_to)) if len(ranges_to)!=0 else None
-    data['range_from']=range_from
-    data['range_to']=range_to
+    data['range_from']=range_from.strip()
+    data['range_to']=range_to.strip()
     data['interface']=server_object.interface_id
     serializer_server=DHCP4ServerSerializer(server_object,data=data)
     if serializer_server.is_valid():
         serializer_server.save()
-        msg="Config server DHPV4 saved successfully!"
+        msg=f"{CONSTANT_DHCP_SERVER} {SUCCESS_MESSAGES_SAVED}"
         status=200
     else:
         # msg=str(next(iter(serializer_server.errors.values()))[0]).strip('.')+"!"
@@ -225,7 +231,7 @@ def get_all_server_dhcp4(request):
             ranges_address=[]
             if ranges_from is not None :
                 for j in range(len(ranges_from)):
-                    ranges_address.append({"range_from":ranges_from[j] , "range_to":ranges_to[j]})
+                    ranges_address.append({"range_from":ranges_from[j].strip() , "range_to":ranges_to[j].strip()})
             
             res[i]['fields']['ranges_address']=ranges_address
             res[i]['fields'].pop("range_from") if "range_from" in res[i]['fields']  else ""

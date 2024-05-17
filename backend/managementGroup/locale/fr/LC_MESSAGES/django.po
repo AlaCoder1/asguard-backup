@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-16 13:10+0000\n"
+"POT-Creation-Date: 2024-05-15 09:43+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,39 +17,34 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+#: backend/managementGroup/views.py:14
+msgid "Groupe name"
+msgstr "Nom du groupe"
 
-#: backend/rules/functions.py:8
-msgid "Rule"
-msgstr "Règle"
-
-#: backend/rules/functions.py:10
+#: backend/managementGroup/views.py:16
 msgid "is created"
 msgstr "est créé"
 
-#: backend/rules/functions.py:11
+#: backend/managementGroup/views.py:17
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/rules/functions.py:12
+#: backend/managementGroup/views.py:18
 msgid "is updated"
-msgstr "est modifié"
+msgstr "est mis à jour"
 
-#: backend/rules/functions.py:14
+#: backend/managementGroup/views.py:21
 msgid "Error in creating"
-msgstr "Erreur lors de la création de"
+msgstr "Erreur lors de la création"
 
-#: backend/rules/functions.py:15
+#: backend/managementGroup/views.py:22
 msgid "Error in deleting"
-msgstr "Erreur lors de la suppression de"
+msgstr "Erreur lors de la suppression"
 
-#: backend/rules/functions.py:16
-msgid "Error in updating"
-msgstr "Erreur lors de la modification de"
+#: backend/managementGroup/views.py:23
+msgid "Invalid"
+msgstr "invalide"
 
-#: backend/rules/functions.py:17
-msgid "already exist"
-msgstr "existe déjà"
-
-#: backend/rules/functions.py:18
-msgid "does not exist"
-msgstr "n'existe pas"
+#: backend/managementGroup/views.py:24
+msgid "Already exist"
+msgstr "Existe déjà"

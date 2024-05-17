@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-16 13:10+0000\n"
+"POT-Creation-Date: 2024-05-16 13:13+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,38 +18,30 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/rules/functions.py:8
-msgid "Rule"
-msgstr "Règle"
+#: backend/vlan/functions.py:8 backend/vlan/views.py:15
+msgid "Configuration VLAN"
+msgstr "Configuration VLAN"
 
-#: backend/rules/functions.py:10
+#: backend/vlan/functions.py:11 backend/vlan/views.py:19
+msgid "Saved"
+msgstr "Sauvegardé"
+
+#: backend/vlan/views.py:16
+msgid "Interface VLAN"
+msgstr "Interface VLAN"
+
+#: backend/vlan/views.py:20
 msgid "is created"
 msgstr "est créé"
 
-#: backend/rules/functions.py:11
+#: backend/vlan/views.py:21
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/rules/functions.py:12
-msgid "is updated"
-msgstr "est modifié"
+#: backend/vlan/views.py:25
+msgid "Already exist"
+msgstr "Existe déjà"
 
-#: backend/rules/functions.py:14
-msgid "Error in creating"
-msgstr "Erreur lors de la création de"
-
-#: backend/rules/functions.py:15
-msgid "Error in deleting"
-msgstr "Erreur lors de la suppression de"
-
-#: backend/rules/functions.py:16
-msgid "Error in updating"
-msgstr "Erreur lors de la modification de"
-
-#: backend/rules/functions.py:17
-msgid "already exist"
-msgstr "existe déjà"
-
-#: backend/rules/functions.py:18
+#: backend/vlan/views.py:26
 msgid "does not exist"
 msgstr "n'existe pas"

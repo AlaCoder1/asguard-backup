@@ -42,6 +42,16 @@ class Command(BaseCommand):
                 source_port = None
             if destination_port.lower() == 'all':
                 destination_port = None
+            # print({"rule":rule})
+            # print({"type_rule":type_rule})
+            # print({"policy":policy})
+            # print({"protocol":protocol})
+            # print({"source_address":source_address})
+            # print({"source_port":source_port})
+            # print({"destination_address":destination_address})
+            # print({"destination_port":destination_port})
+            # print({"interface":interface})
+            # print({"description":description})
             interface_id = Interface.objects.get(ifname=interface)
             ruleupdate=return_rule(policy,source_address,destination_address,source_port,destination_port,protocol,type_rule)
             handle=get_handle_rule(interface,type_rule,rule)
@@ -69,7 +79,12 @@ class Command(BaseCommand):
                             
                         except IntegrityError as e:
                             print("Error occurred:", e)
+                            
+                    else:
+                        return return_add_rule
                 else:
                     return "exist"
+            else:
+                return "Error"
         except IntegrityError as e:
             return "Error: " + str(e)

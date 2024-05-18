@@ -410,16 +410,16 @@ export default defineComponent({
     const rowDataToDelete = ref(null);
 
     const openModalAdd = () => {
-      // if (last_Subscription.value.includes("Firewall")) {
+      if (last_Subscription.value.includes("Firewall")) {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
       emitter.emit("inter-Outbound-uuid", props.uuid);
-      // }
-      //  else {
-      //   emitter.emit("firewal-subscription");
-      //   window.scrollTo(0, 0);
-      // }
+      }
+       else {
+        emitter.emit("firewal-subscription");
+        window.scrollTo(0, 0);
+      }
     };
 
     const onGridReady = (params) => {
@@ -772,6 +772,7 @@ export default defineComponent({
 
       let payload = rowData.value.map((e) => {
         return {
+          id: e.id ?? null,
           policy: e.policy,
           saddr: e.saddr,
           daddr: e.daddr,

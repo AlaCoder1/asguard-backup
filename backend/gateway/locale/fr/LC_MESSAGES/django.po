@@ -21,7 +21,7 @@ msgstr ""
 #: backend/gateway/functions.py:10
 
 msgid "Gateway DHCP"
-msgstr "Passerelle DHCP"
+msgstr "Gateway DHCP"
 
 #: backend/gateway/functions.py:11
 

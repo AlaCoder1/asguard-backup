@@ -63,7 +63,9 @@
     "specificform":"Champ must be at least 32 characters, including at least one uppercase,one lowercase, one number, and one special character",
     "portform":"The local Port field can only include Numbers min 4 and max 5",
     "formsepcificpassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character",
-    "startwithletter":"The name can contain letters, digits, underscores, and hyphens, must begin with a letter, and can be up to 32 characters long"
+    "startwithletter":"The name can contain letters, digits, underscores, and hyphens, must begin with a letter, and can be up to 32 characters long",
+    "addressdAll":"Champ can include address 'X.X.X.X/X' Or word 'ALL'",
+    "numberALL":"Champ can include only Numbers Or word 'ALL'"
 
   },
 
@@ -550,7 +552,11 @@
     "monitoring":"MONITORING",
     "servers":"SERVERS",
     "clients":"CLIENTS",
-    "listing":"LISTING"
+    "listing":"LISTING",
+    "SNAT":"SNAT",
+    "OneToOne":"One To One",
+    "DNAT":"DNAT",
+    "NAT":"NAT"
 
   },
   "titleAgGrid":{

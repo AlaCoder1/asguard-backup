@@ -1,7 +1,7 @@
 <template>
   <div class="mr-3">
     <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
-      <h4>DNAT</h4>
+      <h4>{{ $t("tabs.DNAT") }}</h4>
       <v-divider></v-divider>
       <v-row>
         <v-col cols="12">
@@ -45,14 +45,18 @@
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
-        <v-card-title class="headline">{{$t("firewall.delete_confirm")}}</v-card-title>
-        <v-card-text>{{$t("nat.msg_confirm_delete")}}</v-card-text>
+        <v-card-title class="headline">{{
+          $t("firewall.delete_confirm")
+        }}</v-card-title>
+        <v-card-text>{{ $t("nat.msg_confirm_delete") }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="cancelDelete">{{$t("firewall.cancel")}}</v-btn>
-          <v-btn color="blue darken-1" text @click="confirmDelete"
-            >{{$t("firewall.delete")}}</v-btn
-          >
+          <v-btn color="blue darken-1" text @click="cancelDelete">{{
+            $t("firewall.cancel")
+          }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete">{{
+            $t("firewall.delete")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -69,7 +73,7 @@
 
 <script>
 import axios from "axios";
-import { reactive, ref, onMounted, inject , computed } from "vue";
+import { reactive, ref, onMounted, inject, computed } from "vue";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -556,7 +560,7 @@ export default {
       confirmDelete,
       onRowDragEnd,
       overlayTemplate,
-      paginationLocalization
+      paginationLocalization,
     };
   },
 };

@@ -85,10 +85,10 @@ def restart(request):
         server_satus = ServerSatus.objects.get(id=1)
         server_satus.status_server = False
         server_satus.save()
-        msg = f"{CONSTANT_SQUID}{SUCCESS_MESSAGES_RESTARTING}"
+        msg = f"{CONSTANT_SQUID} {SUCCESS_MESSAGES_RESTARTING}"
         status = 200
     else:
-        msg = f"{ERROR_MESSAGES_RESTARTING}{CONSTANT_SQUID}"
+        msg = f"{ERROR_MESSAGES_RESTARTING} {CONSTANT_SQUID}"
         status =404 
     return JsonResponse({"msg": msg}, status=status)
 
@@ -103,10 +103,10 @@ def restart(request):
 def start(request):
     process = subprocess.run(['systemctl', 'start', 'squid'], capture_output=True, text=True)
     if process.returncode == 0:
-        msg = f"{CONSTANT_SQUID}{SUCCESS_MESSAGES_STARTING}"
+        msg = f"{CONSTANT_SQUID} {SUCCESS_MESSAGES_STARTING}"
         status = 200
     else:
-        msg = f"{ERROR_MESSAGES_STARTING}{CONSTANT_SQUID}"
+        msg = f"{ERROR_MESSAGES_STARTING} {CONSTANT_SQUID}"
         status =404 
     return JsonResponse({"msg": msg}, status=status)
 
@@ -122,10 +122,10 @@ def start(request):
 def stop(request):
     process = subprocess.run(['systemctl', 'stop', 'squid'], capture_output=True, text=True)
     if process.returncode == 0:
-        msg = f"{CONSTANT_SQUID}{SUCCESS_MESSAGES_STOPING}"
+        msg = f"{CONSTANT_SQUID} {SUCCESS_MESSAGES_STOPING}"
         status = 200
     else:
-        msg = f"{ERROR_MESSAGES_STOPING}{CONSTANT_SQUID}"
+        msg = f"{ERROR_MESSAGES_STOPING} {CONSTANT_SQUID}"
         status =404 
     return JsonResponse({"msg": msg}, status=status)
 
@@ -163,7 +163,7 @@ def add_line_after_pattern(file_path, pattern, new_line):
             break
 
     if not found:
-        print(f"{CONSTANT_PATTERN}{pattern}{ERROR_MESSAGES_NOTFOUND_INPATH}{CONSTANT_FILE}")
+        print(f"{CONSTANT_PATTERN} {pattern} {ERROR_MESSAGES_NOTFOUND_INPATH} {CONSTANT_FILE}")
 
     with open(file_path, 'w') as file:
         file.writelines(lines)
@@ -183,7 +183,7 @@ def enable_by_time():
     with open(config_file_path, 'w') as file:
         file.writelines(config_lines)
 
-    return JsonResponse({"msg":f"{CONSTANT_LINES}{CONSTANT_INCOMMENTED}"}, status=200)
+    return JsonResponse({"msg":f"{CONSTANT_LINES} {CONSTANT_INCOMMENTED}"}, status=200)
 @swagger_auto_schema(
     method='POST',
     responses={200: 'Success', 400: 'Bad Request'},
@@ -257,7 +257,7 @@ def addRuleSquid(request):
             serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
             if (serializerProxyRules.is_valid()):
                 serializerProxyRules.save()
-                msg = f"{data['type']}{CONSTANT_BLOCKED}"
+                msg = f"{data['type']} {CONSTANT_BLOCKED}"
                 status=200
                 return JsonResponse({"msg": msg}, status=status)
             else:
@@ -398,7 +398,7 @@ def update_generale_info(request):
     server_satus = ServerSatus.objects.get(id=1)
     server_satus.status_server = True
     server_satus.save() 
-    return JsonResponse({"msg":f"{CONSTANT_PORT}{SUCCESS_MESSAGES_UPDATING}"},status=200)
+    return JsonResponse({"msg":f"{CONSTANT_PORT} {SUCCESS_MESSAGES_UPDATING}"},status=200)
 
 @swagger_auto_schema(
     method='POST',
@@ -427,12 +427,12 @@ def disable_auth(request):
                 else:
                     file.write(line)
 
-        return JsonResponse({"msg":f"{CONSTANT_LINES}{CONSTANT_COMMENTED}"}, status=200)
+        return JsonResponse({"msg":f"{CONSTANT_LINES} {CONSTANT_COMMENTED}"}, status=200)
     except FileNotFoundError:
-        print(f"Error: File not found at path {config_file_path}. Please provide the correct path.")
-        return JsonResponse({"msg": f"{CONSTANT_FILE}{ERROR_MESSAGES_NOTFOUND_INPATH} {CONSTANT_PATH} {config_file_path}.{CONSTANT_CORRECT_PATH}"}, status=404 )
+        
+        return JsonResponse({"msg": f"{CONSTANT_FILE} {ERROR_MESSAGES_NOTFOUND_INPATH} {CONSTANT_PATH} {config_file_path}.{CONSTANT_CORRECT_PATH}"}, status=404 )
     except Exception as e:
-        print(f"An error occurred: {e}")
+        
         return JsonResponse({"msg": f"{ERROR_MESSAGES_OCCURRED}: {e}"}, status=404 )
 
 @swagger_auto_schema(
@@ -465,10 +465,10 @@ def change_auth_status(request):
             server_satus = ServerSatus.objects.get(id=1)
             server_satus.status_server = True
             server_satus.save() 
-            return JsonResponse({"msg":f"{CONSTANT_LINES}{CONSTANT_COMMENTED}"}, status=200)
+            return JsonResponse({"msg":f"{CONSTANT_LINES} {CONSTANT_COMMENTED}"}, status=200)
         except FileNotFoundError:
             print(f"Error: File not found at path {config_file_path}. Please provide the correct path.")
-            return JsonResponse({"msg": f"{CONSTANT_FILE}{ERROR_MESSAGES_NOTFOUND_INPATH} {CONSTANT_PATH} {config_file_path}.{CONSTANT_CORRECT_PATH}"}, status=404 )
+            return JsonResponse({"msg": f"{CONSTANT_FILE} {ERROR_MESSAGES_NOTFOUND_INPATH} {CONSTANT_PATH} {config_file_path}.{CONSTANT_CORRECT_PATH}"}, status=404 )
         except Exception as e:
             print(f"An error occurred: {e}")
             return JsonResponse({"msg": f"{ERROR_MESSAGES_OCCURRED}: {e}"}, status=404 )
@@ -487,7 +487,7 @@ def change_auth_status(request):
         server_satus = ServerSatus.objects.get(id=1)
         server_satus.status = True
         server_satus.save() 
-        return JsonResponse({"msg": f"{CONSTANT_LINES}{CONSTANT_INCOMMENTED}"}, status=200)
+        return JsonResponse({"msg": f"{CONSTANT_LINES} {CONSTANT_INCOMMENTED}"}, status=200)
 
 @swagger_auto_schema(
     method='POST',
@@ -513,7 +513,7 @@ def enable_auth(request):
     with open(config_file_path, 'w') as file:
         file.writelines(config_lines)
 
-    return JsonResponse({"msg":f"{CONSTANT_LINES}{CONSTANT_INCOMMENTED}"}, status=200)
+    return JsonResponse({"msg":f"{CONSTANT_LINES} {CONSTANT_INCOMMENTED}"}, status=200)
 
 @swagger_auto_schema(
     method='GET',
@@ -604,7 +604,7 @@ def change_pwd(request):
         subprocess.run(["crontab", "-"], input=new_crontab, universal_newlines=True)
 
         print("Cron job added successfully.")
-        return JsonResponse({"msg": f"{CONSTANT_CRON_JOB}{SUCCESS_MESSAGES_CREATING}"}, status=200)
+        return JsonResponse({"msg": f"{CONSTANT_CRON_JOB} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     except subprocess.CalledProcessError as e:
         print(f"Error: {e}")
         return JsonResponse({"msg": e}, status=404)
@@ -632,7 +632,7 @@ def add_user_squid(request):
             server_satus.status_server = True
             server_satus.save() 
             #send_email_to_user(email_squid,password_squid,username_squid)
-            msg = f"{CONSTANT_USER}{username_squid}{SUCCESS_MESSAGES_CREATING}"
+            msg = f"{CONSTANT_USER} {username_squid} {SUCCESS_MESSAGES_CREATING}"
             status=200
             return JsonResponse({"msg": msg}, status=status)
         except IntegrityError as e:
@@ -678,7 +678,7 @@ def delete_user_squid(request,id):
         server_satus = ServerSatus.objects.get(id=1)
         server_satus.status_server = True
         server_satus.save() 
-        return JsonResponse({"msg":f"{CONSTANT_USER}{SUCCESS_MESSAGES_DELETING}"},status=200)
+        return JsonResponse({"msg":f"{CONSTANT_USER} {SUCCESS_MESSAGES_DELETING}"},status=200)
     else:
         return JsonResponse({"msg":f"{ERROR_MESSAGES_OCCURRED}"},status = 404 )
 
@@ -747,7 +747,7 @@ def changeStausGroup(request):
     server_satus = ServerSatus.objects.get(id=1)
     server_satus.status_server = True
     server_satus.save() 
-    return JsonResponse({"msg":f"{CONSTANT_STATUS}{SUCCESS_MESSAGES_CHANGE_STATUS}"}, status=200)
+    return JsonResponse({"msg":f"{CONSTANT_STATUS} {SUCCESS_MESSAGES_CHANGE_STATUS}"}, status=200)
 
 @swagger_auto_schema(
     method='POST',
@@ -770,7 +770,7 @@ def readFromFile(request):
                 else:
                     content.append([line.lstrip('#').split('\n')[0], True])
     except FileNotFoundError:
-        return JsonResponse({"msg":f"{CONSTANT_PATH}{squid_config_path}{ERROR_MESSAGES_INEXISTANT}"},status=404 )
+        return JsonResponse({"msg":f"{CONSTANT_PATH} {squid_config_path} {ERROR_MESSAGES_INEXISTANT}"},status=404 )
     except Exception as e:
         return JsonResponse({"msg":f"{ERROR_MESSAGES_OCCURRED}{e}"},status=404 )
                 
@@ -808,7 +808,7 @@ def changeStausElementsInGroup(request):
     server_satus = ServerSatus.objects.get(id=1)
     server_satus.status_server = True
     server_satus.save() 
-    return JsonResponse({"msg": f"{CONSTANT_STATUS}{SUCCESS_MESSAGES_CHANGE_STATUS}"}, status=200)
+    return JsonResponse({"msg": f"{CONSTANT_STATUS} {SUCCESS_MESSAGES_CHANGE_STATUS}"}, status=200)
 
 def changeStausElement(target_url,uncomment,file_path):
     with open(file_path, 'r') as file:
@@ -825,7 +825,7 @@ def changeStausElement(target_url,uncomment,file_path):
     with open(file_path, 'w') as file:
         file.writelines(lines)
         
-    return JsonResponse({"msg":f"{CONSTANT_STATUS}{SUCCESS_MESSAGES_CHANGE_STATUS}"}, status=200)
+    return JsonResponse({"msg":f"{CONSTANT_STATUS} {SUCCESS_MESSAGES_CHANGE_STATUS}"}, status=200)
 
 
 def deleteElement(type,value,file_path):
@@ -924,7 +924,7 @@ def updateStatusRule(request,id):
     server_satus = ServerSatus.objects.get(id=1)
     server_satus.status_server = True
     server_satus.save() 
-    return JsonResponse({"msg": f"{CONSTANT_RULE}{SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    return JsonResponse({"msg": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
 
 
 def file_selected(status,type):

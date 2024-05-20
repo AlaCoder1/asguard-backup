@@ -1,7 +1,7 @@
 <template>
   <div class="mr-3">
     <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
-      <h4>One To One</h4>
+      <h4>{{$t('tabs.OneToOne')}}</h4>
       <v-divider></v-divider>
       <v-row>
         <v-col cols="12">

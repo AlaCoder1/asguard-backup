@@ -61,7 +61,9 @@
     "specificform":"champ doit y avoir au moins 32 caractères, dont au moins une majuscule, une minuscule, un chiffre et un caractère spécial.",
     "portform":"Le champ local Port ne peut inclure que des chiffres, avec un minimum de 4 et un maximum de 5",
     "formsepcificpassword":"champ doit y avoir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial",
-    "startwithletter":"Le nom peut contenir des lettres, des chiffres, des traits de soulignement et des tirets, doit commencer par une lettre et peut comporter jusqu'à 32 caractères"
+    "startwithletter":"Le nom peut contenir des lettres, des chiffres, des traits de soulignement et des tirets, doit commencer par une lettre et peut comporter jusqu'à 32 caractères",
+    "addressdAll":"champ peut inclure une adresse 'X.X.X.X/X' ou mot 'ALL'",
+    "numberALL":"champ ne peut inclure que des nombres ou le mot 'ALL'"
 
 
 
@@ -543,7 +545,11 @@
     "monitoring":"SURVEILLANCE",
     "servers":"SERVEURS",
     "clients":"CLIENTS",
-    "listing":"LISTE"
+    "listing":"LISTE",
+    "SNAT":"SNAT",
+    "OneToOne":"Un à un",
+    "DNAT":"DNAT",
+    "NAT":"NAT"
 
   },
   "titleAgGrid":{

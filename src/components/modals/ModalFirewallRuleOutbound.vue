@@ -53,9 +53,9 @@
                 v-model="state.formData.saddr"
                 outlined
               ></v-text-field>
-              <!-- <p class="error-feedback mb-5" v-if="v$.formData.saddr.$error">
-                {{ v$.formData.saddr.$errors[0].$message }}
-              </p> -->
+              <p class="error-feedback mb-5" v-if="saddrCheck">
+                {{ $t("errors.addressdAll") }}
+              </p>
             </v-col>
             <v-col cols="6" class="mb-n6">
               <v-text-field
@@ -65,9 +65,12 @@
                 v-model="state.formData.sport"
                 outlined
               ></v-text-field>
-              <!-- <p class="error-feedback mb-5" v-if="v$.formData.sport.$error">
+              <p class="error-feedback mb-5" v-if="sportCheck">
+                {{ $t("errors.numberALL") }}
+              </p>
+              <p class="error-feedback mb-5" v-if="v$.formData.sport.$error">
                 {{ v$.formData.sport.$errors[0].$message }}
-              </p> -->
+              </p>
             </v-col>
           </v-row>
           <v-row>
@@ -77,9 +80,9 @@
                 v-model="state.formData.daddr"
                 outlined
               ></v-text-field>
-              <!-- <p class="error-feedback mb-5" v-if="v$.formData.daddr.$error">
-                {{ v$.formData.daddr.$errors[0].$message }}
-              </p> -->
+              <p class="error-feedback mb-5" v-if="daddrCheck">
+                {{ $t("errors.addressdAll") }}
+              </p>
             </v-col>
             <v-col cols="6">
               <v-text-field
@@ -89,9 +92,9 @@
                 v-model="state.formData.dport"
                 outlined
               ></v-text-field>
-              <!-- <p class="error-feedback mb-5" v-if="v$.formData.dport.$error">
-                {{ v$.formData.dport.$errors[0].$message }}
-              </p> -->
+              <p class="error-feedback mb-5" v-if="dportCheck">
+                {{ $t("errors.numberALL") }}
+              </p>
             </v-col>
           </v-row>
         </v-card-text>
@@ -117,7 +120,9 @@
                 outlined
                 color="#213E9F"
                 label-color="#ffffff"
-                :disabled="equal"
+                :disabled="
+                  equal || dportCheck || sportCheck || daddrCheck || saddrCheck
+                "
                 :isLarge="true"
                 class="ml-2"
                 @click="submitForm"
@@ -218,15 +223,56 @@ export default {
       type_rule: "",
       status: "",
     });
+
+    const saddrCheck = computed(() => {
+      let checkSadrr = false;
+      if (state.formData.saddr !== "ALL") {
+        if (
+          !/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/.test(
+            state.formData.saddr
+          )
+        )
+          checkSadrr = true;
+      } else if (state.formData.saddr === "ALL") checkSadrr = false;
+
+      return checkSadrr;
+    });
+
+    const daddrCheck = computed(() => {
+      let daddrCheck = false;
+      if (state.formData.daddr !== "ALL") {
+        if (
+          !/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/.test(
+            state.formData.daddr
+          )
+        )
+          daddrCheck = true;
+      } else if (state.formData.daddr === "ALL") daddrCheck = false;
+
+      return daddrCheck;
+    });
+
+    const sportCheck = computed(() => {
+      let sportCheck = false;
+      if (state.formData.sport !== "ALL") {
+        if (!/^[0-9]+$/.test(state.formData.sport)) sportCheck = true;
+      } else if (state.formData.sport === "ALL") sportCheck = false;
+
+      return sportCheck;
+    });
+    const dportCheck = computed(() => {
+      let dportCheck = false;
+      if (state.formData.dport !== "ALL") {
+        if (!/^[0-9]+$/.test(state.formData.dport)) dportCheck = true;
+      } else if (state.formData.dport === "ALL") dportCheck = false;
+
+      return dportCheck;
+    });
+
     const error = computed(() => {
       return t("errors.valueRequired");
     });
-    const onlynumbers = computed(() => {
-      return t("errors.ChampIncludeOnlyNumbers");
-    });
-    const formaaddress = computed(() => {
-      return t("errors.formatMustBeLikeAdresseIP");
-    });
+
     const rules = computed(() => {
       return {
         formData: {
@@ -240,56 +286,12 @@ export default {
             required: helpers.withMessage(error, required),
           },
 
-          // sport: {
-          //   // requiredIfFuction: helpers.withMessage(
-          //   //   "Value is required",
-          //   //   requiredIf(() => state.formData.protocol !== "all")
-          //   // ),
-
-          //   isValidSport: helpers.withMessage(
-          //     `Champs can include only Numbers.`,
-
-          //     helpers.regex(/^[0-9]+$/)
-          //   ),
-          // },
-
-          // daddr: {
-          //   // isValidDaddr: helpers.withMessage(
-          //   //   `Format must be like adresse IP : X.X.X.X`,
-
-          //   //   helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
-          //   // ),
-          //   isValidDaddr: helpers.withMessage(
-          //     `Format must be like : X.X.X.X/X`,
-          //     helpers.regex(
-          //       /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
-          //     )
-          //   ),
-          // },
-
-          // saddr: {
-          //   isValidSaddr: helpers.withMessage(
-          //     `Format must be like : X.X.X.X/X`,
-          //     helpers.regex(
-          //       /^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\/(32|3[01]|[1-2]?[1-9]))$/
-          //     )
-          //   ),
-          // },
-          // // saddr: {
-          // //   isValidSaddr: helpers.withMessage(
-          // //     `Format must be like adresse IP : X.X.X.X`,
-
-          // //     helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
-          // //   ),
-          // // },
-
-          // dport: {
-          //   isValidSport: helpers.withMessage(
-          //     `Champs can include only Numbers.`,
-
-          //     helpers.regex(/^[0-9]+$/)
-          //   ),
-          // },
+          sport: {
+            requiredIfFuction: helpers.withMessage(
+              error,
+              requiredIf(() => state.formData.protocol !== "all")
+            ),
+          },
         },
       };
     });
@@ -538,7 +540,6 @@ export default {
           //     state.textAlert = i.response.data.response;
           //   });
           emitter.emit("addFirewallRuleOutbound", payload);
-         
         }
 
         closeModal();
@@ -550,6 +551,10 @@ export default {
 
     return {
       state,
+      saddrCheck,
+      dportCheck,
+      daddrCheck,
+      sportCheck,
       equal,
       policyList,
       protocolList,

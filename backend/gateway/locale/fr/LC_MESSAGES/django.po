@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-08 20:27+0000\n"
+"POT-Creation-Date: 2024-05-16 16:37+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,17 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: backend/gateway/functions.py:10
+
+msgid "Gateway DHCP"
+msgstr "Passerelle DHCP"
+
+#: backend/gateway/functions.py:11
+
+msgid "does not found"
+msgstr "n'est pas trouvée"
+
 #: backend/gateway/views.py:19
 msgid "Gateway"
 msgstr "Gateway"

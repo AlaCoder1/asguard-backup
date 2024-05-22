@@ -549,7 +549,8 @@
     "SNAT":"SNAT",
     "OneToOne":"Un à un",
     "DNAT":"DNAT",
-    "NAT":"NAT"
+    "NAT":"NAT",
+    "application":"Application"
 
   },
   "titleAgGrid":{
@@ -921,7 +922,17 @@
       "Maximumparsingdepth":"Profondeur maximale d'analyse",
       "RequestAction":"Demande d'action",
       "Rule":"Règle",
-      "Status":"Statut"
+      "Status":"Statut",
+      "operator":"Operateur", 
+      "transformations":"Fonctions de transformation",
+      "typeTransformations":"Type Fonctions de transformation",
+      "activate":"Activer",
+      "useTransformation":"Utilisez votre propre transformation",
+      "applicationName":"Nom de l'application",
+      "createNewApplication":"Créer une nouvelle application",
+      "updateApplication":"Modifier l'application",
+      "block":"Bloc",
+      "log":"journal"
 
     },
     "settings":{

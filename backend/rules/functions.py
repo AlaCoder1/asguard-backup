@@ -81,10 +81,12 @@ def return_rule(policy,saddr,daddr,sport,dport,protocol,type_rule):
    rule=''
    #concatener tous les addresses à bloquer
    ##cas inbound
-   if policy=="reject" and not protocol.startswith("icmp"):
+   if policy=="reject":
       policy="reject with icmp port-unreachable"
-   elif policy=="reject" and  protocol.startswith("icmp"):
-      policy="reject with icmp type port-unreachable"
+   # if policy=="reject" and not protocol.startswith("icmp type"):
+   #    policy="reject with icmp port-unreachable"
+   # elif policy=="reject" and  protocol.startswith("icmp type"):
+   #    policy="reject with icmp type port-unreachable"
    if type_rule=='inbound' :
       if protocol.upper() != "ALL":
          rule='ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(saddr,daddr,protocol,sport,protocol,dport,policy)
@@ -147,15 +149,22 @@ def add_rule_remote(rule,ifname,type_rule):
 def get_handle_rule(ifname,type_rule,rule):
    """function to get handle rule"""
    # if not(rule.find('sport')==-1 and rule.find('dport')==-1):
-   rule=rule.replace("port-unreachable","3")
+      
    if 'sport' not in rule and 'dport' not in rule:
       if rule.find('ip protocol')!=-1 and rule.find("type")==-1 :
-         rule=rule.replace("icmp","1")
+         ip_protocol_index = rule.find('ip protocol')
+         reject_with_index = rule.find('reject with')
+         icmp_index = rule.find('icmp', ip_protocol_index)
+         if icmp_index != -1 and (reject_with_index == -1 or icmp_index < reject_with_index):
+            rule = rule[:icmp_index] + '1' + rule[icmp_index + len('icmp'):]
+         # rule = rule.replace("icmp", "1", 1)
       rule=rule.replace("echo-request","8")
       rule=rule.replace("echo-reply","0")
       rule=rule.replace("tcp","6")
       rule=rule.replace("udp","17")
    ##cmd pour obtenir handle number pour supprimer rule 
+   rule=rule.replace("port-unreachable","3")
+   
    cmd="sudo nft --handle --numeric list chain inet filter_{} {} | grep '{}'".format(ifname,type_rule,rule)
    ##executer cette commande
    output,_=run_command(cmd)

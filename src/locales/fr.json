@@ -15,6 +15,14 @@
 
 
   },
+  "login":{
+    "verifyYourAccount":"Vérifier Votre Compte",
+    "send":"Nous avons envoyé un code de vérification à",
+    "pleaseMail":"Veuillez vérifier votre Mail et coller le code ci-dessous.",
+    "verify":"Vérifier",
+    "receiveCode":"Vous n'avez pas reçu le code ?",
+    "resend":"Renvoyer"
+  },
   "buttons":{
     "login":"se connecter",
     "save":"Sauvegarder",
@@ -330,7 +338,12 @@
     "device":"Dispositif",
     "VXLANNetworkIdentifie":"Identification du réseau VXLAN",
     "sourceAddress":"Adresse source",
-    "multicastGroup":"Groupe multicast"
+    "multicastGroup":"Groupe multicast",
+    "VXLANInterfaceName":"Nom de l'interface VXLAN",
+    "VXLANNetworkIdentifier":"Identificateur de réseau VXLAN (tag)",
+    "parentDevice":"Dispositif parent",
+    "connectionName":"Nom de la connexion",
+    "selectType":"Sélectionner le Type Vlan/Vxlan"
 
   },
   "routing":{
@@ -985,7 +998,10 @@
       "Newpassowrd":"Nouveau mot de passe",
       "ConfirmNewpassowrd":"Confirmer le nouveau mot de passe",
       "ChangePassword":"Changer mot de passe",
-      "Update":"Mettre à jour"
+      "Update":"Mettre à jour",
+      "pleaseChoose":"Veuillez choisir un fichier image",
+      "fileBig":"Votre fichier est trop volumineux ! Veuillez sélectionner une image de moins de 1MB",
+      "GotIt":"Je l'ai!"
     }
     
     

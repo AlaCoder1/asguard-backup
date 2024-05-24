@@ -13,9 +13,15 @@
     "description":"Description",
     "server":"Directory Server",
     "LoginTime":"Login Time"
-    
-    
-    
+  },
+  "login":{
+    "verifyYourAccount":"Verify Your Account",
+    "send":"We sent a verification code to",
+    "pleaseMail":"Please check your email and paste the code below.",
+    "verify":"Verify",
+    "receiveCode":"Didn't receive the code?",
+    "resend":"Resend"
+
   },
   "buttons":{
     "login":"login",
@@ -338,7 +344,12 @@
     "device":"Device",
     "VXLANNetworkIdentifie":"VXLAN Network Identifie",
     "sourceAddress":"Source Address",
-    "multicastGroup":"Multicast group"
+    "multicastGroup":"Multicast group",
+    "VXLANInterfaceName":"VXLAN interface name",
+    "VXLANNetworkIdentifier":"VXLAN Network Identifier (tag)",
+    "parentDevice":"Parent device",
+    "connectionName":"Connection Name",
+    "selectType":"Select Type Vlan/Vxlan"
 
   },
   "routing":{
@@ -991,7 +1002,10 @@
       "Newpassowrd":"New passowrd",
       "ConfirmNewpassowrd":"Confirm New passowrd",
       "ChangePassword":"Change Password",
-      "Update":"Update"
+      "Update":"Update",
+      "pleaseChoose":"Please choose an image file",
+      "fileBig":"Your file is too big! Please select an image under 1MB",
+      "GotIt":"Got it!"
     }
 
 

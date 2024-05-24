@@ -16,6 +16,20 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-select
+                    v-model="state.typeV"
+                    :label="$t('typeInterface.selectType')"
+                    item-title="name"
+                    item-value="slug"
+                    :items="state.listType"
+                    return-object
+                    :no-data-text="$t('certificat.certificatlist')"
+                  ></v-select>
+                  <p class="error-feedback mb-5" v-if="v$.typeV.$error">
+                    {{ v$.typeV.$errors[0].$message }}
+                  </p>
+                </v-col>
+                <v-col cols="12" class="mb-n6">
+                  <v-select
                     v-model="state.interface"
                     :readonly="modalMode === 'edit' ? true : false"
                     :label="$t('typeInterface.newInterface')"
@@ -141,6 +155,7 @@ export default {
       id: null,
       rowList: [],
       listVlan: [],
+      listType: [],
       listVlanAssing: [],
       snackbar: false,
       color: "",
@@ -148,6 +163,8 @@ export default {
       openModal: false,
       interface: "",
       name_interface: "",
+      typeV: "",
+      
     });
 
     watch(
@@ -168,6 +185,7 @@ export default {
         if (modalMode.value === "create") {
           state.interface = "";
           state.name_interface = "";
+          state.typeV = "";
           state.id = null;
 
           if (state.rowList.length == 0) {
@@ -285,6 +303,7 @@ export default {
       if (modalMode.value === "create") {
         state.interface = "";
         state.name_interface = "";
+        state.typeV = "";
         state.id = null;
       }
     };
@@ -297,6 +316,9 @@ export default {
           required: helpers.withMessage(error, required),
         },
         name_interface: {
+          required: helpers.withMessage(error, required),
+        },
+        typeV: {
           required: helpers.withMessage(error, required),
         },
       };

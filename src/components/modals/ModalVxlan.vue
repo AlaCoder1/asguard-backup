@@ -16,7 +16,16 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('typeInterface.VXLANNetworkIdentifie')"
+                    :label="$t('typeInterface.VXLANInterfaceName')"
+                    v-model="state.interfaceName"
+                  ></v-text-field>
+                  <p class="error-feedback mb-5" v-if="v$.interfaceName.$error">
+                    {{ v$.interfaceName.$errors[0].$message }}
+                  </p>
+                </v-col>
+                <v-col cols="12" class="mb-n6">
+                  <v-text-field
+                    :label="$t('typeInterface.VXLANNetworkIdentifier')"
                     v-model="state.vni"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.vni.$error">
@@ -35,17 +44,26 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    :label="$t('typeInterface.multicastGroup')"
-                    v-model="state.multicast"
+                    :label="$t('firewall.daddr')"
+                    v-model="state.daddress"
                   ></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.multicast.$error">
-                    {{ v$.multicast.$errors[0].$message }}
+                  <p class="error-feedback mb-5" v-if="v$.daddress.$error">
+                    {{ v$.daddress.$errors[0].$message }}
+                  </p>
+                </v-col>
+                <v-col cols="12" class="mb-n6">
+                  <v-text-field
+                    :label="$t('firewall.dport')"
+                    v-model="state.dport"
+                  ></v-text-field>
+                  <p class="error-feedback mb-5" v-if="v$.dport.$error">
+                    {{ v$.dport.$errors[0].$message }}
                   </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.device"
-                    :label="$t('typeInterface.device')"
+                    :label="$t('typeInterface.parentDevice')"
                     item-title="name"
                     item-value="slug"
                     :items="state.listDevice"
@@ -54,6 +72,15 @@
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.device.$error">
                     {{ v$.device.$errors[0].$message }}
+                  </p>
+                </v-col>
+                <v-col cols="12" class="mb-n6">
+                  <v-text-field
+                    :label="$t('typeInterface.connectionName')"
+                    v-model="state.connectionName"
+                  ></v-text-field>
+                  <p class="error-feedback mb-5" v-if="v$.connectionName.$error">
+                    {{ v$.connectionName.$errors[0].$message }}
                   </p>
                 </v-col>
               </v-row>
@@ -148,6 +175,10 @@ export default {
       vlanPriority: "",
       sourceAddress: "",
       vni: "",
+      interfaceName: "",
+      connectionName: "",
+      daddress: "",
+      dport: "",
     });
 
     watch(
@@ -168,8 +199,12 @@ export default {
         if (modalMode.value === "create") {
           state.device = "";
           state.vni = "";
+          state.dport = "";
+          state.interfaceName = "";
+          state.connectionName = "";
           state.vlanPriority = "";
           state.sourceAddress = "";
+          state.daddress = "";
         }
       }
     );
@@ -263,7 +298,10 @@ export default {
       if (modalMode.value === "create") {
         state.device = "";
         state.vni = "";
-        state.multicast = "";
+        state.connectionName = "";
+        state.interfaceName = "";
+        state.dport = "";
+        state.daddress = "";
         state.sourceAddress = "";
       }
     };
@@ -281,8 +319,17 @@ export default {
         device: {
           required,
         },
+        connectionName: {
+          required,
+        },
+        interfaceName: {
+          required,
+        },
 
-        multicast: {
+        dport: {
+          required,
+        },
+        daddress: {
           required,
         },
         sourceAddress: {

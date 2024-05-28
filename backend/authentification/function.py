@@ -9,7 +9,7 @@ from .models import VerificationCode
 import smtplib
 import random
 import string
-import qrcode
+# import qrcode
 import os
 
 

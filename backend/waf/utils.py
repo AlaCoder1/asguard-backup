@@ -1,74 +1,53 @@
-from backend.waf.constant_variables import CONSTANT_JSON_REQUEST, CONSTANT_JSON_REQUEST_COMMENTED, CONSTANT_XML_REQUEST, CONSTANT_XML_REQUEST_COMMENTED, PATH_WAF_CONFIG
+def convert_waf_rule_payload(rule_data):
+    """Function to convert a WAF rule payload 
+    from an object containing a list for each field 
+    to a string to each one of them and set the rule_id for the rule_data"""
+    rule_data["variables"] = ",".join(rule_data["variables"])
+    rule_data["operators"] = ",".join(rule_data["operators"])
+    rule_data["transformations"] = ",".join(rule_data["transformations"])
+    actions = ""
+    for action_dict in rule_data["actions"]:
+        if action_dict["type"] == "id":
+            rule_data["rule_id"] = action_dict["value"]
+        actions += action_dict["type"]
+        if action_dict["value"] != "":
+            actions += f""":{action_dict["value"]}"""
+        actions += ","
+    rule_data["actions"] = actions[:-1]
+    return rule_data
 
 
-def change_waf_config_file(data_config):
-    """Change WAF config file with inputs"""
-    with open(PATH_WAF_CONFIG) as waf_config_file:
-        waf_config_content = waf_config_file.read()
-    config = change_content_config(waf_config_content, data_config)
-    with open(PATH_WAF_CONFIG, 'w') as waf_config_file:
-        waf_config_file.write(config)
-
-
-def change_content_config(config: str, data_config: dict):
-    """Get content of WAF config file and return a new content with input data"""
-    config_keys = {"rule_engine_initialization": "SecRuleEngine",
-                   "access_request_bodies": "SecRequestBodyAccess",
-                   "xml_request_body_parser": "SecRule",
-                   "json_request_body_parser": "SecRule",
-                   "maximum_request_body_size": "SecRequestBodyLimit",
-                   "request_body_size_files_excluded": "SecRequestBodyNoFilesLimit",
-                   "request_body_limit_action": "SecRequestBodyLimitAction",
-                   "maximum_parsing_depth_json": "SecRequestBodyJsonDepthLimit",
-                   "maximum_number_args_request": "SecArgumentsLimit",
-                   "pcre_match_limit": "SecPcreMatchLimit",
-                   "pcre_match_limit_recursion": "SecPcreMatchLimitRecursion",
-                   "response_body_access": "SecResponseBodyAccess",
-                   "response_body_mimetype": "SecResponseBodyMimeType",
-                   "response_body_limit": "SecResponseBodyLimit",
-                   "response_body_limit_action": "SecResponseBodyLimitAction"
-                   }
-    for key in config_keys:
-
-        if key == 'access_request_bodies':
-            config = convert_bool_to_on_off(data_config[key], 'SecRequestBodyAccess', config)
-
-        elif key == 'response_body_access':
-            config = convert_bool_to_on_off(data_config[key], 'SecResponseBodyAccess', config)
-
-        elif key == "xml_request_body_parser":
-            config = comment_uncomment_field(data_config[key], CONSTANT_XML_REQUEST_COMMENTED, CONSTANT_XML_REQUEST, config)
-                
-        elif key == "json_request_body_parser":
-            config = comment_uncomment_field(data_config[key], CONSTANT_JSON_REQUEST_COMMENTED, CONSTANT_JSON_REQUEST, config)
-
+def convert_waf_rule_database(rule: dict):
+    """Function to convert fields of a WAF rule from an object containing an str for each field to a list"""
+    rule["variables"] = list(rule["variables"].split(","))
+    rule["operators"] = list(rule["operators"].split(","))
+    rule["transformations"] = list(rule["transformations"].split(","))
+    actions = list(rule["actions"].split(","))
+    rule["actions"] = []
+    for action in actions:
+        action_list = list(action.split(":"))
+        if len(action_list) > 1:
+            rule["actions"].append({"type": action_list[0], "value": action_list[1]})
         else:
-            index_key = config.find(f'{config_keys[key]} ')
-            line = config[index_key:config.find("\n", index_key)]
-            if key == 'response_body_mimetype':
-                response_body_mimetype = data_config[key]
-                if data_config[key] == 'text/*':
-                    response_body_mimetype = 'text/plain text/html text/xml'
-                config = config.replace(line, f'SecResponseBodyMimeType {response_body_mimetype}')
+            rule["actions"].append({"type": action_list[0], "value": ""})
+    return rule
+
+
+def convert_waf_rule_database1(list_rule_waf: dict):
+    """Function to convert fields of a WAF rule from an object containing an str for each field to a list"""
+    list_created_rule_waf = [rule for rule in list_rule_waf if rule["created"]]
+    list_rule = []
+    for rule in list_created_rule_waf:
+        rule["variables"] = list(rule["variables"].split(","))
+        rule["operators"] = list(rule["operators"].split(","))
+        rule["transformations"] = list(rule["transformations"].split(","))
+        actions = list(rule["actions"].split(","))
+        rule["actions"] = []
+        for action in actions:
+            action_list = list(action.split(":"))
+            if len(action_list) > 1:
+                rule["actions"].append({"type": action_list[0], "value": action_list[1]})
             else:
-                config = config.replace(line, f'{config_keys[key]} {data_config[key]}')
-                
-    return config
-
-
-def convert_bool_to_on_off(bool_test, field_config, config: str):
-    """Convert a boolean input (True or False) to On/Off on a config file content"""
-    if bool_test:
-        config = config.replace(f'\n{field_config} Off', f'\n{field_config} On')
-    else:
-        config = config.replace(f'\n{field_config} On', f'\n{field_config} Off')
-    return config
-
-
-def comment_uncomment_field(bool_test, field_commented, field_uncommented, config: str):
-    """Comment or uncomment a field on a config file content"""
-    if bool_test:
-        config = config.replace(f'\n{field_commented}', f'\n{field_uncommented}')
-    else:
-        config = config.replace(f'\n{field_uncommented}', f'\n{field_commented}')
-    return config
+                rule["actions"].append({"type": action_list[0], "value": ""})
+        list_rule.append(rule)
+    return list_rule

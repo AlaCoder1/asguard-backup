@@ -34,7 +34,7 @@ import ruamel.yaml
 from backend.settings.models import *
 from collections import defaultdict
 from backend.waf.list_waf import get_one_waf_config
-from views.functions import get_vlan, get_vlan_interface
+from views.functions import get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
 
 from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
@@ -689,6 +689,13 @@ def vlan_page(request):
     list_vlan_interface= get_vlan_interface(request)
     context = {'list_vlan':list_vlan,'list_vlan_interface':list_vlan_interface}
     return render(request, 'vlan.html',context)
+
+@login_required(login_url='/')
+def vxlan_page(request):
+    list_vxlan=get_vxlan(request)
+    list_vxlan_interface= get_vxlan_interface(request)
+    context = {'list_vxlan':list_vxlan,'list_vxlan_interface':list_vxlan_interface}
+    return render(request, 'vxlan.html',context)
 
 @login_required(login_url='/')
 def routing_page(request):

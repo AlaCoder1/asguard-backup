@@ -9,7 +9,7 @@ from .models import VerificationCode
 import smtplib
 import random
 import string
-# import qrcode
+import qrcode
 import os
 
 
@@ -44,6 +44,9 @@ def normal_connect(request,data):
         else:
             if send_verification_code(user_dict['email'], user_dict['username']):
                 return f"{CONSTANT_VERIFIFCATION_CODE} {SUCCESS_MESSAGES_SENT}", current_user, status.HTTP_200_OK
+            else:
+                print('code incorrect')
+                return f"incorrect code , please try again", current_user, status.HTTP_401_UNAUTHORIZED
     else:
         return ERROR_MESSAGES_INVALID_CREDENTIALS, None, status.HTTP_401_UNAUTHORIZED
     

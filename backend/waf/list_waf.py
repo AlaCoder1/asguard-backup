@@ -1,7 +1,8 @@
 from django.core import serializers
 import json
 
-from backend.waf.models import ConfigWaf, RulesWaf
+from backend.waf.models import ApplicationRulesWaf, ApplicationWaf, ConfigWaf, RulesWaf
+from backend.waf.utils import convert_waf_rule_database
 
 
 # Configuration WAF
@@ -16,7 +17,7 @@ def get_one_waf_config():
 
 
 # Rules WAF list
-def get_list_all_waf():
+def get_list_all_waf_rule():
     """Getting all WAF Rules from database"""
 
     list_waf = []
@@ -27,15 +28,58 @@ def get_list_all_waf():
     for waf in res:
         waf_id = waf['pk']
         waf['fields']['id'] = waf_id
+        waf['fields'].pop("rule_content")
+        waf['fields'].pop("rule_status")
+        waf['fields'].pop("rule_id")
+        if waf['fields']['created']:
+            waf['fields'] = convert_waf_rule_database(waf['fields'])
         list_waf.append(waf['fields'])
     return list_waf
 
 
-def get_one_waf(id):
+def get_one_waf_rule(id):
     """Getting waf by id from database"""
     waf = RulesWaf.objects.filter(pk=id)
     waf_dict = serializers.serialize("json", waf)
     res = json.loads(waf_dict)
     waf_id = res[0]['pk']
     res[0]['fields']['id'] = waf_id
+    res[0]['fields'].pop("rule_content")
+    res[0]['fields'].pop("rule_status")
+    res[0]['fields'].pop("rule_id")
+    if res[0]['fields']['created']:
+        res[0]['fields'] = convert_waf_rule_database(res[0]['fields'])
+    return res[0]['fields']
+
+
+# Application WAF list
+def get_list_all_waf_application():
+    """Getting all waf applications from database"""
+
+    list_waf_application = []
+    waf_applications = ApplicationWaf.objects.all()
+    waf_application_dict = serializers.serialize("json", waf_applications)
+    res = json.loads(waf_application_dict)
+    for waf_application in res:
+        waf_application.pop('model')
+        waf_application_id = waf_application['pk']
+        waf_application.pop('pk')
+        waf_application['fields']['id'] = waf_application_id
+        waf_application_rules = ApplicationRulesWaf.objects.filter(application_waf_id=waf_application_id)
+        waf_application['fields']['rules'] = [rule.rule_waf.name for rule in waf_application_rules]
+        list_waf_application.append(waf_application['fields'])
+    return list_waf_application
+
+
+def get_one_waf_application(id):
+    """Getting waf application by id from database"""
+    waf_application = ApplicationWaf.objects.filter(pk=id)
+    waf_application_dict = serializers.serialize("json", waf_application)
+    res = json.loads(waf_application_dict)
+    res[0].pop('model')
+    waf_application_id = res[0]['pk']
+    res[0].pop('pk')
+    res[0]['fields']['id'] = waf_application_id
+    waf_application_rules = ApplicationRulesWaf.objects.filter(application_waf_id=waf_application_id)
+    res[0]['fields']['rules'] = [rule.rule_waf.name for rule in waf_application_rules]
     return res[0]['fields']

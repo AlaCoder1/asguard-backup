@@ -9,8 +9,8 @@ from backend.vlan.models import Vlan
 from django.core import serializers
 from django.utils.translation import gettext_lazy as _
 from backend.vlan.serializers import VlanSerializer
-
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 # Constants
 CONSTANT_VLAN_CONFIG = _('Configuration VLAN')
 CONSTANT_VLAN_INTERFACE = _('Interface VLAN')
@@ -43,7 +43,13 @@ def get_vlan(request):
             list_vlan.append(res[i]['fields'])
     return JsonResponse({"msg": list_vlan})  
 
-
+@swagger_auto_schema(
+    method='POST',
+    request_body=VlanSerializer,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO ADD VLAN",
+    operation_description="This API add VLAN with their caracteristique in database",
+)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_vlan(request):
@@ -60,7 +66,14 @@ def add_vlan(request):
             msg=str(next(iter(vlan_serializer.errors.values()))[0]).strip('.')+"!"
             status=400
     return JsonResponse({"msg": msg},status=status)  
-    
+   
+@swagger_auto_schema(
+    method='PUT',
+    request_body=VlanSerializer,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO ADD VLAN",
+    operation_description="This API add VLAN with their caracteristique in database",
+) 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vlan(request,id):
@@ -107,6 +120,12 @@ def update_vlan(request,id):
     return JsonResponse({"msg": msg},status=status) 
 
 
+@swagger_auto_schema(
+    method='DELETE',
+    responses={200: 'Deleted', 400: 'Bad Request'},
+    operation_summary="API DELETE VLAN",
+    operation_description="This API delete VLAN by id ",
+)
 
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
@@ -128,7 +147,26 @@ def delete_vlan(request,id):
         else:
             msg=f"{CONSTANT_VLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
             status=400
-    return JsonResponse({"msg": msg},status=status)  
+    return JsonResponse({"msg": msg},status=status) 
+
+vlan_request_schema = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the VLAN'),
+        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VLAN interface')
+    },
+    required=['id', 'name_interface']
+)
+
+
+
+@swagger_auto_schema(
+    method='POST',
+    request_body=vlan_request_schema,
+    responses={200: "Created", 400: 'Bad Request'},
+    operation_summary="API TO ASSIGN VLAN Interface",
+    operation_description="This API assign a VLAN with its characteristics to the database and system",
+)
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -168,6 +206,26 @@ def assign_vlan_interface(request):
             status=400
     return JsonResponse({"msg": msg},status=status)  
 
+
+vlan_request_schema = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'id': openapi.Schema(type=openapi.TYPE_INTEGER, description='ID of the VLAN'),
+        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VLAN interface')
+    },
+    required=['id', 'name_interface']
+)
+
+
+
+@swagger_auto_schema(
+    method='PUT',
+    request_body=vlan_request_schema,
+    responses={200: "Created", 400: 'Bad Request'},
+    operation_summary="API TO update VLAN interface",
+    operation_description="This API adds a VLAN with its characteristics to the database",
+)
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vlan_interface(request,id_interface):
@@ -202,7 +260,14 @@ def update_vlan_interface(request,id_interface):
             msg=f"{CONSTANT_VLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"
             status=400
     return JsonResponse({"msg": msg},status=status)  
-    
+ 
+@swagger_auto_schema(
+    method='DELETE',
+    responses={200: 'Deleted', 400: 'Bad Request'},
+    operation_summary="API DELETE VLAN interface",
+    operation_description="This API delete VLAN interface by id ",
+)
+   
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vlan_interface(request,id_interface):

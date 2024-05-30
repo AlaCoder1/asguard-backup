@@ -35,3 +35,24 @@ class RulesWaf(models.Model):
 
     class Meta:
         db_table = 'rules_waf'
+
+
+class ApplicationWaf(models.Model):
+    name = models.CharField(max_length=300, default=None, null=True, blank=True, unique=True)
+    application_type = models.CharField(max_length=100, default="ip", null=True, blank=True)
+    application_value = models.CharField(max_length=100, default=None, null=True, blank=True)
+    description = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    rules = models.ManyToManyField(RulesWaf, through="ApplicationRulesWaf")
+
+    class Meta:
+        db_table = 'application_waf'
+
+
+class ApplicationRulesWaf(models.Model):
+    application_waf = models.ForeignKey(ApplicationWaf, on_delete=models.CASCADE)
+    rule_waf = models.ForeignKey(RulesWaf, on_delete=models.CASCADE)
+    rule_policy = models.BooleanField(default=False)
+    rule_log = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'application_rule_waf'

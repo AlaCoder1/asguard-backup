@@ -5,7 +5,8 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 from backend.network.models import Interface
 from backend.network.serializers import InterfaceSerializer
-from backend.vxlan.functions import add_vxlan_sys, get_all_nmcli_uuids,save_in_db
+from backend.vlan.functions import CONSTANT_VLAN_CONFIG, SUCCESS_MESSAGES_SAVED
+from backend.vxlan.functions import add_vxlan_sys, delete_vxlan_sys, get_all_nmcli_uuids,save_in_db, update_vxlan_sys
 from backend.vxlan.models import Vxlan
 from django.core import serializers
 from django.utils.translation import gettext_lazy as _
@@ -46,7 +47,81 @@ def add_vxlan(request):
             status=400
     return JsonResponse({"msg": msg},status=status)  
     
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+def update_vxlan(request,id):
+    """API to update vlan in system and database"""
+    if (request.method == 'PUT'):
+        # parse the incoming information
+        data_input =request.data
+        if Vxlan.objects.filter(id=id).exists():
+            vlan_object=Vxlan.objects.get(id=id)
+            vlan_serializer=VxlanSerializer(vlan_object,data=data_input)
+            if vlan_serializer.is_valid():
+                old_vxlan=vlan_object.vxlan_interface_name
+                old_vxlan_id=vlan_object.vxlan_connection_uuid
+                ##new attributs
+                parent_interface=Interface.objects.get(id=data_input['parent_interface']).ifname
+                vxlan_id=data_input['vxlan_id']
+                vxlan_interface_name=data_input['vxlan_interface_name']
+                vxlan_source_address=data_input['vxlan_source_address']
+                vxlan_destination_address=data_input['vxlan_destination_address']
+                vxlan_destination_port=data_input['vxlan_destination_port']
+                vxlan_connection_uuid=data_input['vxlan_connection_uuid']
+                if Interface.objects.filter(ifname=old_vxlan).exists(): 
+                    print({"hello":old_vxlan_id})
+                    interface_object=Interface.objects.get(ifname=old_vxlan)
+                    aux_save=update_vxlan_sys(old_vxlan_id,parent_interface,vxlan_id,vxlan_interface_name,vxlan_source_address,vxlan_destination_address,vxlan_destination_port,vxlan_connection_uuid) 
+                    data_save={
+                        "ifname":f"{vxlan_interface_name}",
+                        "private_aux":False,
+                        "bogon_aux":False,
+                        "description":f"update default config {vxlan_interface_name}",
+                        }
+                    if aux_save:
+                        interface_serializer=InterfaceSerializer(interface_object,data=data_save)
+                        msg,status=save_in_db(aux_save,interface_serializer)
+                        
+                    else:
+                        msg=aux_save
+                        status=400
+                else:
+                    msg="vxlan saved successfully!!"
+                    status=200
+                vlan_serializer.save()
+            else:
+                msg=str(next(iter(vlan_serializer.errors.values()))[0]).strip('.')+"!"
+                status=400
+      
+        else:
+            msg=f"Vxlan not exist!"
+            status=400
+    return JsonResponse({"msg": msg},status=status) 
 
+
+
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
+def delete_vxlan(request,id):
+    """API to delete vlan from database only"""
+    if (request.method == 'DELETE'):
+        # parse the incoming information
+        if Vxlan.objects.filter(id=id):
+            vlan_object=Vxlan.objects.get(id=id)
+            vxlan_ifname=vlan_object.vxlan_interface_name
+            vxlan_connection=vlan_object.vxlan_connection_uuid
+            if Interface.objects.filter(ifname=vxlan_ifname).exists():
+                interface_object=Interface.objects.get(ifname=vxlan_ifname)
+                aux_delete=delete_vxlan_sys(vxlan_connection,vxlan_ifname)
+                if aux_delete:
+                    interface_object.delete()
+            vlan_object.delete()
+            msg=f"vxlan deleted successfully!"
+            status=200
+        else:
+            msg=f"vxlan not exist!"
+            status=404
+    return JsonResponse({"msg": msg},status=status)  
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def assign_vxlan_interface(request):
@@ -54,8 +129,8 @@ def assign_vxlan_interface(request):
     if (request.method == 'POST'):
         data_input =request.data
         interface_name=data_input["ifname"]
-        if Vxlan.objects.filter(vxlan_connection_uuid=interface_name).exists():
-            vxlan_object=Vxlan.objects.get(vxlan_connection_uuid=interface_name)
+        if Vxlan.objects.filter(vxlan_interface_name=interface_name).exists():
+            vxlan_object=Vxlan.objects.get(vxlan_interface_name=interface_name)
             vxlan = serializers.serialize("json", [vxlan_object])
             res_vxlan = json.loads(vxlan)[0]['fields']
             parent_interface=Interface.objects.get(id=res_vxlan["parent_interface"]).ifname
@@ -67,11 +142,11 @@ def assign_vxlan_interface(request):
             vxlan_connection_uuid=res_vxlan["vxlan_connection_uuid"]
              
             data_save={
-                        "ifname":data_input["ifname"],
+                        "ifname":vxlan_interface_name,
                         "private_aux":False,
                         "bogon_aux":False,
-                        "name_interface":data_input['name_interface'],
-                        "description":f"test default config vxlan {vxlan_id}"
+                        "name_interface":f"VXLAN {data_input['name_interface']}",
+                        "description":f"test default config {vxlan_interface_name}"
                     }
             if not Interface.objects.filter(ifname=vxlan_interface_name).exists():
                 aux_save=add_vxlan_sys(parent_interface,vxlan_id,vxlan_interface_name,vxlan_source_address,vxlan_destination_address,vxlan_destination_port,vxlan_connection_uuid)
@@ -88,3 +163,71 @@ def assign_vxlan_interface(request):
             msg="Vxlan interface not exist"
             status=400
     return JsonResponse({"msg": msg},status=status)  
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+def update_vxlan_interface(request,id_interface):
+    if (request.method == 'PUT'):
+        # parse the incoming information
+        data_input=request.data
+        if Interface.objects.filter(id=id_interface).exists():
+            vlan_object=Interface.objects.get(id=id_interface)
+            data_save={
+                        "ifname":f"{vlan_object.ifname}",
+                        "private_aux":False,
+                        "bogon_aux":False,
+                        "name_interface":f"VXLAN {data_input['name_interface']}",
+                    }
+            interface_serializer=InterfaceSerializer(vlan_object,data=data_save)
+            aux_save=True
+            msg,status=save_in_db(aux_save,interface_serializer)
+        else:
+            msg=f"VXLAN interface not exist!"
+            status=400
+    return JsonResponse({"msg": msg},status=status)  
+    
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
+def delete_vxlan_interface(request,id_interface):
+    if (request.method == 'DELETE'):
+        # parse the incoming information
+        if Interface.objects.filter(id=id_interface).exists():
+            vlan_object=Interface.objects.get(id=id_interface)
+            ifname_vxlan=vlan_object.ifname
+            vxlan_connection=Vxlan.objects.get(vxlan_interface_name=ifname_vxlan).vxlan_connection_uuid
+            aux_delete=delete_vxlan_sys(vxlan_connection,ifname_vxlan)
+            if aux_delete:
+                vlan_object.delete()
+                msg=f"vxlan deleted successfully!!"
+                status=200
+            else:
+                msg=aux_delete
+                status=400
+        else:
+            msg=f"vxlan not exist!!"
+            status=404
+      
+    return JsonResponse({"msg": msg},status=status) 
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+def get_vxlan_interface(request):
+    """API to get all vlan assigned from database """
+    if (request.method == 'GET'):
+        list_vlan_interface=[]
+        # parse the incoming information
+        vlan_object = Interface.objects.filter(name_interface__startswith='VXLAN')
+        vlans = serializers.serialize("json", vlan_object)
+        res = json.loads(vlans)
+        for i in range(len(res)):
+            vlan_ifname=res[i]['fields']['ifname']
+            interface=Vxlan.objects.get(vxlan_interface_name=vlan_ifname).parent_interface_id
+            ifname_parent=Interface.objects.get(id=interface).ifname      
+            data={
+                "id":res[i]['pk'],
+                "name_interface":res[i]['fields']['name_interface'],
+                "network_port":f"VXLAN {vlan_ifname} on {ifname_parent}"
+            }
+            list_vlan_interface.append(data)
+    return JsonResponse({"msg": list_vlan_interface})  

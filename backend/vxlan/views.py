@@ -11,7 +11,8 @@ from backend.vxlan.models import Vxlan
 from django.core import serializers
 from django.utils.translation import gettext_lazy as _
 from backend.vxlan.serializers import VxlanSerializer
-
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -29,7 +30,13 @@ def get_vxlan(request):
             list_vxlan.append(res[i]['fields'])
     return JsonResponse({"msg": list_vxlan})  
 
-
+@swagger_auto_schema(
+    method='POST',
+    request_body=VxlanSerializer,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO ADD VXLAN",
+    operation_description="This API add VXLAN with their caracteristique in database",
+)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_vxlan(request):
@@ -46,7 +53,15 @@ def add_vxlan(request):
             msg=str(next(iter(vxlan_serializer.errors.values()))[0]).strip('.')+"!"
             status=400
     return JsonResponse({"msg": msg},status=status)  
-    
+ 
+ 
+@swagger_auto_schema(
+    method='PUT',
+    request_body=VxlanSerializer,
+    responses={200: 'Created', 400: 'Bad Request'},
+    operation_summary="API TO ADD VXLAN",
+    operation_description="This API add VXLAN with their caracteristique in database",
+)     
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vxlan(request,id):
@@ -98,6 +113,12 @@ def update_vxlan(request,id):
             status=400
     return JsonResponse({"msg": msg},status=status) 
 
+@swagger_auto_schema(
+    method='DELETE',
+    responses={200: 'Deleted', 400: 'Bad Request'},
+    operation_summary="API DELETE VXLAN",
+    operation_description="This API delete VXLAN by id ",
+)
 
 
 @api_view(['DELETE'])
@@ -122,6 +143,26 @@ def delete_vxlan(request,id):
             msg=f"vxlan not exist!"
             status=404
     return JsonResponse({"msg": msg},status=status)  
+
+vxlan_request_schema = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'ifname': openapi.Schema(type=openapi.TYPE_STRING, description='ifname of the VxLAN'),
+        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VxLAN interface')
+    },
+    required=['ifname', 'name_interface']
+)
+
+
+
+@swagger_auto_schema(
+    method='POST',
+    request_body=vxlan_request_schema,
+    responses={200: "Created", 400: 'Bad Request'},
+    operation_summary="API TO ASSIGN VXLAN Interface",
+    operation_description="This API assign a VXLAN with its characteristics to the database and system",
+)
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def assign_vxlan_interface(request):
@@ -164,6 +205,23 @@ def assign_vxlan_interface(request):
             status=400
     return JsonResponse({"msg": msg},status=status)  
 
+vxlan_request_schema_update = openapi.Schema(
+    type=openapi.TYPE_OBJECT,
+    properties={
+        'name_interface': openapi.Schema(type=openapi.TYPE_STRING, description='Name of the VxLAN interface')
+    },
+    required=['name_interface']
+)
+
+
+
+@swagger_auto_schema(
+    method='PUT',
+    request_body=vxlan_request_schema_update,
+    responses={200: "Created", 400: 'Bad Request'},
+    operation_summary="API TO update ASSIGN VXLAN Interface",
+    operation_description="This API update assign a VXLAN with its characteristics to the database and system",
+)
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_vxlan_interface(request,id_interface):
@@ -185,7 +243,13 @@ def update_vxlan_interface(request,id_interface):
             msg=f"VXLAN interface not exist!"
             status=400
     return JsonResponse({"msg": msg},status=status)  
-    
+   
+@swagger_auto_schema(
+    method='DELETE',
+    responses={200: 'Deleted', 400: 'Bad Request'},
+    operation_summary="API DELETE VxLAN interface",
+    operation_description="This API delete VxLAN interface by id ",
+)    
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 def delete_vxlan_interface(request,id_interface):

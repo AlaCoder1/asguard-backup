@@ -3,7 +3,8 @@ from backend.network.models import Interface
 from backend.network.serializers import InterfaceSerializer
 from django.utils.translation import gettext_lazy as _
 
-
+CONSTANT_VXLAN_CONFIG = _('Configuration VxLAN')
+SUCCESS_MESSAGES_SAVED = _("Saved")
 
 
 def get_all_nmcli_uuids():
@@ -85,7 +86,7 @@ def delete_vxlan_sys(vxlan_connection,ifname_vxlan):
 def save_in_db(aux_save,interface_serializer):
     if aux_save and interface_serializer.is_valid():
         interface_serializer.save()
-        msg="Vxlan configuration saved!"
+        msg=f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}"
         status=200
     else:
         msg=str(next(iter(interface_serializer.errors.values()))[0]).strip('.')+"!"

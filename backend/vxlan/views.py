@@ -5,7 +5,6 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 from backend.network.models import Interface
 from backend.network.serializers import InterfaceSerializer
-from backend.vlan.functions import CONSTANT_VLAN_CONFIG, SUCCESS_MESSAGES_SAVED
 from backend.vxlan.functions import add_vxlan_sys, delete_vxlan_sys, get_all_nmcli_uuids,save_in_db, update_vxlan_sys
 from backend.vxlan.models import Vxlan
 from django.core import serializers
@@ -13,6 +12,25 @@ from django.utils.translation import gettext_lazy as _
 from backend.vxlan.serializers import VxlanSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+
+
+
+# Constants
+CONSTANT_VXLAN_CONFIG = _('Configuration VxLAN')
+CONSTANT_VXLAN_INTERFACE = _('Interface VxLAN')
+
+# Success messages
+SUCCESS_MESSAGES_SAVED = _("Saved")
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+
+
+# Error messages
+ERROR_MESSAGES_EXISTANT = _("Already exist")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
+
+
+
 
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -47,7 +65,7 @@ def add_vxlan(request):
         vxlan_serializer=VxlanSerializer(data=data_input)
         if vxlan_serializer.is_valid():
             vxlan_serializer.save()
-            msg= "Vxlan Added successfully"
+            msg= f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_CREATING}"
             status=200
         else:
             msg=str(next(iter(vxlan_serializer.errors.values()))[0]).strip('.')+"!"
@@ -84,7 +102,6 @@ def update_vxlan(request,id):
                 vxlan_destination_port=data_input['vxlan_destination_port']
                 vxlan_connection_uuid=data_input['vxlan_connection_uuid']
                 if Interface.objects.filter(ifname=old_vxlan).exists(): 
-                    print({"hello":old_vxlan_id})
                     interface_object=Interface.objects.get(ifname=old_vxlan)
                     aux_save=update_vxlan_sys(old_vxlan_id,parent_interface,vxlan_id,vxlan_interface_name,vxlan_source_address,vxlan_destination_address,vxlan_destination_port,vxlan_connection_uuid) 
                     data_save={
@@ -101,7 +118,7 @@ def update_vxlan(request,id):
                         msg=aux_save
                         status=400
                 else:
-                    msg="vxlan saved successfully!!"
+                    msg=f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_SAVED}"
                     status=200
                 vlan_serializer.save()
             else:
@@ -109,7 +126,7 @@ def update_vxlan(request,id):
                 status=400
       
         else:
-            msg=f"Vxlan not exist!"
+            msg=f"{CONSTANT_VXLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
             status=400
     return JsonResponse({"msg": msg},status=status) 
 
@@ -137,10 +154,10 @@ def delete_vxlan(request,id):
                 if aux_delete:
                     interface_object.delete()
             vlan_object.delete()
-            msg=f"vxlan deleted successfully!"
+            msg=f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_DELETING}"
             status=200
         else:
-            msg=f"vxlan not exist!"
+            msg=f"{CONSTANT_VXLAN_CONFIG} {ERROR_MESSAGES_INEXISTANT}"
             status=404
     return JsonResponse({"msg": msg},status=status)  
 
@@ -198,10 +215,10 @@ def assign_vxlan_interface(request):
                     msg=aux_save
                     status=400
             else:
-                msg= "Vxlan interface already exist"
+                msg= f"{CONSTANT_VXLAN_INTERFACE} {ERROR_MESSAGES_EXISTANT}"
                 status=400
         else:
-            msg="Vxlan interface not exist"
+            msg=f"{CONSTANT_VXLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"
             status=400
     return JsonResponse({"msg": msg},status=status)  
 
@@ -240,7 +257,7 @@ def update_vxlan_interface(request,id_interface):
             aux_save=True
             msg,status=save_in_db(aux_save,interface_serializer)
         else:
-            msg=f"VXLAN interface not exist!"
+            msg=f"{CONSTANT_VXLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"
             status=400
     return JsonResponse({"msg": msg},status=status)  
    
@@ -262,13 +279,13 @@ def delete_vxlan_interface(request,id_interface):
             aux_delete=delete_vxlan_sys(vxlan_connection,ifname_vxlan)
             if aux_delete:
                 vlan_object.delete()
-                msg=f"vxlan deleted successfully!!"
+                msg=f"{CONSTANT_VXLAN_INTERFACE} {SUCCESS_MESSAGES_DELETING}"
                 status=200
             else:
                 msg=aux_delete
                 status=400
         else:
-            msg=f"vxlan not exist!!"
+            msg=f"{CONSTANT_VXLAN_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"
             status=404
       
     return JsonResponse({"msg": msg},status=status) 

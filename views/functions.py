@@ -84,14 +84,18 @@ def get_vxlan_interface(request):
         for i in range(len(res)):
             vlan_ifname=res[i]['fields']['ifname']
             interface=Vxlan.objects.get(vxlan_interface_name=vlan_ifname).parent_interface_id
-            ifname_parent=Interface.objects.get(id=interface).ifname      
+            ifname_parent=Interface.objects.get(id=interface).ifname
+            id_vxlan=Vxlan.objects.get(vxlan_interface_name=vlan_ifname).id
+
             data={
                 "id":res[i]['pk'],
+                "id_vxlan":id_vxlan,
                 "name_interface":res[i]['fields']['name_interface'],
                 "network_port":f"VXLAN {vlan_ifname} on {ifname_parent}"
             }
             list_vlan_interface.append(data)
     return list_vlan_interface
+
 
 def get_vxlan(request):
     """API to get all vxlan from database """

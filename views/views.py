@@ -709,8 +709,10 @@ def routing_page(request):
 @login_required(login_url='/')
 def interface_type(request):
     list_vlan=get_vlan(request)
+    list_vxlan=get_vxlan(request)
     list_vlan_interface= get_vlan_interface(request)
-    context = {'list_vlan':json.dumps(list_vlan),'list_vlan_interface':json.dumps(list_vlan_interface)}
+    list_vxlan_interface= get_vxlan_interface(request)
+    context = {'list_vlan':json.dumps(list_vlan),'list_vlan_interface':json.dumps(list_vlan_interface),'list_vxlan':json.dumps(list_vxlan),'list_vxlan_interface':json.dumps(list_vxlan_interface)}
     return render(request, 'interfaceType.html',context)
 
 @login_required(login_url='/')

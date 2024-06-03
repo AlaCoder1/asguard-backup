@@ -64,6 +64,7 @@
     "passwordConfirmation":"Votre mot de passe ne correspond pas",
     "ChampIncludeOnlyNumbers":"Champ ne peut inclure que des numéros",
     "formatMustBeLikeAdresseIP":"Format doit correspondre à l'adresse IP : X.X.X.X",
+    "formatMustBeLikeAdresse":"Format doit correspondre à l'adresse : X.X.X.X/XX",
     "minimumOneRange":"Minimum Une Plage",
     "Formatdomain":"Le format doit être comme exemple.com",
     "specificform":"champ doit y avoir au moins 32 caractères, dont au moins une majuscule, une minuscule, un chiffre et un caractère spécial.",

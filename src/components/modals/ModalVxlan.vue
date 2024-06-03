@@ -65,7 +65,7 @@
                     v-model="state.device"
                     :label="$t('typeInterface.parentDevice')"
                     item-title="name"
-                    item-value="slug"
+                    item-value="id"
                     :items="state.listDevice"
                     return-object
                     :no-data-text="$t('certificat.certificatlist')"
@@ -78,8 +78,12 @@
                   <v-text-field
                     :label="$t('typeInterface.connectionName')"
                     v-model="state.connectionName"
+                    :readonly="modalMode === 'edit' ? true : false"
                   ></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.connectionName.$error">
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.connectionName.$error"
+                  >
                     {{ v$.connectionName.$errors[0].$message }}
                   </p>
                 </v-col>
@@ -136,6 +140,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
@@ -157,8 +162,11 @@ export default {
   },
 
   setup(props) {
+    const { t } = useI18n();
     const emitter = inject("emitter");
-    onMounted(() => {});
+    onMounted(() => {
+      getInterface();
+    });
 
     const { isOpen, editRow, modalMode } = toRefs(props);
 
@@ -172,7 +180,6 @@ export default {
       openModal: false,
 
       device: "",
-      vlanPriority: "",
       sourceAddress: "",
       vni: "",
       interfaceName: "",
@@ -202,7 +209,6 @@ export default {
           state.dport = "";
           state.interfaceName = "";
           state.connectionName = "";
-          state.vlanPriority = "";
           state.sourceAddress = "";
           state.daddress = "";
         }
@@ -211,15 +217,19 @@ export default {
 
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        //   state.id = data.id;
-        //   let filtredInterface = state.listInterfaces.filter(
-        //     (i) => i.id === data?.parent_interface
-        //   );
-        //   state.interface = filtredInterface[0];
-        //   state.vni = data.vlan_tag;
-        //   state.vlanPriority = data.vlan_priority;
-        //   state.sourceAddress = data.description;
-        // }
+        console.log("data", data);
+
+        let filtredInterface = state.listDevice.filter(
+          (i) => i.id === data?.parent_interface
+        );
+        state.id = data.id;
+        state.device = filtredInterface[0];
+        state.vni = data.vxlan_id;
+        state.connectionName = data.vxlan_connection_uuid;
+        state.interfaceName = data.vxlan_interface_name;
+        state.dport = data.vxlan_destination_port;
+        state.daddress = data.vxlan_destination_address;
+        state.sourceAddress = data.vxlan_source_address;
       }
     };
 
@@ -238,59 +248,90 @@ export default {
       return cookieValue;
     };
 
+    const getInterface = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/network/AllInterfaces").then(
+        (response) => {
+          let filtredInterface = response.data.filter(
+            (i) =>
+              !i.ifname.startsWith("tun_") &&
+              !i.ifname.startsWith("tap_") &&
+              !i.ifname.startsWith("vlan") &&
+              !i.name_interface.startsWith("VXLAN")
+          );
+
+          let interfaces = filtredInterface.map((i) => {
+            return {
+              id: i.id,
+              name: i.name_interface,
+            };
+          });
+
+          state.listDevice = interfaces;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
+
     const submitForm = async () => {
-      // const result = await v$.value.$validate();
-      // const csrfToken = getCookie("csrftoken");
-      // axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      // if (result) {
-      //   let payload = {
-      //     parent_interface: state.interface?.id,
-      //     vlan_tag: state.vni,
-      //     vlan_priority: state.vlanPriority,
-      //     description: state.description,
-      //   };
-      //   console.log("payload", payload);
-      //   if (modalMode.value === "edit") {
-      //     axios
-      //       .put(`/vlan/updateVlan/${state.id}`, payload)
-      //       .then((response) => {
-      //         if (response.status == "200") {
-      //           state.snackbar = true;
-      //           state.color = "success";
-      //           state.textAlert = response.data.msg;
-      //           setTimeout(() => {
-      //             location.reload();
-      //           }, 1000);
-      //         }
-      //       })
-      //       .catch((i) => {
-      //         state.snackbar = true;
-      //         state.color = "red";
-      //         state.textAlert = i.response.data.msg;
-      //       });
-      //   } else {
-      //     axios
-      //       .post("/vlan/addVlan", payload)
-      //       .then((response) => {
-      //         if (response.status == "200") {
-      //           state.openModal = false;
-      //           state.snackbar = true;
-      //           state.color = "success";
-      //           state.textAlert = response.data.msg;
-      //           setTimeout(() => {
-      //             location.reload();
-      //           }, 1000);
-      //         }
-      //       })
-      //       .catch((i) => {
-      //         state.snackbar = true;
-      //         state.color = "red";
-      //         state.textAlert = i.response.data.msg;
-      //       });
-      //   }
-      // } else {
-      //   console.log("v$", v$.value);
-      // }
+      const result = await v$.value.$validate();
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      if (result) {
+        let payload = {
+          parent_interface: state.device.id,
+          vxlan_id: state.vni,
+          vxlan_destination_port: state.dport,
+          vxlan_interface_name: state.interfaceName,
+          vxlan_connection_uuid: state.connectionName,
+          vxlan_source_address: state.sourceAddress,
+          vxlan_destination_address: state.daddress,
+        };
+        if (modalMode.value === "edit") {
+          axios
+            .put(`/vxlan/updateVxlan/${state.id}`, payload)
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+            });
+        } else {
+          axios
+            .post("/vxlan/addVxlan", payload)
+            .then((response) => {
+              if (response.status == "200") {
+                state.openModal = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+            });
+        }
+      } else {
+        console.log("v$", v$.value);
+      }
     };
 
     const closeModal = () => {
@@ -306,34 +347,57 @@ export default {
       }
     };
 
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const champInclude = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
+
     const rules = computed(() => {
       return {
         vni: {
+          required: helpers.withMessage(error, required),
           isValidvni: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            champInclude,
 
             helpers.regex(/^[0-9]+$/)
           ),
         },
 
         device: {
-          required,
+          required: helpers.withMessage(error, required),
         },
         connectionName: {
-          required,
+          required: helpers.withMessage(error, required),
         },
         interfaceName: {
-          required,
+          required: helpers.withMessage(error, required),
         },
 
         dport: {
-          required,
+          required: helpers.withMessage(error, required),
+          isValidDport: helpers.withMessage(
+            champInclude,
+            helpers.regex(/^[0-9]+$/)
+          ),
         },
         daddress: {
-          required,
+          required: helpers.withMessage(error, required),
+          isValidDAddress: helpers.withMessage(
+            formaaddress,
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
         sourceAddress: {
-          required,
+          required: helpers.withMessage(error, required),
+          isValidSourceAddress: helpers.withMessage(
+            formaaddress,
+            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+          ),
         },
       };
     });

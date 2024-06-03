@@ -26,7 +26,7 @@
           <h4>{{ $t("openvpn.Generalinformation") }}</h4>
           <v-divider class="mt-2"></v-divider>
           <v-row class="mt-2">
-            <v-col cols="4" align-self="center">
+            <v-col cols="4" class="mt-5">
               <label>{{ $t("openvpn.Servername") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
@@ -51,7 +51,7 @@
                 v-model="state.description"
               ></v-text-field>
             </v-col>
-            <v-col cols="4" align-self="center">
+            <v-col cols="4" class="mt-5">
               <label>{{ $t("openvpn.Servermode") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
@@ -77,7 +77,7 @@
               </p>
             </v-col>
 
-            <v-col cols="4" align-self="center">
+            <v-col cols="4" class="mt-5">
               <label>{{ $t("PageIpsec.Protocol") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
@@ -94,7 +94,7 @@
               </p>
             </v-col>
 
-            <v-col cols="4" align-self="center">
+            <v-col cols="4" class="mt-5">
               <label>{{ $t("openvpn.DeviceMode") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
@@ -114,7 +114,7 @@
               </p>
             </v-col>
 
-            <v-col cols="4" align-self="center">
+            <v-col cols="4" class="mt-5">
               <label>Interface*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
@@ -131,7 +131,7 @@
               </p>
             </v-col>
 
-            <v-col cols="4" align-self="center">
+            <v-col cols="4" class="mt-5">
               <label>{{ $t("openvpn.Localport") }}*</label>
             </v-col>
             <v-col cols="8" class="mb-n6">
@@ -375,6 +375,9 @@ export default {
     const formatMustBeLikeAdresseIP = computed(() => {
       return t("errors.formatMustBeLikeAdresseIP");
     });
+    const formatMustBeLikeAdresse = computed(() => {
+      return t("errors.formatMustBeLikeAdresse");
+    });
     const onlynumbers = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
     });
@@ -387,14 +390,14 @@ export default {
         clientName: {
           required: helpers.withMessage(error, required),
           isValidClientName: helpers.withMessage(
-            champ ,
+            champ,
 
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },
 
         serverMode: { required: helpers.withMessage(error, required) },
-        protocol: { required: helpers.withMessage(error, required)},
+        protocol: { required: helpers.withMessage(error, required) },
         deviceMode: { required: helpers.withMessage(error, required) },
         interface: { required: helpers.withMessage(error, required) },
 
@@ -408,64 +411,103 @@ export default {
         },
         //Cryptographic Settings
         tlsGenerate: {
-          required: helpers.withMessage(error, required),
-          requiredIfFuction: requiredIf(() => !state.isEnableAuth),
+          // required: helpers.withMessage(error, required),
+          // requiredIfFuction: requiredIf(() => !state.isEnableAuth),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => !state.isEnableAuth)
+          ),
         },
-        peerCertif: { required: helpers.withMessage(error, required)},
-        serverCertif: { required: helpers.withMessage(error, required)},
-        dhParameters: { required: helpers.withMessage(error, required)},
-        encryptAlgo: { required: helpers.withMessage(error, required)},
-        authDigest: { required: helpers.withMessage(error, required)},
+
+        peerCertif: { required: helpers.withMessage(error, required) },
+        serverCertif: { required: helpers.withMessage(error, required) },
+        dhParameters: { required: helpers.withMessage(error, required) },
+        encryptAlgo: { required: helpers.withMessage(error, required) },
+        authDigest: { required: helpers.withMessage(error, required) },
 
         //Tunnel Settings
 
         ip4Tunnel: {
-          required: helpers.withMessage(error, required),
-          requiredIfFuction: requiredIf(
-            () => !state.isBridge && !state.adressPool
+          // required: helpers.withMessage(error, required),
+          // requiredIfFuction: requiredIf(
+          //   () => !state.isBridge && !state.adressPool
+          // ),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => !state.isBridge && !state.adressPool)
           ),
+
           isValidIp4Tunnel: helpers.withMessage(
-            formatMustBeLikeAdresseIP,
+            formatMustBeLikeAdresse,
 
             helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
         iPv4Local: {
-          required: helpers.withMessage(error, required),
-          requiredIfFuction: requiredIf(
-            () => !state.isBridge && !state.adressPool
+          // required: helpers.withMessage(error, required),
+          // requiredIfFuction: requiredIf(
+          //   () => !state.isBridge && !state.adressPool
+          // ),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => !state.isBridge && !state.adressPool)
           ),
+
           isValidIPv4Local: helpers.withMessage(
-            formatMustBeLikeAdresseIP,
+            formatMustBeLikeAdresse,
 
             helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
         iPv4Remote: {
-          required: helpers.withMessage(error, required),
           isValidIPv4Remote: helpers.withMessage(
-            formatMustBeLikeAdresseIP,
+            formatMustBeLikeAdresse,
 
             helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
         interfaceBridge: {
-          required: helpers.withMessage(error, required),
-          requiredIfFuction: requiredIf(() => state.isBridge),
+          // required: helpers.withMessage(error, required),
+          // requiredIfFuction: requiredIf(() => state.isBridge),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.isBridge)
+          ),
         },
 
         //Client Settings
         startAddressPool: {
-          required: helpers.withMessage(error, required),
-          requiredIfFuction: requiredIf(() => state.adressPool),
+          // required: helpers.withMessage(error, required),
+          // requiredIfFuction: requiredIf(() => state.adressPool),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.adressPool)
+          ),
         },
         endAddressPool: {
-          required: helpers.withMessage(error, required),
-          requiredIfFuction: requiredIf(() => state.adressPool),
+          // required: helpers.withMessage(error, required),
+          // requiredIfFuction: requiredIf(() => state.adressPool),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.adressPool)
+          ),
         },
         startDHCPBridge: {
-          required: helpers.withMessage(error, required),
-          requiredIfFuction: requiredIf(() => state.isBridge),
+          // required: helpers.withMessage(error, required),
+
+          // requiredIfFuction: requiredIf(() => state.isBridge),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.isBridge)
+          ),
+
           isValidStartDHCPBridge: helpers.withMessage(
             formatMustBeLikeAdresseIP,
 
@@ -473,8 +515,13 @@ export default {
           ),
         },
         endDHCPBridge: {
-          required: helpers.withMessage(error, required),
-          requiredIfFuction: requiredIf(() => state.isBridge),
+          // required: helpers.withMessage(error, required),
+          // requiredIfFuction: requiredIf(() => state.isBridge),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.isBridge)
+          ),
 
           isValidEndDHCPBridge: helpers.withMessage(
             formatMustBeLikeAdresseIP,
@@ -483,7 +530,13 @@ export default {
           ),
         },
         activeDnsDefault: {
-          requiredIfFuction: requiredIf(() => state.dnsDefaultDomain),
+          // requiredIfFuction: requiredIf(() => state.dnsDefaultDomain),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.dnsDefaultDomain)
+          ),
+
           isValidActiveDnsDefault: helpers.withMessage(
             formatMustBeLikeAdresseIP,
 
@@ -491,7 +544,12 @@ export default {
           ),
         },
         activeDnsServer1: {
-          requiredIfFuction: requiredIf(() => state.dnsServers),
+          // requiredIfFuction: requiredIf(() => state.dnsServers),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.dnsServers)
+          ),
 
           isValidActiveDnsServer1: helpers.withMessage(
             formatMustBeLikeAdresseIP,
@@ -514,7 +572,12 @@ export default {
           ),
         },
         activeNtpServer1: {
-          requiredIfFuction: requiredIf(() => state.ntpServers),
+          // requiredIfFuction: requiredIf(() => state.ntpServers),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.ntpServers)
+          ),
 
           isValidActiveNtpServer1: helpers.withMessage(
             formatMustBeLikeAdresseIP,
@@ -524,7 +587,13 @@ export default {
         },
 
         portClient: {
-          requiredIfFuction: requiredIf(() => state.clientPort),
+          // requiredIfFuction: requiredIf(() => state.clientPort),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.clientPort)
+          ),
+
           isValidPortClient: helpers.withMessage(
             onlynumbers,
             helpers.regex(/^[0-9]+$/)
@@ -532,11 +601,21 @@ export default {
         },
 
         passwordClient: {
-          requiredIfFuction: requiredIf(
-            () =>
-              (state.clientPort && state.serverModeState === "create") ||
-              (state.serverModeState === "edit" && state.NewPasswordClient)
+          // requiredIfFuction: requiredIf(
+          //   () =>
+          //     (state.clientPort && state.serverModeState === "create") ||
+          //     (state.serverModeState === "edit" && state.NewPasswordClient)
+          // ),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(
+              () =>
+                (state.clientPort && state.serverModeState === "create") ||
+                (state.serverModeState === "edit" && state.NewPasswordClient)
+            )
           ),
+
           isValidPassword: helpers.withMessage(
             specificform,
 
@@ -546,9 +625,17 @@ export default {
           ),
         },
         NewPasswordClient: {
-          requiredIfFuction: requiredIf(
-            () => state.serverModeState === "edit" && state.passwordClient
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(
+              () => state.serverModeState === "edit" && state.passwordClient
+            )
           ),
+
+          // requiredIfFuction: requiredIf(
+          //   () => state.serverModeState === "edit" && state.passwordClient
+          // ),
+
           isValidPassword: helpers.withMessage(
             specificform,
 

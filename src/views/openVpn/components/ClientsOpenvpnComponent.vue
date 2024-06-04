@@ -659,6 +659,9 @@ export default {
     const formatMustBeLikeAdresseIP = computed(() => {
       return t("errors.formatMustBeLikeAdresseIP");
     });
+    const formatMustBeLikeAdresse = computed(() => {
+      return t("errors.formatMustBeLikeAdresse");
+    });
     const onlynumbers = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
     });
@@ -678,20 +681,20 @@ export default {
 
         ipv4TunnelNetwork: {
           isValidIpv4TunnelNetwork: helpers.withMessage(
-            formatMustBeLikeAdresseIP,
+            formatMustBeLikeAdresse,
             helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
         ipv4RemoteNetwork: {
           isValidIpv4RemoteNetwork: helpers.withMessage(
-            formatMustBeLikeAdresseIP,
+            formatMustBeLikeAdresse,
             helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
 
-        server_mode: { required: helpers.withMessage(error, required)},
+        server_mode: { required: helpers.withMessage(error, required) },
         protocol: { required: helpers.withMessage(error, required) },
-        device_mode: { required: helpers.withMessage(error, required)},
+        device_mode: { required: helpers.withMessage(error, required) },
 
         proxy_host: {
           isValidProxy_host: helpers.withMessage(
@@ -713,11 +716,23 @@ export default {
         },
 
         sharedKey: {
-          requiredIfFuction: requiredIf(() => !state.tlsGenerate),
+          // requiredIfFuction: requiredIf(() => !state.tlsGenerate),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => !state.tlsGenerate)
+          ),
         },
         username: {
-          requiredIfFuction: requiredIf(
-            () => state.proxyAuthenticationExtraOptions.slug === "basic"
+          // requiredIfFuction: requiredIf(
+          //   () => state.proxyAuthenticationExtraOptions.slug === "basic"
+          // ),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(
+              () => state.proxyAuthenticationExtraOptions.slug === "basic"
+            )
           ),
         },
         passwordUser: {
@@ -727,8 +742,15 @@ export default {
               /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
             )
           ),
-          requiredIfFuction: requiredIf(
-            () => state.modeState === "edit" && state.NewUserPassword
+          // requiredIfFuction: requiredIf(
+          //   () => state.modeState === "edit" && state.NewUserPassword
+          // ),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(
+              () => state.modeState === "edit" && state.NewUserPassword
+            )
           ),
         },
         NewUserPassword: {
@@ -739,8 +761,12 @@ export default {
               /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
             )
           ),
-          requiredIfFuction: requiredIf(
-            () => state.modeState === "edit" && state.passwordUser
+          // requiredIfFuction: requiredIf(
+          //   () => state.modeState === "edit" && state.passwordUser
+          // ),
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.modeState === "edit" && state.passwordUser)
           ),
         },
 
@@ -753,11 +779,21 @@ export default {
             )
           ),
 
-          requiredIfFuction: requiredIf(
-            () =>
-              (state.proxyAuthenticationExtraOptions.slug === "basic" &&
-                state.modeState === "create") ||
-              (state.modeState === "edit" && state.NewProxyPassword)
+          // requiredIfFuction: requiredIf(
+          //   () =>
+          //     (state.proxyAuthenticationExtraOptions.slug === "basic" &&
+          //       state.modeState === "create") ||
+          //     (state.modeState === "edit" && state.NewProxyPassword)
+          // ),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(
+              () =>
+                (state.proxyAuthenticationExtraOptions.slug === "basic" &&
+                  state.modeState === "create") ||
+                (state.modeState === "edit" && state.NewProxyPassword)
+            )
           ),
         },
         NewProxyPassword: {
@@ -769,13 +805,20 @@ export default {
             )
           ),
 
-          requiredIfFuction: requiredIf(
-            () => state.modeState === "edit" && state.password
+          // requiredIfFuction: requiredIf(
+          //   () => state.modeState === "edit" && state.password
+          // ),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.modeState === "edit" && state.password)
           ),
         },
-        peerCertificateAuthority: { required: helpers.withMessage(error, required)},
+        peerCertificateAuthority: {
+          required: helpers.withMessage(error, required),
+        },
         clientCertificate: { required: helpers.withMessage(error, required) },
-        authDigestAlgorithm: { required: helpers.withMessage(error, required)},
+        authDigestAlgorithm: { required: helpers.withMessage(error, required) },
         // hardwareCrypto: { required },
         encryptionAlgorithm: { required: helpers.withMessage(error, required) },
       };

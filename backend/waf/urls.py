@@ -12,8 +12,6 @@ urlpatterns = [
     path('createRuleWaf', views.create_waf_rule, name="createRuleWaf"),
     path('deleteRuleWaf/<int:id>', views.delete_waf_rule, name="deleteRuleWaf"),
     path('updateRuleWaf/<int:id>', views.update_waf_rule, name="updateRuleWaf"),
-    path('startRuleWaf/<int:id>', views.start_waf_rule, name="startRuleWaf"),
-    path('stopRuleWaf/<int:id>', views.stop_waf_rule, name="stopRuleWaf"),
 
     # Paths for WAF applications
     path('getAllApplicationWaf', views.get_all_waf_application, name="getAllApplicationWaf"),

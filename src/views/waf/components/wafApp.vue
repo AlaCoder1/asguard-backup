@@ -1,5 +1,5 @@
 <template>
-    <div class="mt-3">
+    <div class="mt-3 ml-3">
       <h4>{{ $t("tabs.application") }}</h4>
       <v-divider class="mb-2"></v-divider>
       <div style="overflow: hidden; flex-grow: 1">

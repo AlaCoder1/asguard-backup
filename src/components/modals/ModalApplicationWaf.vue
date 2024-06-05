@@ -258,15 +258,13 @@ export default {
       {
         headerName: block,
         field: "block",
-        width: 90,
-        minWidth: 50,
-        flex: 1,
-      },
-      {
-        headerName: log,
-        field: "log",
         width: 150,
       },
+      // {
+      //   headerName: log,
+      //   field: "log",
+      //   width: 150,
+      // },
     ]);
 
     const populate = (data) => {
@@ -342,7 +340,7 @@ export default {
       }
     };
     const getAllcountryCode = async () => {
-      fetch("https://restcountries.com/v3.1/all")
+      await fetch("https://restcountries.com/v3.1/all")
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

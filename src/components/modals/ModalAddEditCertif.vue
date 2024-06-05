@@ -656,7 +656,7 @@ export default {
   },
 
   methods: {
-    getAllcountry() {
+    async getAllcountry() {
       // axios
       //   .get("https://restcountries.com/v3.1/all")
       //   .then((response) => {
@@ -676,7 +676,7 @@ export default {
       //   .catch(() => {
       //     console.log("error");
       //   });
-      fetch("https://restcountries.com/v3.1/all")
+      await fetch("https://restcountries.com/v3.1/all")
         .then((response) => {
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

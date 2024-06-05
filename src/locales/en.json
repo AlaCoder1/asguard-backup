@@ -951,7 +951,15 @@
       "createNewApplication":"Create new application",
       "updateApplication":"Update Application",
       "block":"Block",
-      "log":"Log"
+      "log":"Log",
+      "attacks":"Attacks",
+      "violation":"Violation",
+      "countOfRecord":"Count of Record",
+      "topCountries":"Top Countries",
+      "country":"Country",
+      "blockedRequests":"Blocked Requests",
+      "timestamp":"Timestamp",
+      "method":"Method"
 
        },
     "settings":{

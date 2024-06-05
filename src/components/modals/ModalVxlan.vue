@@ -259,6 +259,7 @@ export default {
               !i.ifname.startsWith("tun_") &&
               !i.ifname.startsWith("tap_") &&
               !i.ifname.startsWith("vlan") &&
+              !i.name_interface.startsWith("vxlan") &&
               !i.name_interface.startsWith("VXLAN")
           );
 

@@ -41,7 +41,10 @@ class ApplicationWaf(models.Model):
     name = models.CharField(max_length=300, default=None, null=True, blank=True, unique=True)
     application_type = models.CharField(max_length=100, default="ip", null=True, blank=True)
     application_value = models.CharField(max_length=100, default=None, null=True, blank=True)
+    application_port = models.IntegerField(default=None, null=True, blank=True)
     description = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    country = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    rule_geoip_id = models.IntegerField(default=None, null=True, unique=True)
     rules = models.ManyToManyField(RulesWaf, through="ApplicationRulesWaf")
 
     class Meta:

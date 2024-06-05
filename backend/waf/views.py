@@ -9,10 +9,10 @@ from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE
 from backend.waf.list_waf import get_list_all_waf_rule, get_list_all_waf_application, get_one_waf_rule, get_one_waf_application, get_one_waf_config
 from backend.waf.models import ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.serializers import ApplicationWafSerializer, ConfigWafSerializer, RulesWafSerializer
-from backend.waf.utils import convert_waf_rule_payload
+from backend.waf.utils import convert_waf_rule_payload, find_possible_id
 from backend.waf.utils_application import create_application_waf_in_system, delete_application_waf_in_system, update_application_waf_in_system
 from backend.waf.utils_config import change_waf_config_file
-from backend.waf.utils_rules import create_rule_waf_in_system, delete_rule_waf_in_system, start_rule_in_system, stop_rule_in_system, update_rule_waf_in_system
+from backend.waf.utils_rules import create_rule_waf_in_system, delete_rule_waf_in_system, update_rule_waf_in_system
 from utils.errors_utils import CommandExecutionError
 
 
@@ -24,16 +24,10 @@ CONSTANT_WAF_APPLICATION = "WAF Application"
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
-SUCCESS_MESSAGES_STARTING = _("is started")
-SUCCESS_MESSAGES_STOPING = _("is stoped")
 # Error messages
 ERROR_MESSAGES_CREATING = _("Error in creating")
 ERROR_MESSAGES_DELETING = _("Error in deleting")
 ERROR_MESSAGES_UPDATING = _("Error in updating")
-ERROR_MESSAGES_STARTING = _("Error in starting")
-ERROR_MESSAGES_STOPING = _("Error in stoping")
-ERROR_MESSAGES_EXPORTING = _("Error in exporting")
-ERROR_MESSAGES_DELETING_USED_ITEM = _("Unable to delete")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
@@ -221,50 +215,6 @@ def update_waf_rule(request, id):
         return JsonResponse({"error": f"{CONSTANT_WAF_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO START A WAF RULE")
-@api_view(['PUT'])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def start_waf_rule(request, id):
-    """Starting a WAF Rule"""
-    try:
-        waf_rule = RulesWaf.objects.get(id=id)
-        if not waf_rule.rule_status:
-            start_rule_in_system(waf_rule)
-            waf_rule.rule_status = True
-            waf_rule.save()
-            return JsonResponse({"msg": f"{CONSTANT_WAF_RULE} {SUCCESS_MESSAGES_STARTING}"})
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_WAF_RULE}"})
-        
-    except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_WAF_RULE}"}, status=400)
-    except RulesWaf.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_WAF_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
-
-
-@swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO STOP A WAF RULE")
-@api_view(['PUT'])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def stop_waf_rule(request, id):
-    """Stoping a WAF Rule"""
-    try:
-        waf_rule = RulesWaf.objects.get(id=id)
-        if waf_rule.rule_status:
-            stop_rule_in_system(waf_rule)
-            waf_rule.rule_status = False
-            waf_rule.save()
-            return JsonResponse({"msg": f"{CONSTANT_WAF_RULE} {SUCCESS_MESSAGES_STOPING}"})
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_WAF_RULE}"})
-        
-    except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_WAF_RULE}"}, status=400)
-    except RulesWaf.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_WAF_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
-
-
 ########################################
 ########### WAF Application ############
 ########################################
@@ -297,7 +247,9 @@ def get_waf_application(request, id):
                          properties={'name': Schema(type=TYPE_STRING, description="Name of the application"),
                                      'application_type': Schema(type=TYPE_STRING, enum=['ip', 'domain']),
                                      'application_value': Schema(type=TYPE_STRING),
+                                     'application_port': Schema(type=TYPE_INTEGER),
                                      'description': Schema(type=TYPE_STRING),
+                                     'country': Schema(type=TYPE_ARRAY, description="List of country code", items=Schema(type=TYPE_STRING)),
                                      'rules': Schema(type=TYPE_ARRAY, description="List of rules object", 
                                                      items=Schema(type=TYPE_OBJECT, required=['rule_waf', 'rule_policy', 'rule_log'],
                                                                   properties={'rule_waf': Schema(type=TYPE_INTEGER, description="Id of the rule"),
@@ -312,15 +264,21 @@ def create_waf_application(request):
     """Creating a new WAF Application and adding it to the database"""
     try:
         data = request.data
+
+        # Create another object that make country as a string to be saved in database
+        app_data = data
+        app_data['country'] = ','.join(app_data['country'])
+
+        # Give the GEOIP rule a unique id
+        data["rule_geoip_id"] = find_possible_id()
         
-        serializer_application_waf = ApplicationWafSerializer(data=data)
+        serializer_application_waf = ApplicationWafSerializer(data=app_data)
         if serializer_application_waf.is_valid():
 
             create_application_waf_in_system(data)
 
             serializer_application_waf.save()
             return JsonResponse({"msg": f"{CONSTANT_WAF_APPLICATION} {SUCCESS_MESSAGES_CREATING}"}, status=201)
-
         return JsonResponse({"error": list(serializer_application_waf.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
@@ -356,7 +314,9 @@ def delete_waf_application(request, id):
                          properties={'name': Schema(type=TYPE_STRING, description="Name of the application"),
                                      'application_type': Schema(type=TYPE_STRING, enum=['ip', 'domain']),
                                      'application_value': Schema(type=TYPE_STRING),
+                                     'application_port': Schema(type=TYPE_INTEGER),
                                      'description': Schema(type=TYPE_STRING),
+                                     'country': Schema(type=TYPE_ARRAY, description="List of country code", items=Schema(type=TYPE_STRING)),
                                      'rules': Schema(type=TYPE_ARRAY, description="List of rules object", 
                                                      items=Schema(type=TYPE_OBJECT, required=['rule_waf', 'rule_policy', 'rule_log'],
                                                                   properties={'rule_waf': Schema(type=TYPE_INTEGER, description="Id of the rule"),
@@ -372,8 +332,15 @@ def update_waf_application(request, id):
     try:
         waf_application = ApplicationWaf.objects.get(id=id)
         data = request.data
+
+        # Create another object that make country as a string to be saved in database
+        app_data = data
+        app_data['country'] = ','.join(app_data['country'])
+
+        # Give the GEOIP rule a unique id
+        data["rule_geoip_id"] = waf_application.rule_geoip_id
         
-        serializer_application_waf = ApplicationWafSerializer(waf_application, data=data)
+        serializer_application_waf = ApplicationWafSerializer(waf_application, data=app_data)
         if serializer_application_waf.is_valid():
 
             update_application_waf_in_system(waf_application, data)

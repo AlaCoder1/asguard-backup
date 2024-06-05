@@ -29,9 +29,10 @@ class ApplicationWafSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApplicationWaf
-        fields = ['name', 'application_type', 'application_value', 'description', 'rules']
+        fields = ['name', 'application_type', 'application_value', 'application_port', 'description', 'country', 
+                  'rule_geoip_id', 'rules']
 
-    def create(self, validated_data):
+    def create(self, validated_data:dict):
         rules_data = validated_data.pop('rules')
         application_waf = ApplicationWaf.objects.create(**validated_data)
         for rule_data in rules_data:
@@ -46,6 +47,7 @@ class ApplicationWafSerializer(serializers.ModelSerializer):
         application_waf.name = validated_data.get('name', application_waf.name)
         application_waf.application_type = validated_data.get('application_type', application_waf.application_type)
         application_waf.application_value = validated_data.get('application_value', application_waf.application_value)
+        application_waf.application_port = validated_data.get('application_port', application_waf.application_port)
         application_waf.description = validated_data.get('description', application_waf.description)
         application_waf.save()
 

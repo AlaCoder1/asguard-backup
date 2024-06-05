@@ -65,6 +65,11 @@ def get_list_all_waf_application():
         waf_application_id = waf_application['pk']
         waf_application.pop('pk')
         waf_application['fields']['id'] = waf_application_id
+        # Convert country saved in database on str format to a list
+        if waf_application['fields']['country']:
+            waf_application['fields']['country'] = list(waf_application['fields']['country'].split(","))
+        else:
+            waf_application['fields']['country'] = []
         waf_application_rules = ApplicationRulesWaf.objects.filter(application_waf_id=waf_application_id)
         waf_application['fields']['rules'] = [rule.rule_waf.name for rule in waf_application_rules]
         list_waf_application.append(waf_application['fields'])
@@ -80,6 +85,11 @@ def get_one_waf_application(id):
     waf_application_id = res[0]['pk']
     res[0].pop('pk')
     res[0]['fields']['id'] = waf_application_id
+    # Convert country saved in database on str format to a list
+    if res[0]['fields']['country']:
+        res[0]['fields']['country'] = list(res[0]['fields']['country'].split(","))
+    else:
+        res[0]['fields']['country'] = []
     waf_application_rules = ApplicationRulesWaf.objects.filter(application_waf_id=waf_application_id)
     res[0]['fields']['rules'] = [rule.rule_waf.name for rule in waf_application_rules]
     return res[0]['fields']

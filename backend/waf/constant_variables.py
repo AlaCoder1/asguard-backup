@@ -1,6 +1,11 @@
-PATH_MODESC = "/etc/nginx/modsec/"
+PATH_NGINX = "/etc/nginx/"
+PATH_MODESC = f"{PATH_NGINX}modsec/"
+PATH_NGINX_SITES_AVAILABLE = f"{PATH_NGINX}sites-available/"
+PATH_NGINX_SITES_ENABLED = f"{PATH_NGINX}sites-enabled/"
+PATH_ASGUARD_CONFIG = f"{PATH_NGINX_SITES_ENABLED}asguard.conf"
 PATH_WAF_CONFIG = f"{PATH_MODESC}modsecurity.conf"
 PATH_MAIN_WAF = f"{PATH_MODESC}main.conf"
+PATH_CRS_SETUP = "/usr/local/modsecurity-crs/crs-setup.conf"
 PATH_RULES_WAF = "/usr/local/modsecurity-crs/rules/{}.conf"
 
 CONSTANT_WAF_CONFIG = "WAF Config"

@@ -35,6 +35,7 @@ CONSTANT_METHOD_ADD_USER_EMAIL_SERVER = _("with their email in directory server"
 CONSTANT_METHOD_ADD_USER_EMAIL_SYSTEM = _("with simple System email")
 CONSTANT_OR = _("or")
 CONSTANT_AND = _("and")
+CONSTANT_LANGUAGE = _('Language')
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -414,7 +415,7 @@ def update_profile(request):
                 photo_path = os.path.join(user_folder, photo.name)
                 photo_url = '/media/'+os.path.relpath(photo_path, settings.MEDIA_ROOT)
                 print('photo_url',photo_url)
-                old_photo_url_path = os.path.join(user_folder,profile.photo_url.split('/')[3])
+                old_photo_url_path = os.path.join(user_folder,profile.photo_url.split('/')[2])
                 print("path:",old_photo_url_path)
                 # Delete the old photo_url file if it exists
                 if os.path.exists(old_photo_url_path):
@@ -546,9 +547,8 @@ def change_language(request, id):
         profile = Profile.objects.get(user=User.objects.get(id=id))
         serializer_profile = ProfileSerializer(profile, data=data, partial=True)
         if serializer_profile.is_valid():
-            print("Language is updated")
             serializer_profile.save()
-            return JsonResponse({"msg": "Language is updated"}, status=200)
+            return JsonResponse({"msg":f"{CONSTANT_LANGUAGE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
         return JsonResponse({"error": list(serializer_profile.errors.values())[0][0]}, status=400)
     except (User.DoesNotExist, Profile.DoesNotExist):
-        return JsonResponse({"error": "User does not exist"}, status=400)
+        return JsonResponse({"error":f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

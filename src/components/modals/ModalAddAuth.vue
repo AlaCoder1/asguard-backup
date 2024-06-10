@@ -6,10 +6,11 @@
           <v-card-title>
             <span class="text-h5"
               >{{
-                mode === "create" ? $t("buttons.createauth") : $t("buttons.updateauth")
-                
+                mode === "create"
+                  ? $t("buttons.createauth")
+                  : $t("buttons.updateauth")
               }}
-              {{$t("agGrid.certificat")}}</span
+              {{ $t("agGrid.certificat") }}</span
             >
           </v-card-title>
           <v-card-text>
@@ -47,7 +48,9 @@
                 </v-col>
 
                 <v-col cols="12" v-if="isImportCetif" class="mb-n6">
-                  <label for="">{{ $t("certificat.certificat_existant") }}</label>
+                  <label for="">{{
+                    $t("certificat.certificat_existant")
+                  }}</label>
                   <v-divider></v-divider>
 
                   <v-textarea
@@ -203,7 +206,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                       :label="$t('certificat.place')"
+                        :label="$t('certificat.place')"
                         v-model="state.formData.place"
                       ></v-text-field>
                       <p
@@ -215,7 +218,7 @@
                     </v-col>
                     <v-col cols="6" class="mb-n6">
                       <v-text-field
-                       :label="$t('certificat.organisation')"
+                        :label="$t('certificat.organisation')"
                         v-model="state.formData.organisation"
                       ></v-text-field>
                       <p
@@ -263,7 +266,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{$t('buttons.close')}}</span>
+              <span class="text-white pr-3 pl-3">{{
+                $t("buttons.close")
+              }}</span>
             </v-btn>
             <v-btn
               type="submit"
@@ -271,7 +276,7 @@
               :rounded="true"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{$t('buttons.save')}}</span>
+              <span class="text-white pr-3 pl-3">{{ $t("buttons.save") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -293,7 +298,7 @@ import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { required, requiredIf, helpers, email } from "@vuelidate/validators";
-import { reactive, computed, watch,ref } from "vue";
+import { reactive, computed, watch, ref } from "vue";
 export default {
   name: "Modal_User",
   props: {
@@ -338,19 +343,19 @@ export default {
     const certifnew = computed(() => {
       return t("certificat.certif_new");
     });
-    const selectcetifoptions=ref([
-                      {
-                        name:certifexist,
-                        slug: 'import',
-                        id: '1',
-                      },
-                      {
-                        name:certifnew,
-                        slug: 'create',
-                        id: '2',
-                      },
-                    ]);
-                    
+    const selectcetifoptions = ref([
+      {
+        name: certifexist,
+        slug: "import",
+        id: "1",
+      },
+      {
+        name: certifnew,
+        slug: "create",
+        id: "2",
+      },
+    ]);
+
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -371,26 +376,22 @@ export default {
       return {
         formData: {
           certifName: {
-            required: helpers.withMessage(
-                error, 
-                required
-              ),
+            required: helpers.withMessage(error, required),
             isValidCertifName: helpers.withMessage(
               champ,
               helpers.regex(/^[A-Za-z0-9_\-]+$/)
             ),
           },
-          method: {  required: helpers.withMessage(
-                error, 
-                required
-              ),},
+          method: { required: helpers.withMessage(error, required) },
           certificatData: {
             requiredIfFuction: helpers.withMessage(
               error,
               requiredIf(
                 () =>
                   state.formData.method.name ===
-                  "Import an existing Certificate Authority" || state.formData.method.name ==="Importer une autorité de certification existante"
+                    "Import an existing Certificate Authority" ||
+                  state.formData.method.name ===
+                    "Importer une autorité de certification existante"
               )
             ),
           },
@@ -400,7 +401,10 @@ export default {
               error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
+                  state.formData.method.name ===
+                    "Create Certificate Authority" ||
+                  state.formData.method.name ===
+                    "Créer une autorité de certification"
               )
             ),
           },
@@ -409,7 +413,10 @@ export default {
               error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
+                  state.formData.method.name ===
+                    "Create Certificate Authority" ||
+                  state.formData.method.name ===
+                    "Créer une autorité de certification"
               )
             ),
           },
@@ -418,7 +425,10 @@ export default {
               error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
+                  state.formData.method.name ===
+                    "Create Certificate Authority" ||
+                  state.formData.method.name ===
+                    "Créer une autorité de certification"
               )
             ),
           },
@@ -427,7 +437,10 @@ export default {
               error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
+                  state.formData.method.name ===
+                    "Create Certificate Authority" ||
+                  state.formData.method.name ===
+                    "Créer une autorité de certification"
               )
             ),
             isValidlifeTime: helpers.withMessage(
@@ -441,7 +454,10 @@ export default {
               error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
+                  state.formData.method.name ===
+                    "Create Certificate Authority" ||
+                  state.formData.method.name ===
+                    "Créer une autorité de certification"
               )
             ),
           },
@@ -450,7 +466,10 @@ export default {
               error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
+                  state.formData.method.name ===
+                    "Create Certificate Authority" ||
+                  state.formData.method.name ===
+                    "Créer une autorité de certification"
               )
             ),
             isValidState: helpers.withMessage(
@@ -464,7 +483,10 @@ export default {
               error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
+                  state.formData.method.name ===
+                    "Create Certificate Authority" ||
+                  state.formData.method.name ===
+                    "Créer une autorité de certification"
               )
             ),
             isValidPlace: helpers.withMessage(
@@ -478,7 +500,10 @@ export default {
               error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
+                  state.formData.method.name ===
+                    "Create Certificate Authority" ||
+                  state.formData.method.name ===
+                    "Créer une autorité de certification"
               )
             ),
           },
@@ -487,7 +512,10 @@ export default {
               error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
+                  state.formData.method.name ===
+                    "Create Certificate Authority" ||
+                  state.formData.method.name ===
+                    "Créer une autorité de certification"
               )
             ),
             email,
@@ -497,7 +525,10 @@ export default {
               error,
               requiredIf(
                 () =>
-                  state.formData.method.name === "Create Certificate Authority" || state.formData.method.name ==="Créer une autorité de certification"
+                  state.formData.method.name ===
+                    "Create Certificate Authority" ||
+                  state.formData.method.name ===
+                    "Créer une autorité de certification"
               )
             ),
             isValidCommne: helpers.withMessage(
@@ -513,8 +544,7 @@ export default {
     return {
       state,
       v$,
-      selectcetifoptions
-
+      selectcetifoptions,
     };
   },
   data() {
@@ -533,14 +563,18 @@ export default {
     isImportCetif() {
       return (
         this.state.formData.method.name ===
-        "Import an existing Certificate Authority" || this.state.formData.method.name ==="Importer une autorité de certification existante"
+          "Import an existing Certificate Authority" ||
+        this.state.formData.method.name ===
+          "Importer une autorité de certification existante"
       );
     },
     isCreateCetif() {
       return (
-        this.state.formData.method.name === "Create Certificate Authority" || this.state.formData.method.name ==="Créer une autorité de certification"
-    );
-  },
+        this.state.formData.method.name === "Create Certificate Authority" ||
+        this.state.formData.method.name ===
+          "Créer une autorité de certification"
+      );
+    },
   },
 
   watch: {
@@ -565,27 +599,55 @@ export default {
   },
 
   methods: {
-    getAllcountry() {
-      axios.get("https://restcountries.com/v3.1/all").then(
-        (response) => {
-          let countryList = response.data.map((element) => {
-            return {
-              countryName: element.name.common,
-              countryCode: element.cca2,
-              countryID: element.ccn3,
-            };
-          });
+   async getAllcountry() {
+      // axios.get("https://restcountries.com/v3.1/all").then(
+      //   (response) => {
+      //     let countryList = response.data.map((element) => {
+      //       return {
+      //         countryName: element.name.common,
+      //         countryCode: element.cca2,
+      //         countryID: element.ccn3,
+      //       };
+      //     });
 
-          countryList.sort((a, b) =>
-            a.countryName.localeCompare(b.countryName)
-          );
+      //     countryList.sort((a, b) =>
+      //       a.countryName.localeCompare(b.countryName)
+      //     );
 
-          this.countriesList = countryList;
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
+      //     this.countriesList = countryList;
+      //   },
+      //   (error) => {
+      //     console.log(error);
+      //   }
+      // );
+
+      await fetch("https://restcountries.com/v3.1/all")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (Array.isArray(data)) {
+            let countryList = data.map((element) => {
+              return {
+                countryName: element.name.common,
+                countryCode: element.cca2,
+                countryID: element.ccn3,
+              };
+            });
+            countryList.sort((a, b) =>
+              a.countryName.localeCompare(b.countryName)
+            );
+             this.countriesList = countryList;
+          } else {
+            console.error("Unexpected response format:", data);
+          }
+        })
+        .catch((error) => {
+          console.log("Error fetching countries:", error);
+        });
     },
 
     closeModal() {
@@ -614,7 +676,11 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         let payload = {};
-        if (this.state.formData.method.name == "Create Certificate Authority" || this.state.formData.method.name ==="Créer une autorité de certification") {
+        if (
+          this.state.formData.method.name == "Create Certificate Authority" ||
+          this.state.formData.method.name ===
+            "Créer une autorité de certification"
+        ) {
           payload = {
             name: this.state.formData?.certifName,
             method: {

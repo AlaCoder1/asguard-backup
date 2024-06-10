@@ -16,6 +16,18 @@
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-select
+                    :readonly="modalMode === 'edit' ? true : false"
+                    v-model="state.typeV"
+                    :label="$t('typeInterface.selectType')"
+                    :items="state.listType"
+                    :no-data-text="$t('certificat.certificatlist')"
+                  ></v-select>
+                  <p class="error-feedback mb-5" v-if="v$.typeV.$error">
+                    {{ v$.typeV.$errors[0].$message }}
+                  </p>
+                </v-col>
+                <v-col cols="12" class="mb-n6">
+                  <v-select
                     v-model="state.interface"
                     :readonly="modalMode === 'edit' ? true : false"
                     :label="$t('typeInterface.newInterface')"
@@ -123,10 +135,21 @@ export default {
       let vlanList =
         document.getElementById("app").attributes["list_vlan"].value;
       const parsedArray = JSON.parse(vlanList);
+
       state.listVlan = parsedArray.map((e) => {
         return {
           id: e.id,
           vlan: `VLAN : ${e.vlan_tag}`,
+        };
+      });
+      let vxlanList =
+        document.getElementById("app").attributes["list_vxlan"].value;
+      const parsedVXLANArray = JSON.parse(vxlanList);
+      state.listVxlan = parsedVXLANArray.map((e) => {
+        return {
+          id: e.id,
+          vlan: `VXLAN : ${e.vxlan_id}`,
+          vxlan_interface_name: e.vxlan_interface_name,
         };
       });
 
@@ -141,6 +164,8 @@ export default {
       id: null,
       rowList: [],
       listVlan: [],
+      listVxlan: [],
+      listType: ["VLAN", "VXLAN"],
       listVlanAssing: [],
       snackbar: false,
       color: "",
@@ -148,7 +173,36 @@ export default {
       openModal: false,
       interface: "",
       name_interface: "",
+      typeV: "",
     });
+
+    watch(
+      () => state.typeV,
+      (val) => {
+        if (modalMode.value != "edit") state.interface = "";
+        if (val === "VLAN") {
+          if (state.rowList.length == 0) {
+            state.listVlanAssing = [...state.listVlan];
+          } else {
+            const differentValues = filterDifferentValues(
+              state.rowList,
+              state.listVlan
+            );
+            state.listVlanAssing = [...differentValues];
+          }
+        } else if (val === "VXLAN") {
+          if (state.rowList.length == 0) {
+            state.listVlanAssing = [...state.listVxlan];
+          } else {
+            const differentValues = filterDifferentValuesVXLAN(
+              state.rowList,
+              state.listVxlan
+            );
+            state.listVlanAssing = [...differentValues];
+          }
+        }
+      }
+    );
 
     watch(
       () => isOpen.value,
@@ -168,17 +222,8 @@ export default {
         if (modalMode.value === "create") {
           state.interface = "";
           state.name_interface = "";
+          state.typeV = "";
           state.id = null;
-
-          if (state.rowList.length == 0) {
-            state.listVlanAssing = [...state.listVlan];
-          } else {
-            const differentValues = filterDifferentValues(
-              state.rowList,
-              state.listVlan
-            );
-            state.listVlanAssing = [...differentValues];
-          }
         }
       }
     );
@@ -198,14 +243,37 @@ export default {
       });
       return differentValues;
     }
+    function filterDifferentValuesVXLAN(array1, array2) {
+      const differentValues = [];
+
+      // array1.forEach((obj1) => {
+      //   if (!array2.some((obj2) => obj2.id === obj1.id_vlan)) {
+      //     differentValues.push(obj1);
+
+      //   }
+      // });
+      array2.forEach((obj2) => {
+        if (!array1.some((obj1) => obj1.id_vxlan === obj2.id)) {
+          differentValues.push(obj2);
+        }
+      });
+      return differentValues;
+    }
     const populate = (data) => {
       if (modalMode.value === "edit") {
         state.id = data.id;
-        let filtredInterface = state.listVlan.filter(
+        let filtredInterfaceVxlan = state.listVxlan.filter(
+          (i) => i.id === data?.id_vxlan
+        );
+        let filtredInterfaceVlan = state.listVlan.filter(
           (i) => i.id === data?.id_vlan
         );
-        state.interface = filtredInterface[0];
+        state.interface = filtredInterfaceVxlan[0] ?? filtredInterfaceVlan[0];
         state.name_interface = data.name_interface;
+
+        let type = data.network_port.split(" ");
+        if (type[0] === "VXLAN") state.typeV = "VXLAN";
+        else state.typeV = "VLAN";
       }
     };
 
@@ -230,50 +298,108 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (result) {
-        let payload = {
-          id: state.interface.id,
-          name_interface: state.name_interface,
-        };
-
         if (modalMode.value === "edit") {
-          axios
-            .put(`/vlan/updateVlanInterface/${state.id}`, payload)
-            .then((response) => {
-              if (response.status == "200") {
+          if (state.typeV === "VLAN") {
+            let payload = {
+              id: state.interface.id,
+              name_interface: state.name_interface,
+            };
+            axios
+              .put(`/vlan/updateVlanInterface/${state.id}`, payload)
+              .then((response) => {
+                if (response.status == "200") {
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  setTimeout(() => {
+                    location.reload();
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
                 state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.msg;
-            });
-        } else {
-          localStorage.setItem("network-tab", state.name_interface);
-          axios
-            .post("/vlan/assignVlanInterface", payload)
-            .then((response) => {
-              if (response.status == "200") {
-                state.openModal = false;
+                state.color = "red";
+                state.textAlert = i.response.data.msg;
+              });
+          } else if (state.typeV === "VXLAN") {
+            let payload = {
+              name_interface: state.name_interface,
+            };
+            axios
+              .put(`/vxlan/updateVxlanInterface/${state.id}`, payload)
+              .then((response) => {
+                if (response.status == "200") {
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  setTimeout(() => {
+                    location.reload();
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
                 state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
+                state.color = "red";
+                state.textAlert = i.response.data.msg;
+              });
+          }
+        } else if (modalMode.value === "create") {
+          if (state.typeV === "VLAN") {
+            let payload = {
+              id: state.interface.id,
+              name_interface: state.name_interface,
+            };
+            localStorage.setItem("network-tab", state.name_interface);
 
-                setTimeout(() => {
-                  window.location.href = "/interfaces/list-of-interface";
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.msg;
-            });
+            axios
+              .post("/vlan/assignVlanInterface", payload)
+              .then((response) => {
+                if (response.status == "200") {
+                  state.openModal = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+
+                  setTimeout(() => {
+                    window.location.href = "/interfaces/list-of-interface";
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.msg;
+              });
+          } else if (state.typeV === "VXLAN") {
+            let payload = {
+              ifname: state.interface.vxlan_interface_name,
+              name_interface: state.name_interface,
+            };
+            localStorage.setItem(
+              "network-tab",
+              `${"VXLAN " + state.name_interface}`
+            );
+
+            axios
+              .post("/vxlan/assignVxlanInterface", payload)
+              .then((response) => {
+                if (response.status == "200") {
+                  state.openModal = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+
+                  setTimeout(() => {
+                    window.location.href = "/interfaces/list-of-interface";
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.msg;
+              });
+          }
         }
       } else {
         console.log("v$", v$.value);
@@ -285,6 +411,7 @@ export default {
       if (modalMode.value === "create") {
         state.interface = "";
         state.name_interface = "";
+        state.typeV = "";
         state.id = null;
       }
     };
@@ -297,6 +424,9 @@ export default {
           required: helpers.withMessage(error, required),
         },
         name_interface: {
+          required: helpers.withMessage(error, required),
+        },
+        typeV: {
           required: helpers.withMessage(error, required),
         },
       };

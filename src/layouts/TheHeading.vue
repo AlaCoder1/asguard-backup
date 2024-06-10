@@ -285,9 +285,7 @@ export default {
 
         axios
           .put(`/users/modifyLanguage/${this.state.currentInfo.id}`, payload)
-          .then((response) => {
-            console.log("response", response);
-          })
+          .then((response) => {})
           .catch((i) => {
             console.log("resp", i.response);
           });

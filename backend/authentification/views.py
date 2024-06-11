@@ -184,14 +184,14 @@ def verify_code(request,id):
                 if user_input == verification_code.code:
                     verification_code.delete()
                     login(request, user)
-                    return JsonResponse({"message": SUCCESS_MESSAGES_LOGIN})
-                return JsonResponse({"message": ERROR_MESSAGES_INVALID_CREDENTIALS})
+                    return JsonResponse({"message": SUCCESS_MESSAGES_LOGIN}, status=200)
+                return JsonResponse({"message": ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)
             
             # Verification code expired
             verification_code.delete()
-            return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_EXPIRED}"})
+            return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_EXPIRED}"}, status=400)
         except VerificationCode.DoesNotExist:
-            return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_INEXISTANT}"})
+            return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 @csrf_exempt
 def resend_verification_code(request,id):

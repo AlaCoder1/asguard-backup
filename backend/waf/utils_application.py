@@ -1,7 +1,7 @@
 from backend.waf.constant_variables import PATH_CRS_SETUP, PATH_MODESC, PATH_NGINX_SITES_AVAILABLE, PATH_NGINX_SITES_ENABLED, PATH_RULES_WAF, PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
 from backend.waf.utils import convert_waf_rule_payload
-from backend.waf.utils_rules import create_rule
+from backend.waf.utils_rules import create_rule_waf_str
 from utils.commands_utils import execute_command_without_arguments, execute_list_commands_without_arguments
 
 
@@ -82,7 +82,7 @@ Include {app_directory}geoip_{app_data['name']}.conf
             {"type": "msg", "value":"'Access from this countries are refused'"}
             ]
         })
-    rule_geoip = create_rule(rule_data)
+    rule_geoip = create_rule_waf_str(rule_data)
     with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_file:
         rule_file.write(rule_geoip)
     

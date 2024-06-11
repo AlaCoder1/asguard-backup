@@ -415,8 +415,9 @@ def update_profile(request):
                 photo_path = os.path.join(user_folder, photo.name)
                 photo_url = '/media/'+os.path.relpath(photo_path, settings.MEDIA_ROOT)
                 print('photo_url',photo_url)
-                old_photo_url_path = os.path.join(user_folder,profile.photo_url.split('/')[2])
-                print("path:",old_photo_url_path)
+                print({"profile.photo_url":profile.photo_url.split('/')})
+                old_photo_url_path = os.path.join(user_folder,profile.photo_url.split('/')[3])
+                print("old_photo_url_path:",old_photo_url_path)
                 # Delete the old photo_url file if it exists
                 if os.path.exists(old_photo_url_path):
                     os.remove(old_photo_url_path)

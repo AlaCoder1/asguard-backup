@@ -1,4 +1,8 @@
+import json
 import subprocess
+import time
+from backend.ipsecmonitoring.models import IpsecMonitoring
+from django.core import serializers
 
 
 def run_command(command):
@@ -106,18 +110,47 @@ def get_availabile_bytes(bytes_in,bytes_out):
         availability_bytes=round(bytes_out/bytes_in,2)
     return availability_bytes
 
-# tunnel_name="tunnel"
-# uptime=get_uptime()
-# estab_time=get_time_established()
-# availability =get_availability(estab_time,uptime)
-# bytes_in=get_bytes_in()
-# bytes_out=get_bytes_out()
-# availability_bytes=get_availabile_bytes(bytes_in,bytes_out)
-# address=get_tunnel_ip(tunnel_name)
-# # print(address)
-# packet_loss=get_packet_loss(address)
+def convert_to_seconds(time_value, time_unit):
+    """
+    Convert a given time value in minutes, hours, days, or weeks into seconds.
 
-# print({"availability":availability,"bytes_in":bytes_in,"bytes_out":bytes_out,
-#        "availability_bytes":availability_bytes,"packet_loss":packet_loss})
-        
-        
+    :param time_value: The numerical value of the time to be converted.
+    :param time_unit: The unit of time for the time_value ('minutes', 'hours', 'days', 'weeks').
+    :return: The equivalent time in seconds.
+    """
+    # Define conversion factors for each time unit to seconds
+    conversion_factors = {
+        'minutes': 60,
+        'hours': 3600,
+        'days': 86400,
+        'weeks': 604800
+    }
+    
+    # Convert the given time value to seconds
+    if time_unit in conversion_factors:
+        seconds = time_value * conversion_factors[time_unit]
+        return seconds
+    else:
+        return None
+    
+def get_differnce_time(timestamp,current_time):
+    """function to get differnce time"""
+    differnce_time=0
+    if timestamp is not None and current_time is not None:
+        differnce_time=current_time-timestamp
+    return differnce_time
+    
+def get_data_time(time_value):
+    """function to last time _value from database that  """
+    all_data=[]
+    all_data_object=IpsecMonitoring.objects.all()
+    data = serializers.serialize("json", all_data_object)
+    res = json.loads(data)
+    for i in range(len(res)):
+        res[i]['fields']['id']=res[i]["pk"]
+        diffrence_time=(time.time()-time_value)-res[i]['fields']["timestamp"]
+        if diffrence_time>=0:
+            all_data.append(res[i]['fields'])
+    return all_data
+            
+

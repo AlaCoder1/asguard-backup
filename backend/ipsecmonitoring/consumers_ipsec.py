@@ -3,12 +3,12 @@ import logging
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from backend.ipsec.models import ServerIPsec
-from backend.ipsecmonitoring.functions import get_active_session, get_availabile_bytes, get_availability, get_bytes_in, get_bytes_out, get_establishetd_date, get_packet_loss, get_time_established, get_tunnel_ip, get_uptime
+from backend.ipsecmonitoring.functions import convert_to_seconds, get_active_session, get_availabile_bytes, get_availability, get_bytes_in, get_bytes_out, get_data_time, get_differnce_time, get_establishetd_date, get_packet_loss, get_time_established, get_tunnel_ip, get_uptime
 from backend.ipsecmonitoring.serializers import IpsecnMonitoringSerializer
 from channels.db import database_sync_to_async
 from django.utils.translation import gettext_lazy as _
 
-
+import time
 
 logger = logging.getLogger(__name__)
 class IPSECConsumer(AsyncWebsocketConsumer):
@@ -23,11 +23,15 @@ class IPSECConsumer(AsyncWebsocketConsumer):
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         id_server = text_data_json['id']
-        time=text_data_json['time']
-        while True:
-            data =await self.start_data_loop_ipsec(id_server,time)
-            await self.send(json.dumps(data))
+        time_value=text_data_json['time']['time_value']
+        time_unit=text_data_json['time']['time_unit']
+        current_time=convert_to_seconds(time_value, time_unit)
+        while True :
+            data =await self.start_data_loop_ipsec(id_server)
             await self.save_system_usage(data)
+            data_to_send=get_data_time(current_time)
+            await self.send(json.dumps(data_to_send))
+            
             await asyncio.sleep(60)
  
     async def disconnect(self, close_code):
@@ -44,7 +48,7 @@ class IPSECConsumer(AsyncWebsocketConsumer):
             ipsec_serializer.save()
    
     @database_sync_to_async  
-    def start_data_loop_ipsec(self,id,time):
+    def start_data_loop_ipsec(self,id):
         """function to get ipsec monitoring info"""
         tunnel_name=ServerIPsec.objects.get(id=id).conn_name
         uptime=get_uptime()

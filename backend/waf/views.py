@@ -12,14 +12,14 @@ from backend.waf.serializers import ApplicationWafSerializer, ConfigWafSerialize
 from backend.waf.utils import convert_waf_rule_payload, find_possible_id
 from backend.waf.utils_application import create_application_waf_in_system, delete_application_waf_in_system, update_application_waf_in_system
 from backend.waf.utils_config import change_waf_config_file
-from backend.waf.utils_rules import create_rule_waf_in_system, delete_rule_waf_in_system, update_rule_waf_in_system
+from backend.waf.utils_rules import create_rule_waf_in_system, create_rule_waf_str, delete_rule_waf_in_system, update_rule_waf_in_system
 from utils.errors_utils import CommandExecutionError
 
 
 # Constants
-CONSTANT_WAF_CONFIG = "WAF Config"
-CONSTANT_WAF_RULE = "WAF Rule"
-CONSTANT_WAF_APPLICATION = "WAF Application"
+CONSTANT_WAF_CONFIG = _("WAF Config")
+CONSTANT_WAF_RULE = _("WAF Rule")
+CONSTANT_WAF_APPLICATION = _("WAF Application")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -140,8 +140,10 @@ def create_waf_rule(request):
         
         serializer_rule_waf = RulesWafSerializer(data=data)
         if serializer_rule_waf.is_valid():
-
-            rule_waf = create_rule_waf_in_system(data)
+            # Create the rule waf in string format
+            rule_waf = create_rule_waf_str(data)
+            # Create the rule waf in system and reload the nginx
+            create_rule_waf_in_system(rule_waf)
             data["rule_content"] = rule_waf
             serializer_rule_waf = RulesWafSerializer(data=data)
             if serializer_rule_waf.is_valid():
@@ -153,6 +155,7 @@ def create_waf_rule(request):
         return JsonResponse({"error": list(serializer_rule_waf.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
+        delete_rule_waf_in_system(rule_waf)
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_WAF_RULE}"}, status=400)
 
 
@@ -167,7 +170,7 @@ def delete_waf_rule(request, id):
         waf_rule = RulesWaf.objects.get(id=id)
 
         # Delete rule from system
-        delete_rule_waf_in_system(waf_rule)
+        delete_rule_waf_in_system(waf_rule.rule_content)
 
         # delete rule from database
         waf_rule.delete()
@@ -197,8 +200,10 @@ def update_waf_rule(request, id):
         
         serializer_rule_waf = RulesWafSerializer(waf_rule, data=data)
         if serializer_rule_waf.is_valid():
-
-            rule_waf = update_rule_waf_in_system(waf_rule.rule_content, data)
+            # Create the rule waf in string format
+            rule_waf = create_rule_waf_str(data)
+            # Update the rule waf in system and reload the nginx
+            update_rule_waf_in_system(waf_rule.rule_content, rule_waf)
             data["rule_content"] = rule_waf
             serializer_rule_waf = RulesWafSerializer(waf_rule, data=data)
             if serializer_rule_waf.is_valid():
@@ -210,6 +215,9 @@ def update_waf_rule(request, id):
         return JsonResponse({"error": list(serializer_rule_waf.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
+        # Get back the previous rule in system
+        delete_rule_waf_in_system(rule_waf)
+        create_rule_waf_in_system(waf_rule.rule_content)
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_WAF_RULE}"}, status=400)
     except RulesWaf.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_WAF_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

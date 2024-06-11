@@ -30,7 +30,6 @@ def get_list_all_waf_rule():
         waf['fields']['id'] = waf_id
         waf['fields'].pop("rule_content")
         waf['fields'].pop("rule_status")
-        waf['fields'].pop("rule_id")
         if waf['fields']['created']:
             waf['fields'] = convert_waf_rule_database(waf['fields'])
         list_waf.append(waf['fields'])
@@ -46,7 +45,6 @@ def get_one_waf_rule(id):
     res[0]['fields']['id'] = waf_id
     res[0]['fields'].pop("rule_content")
     res[0]['fields'].pop("rule_status")
-    res[0]['fields'].pop("rule_id")
     if res[0]['fields']['created']:
         res[0]['fields'] = convert_waf_rule_database(res[0]['fields'])
     return res[0]['fields']
@@ -71,7 +69,10 @@ def get_list_all_waf_application():
         else:
             waf_application['fields']['country'] = []
         waf_application_rules = ApplicationRulesWaf.objects.filter(application_waf_id=waf_application_id)
-        waf_application['fields']['rules'] = [rule.rule_waf.name for rule in waf_application_rules]
+        waf_application['fields']['rules'] = [{"rule_waf": rule.rule_waf.pk,
+                                               "rule_name": rule.rule_waf.name,
+                                               "rule_policy": rule.rule_policy,
+                                               "rule_log": rule.rule_log,} for rule in waf_application_rules]
         list_waf_application.append(waf_application['fields'])
     return list_waf_application
 
@@ -91,5 +92,8 @@ def get_one_waf_application(id):
     else:
         res[0]['fields']['country'] = []
     waf_application_rules = ApplicationRulesWaf.objects.filter(application_waf_id=waf_application_id)
-    res[0]['fields']['rules'] = [rule.rule_waf.name for rule in waf_application_rules]
+    res[0]['fields']['rules'] = [{"rule_waf": rule.rule_waf.pk,
+                                  "rule_name": rule.rule_waf.name,
+                                  "rule_policy": rule.rule_policy,
+                                  "rule_log": rule.rule_log,} for rule in waf_application_rules]
     return res[0]['fields']

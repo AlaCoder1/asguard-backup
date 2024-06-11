@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-06-04 16:14+0000\n"
+"POT-Creation-Date: 2024-06-10 16:38+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,18 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+#: backend/waf/views.py:20
+msgid "WAF Config"
+msgstr "Config WAF"
+
+#: backend/waf/views.py:21
+msgid "WAF Rule"
+msgstr "Règle WAF"
+
+#: backend/waf/views.py:22
+msgid "WAF Application"
+msgstr "Application WAF"
 
 #: backend/waf/views.py:24
 msgid "is created"

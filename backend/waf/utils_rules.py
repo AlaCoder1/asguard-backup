@@ -2,7 +2,6 @@
 
 
 from backend.waf.constant_variables import PATH_RULES_WAF
-from backend.waf.models import RulesWaf
 from utils.commands_utils import execute_command_without_arguments
 
 

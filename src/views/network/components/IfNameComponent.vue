@@ -307,7 +307,7 @@
         v-if="showAlertGateway"
         :style="alertStyle"
       >
-        {{ $t("interface.addedSuccessfully") }}
+        {{ message }}
       </v-alert>
       <v-alert
         type="success"
@@ -319,7 +319,7 @@
         v-if="showAlert"
         :style="alertStyle"
       >
-        {{ $t("interface.savedSuccessfully") }}
+        {{ message }}
       </v-alert>
       <v-dialog
         v-model="showGatewayDialog"
@@ -421,6 +421,7 @@ export default {
   },
   data() {
     return {
+      message: "",
       typeDHCP4: "",
       advancedParameters: false,
       interface: {
@@ -597,7 +598,8 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         axios.put("/network/conf/" + this.activeTab, params).then(
-          () => {
+          (response) => {
+            this.message = response.data.message;
             this.showAlert = true;
             setTimeout(() => {
               this.showAlert = false;
@@ -712,8 +714,10 @@ export default {
 
       axios.post("/gateway/addStaticGateway", params).then(
         (response) => {
+          console.log("response***", response);
           if (response.status == "200") {
             this.showGatewayDialog = false;
+            this.message = response.data.msg;
             this.gateway = {
               gwname: "",
               gwaddress: "",
@@ -778,6 +782,7 @@ export default {
       axios.put("/gateway/updateStaticGateway", params).then(
         (response) => {
           this.showAlert = true;
+          console.log(response);
           setTimeout(() => {
             this.showAlert = false;
           }, 3000);

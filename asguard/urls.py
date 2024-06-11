@@ -93,6 +93,7 @@ urlpatterns = [
     path('ldap/',include('backend.LdapServer.urls')),
     path('routing/',include('backend.routing.urls')),
     path("profile/",profile_page),
+    path("vxlan/",include('backend.vxlan.urls')),
 
 
 

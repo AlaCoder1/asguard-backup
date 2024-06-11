@@ -125,7 +125,13 @@ export default {
         document.getElementById("app").attributes["list_vlan_interface"].value;
       const parsedArray = JSON.parse(vlanInterfaceList);
 
-      rowDataAssign.value = parsedArray;
+      let vlanInterfaceListVXLAN =
+        document.getElementById("app").attributes["list_vxlan_interface"].value;
+      const parsedArrayVXLAN = JSON.parse(vlanInterfaceListVXLAN);
+
+      var combinedArray = [...parsedArray, ...parsedArrayVXLAN];
+
+      rowDataAssign.value = combinedArray;
     });
     const network = computed(() => {
       return t("typeInterface.networkPort");
@@ -155,7 +161,7 @@ export default {
         headerName: "Action",
         cellRenderer: actionCellRendererKeys,
         field: "action",
-        width:150,
+        width: 150,
         sortable: true,
         filter: true,
       },
@@ -246,6 +252,7 @@ export default {
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
+
           break;
 
         default:
@@ -266,6 +273,9 @@ export default {
     const confirmDelete = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      // let network_port = state.deletedRow.network_port.split(" ");
+      // if (network_port[0] === "VLAN") {
       axios
         .delete(`/vlan/deleteVlanInterface/${state.deletedRow.id}`)
         .then((response) => {

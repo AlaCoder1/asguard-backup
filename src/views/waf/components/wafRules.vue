@@ -1,6 +1,6 @@
 <template>
-  <div class="mt-3">
-    <h4>{{$t('openvpn.Generalinformation')}}</h4>
+  <div class="mt-3 ml-3">
+    <h4>{{ $t("openvpn.Generalinformation") }}</h4>
     <v-divider class="mb-2"></v-divider>
     <div style="overflow: hidden; flex-grow: 1">
       <ag-grid-vue
@@ -13,9 +13,10 @@
         :rowData="rowDataRules.value"
         :gridOptions="gridOptions"
         :overlayNoRowsTemplate="overlayTemplate"
+        :localeText="paginationLocalization"
       />
     </div>
-    <div class="d-flex justify-end mt-3">
+    <div class="d-flex justify-end mt-3 mb-5">
       <VButton
         rounded
         outlined
@@ -38,6 +39,12 @@
   >
     {{ state.textAlert }}
   </v-snackbar>
+
+  <ModalRuleWaf
+    :isOpen="state.isModalOpen"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+  />
 </template>
 
 <script>
@@ -46,22 +53,32 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import VButton from "@/components/VButton.vue";
-import { reactive, ref,computed,onMounted} from "vue";
+import { reactive, ref, computed, onMounted,inject } from "vue";
+import ModalRuleWaf from "@/components/modals/ModalRuleWaf.vue";
 
 export default {
   name: "Rules",
   components: {
     VButton,
     AgGridVue,
+    ModalRuleWaf,
   },
   setup() {
+    const emitter = inject("emitter");
     const { t } = useI18n();
+    const paginationLocalization = reactive({
+      of: "/",
+    });
     const state = reactive({
       snackbar: false,
       color: "",
       textAlert: "",
+      modalData: {},
+      isModalOpen: false,
+      isOpen: null,
+      editRow: {},
+      modalMode: "create",
     });
-
 
     const RequestAction = computed(() => {
       return t("Waf.RequestAction");
@@ -131,7 +148,6 @@ export default {
       }
     };
     onMounted(() => {
-      
       overlayTemplate.value = `
       <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
@@ -140,16 +156,30 @@ export default {
         data-name="Unbox"
       />
      </svg></span>`;
-
     });
+
+    emitter.on("closeWafRuleModal", () => {
+        state.isModalOpen = false;
+        state.isOpen = false;
+        state.modalMode = "";
+        state.editRow = {};
+      });
+
+    const openModalAdd = () => {
+      state.modalData = {};
+      state.modalMode = "create";
+      state.isModalOpen = true;
+    };
 
     return {
       state,
       onGridReady,
+      openModalAdd,
       columnRules,
       rowDataRules,
       gridOptions,
       overlayTemplate,
+      paginationLocalization,
     };
   },
 };

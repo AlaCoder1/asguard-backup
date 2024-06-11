@@ -656,26 +656,54 @@ export default {
   },
 
   methods: {
-    getAllcountry() {
-      axios
-        .get("https://restcountries.com/v3.1/all")
-        .then((response) => {
-          let countryList = response.data.map((element) => {
-            return {
-              countryName: element.name.common,
-              countryCode: element.cca2,
-              countryID: element.ccn3,
-            };
-          });
-          countryList.sort((a, b) =>
-            a.countryName.localeCompare(b.countryName)
-          );
+    async getAllcountry() {
+      // axios
+      //   .get("https://restcountries.com/v3.1/all")
+      //   .then((response) => {
+      //     let countryList = response.data.map((element) => {
+      //       return {
+      //         countryName: element.name.common,
+      //         countryCode: element.cca2,
+      //         countryID: element.ccn3,
+      //       };
+      //     });
+      //     countryList.sort((a, b) =>
+      //       a.countryName.localeCompare(b.countryName)
+      //     );
 
-          this.countriesList = countryList;
+      //     this.countriesList = countryList;
+      //   })
+      //   .catch(() => {
+      //     console.log("error");
+      //   });
+      await fetch("https://restcountries.com/v3.1/all")
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
         })
-        .catch(() => {
-          console.log("error");
+        .then((data) => {
+          if (Array.isArray(data)) {
+            let countryList = data.map((element) => {
+              return {
+                countryName: element.name.common,
+                countryCode: element.cca2,
+                countryID: element.ccn3,
+              };
+            });
+            countryList.sort((a, b) =>
+              a.countryName.localeCompare(b.countryName)
+            );
+            this.countriesList = countryList;
+          } else {
+            console.error("Unexpected response format:", data);
+          }
+        })
+        .catch((error) => {
+          console.log("Error fetching countries:", error);
         });
+    
     },
     closeModal() {
       this.v$.$reset();

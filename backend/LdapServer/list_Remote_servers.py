@@ -2,12 +2,18 @@ from django.shortcuts import render
 from .models import ADServer
 from django.http import JsonResponse
 import json
+from django.utils.translation import gettext_lazy as _
 from backend.authentification.views import *
 from .serializers import ADServerSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from django.core import serializers
 from django.contrib.auth.hashers import make_password
+
+# Constants
+CONSTANT_LDAP_SERVER = _('Directory Server')
+CONSTANT_LDAP_UNREACHABLE= _('Directory Server unreachable')
+CONSTANT_LDAP_AUTH = _("Authentication failed")
 
 
 ###################################### Function to display list of Servers ##########################
@@ -57,11 +63,10 @@ def update_Ldapserver_DB(data, id):
             return False
         
     except ldap.SERVER_DOWN:
-        return {'msg': 'directory server is unreachable'}     
+        return {'msg': f"{CONSTANT_LDAP_UNREACHABLE}"}     
             
-    except ldap.LDAPError as e:
-        print("LDAPError:", e)
-        return {'msg': 'directory server authentication failed'}
+    except ldap.LDAPError:
+        return {'msg': f"{CONSTANT_LDAP_SERVER} {CONSTANT_LDAP_AUTH}"}
     
          
                 

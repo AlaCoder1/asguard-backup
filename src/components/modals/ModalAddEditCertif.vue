@@ -208,7 +208,7 @@
                         v-model="state.formData.country"
                         :label="$t('certificat.country')"
                         item-title="countryName"
-                        item-value="countryID"
+                        item-value="countryCode"
                         return-object
                         :items="countriesList"
                       ></v-autocomplete>
@@ -609,7 +609,7 @@ export default {
   },
   data() {
     return {
-      countriesList: null,
+      countriesList: [],
       color: "",
       openModal: false,
       textAlert: "",
@@ -657,53 +657,23 @@ export default {
 
   methods: {
     async getAllcountry() {
-      // axios
-      //   .get("https://restcountries.com/v3.1/all")
-      //   .then((response) => {
-      //     let countryList = response.data.map((element) => {
-      //       return {
-      //         countryName: element.name.common,
-      //         countryCode: element.cca2,
-      //         countryID: element.ccn3,
-      //       };
-      //     });
-      //     countryList.sort((a, b) =>
-      //       a.countryName.localeCompare(b.countryName)
-      //     );
-
-      //     this.countriesList = countryList;
-      //   })
-      //   .catch(() => {
-      //     console.log("error");
-      //   });
-      await fetch("https://restcountries.com/v3.1/all")
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((data) => {
-          if (Array.isArray(data)) {
-            let countryList = data.map((element) => {
-              return {
-                countryName: element.name.common,
-                countryCode: element.cca2,
-                countryID: element.ccn3,
-              };
-            });
-            countryList.sort((a, b) =>
-              a.countryName.localeCompare(b.countryName)
-            );
-            this.countriesList = countryList;
-          } else {
-            console.error("Unexpected response format:", data);
-          }
-        })
-        .catch((error) => {
-          console.log("Error fetching countries:", error);
-        });
-    
+      await axios.get("https://countriesnow.space/api/v0.1/countries/iso").then(
+        (response) => {
+          let countryList = response.data.data.map((element) => {
+            return {
+              countryName: element.name,
+              countryCode: element.Iso2,
+            };
+          });
+          countryList.sort((a, b) =>
+            a.countryName.localeCompare(b.countryName)
+          );
+          this.countriesList = countryList;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
     },
     closeModal() {
       this.v$.$reset();
@@ -731,7 +701,10 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         let payload = {};
-        if (this.state.formData.method.name == "Create Certificate" || this.state.formData.method.name == "Créer un certificat") {
+        if (
+          this.state.formData.method.name == "Create Certificate" ||
+          this.state.formData.method.name == "Créer un certificat"
+        ) {
           payload = {
             name: this.state.formData?.certifName,
             activation: "True",

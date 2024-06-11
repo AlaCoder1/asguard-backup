@@ -2,6 +2,7 @@
   <div class="mt-3 ml-3">
     <h4>{{ $t("openvpn.Generalinformation") }}</h4>
     <v-divider class="mb-2"></v-divider>
+
     <div style="overflow: hidden; flex-grow: 1">
       <ag-grid-vue
         id="grid-wrapper"
@@ -45,15 +46,34 @@
     :editRow="state.editRow"
     :modalMode="state.modalMode"
   />
+  <v-dialog v-model="state.deleteDialog" max-width="500px">
+    <v-card>
+      <v-card-title class="headline">{{
+        $t("delete.DeleteConfirmation")
+      }}</v-card-title>
+      <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="cancelDelete">{{
+          $t("buttons.cancel")
+        }}</v-btn>
+        <v-btn color="blue darken-1" text @click="confirmDelete">{{
+          $t("buttons.delete")
+        }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script>
+import axios from "axios";
+import { getCookie } from "@/mixins/csrftoken.js";
 import { useI18n } from "vue-i18n";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import VButton from "@/components/VButton.vue";
-import { reactive, ref, computed, onMounted,inject } from "vue";
+import { reactive, ref, computed, onMounted, inject } from "vue";
 import ModalRuleWaf from "@/components/modals/ModalRuleWaf.vue";
 
 export default {
@@ -78,6 +98,7 @@ export default {
       isOpen: null,
       editRow: {},
       modalMode: "create",
+      deletedRow: null
     });
 
     const RequestAction = computed(() => {
@@ -92,15 +113,7 @@ export default {
     const columnRules = ref([
       {
         headerName: "ID",
-        field: "ID",
-        autoHeight: true,
-        width: 90,
-        minWidth: 50,
-        flex: 1,
-      },
-      {
-        headerName: RequestAction,
-        field: "request_action",
+        field: "rule_id",
         autoHeight: true,
         width: 90,
         minWidth: 50,
@@ -109,15 +122,7 @@ export default {
 
       {
         headerName: Rule,
-        field: "Rule",
-        autoHeight: true,
-        resizable: true,
-        width: 90,
-        minWidth: 50,
-        flex: 1,
-      },
-      {
-        headerName: Status,
+        field: "name",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -126,6 +131,7 @@ export default {
       },
       {
         headerName: "Actions",
+        cellRenderer: actionCellRenderer,
         field: "action",
       },
     ]);
@@ -137,6 +143,73 @@ export default {
       paginationPageSize: 5,
       rowSelection: "single",
     });
+
+    function actionCellRenderer(params) {
+      let eGui = document.createElement("div");
+      let editingCells = params.api.getEditingCells();
+      let isCurrentRowEditing = editingCells.some((cell) => {
+        return cell.rowIndex === params.node.rowIndex;
+      });
+      if (isCurrentRowEditing) {
+        eGui.innerHTML = `
+        <button
+          class="action-button update"
+          data-action="update">
+               update
+        </button>
+        <button
+          class="action-button cancel"
+          data-action="cancel">
+               cancel
+        </button>
+        `;
+      } else {
+        if (params.data.created) {
+          eGui.innerHTML = `
+          <button
+                class="action-button edit"
+                data-action="edit">
+                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+          <button
+          class="action-button delete"
+          data-action="delete">
+            <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+          </button>`;
+        } else {
+          eGui.innerHTML = `
+             No Modif for this rule
+          `;
+        }
+      }
+      eGui.querySelectorAll(".action-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.getAttribute("data-action");
+          handleAction(action, params.node.data);
+        });
+      });
+      return eGui;
+    }
+
+    const handleAction = (action, rowData, index) => {
+      switch (action) {
+        case "delete":
+          state.deleteDialog = true;
+          state.deletedRow = rowData;
+          console.log("delete", rowData);
+
+          break;
+        case "edit":
+          console.log("edit", rowData);
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+          state.editRow = rowData;
+          break;
+
+        default:
+          break;
+      }
+    };
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
@@ -156,14 +229,20 @@ export default {
         data-name="Unbox"
       />
      </svg></span>`;
+
+      let wafList =
+        document.getElementById("app").attributes["list_rules"].value;
+      let list_rules = JSON.parse(wafList);
+      rowDataRules.value = list_rules;
+      console.log("list_rules", list_rules);
     });
 
     emitter.on("closeWafRuleModal", () => {
-        state.isModalOpen = false;
-        state.isOpen = false;
-        state.modalMode = "";
-        state.editRow = {};
-      });
+      state.isModalOpen = false;
+      state.isOpen = false;
+      state.modalMode = "";
+      state.editRow = {};
+    });
 
     const openModalAdd = () => {
       state.modalData = {};
@@ -171,11 +250,38 @@ export default {
       state.isModalOpen = true;
     };
 
+    const cancelDelete = () => {
+      state.deleteDialog = false;
+    };
+    const confirmDelete = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios
+        .delete(`/waf/deleteRuleWaf/${state.deletedRow.id}`)
+        .then((response) => {
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.msg;
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
+        });
+    };
+
     return {
       state,
       onGridReady,
       openModalAdd,
+      cancelDelete,
       columnRules,
+      confirmDelete,
       rowDataRules,
       gridOptions,
       overlayTemplate,

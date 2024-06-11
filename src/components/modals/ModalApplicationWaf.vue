@@ -52,19 +52,26 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Description"
-                    v-model="state.description"
+                    label="Port"
+                    v-model="state.port"
                   ></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.description.$error">
-                    {{ v$.description.$errors[0].$message }}
+                  <p class="error-feedback mb-5" v-if="v$.port.$error">
+                    {{ v$.port.$errors[0].$message }}
                   </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
+                  <v-text-field
+                    label="Description"
+                    v-model="state.description"
+                  ></v-text-field>
+                </v-col>
+                <v-col cols="12" class="mb-n6">
                   <v-autocomplete
+                    multiple
                     v-model="state.country"
                     :label="$t('certificat.country')"
                     item-title="countryName"
-                    item-value="countryID"
+                    item-value="countryCode"
                     return-object
                     :items="state.countriesList"
                   ></v-autocomplete>
@@ -184,6 +191,20 @@ export default {
           data-name="Unbox"
         />
        </svg></span>`;
+
+      let wafList =
+        document.getElementById("app").attributes["list_rules"].value;
+      let list_rules = JSON.parse(wafList);
+      let mapedRow = list_rules.map((e) => {
+        return {
+          rule_waf: e.id,
+          name: e.name,
+          rule_policy: false,
+          rule_log: false,
+        };
+      });
+
+      rowDataWafApp.value = mapedRow;
     });
     const { t } = useI18n();
 
@@ -198,8 +219,8 @@ export default {
     const gridColumnApi = ref(null);
 
     const state = reactive({
-      listType: [],
-      countriesList: null,
+      listType: ["ip", "domain"],
+      countriesList: [],
       id: null,
       //
       snackbar: false,
@@ -211,7 +232,8 @@ export default {
       value: "",
       description: "",
       applicationName: "",
-      country: "",
+      country: [],
+      port: "",
     });
 
     watch(
@@ -234,6 +256,8 @@ export default {
           state.applicationName = "";
           state.value = "";
           state.description = "";
+          state.country = "";
+          state.port = "";
         }
       }
     );
@@ -250,15 +274,34 @@ export default {
     const columnWafApp = ref([
       {
         headerName: rule,
-        field: "rule",
+        field: "name",
         width: 90,
         minWidth: 50,
         flex: 1,
       },
       {
         headerName: block,
-        field: "block",
+        field: "rule_policy",
+
         width: 150,
+        cellRenderer: (params) => {
+          const checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = params.value;
+          if (params.data.rule_waf === 18) {
+            params.data.rule_policy = true;
+            checkbox.disabled = true;
+            checkbox.checked = true;
+          } else {
+            checkbox.addEventListener("change", () => {
+              params.node.setDataValue(params.colDef.field, checkbox.checked);
+            });
+          }
+          return checkbox;
+        },
+        editable: (params) => {
+          return params.data.rule_waf !== 18;
+        },
       },
       // {
       //   headerName: log,
@@ -269,6 +312,34 @@ export default {
 
     const populate = (data) => {
       if (modalMode.value === "edit") {
+        console.log("data.rules", data.rules);
+        state.id = data.id;
+
+        let filtredCountry = [];
+        data?.country.forEach((e) => {
+          filtredCountry = [
+            ...filtredCountry,
+            ...state.countriesList.filter((i) => i.countryCode === e),
+          ];
+        });
+        state.country = filtredCountry ?? [];
+
+        state.type = data.application_type;
+        state.applicationName = data.name;
+        state.value = data.application_value;
+        state.description = data.description;
+        state.port = data.application_port;
+
+        let mapedRow = data.rules.map((e) => {
+          return {
+            rule_waf: e.rule_waf,
+            name: e.rule_name,
+            rule_policy: e.rule_policy,
+            rule_log: e.rule_log,
+          };
+        });
+
+        rowDataWafApp.value = mapedRow;
       }
     };
 
@@ -278,19 +349,30 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       if (result) {
+        let mapedCountry = state.country.map((e) => e.countryCode);
+        let mapedRuleApp = rowDataWafApp.value.map((e) => {
+          return {
+            rule_waf: e.rule_waf,
+            rule_policy: e.rule_policy,
+            rule_log: e.rule_log,
+          };
+        });
         let payload = {
-          parent_type: state.type?.id,
-          vlan_tag: state.applicationName,
-          vlan_priority: state.value,
+          name: state.applicationName,
+          application_type: state.type,
+          application_value: state.value,
+          application_port: state.port,
           description: state.description,
+          country: mapedCountry,
+          rules: mapedRuleApp,
         };
         console.log("payload", payload);
 
         if (modalMode.value === "edit") {
           axios
-            .put(`/vlan/updateVlan/${state.id}`, payload)
+            .put(`/waf/updateApplicationWaf/${state.id}`, payload)
             .then((response) => {
-              if (response.status == "200") {
+              if (response.status == "201") {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
@@ -306,9 +388,9 @@ export default {
             });
         } else {
           axios
-            .post("/vlan/addVlan", payload)
+            .post("/waf/createApplicationWaf", payload)
             .then((response) => {
-              if (response.status == "200") {
+              if (response.status == "201") {
                 state.openModal = false;
                 state.snackbar = true;
                 state.color = "success";
@@ -337,40 +419,38 @@ export default {
         state.applicationName = "";
         state.value = "";
         state.description = "";
+        state.country = "";
+        state.port = "";
       }
     };
     const getAllcountryCode = async () => {
-      await fetch("https://restcountries.com/v3.1/all")
-        .then((response) => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then((data) => {
-          if (Array.isArray(data)) {
-            let countryList = data.map((element) => {
-              return {
-                countryName: element.name.common,
-                countryCode: element.cca2,
-                countryID: element.ccn3,
-              };
-            });
-            countryList.sort((a, b) =>
-              a.countryName.localeCompare(b.countryName)
-            );
-            state.countriesList = countryList;
-          } else {
-            console.error("Unexpected response format:", data);
-          }
-        })
-        .catch((error) => {
-          console.log("Error fetching countries:", error);
-        });
+      await axios.get("https://countriesnow.space/api/v0.1/countries/iso").then(
+        (response) => {
+          console.log("re", response);
+
+          let countryList = response.data.data.map((element) => {
+            return {
+              countryName: element.name,
+              countryCode: element.Iso2,
+            };
+          });
+          countryList.sort((a, b) =>
+            a.countryName.localeCompare(b.countryName)
+          );
+          state.countriesList = countryList;
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
     };
     const error = computed(() => {
       return t("errors.valueRequired");
     });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
+
     const rules = computed(() => {
       return {
         applicationName: {
@@ -384,11 +464,16 @@ export default {
         type: {
           required: helpers.withMessage(error, required),
         },
-        description: {
-          required: helpers.withMessage(error, required),
-        },
+
         country: {
           required: helpers.withMessage(error, required),
+        },
+        port: {
+          required: helpers.withMessage(error, required),
+          isValidPort: helpers.withMessage(
+            onlynumbers,
+            helpers.regex(/^[0-9]+$/)
+          ),
         },
       };
     });

@@ -85,7 +85,7 @@ class Profile(models.Model):
     code_postal = models.CharField(max_length=20, blank=True,null=True)
     address = models.TextField(blank=False,null=True)
     country = models.CharField(max_length=100, blank=False,null=True)
-    photo_url = models.CharField(blank=True,null=True,default='/media/profile.jpg',max_length=1000)
+    photo_url = models.CharField(blank=True,null=True,default='/media/profile/profile.jpg',max_length=1000)
     is_enable_2FA = models.BooleanField(default=False)
     language = models.CharField(max_length=100, default='en', null=True, blank=True)
 

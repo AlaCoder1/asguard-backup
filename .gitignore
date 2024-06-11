@@ -87,6 +87,12 @@
 
 /static/
 
+/media/*
+
+!/media/profile
+
+!/media/profile/*
+
 /utils/__pycache__/
 
 /pki/

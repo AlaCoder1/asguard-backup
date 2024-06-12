@@ -215,7 +215,7 @@ export default {
     const overlayTemplate = ref("");
     const gridOptions = ref({
       pagination: true,
-      paginationPageSize: 5,
+      paginationPageSize: 9,
       rowSelection: "single",
     });
 
@@ -241,7 +241,6 @@ export default {
       let list_waf_app =
         document.getElementById("app").attributes["list_waf_app"].value;
       let list_rules = JSON.parse(list_waf_app);
-      console.log("list_rules*", list_rules);
 
       rowDataApplication.value = list_rules;
     });

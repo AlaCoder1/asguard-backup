@@ -98,7 +98,7 @@ export default {
       isOpen: null,
       editRow: {},
       modalMode: "create",
-      deletedRow: null
+      deletedRow: null,
     });
 
     const RequestAction = computed(() => {
@@ -140,7 +140,7 @@ export default {
     const overlayTemplate = ref("");
     const gridOptions = ref({
       pagination: true,
-      paginationPageSize: 5,
+      paginationPageSize: 9,
       rowSelection: "single",
     });
 
@@ -178,7 +178,7 @@ export default {
           </button>`;
         } else {
           eGui.innerHTML = `
-             No Modif for this rule
+          ${t("errors.noModif")}
           `;
         }
       }
@@ -234,7 +234,6 @@ export default {
         document.getElementById("app").attributes["list_rules"].value;
       let list_rules = JSON.parse(wafList);
       rowDataRules.value = list_rules;
-      console.log("list_rules", list_rules);
     });
 
     emitter.on("closeWafRuleModal", () => {

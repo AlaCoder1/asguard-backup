@@ -25,6 +25,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
+                    multiple
                     v-model="state.variable"
                     label="Variable"
                     item-title="name"
@@ -433,6 +434,7 @@ export default {
         { type: "verifySSN", value: "", slug: "verifySSN" },
         { type: "within", value: "", slug: "within" },
       ],
+
       listTrans: [
         { name: "base64Decode", slug: "t:base64Decode" },
         { name: "sqlHexDecode", slug: "t:sqlHexDecode" },
@@ -506,7 +508,7 @@ export default {
       textAlert: "",
       openModal: false,
 
-      variable: "",
+      variable: [],
       operator: [],
       transformationFun: [],
       description: "",
@@ -534,14 +536,15 @@ export default {
       () => modalMode.value,
       () => {
         if (modalMode.value === "create") {
-          state.variable = "";
+          state.variable = [];
           state.ruleName = "";
-          state.operator = "";
-          state.transformationFun = "";
+          state.operator = [];
+          state.transformationFun = [];
           state.isActivated = false;
           rowDataWaf.value = [];
           rowDataOperator.value = [];
           rowDataTransform.value = [];
+          state.actions = [{ type: "id", value: "", slug: "id" }];
         }
       }
     );
@@ -664,18 +667,44 @@ export default {
             slug: e.type,
           };
         });
+        let mapedOperator = data.operators.map((e) => {
+          return {
+            type: e.type,
+            value: e.value,
+            slug: e.type,
+          };
+        });
+        state.operator = mapedOperator;
         state.actions = mapedAction;
         state.ruleName = data.name;
         state.variable = data.variables;
+        if (data.transformations.length === 0) return;
+        else {
+          const index = state.listTrans.findIndex(
+            (item) => item.name === data.transformations[0]
+          );
 
-        let filtredTrans = [];
-        data?.transformations.forEach((e) => {
-          filtredTrans = [
-            ...filtredTrans,
-            ...state.listTrans.filter((i) => i.slug === e),
-          ];
-        });
-        state.transformationFun = filtredTrans ?? [];
+          if (index !== -1) {
+            state.isActivated = false;
+            let filtredTrans = [];
+            data?.transformations.forEach((e) => {
+              filtredTrans = [
+                ...filtredTrans,
+                ...state.listTrans.filter((i) => i.name === e),
+              ];
+            });
+
+            state.transformationFun = filtredTrans ?? [];
+          } else {
+            state.isActivated = true;
+            let mappedTrans = data.transformations.map((e) => {
+              return {
+                value: e,
+              };
+            });
+            rowDataTransform.value = mappedTrans;
+          }
+        }
       }
     };
 
@@ -742,12 +771,12 @@ export default {
     const closeModal = () => {
       emitter.emit("closeWafRuleModal");
       if (modalMode.value === "create") {
-        state.variable = "";
+        state.variable = [];
         state.ruleName = "";
-        state.operator = "";
-        state.transformationFun = "";
+        state.operator = [];
+        state.transformationFun = [];
         state.typeTransf = "";
-        state.actions = "";
+        state.actions = [{ type: "id", value: "", slug: "id" }];
         rowDataTransform.value = [];
         rowDataWaf.value = [];
         rowDataOperator.value = [];
@@ -945,7 +974,7 @@ export default {
     const handleActionTransform = (action, rowData, index) => {
       switch (action) {
         case "delete":
-          const index = rowDataOperator.value.findIndex(
+          const index = rowDataTransform.value.findIndex(
             (item) => item.type === rowData.type
           );
 
@@ -973,18 +1002,19 @@ export default {
         if (isArrayEmpty) {
           state.snackbar = true;
           state.color = "red";
-          state.textAlert =
-            "The array is empty. Please add at least one object.";
+          state.textAlert = t("errors.emptyArray");
           return;
         } else if (checkForEmptyProperties(rowDataWaf.value)) {
           state.snackbar = true;
           state.color = "red";
-          state.textAlert = `${state.existType} has an empty value`;
+          state.textAlert = `${state.existType} ${t("errors.emptyValue")}`;
           return;
         } else if (checkForEmptyPropertiesOperators(rowDataOperator.value)) {
           state.snackbar = true;
           state.color = "red";
-          state.textAlert = `${state.existTypeOperator} has an empty value`;
+          state.textAlert = `${state.existTypeOperator} ${t(
+            "errors.emptyValue"
+          )}`;
           return;
         } else {
           var hasEmptyElement = rowDataTransform.value.some(hasEmptyProperty);
@@ -992,7 +1022,7 @@ export default {
           if (hasEmptyElement) {
             state.snackbar = true;
             state.color = "red";
-            state.textAlert = "At least one element has an empty Value";
+            state.textAlert = t("errors.atLeastemptyValue");
             return;
           }
         }
@@ -1010,13 +1040,16 @@ export default {
           };
         });
 
-        let mapedRowTransf = state.transformationFun.map((e) => e.name);
-        let mapedRowTransfType = rowDataTransform.value.map((e) => e.value);
+        if (!state.isActivated) {
+          var mapedRowTransf = state.transformationFun.map((e) => e.name);
+        } else if (state.isActivated) {
+          var mapedRowTransfType = rowDataTransform.value.map((e) => e.value);
+        }
 
         let payload = {
           name: state.ruleName,
-          variables: [state.variable],
-          operator: mapedOperator,
+          variables: state.variable,
+          operators: mapedOperator,
 
           transformations: !state.isActivated
             ? mapedRowTransf
@@ -1027,9 +1060,9 @@ export default {
 
         if (modalMode.value === "edit") {
           axios
-            .put(`/vlan/updateVlan/${state.id}`, payload)
+            .put(`/waf/updateRuleWaf/${state.id}`, payload)
             .then((response) => {
-              if (response.status == "200") {
+              if (response.status == "201") {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
@@ -1045,25 +1078,25 @@ export default {
             });
         } else {
           console.log("payload", payload);
-          // axios
-          //   .post("/waf/createRuleWaf", payload)
-          //   .then((response) => {
-          //     if (response.status == "201") {
-          //       state.openModal = false;
-          //       state.snackbar = true;
-          //       state.color = "success";
-          //       state.textAlert = response.data.msg;
+          axios
+            .post("/waf/createRuleWaf", payload)
+            .then((response) => {
+              if (response.status == "201") {
+                state.openModal = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
 
-          //       setTimeout(() => {
-          //         location.reload();
-          //       }, 1000);
-          //     }
-          //   })
-          //   .catch((i) => {
-          //     state.snackbar = true;
-          //     state.color = "red";
-          //     state.textAlert = i.response.data.msg;
-          //   });
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+            });
         }
       } else {
         console.log("v$", v$.value);
@@ -1071,18 +1104,19 @@ export default {
         if (isArrayEmpty) {
           state.snackbar = true;
           state.color = "red";
-          state.textAlert =
-            "The array is empty. Please add at least one object.";
+          state.textAlert = t("errors.emptyArray");
           return;
         } else if (checkForEmptyProperties(rowDataWaf.value)) {
           state.snackbar = true;
           state.color = "red";
-          state.textAlert = `${state.existType} has an empty value`;
+          state.textAlert = `${state.existType} ${t("errors.emptyValue")}`;
           return;
         } else if (checkForEmptyPropertiesOperators(rowDataOperator.value)) {
           state.snackbar = true;
           state.color = "red";
-          state.textAlert = `${state.existTypeOperator} has an empty value`;
+          state.textAlert = `${state.existTypeOperator} ${t(
+            "errors.emptyValue"
+          )}`;
           return;
         } else {
           var hasEmptyElement = rowDataTransform.value.some(hasEmptyProperty);
@@ -1090,7 +1124,7 @@ export default {
           if (hasEmptyElement) {
             state.snackbar = true;
             state.color = "red";
-            state.textAlert = "At least one element has an empty Value";
+            state.textAlert = t("errors.atLeastemptyValue");
             return;
           }
         }

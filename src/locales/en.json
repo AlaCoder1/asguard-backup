@@ -72,9 +72,14 @@
     "formsepcificpassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character",
     "startwithletter":"The name can contain letters, digits, underscores, and hyphens, must begin with a letter, and can be up to 32 characters long",
     "addressdAll":"Champ can include address 'X.X.X.X/X' Or word 'ALL'",
-    "numberALL":"Champ can include only Numbers Or word 'ALL'"
+    "numberALL":"Champ can include only Numbers Or word 'ALL'",
+    "emptyArray":"The array is empty. Please add at least one object.",
+    "emptyValue":"has an empty value",
+    "atLeastemptyValue":"At least one element has an empty Value",
+    "noModif":"No Modif For this rule"
 
   },
+
 
   "placeholder":{
     "enterPassword":"Enter password",

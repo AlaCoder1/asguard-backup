@@ -312,7 +312,6 @@ export default {
 
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("data.rules", data.rules);
         state.id = data.id;
 
         let filtredCountry = [];

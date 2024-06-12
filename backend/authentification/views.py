@@ -189,7 +189,7 @@ def verify_code(request,id):
             
             # Verification code expired
             verification_code.delete()
-            return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_EXPIRED}"}, status=400)
+            return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_EXPIRED}"}, status=200)
         except VerificationCode.DoesNotExist:
             return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 

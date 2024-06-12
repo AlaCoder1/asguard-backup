@@ -72,7 +72,12 @@
     "formsepcificpassword":"champ doit y avoir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial",
     "startwithletter":"Le nom peut contenir des lettres, des chiffres, des traits de soulignement et des tirets, doit commencer par une lettre et peut comporter jusqu'à 32 caractères",
     "addressdAll":"champ peut inclure une adresse 'X.X.X.X/X' ou mot 'ALL'",
-    "numberALL":"champ ne peut inclure que des nombres ou le mot 'ALL'"
+    "numberALL":"champ ne peut inclure que des nombres ou le mot 'ALL'",
+    "emptyArray":"Le tableau est vide. Veuillez ajouter au moins un élément.",
+    "emptyValue":"a une valeur vide",
+    "atLeastemptyValue":"Au moins un élément a une valeur vide",
+    "noModif":"Rule Non modifiable"
+
 
 
 

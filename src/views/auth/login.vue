@@ -178,6 +178,7 @@ export default {
     },
 
     async resendOtp() {
+      this.otp = "";
       console.log("resend");
 
       await axios

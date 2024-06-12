@@ -121,7 +121,10 @@ def get_waf_rule(request, id):
                          type=TYPE_OBJECT, required=['name', 'variables', 'operators', 'transformations', 'actions'],
                          properties={'name': Schema(type=TYPE_STRING, description="Name of the rule"),
                                      'variables': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING)),
-                                     'operators': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING)),
+                                     'operators': Schema(type=TYPE_ARRAY, description= "If a transformation don't have a value then value will be an empty string", 
+                                                         items=Schema(type=TYPE_OBJECT, required=['type', 'value'], properties={
+                                                             'type': Schema(type=TYPE_STRING),
+                                                             'value': Schema(type=TYPE_STRING)})),
                                      'transformations': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING)),
                                      'action': Schema(type=TYPE_ARRAY, description= "id action is mandatory. If an action don't have a value like pass or log then value will be an empty string", 
                                                       items=Schema(type=TYPE_OBJECT, required=['type', 'value'], properties={
@@ -183,9 +186,19 @@ def delete_waf_rule(request, id):
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO UPDATE A WAF RULE", request_body=Schema(
-                         type=TYPE_OBJECT, required=['interface'],
-                         properties={'interface': Schema(type=TYPE_INTEGER, description="Id of the interface"),
+                     operation_summary="API TO CREATE A WAF RULE", request_body=Schema(
+                         type=TYPE_OBJECT, required=['name', 'variables', 'operators', 'transformations', 'actions'],
+                         properties={'name': Schema(type=TYPE_STRING, description="Name of the rule"),
+                                     'variables': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING)),
+                                     'operators': Schema(type=TYPE_ARRAY, description= "If a transformation don't have a value then value will be an empty string", 
+                                                         items=Schema(type=TYPE_OBJECT, required=['type', 'value'], properties={
+                                                             'type': Schema(type=TYPE_STRING),
+                                                             'value': Schema(type=TYPE_STRING)})),
+                                     'transformations': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING)),
+                                     'action': Schema(type=TYPE_ARRAY, description= "id action is mandatory. If an action don't have a value like pass or log then value will be an empty string", 
+                                                      items=Schema(type=TYPE_OBJECT, required=['type', 'value'], properties={
+                                                          'type': Schema(type=TYPE_STRING),
+                                                          'value': Schema(type=TYPE_STRING)})),
                                      }
                                      ))
 @api_view(['PUT'])

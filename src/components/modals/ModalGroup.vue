@@ -86,7 +86,7 @@
 
 <script>
 import axios from "axios";
-
+import { useI18n } from "vue-i18n";
 import useValidate from "@vuelidate/core";
 import { required, helpers } from "@vuelidate/validators";
 import { reactive, computed } from "vue";
@@ -111,29 +111,36 @@ export default {
     },
   },
   setup() {
+    const { t } = useI18n();
     const state = reactive({
       formData: {
         groupname: "",
         description: "",
       },
     });
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const startwithletter = computed(() => {
+      return t("errors.startwithletter");
+    });
     const rules = computed(() => {
       return {
         formData: {
           groupname: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               required
             ),
             isValidName: helpers.withMessage(
-              `name can include letters, digits, underscores, and hyphens. It must start with a letter and can be up to 32 characters.`,
+              startwithletter,
 
               helpers.regex(/^[a-zA-Z][a-zA-Z0-9_\-]{0,31}$/)
             ),
           },
           description: {
             required: helpers.withMessage(
-              "Value is required",
+              error,
               required
             ),
           },

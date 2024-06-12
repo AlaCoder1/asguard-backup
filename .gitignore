@@ -46,6 +46,9 @@
 /backend/openvpn/__pycache__/
 /backend/openvpn/migrations/__pycache__/
 
+/backend/ipsecmonitoring/__pycache__/
+/backend/ipsecmonitoring/migrations/__pycache__/
+
 /backend/proxy/migrations/__pycache__/
 /backend/proxy/__pycache__/
 
@@ -77,12 +80,21 @@
 /backend/vlan/migrations/__pycache__/
 /backend/vlan/__pycache__/
 
+/backend/vxlan/migrations/__pycache__/
+/backend/vxlan/__pycache__/
+
 /backend/waf/migrations/__pycache__/
 /backend/waf/__pycache__/
 
 /node_modules/
 
 /static/
+
+/media/*
+
+!/media/profile
+
+!/media/profile/*
 
 /utils/__pycache__/
 

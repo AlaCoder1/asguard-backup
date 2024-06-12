@@ -86,18 +86,31 @@ def authentication(request):
                 user_object = User.objects.get(email=data['username'])
                 user_dict = user_object.__dict__
                 profile = Profile.objects.get(user=user_object.pk)
+                profile_dict = profile.__dict__
+                current_user = {
+                    "id": user_dict['id'],
+                    "username": user_dict['username'],
+                    "email": user_dict['email'],
+                    "is_enable_2FA": profile_dict['is_enable_2FA'],
+                    "role": user_dict['role'],
+                      }
                 if not profile.is_enable_2FA:
                     login(request, user_session)
-                    current_user = {"id": user_dict['id'], "username": user_dict['username'], "email": user_dict['email'],
-                                    "role": user_dict['role']}
+                    
                     settings.CurrentUserId = user_dict['id']
                     ldap_conn.unbind()
                     return JsonResponse({'message': SUCCESS_MESSAGES_LOGIN, 
                                          "currentUser": current_user}, 
                                          status=200)
-                elif send_verification_code(user_dict['email'],user_dict['username']):
-                    return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {SUCCESS_MESSAGES_SENT}", 
-                                         "redirect":True})
+                else:
+                    if send_verification_code(user_dict['email'],user_dict['username']):
+
+                        return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {SUCCESS_MESSAGES_SENT}", 
+                                         "currentUser": current_user,"redirect":True},status=200)
+                    else:
+                        return JsonResponse({"message": "incorrect code , please try again", 
+                                         "currentUser": current_user,"redirect":True}, status=401)
+                
             return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=401)
 
         # Connection with username and password
@@ -171,14 +184,14 @@ def verify_code(request,id):
                 if user_input == verification_code.code:
                     verification_code.delete()
                     login(request, user)
-                    return JsonResponse({"message": SUCCESS_MESSAGES_LOGIN})
-                return JsonResponse({"message": ERROR_MESSAGES_INVALID_CREDENTIALS})
+                    return JsonResponse({"message": SUCCESS_MESSAGES_LOGIN}, status=200)
+                return JsonResponse({"message": ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)
             
             # Verification code expired
             verification_code.delete()
-            return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_EXPIRED}"})
+            return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_EXPIRED}"}, status=200)
         except VerificationCode.DoesNotExist:
-            return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_INEXISTANT}"})
+            return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 @csrf_exempt
 def resend_verification_code(request,id):

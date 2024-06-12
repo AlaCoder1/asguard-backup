@@ -71,10 +71,12 @@ INSTALLED_APPS = [
     "backend.subscription",
     'backend.tasks',
     'backend.vlan',
+    'backend.vxlan',
     'backend.waf',
     'backend.server_dhcp4',
     'channels',
     'drf_yasg',
+    'backend.ipsecmonitoring'
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {
@@ -240,8 +242,10 @@ ASGUARD_VERSION = os.getenv('ASGUARD_VERSION')
 
 EMAIL_HOST = 'smtp.office365.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
-EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+# EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
+# EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = '' 
+EMAIL_HOST_PASSWORD = ''
 
 # Celery configuration
 CELERY_BROKER_URL = 'redis://localhost:6379/0'

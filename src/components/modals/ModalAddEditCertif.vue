@@ -208,7 +208,7 @@
                         v-model="state.formData.country"
                         :label="$t('certificat.country')"
                         item-title="countryName"
-                        item-value="countryID"
+                        item-value="countryCode"
                         return-object
                         :items="countriesList"
                       ></v-autocomplete>
@@ -327,6 +327,7 @@
 </template>
 
 <script>
+import countryList from "country-list";
 import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
@@ -609,7 +610,7 @@ export default {
   },
   data() {
     return {
-      countriesList: null,
+      countriesList: [],
       color: "",
       openModal: false,
       textAlert: "",
@@ -631,7 +632,8 @@ export default {
     },
   },
   mounted() {
-    this.getAllcountry();
+    let countries = countryList.getData();
+    this.getAllcountry(countries);
   },
 
   watch: {
@@ -656,26 +658,32 @@ export default {
   },
 
   methods: {
-    getAllcountry() {
-      axios
-        .get("https://restcountries.com/v3.1/all")
-        .then((response) => {
-          let countryList = response.data.map((element) => {
-            return {
-              countryName: element.name.common,
-              countryCode: element.cca2,
-              countryID: element.ccn3,
-            };
-          });
-          countryList.sort((a, b) =>
-            a.countryName.localeCompare(b.countryName)
-          );
-
-          this.countriesList = countryList;
-        })
-        .catch(() => {
-          console.log("error");
-        });
+    async getAllcountry(countries) {
+      // await axios.get("https://countriesnow.space/api/v0.1/countries/iso").then(
+      //   (response) => {
+      //     let countryList = response.data.data.map((element) => {
+      //       return {
+      //         countryName: element.name,
+      //         countryCode: element.Iso2,
+      //       };
+      //     });
+      //     countryList.sort((a, b) =>
+      //       a.countryName.localeCompare(b.countryName)
+      //     );
+      //     this.countriesList = countryList;
+      //   },
+      //   (error) => {
+      //     console.log(error);
+      //   }
+      // );
+      let countryList = countries.map((element) => {
+        return {
+          countryName: element.name,
+          countryCode: element.code,
+        };
+      });
+      countryList.sort((a, b) => a.countryName.localeCompare(b.countryName));
+      this.countriesList = countryList;
     },
     closeModal() {
       this.v$.$reset();
@@ -703,7 +711,10 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         let payload = {};
-        if (this.state.formData.method.name == "Create Certificate" || this.state.formData.method.name == "Créer un certificat") {
+        if (
+          this.state.formData.method.name == "Create Certificate" ||
+          this.state.formData.method.name == "Créer un certificat"
+        ) {
           payload = {
             name: this.state.formData?.certifName,
             activation: "True",

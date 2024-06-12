@@ -3,6 +3,7 @@ from backend.network.models import Interface
 from backend.server_dhcp4.models import ServerDhcp4
 from backend.vlan.models import Vlan
 from django.core import serializers
+from backend.vxlan.models import Vxlan
 
 
 def get_vlan(request):
@@ -70,3 +71,42 @@ def get_all_server_dhcp4(request):
             list_dhcp4_server.append(res[i]['fields'])
             print(list_dhcp4_server)
     return list_dhcp4_server
+
+
+def get_vxlan_interface(request):
+    """API to get all vlan assigned from database """
+    if (request.method == 'GET'):
+        list_vlan_interface=[]
+        # parse the incoming information
+        vlan_object = Interface.objects.filter(name_interface__startswith='VXLAN')
+        vlans = serializers.serialize("json", vlan_object)
+        res = json.loads(vlans)
+        for i in range(len(res)):
+            vlan_ifname=res[i]['fields']['ifname']
+            interface=Vxlan.objects.get(vxlan_interface_name=vlan_ifname).parent_interface_id
+            ifname_parent=Interface.objects.get(id=interface).ifname
+            id_vxlan=Vxlan.objects.get(vxlan_interface_name=vlan_ifname).id
+
+            data={
+                "id":res[i]['pk'],
+                "id_vxlan":id_vxlan,
+                "name_interface":res[i]['fields']['name_interface'],
+                "network_port":f"VXLAN {vlan_ifname} on {ifname_parent}"
+            }
+            list_vlan_interface.append(data)
+    return list_vlan_interface
+
+
+def get_vxlan(request):
+    """API to get all vxlan from database """
+    if (request.method == 'GET'):
+        list_vxlan=[]
+        # parse the incoming information
+        vxlan_object=Vxlan.objects.all()
+        vxlan = serializers.serialize("json", vxlan_object)
+        res = json.loads(vxlan)
+        for i in range(len(res)):
+            res[i]['fields']['id']=res[i]["pk"]
+            res[i]['fields']['name_interface']=Interface.objects.get(id=res[i]['fields']['parent_interface']).name_interface
+            list_vxlan.append(res[i]['fields'])
+    return list_vxlan

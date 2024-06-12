@@ -46,6 +46,9 @@
 /backend/openvpn/__pycache__/
 /backend/openvpn/migrations/__pycache__/
 
+/backend/ipsecmonitoring/__pycache__/
+/backend/ipsecmonitoring/migrations/__pycache__/
+
 /backend/proxy/migrations/__pycache__/
 /backend/proxy/__pycache__/
 

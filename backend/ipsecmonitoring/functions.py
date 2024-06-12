@@ -1,0 +1,123 @@
+import subprocess
+
+
+def run_command(command):
+    completed_process = subprocess.run("sudo "+command, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout
+    error = completed_process.stderr
+    return output, error
+def get_uptime():
+    """function to get uptime from logs"""
+    uptime=None
+    command='ipsec statusall | grep "uptime" | cut -d \',\' -f 1'
+    output, error=run_command(command)
+    if output!='' and error=='':
+        list_uptime=output.split(':')[1].strip().split(' ')
+        if len(list_uptime)>1:
+            if list_uptime[1].lower()=='minutes':
+                uptime=int(list_uptime[0])*60
+            elif list_uptime[1].lower()=='hours':
+                uptime=int(list_uptime[0])*3600
+            else:
+                uptime=int(list_uptime[0])
+    return uptime 
+def get_establishetd_date():
+    """function to get tunnel establishetd date from logs"""
+    establishetd_date=None
+    command='ipsec statusall | grep "uptime" | cut -d "," -f2'
+    output, error=run_command(command)
+    if output!='' and error=='':
+        establishetd_date=output.strip('since')
+    return establishetd_date         
+def get_time_established():
+    """function to get all time from established connections"""
+    time_established=None
+    command='ipsec statusall | grep "ESTABLISHED" | cut -d \',\' -f 1'
+    output, error=run_command(command)
+    if output!='' and error=='':
+        list_estab=output.split(':')[1].strip().split(' ')[1:-1] 
+        if len(list_estab)>1:
+            if list_estab[1].lower()=='minutes':
+                time_established=int(list_estab[0])*60
+            elif list_estab[1].lower()=='hours':
+                time_established=int(list_estab[0])*3600
+            else:
+                time_established=int(list_estab[0])
+    return time_established
+        
+    
+def get_availability(time_established,uptime):
+    """function to calculate availability %"""
+    availability=0
+    if uptime is not  None and time_established is not None:
+        availability=round((time_established/uptime)*100,2)
+    return availability
+ 
+ 
+def get_active_session():
+    """function to get nomber of active sessions"""
+    active_session=0
+    command='ipsec statusall | grep "Security Associations" | cut -d \'(\' -f 2 | cut -d \',\' -f 1'
+    output, error=run_command(command)
+    if output!='' and error=='':
+        active_session=output.split(' ')[0]
+    return active_session
+
+       
+def get_bytes_in():
+    """function to get bytes received (in)"""
+    bytes_in=0
+    command='ipsec statusall | grep "bytes_i" | cut -d ":" -f 2 | cut -d "," -f2'
+    output, error=run_command(command)
+    if output!='' and error=='':
+        bytes_in=output.strip().split(' ')[0]
+        bytes_in=int(bytes_in) if bytes_in!='' else 0
+    return bytes_in
+
+def get_bytes_out():
+    """function to get bytes sent (out)"""
+    bytes_out=0
+    command='ipsec statusall | grep "bytes_i" | cut -d ":" -f 2 | cut -d "," -f3'
+    output, error=run_command(command)
+    if output!='' and error=='':
+        bytes_out=output.strip().split(' ')[0]
+        bytes_out=int(bytes_out) if bytes_out!='' else 0
+    return bytes_out  
+
+def get_tunnel_ip(tunnel_name):
+    """function to get tunnel ip from tunnel name"""
+    tunnel_endpoint_ip = f"ipsec status | grep -i {tunnel_name} | grep -o '===.*' | awk '{{print $2}}' | cut -d'/' -f1"
+    output, _=run_command(tunnel_endpoint_ip)
+    return output.split('\n')[0]
+def get_packet_loss(address):
+    """function to get packet loss % """
+    packet_loss=0
+    command=f"ping {address} -c 20 -i 0.2 -W1 | grep loss | cut -d ',' -f3"
+    output, error=run_command(command)
+    if output!='' and error=='':
+        packet_loss=output.split(' ')[0].strip('%')
+        packet_loss=int(packet_loss) if packet_loss!='' else 0
+    return packet_loss
+
+def get_availabile_bytes(bytes_in,bytes_out):
+    """function to calculate availability bytes """
+    availability_bytes=0
+    if bytes_in !=0 and bytes_out!=0:
+        availability_bytes=round(bytes_out/bytes_in,2)
+    return availability_bytes
+
+# tunnel_name="tunnel"
+# uptime=get_uptime()
+# estab_time=get_time_established()
+# availability =get_availability(estab_time,uptime)
+# bytes_in=get_bytes_in()
+# bytes_out=get_bytes_out()
+# availability_bytes=get_availabile_bytes(bytes_in,bytes_out)
+# address=get_tunnel_ip(tunnel_name)
+# # print(address)
+# packet_loss=get_packet_loss(address)
+
+# print({"availability":availability,"bytes_in":bytes_in,"bytes_out":bytes_out,
+#        "availability_bytes":availability_bytes,"packet_loss":packet_loss})
+        
+        

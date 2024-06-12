@@ -294,6 +294,7 @@
 </template>
 
 <script>
+import countryList from "country-list";
 import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
@@ -557,7 +558,8 @@ export default {
     };
   },
   mounted() {
-    this.getAllcountry();
+    let countries = countryList.getData();
+    this.getAllcountry(countries);
   },
   computed: {
     isImportCetif() {
@@ -599,24 +601,32 @@ export default {
   },
 
   methods: {
-    async getAllcountry() {
-     await axios.get("https://countriesnow.space/api/v0.1/countries/iso").then(
-        (response) => {
-          let countryList = response.data.data.map((element) => {
-            return {
-              countryName: element.name,
-              countryCode: element.Iso2,
-            };
-          });
-          countryList.sort((a, b) =>
-            a.countryName.localeCompare(b.countryName)
-          );
-          this.countriesList = countryList;
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
+    async getAllcountry(countries) {
+      // await axios.get("https://countriesnow.space/api/v0.1/countries/iso").then(
+      //   (response) => {
+      //     let countryList = response.data.data.map((element) => {
+      //       return {
+      //         countryName: element.name,
+      //         countryCode: element.Iso2,
+      //       };
+      //     });
+      //     countryList.sort((a, b) =>
+      //       a.countryName.localeCompare(b.countryName)
+      //     );
+      //     this.countriesList = countryList;
+      //   },
+      //   (error) => {
+      //     console.log(error);
+      //   }
+      // );
+      let countryList = countries.map((element) => {
+        return {
+          countryName: element.name,
+          countryCode: element.code,
+        };
+      });
+      countryList.sort((a, b) => a.countryName.localeCompare(b.countryName));
+      this.countriesList = countryList;
     },
 
     closeModal() {

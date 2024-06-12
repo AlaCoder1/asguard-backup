@@ -150,6 +150,7 @@
 </template>
 
 <script>
+import countryList from "country-list";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -182,7 +183,8 @@ export default {
   setup(props) {
     const emitter = inject("emitter");
     onMounted(() => {
-      getAllcountryCode();
+      let countries = countryList.getData();
+      getAllcountryCode(countries);
       overlayTemplate.value = `
         <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
         <path
@@ -422,26 +424,35 @@ export default {
         state.port = "";
       }
     };
-    const getAllcountryCode = async () => {
-      await axios.get("https://countriesnow.space/api/v0.1/countries/iso").then(
-        (response) => {
-          console.log("re", response);
+    const getAllcountryCode = async (countries) => {
+      // await axios.get("https://countriesnow.space/api/v0.1/countries/iso").then(
+      //   (response) => {
+      //     console.log("re", response);
 
-          let countryList = response.data.data.map((element) => {
-            return {
-              countryName: element.name,
-              countryCode: element.Iso2,
-            };
-          });
-          countryList.sort((a, b) =>
-            a.countryName.localeCompare(b.countryName)
-          );
-          state.countriesList = countryList;
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
+      //     let countryList = response.data.data.map((element) => {
+      //       return {
+      //         countryName: element.name,
+      //         countryCode: element.Iso2,
+      //       };
+      //     });
+      //     countryList.sort((a, b) =>
+      //       a.countryName.localeCompare(b.countryName)
+      //     );
+      //     state.countriesList = countryList;
+      //   },
+      //   (error) => {
+      //     console.log(error);
+      //   }
+      // );
+
+      let countryList = countries.map((element) => {
+        return {
+          countryName: element.name,
+          countryCode: element.code,
+        };
+      });
+      countryList.sort((a, b) => a.countryName.localeCompare(b.countryName));
+      state.countriesList = countryList;
     };
     const error = computed(() => {
       return t("errors.valueRequired");

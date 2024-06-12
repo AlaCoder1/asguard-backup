@@ -18,9 +18,10 @@ class IpsecnMonitoringSerializer(serializers.ModelSerializer):
                     "total_bytes",
                     "availability_bytes",
                     "packet_loss",
-                    "tunnel",
                     "timestamp",
-                    "created_at",
-                    "updated_at",
+                    "time_added",
+                    "tunnel",
+                    
+                
             ]
        

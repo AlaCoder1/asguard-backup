@@ -2,7 +2,6 @@ import json
 import subprocess
 import time
 from backend.ipsecmonitoring.models import IpsecMonitoring
-from django.core import serializers
 
 
 def run_command(command):
@@ -140,17 +139,6 @@ def get_differnce_time(timestamp,current_time):
         differnce_time=current_time-timestamp
     return differnce_time
     
-def get_data_time(time_value):
-    """function to last time _value from database that  """
-    all_data=[]
-    all_data_object=IpsecMonitoring.objects.all()
-    data = serializers.serialize("json", all_data_object)
-    res = json.loads(data)
-    for i in range(len(res)):
-        res[i]['fields']['id']=res[i]["pk"]
-        diffrence_time=(time.time()-time_value)-res[i]['fields']["timestamp"]
-        if diffrence_time>=0:
-            all_data.append(res[i]['fields'])
-    return all_data
+
             
 

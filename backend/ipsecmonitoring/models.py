@@ -13,6 +13,7 @@ class IpsecMonitoring(models.Model):
     availability_bytes= models.IntegerField(null=True,unique=False)
     packet_loss= models.IntegerField(null=True,unique=False)
     timestamp=models.IntegerField(null=True,unique=False)
+    time_added=models.FloatField(null=True,unique=False)
     tunnel = models.ForeignKey(
             ServerIPsec, on_delete=models.CASCADE)
  

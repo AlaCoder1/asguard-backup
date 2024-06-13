@@ -287,13 +287,15 @@ def create_waf_application(request):
         data = request.data
 
         # Create another object that make country as a string to be saved in database
-        app_data = data
-        app_data['country'] = ','.join(app_data['country'])
+        data_serializer = data.copy()
+        data_serializer['country'] = ','.join(data_serializer['country'])
 
         # Give the GEOIP rule a unique id
-        data["rule_geoip_id"] = find_possible_id()
+        rule_geoip_id = find_possible_id()
+        data["rule_geoip_id"] = rule_geoip_id
+        data_serializer["rule_geoip_id"] = rule_geoip_id
         
-        serializer_application_waf = ApplicationWafSerializer(data=app_data)
+        serializer_application_waf = ApplicationWafSerializer(data=data_serializer)
         if serializer_application_waf.is_valid():
 
             create_application_waf_in_system(data)

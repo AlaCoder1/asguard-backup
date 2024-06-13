@@ -67,11 +67,13 @@ Include {app_directory}geoip_{app_data['name']}.conf
             app_config_content += f"Include {PATH_RULES_WAF.format(rule_waf.name)}\n"
     with open(app_config, 'w') as app_config_file:
         app_config_file.write(app_config_content)
-
+    print("countries= ", app_data['country'])
+    print("countries str= ", " ".join(app_data['country']))
     # Add a GOIP rule
     rule_data = convert_waf_rule_payload({
         "variables": ["ENV:GEOIP_COUNTRY_CODE"],
-        "operators": [f"""!@pm  {" ".join(app_data['country'])}"""],
+        "operators": [{"type": "pm",
+                       "value": " ".join(app_data['country'])}],
         "transformations": [],
         "actions": [
             {"type": "id", "value": app_data["rule_geoip_id"]},

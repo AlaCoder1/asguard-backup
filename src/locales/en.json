@@ -793,7 +793,7 @@
       "Router":"Router",
       "Printer":"Printer",
       "Availablity":"Availablity",
-      "OUTtrafficVPN":"OUT traffic VPN",
+      "OUTtrafficVPN":"Total traffic VPN",
       "CPU&MemoryVPN":"CPU & Memory VPN",
       "PacketReceivedVPN":"Packet Received VPN",
       "PacketSentVPN":"Packet Sent VPN",
@@ -801,7 +801,10 @@
       "PacketLoss":"Packet Loss",
       "ActiveSessions":"Active Sessions",
       "ActiveSSLTunnels":"Active SSL Tunnels",
-      "TUNNELCONFIGURATION":"TUNNEL CONFIGURATION"
+      "TUNNELCONFIGURATION":"TUNNEL CONFIGURATION",
+      "OutTraffic":"Total Traffic",
+      "PacketReceived":"Packet Received",
+      "PacketSent":"Packet Sent"
 
 
     },

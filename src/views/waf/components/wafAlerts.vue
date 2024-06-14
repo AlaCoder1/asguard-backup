@@ -236,34 +236,35 @@ export default {
         />
        </svg></span>`;
 
-      const map = L.map("map").setView([48, 2], 6);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      }).addTo(map);
+      setTimeout(() => {
+        const map = L.map("map").setView([48, 2], 6);
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+          attribution:
+            '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        }).addTo(map);
+        let century21icon = L.icon({
+          iconUrl:
+            "https://img.icons8.com/?size=100&id=uvp0RebVme9d&format=png&color=000000",
+          iconSize: [30, 30],
+        });
 
-      let century21icon = L.icon({
-        iconUrl:
-          "https://img.icons8.com/?size=100&id=uvp0RebVme9d&format=png&color=000000",
-        iconSize: [30, 30],
-      });
+        const locations = [
+          { lat: 51.505, lng: -0.09, name: "souhail 1" },
+          { lat: 52.505, lng: -0.19, name: "souhail 2" },
+          { lat: 48, lng: -0.19, name: "souhail 3" },
+          { lat: 70, lng: -0.19, name: "souhail 4" },
+        ];
 
-      const locations = [
-        { lat: 51.505, lng: -0.09, name: "souhail 1" },
-        { lat: 52.505, lng: -0.19, name: "souhail 2" },
-        { lat: 48, lng: -0.19, name: "souhail 3" },
-        { lat: 70, lng: -0.19, name: "souhail 4" },
-      ];
+        locations.forEach((loc, idx) => {
+          const marker = L.marker([loc.lat, loc.lng], {
+            draggable: false,
+            icon: century21icon,
+          }).bindPopup(`${loc.name}`);
+          marker.addTo(map);
 
-      // locations.forEach((loc, idx) => {
-      //   const marker = L.marker([loc.lat, loc.lng], {
-      //     draggable: false,
-      //     icon: century21icon,
-      //   }).bindPopup(`${loc.name}`);
-      //   marker.addTo(map);
-
-      //   map.setView([locations[0].lat, locations[0].lng], 4);
-      // });
+          map.setView([locations[0].lat, locations[0].lng], 4);
+        });
+      }, 1000);
     });
 
     return {

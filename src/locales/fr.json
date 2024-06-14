@@ -801,7 +801,10 @@
       "PacketLoss":"Perte de paquet",
       "ActiveSessions":"Sessions actives",
       "ActiveSSLTunnels":"Tunnels SSL actifs",
-      "TUNNELCONFIGURATION":"TUNNEL CONFIGURATION"
+      "TUNNELCONFIGURATION":"TUNNEL CONFIGURATION",
+      "OutTraffic":"Trafic total",
+      "PacketReceived":"Paquet reçu",
+      "PacketSent":"Paquet envoyé"
     },
     "KeyPair":{
      "ListofKeys":"Liste des clés",

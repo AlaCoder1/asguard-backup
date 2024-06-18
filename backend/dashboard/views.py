@@ -43,7 +43,7 @@ def set_actions_service(request):
             msg=aux
             status=400
            
-        return JsonResponse({"msg:": msg}, status=status)    
+        return JsonResponse({"msg": msg}, status=status)    
 
 
 def monitoring(request):

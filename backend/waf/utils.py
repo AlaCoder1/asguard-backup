@@ -31,17 +31,20 @@ def find_possible_id():
     if len(ApplicationWaf.objects.all()) > 0:
         list_rule_geoip = [rule.rule_geoip_id for rule in ApplicationWaf.objects.all()]
     list_rule_id = list_rule_waf + list_rule_geoip
-    # Sort the list in ascending order
-    list_rule_id.sort(reverse=True)
-    for rule_id in range(1, list_rule_id[0]):
-        if rule_id not in list_rule_id:
-            return rule_id
-    return list_rule_id[0] + 1
+    if len(list_rule_id) > 0:
+        # Sort the list in ascending order
+        list_rule_id.sort(reverse=True)
+        for rule_id in range(1, list_rule_id[0]):
+            if rule_id not in list_rule_id:
+                return rule_id
+        return list_rule_id[0] + 1
+    return 1
 
 
 def convert_operators_list_to_str(list_operators: list):
     """Convert list of operators objects (each one contain type and value) to a string,
     add @ before each operator and seperate between two operators with comma"""
+    print("list_operators= ", list_operators)
     operators = ""
     for operator_dict in list_operators:
         operators += f"""@{operator_dict["type"]}"""

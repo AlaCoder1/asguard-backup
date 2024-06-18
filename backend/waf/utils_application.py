@@ -65,7 +65,6 @@ Include {app_directory}geoip_{app_data['name']}.conf
             app_config_content += f"Include {PATH_RULES_WAF.format(rule_waf.name)}\n"
     with open(app_config, 'w') as app_config_file:
         app_config_file.write(app_config_content)
-
     # Add a GOIP rule
     rule_geoip = f"""
 SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries'"

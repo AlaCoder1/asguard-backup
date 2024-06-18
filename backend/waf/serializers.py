@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from backend.waf.models import ApplicationRulesWaf, ApplicationWaf, ConfigWaf, RulesWaf
+from backend.waf.models import AlertWaf, ApplicationRulesWaf, ApplicationWaf, ConfigWaf, RulesWaf
 
 
 class ConfigWafSerializer(serializers.ModelSerializer):
@@ -67,3 +67,10 @@ class ApplicationWafSerializer(serializers.ModelSerializer):
                 ApplicationRulesWaf.objects.create(application_waf=application_waf, rule_waf=rule_waf, **rule_data)
 
         return application_waf
+
+
+class AlertWafSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = AlertWaf
+        fields = '__all__'

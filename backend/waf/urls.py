@@ -19,4 +19,7 @@ urlpatterns = [
     path('createApplicationWaf', views.create_waf_application, name="createApplicationWaf"),
     path('deleteApplicationWaf/<int:id>', views.delete_waf_application, name="deleteApplicationWaf"),
     path('updateApplicationWaf/<int:id>', views.update_waf_application, name="updateApplicationWaf"),
+
+    # Paths for WAF alerts
+    path('getAlertsWaf', views.get_all_waf_alerts, name="getAlertsWaf"),
 ]

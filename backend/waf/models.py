@@ -59,3 +59,20 @@ class ApplicationRulesWaf(models.Model):
 
     class Meta:
         db_table = 'application_rule_waf'
+
+
+class AlertWaf(models.Model):
+    log_system_id = models.CharField(max_length=100, default=None, null=True, blank=True)
+    country = models.CharField(max_length=100, default=None, null=True, blank=True)
+    longitude = models.FloatField(default=None, null=True)
+    latitude = models.FloatField(default=None, null=True)
+    timestamp = models.DateTimeField(default=None, null=True)
+    violation_file = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    violation_id = models.IntegerField(default=None, null=True)
+    source = models.CharField(max_length=100, default=None, null=True, blank=True)
+    method = models.CharField(max_length=100, default=None, null=True, blank=True)
+    message = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    url = models.CharField(max_length=1000, default=None, null=True, blank=True)
+
+    class Meta:
+        db_table = 'alert_waf'

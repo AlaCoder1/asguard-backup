@@ -1,7 +1,5 @@
 from backend.waf.constant_variables import PATH_CRS_SETUP, PATH_MODESC, PATH_NGINX_SITES_AVAILABLE, PATH_NGINX_SITES_ENABLED, PATH_RULES_WAF, PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
-from backend.waf.utils import convert_waf_rule_payload
-from backend.waf.utils_rules import create_rule_waf_str
 from utils.commands_utils import execute_command_without_arguments, execute_list_commands_without_arguments
 
 
@@ -67,24 +65,10 @@ Include {app_directory}geoip_{app_data['name']}.conf
             app_config_content += f"Include {PATH_RULES_WAF.format(rule_waf.name)}\n"
     with open(app_config, 'w') as app_config_file:
         app_config_file.write(app_config_content)
-    print("countries= ", app_data['country'])
-    print("countries str= ", " ".join(app_data['country']))
     # Add a GOIP rule
-    rule_data = convert_waf_rule_payload({
-        "variables": ["ENV:GEOIP_COUNTRY_CODE"],
-        "operators": [{"type": "pm",
-                       "value": " ".join(app_data['country'])}],
-        "transformations": [],
-        "actions": [
-            {"type": "id", "value": app_data["rule_geoip_id"]},
-            {"type": "phase", "value": "2"},
-            {"type": "deny", "value": ""},
-            {"type": "log", "value":""},
-            {"type": "logdata", "value":"'%{MATCHED_VAR}'"},
-            {"type": "msg", "value":"'Access from this countries are refused'"}
-            ]
-        })
-    rule_geoip = create_rule_waf_str(rule_data)
+    rule_geoip = f"""
+SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries'"
+SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
     with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_file:
         rule_file.write(rule_geoip)
     

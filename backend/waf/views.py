@@ -6,7 +6,7 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_OBJECT, TYPE_STRING, TYPE_INTEGER
 
-from backend.waf.list_waf import get_list_all_waf_rule, get_list_all_waf_application, get_one_waf_rule, get_one_waf_application, get_one_waf_config
+from backend.waf.list_waf import get_alerts, get_list_all_waf_rule, get_list_all_waf_application, get_one_waf_rule, get_one_waf_application, get_one_waf_config
 from backend.waf.models import ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.serializers import ApplicationWafSerializer, ConfigWafSerializer, RulesWafSerializer
 from backend.waf.utils import convert_waf_rule_payload, find_possible_id
@@ -20,6 +20,7 @@ from utils.errors_utils import CommandExecutionError
 CONSTANT_WAF_CONFIG = _("WAF Config")
 CONSTANT_WAF_RULE = _("WAF Rule")
 CONSTANT_WAF_APPLICATION = _("WAF Application")
+CONSTANT_WAF_ALERT = _("WAF Alert")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -377,3 +378,17 @@ def update_waf_application(request, id):
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_WAF_APPLICATION}"}, status=400)
     except ApplicationWaf.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_WAF_APPLICATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+########################################
+############# WAF Alerts ###############
+########################################
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL WAF ALERTS",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_waf_alerts(request):
+    """Getting all waf alerts from database"""
+    list_waf_alerts = get_alerts()
+    return JsonResponse(list_waf_alerts, safe=False)

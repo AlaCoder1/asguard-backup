@@ -1,8 +1,9 @@
 from django.core import serializers
 import json
 
-from backend.waf.models import ApplicationRulesWaf, ApplicationWaf, ConfigWaf, RulesWaf
+from backend.waf.models import AlertWaf, ApplicationRulesWaf, ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.utils import convert_waf_rule_database
+from backend.waf.utils_alerts import rotate_log_alerts_waf, synchronize_database_waf_alert
 
 
 # Configuration WAF
@@ -97,3 +98,21 @@ def get_one_waf_application(id):
                                   "rule_policy": rule.rule_policy,
                                   "rule_log": rule.rule_log,} for rule in waf_application_rules]
     return res[0]['fields']
+
+
+# Alerts WAF list
+def get_alerts():
+    """Getting waf alerts from database"""
+    rotate_log_alerts_waf()
+    synchronize_database_waf_alert()
+    list_waf_alert = []
+    waf_alerts = AlertWaf.objects.all()
+    waf_alert_dict = serializers.serialize("json", waf_alerts)
+    res = json.loads(waf_alert_dict)
+    for waf_alert in res:
+        waf_alert.pop('model')
+        waf_alert_id = waf_alert['pk']
+        waf_alert.pop('pk')
+        waf_alert['fields']['id'] = waf_alert_id
+        list_waf_alert.append(waf_alert['fields'])
+    return list_waf_alert

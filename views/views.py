@@ -29,7 +29,7 @@ from backend.proxy.views import *
 from backend.proxy.models import *
 from backend.sdwan.list_area import get_list_all_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
-from backend.subscription.models import plan, plansSubscription,plansFeatures
+from backend.subscription.models import plan, plansSubscription,plansFeatures,Features
 import ruamel.yaml
 from backend.settings.models import *
 from collections import defaultdict
@@ -673,6 +673,14 @@ def subscription_info(request):
         else:
             subscription_info = {}
         return subscription_info
+    
+def all_feature(request):
+    features = []
+    if request.method == 'GET':
+        features_from_bd = Features.objects.all()
+        for feature in features_from_bd:
+            features.append(feature.features)
+        return features
     
 @login_required(login_url='/')
 def openvpn_monitoring(request):

@@ -131,33 +131,34 @@ def payment(request):
         if status:
             status=None
         
-        list_features = data['features']
-        if "Basic"in list_features:
-            subscription_plan = plan.objects.get(slug="Basic")
-        elif "Full" in list_features:
-            subscription_plan = plan.objects.get(slug="Full")
-        else:
-            features_queryset = Features.objects.all()
-            features = [(feature.features, feature.price) for feature in features_queryset]
+        # list_features = data['features']
+        # if "Basic"in list_features:
+        #     subscription_plan = plan.objects.get(slug="Basic")
+        # elif "Full" in list_features:
+        #     subscription_plan = plan.objects.get(slug="Full")
+        # else:
+        #     features_queryset = Features.objects.all()
+        #     features = [(feature.features, feature.price) for feature in features_queryset]
 
-            all_combinations_with_details = []
+        #     all_combinations_with_details = []
 
-            combination_number = 1
-            for r in range(1, len(features) + 1):
-                combinations_object = itertools.combinations(features, r)
-                combinations_list = list(combinations_object)
+        #     combination_number = 1
+        #     for r in range(1, len(features) + 1):
+        #         combinations_object = itertools.combinations(features, r)
+        #         combinations_list = list(combinations_object)
                 
-                for combo in combinations_list:
-                    total_price = sum(feature[1] for feature in combo)
-                    feature_names = tuple(feature[0] for feature in combo)
-                    all_combinations_with_details.append((combination_number, feature_names, total_price))
-                    combination_number += 1
+        #         for combo in combinations_list:
+        #             total_price = sum(feature[1] for feature in combo)
+        #             feature_names = tuple(feature[0] for feature in combo)
+        #             all_combinations_with_details.append((combination_number, feature_names, total_price))
+        #             combination_number += 1
 
-            for combo_number, feature_names, total_price in all_combinations_with_details:
-                feature_with_combinations = ["Firewall L4","Networking L2 L3","VPN IPSEC","LDAP"] + list(feature_names)
-                if list_features == feature_with_combinations:
-                    subscription_plan = plan.objects.get(slug=f"Custom{combo_number}")
-        function_paymentTransaction_id(status,subscription_plan.pk)
+        #     for combo_number, feature_names, total_price in all_combinations_with_details:
+        #         feature_with_combinations = ["Firewall L4","Networking L2 L3","VPN IPSEC","LDAP"] + list(feature_names)
+        #         if list_features == feature_with_combinations:
+        #             subscription_plan = plan.objects.get(slug=f"Custom{combo_number}")
+        subscription_id = data['subscription_id']
+        function_paymentTransaction_id(status,subscription_id)
         function_plansSubscription()
         function_planSubsciptionUsage()
         if status == None:

@@ -1,3 +1,4 @@
+import itertools
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -13,7 +14,9 @@ from backend.authentification.function import exist_user_email, generate_verific
 from backend.managementUsers.models import User,Profile
 from backend.LdapServer.models import ADServer
 from drf_yasg.utils import swagger_auto_schema
-from datetime import datetime, timedelta 
+from datetime import datetime, timedelta
+
+from backend.subscription.models import Features, plan 
 from .models import VerificationCode
 import json
 import stripe
@@ -135,6 +138,33 @@ def create_checkout_session(request):
     data = request.data
     # subscription_id = data['subscription_id']
     features = data['features']
+    list_features = data['features']
+    if "Basic"in list_features:
+        subscription_plan = plan.objects.get(slug="Basic")
+    elif "Full" in list_features:
+        subscription_plan = plan.objects.get(slug="Full")
+    else:
+        features_queryset = Features.objects.all()
+        features = [(feature.features, feature.price) for feature in features_queryset]
+
+        all_combinations_with_details = []
+
+        combination_number = 1
+        for r in range(1, len(features) + 1):
+            combinations_object = itertools.combinations(features, r)
+            combinations_list = list(combinations_object)
+            
+            for combo in combinations_list:
+                total_price = sum(feature[1] for feature in combo)
+                feature_names = tuple(feature[0] for feature in combo)
+                all_combinations_with_details.append((combination_number, feature_names, total_price))
+                combination_number += 1
+
+        for combo_number, feature_names, total_price in all_combinations_with_details:
+            feature_with_combinations = ["Firewall L4","Networking L2 L3","VPN IPSEC","LDAP"] + list(feature_names)
+            if list_features == feature_with_combinations:
+                subscription_plan = plan.objects.get(slug=f"Custom{combo_number}")
+
     status = data['status']
     price = data['price']
     card_type = 'card'
@@ -153,7 +183,7 @@ def create_checkout_session(request):
                             'images': ['https://www.numeryx.fr/sites/default/files/gallery/ASGUARD%20bannirere%20site.png'],
                             'description': 'Asguard Subscription',
                             'metadata': {
-                                'features': features,
+                                'subscription_id': subscription_plan.pk,
                                 'status': status,
                             }
                         },
@@ -162,13 +192,14 @@ def create_checkout_session(request):
                 },
             ],
                 metadata = {
-                'features': features,
+                'subscription_id': subscription_plan.pk,
                 'status': status,
             },
             mode='payment',
-            success_url = f'{url}/success/?features={features}',
+            success_url = f'{url}/success/?subscription_id={subscription_plan.pk}',
             cancel_url= f'{url}/asguard/subscription/'
         )
+
         return Response(checkout_session)
     except Exception as e:
         return JsonResponse({'error': str(e)})

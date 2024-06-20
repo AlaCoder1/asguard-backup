@@ -1,6 +1,6 @@
 <template>
   <div class="d-flex flex-column footer px-4 py-2 text-center w-100">
-    Asguard 1.0 © {{ new Date().getFullYear() }} Numeryx.
+    Asguard 1.0 © {{ new Date().getFullYear() }} Sasyx.
   </div>
 </template>
 

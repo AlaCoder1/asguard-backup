@@ -49,7 +49,8 @@
                 />
               </svg>
             </v-icon>
-            <span class="ml-2">{{ $t(service) }}</span>
+            <!-- <span class="ml-2">{{ $t(service) }}</span> -->
+            <span class="ml-2">{{ service }}</span>
           </v-row>
           <v-row
             v-for="service in services"
@@ -139,6 +140,15 @@ export default {
     const emitter = inject("emitter");
     const selectedServices = ref([]);
 
+    const servicesFiltred = ref([
+      { name: "Double Masque", slug: "Double_Masque 150", price: 150, id: 1 },
+      { name: "WAF", slug: "WAF 150", price: 150, id: 2 },
+      { name: "IPS", slug: "IPS 100", price: 100, id: 3 },
+      { name: "VPN SSL", slug: "VPN SSL 100", price: 100, id: 4 },
+      { name: "Proxy", slug: "Proxy 100", price: 100, id: 5 },
+      { name: "SDWAN", slug: "SDWAN 100", price: 100, id: 6 },
+    ]);
+
     const state = reactive({
       textAlert: "",
       color: "",
@@ -181,18 +191,20 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      const subscriptionId = getPackId();
+      const features = getPackId();
+      console.log("features", features);
 
-      if (!subscriptionId) {
+      if (features.length === 4) {
         state.snackbar = true;
         state.color = "red";
         state.textAlert = t("subscription.chooseService");
         return;
       }
+
       try {
         const response = await axios.post("/auth/create_checkout_session", {
           status: "true",
-          subscription_id: subscriptionId,
+          features: features,
           price: props.prices[0].amount,
         });
         if (response.status === 200) {
@@ -205,85 +217,115 @@ export default {
       }
     };
 
+    // const getPackId = () => {
+    //   if (props.title === "Base") return 1;
+    //   if (props.title === "Premium") return 2;
+
+    //   if (selectedServices.value.length === 4) {
+    //     return 17;
+    //   }
+    //   const double = selectedServices.value.includes("double 150");
+    //   if (double && selectedServices.value.length === 1) return 3;
+    //   const casb = selectedServices.value.includes("casb 150");
+    //   if (casb && selectedServices.value.length === 1) return 4;
+    //   const swg = selectedServices.value.includes("swg 100");
+    //   if (swg && selectedServices.value.length === 1) return 5;
+    //   const anti = selectedServices.value.includes("anti 100");
+    //   if (anti && selectedServices.value.length === 1) return 6;
+
+    //   const dC =
+    //     selectedServices.value.includes("double 150") &&
+    //     selectedServices.value.includes("casb 150");
+
+    //   if (dC && selectedServices.value.length === 2) return 7;
+
+    //   const dS =
+    //     selectedServices.value.includes("double 150") &&
+    //     selectedServices.value.includes("swg 100");
+
+    //   if (dS && selectedServices.value.length === 2) return 8;
+
+    //   const dA =
+    //     selectedServices.value.includes("double 150") &&
+    //     selectedServices.value.includes("anti 100");
+
+    //   if (dA && selectedServices.value.length === 2) return 9;
+
+    //   const DCS =
+    //     selectedServices.value.includes("double 150") &&
+    //     selectedServices.value.includes("casb 150") &&
+    //     selectedServices.value.includes("swg 100");
+
+    //   if (DCS && selectedServices.value.length === 3) return 10;
+
+    //   const DCA =
+    //     selectedServices.value.includes("double 150") &&
+    //     selectedServices.value.includes("casb 150") &&
+    //     selectedServices.value.includes("anti 100");
+
+    //   if (DCA && selectedServices.value.length === 3) return 11;
+
+    //   const DSA =
+    //     selectedServices.value.includes("double 150") &&
+    //     selectedServices.value.includes("swg 100") &&
+    //     selectedServices.value.includes("anti 100");
+
+    //   if (DSA && selectedServices.value.length === 3) return 12;
+
+    //   const CS =
+    //     selectedServices.value.includes("casb 150") &&
+    //     selectedServices.value.includes("swg 100");
+
+    //   if (CS && selectedServices.value.length === 2) return 13;
+
+    //   const CSA =
+    //     selectedServices.value.includes("casb 150") &&
+    //     selectedServices.value.includes("swg 100") &&
+    //     selectedServices.value.includes("anti 100");
+
+    //   if (CSA && selectedServices.value.length === 3) return 14;
+
+    //   const SA =
+    //     selectedServices.value.includes("swg 100") &&
+    //     selectedServices.value.includes("anti 100");
+
+    //   if (SA && selectedServices.value.length === 2) return 15;
+
+    //   const CA =
+    //     selectedServices.value.includes("casb 150") &&
+    //     selectedServices.value.includes("anti 100");
+
+    //   if (CA && selectedServices.value.length === 2) return 16;
+    // };
     const getPackId = () => {
-      if (props.title === "Base") return 1;
-      if (props.title === "Premium") return 2;
+      if (props.title === "Base") return ["Basic"];
+      else if (props.title === "Premium") return ["Full"];
+      else {
+        let filtredService = [];
 
-      if (selectedServices.value.length === 4) {
-        return 17;
+        if (selectedServices.value) {
+          selectedServices.value.forEach((e) => {
+            filtredService = [
+              ...filtredService,
+              ...servicesFiltred.value.filter((i) => i.slug === e),
+            ];
+          });
+        }
+
+        const sortedItems = filtredService.sort((a, b) => a.id - b.id);
+
+        const slugs = sortedItems.map((item) => item.name);
+
+        const communservices = [
+          "Firewall L4",
+          "Networking L2 L3",
+          "VPN IPSEC",
+          "LDAP",
+        ];
+        let combine = [...communservices, ...slugs];
+
+        return combine;
       }
-      const double = selectedServices.value.includes("double 150");
-      if (double && selectedServices.value.length === 1) return 3;
-      const casb = selectedServices.value.includes("casb 150");
-      if (casb && selectedServices.value.length === 1) return 4;
-      const swg = selectedServices.value.includes("swg 100");
-      if (swg && selectedServices.value.length === 1) return 5;
-      const anti = selectedServices.value.includes("anti 100");
-      if (anti && selectedServices.value.length === 1) return 6;
-
-      const dC =
-        selectedServices.value.includes("double 150") &&
-        selectedServices.value.includes("casb 150");
-
-      if (dC && selectedServices.value.length === 2) return 7;
-
-      const dS =
-        selectedServices.value.includes("double 150") &&
-        selectedServices.value.includes("swg 100");
-
-      if (dS && selectedServices.value.length === 2) return 8;
-
-      const dA =
-        selectedServices.value.includes("double 150") &&
-        selectedServices.value.includes("anti 100");
-
-      if (dA && selectedServices.value.length === 2) return 9;
-
-      const DCS =
-        selectedServices.value.includes("double 150") &&
-        selectedServices.value.includes("casb 150") &&
-        selectedServices.value.includes("swg 100");
-
-      if (DCS && selectedServices.value.length === 3) return 10;
-
-      const DCA =
-        selectedServices.value.includes("double 150") &&
-        selectedServices.value.includes("casb 150") &&
-        selectedServices.value.includes("anti 100");
-
-      if (DCA && selectedServices.value.length === 3) return 11;
-
-      const DSA =
-        selectedServices.value.includes("double 150") &&
-        selectedServices.value.includes("swg 100") &&
-        selectedServices.value.includes("anti 100");
-
-      if (DSA && selectedServices.value.length === 3) return 12;
-
-      const CS =
-        selectedServices.value.includes("casb 150") &&
-        selectedServices.value.includes("swg 100");
-
-      if (CS && selectedServices.value.length === 2) return 13;
-
-      const CSA =
-        selectedServices.value.includes("casb 150") &&
-        selectedServices.value.includes("swg 100") &&
-        selectedServices.value.includes("anti 100");
-
-      if (CSA && selectedServices.value.length === 3) return 14;
-
-      const SA =
-        selectedServices.value.includes("swg 100") &&
-        selectedServices.value.includes("anti 100");
-
-      if (SA && selectedServices.value.length === 2) return 15;
-
-      const CA =
-        selectedServices.value.includes("casb 150") &&
-        selectedServices.value.includes("anti 100");
-
-      if (CA && selectedServices.value.length === 2) return 16;
     };
 
     return {

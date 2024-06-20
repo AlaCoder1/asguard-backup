@@ -580,19 +580,13 @@ def clamav_page(request):
     # print('******************** :',context)
     return render(request, 'clamaV_page.html',context)
 
-def all_feature(request):
-    features = []
-    if request.method == 'GET':
-        features_from_bd = Features.objects.all()
-        for feature in features_from_bd:
-            features.append(feature.features)
-        return features
 
 @login_required(login_url='/')
 def subscription_page(request):
     subscription_information=subscription_info(request)
+    allfeature = all_feature(request)
     # print('subscription_information',subscription_information)
-    context = {'subscription_information':json.dumps(subscription_information)}
+    context = {'subscription_information':json.dumps(subscription_information),'allfeature':json.dumps(allfeature)}
     return render(request, 'subscription_page.html', context)
  
 #comment to test git command
@@ -685,10 +679,15 @@ def subscription_info(request):
     
 def all_feature(request):
     features = []
+    feature_element = {}
     if request.method == 'GET':
         features_from_bd = Features.objects.all()
         for feature in features_from_bd:
-            features.append(feature.features)
+            feature_element["name"] = feature.features
+            feature_element["price"] = feature.price
+            feature_element["id"] = feature.pk
+            features.append(feature_element)
+            feature_element = {}
         return features
     
 @login_required(login_url='/')

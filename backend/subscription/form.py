@@ -7,7 +7,7 @@ class AddplanForm(ModelForm):
         fields = '__all__'
 class addorganizationForm(ModelForm):
     class Meta:
-        model = organization
+        model = Organization
         fields = '__all__'
 class AddpaymentTransactionForm(ModelForm):
     class Meta:

@@ -133,7 +133,8 @@ def logout_view(request):
 @authentication_classes([SessionAuthentication])
 def create_checkout_session(request):
     data = request.data
-    subscription_id = data['subscription_id']
+    # subscription_id = data['subscription_id']
+    features = data['features']
     status = data['status']
     price = data['price']
     card_type = 'card'
@@ -152,7 +153,7 @@ def create_checkout_session(request):
                             'images': ['https://www.numeryx.fr/sites/default/files/gallery/ASGUARD%20bannirere%20site.png'],
                             'description': 'Asguard Subscription',
                             'metadata': {
-                                'subscription_id': subscription_id,
+                                'features': features,
                                 'status': status,
                             }
                         },
@@ -161,11 +162,11 @@ def create_checkout_session(request):
                 },
             ],
                 metadata = {
-                'subscription_id': subscription_id,
+                'features': features,
                 'status': status,
             },
             mode='payment',
-            success_url = f'{url}/success/?subscription_id={subscription_id}',
+            success_url = f'{url}/success/?features={features}',
             cancel_url= f'{url}/asguard/subscription/'
         )
         return Response(checkout_session)

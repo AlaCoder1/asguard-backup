@@ -76,7 +76,8 @@ INSTALLED_APPS = [
     'backend.server_dhcp4',
     'channels',
     'drf_yasg',
-    'backend.ipsecmonitoring'
+    'backend.ipsecmonitoring',
+    'backend.managementLogs',
 ]
 # Configure the channel layer for WebSocket communication
 CHANNEL_LAYERS = {

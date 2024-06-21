@@ -58,7 +58,7 @@ class User(AbstractBaseUser):
     email = models.CharField(max_length=800, null=True, unique=True)
     fullname = models.CharField(max_length=800, null=True)
     organisation = models.ForeignKey(
-        organization, on_delete=models.CASCADE, null=True)
+        Organization, on_delete=models.CASCADE, null=True)
     role = models.CharField(max_length=800, null=True)
     uid = models.IntegerField(null=True, unique=True)
     group = models.ManyToManyField(Group)

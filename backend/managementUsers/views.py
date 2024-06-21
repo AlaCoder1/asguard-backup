@@ -9,7 +9,7 @@ from backend.managementUsers.functions import add_user_group, add_mail_spool, ad
 from backend.managementGroup.serializers import GroupSerializer
 from backend.managementGroup.functions import change_groupname_username, getGroupNameById, getUidGroup
 from backend.managementGroup.models import Group
-from backend.subscription.models import organization
+from backend.subscription.models import Organization
 import json
 from django.core import serializers
 from rest_framework.authentication import SessionAuthentication
@@ -112,7 +112,7 @@ def create_user(request):
         data = request.data
         username = data['username']
         password = data['password']
-        organisation = organization.objects.get(id=1)
+        organisation = Organization.objects.get(id=1)
         data['organisation'] = organisation.id
         email = data['email']
         

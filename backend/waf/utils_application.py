@@ -77,7 +77,7 @@ SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,p
     with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_file:
         rule_file.write(rule_geoip_id)
     with open(PATH_MAIN_WAF, 'a') as main_file:
-        main_file.write(rule_geoip_id)
+        main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
     
     # Reload nginx
     execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])
@@ -95,9 +95,7 @@ def delete_application_waf_in_system(application:ApplicationWaf):
     execute_list_commands_without_arguments(list_delete_commands)
     with open(PATH_MAIN_WAF) as main_file:
         main_content = main_file.read()
-    rule_geoip_id = f"""
-SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{application.rule_geoip_id+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
-    main_content = main_content.replace(rule_geoip_id, "")
+    main_content = main_content.replace(f"\nInclude {app_directory}geoip_log_{application.name}.conf", "")
     execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])
 
 

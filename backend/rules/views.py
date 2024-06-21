@@ -1,20 +1,35 @@
-from django.shortcuts import render
-from backend.network.serializers import *
-from .models import *
-from rest_framework.parsers import JSONParser
-from rest_framework.authentication import SessionAuthentication
-from backend.authentification.views import *
-from backend.network.address import *
-# Version without SSh connection
-from .functions import *
+from django.http import JsonResponse
 from django.db.models import Q
-# Create your views here.
+from rest_framework.authentication import SessionAuthentication
+from rest_framework.decorators import api_view, authentication_classes
+
+from backend.ids_ips.views import CONSTANT_RULE, ERROR_MESSAGES_EXISTANT, SUCCESS_MESSAGES_CREATING
+from backend.network.models import Interface
+from backend.rules.functions import ERROR_MESSAGES_DELETING, SUCCESS_MESSAGES_DELETING, SUCCESS_MESSAGES_UPDATING, add_rule_db, add_rule_remote, calculate_subnet_address, delete_rule_remote, get_handle_rule, init_file_nftables, return_rule, update_rule_db
+from backend.rules.models import Rule
+from backend.rules.serializers import RuleSerializer
+from utils.constant_variables import ERROR_MESSAGES_CREATING, ERROR_MESSAGES_INEXISTANT, ERROR_MESSAGES_UPDATING
+
+
+# # Constants
+# CONSTANT_RULE = _('Rule')
+# # Success messages
+# SUCCESS_MESSAGES_CREATING = _("is created")
+# SUCCESS_MESSAGES_DELETING = _("is deleted")
+# SUCCESS_MESSAGES_UPDATING = _("is updated")
+# # Error messages
+# ERROR_MESSAGES_CREATING = _("Error in creating")
+# ERROR_MESSAGES_DELETING = _("Error in deleting")
+# ERROR_MESSAGES_UPDATING = _("Error in updating")
+# ERROR_MESSAGES_EXISTANT = _("already exist")
+# ERROR_MESSAGES_INEXISTANT = _("does not exist")
+
 
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
-###function to delete rule
 def delete_rule(request,id):
-      if (request.method == 'DELETE'):
+    """function to delete rule"""
+    if (request.method == 'DELETE'):
         #tester si rule exist ou non
         if (Rule.objects.filter(id=id).exists()):
             rules = Rule.objects.get(id=id)
@@ -33,26 +48,54 @@ def delete_rule(request,id):
               if return_delete_rule_remote is True:
                 #appel la fonction pour supprimer  rule de la base de données 
                 rules.delete()
-                msg="delete rule Successfully!!"
+                msg=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
                 status=200
               else:
-                msg=return_delete_rule_remote
+                msg=f"{ERROR_MESSAGES_DELETING} {CONSTANT_RULE}"
                 status=400 
             else:
-              msg="Rule not exist in system!!"
+              msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
               status=400 
         else:
-          msg="Rule not exist in database!!"
+          msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
           status=400
         return JsonResponse({"msg": msg},status=status)
       
+####
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+def save_rules(request,name_interface):
+  msg=''
+  responses=[]
+  if (request.method == 'POST'):
+    # parse the incoming information
+    data_list=request.data
+    #get object of interface type
+    interface_object= Interface.objects.get(name_interface=name_interface)
+    #get interface name to execute command systeme
+    ifname=interface_object.ifname
+    for data in data_list:
+        id_rule= None if data.get('id', None) == None else data.get('id', None)
+        policy = data.get('policy', None)
+        saddr = None if data.get('saddr', None) == "ALL" else data.get('saddr', None)
+        daddr = None if data.get('daddr', None) =="ALL" else data.get('daddr', None)
+        sport = None if data.get('sport', None) == "ALL" else data.get('sport', None)
+        dport = None if data.get('dport', None) == "ALL" else data.get('dport', None)
+        protocol = None if data.get('protocol', None) == "ALL" else data.get('protocol', None)
+        type_rule = data.get('type_rule', None)
+        rule_description= None if data.get('rule_description', None) == "" else data.get('rule_description', None)
+        if id_rule is None:
+            msg,status,id_rule=add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_description,interface_object)
+        else:
+            msg,status=update_rule_db(id_rule,ifname,policy,saddr,daddr,sport,dport,protocol,rule_description)
+        responses.append({"id":id_rule,"msg":msg,"status":status})
+    return JsonResponse({"response": responses},status=status)  
+        
+            
 
-    
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def add_rule(request,name_interface):
-  msg=''
-  if (request.method == 'POST'):
     # parse the incoming information
     data =request.data
     #get object of interface type
@@ -82,7 +125,7 @@ def add_rule(request,name_interface):
         ).exists():
       #appel la fonction pour ajouter rule dans le système
         return_add_rule=add_rule_remote(rule,ifname,type_rule)
-        if return_add_rule is True:
+        if return_add_rule:
           data = {
               'policy': policy,
               'saddr':saddr,
@@ -106,26 +149,16 @@ def add_rule(request,name_interface):
           # rule_serializer.is_valid(raise_exception=True)
           if rule_serializer.is_valid():
             rule_serializer.save()
-            msg = "Rule added Successfully!!"
-            status=200
-          else:
-            msg = rule_serializer.errors
-            status=400
-        else:
-          msg = return_add_rule
-          status=400
-      else:
-        msg="Rule already exist!"
-        status=400
-    else:
-      msg = return_init_file_nftables
-      status=400
-  return JsonResponse({"response": msg},status=status)    
+            return JsonResponse({"response": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+          return JsonResponse({"response": rule_serializer.errors}, status=400)
+        return JsonResponse({"response": f"{ERROR_MESSAGES_CREATING} {CONSTANT_RULE}"}, status=400)
+      return JsonResponse({"response": f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"}, status=400)
+    return JsonResponse({"response": f"{ERROR_MESSAGES_CREATING} {CONSTANT_RULE}"}, status=400)
+
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def update_rule(request,name_interface):
-  msg=''
-  if (request.method == 'PUT'):
     # parse the incoming information
     data =request.data
     #get object of interface type
@@ -142,55 +175,42 @@ def update_rule(request,name_interface):
     rule_description=data.get('rule_description', None)
     #test if rule exist or not with id 
     if (id is not None and Rule.objects.filter(id=id).exists()):
-      rules_object = Rule.objects.get(id=id)
-      rule=rules_object.rule
-      type_rules=rules_object.type_rule
-      #appel la fonction pour retourner rule à ajouter 
-      ruleupdate=return_rule(policy,saddr,daddr,sport,dport,protocol,type_rules)
-      handle=get_handle_rule(ifname,type_rules,rule)
-      if handle is not None:
-          return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
-          if return_delete_rule_remote is True:
-              return_add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
-              if  return_add_rule is True:
-                  data = {
-                  "id":id,
-                  'policy': policy,
-                  'saddr':saddr,
-                  'daddr': daddr,
-                  'sport': sport,
-                  'dport': dport,
-                  'protocol': protocol,
-                  'rule_description': rule_description
-                  }
-                  
-                  #appel la fonction pour update rule dans la base de données 
-                  # data={key: value for key, value in data.items() if value is not None}
-                  data['interface']=rules_object.interface_id
-                  saddr_db=calculate_subnet_address(saddr)
-                  daddr_db=calculate_subnet_address(daddr)
-                  rule_db_update=return_rule(policy,saddr_db,daddr_db,sport,dport,protocol,type_rules)
-                  data['rule']=rule_db_update
-                  rule_serializer = RuleSerializer(rules_object,data=data)
-                  if rule_serializer.is_valid():
-                    rule_serializer.save()
-                    msg = "Rule updated Successfully!!"
-                    status=200
-                  else:
-                    msg= rule_serializer.errors
-                    status=400
-              else:
-                  msg=return_add_rule
-                  status=400
-          else:
-              msg=return_delete_rule_remote
-              status=400
-      else:
-            msg="Rule not exist!"
-            status=400
+        rules_object = Rule.objects.get(id=id)
+        rule=rules_object.rule
+        type_rules=rules_object.type_rule
+        #appel la fonction pour retourner rule à ajouter 
+        ruleupdate=return_rule(policy,saddr,daddr,sport,dport,protocol,type_rules)
+        handle=get_handle_rule(ifname,type_rules,rule)
+        if handle:
+            return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
+            if return_delete_rule_remote:
+                return_add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
+                if  return_add_rule:
+                    data = {
+                    "id":id,
+                    'policy': policy,
+                    'saddr':saddr,
+                    'daddr': daddr,
+                    'sport': sport,
+                    'dport': dport,
+                    'protocol': protocol,
+                    'rule_description': rule_description
+                    }
+                    
+                    #appel la fonction pour update rule dans la base de données 
+                    # data={key: value for key, value in data.items() if value is not None}
+                    data['interface']=rules_object.interface_id
+                    saddr_db=calculate_subnet_address(saddr)
+                    daddr_db=calculate_subnet_address(daddr)
+                    rule_db_update=return_rule(policy,saddr_db,daddr_db,sport,dport,protocol,type_rules)
+                    data['rule']=rule_db_update
+                    rule_serializer = RuleSerializer(rules_object,data=data)
+                    if rule_serializer.is_valid():
+                        rule_serializer.save()
+                        return JsonResponse({"response": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+                    return JsonResponse({"response": rule_serializer.errors}, status=400)
+            return JsonResponse({"response": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"}, status=400)
+        return JsonResponse({"response": f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
-    else:
-        msg="Rule not exist!"
-        status=400
-  return JsonResponse({"response": msg},status=status)    
+    return JsonResponse({"response": f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     

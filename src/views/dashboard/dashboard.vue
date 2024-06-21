@@ -3,6 +3,25 @@
     <base-layout :title="t('sideBar.dashboard')" active-menu="home">
       <template #content>
         <div class="mr-3">
+          <v-overlay v-model="state.loading">
+            <v-dialog
+              v-model="state.isLoadingDialogue"
+              :scrim="false"
+              persistent
+              width="auto"
+            >
+              <v-card color="#193286">
+                <v-card-text>
+                  {{ $t("requiredfield.attente") }}
+                  <v-progress-linear
+                    indeterminate
+                    color="white"
+                    class="mb-0"
+                  ></v-progress-linear>
+                </v-card-text>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
           <div
             class="certificats-management mt-6 ml-5"
             style="display: flex; flex-direction: column"
@@ -100,6 +119,14 @@
                   style="width: 100%; height: 100%"
                 />
               </v-col>
+              <v-snackbar
+                :timeout="2000"
+                v-model="state.snackbar"
+                location="bottom right"
+                :color="state.color"
+              >
+                {{ state.textAlert }}
+              </v-snackbar>
             </v-row>
           </div>
         </div>
@@ -109,6 +136,8 @@
 </template>
 
 <script>
+import axios from "axios";
+import { getCookie } from "@/mixins/csrftoken.js";
 import { useI18n } from "vue-i18n";
 import { reactive, ref, onMounted, computed } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -132,6 +161,11 @@ export default {
       of: "/",
     });
     const state = reactive({
+      snackbar: false,
+      color: "",
+      textAlert: "",
+      isLoadingDialogue: false,
+      loading: false,
       information: null,
       infoParser: null,
       socket: null,
@@ -321,25 +355,138 @@ export default {
       eGui.style.lineHeight = "2";
       return eGui;
     }
-    function actionCellRendererService() {
+    function actionCellRendererService(params) {
       let eGui = document.createElement("div");
-
-      {
+      if (params.data.status_started) {
         eGui.innerHTML = `
-          <button class="action-button edit" data-action="edit">
-            <span class="mdi mdi-play-circle fa-2x" style="color: green"></span>
-          </button>
-          <button class="action-button delete" data-action="delete">
-            <span class="mdi mdi-reload fa-2x"></span>
-          </button>
-          <button class="action-button delete" data-action="delete">
+         <button class="action-button stop" data-action="stop">
             <span class="mdi mdi-stop-circle fa-2x" style="color: red"></span>
           </button>
+          <button class="action-button restart" data-action="restart">
+            <span class="mdi mdi-reload fa-2x"></span>
+          </button>
+         
+        `;
+      } else if (!params.data.status_started) {
+        eGui.innerHTML = `
+          <button class="action-button start" data-action="start">
+            <span class="mdi mdi-play-circle fa-2x" style="color: green"></span>
+          </button>
+          <button class="action-button restart" data-action="restart">
+            <span class="mdi mdi-reload fa-2x"></span>
+          </button>
+
         `;
       }
+      eGui.querySelectorAll(".action-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.getAttribute("data-action");
+          handleActionServer(action, params.node.data);
+        });
+      });
 
       return eGui;
     }
+    const handleActionServer = (action, rowData, index) => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      switch (action) {
+        case "start":
+          console.log("start", rowData);
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          let payloadStart = {
+            action: "start",
+            service: rowData.service,
+          };
+
+          axios
+            .put("/monitoring/action", payloadStart)
+            .then((response) => {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+            });
+          break;
+        case "restart":
+          console.log("restart", rowData);
+
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          let payloadRestart = {
+            action: "restart",
+            service: rowData.service,
+          };
+          axios
+            .put("/monitoring/action", payloadRestart)
+            .then((response) => {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+            });
+
+          break;
+        case "stop":
+          console.log("stop", rowData);
+
+          state.loading = true;
+          state.isLoadingDialogue = true;
+
+          let payloadStop = {
+            action: "stop",
+            service: rowData.service,
+          };
+          axios
+            .put("/monitoring/action", payloadStop)
+            .then((response) => {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+              state.loading = false;
+              state.isLoadingDialogue = false;
+            });
+          break;
+
+        default:
+          break;
+      }
+    };
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
@@ -432,6 +579,7 @@ export default {
       initializeWebSocket();
       let information = infoData;
       const info = JSON.parse(information);
+
       state.infoParser = info;
 
       let infoService = info.list_info_services.map((i) => {
@@ -439,9 +587,13 @@ export default {
         return {
           service: element.service_name,
           description: element.description,
+          status_enabled: element.status_enabled,
+          status_started: element.status_started,
+          status_install: element.status_install,
         };
       });
       rowDataServices.value = infoService;
+      console.log("rowDataServices.value", rowDataServices.value);
 
       const element = JSON.parse(gateways);
 

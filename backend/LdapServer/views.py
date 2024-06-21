@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import json
 from rest_framework.parsers import JSONParser
+from django.utils.translation import gettext_lazy as _
 from django.core import serializers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -16,6 +17,23 @@ from .list_Remote_servers import get_list_ad_servers,update_Ldapserver_DB
 from drf_yasg.utils import swagger_auto_schema
 from . import views
 from django.http import JsonResponse
+
+# Constants
+CONSTANT_LDAP_SERVER = _('Directory Server')
+CONSTANT_LDAP_UNREACHABLE= _('Directory Server unreachable')
+CONSTANT_LDAP_AUTH = _("Authentication failed")
+CONSTANT_INVALID_REQUEST = _("Invalid request method")
+
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+SUCCESS_MESSAGES_UPDATING = _("is updated")
+
+# Error messages
+ERROR_MESSAGES_CREATING = _("Error in creating")
+ERROR_MESSAGES_DELETING = _("Error in deleting")
+ERROR_MESSAGES_UPDATING = _("Error in updating")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
 ################################### API GET ALL LDAP SERVERS ##################################################
@@ -58,9 +76,9 @@ def getServerById(request, id):
                 res[i].pop('pk')
                 res[i]['fields']['id'] = id
                 list_servers.append(res[i]['fields'])
-            return JsonResponse({"Directory server ": list_servers})
+            return JsonResponse({ f"{CONSTANT_LDAP_SERVER}": list_servers})
         except ADServer.DoesNotExist:
-            return JsonResponse({"error": "Directory server not found"}, status=404)     
+            return JsonResponse({"error":f"{CONSTANT_LDAP_SERVER}{ERROR_MESSAGES_INEXISTANT}"}, status=404)     
 
 
 
@@ -120,20 +138,20 @@ def connect_to_ad(request):
                 # Close LDAP connection
                 ldap_conn.unbind()
 
-                return JsonResponse({ 'msg': "Successfuly connected and created"},status=200)
+                return JsonResponse({ 'msg':f"{CONSTANT_LDAP_SERVER} {SUCCESS_MESSAGES_CREATING}"},status=200)
             
             except ldap.SERVER_DOWN:
                 # LDAP authentication failed
-                return JsonResponse({'msg': 'directory server is unreachable'},status=500)
+                return JsonResponse({'msg': f"{CONSTANT_LDAP_SERVER} {CONSTANT_LDAP_UNREACHABLE}"},status=500)
             except ldap.LDAPError as e:
                 # LDAP authentication failed
-                return JsonResponse({'msg': 'directory server authentication failed'},status=500)
+                return JsonResponse({'msg': f"{CONSTANT_LDAP_SERVER} {CONSTANT_LDAP_AUTH}"},status=500)
 
         
         except Exception as e:
             return JsonResponse({ 'msg': str(e)},status=400)
 
-    return JsonResponse({'msg': 'Invalid request method'},status=400)
+    return JsonResponse({'msg': f"{CONSTANT_INVALID_REQUEST}"},status=400)
 
 
 
@@ -150,12 +168,12 @@ def connect_to_ad(request):
 @permission_classes([])
 def updateLdapServer(request,id):
     if (request.method == 'PUT'):
-        msg="failed to update Ldap server!!"
+        msg=f"{ERROR_MESSAGES_UPDATING}"
         if (ADServer.objects.filter(id=id).exists()):
             data = JSONParser().parse(request)
             result = update_Ldapserver_DB(data, id)
             if result is True:
-                msg = "Update directory Server Successfully!!"
+                msg = f"{CONSTANT_LDAP_SERVER} {SUCCESS_MESSAGES_UPDATING}"
                 status_code= 200
             elif 'msg' in result:
                 msg = result['msg'] 
@@ -179,7 +197,7 @@ def deleteldap_server(request,id):
         if (ADServer.objects.filter(id=id).exists()):
             ldap_servers = ADServer.objects.get(id=id)
             ldap_servers.delete()
-            msg="Delete directory server successfully!!"
+            msg=f"{CONSTANT_LDAP_SERVER} {SUCCESS_MESSAGES_DELETING}"
     return JsonResponse({"msg": msg})      
 
 

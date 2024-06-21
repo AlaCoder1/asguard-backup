@@ -107,7 +107,7 @@ def add_static_gateway(request):
             else:
                 msg = add_gateway_db(data)
            
-        return JsonResponse({"msg:": msg})   
+        return JsonResponse({"msg": msg})   
 
 
 @swagger_auto_schema(
@@ -127,7 +127,7 @@ def delete_gateway(request,id):
             gateways = Gateway.objects.get(id=id)
             gateways.delete()
             msg = f"{CONSTANT_GATEWAY} {(SUCCESS_MESSAGES_DELETING)}"
-    return JsonResponse({"msg:": msg})      
+    return JsonResponse({"msg": msg})      
 
 
 @swagger_auto_schema(
@@ -148,4 +148,4 @@ def update_gateway(request,id):
             data = JSONParser().parse(request)
             if update_gateway_db(data,id):
                 msg = f"{CONSTANT_GATEWAY} {(SUCCESS_MESSAGES_UPDATING)}"
-    return JsonResponse({"msg:": msg})
+    return JsonResponse({"msg": msg})

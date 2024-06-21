@@ -1,9 +1,10 @@
 from django.core import serializers
+from django.db.models import Count
 import json
 
 from backend.waf.models import AlertWaf, ApplicationRulesWaf, ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.utils import convert_waf_rule_database
-from backend.waf.utils_alerts import rotate_log_alerts_waf, synchronize_database_waf_alert
+from backend.waf.utils_alerts import create_list_alerts, rotate_log_alerts_waf, synchronize_database_waf_alert
 
 
 # Configuration WAF
@@ -103,16 +104,25 @@ def get_one_waf_application(id):
 # Alerts WAF list
 def get_alerts():
     """Getting waf alerts from database"""
-    rotate_log_alerts_waf()
-    synchronize_database_waf_alert()
-    list_waf_alert = []
+    log_waf_content = rotate_log_alerts_waf()
+    list_alert_system = create_list_alerts(log_waf_content)
+    synchronize_database_waf_alert(list_alert_system)
     waf_alerts = AlertWaf.objects.all()
     waf_alert_dict = serializers.serialize("json", waf_alerts)
     res = json.loads(waf_alert_dict)
+    violation_counts = AlertWaf.objects.values('violation_id').annotate(count=Count('violation_id')).order_by("-count")
+    top_countries_counts = AlertWaf.objects.values('country').annotate(attacks=Count('country')).order_by("-attacks")
+    alerts_dict = {"attacks": [{"violation": attack["violation_id"], "count_of_record": attack["count"]} for attack in violation_counts],
+                   "top_countries": [{"country": country["country"], "attacks": country["attacks"]} for country in top_countries_counts],
+                   "blocked_requests": []
+                   }
     for waf_alert in res:
         waf_alert.pop('model')
         waf_alert_id = waf_alert['pk']
         waf_alert.pop('pk')
         waf_alert['fields']['id'] = waf_alert_id
-        list_waf_alert.append(waf_alert['fields'])
-    return list_waf_alert
+        waf_alert['fields']['violation'] = [f"{waf_alert['fields']['violation_id']} > {waf_alert['fields']['violation_file']}"]
+        waf_alert['fields'].pop('violation_id')
+        waf_alert['fields'].pop('violation_file')
+        alerts_dict["blocked_requests"].append(waf_alert['fields'])
+    return alerts_dict

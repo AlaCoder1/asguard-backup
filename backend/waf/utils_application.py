@@ -1,4 +1,4 @@
-from backend.waf.constant_variables import PATH_CRS_SETUP, PATH_MODESC, PATH_NGINX_SITES_AVAILABLE, PATH_NGINX_SITES_ENABLED, PATH_RULES_WAF, PATH_WAF_CONFIG
+from backend.waf.constant_variables import PATH_CRS_SETUP, PATH_MAIN_WAF, PATH_MODESC, PATH_NGINX_SITES_AVAILABLE, PATH_NGINX_SITES_ENABLED, PATH_RULES_WAF, PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
 from utils.commands_utils import execute_command_without_arguments, execute_list_commands_without_arguments
 
@@ -53,6 +53,7 @@ def create_application_waf_in_system(app_data):
 Include {app_modsecurity_config}
 Include {PATH_CRS_SETUP}
 Include {app_directory}geoip_{app_data['name']}.conf
+Include {app_directory}geoip_log_{app_data['name']}.conf
 """
     for rule in list_rule_selected:
         rule_waf = RulesWaf.objects.get(id=rule["rule_waf"])
@@ -67,10 +68,16 @@ Include {app_directory}geoip_{app_data['name']}.conf
         app_config_file.write(app_config_content)
     # Add a GOIP rule
     rule_geoip = f"""
-SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries'"
+SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries: %{{GEO:COUNTRY_CODE}}',logdata:'Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'"
 SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
+    rule_geoip_id = f"""
+SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
     with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_file:
         rule_file.write(rule_geoip)
+    with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_file:
+        rule_file.write(rule_geoip_id)
+    with open(PATH_MAIN_WAF, 'a') as main_file:
+        main_file.write(rule_geoip_id)
     
     # Reload nginx
     execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])
@@ -86,6 +93,11 @@ def delete_application_waf_in_system(application:ApplicationWaf):
                             ["sudo", "rm", "-f", app_sites_available_config],
                             ["sudo", "rm", "-f", app_sites_enabled_config],]
     execute_list_commands_without_arguments(list_delete_commands)
+    with open(PATH_MAIN_WAF) as main_file:
+        main_content = main_file.read()
+    rule_geoip_id = f"""
+SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{application.rule_geoip_id+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
+    main_content = main_content.replace(rule_geoip_id, "")
     execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])
 
 

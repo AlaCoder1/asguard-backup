@@ -125,32 +125,31 @@ export default {
         field: "country",
         autoHeight: true,
         width: 90,
-        minWidth: 50,
+        minWidth: 150,
         flex: 1,
       },
       {
         headerName: timestamp,
         field: "timestamp",
         autoHeight: true,
-        width: 90,
+        width: 250,
         minWidth: 50,
-        flex: 1,
       },
 
       {
         headerName: violation,
-        field: "violation",
+        cellRenderer: formatedLine,
         autoHeight: true,
-        width: 90,
-        minWidth: 50,
-        flex: 1,
+        width: 480,
+        minWidth: 150,
+        
       },
       {
         headerName: "source",
         field: "source",
         autoHeight: true,
         width: 90,
-        minWidth: 50,
+        minWidth: 150,
         flex: 1,
       },
       {
@@ -158,25 +157,33 @@ export default {
         field: "method",
         autoHeight: true,
         width: 90,
-        minWidth: 50,
+        minWidth: 150,
         flex: 1,
       },
       {
         headerName: "message",
         field: "message",
         autoHeight: true,
-        width: 90,
-        minWidth: 50,
-        flex: 1,
+        width: 250,
+        minWidth: 350,
       },
       {
         headerName: "URL",
-        field: "URL",
+        field: "url",
         autoHeight: true,
-        width: 150,
+        width: 250,
+        minWidth: 350,
       },
     ]);
 
+    function formatedLine(data) {
+      let eGui = document.createElement("div");
+
+      eGui.innerHTML = `${data.data.violation_id}>${data.data.violation_file}
+        `;
+      eGui.style.lineHeight = "2";
+      return eGui;
+    }
     const columnCountry = ref([
       {
         headerName: Country,
@@ -248,23 +255,35 @@ export default {
           iconSize: [30, 30],
         });
 
-        const locations = [
-          { lat: 51.505, lng: -0.09, name: "souhail 1" },
-          { lat: 52.505, lng: -0.19, name: "souhail 2" },
-          { lat: 48, lng: -0.19, name: "souhail 3" },
-          { lat: 70, lng: -0.19, name: "souhail 4" },
-        ];
+        // const locations = [
+        //   { lat: 51.505, lng: -0.09, name: "souhail 1" },
+        //   { lat: 52.505, lng: -0.19, name: "souhail 2" },
+        //   { lat: 48, lng: -0.19, name: "souhail 3" },
+        //   { lat: 70, lng: -0.19, name: "souhail 4" },
+        // ];
 
-        locations.forEach((loc, idx) => {
-          const marker = L.marker([loc.lat, loc.lng], {
-            draggable: false,
-            icon: century21icon,
-          }).bindPopup(`${loc.name}`);
-          marker.addTo(map);
+        // locations.forEach((loc, idx) => {
+        //   const marker = L.marker([loc.lat, loc.lng], {
+        //     draggable: false,
+        //     icon: century21icon,
+        //   }).bindPopup(`${loc.name}`);
+        //   marker.addTo(map);
 
-          map.setView([locations[0].lat, locations[0].lng], 4);
-        });
+        //   map.setView([locations[0].lat, locations[0].lng], 4);
+        // });
       }, 1000);
+
+      let wafAlert =
+        document.getElementById("app").attributes["waf_alert"].value;
+      let waf_alert = JSON.parse(wafAlert);
+      console.log("waf_alert***", waf_alert);
+      rowDataRules.value = waf_alert;
+
+      if (gridApi.value) {
+        gridApi.value.setRowData(rowDataRules.value);
+      } else {
+        console.error("Grid API.");
+      }
     });
 
     return {

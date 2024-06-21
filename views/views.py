@@ -33,7 +33,7 @@ from backend.subscription.models import plan, plansSubscription,plansFeatures,Fe
 import ruamel.yaml
 from backend.settings.models import *
 from collections import defaultdict
-from backend.waf.list_waf import get_list_all_waf_application, get_list_all_waf_rule, get_one_waf_config
+from backend.waf.list_waf import get_alerts, get_list_all_waf_application, get_list_all_waf_rule, get_one_waf_config
 from views.functions import get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
 
 from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
@@ -551,7 +551,8 @@ def waf_page(request):
     waf_conf = get_one_waf_config()
     list_rules = get_list_all_waf_rule()
     list_waf_app = get_list_all_waf_application()
-    context = {'waf_conf': json.dumps(waf_conf),'list_rules': json.dumps(list_rules),'list_waf_app': json.dumps(list_waf_app)}
+    waf_alert = get_alerts()
+    context = {'waf_conf': json.dumps(waf_conf),'list_rules': json.dumps(list_rules),'list_waf_app': json.dumps(list_waf_app),'waf_alert': json.dumps(waf_alert)}
     print(context)
     return render(request, 'waf_page.html',context)
 
@@ -579,11 +580,13 @@ def clamav_page(request):
     # print('******************** :',context)
     return render(request, 'clamaV_page.html',context)
 
+
 @login_required(login_url='/')
 def subscription_page(request):
     subscription_information=subscription_info(request)
+    allfeature = all_feature(request)
     # print('subscription_information',subscription_information)
-    context = {'subscription_information':json.dumps(subscription_information)}
+    context = {'subscription_information':json.dumps(subscription_information),'allfeature':json.dumps(allfeature)}
     return render(request, 'subscription_page.html', context)
  
 #comment to test git command
@@ -676,10 +679,15 @@ def subscription_info(request):
     
 def all_feature(request):
     features = []
+    feature_element = {}
     if request.method == 'GET':
         features_from_bd = Features.objects.all()
         for feature in features_from_bd:
-            features.append(feature.features)
+            feature_element["name"] = feature.features
+            feature_element["price"] = feature.price
+            feature_element["id"] = feature.pk
+            features.append(feature_element)
+            feature_element = {}
         return features
     
 @login_required(login_url='/')

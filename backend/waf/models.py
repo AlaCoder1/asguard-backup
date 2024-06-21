@@ -45,6 +45,8 @@ class ApplicationWaf(models.Model):
     description = models.CharField(max_length=1000, default=None, null=True, blank=True)
     country = models.CharField(max_length=1000, default=None, null=True, blank=True)
     rule_geoip_id = models.IntegerField(default=None, null=True, unique=True)
+    # rule_geoip_latitude_id = models.IntegerField(default=None, null=True, unique=True)
+    # rule_geoip_longitude_id = models.IntegerField(default=None, null=True, unique=True)
     rules = models.ManyToManyField(RulesWaf, through="ApplicationRulesWaf")
 
     class Meta:
@@ -62,7 +64,7 @@ class ApplicationRulesWaf(models.Model):
 
 
 class AlertWaf(models.Model):
-    log_system_id = models.CharField(max_length=100, default=None, null=True, blank=True)
+    log_system_id = models.CharField(max_length=100, default=None, null=True, blank=True, unique=True)
     country = models.CharField(max_length=100, default=None, null=True, blank=True)
     longitude = models.FloatField(default=None, null=True)
     latitude = models.FloatField(default=None, null=True)

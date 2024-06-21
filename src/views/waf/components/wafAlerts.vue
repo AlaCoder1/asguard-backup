@@ -202,9 +202,7 @@ export default {
       //   `;
       // eGui.style.lineHeight = "2";
       // return eGui;
-      const resultMessage = data.data.violation_file
-        .map((e) => e + "<br>")
-        .join("");
+      const resultMessage = data.data.violation.map((e) => e + "<br>").join("");
       console.log("resultMessage", resultMessage);
       let eGui = document.createElement("div");
 
@@ -271,6 +269,10 @@ export default {
         />
        </svg></span>`;
 
+      let wafAlert =
+        document.getElementById("app").attributes["waf_alert"].value;
+      let waf_alert = JSON.parse(wafAlert);
+
       setTimeout(() => {
         const map = L.map("map").setView([48, 2], 6);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -283,6 +285,14 @@ export default {
           iconSize: [30, 30],
         });
 
+        let mappedRule = waf_alert?.blocked_requests.map((e) => {
+          return {
+            lat: e.latitude,
+            lng: e.longitude,
+            name: e.source,
+          };
+        });
+
         // const locations = [
         //   { lat: 51.505, lng: -0.09, name: "souhail 1" },
         //   { lat: 52.505, lng: -0.19, name: "souhail 2" },
@@ -290,46 +300,41 @@ export default {
         //   { lat: 70, lng: -0.19, name: "souhail 4" },
         // ];
 
-        // locations.forEach((loc, idx) => {
-        //   const marker = L.marker([loc.lat, loc.lng], {
-        //     draggable: false,
-        //     icon: century21icon,
-        //   }).bindPopup(`${loc.name}`);
-        //   marker.addTo(map);
+        mappedRule.forEach((loc, idx) => {
+          const marker = L.marker([loc.lat, loc.lng], {
+            draggable: false,
+            icon: century21icon,
+          }).bindPopup(`${loc.name}`);
+          marker.addTo(map);
 
-        //   map.setView([locations[0].lat, locations[0].lng], 4);
-        // });
+          map.setView([mappedRule[0].lat, mappedRule[0].lng], 4);
+        });
       }, 1000);
 
-      let wafAlert =
-        document.getElementById("app").attributes["waf_alert"].value;
-      let waf_alert = JSON.parse(wafAlert);
-      
-      rowDataCountry.value = waf_alert?.top_countries
-      rowDataAttacks.value = waf_alert?.attacks
+      rowDataCountry.value = waf_alert?.top_countries;
+      rowDataAttacks.value = waf_alert?.attacks;
 
-      let test = [
-        {
-          country: "fr",
-          timestamp: "2024-04-17T08:52:43Z",
-          violation_file: [
-            "REQUEST-920-PROTOCOL-ENFORCEMENT.conf00",
-            "REQUEST-920-PROTOCOL-ENFORCEMENT.conf11",
-            "REQUEST-920-PROTOCOL-ENFORCEMENT.conf12",
-          ],
-          violation_id: 920350,
-          source: "10.1.12.74",
-          method: "GET",
-          message: [
-            "Host header is a numeric IP address1",
-            "Host header is a numeric IP address2",
-          ],
-          url: "10.1.12.74/index.html?exec=/bin/bash",
-        },
-      ];
-      rowDataRules.value = test;
+      // let test = [
+      //   {
+      //     country: "fr",
+      //     timestamp: "2024-04-17T08:52:43Z",
+      //     violation: [
+      //       "REQUEST-920-PROTOCOL-ENFORCEMENT.conf00",
+      //       "REQUEST-920-PROTOCOL-ENFORCEMENT.conf11",
+      //       "REQUEST-920-PROTOCOL-ENFORCEMENT.conf12",
+      //     ],
+      //     violation_id: 920350,
+      //     source: "10.1.12.74",
+      //     method: "GET",
+      //     message: [
+      //       "Host header is a numeric IP address1",
+      //       "Host header is a numeric IP address2",
+      //     ],
+      //     url: "10.1.12.74/index.html?exec=/bin/bash",
+      //   },
+      // ];
+      rowDataRules.value = waf_alert?.blocked_requests;
       console.log("waf_alert0***", waf_alert);
-
     });
 
     return {

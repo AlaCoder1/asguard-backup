@@ -258,7 +258,7 @@ export default {
           state.applicationName = "";
           state.value = "";
           state.description = "";
-          state.country = "";
+          state.country = [];
           state.port = "";
         }
       }
@@ -420,7 +420,7 @@ export default {
         state.applicationName = "";
         state.value = "";
         state.description = "";
-        state.country = "";
+        state.country = [];
         state.port = "";
       }
     };

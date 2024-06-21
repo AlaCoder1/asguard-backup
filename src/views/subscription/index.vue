@@ -154,7 +154,25 @@ export default {
           "VPN IPSEC",
           "LDAP",
         ],
-        services: [],
+        services: [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+        ],
         backgroundColor: "#213E9F",
         buttonColor: "#213E9F",
       },
@@ -171,12 +189,17 @@ export default {
           "LDAP",
         ],
         services: [
-          { name: "Double Masque", slug: "Double_Masque 150", price: 150, id: 1 },
-          { name: "WAF", slug: "WAF 150", price: 150, id: 2 },
-          { name: "IPS", slug: "IPS 100", price: 100, id: 3 },
-          { name: "VPN SSL", slug: "VPN SSL 100", price: 100, id: 4 },
-          { name: "Proxy", slug: "Proxy 100", price: 100, id: 5 },
-          { name: "SDWAN", slug: "SDWAN 100", price: 100, id: 6 },
+          // {
+          //   name: "Double Masque",
+          //   slug: "Double_Masque 150",
+          //   price: 150,
+          //   id: 1,
+          // },
+          // { name: "WAF", slug: "WAF 150", price: 150, id: 2 },
+          // { name: "IPS", slug: "IPS 100", price: 100, id: 3 },
+          // { name: "VPN SSL", slug: "VPN SSL 100", price: 100, id: 4 },
+          // { name: "Proxy", slug: "Proxy 100", price: 100, id: 5 },
+          // { name: "SDWAN", slug: "SDWAN 100", price: 100, id: 6 },
         ],
         backgroundColor: "#FFC300",
         buttonColor: "#FFC300",
@@ -268,6 +291,20 @@ export default {
         let price = data + 1200;
         subscriptionCards.value[1].prices[0].amount = price;
       });
+
+      const allfeatures =
+        document.getElementById("app").attributes["allfeature"].value;
+      let all_features = JSON.parse(allfeatures);
+
+      let mappedService = all_features.map((e) => {
+        return {
+          name: e.name,
+          slug: `${e.name} ${e.price}`,
+          price: e.price,
+          id: e.id,
+        };
+      });
+      subscriptionCards.value[1].services = mappedService
     });
 
     return {

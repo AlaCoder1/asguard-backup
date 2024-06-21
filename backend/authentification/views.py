@@ -15,6 +15,7 @@ from backend.managementUsers.models import User,Profile
 from backend.LdapServer.models import ADServer
 from drf_yasg.utils import swagger_auto_schema
 from datetime import datetime, timedelta
+from django.templatetags import static
 
 from backend.subscription.models import Features, plan 
 from .models import VerificationCode
@@ -180,7 +181,7 @@ def create_checkout_session(request):
                         'unit_amount': int(price * 100),  # Convert price to cents
                         'product_data': {
                             'name': 'Asguard Subscription',
-                            'images': ['https://www.numeryx.fr/sites/default/files/gallery/ASGUARD%20bannirere%20site.png'],
+                            'images': ['https://www.numeryx.fr/wp-content/themes/numeryx/assets/images/bg-Asguard.jpg'],
                             'description': 'Asguard Subscription',
                             'metadata': {
                                 'subscription_id': subscription_plan.pk,

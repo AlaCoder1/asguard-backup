@@ -118,7 +118,7 @@
 <script>
 import { useI18n } from "vue-i18n";
 import VButton from "@/components/VButton.vue";
-import { ref, watch, inject, reactive } from "vue";
+import { ref, watch, inject, reactive, onMounted } from "vue";
 import axios from "axios";
 
 export default {
@@ -140,13 +140,29 @@ export default {
     const emitter = inject("emitter");
     const selectedServices = ref([]);
 
+    onMounted(() => {
+      const allfeatures =
+        document.getElementById("app").attributes["allfeature"].value;
+      let all_features = JSON.parse(allfeatures);
+
+      let mappedService = all_features.map((e) => {
+        return {
+          name: e.name,
+          slug: `${e.name} ${e.price}`,
+          price: e.price,
+          id: e.id,
+        };
+      });
+      servicesFiltred.value = mappedService;
+    });
+
     const servicesFiltred = ref([
-      { name: "Double Masque", slug: "Double_Masque 150", price: 150, id: 1 },
-      { name: "WAF", slug: "WAF 150", price: 150, id: 2 },
-      { name: "IPS", slug: "IPS 100", price: 100, id: 3 },
-      { name: "VPN SSL", slug: "VPN SSL 100", price: 100, id: 4 },
-      { name: "Proxy", slug: "Proxy 100", price: 100, id: 5 },
-      { name: "SDWAN", slug: "SDWAN 100", price: 100, id: 6 },
+      // { name: "Double Masque", slug: "Double_Masque 150", price: 150, id: 1 },
+      // { name: "WAF", slug: "WAF 150", price: 150, id: 2 },
+      // { name: "IPS", slug: "IPS 100", price: 100, id: 3 },
+      // { name: "VPN SSL", slug: "VPN SSL 100", price: 100, id: 4 },
+      // { name: "Proxy", slug: "Proxy 100", price: 100, id: 5 },
+      // { name: "SDWAN", slug: "SDWAN 100", price: 100, id: 6 },
     ]);
 
     const state = reactive({
@@ -192,7 +208,6 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       const features = getPackId();
-      console.log("features", features);
 
       if (features.length === 4) {
         state.snackbar = true;
@@ -203,7 +218,7 @@ export default {
 
       try {
         const response = await axios.post("/auth/create_checkout_session", {
-          status: "true",
+          status: true,
           features: features,
           price: props.prices[0].amount,
         });

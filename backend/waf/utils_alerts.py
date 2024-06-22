@@ -30,24 +30,20 @@ def rotate_log_alerts_waf():
 def synchronize_database_waf_alert(list_alert_system):
     """Function that synchronize database with system alerts for WAF.
     This method gets a list of the last 10000 logs and update the database"""
-    list_alert_db = AlertWaf.objects.all()
-    list_alert_log_id_system = [alert["log_system_id"] for alert in list_alert_system]
-    list_alert_log_db = [alert.log_system_id for alert in list_alert_db]
-
     # Add missing system alerts in database
     for alert in list_alert_system:
         if len(AlertWaf.objects.filter(log_system_id=alert["log_system_id"])) == 0:
             alert_instance = AlertWaf(log_system_id=alert["log_system_id"], 
-                                    country=alert["country"], 
-                                    longitude=alert["longitude"],
-                                    latitude=alert["latitude"],
-                                    timestamp=alert["timestamp"],
-                                    violation_file=alert["violation_file"],
-                                    violation_id=alert["violation_id"],
-                                    source=alert["source"],
-                                    method=alert["method"],
-                                    message=alert["message"],
-                                    url=alert["url"])
+                                      country=alert["country"], 
+                                      longitude=alert["longitude"],
+                                      latitude=alert["latitude"],
+                                      timestamp=alert["timestamp"],
+                                      violation_file=alert["violation_file"],
+                                      violation_id=alert["violation_id"],
+                                      source=alert["source"],
+                                      method=alert["method"],
+                                      message=alert["message"],
+                                      url=alert["url"])
             alert_instance.save()
 
 
@@ -74,11 +70,20 @@ def extract_alert_fields(log: str, log_id: str):
     country, timestamp, violation, source, method, message and URL"""
     # Extract longitude, latitude and country. Now it is static
     data_geoip = extract_field_from_h(log, "data")
-    data_geoip_list = list(data_geoip.split(','))
-    country = data_geoip_list[0].replace("Country: ", "")
-    latitude = data_geoip_list[1].replace("Latitude: ", "")
-    longitude = data_geoip_list[2].replace("Longitude: ", "")
-    longitude = longitude[:-2]
+    try:
+        if data_geoip.find("Country") == -1:
+            log = log.replace(f"""[data "{data_geoip}"]""", "")
+            data_geoip = extract_field_from_h(log, "data")
+        data_geoip_list = list(data_geoip.split(','))
+        country = data_geoip_list[0].replace("Country: ", "")
+        latitude = data_geoip_list[1].replace("Latitude: ", "")
+        longitude = data_geoip_list[2].replace("Longitude: ", "")
+        longitude = longitude[:-2]
+    except IndexError:
+        country = None
+        latitude = None
+        longitude = None
+
     # Extract Timestamp
     log_a_line = log[log.find(f"---{log_id}---A--\n")+len(f"---{log_id}---A--\n"):log.find(f"---{log_id}---B--\n")]
     timestamp_str = log_a_line[1:log_a_line.find("+")-1]

@@ -23,7 +23,7 @@ def create_application_waf_in_system(app_data):
 
     location / {{
 
-        proxy_pass {app_data["application_value"]}:{app_data["application_port"]};
+        proxy_pass {app_data["application_value"]};
 
         proxy_set_header Host $host;
 

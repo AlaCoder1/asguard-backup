@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3 ml-3">
     <h4>{{ $t("tabs.application") }}</h4>
     <v-divider class="mb-2"></v-divider>
@@ -90,6 +109,8 @@ export default {
       of: "/",
     });
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       snackbar: false,
       color: "",
       textAlert: "",
@@ -275,13 +296,18 @@ export default {
         .delete(`/waf/deleteApplicationWaf/${state.deletedRow.id}`)
         .then((response) => {
           restartNginx();
-          state.snackbar = true;
-          state.color = "success";
-          state.textAlert = response.data.msg;
-
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          setTimeout(() => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
+          }, 4000);
           setTimeout(() => {
             location.reload();
-          }, 5000);
+          }, 4000);
         })
         .catch((i) => {
           state.snackbar = true;

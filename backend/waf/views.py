@@ -10,7 +10,7 @@ from backend.waf.list_waf import get_alerts, get_list_all_waf_rule, get_list_all
 from backend.waf.models import ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.serializers import ApplicationWafSerializer, ConfigWafSerializer, RulesWafSerializer
 from backend.waf.utils import convert_waf_rule_payload, find_possible_id
-from backend.waf.utils_application import create_application_waf_in_system, delete_application_waf_in_system, update_application_waf_in_system
+from backend.waf.utils_application import create_application_waf_in_system, delete_application_waf_in_system, restart_nginx_in_system, update_application_waf_in_system
 from backend.waf.utils_config import change_waf_config_file
 from backend.waf.utils_rules import create_rule_waf_in_system, create_rule_waf_str, delete_rule_waf_in_system, update_rule_waf_in_system
 from utils.errors_utils import CommandExecutionError
@@ -379,6 +379,13 @@ def update_waf_application(request, id):
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_WAF_APPLICATION}"}, status=400)
     except ApplicationWaf.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_WAF_APPLICATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def restart_nginx(request):
+    restart_nginx_in_system()
 
 
 ########################################

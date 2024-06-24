@@ -386,6 +386,7 @@ def update_waf_application(request, id):
 @permission_classes([IsAuthenticated])
 def restart_nginx(request):
     restart_nginx_in_system()
+    return JsonResponse({"msg": ""}, status=201)
 
 
 ########################################

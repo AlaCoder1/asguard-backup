@@ -386,7 +386,7 @@ export default {
                 state.textAlert = response.data.msg;
                 setTimeout(() => {
                   location.reload();
-                }, 1000);
+                }, 5000);
               }
             })
             .catch((i) => {
@@ -407,7 +407,7 @@ export default {
 
                 setTimeout(() => {
                   location.reload();
-                }, 1000);
+                }, 5000);
               }
             })
             .catch((i) => {

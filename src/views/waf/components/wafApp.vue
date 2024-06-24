@@ -281,7 +281,7 @@ export default {
 
           setTimeout(() => {
             location.reload();
-          }, 1000);
+          }, 5000);
         })
         .catch((i) => {
           state.snackbar = true;

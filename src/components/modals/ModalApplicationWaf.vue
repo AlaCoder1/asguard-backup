@@ -344,6 +344,12 @@ export default {
       }
     };
 
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post('/waf/restartNginx');
+    };
+
     const submitForm = async () => {
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
@@ -370,33 +376,30 @@ export default {
         console.log("payload", payload);
 
         if (modalMode.value === "edit") {
-          await axios
+          axios
             .put(`/waf/updateApplicationWaf/${state.id}`, payload)
             .then((response) => {
-              console.log("responseThen", response);
               if (response.status == "201") {
-                console.log("response201", response);
+                restartNginx()
                 state.snackbar = true;
                 state.color = "success";
-                state.textAlert = response?.data?.msg;
+                state.textAlert = response.data.msg;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
               }
             })
             .catch((i) => {
-              console.log("response201", i.response);
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i?.response?.data?.msg;
+              state.textAlert = i.response.data.msg;
             });
         } else {
-          await axios
+          axios
             .post("/waf/createApplicationWaf", payload)
             .then((response) => {
-              console.log("response", response);
               if (response.status == "201") {
-                console.log("response201", response);
+                restartNginx()
                 state.openModal = false;
                 state.snackbar = true;
                 state.color = "success";
@@ -408,7 +411,6 @@ export default {
               }
             })
             .catch((i) => {
-              console.log("i", i.response);
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.msg;

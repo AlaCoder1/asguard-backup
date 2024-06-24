@@ -1,3 +1,4 @@
+import time
 from backend.waf.constant_variables import PATH_CRS_SETUP, PATH_MAIN_WAF, PATH_MODESC, PATH_NGINX_SITES_AVAILABLE, PATH_NGINX_SITES_ENABLED, PATH_RULES_WAF, PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
 from utils.commands_utils import execute_command_without_arguments, execute_list_commands_without_arguments
@@ -79,8 +80,8 @@ SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,p
     with open(PATH_MAIN_WAF, 'a') as main_file:
         main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
     
-    # Reload nginx
-    execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])
+    # # Reload nginx
+    execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])
 
 
 def delete_application_waf_in_system(application:ApplicationWaf):
@@ -98,10 +99,14 @@ def delete_application_waf_in_system(application:ApplicationWaf):
     main_content = main_content.replace(f"\nInclude {app_directory}geoip_log_{application.name}.conf", "")
     with open(PATH_MAIN_WAF, 'w') as main_file:
         main_file.write(main_content)
-    execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])
+    execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])
 
 
 def update_application_waf_in_system(application:ApplicationWaf, app_data):
     """Function to update a WAF Application in system"""
     delete_application_waf_in_system(application)
     create_application_waf_in_system(app_data)
+
+
+def restart_nginx_in_system():
+    execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])

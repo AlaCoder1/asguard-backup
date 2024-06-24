@@ -93,7 +93,7 @@
                     :overlayNoRowsTemplate="overlayTemplate"
                     @grid-ready="onGridReady"
                     :pagination="true"
-                    :paginationPageSize="4"
+                    :paginationPageSize="10"
                     :localeText="paginationLocalization"
                   />
                 </v-col>
@@ -370,28 +370,33 @@ export default {
         console.log("payload", payload);
 
         if (modalMode.value === "edit") {
-          axios
+          await axios
             .put(`/waf/updateApplicationWaf/${state.id}`, payload)
             .then((response) => {
+              console.log("responseThen", response);
               if (response.status == "201") {
+                console.log("response201", response);
                 state.snackbar = true;
                 state.color = "success";
-                state.textAlert = response.data.msg;
+                state.textAlert = response?.data?.msg;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
               }
             })
             .catch((i) => {
+              console.log("response201", i.response);
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.msg;
+              state.textAlert = i?.response?.data?.msg;
             });
         } else {
-          axios
+          await axios
             .post("/waf/createApplicationWaf", payload)
             .then((response) => {
+              console.log("response", response);
               if (response.status == "201") {
+                console.log("response201", response);
                 state.openModal = false;
                 state.snackbar = true;
                 state.color = "success";
@@ -403,6 +408,7 @@ export default {
               }
             })
             .catch((i) => {
+              console.log("i", i.response);
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.msg;

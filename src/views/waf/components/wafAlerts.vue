@@ -17,7 +17,7 @@
             :columnDefs="columnAttacks"
             :rowData="rowDataAttacks.value"
             :pagination="true"
-            :paginationPageSize="4"
+            :paginationPageSize="10"
             :overlayNoRowsTemplate="overlayTemplate"
             :localeText="paginationLocalization"
           />
@@ -34,7 +34,7 @@
             :columnDefs="columnCountry"
             :rowData="rowDataCountry.value"
             :pagination="true"
-            :paginationPageSize="4"
+            :paginationPageSize="10"
             :overlayNoRowsTemplate="overlayTemplate"
             :localeText="paginationLocalization"
           />
@@ -54,7 +54,7 @@
         :columnDefs="columnRules"
         :rowData="rowDataRules.value"
         :pagination="true"
-        :paginationPageSize="4"
+        :paginationPageSize="20"
         :overlayNoRowsTemplate="overlayTemplate"
         :localeText="paginationLocalization"
       />

@@ -107,7 +107,7 @@ def get_alerts():
     log_waf_content = rotate_log_alerts_waf()
     list_alert_system = create_list_alerts(log_waf_content)
     synchronize_database_waf_alert(list_alert_system)
-    waf_alerts = AlertWaf.objects.all()
+    waf_alerts = AlertWaf.objects.order_by('-pk')
     waf_alert_dict = serializers.serialize("json", waf_alerts)
     res = json.loads(waf_alert_dict)
     violation_counts = AlertWaf.objects.values('violation_id').annotate(count=Count('violation_id')).order_by("-count")
@@ -121,7 +121,7 @@ def get_alerts():
         waf_alert_id = waf_alert['pk']
         waf_alert.pop('pk')
         waf_alert['fields']['id'] = waf_alert_id
-        waf_alert['fields']['violation'] = [f"{waf_alert['fields']['violation_id']} > {waf_alert['fields']['violation_file']}"]
+        waf_alert['fields']['violation'] = f"{waf_alert['fields']['violation_id']} > {waf_alert['fields']['violation_file']}"
         waf_alert['fields'].pop('violation_id')
         waf_alert['fields'].pop('violation_file')
         alerts_dict["blocked_requests"].append(waf_alert['fields'])

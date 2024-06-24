@@ -71,7 +71,7 @@ def extract_alert_fields(log: str, log_id: str):
     # Extract longitude, latitude and country. Now it is static
     data_geoip = extract_field_from_h(log, "data")
     try:
-        if data_geoip.find("Country") == -1:
+        if data_geoip.find("Country") == -1 and data_geoip.find("Latitude") == -1:
             log = log.replace(f"""[data "{data_geoip}"]""", "")
             data_geoip = extract_field_from_h(log, "data")
         data_geoip_list = list(data_geoip.split(','))

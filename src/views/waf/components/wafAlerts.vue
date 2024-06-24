@@ -138,7 +138,8 @@ export default {
 
       {
         headerName: violation,
-        cellRenderer: formatedLine,
+        field: "violation",
+        // cellRenderer: formatedLine,
         autoHeight: true,
         width: 480,
         minWidth: 150,
@@ -161,8 +162,8 @@ export default {
       },
       {
         headerName: "message",
-        // field: "message",
-        cellRenderer: formatedMessage,
+        field: "message",
+        // cellRenderer: formatedMessage,
         autoHeight: true,
         width: 250,
         minWidth: 350,
@@ -284,8 +285,7 @@ export default {
             "https://img.icons8.com/?size=100&id=uvp0RebVme9d&format=png&color=000000",
           iconSize: [30, 30],
         });
-
-        let mappedRule = waf_alert?.blocked_requests.map((e) => {
+        let mappedRule = waf_alert?.blocked_requests.filter((e) => e.longitude).map((e) => {
           return {
             lat: e.latitude,
             lng: e.longitude,

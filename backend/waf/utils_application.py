@@ -68,7 +68,7 @@ Include {app_directory}geoip_log_{app_data['name']}.conf
         app_config_file.write(app_config_content)
     # Add a GOIP rule
     rule_geoip = f"""
-SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries: %{{GEO:COUNTRY_CODE}}',logdata:'Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'"
+SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries: %{{GEO:COUNTRY_CODE}}',logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'"
 SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
     rule_geoip_id = f"""
 SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
@@ -80,7 +80,7 @@ SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,p
         main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
     
     # Reload nginx
-    execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])
+    execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])
 
 
 def delete_application_waf_in_system(application:ApplicationWaf):
@@ -96,7 +96,9 @@ def delete_application_waf_in_system(application:ApplicationWaf):
     with open(PATH_MAIN_WAF) as main_file:
         main_content = main_file.read()
     main_content = main_content.replace(f"\nInclude {app_directory}geoip_log_{application.name}.conf", "")
-    execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])
+    with open(PATH_MAIN_WAF, 'w') as main_file:
+        main_file.write(main_content)
+    execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])
 
 
 def update_application_waf_in_system(application:ApplicationWaf, app_data):

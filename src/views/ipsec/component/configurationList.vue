@@ -18,35 +18,33 @@
         </h4>
 
         <v-divider></v-divider>
-        <div style="display: flex; flex-direction: column">
-          <v-card class="flex mt-3">
-            <ag-grid-vue
-              id="grid-wrapper"
-              domLayout="autoHeight"
-              class="ag-theme-alpine mt-3 mb-3 ml-3 mr-3"
-              :columnDefs="columns"
-              :rowData="rowData.value"
-              :gridOptions="gridOptions"
-              :defaultColDef="defaultColDef"
-              :overlayNoRowsTemplate="overlayTemplate"
-              :rowGroupPanelShow="rowGroupPanelShow"
-              @grid-ready="onGridReady"
-              style="width: 100%; height: 100%"
-              :localeText="paginationLocalization"
+        <div class="mt-3" style="display: flex; flex-direction: column">
+          <ag-grid-vue
+            id="grid-wrapper"
+            domLayout="autoHeight"
+            class="ag-theme-alpine mt-3 mb-3"
+            :columnDefs="columns"
+            :rowData="rowData.value"
+            :gridOptions="gridOptions"
+            :defaultColDef="defaultColDef"
+            :overlayNoRowsTemplate="overlayTemplate"
+            :rowGroupPanelShow="rowGroupPanelShow"
+            @grid-ready="onGridReady"
+            style="width: 100%; height: 100%"
+            :localeText="paginationLocalization"
+          />
+          <div class="justify-end d-flex mr-3 mt-3 mb-3">
+            <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              :label="$t('PageIpsec.addnewpeer')"
+              :isLarge="true"
+              class="ml-2"
+              @click="addServer"
             />
-            <div class="justify-end d-flex mr-3 mt-3 mb-3">
-              <VButton
-                rounded
-                outlined
-                color="#213E9F"
-                label-color="#ffffff"
-                :label="$t('PageIpsec.addnewpeer')"
-                :isLarge="true"
-                class="ml-2"
-                @click="addServer"
-              />
-            </div>
-          </v-card>
+          </div>
           <br />
           <br />
           <br />

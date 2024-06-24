@@ -400,7 +400,7 @@ export default {
         <button
           id="play"
           class="action-button play"
-          data-action="play" title=${t('sdwan.startServer')}>
+          data-action="play" title=${t("sdwan.startServer")}>
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
 
@@ -433,14 +433,14 @@ export default {
           <button
           id="restart"
           class="action-button restart"
-          data-action="restart" title=${t('interface.restart')}>
+          data-action="restart" title=${t("interface.restart")}>
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
         
        <button
           id="stop"
           class="action-button stop"
-          data-action="stop" title=${t('sdwan.stop')}>
+          data-action="stop" title=${t("sdwan.stop")}>
              <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
           </button>
 
@@ -498,7 +498,9 @@ export default {
           break;
         case "edit":
           emitter.emit("add-server");
-          emitter.emit("edit-server", rowData);
+          setTimeout(() => {
+            emitter.emit("edit-server", rowData);
+          }, 1000);
           break;
         case "stop":
           loading.value = true;

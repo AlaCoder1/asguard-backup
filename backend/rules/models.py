@@ -7,7 +7,7 @@ class Rule(models.Model):
     rule_status = models.BooleanField(default=False)
     type_rule=models.CharField(max_length=200, null=True)
     policy=models.CharField(max_length=200, null=True)
-    rule_description=models.CharField(max_length=200, null=True,unique=False)
+    rule_description=models.CharField(max_length=200, null=True,unique=True)
     protocol=models.CharField(max_length=200, null=True)
     saddr=models.CharField(max_length=200, null=True)
     sport= models.IntegerField(null=True)

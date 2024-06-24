@@ -4,7 +4,11 @@ from backend.gateway.serializers import GatewaySerializer
 from backend.network.models import Interface
 from backend.network.functions import run_command
 from django.db.models import Q
+from django.utils.translation import gettext_lazy as _
 
+
+CONSTANT_INTERFACE_GATEWAY = _('Gateway DHCP')
+ERROR_MESSAGES_NOTFOUND = _("does not found")
 
 # this import to run this on macine distant
 def add_gateway_db(data):
@@ -123,6 +127,6 @@ def save_gateways_database(gwaddr,name_interface,default_aux,far_aux,multiwan_au
             msg=aux_gw
            
     else:
-            msg="Gateway DHCP not found!"
+            msg=f"{CONSTANT_INTERFACE_GATEWAY} {ERROR_MESSAGES_NOTFOUND}"
              
     return msg

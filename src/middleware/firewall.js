@@ -15,6 +15,10 @@ const app = createApp(firewall);
 
 const emitter = mitt();
 app.provide("emitter", emitter);
+let lang = localStorage.getItem("lang");
+if (lang) {
+  var langLocle = JSON.parse(lang);
+}
 
 const vuetify = createVuetify({
   components,
@@ -26,7 +30,8 @@ function hrefPath() {
   localStorage.setItem("href-path", currentPath);
 }
 const i18n = new createI18n({
-  locale: "en",
+  legacy: false,
+  locale: langLocle ? langLocle[0].lang.toLowerCase() : "en",
   messages: {
     en: enJson,
     fr: frJson,

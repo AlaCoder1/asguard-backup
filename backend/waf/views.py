@@ -381,7 +381,7 @@ def update_waf_application(request, id):
         return JsonResponse({"error": f"{CONSTANT_WAF_APPLICATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
-@api_view(['PUT'])
+@api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def restart_nginx(request):

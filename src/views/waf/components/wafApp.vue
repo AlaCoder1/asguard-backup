@@ -258,6 +258,12 @@ export default {
       state.isModalOpen = true;
     };
 
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post(`/waf/restartNginx`);
+    };
+
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
@@ -268,6 +274,7 @@ export default {
       axios
         .delete(`/waf/deleteApplicationWaf/${state.deletedRow.id}`)
         .then((response) => {
+          restartNginx();
           state.snackbar = true;
           state.color = "success";
           state.textAlert = response.data.msg;

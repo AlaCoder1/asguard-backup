@@ -1,0 +1,46 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-30 10:29+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+#: backend/vxlan/functions.py:6 backend/vxlan/views.py:19
+msgid "Configuration VxLAN"
+msgstr "Configuration VxLAN"
+
+#: backend/vxlan/functions.py:7 backend/vxlan/views.py:23
+msgid "Saved"
+msgstr "Sauvegardé"
+
+#: backend/vxlan/views.py:20
+msgid "Interface VxLAN"
+msgstr "Interface VxLAN"
+
+#: backend/vxlan/views.py:24
+msgid "is created"
+msgstr "est créé"
+
+#: backend/vxlan/views.py:25
+msgid "is deleted"
+msgstr "est supprimé"
+
+#: backend/vxlan/views.py:29
+msgid "Already exist"
+msgstr "Existe déjà"
+
+#: backend/vxlan/views.py:30
+msgid "does not exist"
+msgstr "n'existe pas"

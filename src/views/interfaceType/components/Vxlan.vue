@@ -121,11 +121,11 @@ export default {
         state.editRow = {};
       });
 
-      // let vlanList =
-      //   document.getElementById("app").attributes["list_vlan"].value;
-      // const parsedArray = JSON.parse(vlanList);
+      let vlxanList =
+        document.getElementById("app").attributes["list_vxlan"].value;
+      const parsedArray = JSON.parse(vlxanList);
 
-      // rowDataVxlan.value = parsedArray;
+      rowDataVxlan.value = parsedArray;
     });
     const device = computed(() => {
       return t("typeInterface.device");
@@ -134,7 +134,7 @@ export default {
     const columnVxlan = ref([
       {
         headerName: device,
-        field: "Device",
+        field: "name_interface",
         sortable: true,
         autoHeight: true,
         filter: true,
@@ -144,7 +144,7 @@ export default {
       },
       {
         headerName: "VNI",
-        field: "VNI",
+        field: "vxlan_id",
         sortable: true,
         filter: true,
         width: 90,
@@ -152,9 +152,9 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Source",
+        headerName: "Source Address",
         autoHeight: true,
-        field: "Source",
+        field: "vxlan_source_address",
         sortable: true,
         filter: true,
         width: 90,
@@ -277,7 +277,7 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       axios
-        .delete(`/vlan/deleteVxlan/${state.deletedRow.id}`)
+        .delete(`/vxlan/deleteVxlan/${state.deletedRow.id}`)
         .then((response) => {
           state.snackbar = true;
           state.color = "success";

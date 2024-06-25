@@ -13,12 +13,16 @@ class Command(BaseCommand):
             suricata_path="/etc/suricata/suricata.yaml"
             data=read_from_yaml(suricata_path,yaml_class)
             file = read_config(data)
+            id_conf=None
             if file:
                 home_net = file.get("HOME_NET")
                 if not suricatafile.objects.filter(home_net=home_net).exists() and suricatafile.objects.all().count()==0:
                     # Créer une instance du modèle suricatafile
-                    suricata_config = SuricataFileSerializer(file)
-                    id_conf=suricata_config.id
+                    suricata_config = SuricataFileSerializer(data=file)
+                    if suricata_config.is_valid():
+                        suricata_conf=suricata_config.save()
+                        id_conf=suricata_conf.id
+                    
                     if id_conf is not None:
                         _,error=execute_cmd("python manage.py init_rules_suricata -id {}".format(id_conf))
                         if error=="":

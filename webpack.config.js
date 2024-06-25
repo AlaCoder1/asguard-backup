@@ -74,6 +74,12 @@ Encore.setOutputPath("static/")
     config.useBuiltIns = "usage";
     config.corejs = 3;
   })
+
+  .configureDefinePlugin(options => {
+    options.__VUE_OPTIONS_API__ = true;
+    options.__VUE_PROD_DEVTOOLS__ = false;
+  })
+
   .enableSassLoader();
 
 module.exports = Encore.getWebpackConfig();

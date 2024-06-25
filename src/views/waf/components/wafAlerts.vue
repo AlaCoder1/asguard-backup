@@ -17,7 +17,7 @@
             :columnDefs="columnAttacks"
             :rowData="rowDataAttacks.value"
             :pagination="true"
-            :paginationPageSize="4"
+            :paginationPageSize="5"
             :overlayNoRowsTemplate="overlayTemplate"
             :localeText="paginationLocalization"
           />
@@ -34,7 +34,7 @@
             :columnDefs="columnCountry"
             :rowData="rowDataCountry.value"
             :pagination="true"
-            :paginationPageSize="4"
+            :paginationPageSize="5"
             :overlayNoRowsTemplate="overlayTemplate"
             :localeText="paginationLocalization"
           />
@@ -54,7 +54,7 @@
         :columnDefs="columnRules"
         :rowData="rowDataRules.value"
         :pagination="true"
-        :paginationPageSize="4"
+        :paginationPageSize="20"
         :overlayNoRowsTemplate="overlayTemplate"
         :localeText="paginationLocalization"
       />
@@ -114,7 +114,7 @@ export default {
       },
       {
         headerName: countOfRecord,
-        field: "countOfRecord",
+        field: "count_of_record",
         autoHeight: true,
       },
     ]);
@@ -125,32 +125,31 @@ export default {
         field: "country",
         autoHeight: true,
         width: 90,
-        minWidth: 50,
+        minWidth: 150,
         flex: 1,
       },
       {
         headerName: timestamp,
         field: "timestamp",
         autoHeight: true,
-        width: 90,
+        width: 250,
         minWidth: 50,
-        flex: 1,
       },
 
       {
         headerName: violation,
         field: "violation",
+        // cellRenderer: formatedLine,
         autoHeight: true,
-        width: 90,
-        minWidth: 50,
-        flex: 1,
+        width: 480,
+        minWidth: 150,
       },
       {
         headerName: "source",
         field: "source",
         autoHeight: true,
         width: 90,
-        minWidth: 50,
+        minWidth: 150,
         flex: 1,
       },
       {
@@ -158,25 +157,60 @@ export default {
         field: "method",
         autoHeight: true,
         width: 90,
-        minWidth: 50,
+        minWidth: 150,
         flex: 1,
       },
       {
         headerName: "message",
         field: "message",
+        // cellRenderer: formatedMessage,
         autoHeight: true,
-        width: 90,
-        minWidth: 50,
-        flex: 1,
+        width: 250,
+        minWidth: 350,
       },
       {
         headerName: "URL",
-        field: "URL",
+        field: "url",
         autoHeight: true,
-        width: 150,
+        width: 250,
+        minWidth: 350,
       },
     ]);
 
+    function formatedMessage(data) {
+      const resultMessage = data.data.message.map((e) => e + "<br>").join("");
+      console.log("resultMessage", resultMessage);
+      let eGui = document.createElement("div");
+
+      eGui.innerHTML = `${resultMessage}`;
+      // eGui.style.lineHeight = "3";
+      return eGui;
+
+      //       const chunks = longString.match(/.{1,20}/g);
+
+      // const resultWithBr = chunks.map((chunk) => chunk + "<br>").join("");
+
+      // let eGui = document.createElement("div");
+
+      // eGui.innerHTML = `${resultWithBr}
+      //   `;
+      // eGui.style.lineHeight = "2";
+    }
+    function formatedLine(data) {
+      // let eGui = document.createElement("div");
+
+      // eGui.innerHTML = `${data.data.violation_id}>${data.data.violation_file}
+      //   `;
+      // eGui.style.lineHeight = "2";
+      // return eGui;
+      const resultMessage = data.data.violation.map((e) => e + "<br>").join("");
+      console.log("resultMessage", resultMessage);
+      let eGui = document.createElement("div");
+
+      eGui.innerHTML = `${resultMessage}`;
+      // eGui.style.lineHeight = "2";
+      return eGui;
+    }
     const columnCountry = ref([
       {
         headerName: Country,
@@ -236,6 +270,10 @@ export default {
         />
        </svg></span>`;
 
+      let wafAlert =
+        document.getElementById("app").attributes["waf_alert"].value;
+      let waf_alert = JSON.parse(wafAlert);
+
       setTimeout(() => {
         const map = L.map("map").setView([48, 2], 6);
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -247,24 +285,56 @@ export default {
             "https://img.icons8.com/?size=100&id=uvp0RebVme9d&format=png&color=000000",
           iconSize: [30, 30],
         });
+        let mappedRule = waf_alert?.blocked_requests.filter((e) => e.longitude).map((e) => {
+          return {
+            lat: e.latitude,
+            lng: e.longitude,
+            name: e.source,
+          };
+        });
 
-        const locations = [
-          { lat: 51.505, lng: -0.09, name: "souhail 1" },
-          { lat: 52.505, lng: -0.19, name: "souhail 2" },
-          { lat: 48, lng: -0.19, name: "souhail 3" },
-          { lat: 70, lng: -0.19, name: "souhail 4" },
-        ];
+        // const locations = [
+        //   { lat: 51.505, lng: -0.09, name: "souhail 1" },
+        //   { lat: 52.505, lng: -0.19, name: "souhail 2" },
+        //   { lat: 48, lng: -0.19, name: "souhail 3" },
+        //   { lat: 70, lng: -0.19, name: "souhail 4" },
+        // ];
 
-        locations.forEach((loc, idx) => {
+        mappedRule.forEach((loc, idx) => {
           const marker = L.marker([loc.lat, loc.lng], {
             draggable: false,
             icon: century21icon,
           }).bindPopup(`${loc.name}`);
           marker.addTo(map);
 
-          map.setView([locations[0].lat, locations[0].lng], 4);
+          map.setView([mappedRule[0].lat, mappedRule[0].lng], 4);
         });
       }, 1000);
+
+      rowDataCountry.value = waf_alert?.top_countries;
+      rowDataAttacks.value = waf_alert?.attacks;
+
+      // let test = [
+      //   {
+      //     country: "fr",
+      //     timestamp: "2024-04-17T08:52:43Z",
+      //     violation: [
+      //       "REQUEST-920-PROTOCOL-ENFORCEMENT.conf00",
+      //       "REQUEST-920-PROTOCOL-ENFORCEMENT.conf11",
+      //       "REQUEST-920-PROTOCOL-ENFORCEMENT.conf12",
+      //     ],
+      //     violation_id: 920350,
+      //     source: "10.1.12.74",
+      //     method: "GET",
+      //     message: [
+      //       "Host header is a numeric IP address1",
+      //       "Host header is a numeric IP address2",
+      //     ],
+      //     url: "10.1.12.74/index.html?exec=/bin/bash",
+      //   },
+      // ];
+      rowDataRules.value = waf_alert?.blocked_requests;
+      console.log("waf_alert0***", waf_alert);
     });
 
     return {

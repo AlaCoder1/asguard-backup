@@ -1,5 +1,24 @@
 <template>
   <v-row justify="center">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            {{ $t("sdwan.pleaseWait") }}
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
@@ -93,7 +112,7 @@
                     :overlayNoRowsTemplate="overlayTemplate"
                     @grid-ready="onGridReady"
                     :pagination="true"
-                    :paginationPageSize="4"
+                    :paginationPageSize="10"
                     :localeText="paginationLocalization"
                   />
                 </v-col>
@@ -221,6 +240,8 @@ export default {
     const gridColumnApi = ref(null);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       listType: ["ip", "domain"],
       countriesList: [],
       id: null,
@@ -258,7 +279,7 @@ export default {
           state.applicationName = "";
           state.value = "";
           state.description = "";
-          state.country = "";
+          state.country = [];
           state.port = "";
         }
       }
@@ -344,6 +365,12 @@ export default {
       }
     };
 
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/waf/restartNginx");
+    };
+
     const submitForm = async () => {
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
@@ -374,12 +401,19 @@ export default {
             .put(`/waf/updateApplicationWaf/${state.id}`, payload)
             .then((response) => {
               if (response.status == "201") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                }, 4000);
                 setTimeout(() => {
                   location.reload();
-                }, 1000);
+                }, 4000);
               }
             })
             .catch((i) => {
@@ -392,14 +426,19 @@ export default {
             .post("/waf/createApplicationWaf", payload)
             .then((response) => {
               if (response.status == "201") {
-                state.openModal = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                }, 4000);
                 setTimeout(() => {
                   location.reload();
-                }, 1000);
+                }, 4000);
               }
             })
             .catch((i) => {
@@ -420,7 +459,7 @@ export default {
         state.applicationName = "";
         state.value = "";
         state.description = "";
-        state.country = "";
+        state.country = [];
         state.port = "";
       }
     };

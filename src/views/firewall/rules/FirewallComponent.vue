@@ -409,7 +409,7 @@ export default defineComponent({
     const rowDataToDelete = ref(null);
 
     const openModalAdd = () => {
-      if (last_Subscription.value.includes("Firewall")) {
+      if (last_Subscription.value.includes("Firewall L4")) {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;

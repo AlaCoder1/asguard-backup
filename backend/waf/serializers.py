@@ -49,6 +49,7 @@ class ApplicationWafSerializer(serializers.ModelSerializer):
         application_waf.application_value = validated_data.get('application_value', application_waf.application_value)
         application_waf.application_port = validated_data.get('application_port', application_waf.application_port)
         application_waf.description = validated_data.get('description', application_waf.description)
+        application_waf.country = validated_data.get('country', application_waf.country)
         application_waf.save()
 
         # Handle the rules

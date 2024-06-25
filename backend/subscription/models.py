@@ -1,15 +1,11 @@
 from django.db import models
-
 # Create your models here.
-from django.db import models
-
-# Create your models here.
-class organization(models.Model):
-    groupname = models.CharField(max_length=200, null=True)
+class Organization(models.Model):
+    organization = models.CharField(max_length=200, null=True)
     class Meta:
         db_table = 'organization'
     def __str__(self):
-        return self.groupName
+        return self.organization
     
 class plan(models.Model):
     slug = models.CharField(max_length=200, null=True)
@@ -26,7 +22,7 @@ class paymentTransaction(models.Model):
     amount = models.FloatField(null=True)
     status = models.CharField(max_length=200,null=True)
     subscription_type = models.CharField(max_length=200,null=True)
-    organization = models.ForeignKey(organization, on_delete=models.CASCADE)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE)
     plan = models.ForeignKey(plan, on_delete=models.CASCADE,null=True)
     class Meta:
         db_table = 'payment_transaction'
@@ -42,7 +38,7 @@ class plansSubscription(models.Model):
 
     
 class plansFeatures(models.Model):
-    description = models.CharField(max_length=200,null=True )
+    description = models.CharField(max_length=200,null=True)
     plan = models.ForeignKey(plan, on_delete=models.CASCADE,null=True)
     class Meta:
         db_table = 'plans_features'
@@ -54,3 +50,9 @@ class planSubsciptionUsage(models.Model):
     valid_until =models.DateTimeField()
     class Meta:
         db_table = 'plan_subsciption_usage'
+
+class Features(models.Model):
+    features = models.CharField(max_length=800,null=False,unique=True)
+    price = models.IntegerField()
+    class Meta:
+        db_table = 'features'

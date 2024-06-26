@@ -30,11 +30,7 @@
               </v-col>
             </v-row>
             <v-row class="ml-3 mr-3">
-              <v-text-field
-                v-model="description"
-                :rules="[(v) => !!v || $t('interface.descriptionRequired')]"
-                required
-              ></v-text-field>
+              <v-text-field v-model="description"></v-text-field>
             </v-row>
           </div>
           <v-card-title class="title-text mt-5">{{
@@ -416,6 +412,7 @@ export default {
     VButton,
     AdvancedConfigDHCPv4,
   },
+  inject: ["emitter"],
   props: {
     activeTab: String,
   },
@@ -492,6 +489,7 @@ export default {
       },
     };
   },
+
   computed: {
     alertStyle() {
       return {
@@ -576,6 +574,7 @@ export default {
             },
           },
         };
+        console.log("params", params);
 
         function getCookie(name) {
           let cookieValue = null;
@@ -692,6 +691,8 @@ export default {
         far_aux: this.gateway.far_aux,
         multiwan_aux: this.gateway.multiwan_aux,
       };
+      this.allStaticGateways.unshift(params);
+
       function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== "") {
@@ -729,7 +730,7 @@ export default {
             this.showAlertGateway = true;
             setTimeout(() => {
               this.showAlertGateway = false;
-            }, 3000);
+            }, 1000);
           } else {
             this.showGatewayDialog = true;
           }
@@ -837,7 +838,9 @@ export default {
       .replace(/False/g, "false")
       .replace(/None/g, "null");
     parsedArray = JSON.parse(validJsonString);
-    this.allStaticGateways = parsedArray;
+    let combineArray = [{ gwaddress: "Auto Detect" }];
+    this.allStaticGateways = [...parsedArray, ...combineArray];
+    console.log("parsedArray", parsedArray);
 
     this.activate = this.IPV4Config?.interface !== null ? true : false;
     this.device = this.IPV4Config.interface.ifname;

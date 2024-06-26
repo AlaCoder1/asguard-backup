@@ -1,5 +1,24 @@
 <template>
   <div class="mt-3 ml-3">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            {{ $t("sdwan.pleaseWait") }}
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
     <h4>{{ $t("openvpn.Generalinformation") }}</h4>
     <v-divider class="mb-2"></v-divider>
 
@@ -99,6 +118,8 @@ export default {
       editRow: {},
       modalMode: "create",
       deletedRow: null,
+      loading: false,
+      isLoadingDialogue: false,
     });
 
     const RequestAction = computed(() => {
@@ -125,6 +146,14 @@ export default {
         field: "name",
         autoHeight: true,
         resizable: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
+      },
+      {
+        headerName: 'Description',
+        field: "description",
+        autoHeight: true,
         width: 90,
         minWidth: 50,
         flex: 1,
@@ -243,6 +272,11 @@ export default {
       state.editRow = {};
     });
 
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/waf/restartNginx");
+    };
     const openModalAdd = () => {
       state.modalData = {};
       state.modalMode = "create";
@@ -259,15 +293,23 @@ export default {
       axios
         .delete(`/waf/deleteRuleWaf/${state.deletedRow.id}`)
         .then((response) => {
-          state.snackbar = true;
-          state.color = "success";
-          state.textAlert = response.data.msg;
-
+          restartNginx();
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          setTimeout(() => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
+            state.deleteDialog = false;
+          }, 4000);
           setTimeout(() => {
             location.reload();
-          }, 1000);
+          }, 4000);
         })
         .catch((i) => {
+          console.log("i*", i);
           state.snackbar = true;
           state.color = "red";
           state.textAlert = i.response.data.error;

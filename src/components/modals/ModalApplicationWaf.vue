@@ -94,9 +94,9 @@
                     return-object
                     :items="state.countriesList"
                   ></v-autocomplete>
-                  <p class="error-feedback mb-5" v-if="v$.country.$error">
+                  <!-- <p class="error-feedback mb-5" v-if="v$.country.$error">
                     {{ v$.country.$errors[0].$message }}
-                  </p>
+                  </p> -->
                 </v-col>
 
                 <v-col cols="12" class="mb-n5 mb-1 mt-0">
@@ -410,6 +410,7 @@ export default {
                   state.snackbar = true;
                   state.color = "success";
                   state.textAlert = response.data.msg;
+                  closeModal();
                 }, 4000);
                 setTimeout(() => {
                   location.reload();
@@ -419,7 +420,7 @@ export default {
             .catch((i) => {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.msg;
+              state.textAlert = i.response.data.error;
             });
         } else {
           axios
@@ -435,6 +436,7 @@ export default {
                   state.snackbar = true;
                   state.color = "success";
                   state.textAlert = response.data.msg;
+                  closeModal();
                 }, 4000);
                 setTimeout(() => {
                   location.reload();
@@ -444,7 +446,7 @@ export default {
             .catch((i) => {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.msg;
+              state.textAlert = i.response.data.error;
             });
         }
       } else {
@@ -499,11 +501,18 @@ export default {
     const onlynumbers = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
     });
+    const indication = computed(() => {
+      return t("champs.indication");
+    });
 
     const rules = computed(() => {
       return {
         applicationName: {
           required: helpers.withMessage(error, required),
+          isValidName: helpers.withMessage(
+            indication,
+            helpers.regex(/^[A-Za-z0-9_\-]+$/)
+          ),
         },
 
         value: {
@@ -514,9 +523,9 @@ export default {
           required: helpers.withMessage(error, required),
         },
 
-        country: {
-          required: helpers.withMessage(error, required),
-        },
+        // country: {
+        //   required: helpers.withMessage(error, required),
+        // },
         port: {
           required: helpers.withMessage(error, required),
           isValidPort: helpers.withMessage(

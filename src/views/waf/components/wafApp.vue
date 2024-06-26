@@ -304,6 +304,7 @@ export default {
             state.snackbar = true;
             state.color = "success";
             state.textAlert = response.data.msg;
+            state.deleteDialog = false;
           }, 4000);
           setTimeout(() => {
             location.reload();

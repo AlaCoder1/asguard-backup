@@ -30,11 +30,7 @@
               </v-col>
             </v-row>
             <v-row class="ml-3 mr-3">
-              <v-text-field
-                v-model="description"
-                :rules="[(v) => !!v || $t('interface.descriptionRequired')]"
-                required
-              ></v-text-field>
+              <v-text-field v-model="description"></v-text-field>
             </v-row>
           </div>
           <v-card-title class="title-text mt-5">{{

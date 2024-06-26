@@ -121,6 +121,7 @@ def get_waf_rule(request, id):
                      operation_summary="API TO CREATE A WAF RULE", request_body=Schema(
                          type=TYPE_OBJECT, required=['name', 'variables', 'operators', 'transformations', 'actions'],
                          properties={'name': Schema(type=TYPE_STRING, description="Name of the rule"),
+                                     'description': Schema(type=TYPE_STRING, description="Description of the rule"),
                                      'variables': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING)),
                                      'operators': Schema(type=TYPE_ARRAY, description= "If a transformation don't have a value then value will be an empty string", 
                                                          items=Schema(type=TYPE_OBJECT, required=['type', 'value'], properties={
@@ -190,6 +191,7 @@ def delete_waf_rule(request, id):
                      operation_summary="API TO CREATE A WAF RULE", request_body=Schema(
                          type=TYPE_OBJECT, required=['name', 'variables', 'operators', 'transformations', 'actions'],
                          properties={'name': Schema(type=TYPE_STRING, description="Name of the rule"),
+                                     'description': Schema(type=TYPE_STRING, description="Description of the rule"),
                                      'variables': Schema(type=TYPE_ARRAY, items=Schema(type=TYPE_STRING)),
                                      'operators': Schema(type=TYPE_ARRAY, description= "If a transformation don't have a value then value will be an empty string", 
                                                          items=Schema(type=TYPE_OBJECT, required=['type', 'value'], properties={
@@ -291,10 +293,11 @@ def create_waf_application(request):
         data_serializer = data.copy()
         data_serializer['country'] = ','.join(data_serializer['country'])
 
-        # Give the GEOIP rule a unique id
-        rule_geoip_id = find_possible_id()
-        data["rule_geoip_id"] = rule_geoip_id
-        data_serializer["rule_geoip_id"] = rule_geoip_id
+        if len(data["country"]) > 0:
+            # Give the GEOIP rule a unique id
+            rule_geoip_id = find_possible_id()
+            data["rule_geoip_id"] = rule_geoip_id
+            data_serializer["rule_geoip_id"] = rule_geoip_id
         
         serializer_application_waf = ApplicationWafSerializer(data=data_serializer)
         if serializer_application_waf.is_valid():

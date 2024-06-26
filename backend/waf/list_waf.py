@@ -27,14 +27,17 @@ def get_list_all_waf_rule():
                                               "RESPONSE-999-EXCLUSION-RULES-AFTER-CRS"])
     waf_dict = serializers.serialize("json", wafs)
     res = json.loads(waf_dict)
-    for waf in res:
-        waf_id = waf['pk']
-        waf['fields']['id'] = waf_id
-        waf['fields'].pop("rule_content")
-        waf['fields'].pop("rule_status")
-        if waf['fields']['created']:
-            waf['fields'] = convert_waf_rule_database(waf['fields'])
-        list_waf.append(waf['fields'])
+    for rule in res:
+        rule_id = rule['pk']
+        rule['fields']['id'] = rule_id
+        rule['fields'].pop("rule_content")
+        rule['fields'].pop("rule_status")
+        if rule['fields']['created']:
+            rule['fields'] = convert_waf_rule_database(rule['fields'])
+        list_app = ApplicationRulesWaf.objects.filter(rule_waf_id=rule_id)
+        rule['fields']['application'] = [{'id': app.application_waf.pk,
+                                          'name': app.application_waf.name} for app in list_app if app.rule_policy]
+        list_waf.append(rule['fields'])
     return list_waf
 
 
@@ -66,7 +69,7 @@ def get_list_all_waf_application():
         waf_application.pop('pk')
         waf_application['fields']['id'] = waf_application_id
         # Convert country saved in database on str format to a list
-        if waf_application['fields']['country']:
+        if waf_application['fields']['country'] and waf_application['fields']['country'] != '':
             waf_application['fields']['country'] = list(waf_application['fields']['country'].split(","))
         else:
             waf_application['fields']['country'] = []

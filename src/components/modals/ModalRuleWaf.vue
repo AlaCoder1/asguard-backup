@@ -1,5 +1,25 @@
 <template>
   <v-row justify="center">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            {{ $t("sdwan.pleaseWait") }}
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
+
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
@@ -22,6 +42,15 @@
                   <p class="error-feedback mb-5" v-if="v$.ruleName.$error">
                     {{ v$.ruleName.$errors[0].$message }}
                   </p>
+                </v-col>
+                <v-col cols="12" class="mb-n6">
+                  <v-textarea
+                    rows="1"
+                    row-height="15"
+                    v-model="state.description"
+                    :label="$t('firewall.description')"
+                    variant="outlined"
+                  ></v-textarea>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
@@ -501,6 +530,8 @@ export default {
         { type: "ver", value: "", slug: "ver" },
         { type: "xmlns", value: "", slug: "xmlns" },
       ],
+      loading: false,
+      isLoadingDialogue: false,
       id: null,
       //
       snackbar: false,
@@ -518,6 +549,7 @@ export default {
       existType: false,
       existTypeOperator: false,
       isActivated: false,
+      description:''
     });
 
     watch(
@@ -789,10 +821,17 @@ export default {
     const champInclude = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
     });
+    const indication = computed(() => {
+      return t("champs.indication");
+    });
     const rules = computed(() => {
       return {
         ruleName: {
           required: helpers.withMessage(error, required),
+          isValidkeyName: helpers.withMessage(
+            indication,
+            helpers.regex(/^[A-Za-z0-9_\-]+$/)
+          ),
         },
 
         // operator: {
@@ -992,6 +1031,12 @@ export default {
       }
     };
 
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/waf/restartNginx");
+    };
+
     const submitForm = async () => {
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
@@ -1055,6 +1100,7 @@ export default {
             ? mapedRowTransf
             : mapedRowTransfType,
           actions: mapedRow,
+          description: state.description,
         };
         console.log("payload", payload);
 
@@ -1063,18 +1109,32 @@ export default {
             .put(`/waf/updateRuleWaf/${state.id}`, payload)
             .then((response) => {
               if (response.status == "201") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
+                // state.snackbar = true;
+                // state.color = "success";
+                // state.textAlert = response.data.msg;
+                // setTimeout(() => {
+                //   location.reload();
+                // }, 1000);
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  closeModal();
+                }, 4000);
                 setTimeout(() => {
                   location.reload();
-                }, 1000);
+                }, 4000);
               }
             })
             .catch((i) => {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.msg;
+              state.textAlert = i.response.data.error;
             });
         } else {
           console.log("payload", payload);
@@ -1082,20 +1142,34 @@ export default {
             .post("/waf/createRuleWaf", payload)
             .then((response) => {
               if (response.status == "201") {
-                state.openModal = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  closeModal();
+                }, 4000);
                 setTimeout(() => {
                   location.reload();
-                }, 1000);
+                }, 4000);
+                // state.openModal = false;
+                // state.snackbar = true;
+                // state.color = "success";
+                // state.textAlert = response.data.msg;
+
+                // setTimeout(() => {
+                //   location.reload();
+                // }, 1000);
               }
             })
             .catch((i) => {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.msg;
+              state.textAlert = i.response.data.error;
             });
         }
       } else {

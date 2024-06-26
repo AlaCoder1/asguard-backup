@@ -31,6 +31,10 @@ def set_actions_service(request):
                     data={
                         "status_started":False
                     }
+                case "restart":
+                    data={
+                        "status_started":True
+                    }
         aux=service_action(service, action)
         if aux is True:
            if update_sevice_DB(service,data) is True:

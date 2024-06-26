@@ -108,22 +108,24 @@ def conf(request,name_interface):
                             ip_address4 =  None if data['value_setup_Ipv4'].get('ip_address4', None) == "" else  data['value_setup_Ipv4'].get('ip_address4', None)
                             netmask4 =  None if data['value_setup_Ipv4'].get('netmask4', None) == "" else  data['value_setup_Ipv4'].get('netmask4', None)
                             gateway4 =  None if data['value_setup_Ipv4']['gateway4'].get('value', None) == "" else  data['value_setup_Ipv4']['gateway4'].get('value', None)
-                            GatewayObject=Gateway.objects.get(Q(gwaddress=gateway4) & Q(staticgw=True) )
-                            #################
-                            default_aux=GatewayObject.default_aux
-                            far_aux=GatewayObject.far_aux
-                            multiWan_aux=GatewayObject.multiwan_aux
-                            addrgw4=GatewayObject.gwaddress
-                            ############# generete metric statiquement
-                            metric=0
-                            allGatewayInterface = GatewayInterface.objects.all()
-                            if multiWan_aux:
-                                for i in allGatewayInterface:
-                                    list_metric.append(i.metric)
-                                metric=different_metric(list_metric)
-                            cmdgw4=return_gateway_system(uuid,addrgw4,far_aux,multiWan_aux,metric)
-                            ipv4_gw_interface=True
-                            add_gateway_interface_db(GatewayObject,name_interface,metric,ipv4_gw_interface)
+                            cmdgw4=None
+                            if gateway4!="Auto Detect":
+                                GatewayObject=Gateway.objects.get(Q(gwaddress=gateway4) & Q(staticgw=True) )
+                                #################
+                                default_aux=GatewayObject.default_aux
+                                far_aux=GatewayObject.far_aux
+                                multiWan_aux=GatewayObject.multiwan_aux
+                                addrgw4=GatewayObject.gwaddress
+                                ############# generete metric statiquement
+                                metric=0
+                                allGatewayInterface = GatewayInterface.objects.all()
+                                if multiWan_aux:
+                                    for i in allGatewayInterface:
+                                        list_metric.append(i.metric)
+                                    metric=different_metric(list_metric)
+                                cmdgw4=return_gateway_system(uuid,addrgw4,far_aux,multiWan_aux,metric)
+                                ipv4_gw_interface=True
+                                add_gateway_interface_db(GatewayObject,name_interface,metric,ipv4_gw_interface)
                             #call function to convert address to static
                             commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,uuid,ip_address4,netmask4,cmdgw4)
                             jsonIPV4={

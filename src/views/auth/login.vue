@@ -1,11 +1,4 @@
 <template>
-  <!--   
-  <v-select
-    v-model="lang"
-      label="Select"
-      :items="['en', 'fr']"
-    ></v-select> -->
-
   <v-sheet class="bg-asguard_primary_light pa-12 h-screen" rounded>
     <v-card
       :elevation="0"
@@ -14,10 +7,7 @@
     >
       <img src="../../assets/images/logo.svg" class="img-center mb-8 mt-15" />
 
-      <!-- <v-btn @click="changeLang('en')" class="ml-9"> english </v-btn>
-      <v-btn @click="changeLang('fr')" class="ml-5"> frensh </v-btn> -->
-
-      <v-form v-model="form" class="mt-5" @submit.prevent="connect">
+      <v-form class="mt-5" @submit.prevent="connect" v-if="!isVerification">
         <label for="" class="field-auth ml-9">{{ $t("form.username") }}</label>
         <v-text-field
           rounded
@@ -53,7 +43,6 @@
         <v-btn
           @click.prevent="connect"
           rounded
-          :disabled="!form"
           color="asguard_primary_dark"
           class="d-flex mx-auto w-50"
           size="large"
@@ -62,11 +51,46 @@
         >
           <span class="field-login"> {{ $t("buttons.login") }} </span>
         </v-btn>
-        <div class="text-center mt-6 text-asguard_secondary" v-if="message">
-          {{ message }}
-        </div>
       </v-form>
     </v-card>
+
+    <v-card
+      class="py-8 px-6 text-center mx-auto mt-n6"
+      elevation="12"
+      max-width="400"
+      width="100%"
+      v-if="isVerification"
+    >
+      <h3 class="text-h6 mb-4">{{ $t("login.verifyYourAccount") }}</h3>
+
+      <div class="text-body-2">
+        {{ $t("login.send") }} {{ mail }} <br />
+
+        {{ $t("login.pleaseMail") }}
+      </div>
+
+      <v-sheet color="surface">
+        <v-otp-input v-model="otp" type="text" variant="solo"></v-otp-input>
+      </v-sheet>
+
+      <v-btn
+        class="my-4 text-white"
+        color="#FFC300"
+        height="40"
+        :text="$t('login.verify')"
+        variant="flat"
+        width="70%"
+        @click="verifyOtp"
+      ></v-btn>
+
+      <div class="text-caption">
+        {{ $t("login.receiveCode") }}
+        <a href="#" @click.prevent="resendOtp">{{ $t("login.resend") }}</a>
+      </div>
+    </v-card>
+    <div class="text-center mt-6 text-asguard_secondary" v-if="message">
+      {{ message }}
+    </div>
     <Footer />
   </v-sheet>
 </template>
@@ -92,6 +116,11 @@ export default {
       password: "",
       invalid: false,
       message: "",
+      //
+      otp: "",
+      mail: "",
+      idUser: "",
+      isVerification: false,
     };
   },
   mounted() {
@@ -119,20 +148,83 @@ export default {
       await axios
         .post("/auth/authentification", user)
         .then((response) => {
+          console.log("response", response);
           localStorage.setItem("user-info", JSON.stringify(response.data));
 
           this.message = response.data.message;
+          if (response.data?.currentUser?.is_enable_2FA) {
+            this.isVerification = true;
+            this.mail = response.data?.currentUser?.email;
+            this.idUser = response.data?.currentUser?.id;
+          } else {
+            let hrefPath = localStorage.getItem("href-path") ?? "/dashboard";
+            window.location.href = hrefPath;
+          }
+
           setTimeout(() => {
             this.message = "";
           }, 1000);
-          let hrefPath = localStorage.getItem("href-path") ?? "/dashboard";
-          window.location.href = hrefPath;
         })
         .catch((error) => {
           localStorage.setItem(
             "response-info",
             JSON.stringify(error.response.data)
           );
+          this.message = error.response.data.message;
+          setTimeout(() => {
+            this.message = "";
+          }, 1000);
+        });
+    },
+
+    async resendOtp() {
+      this.otp = "";
+      console.log("resend");
+
+      await axios
+        .post(`/auth/resend_verification_code/${this.idUser}`)
+        .then((response) => {
+          console.log("response", response);
+
+          this.message = response.data.message;
+
+          setTimeout(() => {
+            this.message = "";
+          }, 1000);
+        })
+        .catch((error) => {
+          this.message = error.response.data.message;
+          setTimeout(() => {
+            this.message = "";
+          }, 1000);
+        });
+    },
+    async verifyOtp() {
+      console.log("verifyOtp", this.otp);
+
+      let payload = {
+        verification_code: this.otp,
+      };
+
+      await axios
+        .post(`/auth/verify_code/${this.idUser}`, payload)
+        .then((response) => {
+          console.log("response**", response);
+          if (response.status == "200") {
+            this.message = response.data.message;
+            setTimeout(() => {
+              let hrefPath = localStorage.getItem("href-path") ?? "/dashboard";
+              window.location.href = hrefPath;
+            }, 1000);
+          } else {
+            this.message = response.data.message;
+          }
+
+          setTimeout(() => {
+            this.message = "";
+          }, 1000);
+        })
+        .catch((error) => {
           this.message = error.response.data.message;
           setTimeout(() => {
             this.message = "";

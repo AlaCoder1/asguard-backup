@@ -1,3 +1,4 @@
+import itertools
 import json
 from django.shortcuts import render
 from .form import *
@@ -31,7 +32,7 @@ def add_organizations(request):
         if form.is_valid():
             form.save()
             msg = "organization addes successfully"
-    organizations=organization.objects.all()               
+    organizations=Organization.objects.all()               
     context = {'form': form,'msg':msg,'organizations':organizations}
     return render(request, 'add_organization.html', context)
 
@@ -78,7 +79,7 @@ def function_paymentTransaction(checkbox_value,select_value):
         payment_instance.status = "declined"
     else:
         payment_instance.status = "approved"
-    payment_instance.organization = organization.objects.get(id=1)
+    payment_instance.organization = Organization.objects.get(id=1)
     payment_instance.plan = plan.objects.get(slug=select_value)
     payment_instance.save()
 
@@ -89,7 +90,7 @@ def function_paymentTransaction_id(checkbox_value,select_value):
         payment_instance.status = "declined"
     else:
         payment_instance.status = "approved"
-    payment_instance.organization = organization.objects.get(id=1)
+    payment_instance.organization = Organization.objects.get(id=1)
     payment_instance.plan = plan.objects.get(id=select_value)
     payment_instance.save()
         
@@ -124,16 +125,39 @@ def function_planSubsciptionUsage():
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])   
 def payment(request):
-    form = MyForm()
     if request.method == 'POST':
-        # parse the incoming information
         data = request.data
         status = data['status']
         if status:
             status=None
-        # subscription_name = data['subscription_name']
+        
+        # list_features = data['features']
+        # if "Basic"in list_features:
+        #     subscription_plan = plan.objects.get(slug="Basic")
+        # elif "Full" in list_features:
+        #     subscription_plan = plan.objects.get(slug="Full")
+        # else:
+        #     features_queryset = Features.objects.all()
+        #     features = [(feature.features, feature.price) for feature in features_queryset]
+
+        #     all_combinations_with_details = []
+
+        #     combination_number = 1
+        #     for r in range(1, len(features) + 1):
+        #         combinations_object = itertools.combinations(features, r)
+        #         combinations_list = list(combinations_object)
+                
+        #         for combo in combinations_list:
+        #             total_price = sum(feature[1] for feature in combo)
+        #             feature_names = tuple(feature[0] for feature in combo)
+        #             all_combinations_with_details.append((combination_number, feature_names, total_price))
+        #             combination_number += 1
+
+        #     for combo_number, feature_names, total_price in all_combinations_with_details:
+        #         feature_with_combinations = ["Firewall L4","Networking L2 L3","VPN IPSEC","LDAP"] + list(feature_names)
+        #         if list_features == feature_with_combinations:
+        #             subscription_plan = plan.objects.get(slug=f"Custom{combo_number}")
         subscription_id = data['subscription_id']
-        # function_paymentTransaction(status,subscription_name)
         function_paymentTransaction_id(status,subscription_id)
         function_plansSubscription()
         function_planSubsciptionUsage()
@@ -141,10 +165,6 @@ def payment(request):
             return JsonResponse({"msg": "you subscribed successfully"}, status=200)
         else:
             return JsonResponse({"msg": "you subscribed declined"}, status=400)
-    # return render(request, 'payment.html', {'form': form})
-    
-
-
 
 def is_valid():
     last_subscription = plansSubscription.objects.order_by('start_at').last()
@@ -193,23 +213,21 @@ def if_subscribed(indexs_plans_feature):
 def list_features_about_last_subscription(request):
     list_features = []
     if request.method == 'GET':
-        if last_subscription ==None:
-            last_subscription = plansSubscription.objects.order_by('start_at').last()
+        last_subscription = plansSubscription.objects.order_by('start_at').last()
+        if last_subscription !=None:
             last_subscription_dict = last_subscription.__dict__
             if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
-                print({"plan_id_from_last_subscription":last_subscription.plan.pk})
                 plan_features= plansFeatures.objects.filter(plan = last_subscription.plan.pk)
                 plan_features_dict = serializers.serialize("json", plan_features)
                 res = json.loads(plan_features_dict)
-                print({"plan_features":res[0]})
                 for i in res:
                     for key, value in i.items():
-                        print(f"Key: {key}, Value: {value}")
                         if key == 'fields':
                             list_features.append(i['fields']['description'])
         else:
             list_features = []
-        return JsonResponse({"msg": list_features}, status=400)
+        # return list_features
+        return JsonResponse({"msg": list_features}, status=200)
     
 def subscription_info(request):
     subscription_info = {}
@@ -217,12 +235,34 @@ def subscription_info(request):
         last_subscription = plansSubscription.objects.order_by('start_at').last()
         if last_subscription != None:
             last_subscription_dict = last_subscription.__dict__
+            print({"last_subscription_dict['id']":last_subscription_dict})
             if ((last_subscription_dict['end_at'].replace(tzinfo=None) - datetime.now()).days >= 0 ):
-                plan_info = plan.objects.get(id = last_subscription_dict['id'])
+                plan_info = plan.objects.get(id = last_subscription_dict['plan_id'])
                 subscription_info['type_pack'] =plan_info.slug
                 subscription_info['date_start'] =last_subscription_dict['start_at'].strftime('%Y-%m-%d %H:%M:%S')
                 subscription_info['end_at'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
                 subscription_info['expiration_date'] =last_subscription_dict['end_at'].strftime('%Y-%m-%d %H:%M:%S')
         else:
             subscription_info = {}
-        return JsonResponse({"msg": "subscription_info"}, status=400)
+        return JsonResponse({"msg": subscription_info}, status=200)
+    
+    
+    
+    
+def all_feature(request):
+    features = []
+    if request.method == 'GET':
+        features_from_bd = Features.objects.all()
+        for feature in features_from_bd:
+            features.append(feature.features)
+        return JsonResponse({"features": features}, status=200)
+        # return features
+        
+def all_plan(request):
+    plans = []
+    if request.method == 'GET':
+        plans_from_bd = plan.objects.all()
+        for Plan in plans_from_bd:
+            plans.append(Plan.slug)
+        return JsonResponse({"plans": plans}, status=200)
+    

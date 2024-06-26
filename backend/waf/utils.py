@@ -1,74 +1,123 @@
-from backend.waf.constant_variables import CONSTANT_JSON_REQUEST, CONSTANT_JSON_REQUEST_COMMENTED, CONSTANT_XML_REQUEST, CONSTANT_XML_REQUEST_COMMENTED, PATH_WAF_CONFIG
+from backend.waf.models import ApplicationWaf, RulesWaf
 
 
-def change_waf_config_file(data_config):
-    """Change WAF config file with inputs"""
-    with open(PATH_WAF_CONFIG) as waf_config_file:
-        waf_config_content = waf_config_file.read()
-    config = change_content_config(waf_config_content, data_config)
-    with open(PATH_WAF_CONFIG, 'w') as waf_config_file:
-        waf_config_file.write(config)
+def convert_waf_rule_payload(rule_data: dict):
+    """Function to convert a WAF rule payload 
+    from an object containing a list for each field 
+    to a string to each one of them and set the rule_id for the rule_data"""
+    rule_data["variables"] = ",".join(rule_data["variables"])
+    rule_data["operators"] = convert_operators_list_to_str(rule_data["operators"])
+    rule_data["transformations"] = convert_transformations_list_to_str(rule_data["transformations"])
+    rule_data["actions"], rule_data["rule_id"] = convert_actions_list_to_str(rule_data["actions"])
+    return rule_data
 
 
-def change_content_config(config: str, data_config: dict):
-    """Get content of WAF config file and return a new content with input data"""
-    config_keys = {"rule_engine_initialization": "SecRuleEngine",
-                   "access_request_bodies": "SecRequestBodyAccess",
-                   "xml_request_body_parser": "SecRule",
-                   "json_request_body_parser": "SecRule",
-                   "maximum_request_body_size": "SecRequestBodyLimit",
-                   "request_body_size_files_excluded": "SecRequestBodyNoFilesLimit",
-                   "request_body_limit_action": "SecRequestBodyLimitAction",
-                   "maximum_parsing_depth_json": "SecRequestBodyJsonDepthLimit",
-                   "maximum_number_args_request": "SecArgumentsLimit",
-                   "pcre_match_limit": "SecPcreMatchLimit",
-                   "pcre_match_limit_recursion": "SecPcreMatchLimitRecursion",
-                   "response_body_access": "SecResponseBodyAccess",
-                   "response_body_mimetype": "SecResponseBodyMimeType",
-                   "response_body_limit": "SecResponseBodyLimit",
-                   "response_body_limit_action": "SecResponseBodyLimitAction"
-                   }
-    for key in config_keys:
+def convert_waf_rule_database(rule: dict):
+    """Function to convert fields of a WAF rule from an object containing an str for each field to a list"""
+    rule["variables"] = list(rule["variables"].split(","))
+    rule["operators"] = convert_operators_str_to_list(rule["operators"])
+    rule["transformations"] = convert_transformations_str_to_list(rule["transformations"])
+    rule["actions"] = convert_actions_str_to_list(rule["actions"])
+    return rule
 
-        if key == 'access_request_bodies':
-            config = convert_bool_to_on_off(data_config[key], 'SecRequestBodyAccess', config)
 
-        elif key == 'response_body_access':
-            config = convert_bool_to_on_off(data_config[key], 'SecResponseBodyAccess', config)
+def find_possible_id():
+    """Function that return the possible id that can the new GEOIP rule can take it"""
+    # Get list of all existed rule from created rules and GEOIP rules
+    list_rule_waf = []
+    if len(RulesWaf.objects.filter(created=True)) > 0:
+        list_rule_waf = [rule.rule_id for rule in RulesWaf.objects.filter(created=True)]
+    list_rule_geoip = []
+    if len(ApplicationWaf.objects.all()) > 0:
+        list_rule_geoip = [rule.rule_geoip_id for rule in ApplicationWaf.objects.all()]
+    list_rule_id = list_rule_waf + list_rule_geoip
+    if len(list_rule_id) > 0:
+        # Sort the list in ascending order
+        list_rule_id.sort(reverse=True)
+        for rule_id in range(1, list_rule_id[0]):
+            if rule_id not in list_rule_id:
+                return rule_id
+        return list_rule_id[0] + 1
+    return 1
 
-        elif key == "xml_request_body_parser":
-            config = comment_uncomment_field(data_config[key], CONSTANT_XML_REQUEST_COMMENTED, CONSTANT_XML_REQUEST, config)
-                
-        elif key == "json_request_body_parser":
-            config = comment_uncomment_field(data_config[key], CONSTANT_JSON_REQUEST_COMMENTED, CONSTANT_JSON_REQUEST, config)
 
-        else:
-            index_key = config.find(f'{config_keys[key]} ')
-            line = config[index_key:config.find("\n", index_key)]
-            if key == 'response_body_mimetype':
-                response_body_mimetype = data_config[key]
-                if data_config[key] == 'text/*':
-                    response_body_mimetype = 'text/plain text/html text/xml'
-                config = config.replace(line, f'SecResponseBodyMimeType {response_body_mimetype}')
+def convert_operators_list_to_str(list_operators: list):
+    """Convert list of operators objects (each one contain type and value) to a string,
+    add @ before each operator and seperate between two operators with comma"""
+    print("list_operators= ", list_operators)
+    operators = ""
+    for operator_dict in list_operators:
+        operators += f"""@{operator_dict["type"]}"""
+        if operator_dict["value"] != "":
+            operators += f""" {operator_dict["value"]}"""
+        operators += ","
+    # Remove the last comma
+    return operators[:-1]
+
+
+def convert_operators_str_to_list(operators: str):
+    """Convert operators from str format to a list of objects contains type and value"""
+    if operators != "":
+        # Convert operators from str format to a list
+        operators = list(operators.split(","))
+        # Create an empty list
+        list_operators = []
+        for operator in operators:
+            operator_list = list(operator.split(" "))
+            # Remove the first character (@) from type
+            if len(operator_list) > 1:
+                list_operators.append({"type": operator_list[0][1:], "value": operator_list[1]})
             else:
-                config = config.replace(line, f'{config_keys[key]} {data_config[key]}')
-                
-    return config
+                list_operators.append({"type": operator_list[0][1:], "value": ""})
+        return list_operators
+    return []
 
 
-def convert_bool_to_on_off(bool_test, field_config, config: str):
-    """Convert a boolean input (True or False) to On/Off on a config file content"""
-    if bool_test:
-        config = config.replace(f'\n{field_config} Off', f'\n{field_config} On')
-    else:
-        config = config.replace(f'\n{field_config} On', f'\n{field_config} Off')
-    return config
+def convert_transformations_list_to_str(list_transformations: list):
+    """Convert list of transformations objects to a string, 
+    add t: before each transformation and seperate between two transformations with comma"""
+    transformations = ""
+    for transformation in list_transformations:
+        transformations += f"""t:{transformation},"""
+    # Remove the last comma
+    return transformations[:-1]
 
 
-def comment_uncomment_field(bool_test, field_commented, field_uncommented, config: str):
-    """Comment or uncomment a field on a config file content"""
-    if bool_test:
-        config = config.replace(f'\n{field_commented}', f'\n{field_uncommented}')
-    else:
-        config = config.replace(f'\n{field_uncommented}', f'\n{field_commented}')
-    return config
+def convert_transformations_str_to_list(transformations: str):
+    """Convert transformations from str format to a list"""
+    if transformations != "":
+        # Convert transformations from str format to a list
+        transformations = list(transformations.split(","))
+        return [transf.replace("t:", "") for transf in transformations]
+    return []
+
+
+def convert_actions_list_to_str(list_actions:list):
+    """Convert list of actions objects (each one contain type and value) to a string,
+    add @ before each action and seperate between two actions with comma"""
+    actions = ""
+    rule_id = None
+    for action_dict in list_actions:
+        if action_dict["type"] == "id":
+            rule_id = action_dict["value"]
+        actions += action_dict["type"]
+        if action_dict["value"] != "":
+            actions += f""":{action_dict["value"]}"""
+        actions += ","
+    if rule_id:
+        return actions[:-1], rule_id
+    
+
+def convert_actions_str_to_list(actions: str):
+    """Convert actions from str format to a list of objects contains type and value"""
+    if actions != "":
+        actions = list(actions.split(","))
+        list_actions = []
+        for action in actions:
+            action_list = list(action.split(":"))
+            if len(action_list) > 1:
+                list_actions.append({"type": action_list[0], "value": action_list[1]})
+            else:
+                list_actions.append({"type": action_list[0], "value": ""})
+        return list_actions
+    return []

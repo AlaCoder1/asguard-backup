@@ -77,6 +77,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import { mapState } from "pinia";
 import { useAuthStore } from "@/store/modules/auth.js";
 const storeAuth = useAuthStore();
@@ -109,6 +110,7 @@ export default {
     },
   },
   setup() {
+    const { t } = useI18n();
     //data
     const state = reactive({
       formData: {
@@ -118,16 +120,24 @@ export default {
       userRole: null,
       userName: null,
     });
+
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const invalidPassword = computed(() => {
+      return t("errors.invalidPassword");
+    });
+    const passwordConfirmation = computed(() => {
+      return t("errors.passwordConfirmation");
+    });
+
     const rules = computed(() => {
       return {
         formData: {
           password: {
-            required: helpers.withMessage(
-              "Value is required",
-              required
-            ),
+            required: helpers.withMessage(error, required),
             isValidPassword: helpers.withMessage(
-              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+              invalidPassword,
 
               helpers.regex(
                 /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
@@ -136,17 +146,14 @@ export default {
           },
           confirm_password: {
             sameAsPassword: helpers.withMessage(
-              "Your password does not match",
+              passwordConfirmation,
 
               sameAs(state.formData.password)
             ), // can be a reference to a field or computed property
-            required: helpers.withMessage(
-              "Value is required",
-              required
-            ),
+            required: helpers.withMessage(error, required),
 
             isValidPassword: helpers.withMessage(
-              `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+              invalidPassword,
 
               helpers.regex(
                 /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/

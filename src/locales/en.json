@@ -125,11 +125,9 @@
     "traffic":"Traffic",
     "eventLogs":"Event logs",
     "subscription":"Subscription",
-    "routing":"Routing"
-    
-
-
-  },
+    "routing":"Routing",
+    "systemLog":"System Log"
+    },
   "header":{
     "profile":"Profile",
     "logout":"Logout"

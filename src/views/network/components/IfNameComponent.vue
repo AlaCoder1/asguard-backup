@@ -840,7 +840,6 @@ export default {
     parsedArray = JSON.parse(validJsonString);
     let combineArray = [{ gwaddress: "Auto Detect" }];
     this.allStaticGateways = [...parsedArray, ...combineArray];
-    console.log("parsedArray", parsedArray);
 
     this.activate = this.IPV4Config?.interface !== null ? true : false;
     this.device = this.IPV4Config.interface.ifname;
@@ -859,7 +858,7 @@ export default {
     this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 
     this.name_interface = this.IPV4Config.interface.name_interface;
-    this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw;
+    this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw ?? 'Auto Detect';
 
     this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
     this.interface.alias_add = this.IPV4Config.IPV4Config.alias_add;

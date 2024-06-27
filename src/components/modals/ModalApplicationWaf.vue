@@ -179,6 +179,7 @@ import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
 import { required, helpers } from "@vuelidate/validators";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { CheckboxCellEditor } from "ag-grid-community";
 
 export default {
   components: {
@@ -307,31 +308,25 @@ export default {
         field: "rule_policy",
 
         width: 150,
-        cellRenderer: (params) => {
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.checked = params.value;
-          if (params.data.rule_waf === 18) {
-            params.data.rule_policy = true;
-            checkbox.disabled = true;
-            checkbox.checked = true;
-          } else {
-            checkbox.addEventListener("change", () => {
-              params.node.setDataValue(params.colDef.field, checkbox.checked);
-            });
-          }
-          return checkbox;
-        },
-        editable: (params) => {
-          return params.data.rule_waf !== 18;
-        },
+        cellRenderer: CheckboxCell,
       },
-      // {
-      //   headerName: log,
-      //   field: "log",
-      //   width: 150,
-      // },
     ]);
+
+    function CheckboxCell(params) {
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = params.value;
+      if (params.data.rule_waf == 18) {
+        params.data.rule_policy = true;
+        checkbox.disabled = true;
+        checkbox.checked = true;
+      } else {
+        checkbox.addEventListener("change", () => {
+          params.node.setDataValue(params.colDef.field, checkbox.checked);
+        });
+      }
+      return checkbox;
+    }
 
     const populate = (data) => {
       if (modalMode.value === "edit") {
@@ -372,86 +367,87 @@ export default {
     };
 
     const submitForm = async () => {
-      const result = await v$.value.$validate();
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      console.log("row", rowDataWafApp.value);
+      // const result = await v$.value.$validate();
+      // const csrfToken = getCookie("csrftoken");
+      // axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      if (result) {
-        let mapedCountry = state.country.map((e) => e.countryCode);
-        let mapedRuleApp = rowDataWafApp.value.map((e) => {
-          return {
-            rule_waf: e.rule_waf,
-            rule_policy: e.rule_policy,
-            rule_log: e.rule_log,
-          };
-        });
-        let payload = {
-          name: state.applicationName,
-          application_type: state.type,
-          application_value: state.value,
-          application_port: state.port,
-          description: state.description,
-          country: mapedCountry,
-          rules: mapedRuleApp,
-        };
-        console.log("payload", payload);
+      // if (result) {
+      //   let mapedCountry = state.country.map((e) => e.countryCode);
+      //   let mapedRuleApp = rowDataWafApp.value.map((e) => {
+      //     return {
+      //       rule_waf: e.rule_waf,
+      //       rule_policy: e.rule_policy,
+      //       rule_log: e.rule_log,
+      //     };
+      //   });
+      //   let payload = {
+      //     name: state.applicationName,
+      //     application_type: state.type,
+      //     application_value: state.value,
+      //     application_port: state.port,
+      //     description: state.description,
+      //     country: mapedCountry,
+      //     rules: mapedRuleApp,
+      //   };
+      //   console.log("payload", payload);
 
-        if (modalMode.value === "edit") {
-          axios
-            .put(`/waf/updateApplicationWaf/${state.id}`, payload)
-            .then((response) => {
-              if (response.status == "201") {
-                restartNginx();
-                state.loading = true;
-                state.isLoadingDialogue = true;
-                setTimeout(() => {
-                  state.loading = false;
-                  state.isLoadingDialogue = false;
-                  state.snackbar = true;
-                  state.color = "success";
-                  state.textAlert = response.data.msg;
-                  closeModal();
-                }, 4000);
-                setTimeout(() => {
-                  location.reload();
-                }, 4000);
-              }
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            });
-        } else {
-          axios
-            .post("/waf/createApplicationWaf", payload)
-            .then((response) => {
-              if (response.status == "201") {
-                restartNginx();
-                state.loading = true;
-                state.isLoadingDialogue = true;
-                setTimeout(() => {
-                  state.loading = false;
-                  state.isLoadingDialogue = false;
-                  state.snackbar = true;
-                  state.color = "success";
-                  state.textAlert = response.data.msg;
-                  closeModal();
-                }, 4000);
-                setTimeout(() => {
-                  location.reload();
-                }, 4000);
-              }
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            });
-        }
-      } else {
-        console.log("v$", v$.value);
-      }
+      //   if (modalMode.value === "edit") {
+      //     axios
+      //       .put(`/waf/updateApplicationWaf/${state.id}`, payload)
+      //       .then((response) => {
+      //         if (response.status == "201") {
+      //           restartNginx();
+      //           state.loading = true;
+      //           state.isLoadingDialogue = true;
+      //           setTimeout(() => {
+      //             state.loading = false;
+      //             state.isLoadingDialogue = false;
+      //             state.snackbar = true;
+      //             state.color = "success";
+      //             state.textAlert = response.data.msg;
+      //             closeModal();
+      //           }, 4000);
+      //           setTimeout(() => {
+      //             location.reload();
+      //           }, 4000);
+      //         }
+      //       })
+      //       .catch((i) => {
+      //         state.snackbar = true;
+      //         state.color = "red";
+      //         state.textAlert = i.response.data.error;
+      //       });
+      //   } else {
+      //     axios
+      //       .post("/waf/createApplicationWaf", payload)
+      //       .then((response) => {
+      //         if (response.status == "201") {
+      //           restartNginx();
+      //           state.loading = true;
+      //           state.isLoadingDialogue = true;
+      //           setTimeout(() => {
+      //             state.loading = false;
+      //             state.isLoadingDialogue = false;
+      //             state.snackbar = true;
+      //             state.color = "success";
+      //             state.textAlert = response.data.msg;
+      //             closeModal();
+      //           }, 4000);
+      //           setTimeout(() => {
+      //             location.reload();
+      //           }, 4000);
+      //         }
+      //       })
+      //       .catch((i) => {
+      //         state.snackbar = true;
+      //         state.color = "red";
+      //         state.textAlert = i.response.data.error;
+      //       });
+      //   }
+      // } else {
+      //   console.log("v$", v$.value);
+      // }
     };
 
     const closeModal = () => {

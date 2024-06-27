@@ -313,6 +313,7 @@ export default {
     ]);
 
     function CheckboxCell(params) {
+      console.log('params.data',params.data)
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = params.value;

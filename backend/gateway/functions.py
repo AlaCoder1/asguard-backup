@@ -29,7 +29,7 @@ def update_gateway_db(data,id):
 
 
 def add_gateway_interface_db(gateway_object, name_interface, metric, ipv4_gw_interface):
-    """function to add gateway to interface in DB"""
+    """function to add gateway to interface in DB """
     id_interface = Interface.objects.get(name_interface=name_interface).id
     if GatewayInterface.objects.filter(Q(interface=id_interface)& Q(ipv4_gw_interface=ipv4_gw_interface)).exists():
         id_gateway_interface = GatewayInterface.objects.get(Q(interface=id_interface)& Q(ipv4_gw_interface=ipv4_gw_interface)).id
@@ -61,7 +61,9 @@ def different_metric(exclude_list):
 def return_gateway_system(uuid,addrgw, far_aux, multiwan_aux, metric):
     """function to return gateway wwith choices"""
     cmd=""
-    if addrgw:
+    if addrgw =="Auto Detect":
+        cmd= "sudo nmcli connection modify {} ipv4.gateway {} ".format(uuid,"")
+    else:
         cmd= "sudo nmcli connection modify {} ipv4.gateway {} ".format(uuid,addrgw)
         ##test multiwan is true
         if multiwan_aux:
@@ -72,8 +74,11 @@ def return_gateway_system(uuid,addrgw, far_aux, multiwan_aux, metric):
 def return_gateway6_system(uuid,addrgw, far_aux, multiwan_aux, metric):
     """function to return gateway6 wwith choices"""
     cmd=""
-    if addrgw:
+    if addrgw =="Auto Detect":
+        cmd= "sudo nmcli connection modify {} ipv6.gateway {} ".format(uuid,"")
+    else:     
         cmd= "sudo nmcli connection modify {} ipv6.gateway {} ".format(uuid,addrgw)
+    
         ##test multiwan is true
         if multiwan_aux:
             cmd+=" ipv6.route-metric {}".format(metric)

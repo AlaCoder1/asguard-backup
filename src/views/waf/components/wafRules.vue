@@ -64,6 +64,12 @@
     :isOpen="state.isModalOpen"
     :editRow="state.editRow"
     :modalMode="state.modalMode"
+    
+  />
+  <ModalShowAppWaf
+    :isOpen="state.isModalShowAppOpen"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
   />
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
@@ -94,6 +100,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import VButton from "@/components/VButton.vue";
 import { reactive, ref, computed, onMounted, inject } from "vue";
 import ModalRuleWaf from "@/components/modals/ModalRuleWaf.vue";
+import ModalShowAppWaf from "@/components/modals/ModalShowAppWaf.vue";
 
 export default {
   name: "Rules",
@@ -101,6 +108,7 @@ export default {
     VButton,
     AgGridVue,
     ModalRuleWaf,
+    ModalShowAppWaf,
   },
   setup() {
     const emitter = inject("emitter");
@@ -120,6 +128,7 @@ export default {
       deletedRow: null,
       loading: false,
       isLoadingDialogue: false,
+      isModalShowAppOpen: false,
     });
 
     const RequestAction = computed(() => {
@@ -151,7 +160,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: 'Description',
+        headerName: "Description",
         field: "description",
         autoHeight: true,
         width: 90,
@@ -195,6 +204,11 @@ export default {
       } else {
         if (params.data.created) {
           eGui.innerHTML = `
+          <button 
+          class="action-button show"  
+          data-action="show">
+          <span class="mdi mdi-eye  fa-lg" style="color: #086eae;font-size: 24px;"></span>
+          </button>
           <button
                 class="action-button edit"
                 data-action="edit">
@@ -207,7 +221,11 @@ export default {
           </button>`;
         } else {
           eGui.innerHTML = `
-          ${t("errors.noModif")}
+          <button 
+          class="action-button show"  
+          data-action="show">
+          <span class="mdi mdi-eye  fa-lg" style="color: #086eae;font-size: 24px;"></span>
+          </button>
           `;
         }
       }
@@ -233,6 +251,13 @@ export default {
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
+          break;
+
+        case "show":
+          state.isModalShowAppOpen = true;
+          state.editRow = rowData;
+          state.modalMode = "show";
+          console.log("show", rowData);
           break;
 
         default:
@@ -267,6 +292,12 @@ export default {
 
     emitter.on("closeWafRuleModal", () => {
       state.isModalOpen = false;
+      state.isOpen = false;
+      state.modalMode = "";
+      state.editRow = {};
+    });
+    emitter.on("closeModalSHOW", () => {
+      state.isModalShowAppOpen = false;
       state.isOpen = false;
       state.modalMode = "";
       state.editRow = {};

@@ -127,7 +127,8 @@
     "traffic":"Trafic",
     "eventLogs":"Journaux d'événements",
     "subscription":"Abonnement",
-    "routing":"Routage"
+    "routing":"Routage",
+    "systemLog":"Journal du système"
 
   },
   "header":{

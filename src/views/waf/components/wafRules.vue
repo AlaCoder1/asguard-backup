@@ -64,7 +64,6 @@
     :isOpen="state.isModalOpen"
     :editRow="state.editRow"
     :modalMode="state.modalMode"
-    
   />
   <ModalShowAppWaf
     :isOpen="state.isModalShowAppOpen"
@@ -207,24 +206,24 @@ export default {
           <button 
           class="action-button show"  
           data-action="show">
-          <span class="mdi mdi-eye  fa-lg" style="color: #086eae;font-size: 24px;"></span>
+          <i class="mdi mdi-eye" style="color: #086eae;font-size: 24px; "></i>
           </button>
           <button
                 class="action-button edit"
                 data-action="edit">
-                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 24px;"></i>
                 </button>
           <button
           class="action-button delete"
           data-action="delete">
-            <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+            <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 24px;"></i>
           </button>`;
         } else {
           eGui.innerHTML = `
           <button 
           class="action-button show"  
           data-action="show">
-          <span class="mdi mdi-eye  fa-lg" style="color: #086eae;font-size: 24px;"></span>
+          <span class="mdi mdi-eye" style="color: #086eae;font-size: 24px;"></span>
           </button>
           `;
         }

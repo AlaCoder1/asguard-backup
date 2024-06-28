@@ -168,6 +168,12 @@ export default {
               active: "RSA Key Pairs",
             },
             {
+              title: "subtitle.systemLog",
+              icon: "",
+              href: "/system_log",
+              active: "System Log",
+            },
+            {
               title: "subtitle.settings",
               icon: "",
               href: "/settings",

@@ -561,6 +561,10 @@ def profile_page(request):
     return render(request, 'profile_page.html')
 
 @login_required(login_url='/')
+def system_log(request):
+    return render(request, 'system_log.html')
+
+@login_required(login_url='/')
 def setting_page(request):
     network_info = []
     generale_settings=get_generale_settings(request,id=1)

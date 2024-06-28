@@ -369,86 +369,86 @@ export default {
 
     const submitForm = async () => {
       console.log("row", rowDataWafApp.value);
-      // const result = await v$.value.$validate();
-      // const csrfToken = getCookie("csrftoken");
-      // axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const result = await v$.value.$validate();
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      // if (result) {
-      //   let mapedCountry = state.country.map((e) => e.countryCode);
-      //   let mapedRuleApp = rowDataWafApp.value.map((e) => {
-      //     return {
-      //       rule_waf: e.rule_waf,
-      //       rule_policy: e.rule_policy,
-      //       rule_log: e.rule_log,
-      //     };
-      //   });
-      //   let payload = {
-      //     name: state.applicationName,
-      //     application_type: state.type,
-      //     application_value: state.value,
-      //     application_port: state.port,
-      //     description: state.description,
-      //     country: mapedCountry,
-      //     rules: mapedRuleApp,
-      //   };
-      //   console.log("payload", payload);
+      if (result) {
+        let mapedCountry = state.country.map((e) => e.countryCode);
+        let mapedRuleApp = rowDataWafApp.value.map((e) => {
+          return {
+            rule_waf: e.rule_waf,
+            rule_policy: e.rule_policy,
+            rule_log: e.rule_log,
+          };
+        });
+        let payload = {
+          name: state.applicationName,
+          application_type: state.type,
+          application_value: state.value,
+          application_port: state.port,
+          description: state.description,
+          country: mapedCountry,
+          rules: mapedRuleApp,
+        };
+        console.log("payload", payload);
 
-      //   if (modalMode.value === "edit") {
-      //     axios
-      //       .put(`/waf/updateApplicationWaf/${state.id}`, payload)
-      //       .then((response) => {
-      //         if (response.status == "201") {
-      //           restartNginx();
-      //           state.loading = true;
-      //           state.isLoadingDialogue = true;
-      //           setTimeout(() => {
-      //             state.loading = false;
-      //             state.isLoadingDialogue = false;
-      //             state.snackbar = true;
-      //             state.color = "success";
-      //             state.textAlert = response.data.msg;
-      //             closeModal();
-      //           }, 4000);
-      //           setTimeout(() => {
-      //             location.reload();
-      //           }, 4000);
-      //         }
-      //       })
-      //       .catch((i) => {
-      //         state.snackbar = true;
-      //         state.color = "red";
-      //         state.textAlert = i.response.data.error;
-      //       });
-      //   } else {
-      //     axios
-      //       .post("/waf/createApplicationWaf", payload)
-      //       .then((response) => {
-      //         if (response.status == "201") {
-      //           restartNginx();
-      //           state.loading = true;
-      //           state.isLoadingDialogue = true;
-      //           setTimeout(() => {
-      //             state.loading = false;
-      //             state.isLoadingDialogue = false;
-      //             state.snackbar = true;
-      //             state.color = "success";
-      //             state.textAlert = response.data.msg;
-      //             closeModal();
-      //           }, 4000);
-      //           setTimeout(() => {
-      //             location.reload();
-      //           }, 4000);
-      //         }
-      //       })
-      //       .catch((i) => {
-      //         state.snackbar = true;
-      //         state.color = "red";
-      //         state.textAlert = i.response.data.error;
-      //       });
-      //   }
-      // } else {
-      //   console.log("v$", v$.value);
-      // }
+        if (modalMode.value === "edit") {
+          axios
+            .put(`/waf/updateApplicationWaf/${state.id}`, payload)
+            .then((response) => {
+              if (response.status == "201") {
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  closeModal();
+                }, 4000);
+                setTimeout(() => {
+                  location.reload();
+                }, 4000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          axios
+            .post("/waf/createApplicationWaf", payload)
+            .then((response) => {
+              if (response.status == "201") {
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  closeModal();
+                }, 4000);
+                setTimeout(() => {
+                  location.reload();
+                }, 4000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+        }
+      } else {
+        console.log("v$", v$.value);
+      }
     };
 
     const closeModal = () => {

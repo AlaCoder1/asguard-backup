@@ -27,6 +27,7 @@ class RulesWaf(models.Model):
     rule_status = models.BooleanField(default=True)
     created = models.BooleanField(default=True)
     rule_id = models.IntegerField(default=None, null=True, unique=True)
+    description = models.TextField(default=None, null=True, blank=True)
     variables = models.CharField(max_length=1000, default=None, null=True, blank=True)
     operators = models.CharField(max_length=1000, default=None, null=True, blank=True)
     transformations = models.CharField(max_length=1000, default=None, null=True, blank=True)
@@ -41,12 +42,10 @@ class ApplicationWaf(models.Model):
     name = models.CharField(max_length=300, default=None, null=True, blank=True, unique=True)
     application_type = models.CharField(max_length=100, default="ip", null=True, blank=True)
     application_value = models.CharField(max_length=100, default=None, null=True, blank=True)
-    application_port = models.IntegerField(default=None, null=True, blank=True)
+    application_port = models.IntegerField(default=None, null=True, blank=True, unique=True)
     description = models.CharField(max_length=1000, default=None, null=True, blank=True)
     country = models.CharField(max_length=1000, default=None, null=True, blank=True)
     rule_geoip_id = models.IntegerField(default=None, null=True, unique=True)
-    # rule_geoip_latitude_id = models.IntegerField(default=None, null=True, unique=True)
-    # rule_geoip_longitude_id = models.IntegerField(default=None, null=True, unique=True)
     rules = models.ManyToManyField(RulesWaf, through="ApplicationRulesWaf")
 
     class Meta:

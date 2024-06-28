@@ -14,6 +14,7 @@ def create_application_waf_in_system(app_data):
     app_config = f"{app_directory}{app_data['name']}.conf"
     execute_command_without_arguments(["sudo", "cp", PATH_WAF_CONFIG, app_modsecurity_config])
 
+    # Add reverse proxy config for the app
     config_reverse_proxy = f"""server {{
 
     listen {app_data["application_port"]};
@@ -53,9 +54,27 @@ def create_application_waf_in_system(app_data):
     app_config_content = f"""
 Include {app_modsecurity_config}
 Include {PATH_CRS_SETUP}
-Include {app_directory}geoip_{app_data['name']}.conf
-Include {app_directory}geoip_log_{app_data['name']}.conf
 """
+    
+    # Add a GOIP rule
+    if app_data["country"] != []:
+        # Add the geoip rule of log and block to the config of the app
+        app_config_content += f"""
+\nInclude {app_directory}geoip_{app_data['name']}.conf
+Include {app_directory}geoip_log_{app_data['name']}.conf"""
+        rule_geoip = f"""
+SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries: %{{GEO:COUNTRY_CODE}}',logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'"
+SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
+        rule_geoip_id = f"""
+SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
+        with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_file:
+            rule_file.write(rule_geoip)
+        with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_file:
+            rule_file.write(rule_geoip_id)
+        with open(PATH_MAIN_WAF, 'a') as main_file:
+            main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
+    
+    # Add all rules (selected and GEOIP) to the config of the app
     for rule in list_rule_selected:
         rule_waf = RulesWaf.objects.get(id=rule["rule_waf"])
         if rule_waf.created:
@@ -67,18 +86,6 @@ Include {app_directory}geoip_log_{app_data['name']}.conf
             app_config_content += f"Include {PATH_RULES_WAF.format(rule_waf.name)}\n"
     with open(app_config, 'w') as app_config_file:
         app_config_file.write(app_config_content)
-    # Add a GOIP rule
-    rule_geoip = f"""
-SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries: %{{GEO:COUNTRY_CODE}}',logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'"
-SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
-    rule_geoip_id = f"""
-SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
-    with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_file:
-        rule_file.write(rule_geoip)
-    with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_file:
-        rule_file.write(rule_geoip_id)
-    with open(PATH_MAIN_WAF, 'a') as main_file:
-        main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
     
     # # Reload nginx
     execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])

@@ -1,5 +1,11 @@
 <template>
   <div>
+    <div cols="12" md="6" class="d-flex justify-end mt-n4">
+      <v-btn @click="reloadData" icon>
+        <v-icon class="small-refresh-icon">mdi-refresh</v-icon>
+      </v-btn>
+    </div>
+
     <v-row>
       <v-col cols="8">
         <div id="map" class="mt-6" style="height: 70vh"></div>
@@ -242,6 +248,12 @@ export default {
         console.error("Grid API.");
       }
     };
+    const reloadData = () => {
+      let wafAlert =
+        document.getElementById("app").attributes["waf_alert"].value;
+      let waf_alert = JSON.parse(wafAlert);
+      rowDataRules.value = waf_alert?.blocked_requests;
+    };
     const onGridReadyAttacks = (params) => {
       gridApi.value = params.api;
 
@@ -285,13 +297,15 @@ export default {
             "https://img.icons8.com/?size=100&id=uvp0RebVme9d&format=png&color=000000",
           iconSize: [30, 30],
         });
-        let mappedRule = waf_alert?.blocked_requests.filter((e) => e.longitude).map((e) => {
-          return {
-            lat: e.latitude,
-            lng: e.longitude,
-            name: e.source,
-          };
-        });
+        let mappedRule = waf_alert?.blocked_requests
+          .filter((e) => e.longitude)
+          .map((e) => {
+            return {
+              lat: e.latitude,
+              lng: e.longitude,
+              name: e.source,
+            };
+          });
 
         // const locations = [
         //   { lat: 51.505, lng: -0.09, name: "souhail 1" },
@@ -340,6 +354,7 @@ export default {
     return {
       state,
       onGridReady,
+      reloadData,
       onGridReadyAttacks,
       onGridReadyCountry,
       columnRules,

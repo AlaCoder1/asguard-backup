@@ -69,7 +69,7 @@ class AlertWaf(models.Model):
     latitude = models.FloatField(default=None, null=True)
     timestamp = models.DateTimeField(default=None, null=True)
     violation_file = models.CharField(max_length=1000, default=None, null=True, blank=True)
-    violation_id = models.IntegerField(default=None, null=True)
+    violation_id = models.CharField(max_length=200, default=None, null=True, blank=True)
     source = models.CharField(max_length=100, default=None, null=True, blank=True)
     method = models.CharField(max_length=100, default=None, null=True, blank=True)
     message = models.CharField(max_length=1000, default=None, null=True, blank=True)

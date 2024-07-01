@@ -49,7 +49,6 @@ def get_squid_status():
                 status = line.split(':')[1].strip()
                 return status
     except subprocess.CalledProcessError as e:
-        # print(f"Error: {e}")
         return None
     
 def getGeneraleInfo(request):
@@ -379,7 +378,6 @@ def get_informations_by_interface(request,name_interface):
                 info['IPV6Config']=resultat6[0]['fields']
         else:
             info['IPV6Config']=[]
-        # print({"info":info})
     return info
 
 
@@ -514,7 +512,6 @@ def ipsec_page(request):
     servers=get_list_all_server_ipsec()
     public_key =get_list_all_public_key()
     status = get_status_ipsec()
-    # print('status:', status)
     context = {'servers': servers, 'publicKey': public_key, 'status': status}
     return render(request, 'ipsec_page.html', context)
 
@@ -543,7 +540,6 @@ def sdwan_page(request):
     allArea = get_list_all_area()
     allRule = get_list_all_sdwan_rule()
     context = {'allArea': json.dumps(allArea),'allRule': json.dumps(allRule)}
-    # print('context',context) 
     return render(request, 'sdwan_page.html',context)
 
 @login_required(login_url='/')
@@ -553,7 +549,6 @@ def waf_page(request):
     list_waf_app = get_list_all_waf_application()
     waf_alert = get_alerts()
     context = {'waf_conf': json.dumps(waf_conf),'list_rules': json.dumps(list_rules),'list_waf_app': json.dumps(list_waf_app),'waf_alert': json.dumps(waf_alert)}
-    print(context)
     return render(request, 'waf_page.html',context)
 
 @login_required(login_url='/')
@@ -574,14 +569,12 @@ def setting_page(request):
     time_zone = time_zones(request)
     gateway=gatways_information(request)
     context = {'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings),"network_info":json.dumps(network_info),"gateway":json.dumps(gateway)}
-    print({"context ************":context})
     return render(request, 'settings_page.html',context)
 
 @login_required(login_url='/')
 def clamav_page(request):
     config= getclamavconfigurations()
     context = {'config':config}
-    # print('******************** :',context)
     return render(request, 'clamaV_page.html',context)
 
 
@@ -589,7 +582,6 @@ def clamav_page(request):
 def subscription_page(request):
     subscription_information=subscription_info(request)
     allfeature = all_feature(request)
-    # print('subscription_information',subscription_information)
     context = {'subscription_information':json.dumps(subscription_information),'allfeature':json.dumps(allfeature)}
     return render(request, 'subscription_page.html', context)
  
@@ -622,7 +614,6 @@ def index_page(request):
             "ip_address":ip_address}
         config.append(info_interface)
     context = {"informations":info,"gateways":json.dumps(gateways),"interfaces":json.dumps(config)}
-    # print(context)
     return render(request, 'index_page.html',context)
 
 

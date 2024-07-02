@@ -208,7 +208,7 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
-
+        autoHeight: true,
         sortable: true,
         filter: true,
         checkboxSelection: true,
@@ -218,7 +218,7 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
-
+        autoHeight: true,
         cellRenderer: formatedProtocServer,
         sortable: true,
         filter: true,
@@ -231,6 +231,7 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
+        autoHeight: true,
       },
       {
         headerName: "Description",
@@ -240,6 +241,7 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
+        autoHeight: true,
       },
       {
         headerName: CertificatStatus,
@@ -256,6 +258,7 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
+        autoHeight: true,
       },
       {
         headerName: "Action",
@@ -264,6 +267,7 @@ export default {
         field: "action",
         sortable: true,
         filter: true,
+        autoHeight: true,
       },
     ]);
     const columnClients = ref([
@@ -283,6 +287,7 @@ export default {
         cellRenderer: formatedProtocClient,
         sortable: true,
         filter: true,
+        autoHeight: true,
         width: 90,
         minWidth: 50,
         flex: 1,
@@ -301,6 +306,7 @@ export default {
         headerName: "Description",
         field: "description",
         sortable: true,
+        autoHeight: true,
         filter: true,
         width: 90,
         minWidth: 50,
@@ -321,6 +327,7 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
+        autoHeight: true,
       },
       {
         headerName: "Action",
@@ -329,6 +336,7 @@ export default {
         field: "action",
         sortable: true,
         filter: true,
+        autoHeight: true,
       },
     ]);
     const rowDataServers = reactive({});
@@ -697,7 +705,7 @@ export default {
       eGui.innerHTML = `
          ${mapedServer}
         `;
-      eGui.style.lineHeight = "2";
+      // eGui.style.lineHeight = "2";
 
       return eGui;
     }
@@ -707,7 +715,7 @@ export default {
       eGui.innerHTML = `
          ${data.data.proto} / ${data.data.port}
         `;
-      eGui.style.lineHeight = "2";
+      // eGui.style.lineHeight = "2";
 
       return eGui;
     }
@@ -723,7 +731,7 @@ export default {
       eGui.innerHTML = `
          ${data.data.proto} / ${mapedServer}
         `;
-      eGui.style.lineHeight = "2";
+      // eGui.style.lineHeight = "2";
 
       return eGui;
     }

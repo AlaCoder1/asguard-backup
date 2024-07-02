@@ -62,15 +62,15 @@ Include {PATH_CRS_SETUP}
         app_config_content += f"""
 \nInclude {app_directory}geoip_{app_data['name']}.conf
 Include {app_directory}geoip_log_{app_data['name']}.conf"""
-        rule_geoip = f"""
+        rule_geoip_block = f"""
 SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries: %{{GEO:COUNTRY_CODE}}',logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'"
 SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
-        rule_geoip_id = f"""
+        rule_geoip_log = f"""
 SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
-        with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_file:
-            rule_file.write(rule_geoip)
-        with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_file:
-            rule_file.write(rule_geoip_id)
+        with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_block_file:
+            rule_block_file.write(rule_geoip_block)
+        with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_log_file:
+            rule_log_file.write(rule_geoip_log)
         with open(PATH_MAIN_WAF, 'a') as main_file:
             main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
     
@@ -79,8 +79,8 @@ SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,p
         rule_waf = RulesWaf.objects.get(id=rule["rule_waf"])
         if rule_waf.created:
             # Add a new rule conf inside application directory
-            with open(f"{app_directory}{rule_waf.name}.conf", 'w') as rule_file:
-                rule_file.write(rule_waf.rule_content)
+            with open(f"{app_directory}{rule_waf.name}.conf", 'w') as rule_block_file:
+                rule_block_file.write(rule_waf.rule_content)
             app_config_content += f"Include {app_directory}{rule_waf.name}.conf\n"
         else:
             app_config_content += f"Include {PATH_RULES_WAF.format(rule_waf.name)}\n"

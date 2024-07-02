@@ -137,13 +137,14 @@ def get_alerts():
         violation_id = waf_alert['fields'].pop('violation_id')
         violation_file = waf_alert['fields'].pop('violation_file')
         message = waf_alert['fields'].pop('message')
-        list_violation_id = list(violation_id.split('\n'))
-        list_violation_file = list(violation_file.split('\n'))
-        waf_alert['fields']['message'] = list(message.split('\n'))
-        waf_alert['fields']['violation'] = []
-        for index in range(len(list_violation_id)):
-            waf_alert['fields']['violation'].append(f"{list_violation_id[index]} > {list_violation_file[index]}")
-        blocked_requests.append(waf_alert['fields'])
+        if message.find("Access from blocked countries") > -1:
+            list_violation_id = list(violation_id.split('\n'))
+            list_violation_file = list(violation_file.split('\n'))
+            waf_alert['fields']['message'] = list(message.split('\n'))
+            waf_alert['fields']['violation'] = []
+            for index in range(len(list_violation_id)):
+                waf_alert['fields']['violation'].append(f"{list_violation_id[index]} > {list_violation_file[index]}")
+            blocked_requests.append(waf_alert['fields'])
     
     # Return an object contains attacks, top_countries and blocked_requests
     alerts_dict = {"attacks": violation_counts,

@@ -709,6 +709,7 @@ export default {
         state.operator = mapedOperator;
         state.actions = mapedAction;
         state.ruleName = data.name;
+        state.description = data.description;
         state.variable = data.variables;
         if (data.transformations.length === 0) return;
         else {

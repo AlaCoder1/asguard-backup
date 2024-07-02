@@ -15,21 +15,33 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n5 mb-1 mt-0">
-                  <ag-grid-vue
-                    id="grid-wrapper"
+                  <!-- <ag-grid-vue
+                    id="grid"
                     domLayout="autoHeight"
                     class="ag-theme-alpine mt-3"
                     :columnDefs="columnWafAppSHOW"
                     :alwaysShowHorizontalScroll="false"
                     :alwaysShowVarticalScroll="false"
-                    :rowData="rowDataAPP.value"
+                    :rowData="rowApplication.value"
                     style="width: 100%; height: 100%"
                     :overlayNoRowsTemplate="overlayTemplate"
-                    @grid-ready="onGridReady"
                     :pagination="true"
                     :paginationPageSize="10"
                     :localeText="paginationLocalization"
-                  />
+                  /> -->
+
+                  <v-card elevation="0">
+                    <v-card-item
+                      v-if="rowApplication.length"
+                      v-for="app in rowApplication"
+                      :key="app.id"
+                    >
+                      {{ app.name }}
+                    </v-card-item>
+                    <v-card-item v-else class="d-flex justify-center mt-5">
+                      No Applications for this rule
+                    </v-card-item>
+                  </v-card>
                 </v-col>
               </v-row>
             </v-container>
@@ -88,7 +100,7 @@ export default {
 
     const { isOpen, editRow, modalMode } = toRefs(props);
 
-    const rowDataAPP = ref([]);
+    const rowApplication = ref([]);
     const paginationLocalization = reactive({
       of: "/",
     });
@@ -134,8 +146,8 @@ export default {
 
     const populate = (data) => {
       if (modalMode.value === "show") {
-        console.log("datashow", data);
-        rowDataAPP.value = data?.application;
+        console.log("datashow79", data);
+        rowApplication.value = data.application;
       }
     };
 
@@ -143,28 +155,22 @@ export default {
       emitter.emit("closeModalSHOW");
     };
 
-    const onGridReady = (params) => {
+    const onGridReadyApplication = (params) => {
       gridApishow.value = params.api;
       gridColumnApishow.value = params.columnApi;
-
-      if (gridApishow.value) {
-        gridApishow.value.setRowData(rowDataAPP.value);
-      } else {
-        console.error("Grid API.");
-      }
     };
 
     return {
       state,
       emitter,
       columnWafAppSHOW,
-      rowDataAPP,
+      rowApplication,
       paginationLocalization,
       overlayTemplate,
       gridColumnApishow,
       gridApishow,
       closeModal,
-      onGridReady,
+      onGridReadyApplication,
     };
   },
 };

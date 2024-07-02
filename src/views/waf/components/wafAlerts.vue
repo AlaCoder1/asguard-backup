@@ -129,6 +129,7 @@ export default {
       {
         headerName: Country,
         field: "country",
+        cellRenderer: formatedCountry,
         autoHeight: true,
         width: 90,
         minWidth: 150,
@@ -145,7 +146,7 @@ export default {
       {
         headerName: violation,
         field: "violation",
-        // cellRenderer: formatedLine,
+        cellRenderer: formatedLine,
         autoHeight: true,
         width: 480,
         minWidth: 150,
@@ -169,7 +170,7 @@ export default {
       {
         headerName: "message",
         field: "message",
-        // cellRenderer: formatedMessage,
+        cellRenderer: formatedMessage,
         autoHeight: true,
         width: 250,
         minWidth: 350,
@@ -183,24 +184,23 @@ export default {
       },
     ]);
 
+    function formatedCountry(data) {
+      const resultMessage = data.data.country;
+      let eGui = document.createElement("div");
+      eGui.innerHTML = `${resultMessage ?? "--"}`;
+      return eGui;
+    }
+    function formatedTopCountry(data) {
+      const resultMessage = data.data.country;
+      let eGui = document.createElement("div");
+      eGui.innerHTML = `${resultMessage ?? "--"}`;
+      return eGui;
+    }
     function formatedMessage(data) {
       const resultMessage = data.data.message.map((e) => e + "<br>").join("");
-      console.log("resultMessage", resultMessage);
       let eGui = document.createElement("div");
-
       eGui.innerHTML = `${resultMessage}`;
-      // eGui.style.lineHeight = "3";
       return eGui;
-
-      //       const chunks = longString.match(/.{1,20}/g);
-
-      // const resultWithBr = chunks.map((chunk) => chunk + "<br>").join("");
-
-      // let eGui = document.createElement("div");
-
-      // eGui.innerHTML = `${resultWithBr}
-      //   `;
-      // eGui.style.lineHeight = "2";
     }
     function formatedLine(data) {
       // let eGui = document.createElement("div");
@@ -209,18 +209,21 @@ export default {
       //   `;
       // eGui.style.lineHeight = "2";
       // return eGui;
-      const resultMessage = data.data.violation.map((e) => e + "<br>").join("");
-      console.log("resultMessage", resultMessage);
+
+      const resultWithBr = data.data.violation.map((a) => a + "<br>").join("");
+
       let eGui = document.createElement("div");
 
-      eGui.innerHTML = `${resultMessage}`;
-      // eGui.style.lineHeight = "2";
+      eGui.innerHTML = `${resultWithBr}
+`;
+      eGui.style.lineHeight = "2";
       return eGui;
     }
     const columnCountry = ref([
       {
         headerName: Country,
-        field: "country",
+        // field: "country",
+        cellRenderer: formatedTopCountry,
         autoHeight: true,
         width: 90,
         minWidth: 50,
@@ -348,7 +351,6 @@ export default {
       //   },
       // ];
       rowDataRules.value = waf_alert?.blocked_requests;
-      console.log("waf_alert0***", waf_alert);
     });
 
     return {

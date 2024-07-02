@@ -549,7 +549,7 @@ export default {
       existType: false,
       existTypeOperator: false,
       isActivated: false,
-      description:''
+      description: "",
     });
 
     watch(
@@ -588,8 +588,6 @@ export default {
           rowDataWaf.value = val;
           if (gridApi.value) {
             gridApi.value.setRowData(rowDataWaf.value);
-          } else {
-            console.error("Grid API.");
           }
         }
       },
@@ -602,8 +600,6 @@ export default {
           rowDataOperator.value = val;
           if (gridApiOperator.value) {
             gridApiOperator.value.setRowData(rowDataOperator.value);
-          } else {
-            console.error("Grid API.");
           }
         }
       },
@@ -668,7 +664,6 @@ export default {
         // cellRenderer: (params) => params.value.toUpperCase(),
         // searchDebounceDelay: 200,
         // onProtocolsSelected: (event) => {
-        //   console.log('***event**** : ',event)
         //   params.setValue(event);
         // },
         // },
@@ -856,17 +851,13 @@ export default {
 
     const v$ = useValidate(rules, state);
 
-    const show = () => {
-      console.log("row", rowDataWaf.value);
-    };
+    const show = () => {};
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
       gridColumnApi.value = params.columnApi;
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataWaf.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     const onGridReadyOperator = (params) => {
@@ -874,8 +865,6 @@ export default {
       gridColumnApi.value = params.columnApi;
       if (gridApiOperator.value) {
         gridApiOperator.value.setRowData(rowDataOperator.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     const onGridReadyTransform = (params) => {
@@ -883,8 +872,6 @@ export default {
       gridColumnApi.value = params.columnApi;
       if (gridApiTransform.value) {
         gridApiTransform.value.setRowData(rowDataTransform.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     const addNewRow = () => {
@@ -892,8 +879,6 @@ export default {
       rowDataOperator.value.push(newRow);
       if (gridApiOperator.value) {
         gridApiOperator.value.setRowData(rowDataOperator.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     const addNewRowTransform = () => {
@@ -901,8 +886,6 @@ export default {
       rowDataTransform.value.push(newRow);
       if (gridApiTransform.value) {
         gridApiTransform.value.setRowData(rowDataTransform.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     function actionCellRenderer(params) {
@@ -938,8 +921,6 @@ export default {
             rowDataWaf.value.splice(index, 1);
             if (gridApi.value) {
               gridApi.value.setRowData(rowDataWaf.value);
-            } else {
-              console.error("Grid API.");
             }
           }
           break;
@@ -980,8 +961,6 @@ export default {
             rowDataOperator.value.splice(index, 1);
             if (gridApiOperator.value) {
               gridApiOperator.value.setRowData(rowDataOperator.value);
-            } else {
-              console.error("Grid API.");
             }
           }
           break;
@@ -1022,8 +1001,6 @@ export default {
             rowDataTransform.value.splice(index, 1);
             if (gridApiTransform.value) {
               gridApiTransform.value.setRowData(rowDataTransform.value);
-            } else {
-              console.error("Grid API.");
             }
           }
           break;
@@ -1103,7 +1080,6 @@ export default {
           actions: mapedRow,
           description: state.description,
         };
-        console.log("payload", payload);
 
         if (modalMode.value === "edit") {
           axios
@@ -1138,7 +1114,6 @@ export default {
               state.textAlert = i.response.data.error;
             });
         } else {
-          console.log("payload", payload);
           axios
             .post("/waf/createRuleWaf", payload)
             .then((response) => {
@@ -1174,7 +1149,6 @@ export default {
             });
         }
       } else {
-        console.log("v$", v$.value);
         var isArrayEmpty = rowDataWaf.value.length === 0;
         if (isArrayEmpty) {
           state.snackbar = true;

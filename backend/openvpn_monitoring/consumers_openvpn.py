@@ -35,9 +35,10 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         while True:
             data =await self.start_data_loop_openvpn(id_server,password)
             await self.send(json.dumps(data))
-            await self.save_system_usage(data)
-            await asyncio.sleep(60)
- 
+            if not isinstance(data, str):
+                await self.save_system_usage(data)
+                await asyncio.sleep(60)
+    
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
             "chart_group_global",
@@ -235,6 +236,6 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
                 }
                 return data
             else:
-                return ERROR_MESSAGES_INVALID_PASSWORD
+                return f"{ERROR_MESSAGES_INVALID_PASSWORD}"
         else:
-            return ERROR_MESSAGES_MANAGEMENT
+            return f"{ERROR_MESSAGES_MANAGEMENT}"

@@ -48,13 +48,11 @@ class DashboardConsumer(AsyncWebsocketConsumer):
     async def start_data_loop_global_chart(self):
         while True:
             # Execute the command to monitor CPU and memory usage
-            command = "sudo top -bn 1 | awk 'NR==3{print $2}' && free | awk '/Mem/{printf \"%.2f\", $3/$2*100}'"
+            command = "sudo top -bn1 | grep \"%Cpu(s)\" | awk '{print $2}' && free | awk '/Mem/{printf \"%.2f\", $4/$2*100}'"
             completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
             output = completed_process.stdout.splitlines()
-            
             # Parse the output
             cpu_percentage, memory_percentage = map(float, output)
-
             # Get the current timestamp
             current_time = time.strftime("%Y-%m-%d %H:%M:%S")
             # Convert the formatted timestamp to a Unix timestamp

@@ -24,6 +24,7 @@
             </v-col>
             <v-col cols="4" class="mb-n6">
               <v-select
+                :label="$t('sdwan.prefix')"
                 v-model="alias_mask"
                 :items="netmasks"
                 :no-data-text="$t('certificat.certificatlist')"

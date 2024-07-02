@@ -235,6 +235,6 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
                 }
                 return data
             else:
-                return ERROR_MESSAGES_INVALID_PASSWORD
+                return f"{ERROR_MESSAGES_INVALID_PASSWORD}"
         else:
-            return ERROR_MESSAGES_MANAGEMENT
+            return f"{ERROR_MESSAGES_MANAGEMENT}"

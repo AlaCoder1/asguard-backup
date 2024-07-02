@@ -12,22 +12,20 @@
             <input type="checkbox" class="ml-5" v-model="activate" />
             <label class="ml-2">{{ $t("interface.activate") }}</label>
           </v-row>
-          <div class="ml-3" style="background-color: #f6f6f6">
+          <div class="ml-3">
             <v-row class="ml-3 mt-5">
               <v-col class="device-style"
                 >{{ $t("interface.device")
                 }}<span style="color: red">*</span></v-col
               >
             </v-row>
-            <v-row class="ml-3 mr-3">
+            <v-row class="ml-3 mr-3 mb-n6">
               <v-text-field :model-value="device" readonly></v-text-field>
             </v-row>
           </div>
-          <div class="ml-3" style="background-color: #f6f6f6">
+          <div class="ml-3">
             <v-row class="ml-3 mt-5">
-              <v-col class="device-style"
-                >Description <span style="color: red">*</span>
-              </v-col>
+              <v-col class="device-style">Description </v-col>
             </v-row>
             <v-row class="ml-3 mr-3">
               <v-text-field v-model="description"></v-text-field>
@@ -858,7 +856,8 @@ export default {
     this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 
     this.name_interface = this.IPV4Config.interface.name_interface;
-    this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw ?? 'Auto Detect';
+    this.value_setup_Ipv4.gateway4.value =
+      this.IPV4Config.IPV4Config.addrgw ?? "Auto Detect";
 
     this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
     this.interface.alias_add = this.IPV4Config.IPV4Config.alias_add;

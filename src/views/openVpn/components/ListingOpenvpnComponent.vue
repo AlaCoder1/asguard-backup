@@ -263,8 +263,9 @@ export default {
       {
         headerName: "Action",
         cellRenderer: actionCellRenderer,
-        width: 150,
+        width: 200,
         field: "action",
+        minWidth: 150,
         sortable: true,
         filter: true,
         autoHeight: true,
@@ -332,7 +333,8 @@ export default {
       {
         headerName: "Action",
         cellRenderer: actionCellRendererClient,
-        width: 150,
+        width: 200,
+        minWidth: 150,
         field: "action",
         sortable: true,
         filter: true,
@@ -705,7 +707,7 @@ export default {
       eGui.innerHTML = `
          ${mapedServer}
         `;
-      // eGui.style.lineHeight = "2";
+      eGui.style.lineHeight = "3";
 
       return eGui;
     }
@@ -715,7 +717,7 @@ export default {
       eGui.innerHTML = `
          ${data.data.proto} / ${data.data.port}
         `;
-      // eGui.style.lineHeight = "2";
+      eGui.style.lineHeight = "3";
 
       return eGui;
     }
@@ -731,7 +733,7 @@ export default {
       eGui.innerHTML = `
          ${data.data.proto} / ${mapedServer}
         `;
-      // eGui.style.lineHeight = "2";
+      eGui.style.lineHeight = "3";
 
       return eGui;
     }

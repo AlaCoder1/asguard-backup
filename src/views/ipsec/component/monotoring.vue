@@ -302,7 +302,7 @@ export default {
 
     const initializeWebSocket = () => {
       state.socket = new WebSocket(
-        "ws://" + window.location.host + "/ws/ipsecmonitoring/"
+        "wss://" + window.location.host + "/ws/ipsecmonitoring/"
       );
 
       state.socket.onopen = () => {

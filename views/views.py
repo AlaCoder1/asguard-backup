@@ -676,10 +676,15 @@ def subscription_info(request):
     
 def all_feature(request):
     features = []
+    feature_element = {}
     if request.method == 'GET':
         features_from_bd = Features.objects.all()
         for feature in features_from_bd:
-            features.append(feature.features)
+            feature_element["name"] = feature.features
+            feature_element["price"] = feature.price
+            feature_element["id"] = feature.pk
+            features.append(feature_element)
+            feature_element = {}
         return features
     
 @login_required(login_url='/')

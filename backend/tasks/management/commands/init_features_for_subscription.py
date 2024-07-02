@@ -1,10 +1,9 @@
-import itertools
 from backend.subscription.models import *
 from django.core.management.base import BaseCommand
 # features = Features.objects.all()
 
 features = [
-    ("Double Masque",50),("WAF",100), ("IPS",150), ("VPN SSL",200),("Proxy",50),("SDWAN",50)
+    ("WAF",180),("SDWAN",180)
 ]
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):

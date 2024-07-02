@@ -30,11 +30,7 @@
               </v-col>
             </v-row>
             <v-row class="ml-3 mr-3">
-              <v-text-field
-                v-model="description"
-                :rules="[(v) => !!v || $t('interface.descriptionRequired')]"
-                required
-              ></v-text-field>
+              <v-text-field v-model="description"></v-text-field>
             </v-row>
           </div>
           <v-card-title class="title-text mt-5">{{
@@ -307,7 +303,7 @@
         v-if="showAlertGateway"
         :style="alertStyle"
       >
-        {{ $t("interface.addedSuccessfully") }}
+        {{ message }}
       </v-alert>
       <v-alert
         type="success"
@@ -319,7 +315,7 @@
         v-if="showAlert"
         :style="alertStyle"
       >
-        {{ $t("interface.savedSuccessfully") }}
+        {{ message }}
       </v-alert>
       <v-dialog
         v-model="showGatewayDialog"
@@ -416,11 +412,13 @@ export default {
     VButton,
     AdvancedConfigDHCPv4,
   },
+  inject: ["emitter"],
   props: {
     activeTab: String,
   },
   data() {
     return {
+      message: "",
       typeDHCP4: "",
       advancedParameters: false,
       interface: {
@@ -491,6 +489,7 @@ export default {
       },
     };
   },
+
   computed: {
     alertStyle() {
       return {
@@ -575,6 +574,7 @@ export default {
             },
           },
         };
+        console.log("params", params);
 
         function getCookie(name) {
           let cookieValue = null;
@@ -597,7 +597,8 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         axios.put("/network/conf/" + this.activeTab, params).then(
-          () => {
+          (response) => {
+            this.message = response.data.message;
             this.showAlert = true;
             setTimeout(() => {
               this.showAlert = false;
@@ -690,6 +691,8 @@ export default {
         far_aux: this.gateway.far_aux,
         multiwan_aux: this.gateway.multiwan_aux,
       };
+      this.allStaticGateways.unshift(params);
+
       function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== "") {
@@ -712,8 +715,10 @@ export default {
 
       axios.post("/gateway/addStaticGateway", params).then(
         (response) => {
+          console.log("response***", response);
           if (response.status == "200") {
             this.showGatewayDialog = false;
+            this.message = response.data.msg;
             this.gateway = {
               gwname: "",
               gwaddress: "",
@@ -725,7 +730,7 @@ export default {
             this.showAlertGateway = true;
             setTimeout(() => {
               this.showAlertGateway = false;
-            }, 3000);
+            }, 1000);
           } else {
             this.showGatewayDialog = true;
           }
@@ -778,6 +783,7 @@ export default {
       axios.put("/gateway/updateStaticGateway", params).then(
         (response) => {
           this.showAlert = true;
+          console.log(response);
           setTimeout(() => {
             this.showAlert = false;
           }, 3000);
@@ -832,7 +838,8 @@ export default {
       .replace(/False/g, "false")
       .replace(/None/g, "null");
     parsedArray = JSON.parse(validJsonString);
-    this.allStaticGateways = parsedArray;
+    let combineArray = [{ gwaddress: "Auto Detect" }];
+    this.allStaticGateways = [...parsedArray, ...combineArray];
 
     this.activate = this.IPV4Config?.interface !== null ? true : false;
     this.device = this.IPV4Config.interface.ifname;
@@ -851,7 +858,7 @@ export default {
     this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 
     this.name_interface = this.IPV4Config.interface.name_interface;
-    this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw;
+    this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw ?? 'Auto Detect';
 
     this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
     this.interface.alias_add = this.IPV4Config.IPV4Config.alias_add;

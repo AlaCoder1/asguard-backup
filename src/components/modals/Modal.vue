@@ -150,6 +150,7 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, watch, reactive, computed, inject, onMounted, ref } from "vue";
@@ -173,6 +174,7 @@ export default {
   },
 
   setup(props) {
+    const { t } = useI18n();
     const emitter = inject("emitter");
     const { isOpen, editRow, modalMode } = toRefs(props);
 
@@ -311,31 +313,40 @@ export default {
         console.log("v$", v$.value);
       }
     };
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
 
     const rules = computed(() => {
       return {
-        name: { required },
-        serverType: { required },
+        name: { required: helpers.withMessage(error, required) },
+        serverType: { required: helpers.withMessage(error, required) },
         hostIp: {
           isValidHostIp: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
-        searchBase: { required },
+        searchBase: { required: helpers.withMessage(error, required)},
 
         port: {
           isValidlPort: helpers.withMessage(
-            `Champs can include only Numbers.`,
+            onlynumbers,
 
             helpers.regex(/^[0-9]+$/)
           ),
         },
         userDn: {
-          required: helpers.withMessage("Value is required", required),
+          required: helpers.withMessage(error, required),
         },
-        password: { required },
+        password: { required: helpers.withMessage(error, required) },
       };
     });
 

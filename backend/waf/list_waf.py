@@ -1,10 +1,11 @@
+from collections import Counter
 from django.core import serializers
 from django.db.models import Count
 import json
 
 from backend.waf.models import AlertWaf, ApplicationRulesWaf, ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.utils import convert_waf_rule_database
-from backend.waf.utils_alerts import create_list_alerts, rotate_log_alerts_waf, synchronize_database_waf_alert
+from backend.waf.utils_alerts import synchronize_database_waf_alert
 
 
 # Configuration WAF
@@ -107,25 +108,47 @@ def get_one_waf_application(id):
 # Alerts WAF list
 def get_alerts():
     """Getting waf alerts from database"""
-    log_waf_content = rotate_log_alerts_waf()
-    list_alert_system = create_list_alerts(log_waf_content)
-    synchronize_database_waf_alert(list_alert_system)
-    waf_alerts = AlertWaf.objects.order_by('-pk')
+    synchronize_database_waf_alert()
+    waf_alerts = AlertWaf.objects.order_by('-pk')[:10000]
     waf_alert_dict = serializers.serialize("json", waf_alerts)
     res = json.loads(waf_alert_dict)
-    violation_counts = AlertWaf.objects.values('violation_id').annotate(count=Count('violation_id')).order_by("-count")
+
+    # Count occurence of each violation_id
+    list_violation_id_str = ""
+    for violation_id_str in AlertWaf.objects.values('violation_id'):
+        list_violation_id_str += violation_id_str["violation_id"] + "\n"
+    list_violation_id = list(list_violation_id_str.split("\n"))
+    list_violation_id = list(filter(lambda a: a != "", list_violation_id))
+    # Count the frequency of each violation ID
+    counter = Counter(list_violation_id)
+    # Convert the counter to a list of objects
+    violation_counts = [{'violation': violation_id, 'count_of_record': count_of_record} for violation_id, count_of_record in counter.items()]
+    
+    # Count occurence of each country
     top_countries_counts = AlertWaf.objects.values('country').annotate(attacks=Count('country')).order_by("-attacks")
-    alerts_dict = {"attacks": [{"violation": attack["violation_id"], "count_of_record": attack["count"]} for attack in violation_counts],
-                   "top_countries": [{"country": country["country"], "attacks": country["attacks"]} for country in top_countries_counts],
-                   "blocked_requests": []
-                   }
+    
+    # Create list of blocked requests
+    blocked_requests = []
     for waf_alert in res:
         waf_alert.pop('model')
         waf_alert_id = waf_alert['pk']
         waf_alert.pop('pk')
         waf_alert['fields']['id'] = waf_alert_id
-        waf_alert['fields']['violation'] = f"{waf_alert['fields']['violation_id']} > {waf_alert['fields']['violation_file']}"
-        waf_alert['fields'].pop('violation_id')
-        waf_alert['fields'].pop('violation_file')
-        alerts_dict["blocked_requests"].append(waf_alert['fields'])
+        violation_id = waf_alert['fields'].pop('violation_id')
+        violation_file = waf_alert['fields'].pop('violation_file')
+        message = waf_alert['fields'].pop('message')
+        if message.find("Access from blocked countries") > -1:
+            list_violation_id = list(violation_id.split('\n'))
+            list_violation_file = list(violation_file.split('\n'))
+            waf_alert['fields']['message'] = list(message.split('\n'))
+            waf_alert['fields']['violation'] = []
+            for index in range(len(list_violation_id)):
+                waf_alert['fields']['violation'].append(f"{list_violation_id[index]} > {list_violation_file[index]}")
+            blocked_requests.append(waf_alert['fields'])
+    
+    # Return an object contains attacks, top_countries and blocked_requests
+    alerts_dict = {"attacks": violation_counts,
+                   "top_countries": [{"country": country["country"], "attacks": country["attacks"]} for country in top_countries_counts],
+                   "blocked_requests": blocked_requests
+                   }
     return alerts_dict

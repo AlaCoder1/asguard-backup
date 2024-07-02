@@ -242,11 +242,9 @@ export default {
         case "delete":
           state.deleteDialog = true;
           state.deletedRow = rowData;
-          console.log("delete", rowData);
 
           break;
         case "edit":
-          console.log("edit", rowData);
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
@@ -256,7 +254,6 @@ export default {
           state.isModalShowAppOpen = true;
           state.editRow = rowData;
           state.modalMode = "show";
-          console.log("show", rowData);
           break;
 
         default:
@@ -269,8 +266,6 @@ export default {
 
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataRules.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     onMounted(() => {
@@ -339,7 +334,6 @@ export default {
           }, 4000);
         })
         .catch((i) => {
-          console.log("i*", i);
           state.snackbar = true;
           state.color = "red";
           state.textAlert = i.response.data.error;

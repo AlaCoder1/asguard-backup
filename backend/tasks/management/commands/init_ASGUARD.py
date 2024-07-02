@@ -1,5 +1,4 @@
 import subprocess
-from backend.openvpn.models import *
 from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 class Command(BaseCommand):
@@ -11,6 +10,7 @@ class Command(BaseCommand):
             "Description=Asguard Config interfaces",
             "[Service]",
             "Type=oneshot",
+            "ExecStart=/usr/bin/true",
             "",
             "[Install]",
             "WantedBy=multi-user.target",

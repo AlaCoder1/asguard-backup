@@ -58,7 +58,7 @@
             class="text-center ml-14 mb-1"
             style="display: flex"
           >
-            <template v-if="title === 'Custom' || title === 'Personnalisé'">
+            <template v-if="title === 'Premium'">
               <input
                 type="checkbox"
                 :id="'checkbox_'"
@@ -208,14 +208,14 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       const features = getPackId();
+      console.log("features", features);
 
-      if (features.length === 4) {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = t("subscription.chooseService");
-        return;
-      }
-
+      // if (features.length === 4) {
+      //   state.snackbar = true;
+      //   state.color = "red";
+      //   state.textAlert = t("subscription.chooseService");
+      //   return;
+      // }
       try {
         const response = await axios.post("/auth/create_checkout_session", {
           status: true,
@@ -314,8 +314,8 @@ export default {
     // };
     const getPackId = () => {
       if (props.title === "Base") return ["Basic"];
-      else if (props.title === "Premium") return ["Full"];
-      else {
+      // else  return ["Full"];
+      else if (props.title === "Premium" && selectedServices.value.length) {
         let filtredService = [];
 
         if (selectedServices.value) {
@@ -336,11 +336,15 @@ export default {
           "Networking L2 L3",
           "VPN IPSEC",
           "LDAP",
+          "Double Masque",
+          "IDS/IPS",
+          "VPN SSL",
+          "Proxy",
         ];
         let combine = [...communservices, ...slugs];
 
         return combine;
-      }
+      } else return ["Full"];
     };
 
     return {

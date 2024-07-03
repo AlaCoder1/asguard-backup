@@ -149,11 +149,30 @@ export default {
           { label: monthly, amount: 100 },
         ],
         communservices: [
-          "subscription.firewall",
-          "subscription.ZTNA",
-          "subscription.LDAP",
+          "Firewall L4",
+          "Networking L2 L3",
+          "VPN IPSEC",
+          "LDAP",
         ],
-        services: ["", "", "", "", "", "", "", "", "", "", ""],
+        services: [
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+          "",
+        ],
         backgroundColor: "#213E9F",
         buttonColor: "#213E9F",
       },
@@ -164,15 +183,23 @@ export default {
           { label: monthly, amount: 150 },
         ],
         communservices: [
-          "subscription.firewall",
-          "subscription.ZTNA",
-          "subscription.LDAP",
+          "Firewall L4",
+          "Networking L2 L3",
+          "VPN IPSEC",
+          "LDAP",
         ],
         services: [
-          { name: doubleMask150Annual, slug: "double 150", price: 150 },
-          { name: cASB150Annual, slug: "casb 150", price: 150 },
-          { name: sWG100Annual, slug: "swg 100", price: 100 },
-          { name: antiVirus100Annual, slug: "anti 100", price: 100 },
+          // {
+          //   name: "Double Masque",
+          //   slug: "Double_Masque 150",
+          //   price: 150,
+          //   id: 1,
+          // },
+          // { name: "WAF", slug: "WAF 150", price: 150, id: 2 },
+          // { name: "IPS", slug: "IPS 100", price: 100, id: 3 },
+          // { name: "VPN SSL", slug: "VPN SSL 100", price: 100, id: 4 },
+          // { name: "Proxy", slug: "Proxy 100", price: 100, id: 5 },
+          // { name: "SDWAN", slug: "SDWAN 100", price: 100, id: 6 },
         ],
         backgroundColor: "#FFC300",
         buttonColor: "#FFC300",
@@ -184,15 +211,18 @@ export default {
           { label: monthly, amount: 150 },
         ],
         communservices: [
-          "subscription.firewall",
-          "subscription.ZTNA",
-          "subscription.LDAP",
+          "Firewall L4",
+          "Networking L2 L3",
+          "VPN IPSEC",
+          "LDAP",
         ],
         services: [
-          { name: doubleMask, slug: "double" },
-          { name: casb, slug: "casb" },
-          { name: SWG, slug: "swg" },
-          { name: "Anti-virus", slug: "anti" },
+          { name: "Double Masque", slug: "double" },
+          { name: "WAF", slug: "WAF" },
+          { name: "IPS", slug: "IPS" },
+          { name: "VPN SSL", slug: "VPN SSL" },
+          { name: "Proxy", slug: "Proxy" },
+          { name: "SDWAN", slug: "SDWAN" },
         ],
         backgroundColor: "#213E9F",
         buttonColor: "#213E9F",
@@ -244,7 +274,8 @@ export default {
             Difference_In_Time / (1000 * 3600 * 24)
           );
           if (Difference_In_Days === 1) dayString.value = t("subscription.day");
-          else if (Difference_In_Days > 1) dayString.value = t("subscription.days");
+          else if (Difference_In_Days > 1)
+            dayString.value = t("subscription.days");
           ExpiredDays.value = Difference_In_Days;
         } else if (dateLocal < expireDate) {
           statusPackage.value = false;
@@ -260,6 +291,20 @@ export default {
         let price = data + 1200;
         subscriptionCards.value[1].prices[0].amount = price;
       });
+
+      const allfeatures =
+        document.getElementById("app").attributes["allfeature"].value;
+      let all_features = JSON.parse(allfeatures);
+
+      let mappedService = all_features.map((e) => {
+        return {
+          name: e.name,
+          slug: `${e.name} ${e.price}`,
+          price: e.price,
+          id: e.id,
+        };
+      });
+      subscriptionCards.value[1].services = mappedService
     });
 
     return {

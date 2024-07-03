@@ -18,35 +18,33 @@
         </h4>
 
         <v-divider></v-divider>
-        <div style="display: flex; flex-direction: column">
-          <v-card class="flex mt-3">
-            <ag-grid-vue
-              id="grid-wrapper"
-              domLayout="autoHeight"
-              class="ag-theme-alpine mt-3 mb-3 ml-3 mr-3"
-              :columnDefs="columns"
-              :rowData="rowData.value"
-              :gridOptions="gridOptions"
-              :defaultColDef="defaultColDef"
-              :overlayNoRowsTemplate="overlayTemplate"
-              :rowGroupPanelShow="rowGroupPanelShow"
-              @grid-ready="onGridReady"
-              style="width: 100%; height: 100%"
-              :localeText="paginationLocalization"
+        <div class="mt-3" style="display: flex; flex-direction: column">
+          <ag-grid-vue
+            id="grid-wrapper"
+            domLayout="autoHeight"
+            class="ag-theme-alpine mt-3 mb-3"
+            :columnDefs="columns"
+            :rowData="rowData.value"
+            :gridOptions="gridOptions"
+            :defaultColDef="defaultColDef"
+            :overlayNoRowsTemplate="overlayTemplate"
+            :rowGroupPanelShow="rowGroupPanelShow"
+            @grid-ready="onGridReady"
+            style="width: 100%; height: 100%"
+            :localeText="paginationLocalization"
+          />
+          <div class="justify-end d-flex mr-3 mt-3 mb-3">
+            <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              :label="$t('PageIpsec.addnewpeer')"
+              :isLarge="true"
+              class="ml-2"
+              @click="addServer"
             />
-            <div class="justify-end d-flex mr-3 mt-3 mb-3">
-              <VButton
-                rounded
-                outlined
-                color="#213E9F"
-                label-color="#ffffff"
-                :label="$t('PageIpsec.addnewpeer')"
-                :isLarge="true"
-                class="ml-2"
-                @click="addServer"
-              />
-            </div>
-          </v-card>
+          </div>
           <br />
           <br />
           <br />
@@ -194,6 +192,7 @@ export default {
         cellRenderer: SecondPhaseProposal,
         minWidth: 200,
         suppressSizeToFit: true,
+        autoHeight: true,
         sortable: true,
         filter: true,
       },
@@ -291,24 +290,24 @@ export default {
     }
     function FirstPhaseProposal(data) {
       let eGui = document.createElement("div");
-      let encryptionText = "";
+      // let encryptionText = "";
 
-      switch (data.data.encryption_algorithm_ph1) {
-        case "128":
-          encryptionText = "128 bit AES-GCM with 128 bit ICV";
-          break;
-        case "192":
-          encryptionText = "192 bit AES-GCM with 128 bit ICV";
-          break;
-        case "256":
-          encryptionText = "256 bit AES-GCM with 128 bit ICV";
-          break;
-        default:
-          encryptionText = "";
-      }
+      // switch (data.data.encryption_algorithm_ph1) {
+      //   case "128":
+      //     encryptionText = "128 bit AES-GCM with 128 bit ICV";
+      //     break;
+      //   case "192":
+      //     encryptionText = "192 bit AES-GCM with 128 bit ICV";
+      //     break;
+      //   case "256":
+      //     encryptionText = "256 bit AES-GCM with 128 bit ICV";
+      //     break;
+      //   default:
+      //     encryptionText = "";
+      // }
 
       eGui.innerHTML = `
-          ${encryptionText} <br/>
+          ${data.data.encryption_algorithm_ph1} <br/>
           ${uppercaseData(data.data.hash_algorithm_ph1)} <br/> DH Group 
           ${extractDHKey(data.data.dh_key_group)}
           `;
@@ -321,43 +320,47 @@ export default {
       let encryptionText = "";
 
       // Assuming data.data.encryption_algorithm_ph2 is an array
-      if (
-        Array.isArray(data.data.encryption_algorithm_ph2) &&
-        data.data.encryption_algorithm_ph2.length > 0
-      ) {
-        encryptionText = data.data.encryption_algorithm_ph2
-          .map((algorithm) => {
-            switch (algorithm) {
-              case "128":
-                return "aes128gcm16";
-              case "192":
-                return "aes192gcm16";
-              case "256":
-                return "aes256gcm16";
-              default:
-                return ""; // For unknown cases, add an empty string or handle accordingly
-            }
-          })
-          .join(" "); // Join the algorithms with space
-      } else {
-        encryptionText = null; // Set encryptionText as null if encryption algorithms array is empty or undefined
-      }
+      // if (
+      //   Array.isArray(data.data.encryption_algorithm_ph2) &&
+      //   data.data.encryption_algorithm_ph2.length > 0
+      // ) {
+      //   encryptionText = data.data.encryption_algorithm_ph2
+      //     .map((algorithm) => {
+      //       switch (algorithm) {
+      //         case "128":
+      //           return "aes128gcm16";
+      //         case "192":
+      //           return "aes192gcm16";
+      //         case "256":
+      //           return "aes256gcm16";
+      //         default:
+      //           return ""; // For unknown cases, add an empty string or handle accordingly
+      //       }
+      //     })
+      //     .join(" "); // Join the algorithms with space
+      // } else {
+      //   encryptionText = null; // Set encryptionText as null if encryption algorithms array is empty or undefined
+      // }
 
-      // Conditionally add <br/> if encryptionText is not null
-      let lineBreak = encryptionText !== null ? "<br/>" : "";
+      // // Conditionally add <br/> if encryptionText is not null
+      // let lineBreak = encryptionText !== null ? "<br/>" : "";
+
+      const resultMessage = data.data.encryption_algorithm_ph2
+        .map((e) => e + "<br>")
+        .join("");
 
       if (data.data.pfs_key_group !== "off") {
         let pfsKey = data.data.pfs_key_group
           ? `(${extractPFSKey(data.data.pfs_key_group)}) bits`
           : "";
         eGui.innerHTML = `
-      ${encryptionText ? `${encryptionText} ${lineBreak}` : ""}
+      ${resultMessage ? `${resultMessage}` : ""}
       ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
       ${extractDHKey(data.data.pfs_key_group)} ${pfsKey}
     `;
       } else {
         eGui.innerHTML = `
-      ${encryptionText ? `${encryptionText} ${lineBreak}` : ""}
+      ${resultMessage ? `${resultMessage}` : ""}
       ${uppercaseData(data.data.hash_algorithm_ph2)} <br/>
       ${extractDHKey(data.data.pfs_key_group)}
     `;
@@ -449,7 +452,11 @@ export default {
         case "edit":
           console.log("edit :", rowData);
           emitter.emit("add-serverIpsec");
-          emitter.emit("edit-serverIpsec", rowData);
+
+          setTimeout(() => {
+            emitter.emit("edit-serverIpsec", rowData);
+          }, 1000);
+
           break;
         case "delete":
           currentRowToDelete.value = rowData;
@@ -506,6 +513,7 @@ export default {
         const validJsonString = serversAttribute;
         const parsedArray = JSON.parse(validJsonString);
         rowData.value = parsedArray;
+        console.log("rowData.value", rowData.value);
 
         const statusAttribute =
           document.getElementById("app").attributes["status"].value;

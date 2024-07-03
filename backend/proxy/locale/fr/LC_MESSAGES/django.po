@@ -1,0 +1,158 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-05-20 08:37+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+#: backend/proxy/views.py:19
+msgid "Squid"
+msgstr "Squid"
+
+#: backend/proxy/views.py:20
+msgid "Pattern"
+msgstr "Pattern"
+
+#: backend/proxy/views.py:21
+msgid "Lines"
+msgstr "Lignes"
+
+#: backend/proxy/views.py:22
+msgid "interface"
+msgstr "interface"
+
+#: backend/proxy/views.py:23
+msgid "are Uncommented"
+msgstr "sont décommentées"
+
+#: backend/proxy/views.py:24
+msgid "are Commented"
+msgstr "sont Commentées"
+
+#: backend/proxy/views.py:25
+msgid "is Unblocked"
+msgstr "est Débloqué"
+
+#: backend/proxy/views.py:26
+msgid "is blocked"
+msgstr "est Bloqué"
+
+#: backend/proxy/views.py:27
+msgid "Address"
+msgstr "Adresse"
+
+#: backend/proxy/views.py:28
+msgid "File"
+msgstr "Fichier"
+
+#: backend/proxy/views.py:29
+msgid "Path"
+msgstr "Chemin"
+
+#: backend/proxy/views.py:30
+msgid "Port"
+msgstr "Port"
+
+#: backend/proxy/views.py:31
+msgid "Please provide the correct"
+msgstr "Veuillez fournir le correct"
+
+#: backend/proxy/views.py:32
+msgid "Cron job"
+msgstr "Cron job"
+
+#: backend/proxy/views.py:33
+msgid "User"
+msgstr "Utilisateur"
+
+#: backend/proxy/views.py:34
+msgid "Status"
+msgstr "Statut"
+
+#: backend/proxy/views.py:35
+msgid "Rule"
+msgstr "Règle"
+
+#: backend/proxy/views.py:39
+msgid "is created"
+msgstr "est créé"
+
+#: backend/proxy/views.py:40
+msgid "is deleted"
+msgstr "est supprimé"
+
+#: backend/proxy/views.py:41
+msgid "is updated"
+msgstr "est modifié"
+
+#: backend/proxy/views.py:42
+msgid "is started"
+msgstr "est démarré"
+
+#: backend/proxy/views.py:43
+msgid "is restarted"
+msgstr "est redémarré"
+
+#: backend/proxy/views.py:44
+msgid "is stoped"
+msgstr "est arrêté"
+
+#: backend/proxy/views.py:45
+msgid "is changed"
+msgstr "est changé"
+
+#: backend/proxy/views.py:47
+msgid "Error in creating"
+msgstr "Erreur lors de la création de"
+
+#: backend/proxy/views.py:48
+msgid "Error in deleting"
+msgstr "Erreur lors de la suppression de"
+
+#: backend/proxy/views.py:49
+msgid "Error in updating"
+msgstr "Erreur lors de la modification de"
+
+#: backend/proxy/views.py:50
+msgid "Error in starting"
+msgstr "rreur lors de démarrage"
+
+#: backend/proxy/views.py:51
+msgid "Error in restarting"
+msgstr "Erreur lors de redémarrage"
+
+#: backend/proxy/views.py:52
+msgid "Error in stoping"
+msgstr "Erreur lors de l'arrêt"
+
+#: backend/proxy/views.py:53
+msgid "Error Occurred"
+msgstr "Une erreur s'est produite"
+
+#: backend/proxy/views.py:54
+msgid "Not Found in"
+msgstr "Non trouvé dans"
+
+#: backend/proxy/views.py:55
+msgid "Error in saving instance"
+msgstr "Erreur lors de l'enregistrement de l'instance"
+
+#: backend/proxy/views.py:56
+msgid "Error in adding user"
+msgstr "Erreur lors de l'ajout de l'utilisateur"
+
+#: backend/proxy/views.py:57
+msgid "does not exist"
+msgstr "n'existe pas"

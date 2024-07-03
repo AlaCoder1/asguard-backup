@@ -1,199 +1,125 @@
 <template>
   <div class="mt-3">
+    <v-row class="ml-1 mb-0 d-flex justify-start">
+      <v-col cols="3">
+        <v-select
+          :label="$t('Clientsopenvpn.Server')"
+          density="compact"
+          v-model="state.server"
+          item-title="name"
+          item-value="id"
+          return-object
+          :items="state.serverList"
+        ></v-select>
+        <p class="error-feedback mb-5" v-if="v$.server.$errors.length">
+          {{ v$.server.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="3">
+        <v-select
+          :label="$t('clamaV.time')"
+          density="compact"
+          v-model="state.date"
+          item-title="name"
+          item-value="time_value"
+          return-object
+          :items="state.dateList"
+        ></v-select>
+        <p class="error-feedback mb-5" v-if="v$.date.$errors.length">
+          {{ v$.date.$errors?.[0].$message }}
+        </p>
+      </v-col>
+      <v-col cols="3" style="">
+        <v-btn
+          style="
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 38px;
+            width: 60%;
+          "
+          label-color="#213E9F"
+          color="indigo-darken-3"
+          @click="serve"
+        >
+          <span class="text-white pr-3 pl-3">{{ $t("buttons.Load") }}</span>
+        </v-btn>
+      </v-col>
+    </v-row>
     <v-row>
       <v-col>
         <div class="ml-3 mr-3">
-          <v-row class="mt-2 mb-5">
-            <MonitoringCards />
+          <v-row class="mb-5">
+            <MonitoringCards :lasObj="state.lasObj" />
           </v-row>
         </div>
       </v-col>
     </v-row>
     <v-row>
-      <v-col cols="4">
-        <v-card class="mx-auto ml-3" height=" 400px" hover>
+      <v-col cols="6">
+        <v-card class="ml-3" hover>
+          <v-card-title>
+            {{ $t("monitoringVPN.Availablity") }}
+          </v-card-title>
           <v-card-item>
-            <div class="title-card-light mb-6">
-              {{$t('monitoringVPN.currentstate')}}
-            </div>
+            <apexchart
+              class="mb-5"
+              ref="chartOptionsAvailability"
+              height="350"
+              :options="state.chartOptionsAvailability"
+              :series="state.chartOptionsAvailability.series"
+            ></apexchart>
           </v-card-item>
-          <v-card-text class="content-style">
-            <v-row>
-              <v-col>
-                <v-card
-                  height="60px"
-                  width="80px"
-                  hover
-                  color="#E7F4E4"
-                  class="monitor-status-card"
-                >
-                  <v-card-text class="content-style">
-                    1F <br />{{$t('monitoringVPN.Switch')}}
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col>
-                <v-card
-                  height="60px"
-                  width="80px"
-                  hover
-                  color="#FCE3A8"
-                  class="monitor-status-card"
-                >
-                  <v-card-text class="content-style">
-                    {{$t('monitoringVPN.Router')}} <br />
-                    03
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col>
-                <v-card
-                  height="60px"
-                  width="80px"
-                  hover
-                  color="#E7F4E4"
-                  class="monitor-status-card"
-                >
-                  <v-card-text class="content-style">
-                    2F <br />
-                    {{$t('monitoringVPN.Switch')}}
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col>
-                <v-card
-                  height="60px"
-                  width="80px"
-                  hover
-                  color="#E7F4E4"
-                  class="monitor-status-card"
-                >
-                  <v-card-text class="content-style">
-                    {{$t('monitoringVPN.Printer')}} <br />03
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col>
-                <v-card
-                  height="60px"
-                  width="80px"
-                  hover
-                  color="#FCE3A8"
-                  class="monitor-status-card"
-                >
-                  <v-card-text class="content-style">
-                    3F <br />
-                    {{$t('monitoringVPN.Switch')}}
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col>
-                <v-card
-                  height="60px"
-                  width="80px"
-                  hover
-                  color="#F9DEDE"
-                  class="monitor-status-card"
-                >
-                  <v-card-text class="content-style">
-                    {{$t('monitoringVPN.Printer')}} <br />
-                    2F
-                  </v-card-text>
-                </v-card>
-              </v-col>
-              <v-col>
-                <v-card
-                  height="60px"
-                  width="80px"
-                  hover
-                  color="#FCE3A8"
-                  class="monitor-status-card"
-                >
-                  <v-card-text class="content-style">
-                    {{$t('monitoringVPN.Printer')}} <br />
-                    3F
-                  </v-card-text>
-                </v-card>
-              </v-col>
-            </v-row>
-          </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="4">
-        <v-card class="mx-auto ml-3" height=" 400px" hover>
+      <v-col cols="6">
+        <v-card class="ml-3" hover>
+          <v-card-title>
+            {{ $t("monitoringVPN.OUTtrafficVPN") }}
+          </v-card-title>
           <v-card-item>
-            <div class="title-card-light mb-6">{{$t('monitoringVPN.Availablity')}}</div>
+            <apexchart
+              class="mb-5"
+              ref="chartOptionOutTraffic"
+              height="350"
+              :options="state.chartOptionOutTraffic"
+              :series="state.chartOptionOutTraffic.series"
+            ></apexchart>
           </v-card-item>
-          <v-card-text class="content-style">
-            <Apexchart
-              width="500"
-              type="area"
-              :options="chartOptions"
-              :series="series"
-            />
-          </v-card-text>
-        </v-card>
-      </v-col>
-      <v-col cols="4">
-        <v-card class="mx-auto ml-3" height=" 400px" hover>
-          <v-card-item>
-            <div class="title-card-light mb-6">{{$t('monitoringVPN.OUTtrafficVPN')}}</div>
-          </v-card-item>
-          <v-card-text class="content-style">
-            <Apexchart
-              width="500"
-              type="area"
-              :options="chartOptions"
-              :series="series"
-            />
-          </v-card-text>
         </v-card>
       </v-col>
     </v-row>
     <v-row>
-      <v-col cols="4">
-        <v-card class="mx-auto ml-3" height=" 400px" hover>
+      <v-col cols="6">
+        <v-card class="ml-3" hover>
+          <v-card-title>
+            {{ $t("monitoringVPN.PacketReceivedVPN") }}
+          </v-card-title>
           <v-card-item>
-            <div class="title-card-light mb-6">{{$t('monitoringVPN.CPU&MemoryVPN')}}</div>
+            <apexchart
+              class="mb-5"
+              ref="chartOptionPacketReceived"
+              height="350"
+              :options="state.chartOptionPacketReceived"
+              :series="state.chartOptionPacketReceived.series"
+            ></apexchart>
           </v-card-item>
-          <v-card-text class="content-style">
-            <Apexchart
-              width="500"
-              type="area"
-              :options="chartOptions"
-              :series="series"
-            />
-          </v-card-text>
         </v-card>
       </v-col>
-      <v-col cols="4">
-        <v-card class="mx-auto ml-3" height=" 400px" hover>
+      <v-col cols="6">
+        <v-card class="ml-3" hover>
+          <v-card-title>
+            {{ $t("monitoringVPN.PacketSentVPN") }}
+          </v-card-title>
           <v-card-item>
-            <div class="title-card-light mb-6">{{$t('monitoringVPN.PacketReceivedVPN')}}</div>
+            <apexchart
+              class="mb-5"
+              ref="chartOptionPacketSent"
+              height="350"
+              :options="state.chartOptionPacketSent"
+              :series="state.chartOptionPacketSent.series"
+            ></apexchart>
           </v-card-item>
-          <v-card-text class="content-style">
-            <Apexchart
-              width="500"
-              type="area"
-              :options="chartOptions"
-              :series="series"
-            />
-          </v-card-text>
-        </v-card>
-      </v-col>
-      <v-col cols="4">
-        <v-card class="mx-auto ml-3" height=" 400px" hover>
-          <v-card-item>
-            <div class="title-card-light mb-6">{{$t('monitoringVPN.PacketSentVPN')}}</div>
-          </v-card-item>
-          <v-card-text class="content-style">
-            <Apexchart
-              width="500"
-              type="area"
-              :options="chartOptions"
-              :series="series"
-            />
-          </v-card-text>
         </v-card>
       </v-col>
     </v-row>
@@ -204,10 +130,15 @@
 </template>
 
 <script>
+import useValidate from "@vuelidate/core";
+import { required, helpers } from "@vuelidate/validators";
+import { getCookie } from "@/mixins/csrftoken.js";
+import axios from "axios";
+import { reactive, onMounted, ref, computed } from "vue";
+import { useI18n } from "vue-i18n";
 import MonitoringCards from "./cards.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import Apexchart from "vue3-apexcharts";
-
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 
@@ -218,64 +149,250 @@ export default {
     MonitoringCards,
     Apexchart,
   },
-  props: {},
-  data() {
-    return {
-      series: [
-        {
-          name: "server",
-          data: [31, 40, 28, 51, 42, 109, 100],
-        },
+
+  setup() {
+    const { t } = useI18n();
+
+    const availability = computed(() => {
+      return t("monitoringVPN.Availablity");
+    });
+    const OutTraffic = computed(() => {
+      return t("monitoringVPN.OutTraffic");
+    });
+    const PacketReceived = computed(() => {
+      return t("monitoringVPN.PacketReceived");
+    });
+    const PacketSent = computed(() => {
+      return t("monitoringVPN.PacketSent");
+    });
+    const state = reactive({
+      server: "",
+      lasObj: null,
+      date: "",
+      snackbar: false,
+      color: "",
+      textAlert: "",
+      serverList: [],
+      dateList: [
+        { name: "LAST 24 HOURS", time_value: "24", time_unit: "hours" },
       ],
-      chartOptions: {
+      socket: null,
+      dataChart: null,
+      chartOptionsAvailability: {
         chart: {
-          height: 350,
           type: "area",
           zoom: {
-            enabled: true,
-          },
-        },
-        dataLabels: {
-          enabled: false,
-        },
-        stroke: {
-          curve: "straight",
-        },
-        title: {
-          text: "",
-          align: "left",
-        },
-        grid: {
-          row: {
-            colors: ["#f3f3f3", "transparent"], // takes an array which will be repeated on columns
-            opacity: 0.5,
+            enabled: false,
           },
         },
         xaxis: {
-          categories: [
-            "05:00 PM",
-            "06:00 PM",
-            "07:00 PM",
-            "08:00 PM",
-            "09:00 PM",
-            "10:00 PM",
-            "11:00 PM",
-          ],
+          type: "datetime",
         },
-        fill: {
-          colors: ["#213E9F"],
-          type: "gradient",
-          gradient: {
-            shadeIntensity: 1,
-            opacityFrom: 0.7,
-            opacityTo: 0.9,
-            stops: [0, 90, 100],
+
+        series: [
+          {
+            name: availability,
+            data: [],
+          },
+        ],
+      },
+      chartOptionOutTraffic: {
+        chart: {
+          type: "area",
+          zoom: {
+            enabled: false,
           },
         },
+        xaxis: {
+          type: "datetime",
+        },
+
+        series: [
+          {
+            name: OutTraffic,
+            data: [],
+          },
+        ],
       },
+      chartOptionPacketReceived: {
+        chart: {
+          type: "area",
+          zoom: {
+            enabled: false,
+          },
+        },
+        xaxis: {
+          type: "datetime",
+        },
+
+        series: [
+          {
+            name: PacketReceived,
+            data: [],
+          },
+        ],
+      },
+      chartOptionPacketSent: {
+        chart: {
+          type: "area",
+          zoom: {
+            enabled: false,
+          },
+        },
+        xaxis: {
+          type: "datetime",
+        },
+
+        series: [
+          {
+            name: PacketSent,
+            data: [],
+          },
+        ],
+      },
+    });
+
+    const getAllListServer = () => {
+      const serversAttribute =
+        document.getElementById("app").attributes["servers"].value;
+
+      const parsedArray = JSON.parse(serversAttribute);
+      let servers = parsedArray.map((i) => {
+        return {
+          id: i.id,
+          name: i.conn_name,
+        };
+      });
+
+      state.serverList = servers;
+    };
+
+    onMounted(async () => {
+      getAllListServer();
+    });
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+
+    const rules = computed(() => {
+      return {
+        date: { required: helpers.withMessage(error, required) },
+        server: { required: helpers.withMessage(error, required) },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
+
+    const serve = async () => {
+      const result = await v$.value.$validate();
+
+      if (result) {
+        setTimeout(() => {
+          initializeWebSocket();
+        }, 1000);
+      }
+    };
+
+    const apexChart = ref(null);
+    const chartTraffic = ref(null);
+    const chartOptionsAvailability = ref(null);
+    const chartOptionOutTraffic = ref(null);
+    const chartOptionPacketReceived = ref(null);
+    const chartOptionPacketSent = ref(null);
+
+    const initializeWebSocket = () => {
+      state.socket = new WebSocket(
+        "wss://" + window.location.host + "/ws/ipsecmonitoring/"
+      );
+
+      state.socket.onopen = () => {
+        console.log("WebSocket connection opened.");
+        state.socket.send(
+          JSON.stringify({
+            id: state.server.id,
+            time: {
+              time_value: +state.date.time_value,
+              time_unit: state.date.time_unit,
+            },
+          })
+        );
+      };
+      state.socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        const lastIndex = data.length - 1;
+        const lastObject = data[lastIndex];
+        state.lasObj = lastObject;
+
+        state.chartOptionsAvailability.series[0].data = [];
+        state.chartOptionOutTraffic.series[0].data = [];
+
+        state.chartOptionPacketReceived.series[0].data = [];
+
+        state.chartOptionPacketSent.series[0].data = [];
+
+        data.forEach((element) => {
+          state.chartOptionsAvailability.series[0].data.push({
+            x: new Date(element.timestamp * 1000).getTime(),
+            y: element.availability_bytes,
+          });
+          state.chartOptionOutTraffic.series[0].data.push({
+            x: new Date(element.timestamp * 1000).getTime(),
+            y: element.total_bytes,
+          });
+          state.chartOptionPacketReceived.series[0].data.push({
+            x: new Date(element.timestamp * 1000).getTime(),
+            y: element.bytes_in,
+          });
+          state.chartOptionPacketSent.series[0].data.push({
+            x: new Date(element.timestamp * 1000).getTime(),
+            y: element.bytes_out,
+          });
+        });
+        const maxDataPoints = 10;
+        if (
+          state.chartOptionsAvailability.series[0].data.length > maxDataPoints
+        ) {
+          state.chartOptionsAvailability.series[0].data.shift();
+        }
+
+        chartOptionsAvailability.value.updateOptions({});
+
+        if (state.chartOptionOutTraffic.series[0].data.length > maxDataPoints) {
+          state.chartOptionOutTraffic.series[0].data.shift();
+        }
+
+        chartOptionOutTraffic.value.updateOptions({});
+        if (
+          state.chartOptionPacketReceived.series[0].data.length > maxDataPoints
+        ) {
+          state.chartOptionPacketReceived.series[0].data.shift();
+        }
+
+        chartOptionPacketReceived.value.updateOptions({});
+        if (state.chartOptionPacketSent.series[0].data.length > maxDataPoints) {
+          state.chartOptionPacketSent.series[0].data.shift();
+        }
+
+        chartOptionPacketSent.value.updateOptions({});
+      };
+
+      state.socket.onclose = () => {
+        console.log("WebSocket connection closed.");
+      };
+    };
+
+    return {
+      v$,
+      state,
+      apexChart,
+      chartOptionsAvailability,
+      chartOptionOutTraffic,
+      chartOptionPacketReceived,
+      chartOptionPacketSent,
+      chartTraffic,
+      serve,
     };
   },
-  computed: {},
 };
 </script>
 

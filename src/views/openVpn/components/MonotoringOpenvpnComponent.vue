@@ -306,12 +306,14 @@ export default {
         ],
       },
     });
-
+    const specificform = computed(() => {
+      return t("errors.formsepcificpassword");
+    });
     const rules = computed(() => {
       return {
         password: {
           isValidPassword: helpers.withMessage(
-            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+            specificform,
 
             helpers.regex(
               /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
@@ -494,7 +496,7 @@ export default {
 
     const initializeWebSocket = () => {
       state.socket = new WebSocket(
-        "ws://" + window.location.host + "/ws/vpnmonitoring/"
+        "wss://" + window.location.host + "/ws/vpnmonitoring/"
       );
 
       state.socket.onopen = () => {

@@ -4,6 +4,7 @@ from backend.network.models import Interface
 from .models import *
 from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
+from django.utils.translation import gettext_lazy as _
 import json
 from backend.authentification.views import *
 from backend.gateway.models import *
@@ -17,6 +18,26 @@ from collections import defaultdict
 from drf_yasg.openapi import Schema, TYPE_ARRAY, TYPE_BOOLEAN, TYPE_INTEGER, TYPE_OBJECT, TYPE_STRING
 from rest_framework.permissions import IsAuthenticated
 # Create your views here.
+
+
+
+# Constants
+CONSTANT_SYSTEM = _('System')
+CONSTANT_LANGUAGE = _('Language')
+CONSTANT_SYSTEM_CONFIG = _('Configuration')
+
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+SUCCESS_MESSAGES_UPDATING = _("is updated")
+
+# Error messages
+ERROR_MESSAGES_CREATING = _("Error in creating")
+ERROR_MESSAGES_DELETING = _("Error in deleting")
+ERROR_MESSAGES_UPDATING = _("Error in updating")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
+
+
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, operation_summary="API TO UPDATE generale settings",
                      request_body=Schema(type=TYPE_OBJECT,  required=['hostname', 'domain', 'timezone', 'dns_servers'],
@@ -67,10 +88,10 @@ def generale_settings(request,id):
                 instance, created = Network.objects.update_or_create(
                     defaults={'server_dns': data['dns_servers']},  # Replace field1, field2, new_value1, new_value2 with your updated values
                 )
-            msg = "done"
+            msg = f"{CONSTANT_SYSTEM} {SUCCESS_MESSAGES_CREATING}"
             status = 200
         else:
-            msg = "eroor"
+            msg = f"{CONSTANT_SYSTEM} {ERROR_MESSAGES_CREATING}"
             status = 400
     return JsonResponse({"msg": msg}, status=status)
 
@@ -210,7 +231,7 @@ def createSystem(request):
         serializerSystem = SystemSerializer(data=data)
         # check if the sent information is okay
         if (serializerSystem.is_valid()):
-            msg = 'system added succesfully'
+            msg = f"{CONSTANT_SYSTEM} {SUCCESS_MESSAGES_CREATING}"
                 # if okay, save it on the database
             serializerSystem.save()
                 # provide a Json Response with the data that was saved
@@ -449,7 +470,7 @@ def change_language(request, id):
         serializer_system = SystemSerializer(system, data=data, partial=True)
         if serializer_system.is_valid():
             serializer_system.save()
-            return JsonResponse({"msg": "Language is updated"}, status=200)
+            return JsonResponse({"msg":f"{CONSTANT_LANGUAGE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
         return JsonResponse({"error": list(serializer_system.errors.values())[0][0]}, status=400)
     except (System.DoesNotExist):
-        return JsonResponse({"error": "No systm configuration exist"}, status=400)
+        return JsonResponse({"error":f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

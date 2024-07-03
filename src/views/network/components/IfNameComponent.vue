@@ -7,43 +7,65 @@
             $t("interface.basicConfiguration")
           }}</v-card-title>
           <v-divider class="ml-3"></v-divider>
-          <v-row class="ml-3 mt-3">
-            <div style="color: black">Interface</div>
+          <v-row class="px-0 mx-0 mt-3">
+            <!-- <div style="color: black">Interface</div>
             <input type="checkbox" class="ml-5" v-model="activate" />
-            <label class="ml-2">{{ $t("interface.activate") }}</label>
+            <label class="ml-5">{{ $t("interface.activate") }}</label> -->
+
+            <v-col cols="4">
+              <label>Interface</label>
+            </v-col>
+            <v-col cols="4" class="mb-n6">
+              <input type="checkbox" v-model="activate" />
+              <label class="ml-2">{{ $t("interface.activate") }}</label>
+            </v-col>
           </v-row>
-          <div class="ml-3" style="background-color: #f6f6f6">
-            <v-row class="ml-3 mt-5">
+
+          <div class="px-0 mx-0">
+            <v-row class="px-0 mx-0 mt-5">
               <v-col class="device-style"
                 >{{ $t("interface.device")
                 }}<span style="color: red">*</span></v-col
               >
             </v-row>
-            <v-row class="ml-3 mr-3">
+            <v-row class="ml-2 mr-3 mb-n6">
               <v-text-field :model-value="device" readonly></v-text-field>
             </v-row>
           </div>
-          <div class="ml-3" style="background-color: #f6f6f6">
-            <v-row class="ml-3 mt-5">
-              <v-col class="device-style"
-                >Description <span style="color: red">*</span>
-              </v-col>
+          <div class="">
+            <v-row class="px-0 mx-0 mt-5">
+              <v-col class="device-style">Description </v-col>
             </v-row>
-            <v-row class="ml-3 mr-3">
-              <v-text-field
-                v-model="description"
-                :rules="[(v) => !!v || $t('interface.descriptionRequired')]"
-                required
-              ></v-text-field>
+            <v-row class="ml-2 mr-3">
+              <v-text-field v-model="description"></v-text-field>
             </v-row>
           </div>
           <v-card-title class="title-text mt-5">{{
             $t("interface.genericConfiguration")
           }}</v-card-title>
           <v-divider class="ml-3 mb-5"></v-divider>
+
+          <v-row class="px-0 mb-2">
+            <v-col cols="4" class="ml-3">
+              <label>{{ $t("interface.blockNetworks") }}</label>
+            </v-col>
+            <v-col cols="4" class="mb-n6">
+              <input type="checkbox" v-model="private_aux" />
+              <label class="ml-2">{{ $t("interface.private") }}</label>
+            </v-col>
+            <v-col cols="4" class="ml-3">
+              <label>{{ $t("interface.blockBogonAddresses") }}</label>
+            </v-col>
+            <v-col cols="4" class="mb-n6">
+              <input type="checkbox" v-model="bogon_aux" />
+              <label class="ml-2">{{
+                $t("interface.notAssignedByIANA")
+              }}</label>
+            </v-col>
+          </v-row>
           <table class="ml-3">
             <tbody>
-              <tr>
+              <!-- <tr>
                 <td>
                   <div>{{ $t("interface.blockNetworks") }}</div>
                 </td>
@@ -62,16 +84,17 @@
                   <input type="checkbox" v-model="bogon_aux" class="ml-5" />
                   <label>{{ $t("interface.notAssignedByIANA") }}</label>
                 </td>
-              </tr>
+              </tr> -->
               <tr>
                 <td>
-                  <div>
+                  <div class="mt-n4">
                     {{ $t("interface.IPV4SetupType") }}
                     <span style="color: red">*</span>
                   </div>
                 </td>
                 <td class="new-style">
                   <v-select
+                    :label="$t('interface.IPV4SetupType')"
                     background-color="#f6f6f6"
                     v-model="setuptypeip4"
                     :items="items.map((item) => item.value)"
@@ -83,7 +106,7 @@
               </tr>
               <tr>
                 <td>
-                  <div style="color: #020202">
+                  <div style="color: #020202" class="mt-n4">
                     {{ $t("interface.MACAddress") }}
                   </div>
                 </td>
@@ -98,7 +121,7 @@
               </tr>
               <tr>
                 <td>
-                  <div>{{ $t("interface.MTU") }}</div>
+                  <div class="mt-n4">{{ $t("interface.MTU") }}</div>
                 </td>
                 <td>
                   <v-text-field
@@ -111,7 +134,7 @@
               </tr>
               <tr>
                 <td>
-                  <div>{{ $t("interface.MSS") }}</div>
+                  <div class="mt-n4">{{ $t("interface.MSS") }}</div>
                 </td>
                 <td>
                   <v-text-field
@@ -123,12 +146,13 @@
               </tr>
               <tr>
                 <td>
-                  <span style="color: #020202">{{
-                    $t("interface.speedAndDuplex")
-                  }}</span>
+                  <div style="color: #020202" class="mt-n4">
+                    {{ $t("interface.speedAndDuplex") }}
+                  </div>
                 </td>
                 <td>
                   <v-select
+                    :label="$t('interface.speedAndDuplex')"
                     v-model="speed_duplex"
                     :items="speedDuplexItems.map((item) => item)"
                     class="ml-3 speed-duplex-style"
@@ -147,7 +171,7 @@
             <v-divider class="ml-3 mr-3"></v-divider>
             <div class="mr-2 ml-2">
               <v-row class="mt-2">
-                <v-col align-self="center" cols="4">
+                <v-col align-self="center" cols="3">
                   <label>{{ $t("interface.IPV4Address") }}</label>
                   <small style="color: red">*</small>
                 </v-col>
@@ -164,6 +188,7 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
+                    :label="$t('sdwan.prefix')"
                     v-model="value_setup_Ipv4.netmask4"
                     :items="netmaskItems"
                     class="ml-3 netmask-select-style"
@@ -171,7 +196,7 @@
                     :no-data-text="$t('certificat.certificatlist')"
                   ></v-select>
                 </v-col>
-                <v-col align-self="center" cols="4">
+                <v-col align-self="center" cols="3">
                   <label>IPV4 gateway</label>
                   <small style="color: red">*</small>
                 </v-col>
@@ -307,7 +332,7 @@
         v-if="showAlertGateway"
         :style="alertStyle"
       >
-        {{ $t("interface.addedSuccessfully") }}
+        {{ message }}
       </v-alert>
       <v-alert
         type="success"
@@ -319,7 +344,7 @@
         v-if="showAlert"
         :style="alertStyle"
       >
-        {{ $t("interface.savedSuccessfully") }}
+        {{ message }}
       </v-alert>
       <v-dialog
         v-model="showGatewayDialog"
@@ -341,6 +366,9 @@
                     v-model="gateway.gwname"
                   ></v-text-field>
                 </v-row>
+                <p class="error-feedback mb-5 px-0 mx-0" v-if="!isNameGateway">
+                  {{ messageNameGateway }}
+                </p>
                 <v-row>
                   <v-text-field
                     label="Gateway IPV4"
@@ -348,6 +376,15 @@
                     v-model="gateway.gwaddress"
                   ></v-text-field>
                 </v-row>
+                <p
+                  class="error-feedback mb-5 px-0 mx-0"
+                  v-if="!isGatewayAddress"
+                >
+                  {{ messageGatewayAddress }}
+                </p>
+                <p class="error-feedback mb-5 px-0 mx-0" v-if="!isValidAddress">
+                  {{ messageValidAddress }}
+                </p>
                 <v-row>
                   <v-text-field
                     label="Description"
@@ -416,11 +453,16 @@ export default {
     VButton,
     AdvancedConfigDHCPv4,
   },
+  inject: ["emitter"],
   props: {
     activeTab: String,
   },
   data() {
     return {
+      messageGatewayAddress: "",
+      messageNameGateway: "",
+      messageValidAddress: "",
+      message: "",
       typeDHCP4: "",
       advancedParameters: false,
       interface: {
@@ -491,6 +533,7 @@ export default {
       },
     };
   },
+
   computed: {
     alertStyle() {
       return {
@@ -500,8 +543,24 @@ export default {
         width: "20%",
       };
     },
+    isNameGateway() {
+      return this.gateway.gwname;
+    },
+    isGatewayAddress() {
+      return this.gateway.gwaddress;
+    },
     allStaticGatewaysAddresses() {
       return this.allStaticGateways.map((gateway) => gateway.gwaddress);
+    },
+    isValidAddress() {
+      const ipRegex =
+        /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+
+      // Validate the input value against the regex
+      if (!ipRegex.test(this.gateway.gwaddress)) {
+        return false; // Error message for invalid IP address
+      }
+      return true;
     },
   },
   methods: {
@@ -575,6 +634,7 @@ export default {
             },
           },
         };
+        console.log("params", params);
 
         function getCookie(name) {
           let cookieValue = null;
@@ -597,11 +657,13 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         axios.put("/network/conf/" + this.activeTab, params).then(
-          () => {
+          (response) => {
+            this.message = response.data.message;
             this.showAlert = true;
             setTimeout(() => {
               this.showAlert = false;
-            }, 3000);
+              location.reload();
+            }, 1000);
           },
           (error) => {
             console.log(error);
@@ -663,11 +725,13 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         axios.put("/network/conf/" + this.activeTab, params).then(
-          () => {
+          (response) => {
+            this.message = response.data.message;
             this.showAlert = true;
             setTimeout(() => {
               this.showAlert = false;
-            }, 3000);
+              location.reload();
+            }, 1000);
           },
           (error) => {
             console.log(error);
@@ -682,6 +746,19 @@ export default {
       this.showGatewayDialog = true;
     },
     addGateway() {
+      if (!this.isNameGateway) {
+        this.messageNameGateway = this.$t("errors.valueRequired");
+        return;
+      }
+      if (!this.isGatewayAddress) {
+        this.messageGatewayAddress = this.$t("errors.valueRequired");
+        return;
+      }
+      if (!this.isValidAddress) {
+        this.messageValidAddress = this.$t("champs.validAddress");
+        return;
+      }
+
       const params = {
         gwname: this.gateway.gwname,
         gwaddress: this.gateway.gwaddress,
@@ -690,6 +767,8 @@ export default {
         far_aux: this.gateway.far_aux,
         multiwan_aux: this.gateway.multiwan_aux,
       };
+      this.allStaticGateways.unshift(params);
+
       function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== "") {
@@ -712,20 +791,25 @@ export default {
 
       axios.post("/gateway/addStaticGateway", params).then(
         (response) => {
+          console.log("response***", response);
           if (response.status == "200") {
             this.showGatewayDialog = false;
+            this.message = response.data.msg;
             this.gateway = {
               gwname: "",
               gwaddress: "",
               description: "",
-              default_aux: true,
+              default_aux: false,
               far_aux: false,
               multiwan_aux: false,
             };
+            this.messageGatewayAddress = "";
+            this.messageNameGateway = "";
+            this.messageValidAddress = "";
             this.showAlertGateway = true;
             setTimeout(() => {
               this.showAlertGateway = false;
-            }, 3000);
+            }, 1000);
           } else {
             this.showGatewayDialog = true;
           }
@@ -741,10 +825,13 @@ export default {
         gwname: "",
         gwaddress: "",
         description: "",
-        default_aux: true,
+        default_aux: false,
         far_aux: false,
         multiwan_aux: false,
       };
+      this.messageGatewayAddress = "";
+      this.messageNameGateway = "";
+      this.messageValidAddress = "";
     },
     updateGateway() {
       const params = {
@@ -778,6 +865,7 @@ export default {
       axios.put("/gateway/updateStaticGateway", params).then(
         (response) => {
           this.showAlert = true;
+          console.log(response);
           setTimeout(() => {
             this.showAlert = false;
           }, 3000);
@@ -832,7 +920,8 @@ export default {
       .replace(/False/g, "false")
       .replace(/None/g, "null");
     parsedArray = JSON.parse(validJsonString);
-    this.allStaticGateways = parsedArray;
+    let combineArray = [{ gwaddress: "Auto Detect" }];
+    this.allStaticGateways = [...parsedArray, ...combineArray];
 
     this.activate = this.IPV4Config?.interface !== null ? true : false;
     this.device = this.IPV4Config.interface.ifname;
@@ -851,7 +940,8 @@ export default {
     this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 
     this.name_interface = this.IPV4Config.interface.name_interface;
-    this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw;
+    this.value_setup_Ipv4.gateway4.value =
+      this.IPV4Config.IPV4Config.addrgw ?? "Auto Detect";
 
     this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
     this.interface.alias_add = this.IPV4Config.IPV4Config.alias_add;

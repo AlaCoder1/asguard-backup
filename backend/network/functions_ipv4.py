@@ -25,10 +25,11 @@ def update_conn_static_IPV4(config,ifname,uuid,ipaddress,netmask,cmdgw):
     cmd_final=[]
     if ipaddress is not None and netmask is not None:
         cmd_final.append("sudo nmcli connection modify {} ipv4.method manual ipv4.addresses {}/{}".format(uuid,ipaddress,netmask))
-    cmd_final+=[ 
-         cmdgw,      
-        ]
-    
+    if cmdgw is not  None:
+        cmd_final+=[ 
+            cmdgw,      
+            ]
+        
     return commands,config,cmd_final
 
 ################### Dhcp

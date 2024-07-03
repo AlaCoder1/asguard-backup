@@ -29,12 +29,12 @@ from backend.proxy.views import *
 from backend.proxy.models import *
 from backend.sdwan.list_area import get_list_all_area
 from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule
-from backend.subscription.models import plan, plansSubscription,plansFeatures
+from backend.subscription.models import plan, plansSubscription,plansFeatures,Features
 import ruamel.yaml
 from backend.settings.models import *
 from collections import defaultdict
-from backend.waf.list_waf import get_one_waf_config
-from views.functions import get_vlan, get_vlan_interface
+from backend.waf.list_waf import get_alerts, get_list_all_waf_application, get_list_all_waf_rule, get_one_waf_config
+from views.functions import get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
 
 from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
@@ -49,7 +49,6 @@ def get_squid_status():
                 status = line.split(':')[1].strip()
                 return status
     except subprocess.CalledProcessError as e:
-        # print(f"Error: {e}")
         return None
     
 def getGeneraleInfo(request):
@@ -379,7 +378,6 @@ def get_informations_by_interface(request,name_interface):
                 info['IPV6Config']=resultat6[0]['fields']
         else:
             info['IPV6Config']=[]
-        # print({"info":info})
     return info
 
 
@@ -498,7 +496,7 @@ def firewall_page(request):
     rules=get_all_rules(request)
     interfaces=get_all_interfaces(request)
     last_subscription=list_features_about_last_subscription(request)
-    context = {'rules':rules, 'interfaces':interfaces,'last_subscription':json.dumps(last_subscription)}
+    context = {'rules':json.dumps(rules), 'interfaces':interfaces,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'firewall_page.html',context)
 
 @login_required(login_url='/')
@@ -514,7 +512,6 @@ def ipsec_page(request):
     servers=get_list_all_server_ipsec()
     public_key =get_list_all_public_key()
     status = get_status_ipsec()
-    # print('status:', status)
     context = {'servers': servers, 'publicKey': public_key, 'status': status}
     return render(request, 'ipsec_page.html', context)
 
@@ -543,19 +540,24 @@ def sdwan_page(request):
     allArea = get_list_all_area()
     allRule = get_list_all_sdwan_rule()
     context = {'allArea': json.dumps(allArea),'allRule': json.dumps(allRule)}
-    # print('context',context) 
     return render(request, 'sdwan_page.html',context)
 
 @login_required(login_url='/')
 def waf_page(request):
     waf_conf = get_one_waf_config()
-    context = {'waf_conf': json.dumps(waf_conf)}
-    print(context)
+    list_rules = get_list_all_waf_rule()
+    list_waf_app = get_list_all_waf_application()
+    waf_alert = get_alerts()
+    context = {'waf_conf': json.dumps(waf_conf),'list_rules': json.dumps(list_rules),'list_waf_app': json.dumps(list_waf_app),'waf_alert': json.dumps(waf_alert)}
     return render(request, 'waf_page.html',context)
 
 @login_required(login_url='/')
 def profile_page(request):
     return render(request, 'profile_page.html')
+
+@login_required(login_url='/')
+def system_log(request):
+    return render(request, 'system_log.html')
 
 @login_required(login_url='/')
 def setting_page(request):
@@ -567,21 +569,20 @@ def setting_page(request):
     time_zone = time_zones(request)
     gateway=gatways_information(request)
     context = {'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings),"network_info":json.dumps(network_info),"gateway":json.dumps(gateway)}
-    print({"context ************":context})
     return render(request, 'settings_page.html',context)
 
 @login_required(login_url='/')
 def clamav_page(request):
     config= getclamavconfigurations()
     context = {'config':config}
-    # print('******************** :',context)
     return render(request, 'clamaV_page.html',context)
+
 
 @login_required(login_url='/')
 def subscription_page(request):
     subscription_information=subscription_info(request)
-    # print('subscription_information',subscription_information)
-    context = {'subscription_information':json.dumps(subscription_information)}
+    allfeature = all_feature(request)
+    context = {'subscription_information':json.dumps(subscription_information),'allfeature':json.dumps(allfeature)}
     return render(request, 'subscription_page.html', context)
  
 #comment to test git command
@@ -613,7 +614,6 @@ def index_page(request):
             "ip_address":ip_address}
         config.append(info_interface)
     context = {"informations":info,"gateways":json.dumps(gateways),"interfaces":json.dumps(config)}
-    # print(context)
     return render(request, 'index_page.html',context)
 
 
@@ -672,6 +672,19 @@ def subscription_info(request):
             subscription_info = {}
         return subscription_info
     
+def all_feature(request):
+    features = []
+    feature_element = {}
+    if request.method == 'GET':
+        features_from_bd = Features.objects.all()
+        for feature in features_from_bd:
+            feature_element["name"] = feature.features
+            feature_element["price"] = feature.price
+            feature_element["id"] = feature.pk
+            features.append(feature_element)
+            feature_element = {}
+        return features
+    
 @login_required(login_url='/')
 def openvpn_monitoring(request):
     return render(request, 'vpnmonitoring.html')
@@ -691,6 +704,13 @@ def vlan_page(request):
     return render(request, 'vlan.html',context)
 
 @login_required(login_url='/')
+def vxlan_page(request):
+    list_vxlan=get_vxlan(request)
+    list_vxlan_interface= get_vxlan_interface(request)
+    context = {'list_vxlan':list_vxlan,'list_vxlan_interface':list_vxlan_interface}
+    return render(request, 'vxlan.html',context)
+
+@login_required(login_url='/')
 def routing_page(request):
 
     listAllRouting = get_list_all_routing()
@@ -702,8 +722,10 @@ def routing_page(request):
 @login_required(login_url='/')
 def interface_type(request):
     list_vlan=get_vlan(request)
+    list_vxlan=get_vxlan(request)
     list_vlan_interface= get_vlan_interface(request)
-    context = {'list_vlan':json.dumps(list_vlan),'list_vlan_interface':json.dumps(list_vlan_interface)}
+    list_vxlan_interface= get_vxlan_interface(request)
+    context = {'list_vlan':json.dumps(list_vlan),'list_vlan_interface':json.dumps(list_vlan_interface),'list_vxlan':json.dumps(list_vxlan),'list_vxlan_interface':json.dumps(list_vxlan_interface)}
     return render(request, 'interfaceType.html',context)
 
 @login_required(login_url='/')

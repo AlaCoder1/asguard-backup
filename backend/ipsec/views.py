@@ -314,10 +314,6 @@ def create_server_ipsec(request):
 
             # Add the server to the database
             serializer_server.save()
-            up_ipsec_status = up_ipsec_conn(conn_name)
-            if up_ipsec_status:
-                return JsonResponse({"msg": f"{conn_name} {SUCCESS_MESSAGES_CREATING}"}, status=201)
-            return JsonResponse({"error": ERROR_MESSAGES_UP_CONFIG}, status=400)
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_IPSEC_CONFIGURATION}"}, status=400)
@@ -556,10 +552,6 @@ def update_server_ipsec(request, id):
 
             # Add the server to the database
             serializer_server.save()
-            up_ipsec_status = up_ipsec_conn(server.conn_name)
-            if up_ipsec_status:
-                return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
-            return JsonResponse({"error": ERROR_MESSAGES_UP_CONFIG}, status=400)
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 
     except ServerIPsec.DoesNotExist:
@@ -568,6 +560,20 @@ def update_server_ipsec(request, id):
         return JsonResponse({"error": f"{CONSTANT_INTERFACE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
     except IP4Config.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_IPV4_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO UP A CONN IPSEC",)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def up_server_ipsec(request, id):
+    """Up a conn IPsec from system"""
+    server = ServerIPsec.objects.get(id=id)
+    up_ipsec_status = up_ipsec_conn(server.conn_name)
+    if up_ipsec_status:
+        return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+    return JsonResponse({"error": ERROR_MESSAGES_UP_CONFIG}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 

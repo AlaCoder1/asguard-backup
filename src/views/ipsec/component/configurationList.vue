@@ -1,6 +1,26 @@
 <template>
   <div class="mt-3 ml-3 mr-3">
     <v-row>
+      <v-overlay v-model="loading">
+        <v-dialog
+          v-model="isLoadingDialogue"
+          :scrim="false"
+          persistent
+          width="auto"
+        >
+          <v-card color="#193286">
+            <v-card-text>
+              {{ $t("requiredfield.attente") }}
+              <v-progress-linear
+                indeterminate
+                color="white"
+                class="mb-0"
+              ></v-progress-linear>
+            </v-card-text>
+          </v-card>
+        </v-dialog>
+      </v-overlay>
+
       <v-col cols="12">
         <h4 class="mb-1">
           IPSEC PEERS
@@ -108,6 +128,8 @@ export default {
     const dialogDelete = ref(false);
     const overlayTemplate = ref("");
     const currentRowToDelete = ref(null);
+    const loading = ref(false);
+    const isLoadingDialogue = ref(false);
     const status = ref(false);
     const remoteGateway = computed(() => {
       return t("PageIpsec.remotegateway");
@@ -426,6 +448,11 @@ export default {
       } else {
         eGui.innerHTML = `
             <button
+            class="action-button up"
+            data-action="up">
+              <i class="mdi mdi-arrow-up-bold-circle" style="color: #086EAE; font-size: 20px;" ></i>
+            </button>
+            <button
             class="action-button editClient"
             data-action="edit">
               <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -435,6 +462,7 @@ export default {
             data-action="delete">
               <i class="mdi mdi-delete" style="color: #086EAE; font-size: 20px;"></i>
             </button>
+           
         `;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
@@ -461,6 +489,31 @@ export default {
         case "delete":
           currentRowToDelete.value = rowData;
           dialogDelete.value = true;
+          break;
+        case "up":
+          console.log("up", rowData);
+          loading.value = true;
+          isLoadingDialogue.value = true;
+          axios
+            .post(`/ipsec/upServerIPsec/${rowData.id}`)
+            .then((response) => {
+              snackbar.value = true;
+              color.value = "success";
+              textAlert.value = response.data.msg;
+              loading.value = false;
+              isLoadingDialogue.value = false;
+
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+              loading.value = false;
+              isLoadingDialogue.value = false;
+            });
           break;
         default:
           break;
@@ -552,6 +605,8 @@ export default {
     };
 
     return {
+      loading,
+      isLoadingDialogue,
       status,
       emitter,
       overlayTemplate,

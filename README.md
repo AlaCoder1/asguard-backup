@@ -93,3 +93,6 @@ python manage.py init_routing
 
 #### WAF
 python manage.py init_waf_config
+
+#### Logs
+python manage.py init_logs

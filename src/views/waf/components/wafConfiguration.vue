@@ -503,7 +503,7 @@ export default {
             state.isLoadingDialogue = false;
             state.snackbar = true;
             state.color = "error";
-            state.textAlert = i.response.data.msg;
+            state.textAlert = i.response.data.error;
           });
       } else {
         console.log("error", v$.value);

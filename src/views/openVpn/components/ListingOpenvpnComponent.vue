@@ -74,7 +74,7 @@
             :paginationPageSize="4"
             :localeText="paginationLocalization"
           />
-          <div class="d-flex justify-end mt-3">
+          <div class="d-flex justify-end mt-3 mb-10">
             <VButton
               rounded
               outlined
@@ -208,7 +208,7 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
-
+        autoHeight: true,
         sortable: true,
         filter: true,
         checkboxSelection: true,
@@ -218,7 +218,7 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
-
+        autoHeight: true,
         cellRenderer: formatedProtocServer,
         sortable: true,
         filter: true,
@@ -231,6 +231,7 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
+        autoHeight: true,
       },
       {
         headerName: "Description",
@@ -240,6 +241,7 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
+        autoHeight: true,
       },
       {
         headerName: CertificatStatus,
@@ -256,14 +258,17 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
+        autoHeight: true,
       },
       {
         headerName: "Action",
         cellRenderer: actionCellRenderer,
-        width: 150,
+        width: 200,
         field: "action",
+        minWidth: 150,
         sortable: true,
         filter: true,
+        autoHeight: true,
       },
     ]);
     const columnClients = ref([
@@ -283,6 +288,7 @@ export default {
         cellRenderer: formatedProtocClient,
         sortable: true,
         filter: true,
+        autoHeight: true,
         width: 90,
         minWidth: 50,
         flex: 1,
@@ -301,6 +307,7 @@ export default {
         headerName: "Description",
         field: "description",
         sortable: true,
+        autoHeight: true,
         filter: true,
         width: 90,
         minWidth: 50,
@@ -321,14 +328,17 @@ export default {
         width: 90,
         minWidth: 50,
         flex: 1,
+        autoHeight: true,
       },
       {
         headerName: "Action",
         cellRenderer: actionCellRendererClient,
-        width: 150,
+        width: 200,
+        minWidth: 150,
         field: "action",
         sortable: true,
         filter: true,
+        autoHeight: true,
       },
     ]);
     const rowDataServers = reactive({});
@@ -400,7 +410,7 @@ export default {
         <button
           id="play"
           class="action-button play"
-          data-action="play" title=${t('sdwan.startServer')}>
+          data-action="play" title=${t("sdwan.startServer")}>
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
 
@@ -433,14 +443,14 @@ export default {
           <button
           id="restart"
           class="action-button restart"
-          data-action="restart" title=${t('interface.restart')}>
+          data-action="restart" title=${t("interface.restart")}>
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
         
        <button
           id="stop"
           class="action-button stop"
-          data-action="stop" title=${t('sdwan.stop')}>
+          data-action="stop" title=${t("sdwan.stop")}>
              <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
           </button>
 
@@ -498,7 +508,9 @@ export default {
           break;
         case "edit":
           emitter.emit("add-server");
-          emitter.emit("edit-server", rowData);
+          setTimeout(() => {
+            emitter.emit("edit-server", rowData);
+          }, 1000);
           break;
         case "stop":
           loading.value = true;
@@ -695,7 +707,7 @@ export default {
       eGui.innerHTML = `
          ${mapedServer}
         `;
-      eGui.style.lineHeight = "2";
+      eGui.style.lineHeight = "3";
 
       return eGui;
     }
@@ -705,7 +717,7 @@ export default {
       eGui.innerHTML = `
          ${data.data.proto} / ${data.data.port}
         `;
-      eGui.style.lineHeight = "2";
+      eGui.style.lineHeight = "3";
 
       return eGui;
     }
@@ -721,7 +733,7 @@ export default {
       eGui.innerHTML = `
          ${data.data.proto} / ${mapedServer}
         `;
-      eGui.style.lineHeight = "2";
+      eGui.style.lineHeight = "3";
 
       return eGui;
     }

@@ -51,6 +51,7 @@ class DashboardConsumer(AsyncWebsocketConsumer):
             command = "sudo top -bn1 | grep \"%Cpu(s)\" | awk '{print $2}' && free | awk '/Mem/{printf \"%.2f\", $4/$2*100}'"
             completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
             output = completed_process.stdout.splitlines()
+            # print({"output":output})
             # Parse the output
             cpu_percentage, memory_percentage = map(float, output)
             # Get the current timestamp

@@ -74,7 +74,7 @@
             :paginationPageSize="4"
             :localeText="paginationLocalization"
           />
-          <div class="d-flex justify-end mt-3">
+          <div class="d-flex justify-end mt-3 mb-10">
             <VButton
               rounded
               outlined

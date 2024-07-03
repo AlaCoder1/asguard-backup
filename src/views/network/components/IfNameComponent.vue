@@ -607,7 +607,26 @@ export default {
       }
       return true; // Return true when the input is valid
     },
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          // Does this cookie string begin with the name we want?
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
+
     addNetwork() {
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
       if (this.advancedParameters) {
         this.typeDHCP4 = "Advanced";
       } else {
@@ -635,26 +654,6 @@ export default {
           },
         };
         console.log("params", params);
-
-        function getCookie(name) {
-          let cookieValue = null;
-          if (document.cookie && document.cookie !== "") {
-            const cookies = document.cookie.split(";");
-            for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i].trim();
-              // Does this cookie string begin with the name we want?
-              if (cookie.substring(0, name.length + 1) === name + "=") {
-                cookieValue = decodeURIComponent(
-                  cookie.substring(name.length + 1)
-                );
-                break;
-              }
-            }
-          }
-          return cookieValue;
-        }
-        const csrfToken = getCookie("csrftoken");
-        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         axios.put("/network/conf/" + this.activeTab, params).then(
           (response) => {
@@ -704,25 +703,6 @@ export default {
               this.AdvancedConfigDHCPv4.prepend_domain_server,
           },
         };
-        function getCookie(name) {
-          let cookieValue = null;
-          if (document.cookie && document.cookie !== "") {
-            const cookies = document.cookie.split(";");
-            for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i].trim();
-              // Does this cookie string begin with the name we want?
-              if (cookie.substring(0, name.length + 1) === name + "=") {
-                cookieValue = decodeURIComponent(
-                  cookie.substring(name.length + 1)
-                );
-                break;
-              }
-            }
-          }
-          return cookieValue;
-        }
-        const csrfToken = getCookie("csrftoken");
-        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         axios.put("/network/conf/" + this.activeTab, params).then(
           (response) => {
@@ -769,24 +749,7 @@ export default {
       };
       this.allStaticGateways.unshift(params);
 
-      function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-          const cookies = document.cookie.split(";");
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === name + "=") {
-              cookieValue = decodeURIComponent(
-                cookie.substring(name.length + 1)
-              );
-              break;
-            }
-          }
-        }
-        return cookieValue;
-      }
-      const csrfToken = getCookie("csrftoken");
+      const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       axios.post("/gateway/addStaticGateway", params).then(
@@ -842,24 +805,7 @@ export default {
         far_aux: this.gateway.far_aux,
         multiwan_aux: this.gateway.multiwan_aux,
       };
-      function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== "") {
-          const cookies = document.cookie.split(";");
-          for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            // Does this cookie string begin with the name we want?
-            if (cookie.substring(0, name.length + 1) === name + "=") {
-              cookieValue = decodeURIComponent(
-                cookie.substring(name.length + 1)
-              );
-              break;
-            }
-          }
-        }
-        return cookieValue;
-      }
-      const csrfToken = getCookie("csrftoken");
+      const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       axios.put("/gateway/updateStaticGateway", params).then(

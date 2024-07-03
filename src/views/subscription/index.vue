@@ -145,48 +145,35 @@ export default {
       {
         title: base,
         prices: [
-          { label: annual, amount: 1200 },
-          { label: monthly, amount: 100 },
+          { label: annual, amount: 999 },
+          // { label: monthly, amount: 100 },
         ],
         communservices: [
           "Firewall L4",
           "Networking L2 L3",
           "VPN IPSEC",
           "LDAP",
+          "Double Masque",
         ],
-        services: [
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-          "",
-        ],
+        services: ["", "", "", "", "", "", "", "", "", "", "", "", "", ""],
         backgroundColor: "#213E9F",
         buttonColor: "#213E9F",
       },
       {
-        title: custom,
+        title: premium,
         prices: [
-          { label: annual, amount: 1200 },
-          { label: monthly, amount: 150 },
+          { label: annual, amount: 1199 },
+          // { label: monthly, amount: 150 },
         ],
         communservices: [
           "Firewall L4",
           "Networking L2 L3",
           "VPN IPSEC",
           "LDAP",
+          "Double Masque",
+          "IDS/IPS",
+          "VPN SSL",
+          "Proxy",
         ],
         services: [
           // {
@@ -204,29 +191,29 @@ export default {
         backgroundColor: "#FFC300",
         buttonColor: "#FFC300",
       },
-      {
-        title: premium,
-        prices: [
-          { label: annual, amount: 1700 },
-          { label: monthly, amount: 150 },
-        ],
-        communservices: [
-          "Firewall L4",
-          "Networking L2 L3",
-          "VPN IPSEC",
-          "LDAP",
-        ],
-        services: [
-          { name: "Double Masque", slug: "double" },
-          { name: "WAF", slug: "WAF" },
-          { name: "IPS", slug: "IPS" },
-          { name: "VPN SSL", slug: "VPN SSL" },
-          { name: "Proxy", slug: "Proxy" },
-          { name: "SDWAN", slug: "SDWAN" },
-        ],
-        backgroundColor: "#213E9F",
-        buttonColor: "#213E9F",
-      },
+      // {
+      //   title: premium,
+      //   prices: [
+      //     { label: annual, amount: 1700 },
+      //     { label: monthly, amount: 150 },
+      //   ],
+      //   communservices: [
+      //     "Firewall L4",
+      //     "Networking L2 L3",
+      //     "VPN IPSEC",
+      //     "LDAP",
+      //   ],
+      //   services: [
+      //     { name: "Double Masque", slug: "double" },
+      //     { name: "WAF", slug: "WAF" },
+      //     { name: "IPS", slug: "IPS" },
+      //     { name: "VPN SSL", slug: "VPN SSL" },
+      //     { name: "Proxy", slug: "Proxy" },
+      //     { name: "SDWAN", slug: "SDWAN" },
+      //   ],
+      //   backgroundColor: "#213E9F",
+      //   buttonColor: "#213E9F",
+      // },
     ]);
 
     const subscriptionInfo = ref({});
@@ -288,13 +275,14 @@ export default {
       }
 
       emitter.on("changePrice", (data) => {
-        let price = data + 1200;
+        let price = data + 1199;
         subscriptionCards.value[1].prices[0].amount = price;
       });
 
       const allfeatures =
         document.getElementById("app").attributes["allfeature"].value;
       let all_features = JSON.parse(allfeatures);
+      console.log("all_features", all_features);
 
       let mappedService = all_features.map((e) => {
         return {
@@ -304,7 +292,7 @@ export default {
           id: e.id,
         };
       });
-      subscriptionCards.value[1].services = mappedService
+      subscriptionCards.value[1].services = mappedService;
     });
 
     return {

@@ -314,6 +314,7 @@ def create_server_ipsec(request):
 
             # Add the server to the database
             serializer_server.save()
+            return JsonResponse({"msg": f"{conn_name} {SUCCESS_MESSAGES_CREATING}"}, status=201)
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_IPSEC_CONFIGURATION}"}, status=400)
@@ -552,6 +553,7 @@ def update_server_ipsec(request, id):
 
             # Add the server to the database
             serializer_server.save()
+            return JsonResponse({"msg": f"{server.conn_name} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
         return JsonResponse({"error": list(serializer_server.errors.values())[0][0]}, status=400)
 
     except ServerIPsec.DoesNotExist:

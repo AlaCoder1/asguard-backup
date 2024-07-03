@@ -109,7 +109,7 @@ websocket_urlpatterns = [
       path('ws/data/', consumers.DashboardConsumer.as_asgi()),
       path('ws/vpnmonitoring/', consumers_openvpn.OpenVpnConsumer.as_asgi()),
       path('ws/ipsecmonitoring/', consumers_ipsec.IPSECConsumer.as_asgi()),
-      path('ws/logs',consumers_logs.LogsdConsumer.as_asgi())
+      path('ws/logs/',consumers_logs.LogsdConsumer.as_asgi())
       
 ]
 

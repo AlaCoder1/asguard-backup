@@ -492,31 +492,75 @@ export default {
           break;
         case "up":
           console.log("up", rowData);
-          loading.value = true;
-          isLoadingDialogue.value = true;
-          axios
-            .post(`/ipsec/upServerIPsec/${rowData.id}`)
-            .then((response) => {
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
-              loading.value = false;
-              isLoadingDialogue.value = false;
-
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-              loading.value = false;
-              isLoadingDialogue.value = false;
-            });
+          let id = rowData.id;
+          upServer(id);
           break;
         default:
           break;
+      }
+    };
+    const upServer = async (id) => {
+      let timeoutPromise = new Promise((resolve, reject) => {
+        setTimeout(() => {
+          reject(new Error("Request is taking longer than expected."));
+        }, 3000);
+      });
+      console.log("up", id);
+      try {
+        loading.value = true;
+        isLoadingDialogue.value = true;
+        // loading.value = true;
+        // isLoadingDialogue.value = true;
+        // let response = await axios.post(`/ipsec/upServerIPsec/${id}`);
+        // console.log("response", response);
+        // if (response) {
+        //   snackbar.value = true;
+        //   color.value = "success";
+        //   textAlert.value = response.data.msg;
+        //   loading.value = false;
+        //   isLoadingDialogue.value = false;
+        //   setTimeout(() => {
+        //     location.reload();
+        //   }, 1000);
+        // }
+        let response = await Promise.race([
+          axios.post(`/ipsec/upServerIPsec/${id}`),
+          timeoutPromise,
+        ]);
+
+        console.log("response", response);
+
+        if (response) {
+          snackbar.value = true;
+          color.value = "success";
+          textAlert.value = response.data.msg;
+          loading.value = false;
+          isLoadingDialogue.value = false;
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        }
+      } catch (error) {
+        // snackbar.value = true;
+        // color.value = "red";
+        // textAlert.value = i.response.data.error;
+        // loading.value = false;
+        // isLoadingDialogue.value = false;
+        if (error.message === "Request is taking longer than expected.") {
+          // snackbar.value = true;
+          // color.value = "warning";
+          // textAlert.value = "The request is taking longer than expected...";
+          loading.value = false;
+          isLoadingDialogue.value = false;
+        } else {
+          // console.error(error);
+          // snackbar.value = true;
+          // color.value = "error";
+          // textAlert.value = "An error occurred while processing your request.";
+          loading.value = false;
+          isLoadingDialogue.value = false;
+        }
       }
     };
     const addServer = () => {

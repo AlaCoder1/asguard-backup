@@ -1,4 +1,5 @@
 import json
+from backend.managementLogs.models import LogsData
 from backend.network.models import Interface
 from backend.server_dhcp4.models import ServerDhcp4
 from backend.vlan.models import Vlan
@@ -110,3 +111,16 @@ def get_vxlan(request):
             res[i]['fields']['name_interface']=Interface.objects.get(id=res[i]['fields']['parent_interface']).name_interface
             list_vxlan.append(res[i]['fields'])
     return list_vxlan
+
+def get_logs_data(request):
+    """API to get the last 1000 logs from the database"""
+    if request.method == 'GET':
+        list_logs = []
+        logs_object = LogsData.objects.all().order_by('-id')[:1000]
+        print({'logs_object': logs_object})
+        logs = serializers.serialize("json", logs_object)
+        res = json.loads(logs)
+        for log in res:
+            log['fields']['id'] = log["pk"]
+            list_logs.append(log['fields'])
+        return  list_logs

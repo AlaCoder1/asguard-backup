@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 from backend.dashboard import consumers
 from backend.ipsecmonitoring import consumers_ipsec
+from backend.managementLogs import consumers_logs
 from backend.openvpn_monitoring import consumers_openvpn
 from views.views import *
 from django.conf.urls import handler404
@@ -96,6 +97,7 @@ urlpatterns = [
     path("profile/",profile_page),
     path("vxlan/",include('backend.vxlan.urls')),
     path("system_log/",system_log),
+    path("system_log/",include('backend.managementLogs.urls')),
 
 
 
@@ -107,6 +109,7 @@ websocket_urlpatterns = [
       path('ws/data/', consumers.DashboardConsumer.as_asgi()),
       path('ws/vpnmonitoring/', consumers_openvpn.OpenVpnConsumer.as_asgi()),
       path('ws/ipsecmonitoring/', consumers_ipsec.IPSECConsumer.as_asgi()),
+      path('ws/logs',consumers_logs.LogsdConsumer.as_asgi())
       
 ]
 

@@ -10,7 +10,7 @@ from backend.managementLogs.serializers import LogsDataSerializer
 from django.db.models import Q
 
 logger = logging.getLogger(__name__) 
-class DashboardConsumer(AsyncWebsocketConsumer):
+class LogsdConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         logger.info('WebSocket connection established')
         await self.accept()

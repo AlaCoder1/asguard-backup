@@ -317,7 +317,7 @@ export default {
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = params.value;
-      if (params.data.rule_waf == 18) {
+      if (params.data.name === 'REQUEST-949-BLOCKING-EVALUATION') {
         params.data.rule_policy = true;
         checkbox.disabled = true;
         checkbox.checked = true;

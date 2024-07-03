@@ -38,6 +38,9 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
             if not isinstance(data, str):
                 await self.save_system_usage(data)
                 await asyncio.sleep(60)
+            else:
+                await self.close()
+                break
     
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(

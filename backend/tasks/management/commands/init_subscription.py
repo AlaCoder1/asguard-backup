@@ -5,7 +5,7 @@ from django.core.management.base import BaseCommand
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         #### init basic
-        plan_basic(800)
+        plan_basic(999)
         #### init basic
         features_queryset = Features.objects.all()
         features = [(feature.features, feature.price) for feature in features_queryset]
@@ -56,6 +56,8 @@ def plan_basic(price):
     initBD_plansFeatures("Networking L2 L3",basic_plan.pk)
     initBD_plansFeatures("VPN IPSEC",basic_plan.pk)
     initBD_plansFeatures("LDAP",basic_plan.pk)
+    initBD_plansFeatures("Double Masque",basic_plan.pk)
+    
     
 def basic(slug):
     last_plan = plan.objects.get(slug=slug)
@@ -63,6 +65,7 @@ def basic(slug):
     initBD_plansFeatures("Networking L2 L3",last_plan.pk)
     initBD_plansFeatures("VPN IPSEC",last_plan.pk)
     initBD_plansFeatures("LDAP",last_plan.pk)
+    initBD_plansFeatures("Double Masque",last_plan.pk)
 
     
 def full(features):
@@ -73,5 +76,10 @@ def full(features):
     initBD_plansFeatures("Networking L2 L3",basic_plan.pk+1)
     initBD_plansFeatures("VPN IPSEC",basic_plan.pk+1)
     initBD_plansFeatures("LDAP",basic_plan.pk+1)
+    initBD_plansFeatures("Double Masque",basic_plan.pk+1)
+    initBD_plansFeatures("IDS/IPS",basic_plan.pk+1)
+    initBD_plansFeatures("VPN SSL",basic_plan.pk+1)
+    initBD_plansFeatures("Proxy",basic_plan.pk+1)
+    
     for feature in features:
         initBD_plansFeatures(feature[0],basic_plan.pk+1)

@@ -590,23 +590,18 @@ def change_pwd(request):
     try:
         # Use subprocess to execute the crontab -l command and capture the current crontab content
         current_crontab = subprocess.check_output(["crontab", "-l"], universal_newlines=True)
-        print({"current_crontab":current_crontab})
         ## reset our cron with a empty str
         current_crontab = ''
         # Add the new cron job to the existing crontab content  
         # new_crontab = f"{current_crontab.strip()}\n{cron_job}\n"
         new_crontab = f"{current_crontab.strip()}{cron_job}\n"
-        print({"new_crontab":new_crontab})
-        print({"cron_job":cron_job})
 
         # Use subprocess to set the new crontab content
         subprocess.run(["echo", new_crontab], stdout=subprocess.PIPE, input=new_crontab, universal_newlines=True)
         subprocess.run(["crontab", "-"], input=new_crontab, universal_newlines=True)
 
-        print("Cron job added successfully.")
         return JsonResponse({"msg": f"{CONSTANT_CRON_JOB} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     except subprocess.CalledProcessError as e:
-        print(f"Error: {e}")
         return JsonResponse({"msg": e}, status=404)
 
 @swagger_auto_schema(

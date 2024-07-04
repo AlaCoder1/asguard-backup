@@ -1,5 +1,25 @@
 <template>
   <v-row justify="center">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            {{ $t("sdwan.pleaseWait") }}
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
+
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
@@ -22,6 +42,15 @@
                   <p class="error-feedback mb-5" v-if="v$.ruleName.$error">
                     {{ v$.ruleName.$errors[0].$message }}
                   </p>
+                </v-col>
+                <v-col cols="12" class="mb-n6">
+                  <v-textarea
+                    rows="1"
+                    row-height="15"
+                    v-model="state.description"
+                    :label="$t('firewall.description')"
+                    variant="outlined"
+                  ></v-textarea>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
@@ -501,6 +530,8 @@ export default {
         { type: "ver", value: "", slug: "ver" },
         { type: "xmlns", value: "", slug: "xmlns" },
       ],
+      loading: false,
+      isLoadingDialogue: false,
       id: null,
       //
       snackbar: false,
@@ -518,6 +549,7 @@ export default {
       existType: false,
       existTypeOperator: false,
       isActivated: false,
+      description: "",
     });
 
     watch(
@@ -556,8 +588,6 @@ export default {
           rowDataWaf.value = val;
           if (gridApi.value) {
             gridApi.value.setRowData(rowDataWaf.value);
-          } else {
-            console.error("Grid API.");
           }
         }
       },
@@ -570,8 +600,6 @@ export default {
           rowDataOperator.value = val;
           if (gridApiOperator.value) {
             gridApiOperator.value.setRowData(rowDataOperator.value);
-          } else {
-            console.error("Grid API.");
           }
         }
       },
@@ -636,7 +664,6 @@ export default {
         // cellRenderer: (params) => params.value.toUpperCase(),
         // searchDebounceDelay: 200,
         // onProtocolsSelected: (event) => {
-        //   console.log('***event**** : ',event)
         //   params.setValue(event);
         // },
         // },
@@ -677,6 +704,7 @@ export default {
         state.operator = mapedOperator;
         state.actions = mapedAction;
         state.ruleName = data.name;
+        state.description = data.description;
         state.variable = data.variables;
         if (data.transformations.length === 0) return;
         else {
@@ -789,10 +817,17 @@ export default {
     const champInclude = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
     });
+    const indication = computed(() => {
+      return t("champs.indication");
+    });
     const rules = computed(() => {
       return {
         ruleName: {
           required: helpers.withMessage(error, required),
+          isValidkeyName: helpers.withMessage(
+            indication,
+            helpers.regex(/^[A-Za-z0-9_\-]+$/)
+          ),
         },
 
         // operator: {
@@ -816,17 +851,13 @@ export default {
 
     const v$ = useValidate(rules, state);
 
-    const show = () => {
-      console.log("row", rowDataWaf.value);
-    };
+    const show = () => {};
 
     const onGridReady = (params) => {
       gridApi.value = params.api;
       gridColumnApi.value = params.columnApi;
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataWaf.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     const onGridReadyOperator = (params) => {
@@ -834,8 +865,6 @@ export default {
       gridColumnApi.value = params.columnApi;
       if (gridApiOperator.value) {
         gridApiOperator.value.setRowData(rowDataOperator.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     const onGridReadyTransform = (params) => {
@@ -843,8 +872,6 @@ export default {
       gridColumnApi.value = params.columnApi;
       if (gridApiTransform.value) {
         gridApiTransform.value.setRowData(rowDataTransform.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     const addNewRow = () => {
@@ -852,8 +879,6 @@ export default {
       rowDataOperator.value.push(newRow);
       if (gridApiOperator.value) {
         gridApiOperator.value.setRowData(rowDataOperator.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     const addNewRowTransform = () => {
@@ -861,8 +886,6 @@ export default {
       rowDataTransform.value.push(newRow);
       if (gridApiTransform.value) {
         gridApiTransform.value.setRowData(rowDataTransform.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     function actionCellRenderer(params) {
@@ -898,8 +921,6 @@ export default {
             rowDataWaf.value.splice(index, 1);
             if (gridApi.value) {
               gridApi.value.setRowData(rowDataWaf.value);
-            } else {
-              console.error("Grid API.");
             }
           }
           break;
@@ -940,8 +961,6 @@ export default {
             rowDataOperator.value.splice(index, 1);
             if (gridApiOperator.value) {
               gridApiOperator.value.setRowData(rowDataOperator.value);
-            } else {
-              console.error("Grid API.");
             }
           }
           break;
@@ -982,14 +1001,18 @@ export default {
             rowDataTransform.value.splice(index, 1);
             if (gridApiTransform.value) {
               gridApiTransform.value.setRowData(rowDataTransform.value);
-            } else {
-              console.error("Grid API.");
             }
           }
           break;
         default:
           break;
       }
+    };
+
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/waf/restartNginx");
     };
 
     const submitForm = async () => {
@@ -1055,51 +1078,77 @@ export default {
             ? mapedRowTransf
             : mapedRowTransfType,
           actions: mapedRow,
+          description: state.description,
         };
-        console.log("payload", payload);
 
         if (modalMode.value === "edit") {
           axios
             .put(`/waf/updateRuleWaf/${state.id}`, payload)
             .then((response) => {
               if (response.status == "201") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
+                // state.snackbar = true;
+                // state.color = "success";
+                // state.textAlert = response.data.msg;
+                // setTimeout(() => {
+                //   location.reload();
+                // }, 1000);
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  closeModal();
+                }, 4000);
                 setTimeout(() => {
                   location.reload();
-                }, 1000);
+                }, 4000);
               }
             })
             .catch((i) => {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.msg;
+              state.textAlert = i.response.data.error;
             });
         } else {
-          console.log("payload", payload);
           axios
             .post("/waf/createRuleWaf", payload)
             .then((response) => {
               if (response.status == "201") {
-                state.openModal = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  closeModal();
+                }, 4000);
                 setTimeout(() => {
                   location.reload();
-                }, 1000);
+                }, 4000);
+                // state.openModal = false;
+                // state.snackbar = true;
+                // state.color = "success";
+                // state.textAlert = response.data.msg;
+
+                // setTimeout(() => {
+                //   location.reload();
+                // }, 1000);
               }
             })
             .catch((i) => {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.msg;
+              state.textAlert = i.response.data.error;
             });
         }
       } else {
-        console.log("v$", v$.value);
         var isArrayEmpty = rowDataWaf.value.length === 0;
         if (isArrayEmpty) {
           state.snackbar = true;

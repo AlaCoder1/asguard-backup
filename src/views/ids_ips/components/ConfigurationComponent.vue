@@ -133,6 +133,9 @@
               return-object
               :items="state.algoLists"
             ></v-select>
+            <p class="error-feedback mb-5" v-if="v$.mpm_algo.$error">
+              {{ v$.mpm_algo.$errors[0].$message }}
+            </p>
           </v-col>
           <v-col cols="4" class="mt-5">
             <label>{{ $t("suricata.detectProfile") }}</label>
@@ -146,6 +149,9 @@
               return-object
               :items="state.profileLists"
             ></v-select>
+            <p class="error-feedback mb-5" v-if="v$.profile.$error">
+              {{ v$.profile.$errors[0].$message }}
+            </p>
           </v-col>
         </v-row>
       </v-col>
@@ -264,6 +270,8 @@ import UsersList from "../../system/user/components/UsersList.vue";
 import { reactive, onMounted, computed, ref, inject } from "vue";
 import ModalAddInterface from "@/components/modals/ModalAddInterface.vue";
 import { v4 as uuidv4 } from "uuid";
+import useValidate from "@vuelidate/core";
+import { required, helpers } from "@vuelidate/validators";
 
 export default {
   name: "ConfigurationComponent",
@@ -810,97 +818,127 @@ export default {
     };
 
     const submitForm = async () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const result = await v$.value.$validate();
+      if (result) {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      if (!rowDataAF.value) {
-        rowDataAF.value = [];
-      }
+        if (!rowDataAF.value) {
+          rowDataAF.value = [];
+        }
 
-      if (rowDataAF.value.length) {
-        var mapedRow = rowDataAF.value.map((e) => {
-          let filtredCopy = state.mapedInterface
-            .filter((i) => i.name === e.copy_iface)
-            .map((i) => {
-              return {
-                id: i.id,
-                name: i.ifname,
-              };
-            });
+        if (rowDataAF.value.length) {
+          var mapedRow = rowDataAF.value.map((e) => {
+            let filtredCopy = state.mapedInterface
+              .filter((i) => i.name === e.copy_iface)
+              .map((i) => {
+                return {
+                  id: i.id,
+                  name: i.ifname,
+                };
+              });
 
-          return {
-            id: e.id ?? e.id_interface,
-            interface: e.ifname,
-            threads: e.threads,
-            cluster_id: e.cluster_id,
-            cluster_type: e.cluster_type,
-            defrag: e.defrag,
-            use_mmap: e.use_mmap,
-            ring_size: e.ring_size,
-            copy_iface: filtredCopy[0] ?? null,
-            copy_mode: e.copy_mode === "--" ? null : e.copy_mode,
+            return {
+              id: e.id ?? e.id_interface,
+              interface: e.ifname,
+              threads: e.threads,
+              cluster_id: e.cluster_id,
+              cluster_type: e.cluster_type,
+              defrag: e.defrag,
+              use_mmap: e.use_mmap,
+              ring_size: e.ring_size,
+              copy_iface: filtredCopy[0] ?? null,
+              copy_mode: e.copy_mode === "--" ? null : e.copy_mode,
+            };
+          });
+
+          let payload = {
+            status_enabled: state.status_enabled,
+            promisc: state.promisc,
+            eve_log: state.eve_log,
+            syslog: state.syslog,
+            mpm_algo: state.mpm_algo.slug,
+            profile: state.profile.slug,
+            mode_inline: state.mode_inline,
+            list_interfaces: mapedRow,
           };
-        });
-
-        let payload = {
-          status_enabled: state.status_enabled,
-          promisc: state.promisc,
-          eve_log: state.eve_log,
-          syslog: state.syslog,
-          mpm_algo: state.mpm_algo.slug,
-          profile: state.profile.slug,
-          mode_inline: state.mode_inline,
-          list_interfaces: mapedRow,
-        };
-        state.loading = true;
-        state.isLoadingDialogue = true;
-        axios
-          .put("/ids-ips/UpdateGeneralConfig/" + state.interId, payload)
-          .then((response) => {
-            if (response.status == 200) {
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = t("suricata.configurationSuccess");
-              // Automatically close the snackbar after 3000 milliseconds (3 seconds)
-              setTimeout(() => {
-                state.snackbar = false;
-                location.reload();
-              }, 1000);
-            } else {
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          axios
+            .put("/ids-ips/UpdateGeneralConfig/" + state.interId, payload)
+            .then((response) => {
+              if (response.status == 200) {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = t("suricata.configurationSuccess");
+                // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+                setTimeout(() => {
+                  state.snackbar = false;
+                  location.reload();
+                }, 1000);
+              } else {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.snackbar = true;
+                state.color = "error";
+                state.textAlert = t("suricata.failedToSaveConfiguration");
+                // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+                setTimeout(() => {
+                  state.snackbar = false;
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
               state.loading = false;
               state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "error";
-              state.textAlert = t("suricata.failedToSaveConfiguration");
-              // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+              state.textAlert = error;
               setTimeout(() => {
                 state.snackbar = false;
                 location.reload();
               }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            state.snackbar = true;
-            state.color = "error";
-            state.textAlert = error;
-            setTimeout(() => {
-              state.snackbar = false;
-              location.reload();
-            }, 1000);
-          });
+            });
+        } else {
+          state.snackbar = true;
+          state.color = "error";
+          state.textAlert = t("suricata.MinimumOneInter");
+          setTimeout(() => {
+            state.snackbar = false;
+          }, 2000);
+        }
       } else {
-        state.snackbar = true;
-        state.color = "error";
-        state.textAlert = t("suricata.MinimumOneInter");
-        setTimeout(() => {
-          state.snackbar = false;
-        }, 2000);
+        console.log("v$", v$.value);
+        if (rowDataAF.value.length === 0) {
+          state.snackbar = true;
+          state.color = "error";
+          state.textAlert = t("suricata.MinimumOneInter");
+          setTimeout(() => {
+            state.snackbar = false;
+          }, 2000);
+        }
       }
     };
+
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+
+    const rules = computed(() => {
+      return {
+        mpm_algo: {
+          required: helpers.withMessage(error, required),
+        },
+        profile: {
+          required: helpers.withMessage(error, required),
+        },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
     const cancel = () => {};
 
     return {
@@ -920,6 +958,7 @@ export default {
       overlayTemplate,
       paginationLocalization,
       openModalAdd,
+      v$,
     };
   },
 };

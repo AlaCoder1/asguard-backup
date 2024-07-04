@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3 ml-3">
     <h4>{{ $t("tabs.application") }}</h4>
     <v-divider class="mb-2"></v-divider>
@@ -90,6 +109,8 @@ export default {
       of: "/",
     });
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       snackbar: false,
       color: "",
       textAlert: "",
@@ -195,11 +216,9 @@ export default {
         case "delete":
           state.deleteDialog = true;
           state.deletedRow = rowData;
-          console.log("delete", rowData);
 
           break;
         case "edit":
-          console.log("edit", rowData);
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
@@ -224,8 +243,6 @@ export default {
 
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataApplication.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     onMounted(() => {
@@ -258,6 +275,12 @@ export default {
       state.isModalOpen = true;
     };
 
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post(`/waf/restartNginx`);
+    };
+
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
@@ -268,13 +291,20 @@ export default {
       axios
         .delete(`/waf/deleteApplicationWaf/${state.deletedRow.id}`)
         .then((response) => {
-          state.snackbar = true;
-          state.color = "success";
-          state.textAlert = response.data.msg;
-
+          restartNginx();
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          setTimeout(() => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
+            state.deleteDialog = false;
+          }, 4000);
           setTimeout(() => {
             location.reload();
-          }, 1000);
+          }, 4000);
         })
         .catch((i) => {
           state.snackbar = true;

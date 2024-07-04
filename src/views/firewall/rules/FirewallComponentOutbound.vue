@@ -410,16 +410,16 @@ export default defineComponent({
     const rowDataToDelete = ref(null);
 
     const openModalAdd = () => {
-      if (last_Subscription.value.includes("Firewall")) {
+      // if (last_Subscription.value.includes("Firewall L4")) {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
       emitter.emit("inter-Outbound-uuid", props.uuid);
-      }
-       else {
-        emitter.emit("firewal-subscription");
-        window.scrollTo(0, 0);
-      }
+      // }
+      //  else {
+      //   emitter.emit("firewal-subscription");
+      //   window.scrollTo(0, 0);
+      // }
     };
 
     const onGridReady = (params) => {
@@ -854,6 +854,7 @@ export default defineComponent({
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
+      console.log('last_Subscription.value',last_Subscription.value)
 
       emitter.on("addFirewallRuleOutbound", (data) => {
         if (data.interUuid === props.uuid) {

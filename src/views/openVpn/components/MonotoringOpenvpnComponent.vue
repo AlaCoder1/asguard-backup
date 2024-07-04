@@ -49,8 +49,8 @@
         title="Choose Server"
       ></i>
     </div> -->
-    <v-row class="ml-1 d-flex justify-start">
-      <v-col cols="2">
+    <v-row class="ml-1 mb-3 d-flex justify-start">
+      <v-col cols="3">
         <v-select
           :label="$t('Clientsopenvpn.Server')"
           density="compact"
@@ -60,9 +60,12 @@
           return-object
           :items="state.serverList"
         ></v-select>
+        <p class="error-feedback mb-5" v-if="v$.server.$errors.length">
+          {{ v$.server.$errors?.[0].$message }}
+        </p>
         <!-- @update:modelValue="serve" -->
       </v-col>
-      <v-col cols="2">
+      <v-col cols="3">
         <v-text-field
           :append-inner-icon="state.show1 ? 'mdi-eye' : 'mdi-eye-off'"
           @click:append-inner="state.show1 = !state.show1"
@@ -75,14 +78,13 @@
           {{ v$.password.$errors?.[0].$message }}
         </p>
       </v-col>
-      <v-col cols="2" class="mt-2" style="">
+      <v-col cols="3" style="">
         <v-btn
-          rounded
           style="
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 30px;
+            height: 38px;
             width: 60%;
           "
           label-color="#213E9F"
@@ -93,33 +95,20 @@
         </v-btn>
       </v-col>
     </v-row>
-    <v-row class="mt-n10">
-      <v-col cols="7">
+
+    <v-row class="mt-n10 ">
+      <v-col cols="12">
         <div class="ml-3 mr-3">
           <v-row class="mt-0 mb-5">
             <monitoringCards :dataChart="state.dataChart" />
           </v-row>
-          <v-row class="mt-2 mb-10">
+          <v-row class="mt-2 mb-15">
             <v-col cols="6">
-              <v-card-title>
-                {{ $t("Clientsopenvpn.TopTraffic") }}
-              </v-card-title>
-              <v-card-item>
-                <apexchart
-                  ref="apexChart"
-                  id="top-trafic-chart"
-                  type="bar"
-                  :options="state.chartOptions"
-                  :series="state.chartOptions.series"
-                />
-              </v-card-item>
-            </v-col>
-            <v-col cols="6">
-              <v-card elevation="0">
+              <v-card hover>
                 <v-card-title>
                   {{ $t("Clientsopenvpn.Trafficdistribution") }}
                 </v-card-title>
-                <v-card-item style="margin-left: -19%">
+                <v-card-item>
                   <apexchart
                     ref="chartTraffic"
                     :options="state.chartOptionsPie"
@@ -128,47 +117,60 @@
                 </v-card-item>
               </v-card>
             </v-col>
-            <!-- <v-col cols="6">
-              <apexchart
-                id="top-loggins-chart"
-                type="bar"
-                :options="chartOptions"
-                :series="chartSeries"
-              />
-            </v-col> -->
-            <v-col cols="12">
-              <v-card-title>
-                {{ $t("Clientsopenvpn.Top2ClientNetworkActivity") }}
-              </v-card-title>
-              <v-card-item>
-                <apexchart
-                  ref="apexChartNetwork"
-                  height="350"
-                  :options="state.chartOptionsNetwork"
-                  :series="state.chartOptionsNetwork.series"
-                ></apexchart>
-              </v-card-item>
+            <v-col cols="6">
+              <div class="ml-3 mr-3" >
+                <ag-grid-vue
+                  id="grid-wrapper"
+                  domLayout="autoHeight"
+                  class="ag-theme-alpine mt-3 ag-header-cell-text"
+                  :columnDefs="columns"
+                  :rowData="rowData.value"
+                  :overlayNoRowsTemplate="overlayTemplate"
+                  @grid-ready="onGridReady"
+                  :localeText="paginationLocalization"
+                  :pagination="true"
+                  :paginationPageSize="7"
+                />
+              </div>
+            </v-col>
+            <v-col cols="6">
+              <v-card hover>
+                <v-card-title>
+                  {{ $t("Clientsopenvpn.TopTraffic") }}
+                </v-card-title>
+                <v-card-item>
+                  <apexchart
+                    ref="apexChart"
+                    id="top-trafic-chart"
+                    type="bar"
+                    height="350"
+                    :options="state.chartOptions"
+                    :series="state.chartOptions.series"
+                  />
+                </v-card-item>
+              </v-card>
+            </v-col>
+
+            <v-col cols="6">
+              <v-card hover>
+                <v-card-title>
+                  {{ $t("Clientsopenvpn.Top2ClientNetworkActivity") }}
+                </v-card-title>
+                <v-card-item>
+                  <apexchart
+                    ref="apexChartNetwork"
+                    height="350"
+                    :options="state.chartOptionsNetwork"
+                    :series="state.chartOptionsNetwork.series"
+                  ></apexchart>
+                </v-card-item>
+              </v-card>
             </v-col>
           </v-row>
         </div>
       </v-col>
-      <v-col cols="5">
-        <div class="ml-3 mr-3">
-          <ag-grid-vue
-            id="grid-wrapper"
-            domLayout="autoHeight"
-            class="ag-theme-alpine mt-3 ag-header-cell-text"
-            :columnDefs="columns"
-            :rowData="rowData.value"
-            :overlayNoRowsTemplate="overlayTemplate"
-            @grid-ready="onGridReady"
-            :localeText="paginationLocalization"
-            :pagination="true"
-            :paginationPageSize="4"
-          />
-        </div>
-      </v-col>
     </v-row>
+
     <v-snackbar
       :timeout="2000"
       v-model="state.snackbar"
@@ -220,7 +222,6 @@ export default {
       dataChart: null,
       chartOptions: {
         chart: {
-          height: "250px",
           type: "bar",
           zoom: {
             enabled: false,
@@ -273,7 +274,7 @@ export default {
       },
 
       chartOptionsPie: {
-        series: [],
+        series: [10, 20, 30, 40, 50],
         chart: {
           width: 380,
           type: "donut",
@@ -309,9 +310,13 @@ export default {
     const specificform = computed(() => {
       return t("errors.formsepcificpassword");
     });
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
     const rules = computed(() => {
       return {
         password: {
+          required: helpers.withMessage(error, required),
           isValidPassword: helpers.withMessage(
             specificform,
 
@@ -320,6 +325,7 @@ export default {
             )
           ),
         },
+        server: { required: helpers.withMessage(error, required) },
       };
     });
 

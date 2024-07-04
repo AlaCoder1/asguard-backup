@@ -264,18 +264,18 @@ export default {
         name: "Round-Robin",
         slug: "round_robin",
       },
-      {
-        name: "Source IP",
-        slug: "Source IP",
-      },
-      {
-        name: "Source-Destination IP",
-        slug: "Source-Destination IP",
-      },
-      {
-        name: "Best Quality",
-        slug: "Best Quality",
-      },
+      // {
+      //   name: "Source IP",
+      //   slug: "Source IP",
+      // },
+      // {
+      //   name: "Source-Destination IP",
+      //   slug: "Source-Destination IP",
+      // },
+      // {
+      //   name: "Best Quality",
+      //   slug: "Best Quality",
+      // },
     ]);
 
     const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));

@@ -10,7 +10,7 @@ from backend.managementLogs.serializers import LogsDataSerializer
 from django.db.models import Q
 
 logger = logging.getLogger(__name__) 
-class DashboardConsumer(AsyncWebsocketConsumer):
+class LogsdConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         logger.info('WebSocket connection established')
         await self.accept()
@@ -36,7 +36,7 @@ class DashboardConsumer(AsyncWebsocketConsumer):
         logs_erializer = LogsDataSerializer(data=data)
         if logs_erializer.is_valid() and LogsData.objects.filter(Q(date=data['date'])& Q(date=data['process']) & Q(date=data['message'])) :
             count = LogsData.objects.count()
-            if count >= 20:
+            if count >= 10000:
                 min_timestamp_record = LogsData.objects.order_by('id').first()
                 if min_timestamp_record:
                     min_timestamp_record.delete()

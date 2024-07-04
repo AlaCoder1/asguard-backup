@@ -1,45 +1,18 @@
 from datetime import datetime
-import os
 import re
-from backend.waf.constant_variables import PATH_LOG_BACKUP, PATH_LOG_WAF
-from utils.commands_utils import execute_command_without_arguments
 
-
-def rotate_log_alerts_waf():
-    """Function that retain only the last 10000 waf alerts and save the rest in backup"""
-    with open(PATH_LOG_WAF) as log_waf_file:
-        log_waf_content = log_waf_file.read()
-    with open(PATH_LOG_WAF, 'w') as log_waf_file:
-        log_waf_file.write(log_waf_content)
-    return log_waf_content
+from backend.waf.constant_variables import PATH_LOG_WAF
+from backend.waf.models import AlertWaf
 
 
 def synchronize_database_waf_alert():
     """Function that synchronize database with system alerts for WAF.
-    This method gets a list of the last 10000 logs and update the database"""
-
-
-def get_alerts():
-    """Function that get the WAF log content and extract the fields for each log"""
-    # Get the WAF log content
-    print("size= ", os.path.getsize(PATH_LOG_WAF))
-    execute_command_without_arguments(["sudo", "mkdir", "-p", PATH_LOG_BACKUP])
+    This method gets the WAF modsecurity logs, extract the fields for each log and update the database"""
     with open(PATH_LOG_WAF) as log_waf_file:
         log_waf_content = log_waf_file.read()
     
     len_log = log_waf_content.count("---A--")
 
-    # # Logroutate
-    # list_index_start = [match.start() for match in re.finditer("---A--", log_waf_content)]
-    # list_index_end = [match.start() for match in re.finditer("---Z--", log_waf_content)]
-    # for index in range(len_log // 10000):
-    #     backup_content = log_waf_content[list_index_start[index*10000]:list_index_end[index*10000]]
-    #     date_now = str(datetime.now())
-    #     with open(f"{PATH_LOG_BACKUP}{date_now}", 'w') as backup_file:
-    #         backup_file.write(backup_content)
-    #     log_waf_content.replace(backup_content, "")
-
-    list_log = []
     # Loop throw the logs number
     for _ in range(len_log):
         # each log start from ---{log_id}---A-- and finish in ---{log_id}---Z--
@@ -47,45 +20,110 @@ def get_alerts():
         log = log_waf_content[:end_log+8]
         log_id = extract_dynamic_log_id(log)
         log_waf_content = log_waf_content.replace(log, "", 1)
-        log_fields = get_alerts_fields(log, log_id)
-        list_log.append(log_fields)
-    return list_log
+        if len(AlertWaf.objects.filter(log_system_id=log_id)) == 0:
+            log_fields = extract_alert_fields(log, log_id)
+            alert_instance = AlertWaf(log_system_id=log_fields["log_system_id"], 
+                                      country=log_fields["country"], 
+                                      longitude=log_fields["longitude"],
+                                      latitude=log_fields["latitude"],
+                                      timestamp=log_fields["timestamp"],
+                                      violation_file=log_fields["violation_file"],
+                                      violation_id=log_fields["violation_id"],
+                                      source=log_fields["source"],
+                                      method=log_fields["method"],
+                                      message=log_fields["message"],
+                                      url=log_fields["url"])
+            alert_instance.save()
 
 
-def get_alerts_fields(log: str, log_id: str):
+def extract_alert_fields(log: str, log_id: str):
     """Function that take the log and it's id as inputs and return an object contains 
     country, timestamp, violation, source, method, message and URL"""
-    # Extract longitude, latitude and country. Now it is static
-    latitude = "51.505"
-    longitude = "-0.09"
-    country = "FR"
-    # Extract Timestamp
-    log_a_line = log[log.find(f"---{log_id}---A--\n")+len(f"---{log_id}---A--\n"):log.find(f"---{log_id}---B--\n")]
-    timestamp_str = log_a_line[1:log_a_line.find("+")-1]
-    # Extract Violation
-    violation_file = extract_field_from_h(log, "file")
-    violation_file = violation_file.replace("/usr/local/modsecurity-crs/rules/", "")
-    violation_id = extract_field_from_h(log, "id")
-    # Extract method
-    method = log[log.find(f"---{log_id}---B--\n")+len(f"---{log_id}---B--\n"):log.find(" ", log.find(f"---{log_id}---B--\n"))]
+    # Extract A, B and H bloc from log
+    a_bloc = extract_bloc(log, log_id, 'A')
+    b_bloc = extract_bloc(log, log_id, 'B')
+    h_bloc = extract_bloc(log, log_id, 'H')
+
+    # Extract list of modsecurity part from H bloc
+    list_modsecurity = extract_modsecurity_from_h_bloc(h_bloc)
+    # Initialize params
+    country = None
+    latitude = None
+    longitude = None
+    violation_file_list = ""
+    violation_id_list = ""
+    message_list = ""
+    # Extract GEOIP params, violation and message from each modsecurity in log
+    for modsecurity in list_modsecurity:
+        # Extract longitude, latitude and country
+        try:
+            # Search for GEOIP params in data
+            data_geoip = extract_field_from_modsecurity(modsecurity, "data")
+            data_geoip_list = list(data_geoip.split(','))
+            if data_geoip.find("Country") > -1:
+                country = data_geoip_list.pop(0)
+                country = country.replace("Country: ", "")
+            if data_geoip.find("Latitude") > -1:
+                latitude = data_geoip_list.pop(0)
+                latitude = float(latitude.replace("Latitude: ", ""))
+            if data_geoip.find("Longitude") > -1:
+                longitude = data_geoip_list.pop(0)
+                longitude = longitude.replace("Longitude: ", "")
+                longitude = float(longitude[:-2])
+        except IndexError:
+            pass
+        # Extract Violation
+        violation_file = extract_field_from_modsecurity(modsecurity, "file")
+        # Remove the path of the Core rules file
+        violation_file_list += violation_file.replace("/usr/local/modsecurity-crs/rules/", "") + "\n"
+        violation_id_list += extract_field_from_modsecurity(modsecurity, "id") + "\n"
+        # Extract message
+        message_list += extract_field_from_modsecurity(modsecurity, "msg") + "\n"
+    violation_file_list = violation_file_list[:-1]
+    violation_id_list = violation_id_list[:-1]
+    message_list = message_list[:-1]
+    
+    # Extract Timestamp from A bloc which contains the datetime in format like [28/Jun/2024:08:54:59 +0100]
+    try:
+        a_bloc = a_bloc.replace(f"---{log_id}---A--\n[", "")
+        # print("a_bloc= ", a_bloc)
+        timestamp_str = a_bloc[:a_bloc.find("+")-1]
+        timestamp = datetime.strptime(timestamp_str, "%d/%b/%Y:%H:%M:%S")
+    except ValueError:
+        timestamp = None
+
     # Extract Source
-    source = list(log_a_line.split("]"))
-    source = list(source[1].split(" "))
-    # Extract message
-    message = extract_field_from_h(log, "msg")
+    try:
+        source = list(a_bloc.split("] "))
+        source = list(source[1].split(" "))
+        source = source[1]
+    except IndexError:
+        source = None
+
+    # Extract method
+    b_bloc = b_bloc.replace(f"---{log_id}---B--\n", "")
+    method = list(b_bloc.split(" "))
+    method = method[0]
+
     # Extract URL
-    host = log[log.find("Host: ") + 6:log.find("\n", log.find("Host: "))]
-    url = log[log.find(method) + len(method) + 1:log.find(" ", log.find(method) + len(method) + 1)]
-    url = host + url
-    log_fields = {"longitude": longitude,
+    url = list(b_bloc.split(" "))
+    url = url[1]
+    # Add the Host to the url if exists    
+    if log.find("Host: ") > -1:
+        host = log[log.find("Host: ") + 6:log.find("\n", log.find("Host: "))]
+        url = host + url
+    
+    # Create an object contains the log fields
+    log_fields = {"log_system_id": log_id,
+                  "longitude": longitude,
                   "latitude": latitude,
                   "country": country,
-                  "timestamp": datetime.strptime(timestamp_str, "%d/%b/%Y:%H:%M:%S"),
-                  "violation_file": violation_file,
-                  "violation_id": violation_id,
-                  "source": source[2],
+                  "timestamp": timestamp,
+                  "violation_file": violation_file_list,
+                  "violation_id": violation_id_list,
+                  "source": source,
                   "method": method,
-                  "message": message,
+                  "message": message_list,
                   "url": url}
     return log_fields
 
@@ -97,10 +135,32 @@ def extract_dynamic_log_id(log: str):
     return matches[0] if matches else None
 
 
-def extract_field_from_h(log: str, field_name: str):
+def extract_field_from_modsecurity(modsecurity: str, field_name: str):
+    """Extract a field from ModSecurity in H bloc"""
     try:
-        if log.find(f'[{field_name} "') > -1:
-            return log[log.find(f'[{field_name} "')+len(f'[{field_name} "'):log.find('"]', log.find(f'[{field_name} "'))]
+        if modsecurity.find(f'[{field_name} "') > -1:
+            return modsecurity[modsecurity.find(f'[{field_name} "')+len(f'[{field_name} "'):modsecurity.find('"]', modsecurity.find(f'[{field_name} "'))]
         return ""
     except Exception:
         return ""
+
+
+def extract_modsecurity_from_h_bloc(h_bloc: str):
+    """Extract all ModSecrutiy parts in H bloc"""
+    list_modsecurity = []
+    modsecurity_index = h_bloc.find("ModSecurity: ")
+    next_modsecurity_index = h_bloc.find("ModSecurity: ", modsecurity_index+11)
+    for _ in range(h_bloc.count("ModSecurity: ")):
+        modsecurity = h_bloc[modsecurity_index: next_modsecurity_index]
+        list_modsecurity.append(modsecurity)
+        modsecurity_index = next_modsecurity_index
+        next_modsecurity_index = h_bloc.find("ModSecurity: ", modsecurity_index+11)
+    return list_modsecurity
+
+
+def extract_bloc(log: str, log_id: str, bloc: str):
+    """Extract bloc from a WAF log"""
+    start_bloc = f"---{log_id}---{bloc}--"
+    if log.find(start_bloc) > -1:
+        return log[log.find(start_bloc):log.find(f"---{log_id}---", log.find(start_bloc)+len(start_bloc))]
+    return ""

@@ -1,5 +1,24 @@
 <template>
   <v-row justify="center">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            {{ $t("sdwan.pleaseWait") }}
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
@@ -75,9 +94,9 @@
                     return-object
                     :items="state.countriesList"
                   ></v-autocomplete>
-                  <p class="error-feedback mb-5" v-if="v$.country.$error">
+                  <!-- <p class="error-feedback mb-5" v-if="v$.country.$error">
                     {{ v$.country.$errors[0].$message }}
-                  </p>
+                  </p> -->
                 </v-col>
 
                 <v-col cols="12" class="mb-n5 mb-1 mt-0">
@@ -93,7 +112,7 @@
                     :overlayNoRowsTemplate="overlayTemplate"
                     @grid-ready="onGridReady"
                     :pagination="true"
-                    :paginationPageSize="4"
+                    :paginationPageSize="10"
                     :localeText="paginationLocalization"
                   />
                 </v-col>
@@ -160,6 +179,7 @@ import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
 import { required, helpers } from "@vuelidate/validators";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { CheckboxCellEditor } from "ag-grid-community";
 
 export default {
   components: {
@@ -221,6 +241,8 @@ export default {
     const gridColumnApi = ref(null);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       listType: ["ip", "domain"],
       countriesList: [],
       id: null,
@@ -258,7 +280,7 @@ export default {
           state.applicationName = "";
           state.value = "";
           state.description = "";
-          state.country = "";
+          state.country = [];
           state.port = "";
         }
       }
@@ -286,31 +308,26 @@ export default {
         field: "rule_policy",
 
         width: 150,
-        cellRenderer: (params) => {
-          const checkbox = document.createElement("input");
-          checkbox.type = "checkbox";
-          checkbox.checked = params.value;
-          if (params.data.rule_waf === 18) {
-            params.data.rule_policy = true;
-            checkbox.disabled = true;
-            checkbox.checked = true;
-          } else {
-            checkbox.addEventListener("change", () => {
-              params.node.setDataValue(params.colDef.field, checkbox.checked);
-            });
-          }
-          return checkbox;
-        },
-        editable: (params) => {
-          return params.data.rule_waf !== 18;
-        },
+        cellRenderer: CheckboxCell,
       },
-      // {
-      //   headerName: log,
-      //   field: "log",
-      //   width: 150,
-      // },
     ]);
+
+    function CheckboxCell(params) {
+      console.log('params.data',params.data)
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.checked = params.value;
+      if (params.data.name === 'REQUEST-949-BLOCKING-EVALUATION') {
+        params.data.rule_policy = true;
+        checkbox.disabled = true;
+        checkbox.checked = true;
+      } else {
+        checkbox.addEventListener("change", () => {
+          params.node.setDataValue(params.colDef.field, checkbox.checked);
+        });
+      }
+      return checkbox;
+    }
 
     const populate = (data) => {
       if (modalMode.value === "edit") {
@@ -344,7 +361,14 @@ export default {
       }
     };
 
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/waf/restartNginx");
+    };
+
     const submitForm = async () => {
+      console.log("row", rowDataWafApp.value);
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -374,38 +398,52 @@ export default {
             .put(`/waf/updateApplicationWaf/${state.id}`, payload)
             .then((response) => {
               if (response.status == "201") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  closeModal();
+                }, 4000);
                 setTimeout(() => {
                   location.reload();
-                }, 1000);
+                }, 4000);
               }
             })
             .catch((i) => {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.msg;
+              state.textAlert = i.response.data.error;
             });
         } else {
           axios
             .post("/waf/createApplicationWaf", payload)
             .then((response) => {
               if (response.status == "201") {
-                state.openModal = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  closeModal();
+                }, 4000);
                 setTimeout(() => {
                   location.reload();
-                }, 1000);
+                }, 4000);
               }
             })
             .catch((i) => {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.msg;
+              state.textAlert = i.response.data.error;
             });
         }
       } else {
@@ -420,7 +458,7 @@ export default {
         state.applicationName = "";
         state.value = "";
         state.description = "";
-        state.country = "";
+        state.country = [];
         state.port = "";
       }
     };
@@ -460,11 +498,18 @@ export default {
     const onlynumbers = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
     });
+    const indication = computed(() => {
+      return t("champs.indication");
+    });
 
     const rules = computed(() => {
       return {
         applicationName: {
           required: helpers.withMessage(error, required),
+          isValidName: helpers.withMessage(
+            indication,
+            helpers.regex(/^[A-Za-z0-9_\-]+$/)
+          ),
         },
 
         value: {
@@ -475,9 +520,9 @@ export default {
           required: helpers.withMessage(error, required),
         },
 
-        country: {
-          required: helpers.withMessage(error, required),
-        },
+        // country: {
+        //   required: helpers.withMessage(error, required),
+        // },
         port: {
           required: helpers.withMessage(error, required),
           isValidPort: helpers.withMessage(

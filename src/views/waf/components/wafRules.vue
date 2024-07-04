@@ -1,5 +1,24 @@
 <template>
   <div class="mt-3 ml-3">
+    <v-overlay v-model="state.loading">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            {{ $t("sdwan.pleaseWait") }}
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
     <h4>{{ $t("openvpn.Generalinformation") }}</h4>
     <v-divider class="mb-2"></v-divider>
 
@@ -46,6 +65,11 @@
     :editRow="state.editRow"
     :modalMode="state.modalMode"
   />
+  <ModalShowAppWaf
+    :isOpen="state.isModalShowAppOpen"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+  />
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
       <v-card-title class="headline">{{
@@ -75,6 +99,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import VButton from "@/components/VButton.vue";
 import { reactive, ref, computed, onMounted, inject } from "vue";
 import ModalRuleWaf from "@/components/modals/ModalRuleWaf.vue";
+import ModalShowAppWaf from "@/components/modals/ModalShowAppWaf.vue";
 
 export default {
   name: "Rules",
@@ -82,6 +107,7 @@ export default {
     VButton,
     AgGridVue,
     ModalRuleWaf,
+    ModalShowAppWaf,
   },
   setup() {
     const emitter = inject("emitter");
@@ -99,6 +125,9 @@ export default {
       editRow: {},
       modalMode: "create",
       deletedRow: null,
+      loading: false,
+      isLoadingDialogue: false,
+      isModalShowAppOpen: false,
     });
 
     const RequestAction = computed(() => {
@@ -125,6 +154,14 @@ export default {
         field: "name",
         autoHeight: true,
         resizable: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
+      },
+      {
+        headerName: "Description",
+        field: "description",
+        autoHeight: true,
         width: 90,
         minWidth: 50,
         flex: 1,
@@ -166,19 +203,28 @@ export default {
       } else {
         if (params.data.created) {
           eGui.innerHTML = `
+          <button 
+          class="action-button show"  
+          data-action="show">
+          <i class="mdi mdi-eye" style="color: #086eae;font-size: 24px; "></i>
+          </button>
           <button
                 class="action-button edit"
                 data-action="edit">
-                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 24px;"></i>
                 </button>
           <button
           class="action-button delete"
           data-action="delete">
-            <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+            <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 24px;"></i>
           </button>`;
         } else {
           eGui.innerHTML = `
-          ${t("errors.noModif")}
+          <button 
+          class="action-button show"  
+          data-action="show">
+          <span class="mdi mdi-eye" style="color: #086eae;font-size: 24px;"></span>
+          </button>
           `;
         }
       }
@@ -196,14 +242,18 @@ export default {
         case "delete":
           state.deleteDialog = true;
           state.deletedRow = rowData;
-          console.log("delete", rowData);
 
           break;
         case "edit":
-          console.log("edit", rowData);
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
+          break;
+
+        case "show":
+          state.isModalShowAppOpen = true;
+          state.editRow = rowData;
+          state.modalMode = "show";
           break;
 
         default:
@@ -216,8 +266,6 @@ export default {
 
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataRules.value);
-      } else {
-        console.error("Grid API.");
       }
     };
     onMounted(() => {
@@ -242,7 +290,18 @@ export default {
       state.modalMode = "";
       state.editRow = {};
     });
+    emitter.on("closeModalSHOW", () => {
+      state.isModalShowAppOpen = false;
+      state.isOpen = false;
+      state.modalMode = "";
+      state.editRow = {};
+    });
 
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/waf/restartNginx");
+    };
     const openModalAdd = () => {
       state.modalData = {};
       state.modalMode = "create";
@@ -259,13 +318,20 @@ export default {
       axios
         .delete(`/waf/deleteRuleWaf/${state.deletedRow.id}`)
         .then((response) => {
-          state.snackbar = true;
-          state.color = "success";
-          state.textAlert = response.data.msg;
-
+          restartNginx();
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          setTimeout(() => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = response.data.msg;
+            state.deleteDialog = false;
+          }, 4000);
           setTimeout(() => {
             location.reload();
-          }, 1000);
+          }, 4000);
         })
         .catch((i) => {
           state.snackbar = true;

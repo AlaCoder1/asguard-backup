@@ -29,7 +29,7 @@ def find_possible_id():
         list_rule_waf = [rule.rule_id for rule in RulesWaf.objects.filter(created=True)]
     list_rule_geoip = []
     if len(ApplicationWaf.objects.all()) > 0:
-        list_rule_geoip = [rule.rule_geoip_id for rule in ApplicationWaf.objects.all()]
+        list_rule_geoip = [rule.rule_geoip_id for rule in ApplicationWaf.objects.all() if rule.rule_geoip_id]
     list_rule_id = list_rule_waf + list_rule_geoip
     if len(list_rule_id) > 0:
         # Sort the list in ascending order

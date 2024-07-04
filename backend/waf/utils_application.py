@@ -1,4 +1,4 @@
-import time
+from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
 from backend.waf.constant_variables import PATH_CRS_SETUP, PATH_MAIN_WAF, PATH_MODESC, PATH_NGINX_SITES_AVAILABLE, PATH_NGINX_SITES_ENABLED, PATH_RULES_WAF, PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
 from utils.commands_utils import execute_command_without_arguments, execute_list_commands_without_arguments
@@ -15,29 +15,59 @@ def create_application_waf_in_system(app_data):
     execute_command_without_arguments(["sudo", "cp", PATH_WAF_CONFIG, app_modsecurity_config])
 
     # Add reverse proxy config for the app
-    config_reverse_proxy = f"""server {{
+    modsecurity = f"""
+        modsecurity on;
+        modsecurity_rules_file {app_config};"""
+    location = f"""
+        location / {{
+            proxy_pass {app_data["application_protocol"]}://{app_data["application_value"]};
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+        }}"""
+    if app_data["application_protocol"] == "http":  # Config for HTTP
+        config_reverse_proxy = f"""
+server {{
+        listen {app_data["application_port"]};
 
-    listen {app_data["application_port"]};
+        {modsecurity}
 
-    modsecurity on;
-
-    modsecurity_rules_file {app_config};
-
-    location / {{
-
-        proxy_pass {app_data["application_value"]};
-
-        proxy_set_header Host $host;
-
-        proxy_set_header X-Real-IP $remote_addr;
-
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-
-        proxy_set_header X-Forwarded-Proto $scheme;
-
-    }}
+        {location}
 
 }}"""
+    else:  # Config for HTTPS
+        # Add SSL settings for the proxy
+        location = location.replace("proxy_set_header X-Forwarded-Proto $scheme;", """
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # SSL settings for the proxy
+            proxy_ssl_protocols TLSv1.2 TLSv1.3;
+            proxy_ssl_verify off;""")
+        config_reverse_proxy = f"""
+server {{
+    listen 80;
+    server_name _l;
+ 
+    # Redirect HTTP to HTTPS
+    location / {{
+        return 301 https://$host:{app_data["application_port"]}$request_uri;
+    }}
+}}
+
+server {{
+        listen {app_data["application_port"]} ssl;
+        server_name _;
+
+        ssl_certificate {PATH_SERVER_CERT_CRT.format(app_data["certificate_name"])};
+        ssl_certificate_key {PATH_SERVER_CERT_KEY.format(app_data["certificate_name"])};
+
+        {modsecurity}
+
+        {location}
+
+}}"""
+        
     with open(app_sites_available_config, 'w') as reverse_proxy_file:
         reverse_proxy_file.write(config_reverse_proxy)
     
@@ -81,9 +111,9 @@ SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,p
             # Add a new rule conf inside application directory
             with open(f"{app_directory}{rule_waf.name}.conf", 'w') as rule_block_file:
                 rule_block_file.write(rule_waf.rule_content)
-            app_config_content += f"Include {app_directory}{rule_waf.name}.conf\n"
+            app_config_content += f"\nInclude {app_directory}{rule_waf.name}.conf"
         else:
-            app_config_content += f"Include {PATH_RULES_WAF.format(rule_waf.name)}\n"
+            app_config_content += f"\nInclude {PATH_RULES_WAF.format(rule_waf.name)}"
     with open(app_config, 'w') as app_config_file:
         app_config_file.write(app_config_content)
     

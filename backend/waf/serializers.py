@@ -29,7 +29,7 @@ class ApplicationWafSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ApplicationWaf
-        fields = ['name', 'application_type', 'application_value', 'application_port', 'description', 'country', 
+        fields = ['name', 'application_type', 'application_protocol', 'certificate_name', 'application_value', 'application_port', 'description', 'country', 
                   'rule_geoip_id', 'rules']
 
     def create(self, validated_data:dict):
@@ -46,6 +46,8 @@ class ApplicationWafSerializer(serializers.ModelSerializer):
         # Update the ApplicationWaf instance
         application_waf.name = validated_data.get('name', application_waf.name)
         application_waf.application_type = validated_data.get('application_type', application_waf.application_type)
+        application_waf.application_protocol = validated_data.get('application_protocol', application_waf.application_protocol)
+        application_waf.certificate_name = validated_data.get('certificate_name', None)
         application_waf.application_value = validated_data.get('application_value', application_waf.application_value)
         application_waf.application_port = validated_data.get('application_port', application_waf.application_port)
         application_waf.description = validated_data.get('description', application_waf.description)

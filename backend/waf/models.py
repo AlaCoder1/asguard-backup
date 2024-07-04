@@ -27,6 +27,7 @@ class RulesWaf(models.Model):
     rule_status = models.BooleanField(default=True)
     created = models.BooleanField(default=True)
     rule_id = models.IntegerField(default=None, null=True, unique=True)
+    description = models.TextField(default=None, null=True, blank=True)
     variables = models.CharField(max_length=1000, default=None, null=True, blank=True)
     operators = models.CharField(max_length=1000, default=None, null=True, blank=True)
     transformations = models.CharField(max_length=1000, default=None, null=True, blank=True)
@@ -35,3 +36,44 @@ class RulesWaf(models.Model):
 
     class Meta:
         db_table = 'rules_waf'
+
+
+class ApplicationWaf(models.Model):
+    name = models.CharField(max_length=300, default=None, null=True, blank=True, unique=True)
+    application_type = models.CharField(max_length=100, default="ip", null=True, blank=True)
+    application_value = models.CharField(max_length=100, default=None, null=True, blank=True)
+    application_port = models.IntegerField(default=None, null=True, blank=True, unique=True)
+    description = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    country = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    rule_geoip_id = models.IntegerField(default=None, null=True, unique=True)
+    rules = models.ManyToManyField(RulesWaf, through="ApplicationRulesWaf")
+
+    class Meta:
+        db_table = 'application_waf'
+
+
+class ApplicationRulesWaf(models.Model):
+    application_waf = models.ForeignKey(ApplicationWaf, on_delete=models.CASCADE)
+    rule_waf = models.ForeignKey(RulesWaf, on_delete=models.CASCADE)
+    rule_policy = models.BooleanField(default=False)
+    rule_log = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = 'application_rule_waf'
+
+
+class AlertWaf(models.Model):
+    log_system_id = models.CharField(max_length=100, default=None, null=True, blank=True, unique=True)
+    country = models.CharField(max_length=100, default=None, null=True, blank=True)
+    longitude = models.FloatField(default=None, null=True)
+    latitude = models.FloatField(default=None, null=True)
+    timestamp = models.DateTimeField(default=None, null=True)
+    violation_file = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    violation_id = models.CharField(max_length=200, default=None, null=True, blank=True)
+    source = models.CharField(max_length=100, default=None, null=True, blank=True)
+    method = models.CharField(max_length=100, default=None, null=True, blank=True)
+    message = models.CharField(max_length=1000, default=None, null=True, blank=True)
+    url = models.CharField(max_length=1000, default=None, null=True, blank=True)
+
+    class Meta:
+        db_table = 'alert_waf'

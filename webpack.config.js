@@ -35,6 +35,7 @@ Encore.setOutputPath("static/")
   .addEntry("interfacesType", "./src/middleware/interfaces_type.js")
   .addEntry("dhcp4-server", "./src/middleware/dhcp4-server.js")
   .addEntry("profile", "./src/middleware/profile.js")
+  .addEntry("systemLog", "./src/middleware/systemLog.js")
   .addEntry("settings", "./src/middleware/settings.js")
   .enableVueLoader(() => {}, {
     version: 3,
@@ -74,6 +75,12 @@ Encore.setOutputPath("static/")
     config.useBuiltIns = "usage";
     config.corejs = 3;
   })
+
+  .configureDefinePlugin(options => {
+    options.__VUE_OPTIONS_API__ = true;
+    options.__VUE_PROD_DEVTOOLS__ = false;
+  })
+
   .enableSassLoader();
 
 module.exports = Encore.getWebpackConfig();

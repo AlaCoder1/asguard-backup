@@ -8,6 +8,7 @@ urlpatterns = [
     path('createServerIPsec', views.create_server_ipsec, name="createServerIPsec"),
     path('deleteServerIPsec/<int:id>', views.delete_server_ipsec, name="deleteServerIPsec"),
     path('updateServerIPsec/<int:id>', views.update_server_ipsec, name="updateServerIPsec"),
+    path('upServerIPsec/<int:id>', views.up_server_ipsec, name="upServerIPsec"),
     path('statusServerIPsec/<int:id>', views.status_server_ipsec, name="statusServerIPsec"),
 
     # urls for IPsec service

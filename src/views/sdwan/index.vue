@@ -20,7 +20,7 @@
               </v-card-text>
             </v-card>
           </v-window-item>
-          <v-window-item
+          <!-- <v-window-item
             v-for="tab in tabs"
             :key="tab.id"
             value="Visualization"
@@ -28,7 +28,7 @@
             <v-card>
               <v-card-text> </v-card-text>
             </v-card>
-          </v-window-item>
+          </v-window-item> -->
         </v-window>
       </template>
     </base-layout>

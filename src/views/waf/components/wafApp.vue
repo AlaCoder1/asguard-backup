@@ -127,6 +127,9 @@ export default {
     const value = computed(() => {
       return t("squid.value");
     });
+    const protocol = computed(() => {
+      return t("firewall.protocol");
+    });
     const columnApplication = ref([
       {
         headerName: appName,
@@ -137,8 +140,16 @@ export default {
         flex: 1,
       },
       {
-        headerName: "Type",
+        headerName: "protocol",
         field: "application_type",
+        autoHeight: true,
+        width: 90,
+        minWidth: 50,
+        flex: 1,
+      },
+      {
+        headerName: protocol,
+        field: "application_protocol",
         autoHeight: true,
         width: 90,
         minWidth: 50,
@@ -219,6 +230,7 @@ export default {
 
           break;
         case "edit":
+          console.log("edit", rowData);
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;

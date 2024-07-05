@@ -102,9 +102,7 @@
                 >
                   <span>--</span>
                   {{
-                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol}  ${
-                      rule.rule_description
-                    } ${rule.saddr} ${
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${rule.saddr} ${
                       rule.sport === undefined ? "" : rule.sport
                     } ${rule.daddr} ${
                       rule.dport === undefined ? "" : rule.dport
@@ -117,9 +115,7 @@
                 >
                   <span>--</span>
                   {{
-                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol}  ${
-                      rule.rule_description
-                    } ${rule.saddr} ${
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${rule.saddr} ${
                       rule.sport === undefined ? "" : rule.sport
                     } ${rule.daddr} ${
                       rule.dport === undefined ? "" : rule.dport
@@ -139,9 +135,7 @@
                 >
                   <span> {{ `${rule?.status === "new" ? "+++" : "+-"}` }}</span>
                   {{
-                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol}  ${
-                      rule.rule_description
-                    } ${rule.saddr} ${
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${rule.saddr} ${
                       rule.sport === undefined ? "" : rule.sport
                     } ${rule.daddr} ${
                       rule.dport === undefined ? "" : rule.dport

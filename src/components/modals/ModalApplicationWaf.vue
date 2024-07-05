@@ -59,6 +59,41 @@
                     {{ v$.type.$errors[0].$message }}
                   </p>
                 </v-col>
+                <v-col cols="12" class="mb-n6">
+                  <v-select
+                    v-model="state.protocol"
+                    :label="$t('firewall.protocol')"
+                    item-title="name"
+                    item-value="slug"
+                    :items="state.listProtocol"
+                    return-object
+                    :no-data-text="$t('certificat.certificatlist')"
+                  ></v-select>
+                  <p class="error-feedback mb-5" v-if="v$.protocol.$error">
+                    {{ v$.protocol.$errors[0].$message }}
+                  </p>
+                </v-col>
+                <v-col
+                  cols="12"
+                  class="mb-n6"
+                  v-if="state.protocol.slug === 'https'"
+                >
+                  <v-select
+                    :label="$t('openvpn.ServeurCertificate')"
+                    v-model="state.serverCertif"
+                    item-title="name"
+                    item-value="id"
+                    :items="state.filtredMapCertif"
+                    :no-data-text="$t('certificat.certificatlist')"
+                    return-object
+                  ></v-select>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.serverCertif.$errors.length"
+                  >
+                    {{ v$.serverCertif.$errors?.[0].$message }}
+                  </p>
+                </v-col>
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
@@ -177,7 +212,7 @@ import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
-import { required, helpers } from "@vuelidate/validators";
+import { required, helpers, requiredIf } from "@vuelidate/validators";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { CheckboxCellEditor } from "ag-grid-community";
 
@@ -205,6 +240,7 @@ export default {
     onMounted(() => {
       let countries = countryList.getData();
       getAllcountryCode(countries);
+      getCertif();
       overlayTemplate.value = `
         <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
         <path
@@ -245,6 +281,13 @@ export default {
       isLoadingDialogue: false,
       listType: ["ip", "domain"],
       countriesList: [],
+      listProtocol: [
+        { name: "HTTP", slug: "http" },
+        { name: "HTTPS", slug: "https" },
+      ],
+      protocol: "",
+      filtredMapCertif: [],
+      serverCertif: "",
       id: null,
       //
       snackbar: false,
@@ -267,6 +310,12 @@ export default {
       }
     );
     watch(
+      () => state.protocol,
+      (val) => {
+        if (val.slug === "http") state.serverCertif = "";
+      }
+    );
+    watch(
       () => editRow.value,
       (val) => {
         populate(val);
@@ -282,9 +331,39 @@ export default {
           state.description = "";
           state.country = [];
           state.port = "";
+          state.serverCertif = "";
+          state.state.protocol = "";
         }
       }
     );
+
+    const getCertif = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/certificates/getAllCertificates").then(
+        (response) => {
+          let mapedListCertif = response.data.filter(
+            (i) => i.certificate_type === "server"
+          );
+          let mapedCertServer = mapedListCertif.map((i) => {
+            return {
+              id: i.id,
+              name: i.name,
+              is_private_key: i.is_private_key,
+              certificate_authority: i.certificate_authority,
+            };
+          });
+          state.filtredMapCertif = mapedCertServer.filter(
+            (i) => i.is_private_key
+          );
+        },
+        (error) => {
+          console.log(error);
+        }
+      );
+    };
+
     const block = computed(() => {
       return t("Waf.block");
     });
@@ -313,11 +392,10 @@ export default {
     ]);
 
     function CheckboxCell(params) {
-      console.log('params.data',params.data)
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = params.value;
-      if (params.data.name === 'REQUEST-949-BLOCKING-EVALUATION') {
+      if (params.data.name === "REQUEST-949-BLOCKING-EVALUATION") {
         params.data.rule_policy = true;
         checkbox.disabled = true;
         checkbox.checked = true;
@@ -358,6 +436,18 @@ export default {
         });
 
         rowDataWafApp.value = mapedRow;
+
+        let filtredProtocol = state.listProtocol.filter(
+          (i) => i.slug === data?.application_protocol
+        );
+        state.protocol = filtredProtocol[0];
+
+        if (data.certificate_name) {
+          let filtredCertif = state.filtredMapCertif.filter(
+            (i) => i.name === data?.certificate_name
+          );
+          state.serverCertif = filtredCertif[0];
+        }
       }
     };
 
@@ -368,7 +458,6 @@ export default {
     };
 
     const submitForm = async () => {
-      console.log("row", rowDataWafApp.value);
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -382,8 +471,10 @@ export default {
             rule_log: e.rule_log,
           };
         });
+
         let payload = {
           name: state.applicationName,
+          application_protocol: state.protocol.slug,
           application_type: state.type,
           application_value: state.value,
           application_port: state.port,
@@ -391,7 +482,9 @@ export default {
           country: mapedCountry,
           rules: mapedRuleApp,
         };
-        console.log("payload", payload);
+        if (state.protocol.slug === "https") {
+          payload = { ...payload, certificate_name: state.serverCertif.name };
+        }
 
         if (modalMode.value === "edit") {
           axios
@@ -460,6 +553,9 @@ export default {
         state.description = "";
         state.country = [];
         state.port = "";
+        state.serverCertif = "";
+        state.state.protocol = "";
+        v$.value.$reset();
       }
     };
     const getAllcountryCode = async (countries) => {
@@ -515,6 +611,15 @@ export default {
         value: {
           required: helpers.withMessage(error, required),
         },
+        protocol: {
+          required: helpers.withMessage(error, required),
+        },
+        serverCertif: {
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.protocol.slug === "https")
+          ),
+        },
 
         type: {
           required: helpers.withMessage(error, required),
@@ -540,8 +645,6 @@ export default {
       gridColumnApi.value = params.columnApi;
       if (gridApi.value) {
         gridApi.value.setRowData(rowDataWafApp.value);
-      } else {
-        console.error("Grid API.");
       }
     };
 

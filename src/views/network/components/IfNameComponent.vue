@@ -436,6 +436,14 @@
         </v-card>
       </v-dialog>
     </v-form>
+    <v-snackbar
+      :timeout="2000"
+      v-model="snackbar"
+      location="bottom right"
+      :color="color"
+    >
+      {{ textAlert }}
+    </v-snackbar>
   </v-card>
 </template>
 
@@ -459,6 +467,9 @@ export default {
   },
   data() {
     return {
+      textAlert: "",
+      color: "",
+      snackbar: false,
       messageGatewayAddress: "",
       messageNameGateway: "",
       messageValidAddress: "",
@@ -655,19 +666,26 @@ export default {
         };
         console.log("params", params);
 
-        axios.put("/network/conf/" + this.activeTab, params).then(
-          (response) => {
-            this.message = response.data.message;
-            this.showAlert = true;
-            setTimeout(() => {
-              this.showAlert = false;
-              location.reload();
-            }, 1000);
-          },
-          (error) => {
-            console.log(error);
-          }
-        );
+        axios
+          .put("/network/conf/" + this.activeTab, params)
+          .then(
+            (response) => {
+              this.message = response.data.message;
+              this.showAlert = true;
+              setTimeout(() => {
+                this.showAlert = false;
+                location.reload();
+              }, 1000);
+            },
+            (error) => {
+              console.log(error);
+            }
+          )
+          .catch((e) => {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = e.response.data.message;
+          });
       }
       if (this.setuptypeip4 === "dhcp") {
         const params = {
@@ -704,19 +722,26 @@ export default {
           },
         };
 
-        axios.put("/network/conf/" + this.activeTab, params).then(
-          (response) => {
-            this.message = response.data.message;
-            this.showAlert = true;
-            setTimeout(() => {
-              this.showAlert = false;
-              location.reload();
-            }, 1000);
-          },
-          (error) => {
-            console.log(error);
-          }
-        );
+        axios
+          .put("/network/conf/" + this.activeTab, params)
+          .then(
+            (response) => {
+              this.message = response.data.message;
+              this.showAlert = true;
+              setTimeout(() => {
+                this.showAlert = false;
+                location.reload();
+              }, 1000);
+            },
+            (error) => {
+              console.log(error);
+            }
+          )
+          .catch((e) => {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = e.response.data.message;
+          });
       }
     },
     cancel() {
@@ -752,35 +777,42 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.post("/gateway/addStaticGateway", params).then(
-        (response) => {
-          console.log("response***", response);
-          if (response.status == "200") {
-            this.showGatewayDialog = false;
-            this.message = response.data.msg;
-            this.gateway = {
-              gwname: "",
-              gwaddress: "",
-              description: "",
-              default_aux: false,
-              far_aux: false,
-              multiwan_aux: false,
-            };
-            this.messageGatewayAddress = "";
-            this.messageNameGateway = "";
-            this.messageValidAddress = "";
-            this.showAlertGateway = true;
-            setTimeout(() => {
-              this.showAlertGateway = false;
-            }, 1000);
-          } else {
-            this.showGatewayDialog = true;
+      axios
+        .post("/gateway/addStaticGateway", params)
+        .then(
+          (response) => {
+            console.log("response***", response);
+            if (response.status == "200") {
+              this.showGatewayDialog = false;
+              this.message = response.data.msg;
+              this.gateway = {
+                gwname: "",
+                gwaddress: "",
+                description: "",
+                default_aux: false,
+                far_aux: false,
+                multiwan_aux: false,
+              };
+              this.messageGatewayAddress = "";
+              this.messageNameGateway = "";
+              this.messageValidAddress = "";
+              this.showAlertGateway = true;
+              setTimeout(() => {
+                this.showAlertGateway = false;
+              }, 1000);
+            } else {
+              this.showGatewayDialog = true;
+            }
+          },
+          (error) => {
+            console.log(error);
           }
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
+        )
+        .catch((e) => {
+          this.snackbar = true;
+          this.color = "red";
+          this.textAlert = e.response.data.msg;
+        });
     },
     cancelGateway() {
       this.showGatewayDialog = false;
@@ -808,18 +840,25 @@ export default {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios.put("/gateway/updateStaticGateway", params).then(
-        (response) => {
-          this.showAlert = true;
-          console.log(response);
-          setTimeout(() => {
-            this.showAlert = false;
-          }, 3000);
-        },
-        (error) => {
-          console.log(error);
-        }
-      );
+      axios
+        .put("/gateway/updateStaticGateway", params)
+        .then(
+          (response) => {
+            this.showAlert = true;
+            console.log(response);
+            setTimeout(() => {
+              this.showAlert = false;
+            }, 3000);
+          },
+          (error) => {
+            console.log(error);
+          }
+        )
+        .catch((e) => {
+          this.snackbar = true;
+          this.color = "red";
+          this.textAlert = e.response.data.msg;
+        });
     },
     onSubmit() {
       this.addNetwork();
@@ -881,7 +920,7 @@ export default {
     this.mssv = this.IPV4Config.genericConfig.mssv;
     this.speed_duplex = this.IPV4Config.genericConfig.speed_duplex;
 
-    this.setuptypeip4 = this.IPV4Config.IPV4Config.typeip4;
+    this.setuptypeip4 = this.IPV4Config.IPV4Config.typeip4.toLowerCase();
     this.value_setup_Ipv4.ip_address4 = this.IPV4Config.IPV4Config.ip_address;
     this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 

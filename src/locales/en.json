@@ -199,7 +199,8 @@
     "action":"Action",
     "save":"Save",
     "add_rule":"Add new Rule",
-    "update_rule":"Update Rule"
+    "update_rule":"Update Rule",
+    "remplirChamps":"Fill the fields with word 'ALL'"
 
 
 

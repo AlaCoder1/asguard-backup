@@ -50,7 +50,7 @@ export default {
       activeTab: "Configuration",
       tabs: [
         { id: 1, label: "Configuration" },
-        { id: 2, label: "Visualization" },
+        // { id: 2, label: "Visualization" },
       ],
     };
   },

@@ -314,13 +314,13 @@ export default {
         formData: {
           olPassword: {
             required: helpers.withMessage(error, required),
-            isValidPassword: helpers.withMessage(
-              invalidPassword,
+            // isValidPassword: helpers.withMessage(
+            //   invalidPassword,
 
-              helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-              )
-            ),
+            //   helpers.regex(
+            //     /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            //   )
+            // ),
           },
           newPassword: {
             required: helpers.withMessage(error, required),

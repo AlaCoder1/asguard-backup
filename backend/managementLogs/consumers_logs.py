@@ -60,4 +60,4 @@ class LogsdConsumer(AsyncWebsocketConsumer):
                     list_data.append(data)
                     await self.save_system_usage(data)
                     await self.send(json.dumps(list_data))
-            await asyncio.sleep(60)
+            await asyncio.sleep(900)

@@ -15,6 +15,25 @@ from backend.gateway.models import *
 from backend.gateway.functions import *
 from django.db.models import Q
 from django.core import serializers
+from django.utils.translation import gettext_lazy as _
+
+
+# Constants
+CONSTANT_INTERFACE_NETWORK = _('Interface')
+CONSTANT_INTERFACE_CONNECTION = _('Connection')
+
+# Success messages
+SUCCESS_MESSAGES_CONFIGURED = _("is configured")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+
+
+# Error messages
+ERROR_MESSAGES_NOACTIVE = _("does not active")
+ERROR_MESSAGES_FAILED = _("Failed to configure")
+ERROR_MESSAGES_FAILED_DELETE = _("Failed to delete")
+
+
+
 
 ###########################
 @swagger_auto_schema(
@@ -29,7 +48,7 @@ from django.core import serializers
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 def conf(request,name_interface):
-    msg="Failed to configure Network!"
+    msg=f"{ERROR_MESSAGES_FAILED} {CONSTANT_INTERFACE_NETWORK}"
     status=400
     list_metric = []
     if (request.method == 'PUT'):
@@ -71,7 +90,7 @@ def conf(request,name_interface):
             ##get old configuration in service
             output_service,error=get_old_config()
             if error!="" or len(output_service)==0:
-                msg="Failed to configure Network!"
+                msg=f"{ERROR_MESSAGES_FAILED} {CONSTANT_INTERFACE_NETWORK}"
                 status=400
             else:
                     #delete empty value
@@ -89,22 +108,24 @@ def conf(request,name_interface):
                             ip_address4 =  None if data['value_setup_Ipv4'].get('ip_address4', None) == "" else  data['value_setup_Ipv4'].get('ip_address4', None)
                             netmask4 =  None if data['value_setup_Ipv4'].get('netmask4', None) == "" else  data['value_setup_Ipv4'].get('netmask4', None)
                             gateway4 =  None if data['value_setup_Ipv4']['gateway4'].get('value', None) == "" else  data['value_setup_Ipv4']['gateway4'].get('value', None)
-                            GatewayObject=Gateway.objects.get(Q(gwaddress=gateway4) & Q(staticgw=True) )
-                            #################
-                            default_aux=GatewayObject.default_aux
-                            far_aux=GatewayObject.far_aux
-                            multiWan_aux=GatewayObject.multiwan_aux
-                            addrgw4=GatewayObject.gwaddress
-                            ############# generete metric statiquement
-                            metric=0
-                            allGatewayInterface = GatewayInterface.objects.all()
-                            if multiWan_aux:
-                                for i in allGatewayInterface:
-                                    list_metric.append(i.metric)
-                                metric=different_metric(list_metric)
-                            cmdgw4=return_gateway_system(uuid,addrgw4,far_aux,multiWan_aux,metric)
-                            ipv4_gw_interface=True
-                            add_gateway_interface_db(GatewayObject,name_interface,metric,ipv4_gw_interface)
+                            cmdgw4=None
+                            if gateway4!="Auto Detect":
+                                GatewayObject=Gateway.objects.get(Q(gwaddress=gateway4) & Q(staticgw=True) )
+                                #################
+                                default_aux=GatewayObject.default_aux
+                                far_aux=GatewayObject.far_aux
+                                multiWan_aux=GatewayObject.multiwan_aux
+                                addrgw4=GatewayObject.gwaddress
+                                ############# generete metric statiquement
+                                metric=0
+                                allGatewayInterface = GatewayInterface.objects.all()
+                                if multiWan_aux:
+                                    for i in allGatewayInterface:
+                                        list_metric.append(i.metric)
+                                    metric=different_metric(list_metric)
+                                cmdgw4=return_gateway_system(uuid,addrgw4,far_aux,multiWan_aux,metric)
+                                ipv4_gw_interface=True
+                                add_gateway_interface_db(GatewayObject,name_interface,metric,ipv4_gw_interface)
                             #call function to convert address to static
                             commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,uuid,ip_address4,netmask4,cmdgw4)
                             jsonIPV4={
@@ -357,7 +378,7 @@ EOF""".format('\n'.join(output_service))
                                                         aux_server=delete_dhcp4_server(id_interface,ifname)
                                                     if aux_server is True:
                                                             ###### 
-                                                            msg="Your interface {} was configured Successfully!!".format(name_interface)
+                                                            msg=f"{CONSTANT_INTERFACE_NETWORK} {SUCCESS_MESSAGES_CONFIGURED}"
                                                             status=200
                                                     else:
                                                         msg=aux_server
@@ -390,9 +411,8 @@ EOF""".format('\n'.join(output_service))
              
         else:
             
-            msg="Connection is not active !!"
+            msg=f"{CONSTANT_INTERFACE_CONNECTION } {ERROR_MESSAGES_NOACTIVE}"
             status=400
-    # print(msg)
     return JsonResponse({"message":msg},status=status)
 
 ##API to delete config 
@@ -400,7 +420,7 @@ EOF""".format('\n'.join(output_service))
 @api_view(['DELETE'])
 @permission_classes([AllowAny])
 def delete_interface(request,id):
-    msg="failed to delete interface!"
+    msg=f"{ERROR_MESSAGES_FAILED_DELETE} {CONSTANT_INTERFACE_NETWORK}"
     if request.method=="DELETE":
         if (Interface.objects.filter(id=id).exists()):
                 interfaceObject = Interface.objects.get(id=id)
@@ -409,9 +429,9 @@ def delete_interface(request,id):
                 if not error:
                     if desactiver_interface_remote(ifname,output_service):
                         interfaceObject.delete() 
-                        msg="Delete interface Successfully!!"
+                        msg=f"{CONSTANT_INTERFACE_NETWORK} {SUCCESS_MESSAGES_DELETING}"
                 
-    return JsonResponse({"mssg":msg})
+    return JsonResponse({"msg":msg})
             
             
 @api_view(['GET'])

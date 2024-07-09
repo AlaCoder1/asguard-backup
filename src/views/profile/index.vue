@@ -55,16 +55,12 @@
                   v-ripple
                   v-else
                   class="mb-3"
-                  style="cursor: pointer"
+                  style="cursor: pointer; overflow: hidden; border-radius: 50%"
                 >
                   <img
                     :src="imageURL"
                     alt="avatar"
-                    style="
-                      width: 100%;
-                      background-size: cover;
-                      overflow: hidden;
-                    "
+                    style="width: 100%; height: 100%; object-fit: cover"
                   />
                 </v-avatar>
               </v-badge>
@@ -90,56 +86,85 @@
                 <v-card-text class="subheading">{{ errorText }}</v-card-text>
                 <v-card-actions>
                   <v-spacer></v-spacer>
-                  <v-btn @click="errorDialog = false" flat>Got it!</v-btn>
+                  <v-btn @click="errorDialog = false" flat>{{
+                    $t("profil.GotIt")
+                  }}</v-btn>
                 </v-card-actions>
               </v-card>
             </v-dialog>
           </div>
           <v-row class="d-flex justify-center align-center mt-5">
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Username')"></v-text-field>
+              <v-text-field
+                :label="$t('profil.Username')"
+                v-model="username"
+              ></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Address')"></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row class="d-flex justify-center align-center mt-5">
-            <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Firstname')"></v-text-field>
-            </v-col>
-            <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Region')"></v-text-field>
+              <v-text-field
+                :label="$t('profil.Address')"
+                v-model="address"
+              ></v-text-field>
             </v-col>
           </v-row>
           <v-row class="d-flex justify-center align-center mt-5">
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Phonenumber')"></v-text-field>
+              <v-text-field
+                :label="$t('profil.Firstname')"
+                v-model="firstname"
+              ></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Country')"></v-text-field>
-            </v-col>
-          </v-row>
-          <v-row class="d-flex justify-center align-center mt-5">
-            <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Email')"></v-text-field>
-            </v-col>
-            <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Postalcode')"></v-text-field>
+              <v-text-field
+                :label="$t('profil.Region')"
+                v-model="region"
+              ></v-text-field>
             </v-col>
           </v-row>
           <v-row class="d-flex justify-center align-center mt-5">
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Lastname')"></v-text-field>
+              <v-text-field
+                :label="$t('profil.Phonenumber')"
+                v-model="phone_number"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="4" class="mb-n6">
+              <v-text-field
+                :label="$t('profil.Country')"
+                v-model="country"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row class="d-flex justify-center align-center mt-5">
+            <v-col cols="4" class="mb-n6">
+              <v-text-field
+                :label="$t('profil.Email')"
+                v-model="email"
+              ></v-text-field>
+            </v-col>
+            <v-col cols="4" class="mb-n6">
+              <v-text-field
+                :label="$t('profil.Postalcode')"
+                v-model="code_postal"
+              ></v-text-field>
+            </v-col>
+          </v-row>
+          <v-row class="d-flex justify-center align-center mt-5">
+            <v-col cols="4" class="mb-n6">
+              <v-text-field
+                :label="$t('profil.Lastname')"
+                v-model="lastname"
+              ></v-text-field>
             </v-col>
             <v-col cols="4" class="mb-n6">
               <v-row>
                 <v-col cols="8">
-                  <label>{{$t('profil.2FA')}} </label>
+                  <label>{{ $t("profil.2FA") }} </label>
                 </v-col>
                 <v-spacer></v-spacer>
                 <v-col cols="4" class="mb-n6">
-                  <input type="checkbox" hide-details />
-                  <label class="ml-1">{{$t('profil.ActivateOTP')}} </label>
+                  <input type="checkbox" hide-details v-model="is_enable_2FA" />
+                  <label class="ml-1">{{ $t("profil.ActivateOTP") }} </label>
                 </v-col>
               </v-row>
             </v-col>
@@ -155,23 +180,58 @@
                   label-color="#ffffff"
                   :label="$t('profil.Update')"
                   :isLarge="true"
+                  @click="submitForm"
                 />
               </div>
             </v-col>
           </v-row>
 
-          <v-row class="d-flex justify-center align-center mt-0">
+          <v-row class="d-flex justify-center align-center mt-0 mb-3">
             <v-col cols="8" class="mb-n6">
-              <v-text-field :label="$t('profil.Oldpassword')"></v-text-field>
+              <v-text-field
+                :label="$t('profil.Oldpassword')"
+                v-model="state.formData.olPassword"
+                :append-inner-icon="show1 ? 'mdi-eye' : 'mdi-eye-off'"
+                prepend-inner-icon="mdi-lock-outline"
+                :type="show1 ? 'text' : 'password'"
+                @click:append-inner="show1 = !show1"
+              ></v-text-field>
+
+              <p class="error-feedback" v-if="v$.formData.olPassword.$error">
+                {{ v$.formData.olPassword.$errors[0].$message }}
+              </p>
             </v-col>
           </v-row>
 
           <v-row class="d-flex justify-center align-center">
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.Newpassowrd')"></v-text-field>
+              <v-text-field
+                :label="$t('profil.Newpassowrd')"
+                v-model="state.formData.newPassword"
+                :append-inner-icon="show2 ? 'mdi-eye' : 'mdi-eye-off'"
+                prepend-inner-icon="mdi-lock-outline"
+                :type="show2 ? 'text' : 'password'"
+                @click:append-inner="show2 = !show2"
+              ></v-text-field>
+              <p class="error-feedback" v-if="v$.formData.newPassword.$error">
+                {{ v$.formData.newPassword.$errors[0].$message }}
+              </p>
             </v-col>
             <v-col cols="4" class="mb-n6">
-              <v-text-field :label="$t('profil.ConfirmNewpassowrd')"></v-text-field>
+              <v-text-field
+                :append-inner-icon="show3 ? 'mdi-eye' : 'mdi-eye-off'"
+                prepend-inner-icon="mdi-lock-outline"
+                :type="show3 ? 'text' : 'password'"
+                @click:append-inner="show3 = !show3"
+                :label="$t('profil.ConfirmNewpassowrd')"
+                v-model="state.formData.confirmPassword"
+              ></v-text-field>
+              <p
+                class="error-feedback"
+                v-if="v$.formData.confirmPassword.$error"
+              >
+                {{ v$.formData.confirmPassword.$errors[0].$message }}
+              </p>
             </v-col>
           </v-row>
           <v-row class="flex py-8 mb-10">
@@ -184,10 +244,19 @@
                   label-color="#ffffff"
                   :label="$t('profil.ChangePassword')"
                   :isLarge="true"
+                  @click="changePass"
                 />
               </div>
             </v-col>
           </v-row>
+          <v-snackbar
+            :timeout="2000"
+            v-model="snackbar"
+            location="bottom right"
+            :color="color"
+          >
+            {{ textAlert }}
+          </v-snackbar>
         </div>
       </template>
     </base-layout>
@@ -195,15 +264,100 @@
 </template>
 
 <script>
+import { useI18n } from "vue-i18n";
+import { reactive, computed } from "vue";
+import useValidate from "@vuelidate/core";
+import { required, sameAs, helpers } from "@vuelidate/validators";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
+import { getCookie } from "@/mixins/csrftoken.js";
+import axios from "axios";
 export default {
   name: "Profile",
   components: {
     BaseLayout,
     VButton,
   },
+
+  mounted() {
+    let retriveInfo = localStorage.getItem("user-info");
+    let userInfo = JSON.parse(retriveInfo);
+    let userId = userInfo?.currentUser?.id;
+    this.getUserById(userId);
+  },
+
+  setup() {
+    //data
+    const { t } = useI18n();
+    const state = reactive({
+      formData: {
+        confirmPassword: "",
+        newPassword: "",
+        olPassword: "",
+      },
+    });
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const invalidPassword = computed(() => {
+      return t("errors.invalidPassword");
+    });
+    const passwordConfirmation = computed(() => {
+      return t("errors.passwordConfirmation");
+    });
+    const rules = computed(() => {
+      return {
+        formData: {
+          olPassword: {
+            required: helpers.withMessage(error, required),
+            // isValidPassword: helpers.withMessage(
+            //   invalidPassword,
+
+            //   helpers.regex(
+            //     /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            //   )
+            // ),
+          },
+          newPassword: {
+            required: helpers.withMessage(error, required),
+            isValidPassword: helpers.withMessage(
+              invalidPassword,
+
+              helpers.regex(
+                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+              )
+            ),
+          },
+          confirmPassword: {
+            sameAsPassword: helpers.withMessage(
+              passwordConfirmation,
+
+              sameAs(state.formData.newPassword)
+            ), // can be a reference to a field or computed property
+            required: helpers.withMessage(error, required),
+
+            isValidPassword: helpers.withMessage(
+              invalidPassword,
+
+              helpers.regex(
+                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+              )
+            ),
+          },
+        },
+      };
+    });
+
+    const v$ = useValidate(rules, state);
+    return {
+      state,
+      v$,
+    };
+  },
   data: () => ({
+    show1: false,
+    show2: false,
+    show3: false,
     errorDialog: false,
     errorText: "",
     uploadFieldName: "file",
@@ -212,9 +366,70 @@ export default {
     saving: false,
     saved: false,
     imageURL: null,
+    //
+    snackbar: false,
+    color: "",
+    textAlert: "",
+    //
+    username: "",
+    firstname: "",
+    lastname: "",
+    code_postal: "",
+    email: "",
+    region: "",
+    phone_number: "",
+    is_enable_2FA: "",
+    address: "",
+    country: "",
+    fileImg: null,
+    //
   }),
 
   methods: {
+    getUserById(userId) {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios
+        .get(`/users/getUser/${userId}`)
+        .then((response) => {
+          console.log("response", response);
+          this.username =
+            response.data.username === "null" ? "" : response.data.username;
+          this.firstname =
+            response.data.fullname === "null" ? "" : response.data.fullname;
+          this.lastname =
+            response.data.fullname === "null" ? "" : response.data.fullname;
+          this.code_postal =
+            response.data.profile.code_postal === "null"
+              ? ""
+              : response.data.profile.code_postal;
+          this.email =
+            response.data.email === "null" ? "" : response.data.email;
+          this.region =
+            response.data.profile.region === "null"
+              ? ""
+              : response.data.profile.region;
+          this.phone_number =
+            response.data.profile.phone_number === "null"
+              ? ""
+              : response.data.profile.phone_number;
+          this.is_enable_2FA = response.data.profile.is_enable_2FA;
+          this.address =
+            response.data.profile.address === "null"
+              ? ""
+              : response.data.profile.address;
+          this.country =
+            response.data.profile.country === "null"
+              ? ""
+              : response.data.profile.country;
+          this.imageURL = response.data.profile.photo_url;
+        })
+        .catch((e) => {
+          console.log("e", e.response);
+        });
+    },
+
     uploadImage() {
       this.saving = true;
       setTimeout(() => this.savedAvatar(), 1000);
@@ -223,37 +438,106 @@ export default {
       this.saving = false;
       this.saved = true;
     },
-    //
     launchFilePicker() {
       this.$refs.file.click();
     },
     onFileChange(fieldName, file) {
-      console.log("file", file);
-      console.log("fieldName", fieldName);
       const { maxSize } = this;
       let imageFile = file[0];
       if (file.length > 0) {
         let size = imageFile.size / maxSize / maxSize;
         if (!imageFile.type.match("image.*")) {
           this.errorDialog = true;
-          this.errorText = "Please choose an image file";
+          this.errorText = this.$t("profil.pleaseChoose");
         } else if (size > 1) {
           this.errorDialog = true;
-          this.errorText =
-            "Your file is too big! Please select an image under 1MB";
+          this.errorText = this.$t("profil.fileBig");
         } else {
-          // let formData = new FormData();
-          let imageURL = URL.createObjectURL(imageFile);
-          // formData.append(fieldName, imageFile);
-          // console.log("formData", formData);
-          console.log("imageURL", imageURL);
-          console.log("file[0]", file[0]);
-          // this.$emit("input", { formData, imageURL });
-          this.imageURL = imageURL;
+          this.imageURL = URL.createObjectURL(imageFile);
+          this.fileImg = file[0];
         }
+      }
+    },
+
+    submitForm() {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let formData = new FormData();
+      formData.append("photo", this.fileImg);
+      formData.append("username", this.username);
+      formData.append("fullname", this.firstname);
+      formData.append("code_postal", this.code_postal);
+      formData.append("email", this.email);
+      formData.append("region", this.region);
+      formData.append("phone_number", this.phone_number);
+      formData.append(" is_enable_2FA", this.is_enable_2FA);
+      formData.append("address", this.address);
+      formData.append("country", this.country);
+
+      axios
+        .put(`/users/update_profile`, formData, {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        })
+        .then((response) => {
+          console.log("response*", response);
+          if (response.status == "200") {
+            this.snackbar = true;
+            this.color = "success";
+            this.textAlert = response.data.message;
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          }
+        })
+        .catch((i) => {
+          console.log("i", i.response);
+          this.snackbar = true;
+          this.color = "red";
+          this.textAlert = i.response.data.msg;
+        });
+    },
+    changePass() {
+      this.v$.$validate();
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      if (!this.v$.$error) {
+        let payload = {
+          current_password: this.state.formData.olPassword,
+          new_password: this.state.formData.newPassword,
+          confirm_password: this.state.formData.confirmPassword,
+        };
+
+        axios
+          .put(`/users/userChangePW`, payload)
+          .then((response) => {
+            if (response.status == "200") {
+              this.snackbar = true;
+              this.color = "success";
+              this.textAlert = response.data.msg;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            console.log("i", i.response);
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.response;
+          });
+      } else {
+        console.log("his.v$", this.v$);
       }
     },
   },
 };
 </script>
-<style scoped lang="scss"></style>
+<style>
+.error-feedback {
+  color: red;
+  font-size: 0.85em;
+}
+</style>

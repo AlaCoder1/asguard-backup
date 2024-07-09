@@ -27,15 +27,26 @@ def normal_connect(request,data):
     if user:
         user_object = User.objects.get(username=data['username'])
         user_dict = user_object.__dict__
-        current_user = {"id": user_dict["id"], "username":user_dict['username'], "email":user_dict['email'], "role":user_dict['role']}
-        settings.CurrentUserId = user_dict['id']
         profile = Profile.objects.get(user=user_object.pk)
+        profile_dict = profile.__dict__
+        current_user = {
+                "id": user_dict['id'],
+                "username": user_dict['username'],
+                "email": user_dict['email'],
+                "is_enable_2FA": profile_dict['is_enable_2FA'],
+                "role": user_dict['role'],
+                    }
+        settings.CurrentUserId = user_dict['id']
+        
         if profile.is_enable_2FA is False:
             login(request, user)
             return SUCCESS_MESSAGES_LOGIN, current_user, status.HTTP_200_OK
         else:
             if send_verification_code(user_dict['email'], user_dict['username']):
                 return f"{CONSTANT_VERIFIFCATION_CODE} {SUCCESS_MESSAGES_SENT}", current_user, status.HTTP_200_OK
+            else:
+                print('code incorrect')
+                return f"incorrect code , please try again", current_user, status.HTTP_401_UNAUTHORIZED
     else:
         return ERROR_MESSAGES_INVALID_CREDENTIALS, None, status.HTTP_401_UNAUTHORIZED
     
@@ -55,7 +66,7 @@ def show_url(request):
     return url
 
 def generate_verification_code():
-    return ''.join(random.choices(string.digits, k=8))
+    return ''.join(random.choices(string.digits, k=6))
 
 def send_email_to_user(email, code, username):
     qr = qrcode.QRCode(

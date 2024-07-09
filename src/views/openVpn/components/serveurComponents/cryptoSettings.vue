@@ -25,7 +25,7 @@
     </p>
   </v-col>
 
-  <v-col cols="4" align-self="center">
+  <v-col cols="4" class="mt-5">
     <label>{{$t("openvpn.peercertif")}}*</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
@@ -45,7 +45,7 @@
       {{ props.errors.peerCertif.$errors?.[0].$message }}
     </p>
   </v-col>
-  <v-col cols="4" align-self="center">
+  <v-col cols="4" class="mt-5">
     <label>{{$t("openvpn.ServeurCertificate")}}*</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
@@ -65,7 +65,7 @@
       {{ props.errors.serverCertif.$errors?.[0].$message }}
     </p>
   </v-col>
-  <v-col cols="4" align-self="center">
+  <v-col cols="4" class="mt-5">
     <label>{{$t('openvpn.DHparamerters')}}*</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
@@ -81,7 +81,7 @@
       {{ props.errors.dhParameters.$errors?.[0].$message }}
     </p>
   </v-col>
-  <v-col cols="4" align-self="center">
+  <v-col cols="4" class="mt-5">
     <label>{{$t("PageIpsec.algorithm_cryptage")}}*</label>
   </v-col>
   <v-col cols="8" class="mb-n6">
@@ -97,7 +97,7 @@
       {{ props.errors.encryptAlgo.$errors?.[0].$message }}
     </p>
   </v-col>
-  <v-col cols="4" align-self="center">
+  <v-col cols="4" class="mt-5">
     <label>{{$t("openvpn.Auth_diagest")}}*</label>
   </v-col>
   <v-col cols="8" class="mb-n6">

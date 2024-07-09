@@ -6,7 +6,7 @@
       <v-col
         v-if="!props.addressPool && !isBridge"
         cols="4"
-        align-self="center"
+        class="mt-5"
       >
         <label>{{$t('openvpn.IPv4TunnelNetwork')}}*</label>
       </v-col>
@@ -97,7 +97,7 @@
           {{ props.errors.endDHCPBridge.$errors?.[0].$message }}
         </p>
       </v-col>
-      <v-col cols="4" align-self="center">
+      <v-col cols="4" class="mt-5">
         <label>
           {{
             isBridge || props.addressPool
@@ -127,7 +127,7 @@
           v-model="iPv6Local"
         ></v-text-field>
       </v-col>
-      <v-col cols="4" align-self="center">
+      <v-col cols="4" class="mt-5">
         <label>{{$t('openvpn.IPv4RemoteNetwork')}}</label>
       </v-col>
       <v-col cols="8" class="mb-n6">

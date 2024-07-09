@@ -10,5 +10,8 @@ urlpatterns = [
     path('add_plansFeatures', views.add_plansFeatures, name="add_plansFeatures"),
     path('list_features_about_last_subscription', views.list_features_about_last_subscription, name="list_features_about_last_subscription"),
     path('subscription_info', views.subscription_info, name="subscription_info"),
+    
+    
+    path('features', views.all_feature, name="features"),
 ]
 

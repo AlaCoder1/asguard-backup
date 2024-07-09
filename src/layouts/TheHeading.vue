@@ -31,17 +31,17 @@
             class="ml-3 mr-3"
             size="40"
             v-bind="props"
-            style="border: 2px solid #fff"
+            style="
+              border: 2px solid #fff;
+              cursor: pointer;
+              overflow: hidden;
+              border-radius: 50%;
+            "
           >
             <img
               :src="state.imageURL"
               alt="avatar"
-              style="
-                width: 100%;
-                background-size: cover;
-                overflow: hidden;
-                cursor: pointer;
-              "
+              style="width: 100%; height: 100%; object-fit: cover"
             />
           </v-avatar>
         </template>

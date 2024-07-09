@@ -55,16 +55,12 @@
                   v-ripple
                   v-else
                   class="mb-3"
-                  style="cursor: pointer"
+                  style="cursor: pointer; overflow: hidden; border-radius: 50%"
                 >
                   <img
                     :src="imageURL"
                     alt="avatar"
-                    style="
-                      width: 100%;
-                      background-size: cover;
-                      overflow: hidden;
-                    "
+                    style="width: 100%; height: 100%; object-fit: cover"
                   />
                 </v-avatar>
               </v-badge>

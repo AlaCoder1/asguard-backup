@@ -2,12 +2,29 @@ import json
 from django.http import JsonResponse
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
+from django.utils.translation import gettext_lazy as _
 from django.core import serializers
 from backend.network.models import Interface
 from backend.server_dhcp4.functions import  customize_error_msg, delete_dhcp4_server, init_file_dhcp4, is_ip_in_range, parse_range_address, parse_server_info, prepare_conf_server, retur_config_file, save_config_in_system, save_server_db
 from django.db.models import Q
 from backend.server_dhcp4.models import ServerDhcp4
 from backend.server_dhcp4.serializers import DHCP4ServerSerializer
+
+
+
+# Constants
+CONSTANT_DHCP_SERVER = _('DHCP server')
+CONSTANT_RANGE = _('The specified range is outside the available range')
+
+
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+# Error messages
+ERROR_MESSAGES_NOTFOUND = _("does not found")
+ERROR_MESSAGES_NOACTIVE = _("does not active")
+ERROR_MESSAGES_EXISTANT = _("Already exist")
+
 # # Create your views here.
 
 @api_view(['GET'])
@@ -47,13 +64,13 @@ def add_server_dhcp4(request):
                 server_serializer=DHCP4ServerSerializer(data=data_save)
             if server_serializer.is_valid():
                 server_serializer.save()
-                msg="Server Created Successfully!!"
+                msg=f"{CONSTANT_DHCP_SERVER} {SUCCESS_MESSAGES_CREATING}"
                 status=201
             else:
                 msg= customize_error_msg(server_serializer)
                 status=400
         else:
-            msg="Server already exist with this informations!"
+            msg=f"{CONSTANT_DHCP_SERVER} {ERROR_MESSAGES_EXISTANT}"
             status=400
     return JsonResponse({"msg": msg},status=status) 
 
@@ -84,10 +101,10 @@ def update_config_dhcp4_server(request,id_server):
                     msg=aux_init
                     status=400  
             else:
-                msg="Server not active!"
+                msg=f"{CONSTANT_DHCP_SERVER} {ERROR_MESSAGES_NOACTIVE}"
                 status=400   
         else:
-            msg="Range from or to not in available range!"
+            msg=f"{CONSTANT_RANGE}"
             status=400      
     return JsonResponse({"msg": msg},status=status)  
 
@@ -102,12 +119,12 @@ def delete_server_dhcp4(request,server_id):
             ifname=Interface.objects.get(id=id_interface).ifname
             aux_delete=delete_dhcp4_server(id_interface,ifname)
             if aux_delete is True:
-                msg="Server deleted Successfully"
+                msg=f"{CONSTANT_DHCP_SERVER} {SUCCESS_MESSAGES_DELETING}"
                 status=200
             else:
                 msg=aux_delete
                 status=400
         else:
-            msg="Server not found!"
+            msg=f"{CONSTANT_DHCP_SERVER} {ERROR_MESSAGES_NOTFOUND}"
             status=400
     return JsonResponse({"msg": msg},status=status) 

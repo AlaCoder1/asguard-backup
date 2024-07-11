@@ -11,6 +11,13 @@ from .functions_client import *
 import pyshark
 from django.core import serializers
 from django.contrib.auth.hashers import  check_password
+from django.utils.translation import gettext_lazy as _
+
+
+# Constants
+ERROR_MESSAGES_INVALID_PASSWORD = _("Invalid password")
+ERROR_MESSAGES_MANAGEMENT = _("Please provide management information!")
+
 logger = logging.getLogger(__name__)
 class OpenVpnConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -28,9 +35,13 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         while True:
             data =await self.start_data_loop_openvpn(id_server,password)
             await self.send(json.dumps(data))
-            await self.save_system_usage(data)
-            await asyncio.sleep(60)
- 
+            if not isinstance(data, str):
+                await self.save_system_usage(data)
+                await asyncio.sleep(60)
+            else:
+                await self.close()
+                break
+    
     async def disconnect(self, close_code):
         await self.channel_layer.group_discard(
             "chart_group_global",
@@ -187,45 +198,47 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         vpn_db=ServerOpenvpn.objects.get(pk=id)
         name_server=vpn_db.dev+"_"+vpn_db.name
         all_client=ClientOpenvpn.objects.all().count()
-        check_match=check_password(password,  vpn_db.client_management_password)
-        if check_match:
-            cfg=[{'host': 'localhost', 'port': vpn_db.client_management_port, 'name':name_server, 'password': vpn_db.client_management_password, 'show_disconnect': False,"server_status":vpn_db.server_status} ]
-            vpn = OpenvpnMgmtInterface(cfg).vpns
-            vpn=vpn[0]
-            client_active=vpn['stats']['nclients'] if 'stats' in vpn and 'nclients' in vpn['stats'] else 0
-            capacity_server_in=int(vpn['stats']['bytesin'])   if 'stats'in vpn and 'bytesin' in vpn['stats'] else 0
-            capacity_server_out=int(vpn['stats']['bytesout'])   if 'stats'in vpn and 'bytesout' in vpn['stats'] else 0
-            address_server=str(vpn["state"]["local_ip"]) if "state" in vpn  and "local_ip" in vpn["state"]  else None
-            info_clients=[]
-            if 'sessions' in vpn:
-    
-                info_clients = [
-                                {
-                                    "username": session['username'],
-                                    "login_time": str(session['connected_since']),
-                                    "address": str(session['local_ip']),
-                                    "bytes_recv":self.convert_bytes(int(session['bytes_recv'])),
-                                    "bytes_sent":self.convert_bytes(int(session['bytes_sent'])),
-                                    "total_traffic":self.convert_bytes(int(session['bytes_recv'])+int(session['bytes_sent'])),
-                                    "location":session['location'],
-                                    "traffic_distr":((int(session['bytes_recv'])+int(session['bytes_sent']))/(capacity_server_in+capacity_server_out))*100
-                                }
-                            for session in vpn['sessions'].values()
-                            ]
-            # Create a JSON object with the data
-            data = {
-                "address_server":address_server,
-                "all_client": all_client,
-                "client_active": client_active,
-                "capacity_client_in":self.convert_bytes(capacity_server_in),
-                "capacity_client_out":self.convert_bytes(capacity_server_out),
-                "info_clients":info_clients,
-                "top_traffic":self.get_top_traffic(info_clients),
-                # "top_logging":self.get_top_logging(vpn,name_server,address_server),
-                "top_network":self.get_top_network(info_clients)
-            
-            }
-            return data
-        else:
-            return "Check your password!"
+        if vpn_db.client_management_password is not None:
+            check_match=check_password(password,  vpn_db.client_management_password)
+            if check_match:
+                cfg=[{'host': 'localhost', 'port': vpn_db.client_management_port, 'name':name_server, 'password': vpn_db.client_management_password, 'show_disconnect': False,"server_status":vpn_db.server_status} ]
+                vpn = OpenvpnMgmtInterface(cfg).vpns
+                vpn=vpn[0]
+                client_active=vpn['stats']['nclients'] if 'stats' in vpn and 'nclients' in vpn['stats'] else 0
+                capacity_server_in=int(vpn['stats']['bytesin'])   if 'stats'in vpn and 'bytesin' in vpn['stats'] else 0
+                capacity_server_out=int(vpn['stats']['bytesout'])   if 'stats'in vpn and 'bytesout' in vpn['stats'] else 0
+                address_server=str(vpn["state"]["local_ip"]) if "state" in vpn  and "local_ip" in vpn["state"]  else None
+                info_clients=[]
+                if 'sessions' in vpn:
         
+                    info_clients = [
+                                    {
+                                        "username": session['username'],
+                                        "login_time": str(session['connected_since']),
+                                        "address": str(session['local_ip']),
+                                        "bytes_recv":self.convert_bytes(int(session['bytes_recv'])),
+                                        "bytes_sent":self.convert_bytes(int(session['bytes_sent'])),
+                                        "total_traffic":self.convert_bytes(int(session['bytes_recv'])+int(session['bytes_sent'])),
+                                        "location":session['location'],
+                                        "traffic_distr":((int(session['bytes_recv'])+int(session['bytes_sent']))/(capacity_server_in+capacity_server_out))*100
+                                    }
+                                for session in vpn['sessions'].values()
+                                ]
+                # Create a JSON object with the data
+                data = {
+                    "address_server":address_server,
+                    "all_client": all_client,
+                    "client_active": client_active,
+                    "capacity_client_in":self.convert_bytes(capacity_server_in),
+                    "capacity_client_out":self.convert_bytes(capacity_server_out),
+                    "info_clients":info_clients,
+                    "top_traffic":self.get_top_traffic(info_clients),
+                    # "top_logging":self.get_top_logging(vpn,name_server,address_server),
+                    "top_network":self.get_top_network(info_clients)
+                
+                }
+                return data
+            else:
+                return f"{ERROR_MESSAGES_INVALID_PASSWORD}"
+        else:
+            return f"{ERROR_MESSAGES_MANAGEMENT}"

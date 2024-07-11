@@ -28,6 +28,8 @@
 <script>
 import wafConfiguration from "./components/wafConfiguration.vue";
 import wafRules from "./components/wafRules.vue";
+import wafAPP from "./components/wafApp.vue";
+import wafAlerts from "./components/wafAlerts.vue";
 import BaseLayout from "@/layouts/layout.vue";
 
 export default {
@@ -36,6 +38,8 @@ export default {
     BaseLayout,
     wafConfiguration,
     wafRules,
+    wafAPP,
+    wafAlerts,
   },
   inject: ["emitter"],
   data() {
@@ -44,7 +48,8 @@ export default {
       tabs: [
         { id: 1, label: "tabs.configuration", component: wafConfiguration },
         { id: 2, label: "tabs.rules", component: wafRules },
-        { id: 3, label: "tabs.alerts" },
+        { id: 3, label: "tabs.application", component: wafAPP },
+        { id: 4, label: "tabs.alerts", component: wafAlerts },
       ],
     };
   },

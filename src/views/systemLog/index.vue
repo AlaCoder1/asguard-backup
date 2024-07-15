@@ -10,7 +10,7 @@
             <h4>{{ $t("subtitle.systemLog") }}</h4>
             <v-divider></v-divider>
             <v-row class="mb-15">
-              <v-col cols="12" md="6" class="mt-5">
+              <v-col cols="9" md="6" class="mt-5">
                 <v-text-field
                   id="filter-text-box"
                   v-model="state.filterText"
@@ -23,6 +23,15 @@
                   prepend-inner-icon="mdi-magnify"
                   @input="onFilterTextBoxChanged"
                 ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="6" class="d-flex justify-end">
+                <v-btn class="ml-3 mt-2" @click="downloadLogs">
+                  <!-- <i class="fas fa-plus" style="color: #086eae"></i> -->
+                  <span
+                    class="mdi mdi-download-circle-outline mt-1"
+                    style="color: #086eae; font-size: 30px"
+                  ></span>
+                </v-btn>
               </v-col>
               <v-col cols="12">
                 <div style="overflow: hidden; flex-grow: 1">
@@ -78,6 +87,7 @@
 import { useI18n } from "vue-i18n";
 import axios from "axios";
 import { reactive, ref, onMounted, inject, computed } from "vue";
+import { getCookie } from "@/mixins/csrftoken.js";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -120,7 +130,7 @@ export default {
     });
     const initializeWebSocket = () => {
       state.socket = new WebSocket(
-        "ws://" + window.location.host + "/ws/logs/"
+        "wss://" + window.location.host + "/ws/logs/"
       );
 
       state.socket.onopen = () => {
@@ -186,26 +196,36 @@ export default {
         document.getElementById("filter-text-box").value
       );
     };
+    const downloadLogs = () => {
+      console.log("ok");
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/system_log/downloadLogs").then((response) => {
+        console.log("oui", response);
+        const text = response.data.data;
+        const blob = new Blob([text], {
+          type: "application/x-x509-ca-cert",
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+        a.download = `logs.txt`;
+
+        document.body.appendChild(a);
+        a.click();
+
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      });
+    };
 
     const defaultColDef = {
       // sortable: true,
       // filter: true,
       // flex: 1,
-    };
-
-    const getCookie = (name) => {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === name + "=") {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
     };
 
     function actionCellRendererKeys(params) {
@@ -357,6 +377,7 @@ export default {
       cancelDelete,
       confirmDelete,
       onFilterTextBoxChanged,
+      downloadLogs,
     };
   },
 };

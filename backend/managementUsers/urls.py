@@ -13,7 +13,7 @@ urlpatterns = [
          views.change_password_by_admin, name="userChangePW"),
     path('userChangePW', views.change_password, name="userChangePW"),
     # path('userChangePW/<int:id>', views.changePassword, name="userChangePW"),
-    path('update_profile',views.update_profile, name='update_profile'),
+    path('update_profile/<int:id>',views.update_profile, name='update_profile'),
     path('getLanguage/<int:id>',views.get_profile_language, name='getLanguage'),
     path('modifyLanguage/<int:id>',views.change_language, name='modifyLanguage'),
 ]

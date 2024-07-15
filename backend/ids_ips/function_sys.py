@@ -351,3 +351,78 @@ def prepare_alert_attribut(lines):
                 "alert":line.strip(),
                     })  
     return logs
+
+
+########
+def init_logrotate_conf(contenu,file_path):
+    """
+    Create a logrotate configuration file with the provided content.
+
+    Parameters:
+    contenu (str): Content to be written into the logrotate configuration file.
+    file_path (str): Path where the logrotate configuration file will be created.
+
+    Returns:
+    True if the configuration file is created successfully, otherwise an error message.
+    """
+    if contenu is not None:
+        cmd = """sudo sh -c 'cat <<EOF > {}
+{}
+EOF'""".format(file_path,contenu)
+    _, error = execute_cmd(cmd)
+    if error !='':
+        return error
+    return True
+
+
+def init_script_bash(script,script_path):
+    """
+    Create and initialize a bash script with the provided content and make it executable.
+
+    Parameters:
+    script (str): Content to be written into the bash script.
+    script_path (str): Path where the bash script will be created.
+
+    Returns:
+    True if the script is created and made executable successfully, otherwise an error message.
+    """
+    if script is not None:
+        commandes = [
+        """sudo sh -c 'cat <<EOF > {}
+{}
+EOF'""".format(script_path,script),
+        f"sudo chmod +x {script_path}"
+    ]
+    for cmd in commandes:
+        _, error = execute_cmd(cmd)
+        if error !='':
+            return error
+    return True
+    
+    
+def update_file_timer(file_path,contenu_timer):
+    """
+    Update the logrotate timer file with the provided content and reload the systemd configuration.
+
+    Parameters:
+    file_path (str): Path where the timer configuration file will be updated.
+    contenu_timer (str): Content to be written into the timer configuration file.
+
+    Returns:
+    True if the timer file is updated and systemd reloaded successfully, otherwise an error message.
+    """
+    if contenu_timer is not None:
+        commandes = [
+        """sudo sh -c 'cat <<EOF > {}
+{}
+EOF'""".format(file_path,contenu_timer),
+        "sudo systemctl daemon-reload",
+        "sudo systemctl enable --quiet logrotate.timer",
+        "sudo systemctl start  --quiet logrotate.timer"
+
+    ]
+    for cmd in commandes:
+        _, error = execute_cmd(cmd)
+        if error !='':
+            return error
+    return True

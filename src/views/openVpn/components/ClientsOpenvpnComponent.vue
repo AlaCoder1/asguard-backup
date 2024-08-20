@@ -650,120 +650,177 @@ export default {
         }
       });
     });
+    const champ = computed(() => {
+      return t("champs.indication");
+    });
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const formatMustBeLikeAdresseIP = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
+    const formatMustBeLikeAdresse = computed(() => {
+      return t("errors.formatMustBeLikeAdresse");
+    });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
 
+    const specificform = computed(() => {
+      return t("errors.formsepcificpassword");
+    });
     const rules = computed(() => {
       return {
         clientName: {
-          required,
+          required: helpers.withMessage(error, required),
           isValidClientName: helpers.withMessage(
-            `champs can include only letters & Numbers & underscores & hyphens without space.`,
+            champ,
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },
 
         ipv4TunnelNetwork: {
           isValidIpv4TunnelNetwork: helpers.withMessage(
-            `Format must be like : X.X.X.X/X`,
+            formatMustBeLikeAdresse,
             helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
         ipv4RemoteNetwork: {
           isValidIpv4RemoteNetwork: helpers.withMessage(
-            `Format must be like : X.X.X.X/X`,
+            formatMustBeLikeAdresse,
             helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
           ),
         },
 
-        server_mode: { required },
-        protocol: { required },
-        device_mode: { required },
+        server_mode: { required: helpers.withMessage(error, required) },
+        protocol: { required: helpers.withMessage(error, required) },
+        device_mode: { required: helpers.withMessage(error, required) },
 
         proxy_host: {
           isValidProxy_host: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formatMustBeLikeAdresseIP,
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         proxy_port: {
           isValidProxy_port: helpers.withMessage(
-            `champs can include only Numbers.`,
+            onlynumbers,
             helpers.regex(/^[0-9]+$/)
           ),
         },
         local_port: {
           isValidLocal_port: helpers.withMessage(
-            `champs can include only Numbers.`,
+            onlynumbers,
             helpers.regex(/^[0-9]+$/)
           ),
         },
 
         sharedKey: {
-          requiredIfFuction: requiredIf(() => !state.tlsGenerate),
+          // requiredIfFuction: requiredIf(() => !state.tlsGenerate),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => !state.tlsGenerate)
+          ),
         },
         username: {
-          requiredIfFuction: requiredIf(
-            () => state.proxyAuthenticationExtraOptions.slug === "basic"
+          // requiredIfFuction: requiredIf(
+          //   () => state.proxyAuthenticationExtraOptions.slug === "basic"
+          // ),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(
+              () => state.proxyAuthenticationExtraOptions.slug === "basic"
+            )
           ),
         },
         passwordUser: {
           isValidPassword: helpers.withMessage(
-            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
-
+            specificform,
             helpers.regex(
               /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
             )
           ),
-          requiredIfFuction: requiredIf(
-            () => state.modeState === "edit" && state.NewUserPassword
+          // requiredIfFuction: requiredIf(
+          //   () => state.modeState === "edit" && state.NewUserPassword
+          // ),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(
+              () => state.modeState === "edit" && state.NewUserPassword
+            )
           ),
         },
         NewUserPassword: {
           isValidNewUserPassword: helpers.withMessage(
-            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+            specificform,
 
             helpers.regex(
               /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
             )
           ),
-          requiredIfFuction: requiredIf(
-            () => state.modeState === "edit" && state.passwordUser
+          // requiredIfFuction: requiredIf(
+          //   () => state.modeState === "edit" && state.passwordUser
+          // ),
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.modeState === "edit" && state.passwordUser)
           ),
         },
 
         password: {
           isValidPassword: helpers.withMessage(
-            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+            specificform,
 
             helpers.regex(
               /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
             )
           ),
 
-          requiredIfFuction: requiredIf(
-            () =>
-              (state.proxyAuthenticationExtraOptions.slug === "basic" &&
-                state.modeState === "create") ||
-              (state.modeState === "edit" && state.NewProxyPassword)
+          // requiredIfFuction: requiredIf(
+          //   () =>
+          //     (state.proxyAuthenticationExtraOptions.slug === "basic" &&
+          //       state.modeState === "create") ||
+          //     (state.modeState === "edit" && state.NewProxyPassword)
+          // ),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(
+              () =>
+                (state.proxyAuthenticationExtraOptions.slug === "basic" &&
+                  state.modeState === "create") ||
+                (state.modeState === "edit" && state.NewProxyPassword)
+            )
           ),
         },
         NewProxyPassword: {
           isValidNewProxyPassword: helpers.withMessage(
-            `There must be at least 20 characters, including at least one uppercase, one number, and one special character.`,
+            specificform,
 
             helpers.regex(
               /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
             )
           ),
 
-          requiredIfFuction: requiredIf(
-            () => state.modeState === "edit" && state.password
+          // requiredIfFuction: requiredIf(
+          //   () => state.modeState === "edit" && state.password
+          // ),
+
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.modeState === "edit" && state.password)
           ),
         },
-        peerCertificateAuthority: { required },
-        clientCertificate: { required },
-        authDigestAlgorithm: { required },
+        peerCertificateAuthority: {
+          required: helpers.withMessage(error, required),
+        },
+        clientCertificate: { required: helpers.withMessage(error, required) },
+        authDigestAlgorithm: { required: helpers.withMessage(error, required) },
         // hardwareCrypto: { required },
-        encryptionAlgorithm: { required },
+        encryptionAlgorithm: { required: helpers.withMessage(error, required) },
       };
     });
 

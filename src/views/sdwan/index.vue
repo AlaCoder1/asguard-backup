@@ -20,7 +20,7 @@
               </v-card-text>
             </v-card>
           </v-window-item>
-          <v-window-item
+          <!-- <v-window-item
             v-for="tab in tabs"
             :key="tab.id"
             value="Visualization"
@@ -28,7 +28,7 @@
             <v-card>
               <v-card-text> </v-card-text>
             </v-card>
-          </v-window-item>
+          </v-window-item> -->
         </v-window>
       </template>
     </base-layout>
@@ -50,7 +50,7 @@ export default {
       activeTab: "Configuration",
       tabs: [
         { id: 1, label: "Configuration" },
-        { id: 2, label: "Visualization" },
+        // { id: 2, label: "Visualization" },
       ],
     };
   },

@@ -13,9 +13,15 @@
     "description":"Description",
     "server":"Directory Server",
     "LoginTime":"Login Time"
-    
-    
-    
+  },
+  "login":{
+    "verifyYourAccount":"Verify Your Account",
+    "send":"We sent a verification code to",
+    "pleaseMail":"Please check your email and paste the code below.",
+    "verify":"Verify",
+    "receiveCode":"Didn't receive the code?",
+    "resend":"Resend"
+
   },
   "buttons":{
     "login":"login",
@@ -58,11 +64,22 @@
     "passwordConfirmation":"Your password does not match",
     "ChampIncludeOnlyNumbers":"Champs can include only Numbers",
     "formatMustBeLikeAdresseIP":"Format must be like adresse IP : X.X.X.X",
+    "formatMustBeLikeAdresse":"Format must be like: X.X.X.X/XX",
     "minimumOneRange":"Minimum One Range",
-    "Formatdomain":"Format must be like exemple.com"
-    
+    "Formatdomain":"Format must be like exemple.com",
+    "specificform":"Champ must be at least 32 characters, including at least one uppercase,one lowercase, one number, and one special character",
+    "portform":"The local Port field can only include Numbers min 4 and max 5",
+    "formsepcificpassword":"There must be at least 20 characters, including at least one uppercase, one number, and one special character",
+    "startwithletter":"The name can contain letters, digits, underscores, and hyphens, must begin with a letter, and can be up to 32 characters long",
+    "addressdAll":"Champ can include address 'X.X.X.X/X' Or word 'ALL'",
+    "numberALL":"Champ can include only Numbers Or word 'ALL'",
+    "emptyArray":"The array is empty. Please add at least one object.",
+    "emptyValue":"has an empty value",
+    "atLeastemptyValue":"At least one element has an empty Value",
+    "noModif":"No Modif For this rule"
 
   },
+
 
   "placeholder":{
     "enterPassword":"Enter password",
@@ -108,10 +125,9 @@
     "traffic":"Traffic",
     "eventLogs":"Event logs",
     "subscription":"Subscription",
-    "routing":"Routing"
-
-
-  },
+    "routing":"Routing",
+    "systemLog":"System Log"
+    },
   "header":{
     "profile":"Profile",
     "logout":"Logout"
@@ -158,6 +174,83 @@
     "Listauthoriy":"list of certification authorities",
     "certificat":"certificate",
     "agGridOf":"of"
+
+  },
+
+  "firewall":{
+    "rules":"Rules",
+    "msg_subscription":"You are currently in Free Mode, unlocking this feature requires payment. Go to",
+    "sub_page":"subscription page",
+    "outbound":"Outbound rules",
+    "inbound":"Inbound rules",
+    "delete_confirm":"Delete Confirmation",
+    "msg_confirm_delete":"Are you sure you want to delete this rule from the Firewall?",
+    "cancel":"Cancel",
+    "delete":"Delete",
+    "search":"Search",
+    "add":"Add",
+    "policy":"Policy",
+    "description":"Rule Description",
+    "protocol":"Protocol",
+    "saddr":"Source Address",
+    "sport":"Source Port",
+    "daddr":"Destination Address",
+    "dport":"Destination Port",
+    "action":"Action",
+    "save":"Save",
+    "add_rule":"Add new Rule",
+    "update_rule":"Update Rule",
+    "remplirChamps":"Fill the fields with word 'ALL'"
+
+
+
+  },
+  "nat":{
+    "msg_confirm_delete":"Are you sure you want to delete this Row ?",
+    "interface":"Interface",
+    "protocol":"Protocol",
+    "saddr":"Source Address",
+    "sport":"Source Ports",
+    "daddr":"Destination Address",
+    "dport":"Destination Ports",
+    "trans_addr":"Translation address",
+    "trans_port":"Translation Port",
+    "description":"Description",
+    "status":"Status",
+    "action":"Actions",
+    "create_msg_snat":"Create New SNAT Rule",
+    "update_msg_snat":"Update SNAT Rule",
+    "create_msg_one": "Create New One To One Rule",
+    "update_msg_one":"Update One To One Rule",
+    "create_msg_dnat": "Create New DNAT Rule",
+    "update_msg_dnat":"Update New DNAT Rule",
+    "select_version":"Select TCP/IP version",
+    "select_protocol":"Select Protocol",
+    "ent_saddr":"Enter source address",
+    "prefix":"Prefix",
+    "ent_sport":"Select source port",
+    "ent_daddr":"Enter destination address",
+    "ent_dport":"Select destination port",
+    "ent_tran_add":"Enter translation address",
+    "tran_add_from":"Enter translation address from",
+    "static":"Static",
+    "tran_add_to":"Enter translation address to",
+    "ent_trans_port":"Translation port",
+    "port":"port",
+    "sport_range":"Source Port Range",
+    "dport_range":"Destination Port Range",
+    "from":"From",
+    "to":"To",
+    "msg_validation_port":"Port To must me greater than or equal to Port from",
+    "ent_ext_add":"Enter External address",
+    "ent_int_add":"Enter Internal address",
+    "msg_no_data":"No data available!",
+    "ext_addr":"External address",
+    "int_addr":"Internal address",
+    "ext_port":"External port",
+    "int_port":"Internal port"
+   
+
 
   },
 
@@ -256,7 +349,12 @@
     "device":"Device",
     "VXLANNetworkIdentifie":"VXLAN Network Identifie",
     "sourceAddress":"Source Address",
-    "multicastGroup":"Multicast group"
+    "multicastGroup":"Multicast group",
+    "VXLANInterfaceName":"VXLAN interface name",
+    "VXLANNetworkIdentifier":"VXLAN Network Identifier (tag)",
+    "parentDevice":"Parent device",
+    "connectionName":"Connection Name",
+    "selectType":"Select Type Vlan/Vxlan"
 
   },
   "routing":{
@@ -470,7 +568,12 @@
     "monitoring":"MONITORING",
     "servers":"SERVERS",
     "clients":"CLIENTS",
-    "listing":"LISTING"
+    "listing":"LISTING",
+    "SNAT":"SNAT",
+    "OneToOne":"One To One",
+    "DNAT":"DNAT",
+    "NAT":"NAT",
+    "application":"Application"
 
   },
   "titleAgGrid":{
@@ -689,7 +792,7 @@
       "Router":"Router",
       "Printer":"Printer",
       "Availablity":"Availablity",
-      "OUTtrafficVPN":"OUT traffic VPN",
+      "OUTtrafficVPN":"Total traffic VPN",
       "CPU&MemoryVPN":"CPU & Memory VPN",
       "PacketReceivedVPN":"Packet Received VPN",
       "PacketSentVPN":"Packet Sent VPN",
@@ -697,7 +800,10 @@
       "PacketLoss":"Packet Loss",
       "ActiveSessions":"Active Sessions",
       "ActiveSSLTunnels":"Active SSL Tunnels",
-      "TUNNELCONFIGURATION":"TUNNEL CONFIGURATION"
+      "TUNNELCONFIGURATION":"TUNNEL CONFIGURATION",
+      "OutTraffic":"Total Traffic",
+      "PacketReceived":"Packet Received",
+      "PacketSent":"Packet Sent"
 
 
     },
@@ -842,9 +948,27 @@
       "Maximumparsingdepth":"Maximum parsing depth",
       "RequestAction":"Request Action",
       "Rule":"Rule",
-      "Status":"Status"
+      "Status":"Status",
+      "operator":"Operator", 
+      "transformations":"Transformations functions",
+      "typeTransformations":"Type Transformations functions",
+      "activate":"Activate",
+      "useTransformation":"Use your own transformation",
+      "applicationName":"Application Name",
+      "createNewApplication":"Create new application",
+      "updateApplication":"Update Application",
+      "block":"Block",
+      "log":"Log",
+      "attacks":"Attacks",
+      "violation":"Violation",
+      "countOfRecord":"Count of Record",
+      "topCountries":"Top Countries",
+      "country":"Country",
+      "blockedRequests":"Blocked Requests",
+      "timestamp":"Timestamp",
+      "method":"Method"
 
-    },
+       },
     "settings":{
       "GENERALPARAMETERS":"GENERAL PARAMETERS",
       "System":"System",
@@ -894,7 +1018,10 @@
       "Newpassowrd":"New passowrd",
       "ConfirmNewpassowrd":"Confirm New passowrd",
       "ChangePassword":"Change Password",
-      "Update":"Update"
+      "Update":"Update",
+      "pleaseChoose":"Please choose an image file",
+      "fileBig":"Your file is too big! Please select an image under 1MB",
+      "GotIt":"Got it!"
     }
 
 

@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              Create New One To One Rule</span
+             {{$t("nat.create_msg_one") }}</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              Update One To One Rule</span
+              {{$t("nat.update_msg_one")}}</span
             >
           </v-card-title>
           <v-card-text>
@@ -17,7 +17,8 @@
                 <v-col cols="12" class="mb-n6">
                   <v-select
                     v-model="state.interface"
-                    label="Interface"
+                    :label="$t('nat.interface')"
+                    :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
                     item-value="id"
                     :items="state.mapedInterface"
@@ -31,7 +32,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    label="Enter source address"
+                  :label="$t('nat.ent_saddr')"
                     v-model="state.sourceAddress"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.sourceAddress.$error">
@@ -43,8 +44,9 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    label="Prefix"
+                  :label="$t('nat.prefix')"
                     v-model="state.sourcePrefix"
+                    :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
                   ></v-select>
                   <p class="error-feedback mb-5" v-if="v$.sourcePrefix.$error">
@@ -54,7 +56,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    label="Enter Translation address"
+                    :label="$t('nat.ent_tran_add')"
                     v-model="state.translationAddress"
                   ></v-text-field>
                   <p
@@ -69,8 +71,9 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    label="Prefix"
+                    :label="$t('nat.prefix')"
                     v-model="state.translationPrefix"
+                    :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
                   ></v-select>
                   <p
@@ -83,7 +86,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                    label="Enter destination address"
+                  :label="$t('nat.ent_daddr')"
                     v-model="state.destinationAddress"
                   ></v-text-field>
                   <p
@@ -98,8 +101,9 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                    label="Prefix"
+                  :label="$t('nat.prefix')"
                     v-model="state.destinationAddressPrefix"
+                    :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
                     clearable
                   ></v-select>
@@ -113,7 +117,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                    label="Description"
+                  :label="$t('nat.description')"
                     v-model="state.description"
                   ></v-text-field>
                 </v-col>
@@ -133,7 +137,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3" style="color: #213e9f">Cancel</span>
+            <span class="pr-3 pl-3" style="color: #213e9f">{{$t("firewall.cancel")}}</span>
             </v-btn>
 
             <v-btn
@@ -147,7 +151,12 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{ modalMode }}</span>
+            <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+                {{ $t("buttons.create") }}</span
+              >
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -171,6 +180,7 @@ import useValidate from "@vuelidate/core";
 import { toRefs, watch, reactive, computed, inject, onMounted, ref } from "vue";
 import { required, helpers, requiredIf } from "@vuelidate/validators";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { useI18n } from "vue-i18n";
 
 export default {
   props: {
@@ -189,6 +199,7 @@ export default {
   },
 
   setup(props) {
+    const { t } = useI18n();
     const emitter = inject("emitter");
     const { isOpen, editRow, modalMode } = toRefs(props);
     const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
@@ -377,43 +388,52 @@ export default {
         console.log("v$", v$.value);
       }
     };
+    const error = computed(() => {
+      return t("errors.valueRequired");
+    });
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
 
     const rules = computed(() => {
       return {
-        interface: { required },
+        interface: {required: helpers.withMessage(error, required) },
         sourceAddress: {
-          required,
+          required: helpers.withMessage(error, required),
           isValidSourceAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         translationAddress: {
-          required,
+          required: helpers.withMessage(error, required),
           isValidSourceAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         destinationAddress: {
           isValidSourceAddress: helpers.withMessage(
-            `Format must be like adresse IP : X.X.X.X`,
+            formaaddress,
 
             helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
           ),
         },
         sourcePrefix: {
-          required,
+          required: helpers.withMessage(error, required),
         },
         translationPrefix: {
-          required,
+          required: helpers.withMessage(error, required),
         },
 
         destinationAddressPrefix: {
           requiredIfFuction: helpers.withMessage(
-            "Value is required",
+            error,
             requiredIf(() => state.destinationAddress)
           ),
         },

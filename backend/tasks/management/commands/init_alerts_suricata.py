@@ -1,13 +1,10 @@
 from django.core.management.base import BaseCommand
-from backend.ids_ips.models import *
-from backend.network.serializers import *
-from backend.network.models import *
-from backend.settings.serializers import *
-from backend.authentification.views import *
-from backend.ids_ips.serializers import *
-from backend.ids_ips.function_BD import *
-from backend.ids_ips.function_sys import *
+
 from django.db import IntegrityError
+
+from backend.ids_ips.function_sys import prepare_alert_attribut, read_suricata_log
+from backend.ids_ips.models import Alert, suricatafile
+from backend.ids_ips.serializers import AlertSerializer
 class Command(BaseCommand):
     def add_arguments(self, parser):
         # Optional argument
@@ -34,13 +31,12 @@ class Command(BaseCommand):
                     suricatafile_obj = suricatafile.objects.get(pk=id)  
                     log['suricatafile']=int(suricatafile_obj.id)
                     if not Alert.objects.filter(alert=log['alert']).exists():
-                        serializerAlert = AlertSerializer(data=log)
-                        if serializerAlert.is_valid():
-                            serializerAlert.save()
+                        serializer_alert = AlertSerializer(data=log)
+                        if serializer_alert.is_valid():
+                            serializer_alert.save()
                         else:
-                            return str(serializerAlert.errors)
-                    else:
-                        pass
+                            return str(serializer_alert.errors)
+                    
             if len(logs_delete)!=0:
                 for l in logs_delete:
                     print("data to delete ==>",l)

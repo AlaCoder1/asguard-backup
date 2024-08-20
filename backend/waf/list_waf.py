@@ -109,7 +109,7 @@ def get_one_waf_application(id):
 def get_alerts():
     """Getting waf alerts from database"""
     synchronize_database_waf_alert()
-    waf_alerts = AlertWaf.objects.order_by('-pk')[:10000]
+    waf_alerts = AlertWaf.objects.order_by('-pk')[:1000]
     waf_alert_dict = serializers.serialize("json", waf_alerts)
     res = json.loads(waf_alert_dict)
 

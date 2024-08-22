@@ -27,9 +27,11 @@ fi
 mkdir -p "\$DEST_DIR" 
 
 # Copy log files to backup directory 
-for file in *.gz; do 
-    [ ! -e "\${DEST_DIR}/\$(basename "\$file")" ] && mv "\$file" "\$DEST_DIR"
-done 
+for file in $LOG_FILE-*.gz; do
+    if [ ! -e "${DEST_DIR}/$(basename "$file")" ]; then
+                mv "$file" "$DEST_DIR"
+fi
+done
 """
             script_path = "/usr/local/bin/logrotate-script.sh"       
             aux_script = init_script_bash(script, script_path)

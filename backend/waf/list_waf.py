@@ -109,7 +109,7 @@ def get_one_waf_application(id):
 def get_alerts():
     """Getting waf alerts from database"""
     synchronize_database_waf_alert()
-    waf_alerts = AlertWaf.objects.order_by('-pk')[:10000]
+    waf_alerts = AlertWaf.objects.order_by('-pk')[:1000]
     waf_alert_dict = serializers.serialize("json", waf_alerts)
     res = json.loads(waf_alert_dict)
 
@@ -144,6 +144,10 @@ def get_alerts():
             waf_alert['fields']['violation'] = []
             for index in range(len(list_violation_id)):
                 waf_alert['fields']['violation'].append(f"{list_violation_id[index]} > {list_violation_file[index]}")
+            blocked_requests.append(waf_alert['fields'])
+        else:
+            waf_alert['fields']['message'] = message
+            waf_alert['fields']['violation'] = f"{violation_id} > {violation_file}"
             blocked_requests.append(waf_alert['fields'])
     
     # Return an object contains attacks, top_countries and blocked_requests

@@ -1,21 +1,19 @@
+import json
 from django.core.management.base import BaseCommand
-from backend.ids_ips.models import *
-from backend.network.serializers import *
-from backend.network.models import *
-from backend.settings.serializers import *
-from backend.authentification.views import *
-from backend.ids_ips.serializers import *
-from backend.ids_ips.function_BD import *
-from backend.ids_ips.function_sys import *
+
 from django.db import IntegrityError
 from django.core import serializers
+
+from backend.ids_ips.function_sys import prepare_alert_attribut, read_suricata_log
+from backend.ids_ips.models import Alert, suricatafile
+from backend.ids_ips.serializers import AlertSerializer
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         # Your code to add data to the database here
         try:
-            suricataObject = suricatafile.objects.all() 
-            suricataDict = serializers.serialize("json", suricataObject)
-            res = json.loads(suricataDict)
+            suricata_object = suricatafile.objects.all() 
+            suricata_dict = serializers.serialize("json", suricata_object)
+            res = json.loads(suricata_dict)
             id = res[0]['pk']
             logs = read_suricata_log()
             alerts = Alert.objects.all()  # Récupérer toutes les alertes de la base de données
@@ -35,13 +33,12 @@ class Command(BaseCommand):
                     suricatafile_obj = suricatafile.objects.get(pk=id)  
                     log['suricatafile']=int(suricatafile_obj.id)
                     if not Alert.objects.filter(alert=log['alert']).exists():
-                        serializerAlert = AlertSerializer(data=log)
-                        if serializerAlert.is_valid():
-                            serializerAlert.save()
+                        serializer_alert = AlertSerializer(data=log)
+                        if serializer_alert.is_valid():
+                            serializer_alert.save()
                         else:
-                            return str(serializerAlert.errors)
-                    else:
-                        pass
+                            return str(serializer_alert.errors)
+                    
             if len(logs_delete)!=0:
                 for l in logs_delete:
                     print("data to delete ==>",l)

@@ -27,7 +27,7 @@ fi
 mkdir -p "\$DEST_DIR" 
 
 # Copy log files to backup directory 
-for file in /var/log/suricata/fast.*.gz; do 
+for file in *.gz; do 
     [ ! -e "\${DEST_DIR}/\$(basename "\$file")" ] && mv "\$file" "\$DEST_DIR"
 done 
 """

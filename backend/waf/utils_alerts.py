@@ -106,8 +106,11 @@ def extract_alert_fields(log: str, log_id: str):
     method = method[0]
 
     # Extract URL
-    url = list(b_bloc.split(" "))
-    url = url[1]
+    try:
+        url = list(b_bloc.split(" "))
+        url = url[1]
+    except IndexError:
+        url = ""
     # Add the Host to the url if exists    
     if log.find("Host: ") > -1:
         host = log[log.find("Host: ") + 6:log.find("\n", log.find("Host: "))]

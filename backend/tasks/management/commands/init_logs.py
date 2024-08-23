@@ -15,7 +15,7 @@ class Command(BaseCommand):
                     "message": message,
                 }
                 save_logs_database(data)
-            return "All logs saved successfully!"
+            return  self.stdout.write(self.style.SUCCESS("All logs saved successfully!"))
                 
         except IntegrityError as e:
-            return "Error: " + str(e)
+            self.stdout.write(self.style.ERROR("Error: " + str(e)))

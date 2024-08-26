@@ -1,5 +1,6 @@
 import itertools
 import json
+import re
 from django.shortcuts import render
 from .form import *
 from .models import *
@@ -272,3 +273,115 @@ def all_plan(request):
             plans.append(Plan.slug)
         return JsonResponse({"plans": plans}, status=200)
     
+
+
+def getget(request):
+    list_of_descriptions = []
+    plan_dict = {}
+    plans = plan.objects.all()
+    for p in plans:
+        if p.slug in ['Basic', 'Full']:
+            continue
+        descriptions = plansFeatures.objects.filter(plan=p).values_list('description', flat=True)
+        plan_dict[p.slug]=list(descriptions)
+        list_of_descriptions.append(list(descriptions))
+        plan_dict = {}
+    
+    list_feature_with_combinations = []
+    features_queryset = Features.objects.all()
+    features = [(feature.features, feature.price) for feature in features_queryset]
+
+    all_combinations_with_details = []
+    full_plan = plan.objects.get(slug="Full")
+    combination_number = 1
+    for r in range(1, len(features) + 1):
+        combinations_object = itertools.combinations(features, r)
+        combinations_list = list(combinations_object)
+        
+        for combo in combinations_list:
+            total_price = sum(feature[1] for feature in combo)
+            feature_names = tuple(feature[0] for feature in combo)
+            all_combinations_with_details.append((combination_number, feature_names, total_price))
+            combination_number += 1
+    for combo_number, feature_names, total_price in all_combinations_with_details:
+        all_plans = plan.objects.all()
+        # print(f"Combination {combo_number}: {feature_names} with Total Price: {total_price}")
+        feature_with_combinations = ["Firewall L4","Networking L2 L3","VPN IPSEC","LDAP","Double Masque","IDS/IPS","VPN SSL","Proxy"] + list(feature_names)
+        list_feature_with_combinations.append(feature_with_combinations)
+        # print({"len plans":len(all_plans) -2})
+        if len(all_combinations_with_details) > len(all_plans)-2:
+            last_plan = plan.objects.last()
+            num = re.search(r'\d+', last_plan.slug).group()
+            # print({"num":num})
+            initBD_plan(f"Custom{int(num)+1}",total_price+full_plan.price)
+            # basic()
+            # print({"list_feature_with_combinations":list_feature_with_combinations})
+            # print({"list_of_descriptions":list_of_descriptions})
+            # diff_list = [item for item in list_feature_with_combinations if item not in list_of_descriptions]
+            # print({"diff_list":diff_list})
+            # # if len(diff_list) > 0:
+            # #     flattened_list = [item for sublist in diff_list for item in sublist]
+            # #     for name in flattened_list:
+            # #         initBD_plansFeatures(name,last_plan.pk)
+    # last_plan_features = plansFeatures.objects.last()
+    # print({"last_plan_features.plan":last_plan_features.plan_id})
+    diff_list = [item for item in list_feature_with_combinations if item not in list_of_descriptions]
+    print({"diff_list":diff_list})
+    if len(diff_list) > 0:
+        for element in diff_list:
+            print({"element":element})
+            last_plan_features = plansFeatures.objects.last()
+            print({"last_plan_features.plan":last_plan_features.plan_id})
+            last_plan_features_plan_id = last_plan_features.plan_id
+            aa =plan.objects.get(id=last_plan_features.plan_id)
+            print({"aa":aa.slug})
+            for name in element:
+                print({"name":name})
+                initBD_plansFeatures(name,last_plan_features_plan_id+1)
+        
+    # print({"list_feature_with_combinations":list_feature_with_combinations})
+    # print({"list_of_descriptions":list_of_descriptions})
+    # print({"len all_combinations_with_details":len(all_combinations_with_details)})
+    # print({"len plans":len(plans)})
+    # if len(all_combinations_with_details) > len(plans) -2:
+    #     full_plan = plan.objects.get(slug="Full")
+    #     # print('7lou')
+    #     diff_list = [item for item in list_feature_with_combinations if item not in list_of_descriptions]
+
+    #     # print({"diff_list":diff_list})
+    #     # print({"len diff_list":len(diff_list)})
+        
+    #     last_plan = plan.objects.all().last()
+    #     # print({"last_plan":last_plan.slug})
+    #     number = re.search(r'\d+', last_plan.slug).group()
+    #     # print({"number":number})
+    #     # for i in range(int(number)+1,int(number)+len(diff_list)+1):
+    #         # print({"total_price":total_price})
+    #         # initBD_plan(f"Custom{i}",total_price+full_plan.price)
+    # else:
+    #     print('mech 7lou')
+    return JsonResponse({"list_of_descriptions": list_of_descriptions}, status=200)
+
+def initBD_plan(slug,price):
+    plan_instance = plan()
+    plan_instance.slug = slug
+    plan_instance.price = price
+    plan_instance.currency = "euro"
+    plan_instance.save()
+    
+def initBD_plansFeatures(description,planId):
+    plansFeatures_instance = plansFeatures()
+    plansFeatures_instance.description = description
+    plansFeatures_instance.plan = plan.objects.get(id=planId)
+    plansFeatures_instance.save()
+    
+def basic():
+    last_plan = plan.objects.last()
+    initBD_plansFeatures("Firewall L4",last_plan.pk)
+    initBD_plansFeatures("Networking L2 L3",last_plan.pk)
+    initBD_plansFeatures("VPN IPSEC",last_plan.pk)
+    initBD_plansFeatures("LDAP",last_plan.pk)
+    initBD_plansFeatures("Double Masque",last_plan.pk)
+    initBD_plansFeatures("IDS/IPS",last_plan.pk)
+    initBD_plansFeatures("VPN SSL",last_plan.pk)
+    initBD_plansFeatures("Proxy",last_plan.pk)

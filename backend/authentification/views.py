@@ -162,7 +162,7 @@ def create_checkout_session(request):
                 combination_number += 1
 
         for combo_number, feature_names, total_price in all_combinations_with_details:
-            feature_with_combinations = ["Firewall L4","Networking L2 L3","VPN IPSEC","LDAP"] + list(feature_names)
+            feature_with_combinations = ["Firewall L4","Networking L2 L3","VPN IPSEC","LDAP","Double Masque","IDS/IPS","VPN SSL","Proxy"] + list(feature_names)
             if list_features == feature_with_combinations:
                 subscription_plan = plan.objects.get(slug=f"Custom{combo_number}")
 

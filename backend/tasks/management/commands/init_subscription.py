@@ -28,8 +28,8 @@ class Command(BaseCommand):
 
         for combo_number, feature_names, total_price in all_combinations_with_details:
             # print(f"Combination {combo_number}: {feature_names} with Total Price: {total_price}")
-            basic_plan = plan.objects.get(slug="Basic")
-            initBD_plan(f"Custom{combo_number}",total_price+basic_plan.price)
+            full_plan = plan.objects.get(slug="Full")
+            initBD_plan(f"Custom{combo_number}",total_price+full_plan.price)
             basic(f"Custom{combo_number}")
             last_plan = plan.objects.get(slug=f"Custom{combo_number}")
             for name in feature_names:
@@ -66,7 +66,9 @@ def basic(slug):
     initBD_plansFeatures("VPN IPSEC",last_plan.pk)
     initBD_plansFeatures("LDAP",last_plan.pk)
     initBD_plansFeatures("Double Masque",last_plan.pk)
-
+    initBD_plansFeatures("IDS/IPS",last_plan.pk)
+    initBD_plansFeatures("VPN SSL",last_plan.pk)
+    initBD_plansFeatures("Proxy",last_plan.pk)
     
 def full(features):
     basic_plan = plan.objects.get(slug="Basic")
@@ -81,5 +83,5 @@ def full(features):
     initBD_plansFeatures("VPN SSL",basic_plan.pk+1)
     initBD_plansFeatures("Proxy",basic_plan.pk+1)
     
-    for feature in features:
-        initBD_plansFeatures(feature[0],basic_plan.pk+1)
+    # for feature in features:
+    #     initBD_plansFeatures(feature[0],basic_plan.pk+1)

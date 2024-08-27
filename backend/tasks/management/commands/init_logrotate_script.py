@@ -28,9 +28,9 @@ mkdir -p "\$DEST_DIR"
 
 # Copy log files to backup directory 
 for file in $LOG_FILE-*.gz; do
-    if [ ! -e "${DEST_DIR}/$(basename "$file")" ]; then
-                python /asguard/newdms/manage.py init_logrotate_db -f "$file" -s "$SERVICE"
-                mv "$file" "$DEST_DIR"
+    if [ ! -e "\$file" ]; then
+                python /asguard/newdms/manage.py init_logrotate_db -f "\$file" -s "\$SERVICE"
+                mv "\$file" "\$DEST_DIR"
 fi
 done
 """

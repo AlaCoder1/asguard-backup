@@ -310,10 +310,10 @@ export default {
         } else {
           state.isAll = false;
         }
-        if (state.formData.saddr === "") state.formData.saddr = "ALL";
-        if (state.formData.sport === "") state.formData.sport = "ALL";
-        if (state.formData.daddr === "") state.formData.daddr = "ALL";
-        if (state.formData.dport === "") state.formData.dport = "ALL";
+        // if (state.formData.saddr === "") state.formData.saddr = "ALL";
+        // if (state.formData.sport === "") state.formData.sport = "ALL";
+        // if (state.formData.daddr === "") state.formData.daddr = "ALL";
+        // if (state.formData.dport === "") state.formData.dport = "ALL";
       },
       { immediate: true }
     );

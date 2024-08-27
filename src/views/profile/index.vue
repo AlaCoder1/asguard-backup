@@ -55,16 +55,12 @@
                   v-ripple
                   v-else
                   class="mb-3"
-                  style="cursor: pointer"
+                  style="cursor: pointer; overflow: hidden; border-radius: 50%"
                 >
                   <img
                     :src="imageURL"
                     alt="avatar"
-                    style="
-                      width: 100%;
-                      background-size: cover;
-                      overflow: hidden;
-                    "
+                    style="width: 100%; height: 100%; object-fit: cover"
                   />
                 </v-avatar>
               </v-badge>
@@ -143,8 +139,14 @@
             <v-col cols="4" class="mb-n6">
               <v-text-field
                 :label="$t('profil.Email')"
-                v-model="email"
+                v-model="state.formData.email"
               ></v-text-field>
+              <p
+                class="error-feedback mb-2"
+                v-if="vEmail$.formData.email.$error"
+              >
+                {{ vEmail$.formData.email.$errors[0].$message }}
+              </p>
             </v-col>
             <v-col cols="4" class="mb-n6">
               <v-text-field
@@ -271,7 +273,7 @@
 import { useI18n } from "vue-i18n";
 import { reactive, computed } from "vue";
 import useValidate from "@vuelidate/core";
-import { required, sameAs, helpers } from "@vuelidate/validators";
+import { required, sameAs, helpers, email } from "@vuelidate/validators";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { getCookie } from "@/mixins/csrftoken.js";
@@ -287,17 +289,18 @@ export default {
     let retriveInfo = localStorage.getItem("user-info");
     let userInfo = JSON.parse(retriveInfo);
     let userId = userInfo?.currentUser?.id;
+    this.id = userId;
     this.getUserById(userId);
   },
 
   setup() {
-    //data
     const { t } = useI18n();
     const state = reactive({
       formData: {
         confirmPassword: "",
         newPassword: "",
         olPassword: "",
+        email: "",
       },
     });
     const error = computed(() => {
@@ -314,13 +317,13 @@ export default {
         formData: {
           olPassword: {
             required: helpers.withMessage(error, required),
-            isValidPassword: helpers.withMessage(
-              invalidPassword,
+            // isValidPassword: helpers.withMessage(
+            //   invalidPassword,
 
-              helpers.regex(
-                /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
-              )
-            ),
+            //   helpers.regex(
+            //     /^(?=.*[A-Z])(?=.*[a-z])(?=.*\d)(?=.*[!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~])[A-Za-z\d!"#$%&'()*+,-./:;<=>?@[\]^_`{|}~]{20,}$/
+            //   )
+            // ),
           },
           newPassword: {
             required: helpers.withMessage(error, required),
@@ -353,12 +356,23 @@ export default {
     });
 
     const v$ = useValidate(rules, state);
+    const ruleEmail = computed(() => {
+      return {
+        formData: {
+          email: { required: helpers.withMessage(error, required), email },
+        },
+      };
+    });
+
+    const vEmail$ = useValidate(ruleEmail, state);
     return {
       state,
       v$,
+      vEmail$,
     };
   },
   data: () => ({
+    id: null,
     show1: false,
     show2: false,
     show3: false,
@@ -379,7 +393,7 @@ export default {
     firstname: "",
     lastname: "",
     code_postal: "",
-    email: "",
+    // email: "",
     region: "",
     phone_number: "",
     is_enable_2FA: "",
@@ -408,7 +422,7 @@ export default {
             response.data.profile.code_postal === "null"
               ? ""
               : response.data.profile.code_postal;
-          this.email =
+          this.state.formData.email =
             response.data.email === "null" ? "" : response.data.email;
           this.region =
             response.data.profile.region === "null"
@@ -466,42 +480,44 @@ export default {
     submitForm() {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      this.vEmail$.$validate();
+      if (!this.vEmail$.$error) {
+        let formData = new FormData();
+        formData.append("photo", this.fileImg ? this.fileImg : this.imageURL);
+        formData.append("username", this.username);
+        formData.append("fullname", this.firstname);
+        formData.append("code_postal", this.code_postal);
+        formData.append("email", this.state.formData.email);
+        formData.append("region", this.region);
+        formData.append("phone_number", this.phone_number);
+        formData.append(" is_enable_2FA", this.is_enable_2FA);
+        formData.append("address", this.address);
+        formData.append("country", this.country);
 
-      let formData = new FormData();
-      formData.append("photo", this.fileImg);
-      formData.append("username", this.username);
-      formData.append("fullname", this.firstname);
-      formData.append("code_postal", this.code_postal);
-      formData.append("email", this.email);
-      formData.append("region", this.region);
-      formData.append("phone_number", this.phone_number);
-      formData.append(" is_enable_2FA", this.is_enable_2FA);
-      formData.append("address", this.address);
-      formData.append("country", this.country);
-
-      axios
-        .put(`/users/update_profile`, formData, {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        })
-        .then((response) => {
-          console.log("response*", response);
-          if (response.status == "200") {
+        axios
+          .put(`/users/update_profile/${this.id}`, formData, {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          })
+          .then((response) => {
+            console.log("response*", response);
+            if (response.status == "200") {
+              this.snackbar = true;
+              this.color = "success";
+              this.textAlert = response.data.message;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            console.log("i", i.response);
             this.snackbar = true;
-            this.color = "success";
-            this.textAlert = response.data.message;
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          }
-        })
-        .catch((i) => {
-          console.log("i", i.response);
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.msg;
-        });
+            this.color = "red";
+            this.textAlert = i.response.data.msg;
+          });
+      }
     },
     changePass() {
       this.v$.$validate();

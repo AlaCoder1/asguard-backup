@@ -137,7 +137,6 @@ def logout_view(request):
 @authentication_classes([SessionAuthentication])
 def create_checkout_session(request):
     data = request.data
-    # subscription_id = data['subscription_id']
     features = data['features']
     list_features = data['features']
     if "Basic"in list_features:

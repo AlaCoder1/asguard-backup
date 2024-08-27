@@ -87,8 +87,16 @@
       <v-card v-if="changes" class="mt-3">
         <v-card-title>Changes</v-card-title>
         <v-card-text>
-          <v-row class="mt-5 justify-center">
-            <v-col cols="5" v-if="oldRow.length">
+          <v-row
+            :class="[
+              oldRow.length !== 0 ? 'mt-5' : 'justify-start mt-5 ml-2',
+            ]"
+          >
+            <v-col
+              :cols="oldRow.length !== 0 ? 6 : 1"
+              v-if="oldRow.length"
+              style=""
+            >
               <!-- <span v-if="oldRow.length === 0"
                 >-----------------------------</span
               > -->
@@ -98,54 +106,68 @@
                     (rule.id && rule.status === 'initial') ||
                     (rule.id && rule.status === 'old')
                   "
-                  style="color: #ef233c; margin: 10px"
+                  style="
+                    color: #ef233c;
+                    display: flex;
+                    left: 1%;
+                    position: relative;
+                    font-size: 16px;
+                    font-weight: bold;
+                  "
                 >
                   <span>--</span>
                   {{
-                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol}  ${
-                      rule.rule_description
-                    } ${rule.saddr} ${
-                      rule.sport === undefined ? "" : rule.sport
-                    } ${rule.daddr} ${
-                      rule.dport === undefined ? "" : rule.dport
-                    }   `
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${
+                      rule.saddr
+                    } ${rule.sport === undefined ? "" : rule.sport} ${
+                      rule.daddr
+                    } ${rule.dport === undefined ? "" : rule.dport}   `
                   }}
                 </span>
                 <del
                   v-if="rule.id && rule.status === 'deleted'"
-                  style="color: #ef233c; margin: 10px"
+                  style="
+                    color: #ef233c;
+                    display: flex;
+                    left: 1%;
+                    position: relative;
+                    font-size: 16px;
+                    font-weight: bold;
+                  "
                 >
                   <span>--</span>
                   {{
-                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol}  ${
-                      rule.rule_description
-                    } ${rule.saddr} ${
-                      rule.sport === undefined ? "" : rule.sport
-                    } ${rule.daddr} ${
-                      rule.dport === undefined ? "" : rule.dport
-                    }   `
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${
+                      rule.saddr
+                    } ${rule.sport === undefined ? "" : rule.sport} ${
+                      rule.daddr
+                    } ${rule.dport === undefined ? "" : rule.dport}   `
                   }}
                 </del>
               </v-row>
             </v-col>
-            <v-col cols="5">
+            <v-col cols="6">
               <v-row v-for="rule in rowData.value" :key="rule.uuid">
                 <span
                   v-if="rule.status === 'new' || rule.status === 'old'"
                   :style="{
                     color: rule?.status === 'new' ? ' #4CCD99' : '  #4CCD99',
-                    margin: '10px',
                   }"
+                  style="
+                    display: flex;
+                    /* left: 15%; */
+                    position: relative;
+                    font-size: 16px;
+                    font-weight: bold;
+                  "
                 >
                   <span> {{ `${rule?.status === "new" ? "+++" : "+-"}` }}</span>
                   {{
-                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol}  ${
-                      rule.rule_description
-                    } ${rule.saddr} ${
-                      rule.sport === undefined ? "" : rule.sport
-                    } ${rule.daddr} ${
-                      rule.dport === undefined ? "" : rule.dport
-                    }   `
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${
+                      rule.saddr
+                    } ${rule.sport === undefined ? "" : rule.sport} ${
+                      rule.daddr
+                    } ${rule.dport === undefined ? "" : rule.dport}   `
                   }}</span
                 >
               </v-row>
@@ -409,16 +431,16 @@ export default defineComponent({
     const rowDataToDelete = ref(null);
 
     const openModalAdd = () => {
-      // if (last_Subscription.value.includes("Firewall L4")) {
+      if (last_Subscription.value.includes("Firewall L4")) {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
       emitter.emit("interface-uuid", props.uuid);
-      // }
-      //  else {
-      //   emitter.emit("firewal-subscription");
-      //   window.scrollTo(0, 0);
-      // }
+      }
+       else {
+        emitter.emit("firewal-subscription");
+        window.scrollTo(0, 0);
+      }
     };
 
     const onGridReady = (params) => {

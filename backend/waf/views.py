@@ -270,8 +270,10 @@ def get_waf_application(request, id):
                          type=TYPE_OBJECT, required=['name', 'application_type', 'application_value', 'description', 'rules'],
                          properties={'name': Schema(type=TYPE_STRING, description="Name of the application"),
                                      'application_type': Schema(type=TYPE_STRING, enum=['ip', 'domain']),
+                                     'application_protocol': Schema(type=TYPE_STRING, enum=['http', 'https']),
+                                     'certificate_name': Schema(type=TYPE_STRING, description="Required when choosing HTTPS protocol"),
                                      'application_value': Schema(type=TYPE_STRING),
-                                     'application_port': Schema(type=TYPE_INTEGER),
+                                     'application_port': Schema(type=TYPE_INTEGER, description="When choosing HTTPS protocol the port must be compatible with ssl in format of *443"),
                                      'description': Schema(type=TYPE_STRING),
                                      'country': Schema(type=TYPE_ARRAY, description="List of country code", items=Schema(type=TYPE_STRING)),
                                      'rules': Schema(type=TYPE_ARRAY, description="List of rules object", 
@@ -340,8 +342,10 @@ def delete_waf_application(request, id):
                          type=TYPE_OBJECT, required=['name', 'application_type', 'application_value', 'description', 'rules'],
                          properties={'name': Schema(type=TYPE_STRING, description="Name of the application"),
                                      'application_type': Schema(type=TYPE_STRING, enum=['ip', 'domain']),
+                                     'application_protocol': Schema(type=TYPE_STRING, enum=['http', 'https']),
+                                     'certificate_name': Schema(type=TYPE_STRING, description="Required when choosing HTTPS protocol"),
                                      'application_value': Schema(type=TYPE_STRING),
-                                     'application_port': Schema(type=TYPE_INTEGER),
+                                     'application_port': Schema(type=TYPE_INTEGER, description="When choosing HTTPS protocol the port must be compatible with ssl in format of *443"),
                                      'description': Schema(type=TYPE_STRING),
                                      'country': Schema(type=TYPE_ARRAY, description="List of country code", items=Schema(type=TYPE_STRING)),
                                      'rules': Schema(type=TYPE_ARRAY, description="List of rules object", 
@@ -364,9 +368,15 @@ def update_waf_application(request, id):
         data_serializer = data.copy()
         data_serializer['country'] = ','.join(data_serializer['country'])
 
-        # Give the GEOIP rule a unique id
-        data["rule_geoip_id"] = waf_application.rule_geoip_id
-        data_serializer["rule_geoip_id"] = waf_application.rule_geoip_id
+        # Give the GEOIP rule a unique id by getting the same previous id or create a new one
+        if waf_application.rule_geoip_id:
+            data["rule_geoip_id"] = waf_application.rule_geoip_id
+            data_serializer["rule_geoip_id"] = waf_application.rule_geoip_id
+        elif len(data["country"]) > 0:
+            # Give the GEOIP rule a unique id
+            rule_geoip_id = find_possible_id()
+            data["rule_geoip_id"] = rule_geoip_id
+            data_serializer["rule_geoip_id"] = rule_geoip_id
         
         serializer_application_waf = ApplicationWafSerializer(waf_application, data=data_serializer)
         if serializer_application_waf.is_valid():

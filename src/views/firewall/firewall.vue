@@ -4,12 +4,13 @@
       <template #content>
         <v-alert v-model="isFirewallSubscribe" density="compact" type="warning"
           ><span style="font-size: 19px"
-            >{{$t("firewall.msg_subscription")}}
+            >{{ $t("firewall.msg_subscription") }}
           </span>
           <span
+            class="ml-2"
             style="cursor: pointer; text-decoration: underline; font-size: 19px"
             @click="goToSub"
-            >{{$t("firewall.sub_page")}}</span
+            >{{ $t("firewall.sub_page") }}</span
           >
         </v-alert>
         <v-tabs
@@ -83,7 +84,7 @@ export default {
   computed: {
     tabs() {
       return this.interfaces.map((element) => ({
-        uuid:uuidv4(),
+        uuid: uuidv4(),
         name_interface: element.name_interface,
       }));
     },

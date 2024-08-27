@@ -9,7 +9,30 @@
           >
             <h4>{{ $t("subtitle.systemLog") }}</h4>
             <v-divider></v-divider>
-            <v-row>
+            <v-row class="mb-15">
+              <v-col cols="9" md="6" class="mt-5">
+                <v-text-field
+                  id="filter-text-box"
+                  v-model="state.filterText"
+                  :placeholder="$t('firewall.search')"
+                  density="compact"
+                  rounded
+                  variant="solo"
+                  hide-details
+                  dense
+                  prepend-inner-icon="mdi-magnify"
+                  @input="onFilterTextBoxChanged"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="6" class="d-flex justify-end">
+                <v-btn class="ml-3 mt-2" @click="downloadLogs">
+                  <!-- <i class="fas fa-plus" style="color: #086eae"></i> -->
+                  <span
+                    class="mdi mdi-download-circle-outline mt-1"
+                    style="color: #086eae; font-size: 30px"
+                  ></span>
+                </v-btn>
+              </v-col>
               <v-col cols="12">
                 <div style="overflow: hidden; flex-grow: 1">
                   <ag-grid-vue
@@ -22,11 +45,10 @@
                     :rowData="rowDataKeys.value"
                     :overlayNoRowsTemplate="overlayTemplate"
                     :pagination="true"
-                    :paginationPageSize="4"
+                    :paginationPageSize="30"
                     :localeText="paginationLocalization"
                   />
                 </div>
-             
               </v-col>
             </v-row>
           </div>
@@ -65,6 +87,7 @@
 import { useI18n } from "vue-i18n";
 import axios from "axios";
 import { reactive, ref, onMounted, inject, computed } from "vue";
+import { getCookie } from "@/mixins/csrftoken.js";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -74,7 +97,7 @@ export default {
   name: "KeyPair",
   components: {
     BaseLayout,
-    AgGridVue
+    AgGridVue,
   },
   setup() {
     const { t } = useI18n();
@@ -84,15 +107,17 @@ export default {
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
     const state = reactive({
+      filterText: "",
       deleteDialog: false,
       deletedRow: null,
       snackbar: false,
       color: null,
       textAlert: "",
+      socket: null,
     });
 
     onMounted(() => {
-     overlayTemplate.value = `
+      overlayTemplate.value = `
       <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
         d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
@@ -100,43 +125,57 @@ export default {
         data-name="Unbox"
       />
      </svg></span>`;
-     
+
+      initializeWebSocket();
     });
+    const initializeWebSocket = () => {
+      state.socket = new WebSocket(
+        "wss://" + window.location.host + "/ws/logs/"
+      );
+
+      state.socket.onopen = () => {
+        console.log("WebSocket connection opened.");
+      };
+
+      state.socket.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("data**", data);
+        if (state.socket.readyState === WebSocket.OPEN) {
+          const data = JSON.parse(event.data);
+          console.log("data00", data);
+          rowDataKeys.value = [];
+          rowDataKeys.value = data;
+        }
+
+        state.socket.onclose = () => {
+          console.log("WebSocket connection closed.");
+        };
+      };
+    };
     const KeyName = computed(() => {
       return t("KeyPair.KeyName");
     });
 
     const columnKeys = ref([
       {
-        headerName: 'Date',
-        field: "name",
+        headerName: "Date",
+        field: "date",
         autoHeight: true,
-        width: 90,
-        minWidth: 50,
-        flex: 1,
+        width: 350,
+        minWidth: 150,
       },
       {
-        headerName: 'Process',
-        field: "utility",
-        width: 90,
+        headerName: "Process",
+        field: "process",
+        width: 500,
         minWidth: 50,
-        flex: 1,
-        sortable: true,
-        filter: true,
       },
       {
-        headerName: 'Line',
+        headerName: "Message",
         autoHeight: true,
-        field: "key_size",
-        width: 90,
+        field: "message",
+        width: 800,
         minWidth: 50,
-        flex: 1,
-      },
-      {
-        headerName: "Action",
-        width:150,
-        cellRenderer: actionCellRendererKeys,
-        field: "action",
       },
     ]);
 
@@ -152,26 +191,41 @@ export default {
         console.error("Grid API.");
       }
     };
+    const onFilterTextBoxChanged = () => {
+      gridApi.value.setQuickFilter(
+        document.getElementById("filter-text-box").value
+      );
+    };
+    const downloadLogs = () => {
+      console.log("ok");
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-    const defaultColDef = {
-      sortable: true,
-      filter: true,
-      // flex: 1,
+      axios.get("/system_log/downloadLogs").then((response) => {
+        console.log("oui", response);
+        const text = response.data.data;
+        const blob = new Blob([text], {
+          type: "application/x-x509-ca-cert",
+        });
+
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+        a.download = `logs.txt`;
+
+        document.body.appendChild(a);
+        a.click();
+
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      });
     };
 
-    const getCookie = (name) => {
-      let cookieValue = null;
-      if (document.cookie && document.cookie !== "") {
-        const cookies = document.cookie.split(";");
-        for (let i = 0; i < cookies.length; i++) {
-          const cookie = cookies[i].trim();
-          if (cookie.substring(0, name.length + 1) === name + "=") {
-            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-            break;
-          }
-        }
-      }
-      return cookieValue;
+    const defaultColDef = {
+      // sortable: true,
+      // filter: true,
+      // flex: 1,
     };
 
     function actionCellRendererKeys(params) {
@@ -198,12 +252,12 @@ export default {
           eGui.innerHTML = `
           <button
            class="action-button copy"
-           data-action="copy"  title=${t('titleAgGrid.publicKey')}>
+           data-action="copy"  title=${t("titleAgGrid.publicKey")}>
               <i class="mdi mdi-content-copy" style="color: #086eae;font-size: 20px;"></i>
            </button>
           <button
            class="action-button download"
-           data-action="export"  title=${t('titleAgGrid.pK')}>
+           data-action="export"  title=${t("titleAgGrid.pK")}>
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
@@ -267,8 +321,6 @@ export default {
       }
     };
 
-
-
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
@@ -324,6 +376,8 @@ export default {
       getCookie,
       cancelDelete,
       confirmDelete,
+      onFilterTextBoxChanged,
+      downloadLogs,
     };
   },
 };

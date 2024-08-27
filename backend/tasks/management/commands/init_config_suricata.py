@@ -1,11 +1,11 @@
 from django.core.management.base import BaseCommand
-from backend.ids_ips.models import *
-from backend.network.models import *
-from backend.ids_ips.serializers import *
-from backend.ids_ips.function_BD import *
-from backend.ids_ips.function_sys import *
+
 from django.db import IntegrityError
 import ruamel.yaml
+
+from backend.ids_ips.function_sys import execute_cmd, read_config, read_from_yaml
+from backend.ids_ips.models import suricatafile
+from backend.ids_ips.serializers import SuricataFileSerializer
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         try:

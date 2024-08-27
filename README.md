@@ -96,3 +96,10 @@ python manage.py init_waf_config
 
 #### Logs
 python manage.py init_logs
+
+
+### Logs rotation 
+## example
+python manage.py init_logrotate_script 
+python manage.py init_logrotate 
+python manage.py init_logrotate_timer

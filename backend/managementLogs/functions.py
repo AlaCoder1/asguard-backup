@@ -23,7 +23,7 @@ def get_attributes_logs(text):
 
 def get_logs_sys():
     """" function to get all logs system"""
-    command = "sudo journalctl -n 10000"
+    command = "sudo journalctl -n 1000"
     completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
     output = completed_process.stdout
     return output

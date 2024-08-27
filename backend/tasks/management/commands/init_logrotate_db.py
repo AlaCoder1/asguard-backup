@@ -17,7 +17,7 @@ class Command(BaseCommand):
                 original_path = file.split("-")[0]
                 backup_path = "/".join(file.split("/")[:-1])
                 backup_path+="/backup_logs/"
-                date=filename.split("-")[1].strip('.gz')
+                date="-" .join(filename.split("-")[1:]).strip('.gz')
                 data={
                     "service":service,
                     "filename": filename,
@@ -25,11 +25,12 @@ class Command(BaseCommand):
                     "backup_path": backup_path,
                     "date": date,
                 }
-                aux_save=LogrotateDataSerializer(data=data)
-                if aux_save is True:
+                logrotate_serializer=LogrotateDataSerializer(data=data)
+                if logrotate_serializer.is_valid():
+                    logrotate_serializer.save()
                     self.stdout.write(self.style.SUCCESS("File backup saved successfully"))
                 else:
-                    self.stdout.write(self.style.ERROR(f"Failed to save config: {aux_save}"))
+                    self.stdout.write(self.style.ERROR(f"Failed to save config: {logrotate_serializer.errors}"))
                     
         except IntegrityError as e:
             self.stderr.write(self.style.ERROR(f"Error: {str(e)}"))

@@ -34,7 +34,7 @@ import ruamel.yaml
 from backend.settings.models import *
 from collections import defaultdict
 from backend.waf.list_waf import get_alerts, get_list_all_waf_application, get_list_all_waf_rule, get_one_waf_config
-from views.functions import get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
+from views.functions import get_logrotate_data, get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
 
 from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
@@ -733,6 +733,12 @@ def server_dhcp4_page(request):
     list_dhcp4_server=get_all_server_dhcp4(request)
     context = {'list_dhcp4_server':list_dhcp4_server}
     return render(request, 'dhcp4_server.html',context)
+
+@login_required(login_url='/')
+def logrotate_page(request):
+    list_logrotate=get_logrotate_data(request)
+    context = {'list_logrotate':list_logrotate}
+    return render(request, 'logrotate.html',context)
 
 ################## generale information ##################
 

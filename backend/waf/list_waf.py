@@ -146,8 +146,8 @@ def get_alerts():
                 waf_alert['fields']['violation'].append(f"{list_violation_id[index]} > {list_violation_file[index]}")
             blocked_requests.append(waf_alert['fields'])
         else:
-            waf_alert['fields']['message'] = message
-            waf_alert['fields']['violation'] = f"{violation_id} > {violation_file}"
+            waf_alert['fields']['message'] = [message]
+            waf_alert['fields']['violation'] = [f"{violation_id} > {violation_file}"]
             blocked_requests.append(waf_alert['fields'])
     
     # Return an object contains attacks, top_countries and blocked_requests

@@ -13,5 +13,9 @@ urlpatterns = [
     
     
     path('features', views.all_feature, name="features"),
+    
+    
+    
+    path('getget', views.getget, name="getget"),
 ]
 

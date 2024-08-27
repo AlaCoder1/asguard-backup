@@ -13,7 +13,7 @@ class Command(BaseCommand):
 # Set variables 
 LOG_FILE="\$1"
 DEST_DIR="\$2"
-
+SERVICE="\$3"
 # Truncate or clear log file depending on its path
 if [ "\$LOG_FILE" == "/var/log/modsec_audit.log" ||  "\$LOG_FILE" == "/var/log/openvpn/openvpn.log"]; then
     # Clear the log file
@@ -27,9 +27,12 @@ fi
 mkdir -p "\$DEST_DIR" 
 
 # Copy log files to backup directory 
-for file in *.gz; do 
-    [ ! -e "\${DEST_DIR}/\$(basename "\$file")" ] && mv "\$file" "\$DEST_DIR"
-done 
+for file in $LOG_FILE-*.gz; do
+    if [ ! -e "\$file" ]; then
+                python /asguard/newdms/manage.py init_logrotate_db -f "\$file" -s "\$SERVICE"
+                mv "\$file" "\$DEST_DIR"
+fi
+done
 """
             script_path = "/usr/local/bin/logrotate-script.sh"       
             aux_script = init_script_bash(script, script_path)

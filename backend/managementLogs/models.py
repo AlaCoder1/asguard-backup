@@ -8,3 +8,12 @@ class LogsData(models.Model):
     message = models.CharField(max_length=200, blank=True,unique=False)
     class Meta:
         db_table = 'logs_data'    
+        
+class LogrotateData(models.Model):
+    service=models.CharField(max_length=200, blank=True,unique=False)
+    filename = models.CharField(max_length=200, blank=True,unique=True)
+    original_path = models.CharField(max_length=200, blank=True,unique=False)
+    backup_path = models.CharField(max_length=200, blank=True,unique=False)
+    date=models.CharField(max_length=200, blank=True,unique=False)
+    class Meta:
+        db_table = 'logrotate_data'    

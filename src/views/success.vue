@@ -7,7 +7,7 @@
           :width="500"
           aspect-ratio="16/9"
           cover
-          src="https://www.numeryx.fr/sites/default/files/gallery/ASGUARD%20bannirere%20site.png"
+          src="https://www.numeryx.fr/wp-content/themes/numeryx/assets/images/bg-Asguard.jpg"
         ></v-img>
       </v-col>
       <v-col cols="6" class="mt-6">

@@ -1,7 +1,7 @@
 <template>
   <v-container fluid width="100%">
     <v-row>
-      <v-col>
+      <!-- <v-col>
         <v-card
           class="mx-auto"
           max-width="344"
@@ -54,7 +54,7 @@
             </v-row>
           </v-card-text>
         </v-card>
-      </v-col>
+      </v-col> -->
       <v-col>
         <v-card
           class="mx-auto"
@@ -64,21 +64,23 @@
           hover
         >
           <v-card-item>
-            <div class="title-card mb-6">{{$t('monitoringVPN.Availablity')}}</div>
+            <div class="title-card mb-6">
+              {{ $t("monitoringVPN.Availablity") }}
+            </div>
           </v-card-item>
           <v-card-text class="content-style">
             <v-row>
               <v-col cols="6">
-                <div>76%</div>
+                <div>{{ state.availability }}%</div>
               </v-col>
               <v-col cols="6">
                 <v-progress-circular
                   :size="60"
                   :width="2"
-                  :model-value="76"
+                  v-model="state.availability"
                   color="#086EAE"
                 >
-                  <div>{{ 76 }}%</div>
+                  <div>{{ state.availability }}%</div>
                 </v-progress-circular>
               </v-col>
             </v-row>
@@ -94,21 +96,23 @@
           hover
         >
           <v-card-item>
-            <div class="title-card mb-6">{{$t('monitoringVPN.PacketLoss')}}</div>
+            <div class="title-card mb-6">
+              {{ $t("monitoringVPN.PacketLoss") }}
+            </div>
           </v-card-item>
           <v-card-text class="content-style">
             <v-row>
               <v-col cols="6">
-                <div>1%</div>
+                <div>{{ state.packet_loss }}%</div>
               </v-col>
               <v-col cols="6">
                 <v-progress-circular
                   :size="60"
                   :width="2"
-                  :model-value="1"
+                  v-model="state.packet_loss"
                   color="#086EAE"
                 >
-                  <div>{{ 1 }}%</div>
+                  <div>{{ state.packet_loss }}%</div>
                 </v-progress-circular>
               </v-col>
             </v-row>
@@ -124,16 +128,18 @@
           hover
         >
           <v-card-item>
-            <div class="title-card mb-6">{{$t('monitoringVPN.ActiveSessions')}}</div>
+            <div class="title-card mb-6">
+              {{ $t("monitoringVPN.ActiveSessions") }}
+            </div>
           </v-card-item>
           <v-card-text class="content-style">
             <v-row>
-              <div class="center-item">138</div>
+              <div class="center-item">{{ state.active_sessions }}</div>
             </v-row>
           </v-card-text>
         </v-card>
       </v-col>
-      <v-col>
+      <!-- <v-col>
         <v-card
           class="mx-auto"
           max-width="344"
@@ -152,7 +158,7 @@
             </v-row>
           </v-card-text>
         </v-card>
-      </v-col>
+      </v-col> -->
       <v-col>
         <v-card
           class="mx-auto"
@@ -162,10 +168,12 @@
           hover
           color="indigo-darken-3"
           text-color="white"
+          v-if="state.establishetd_date"
         >
           <v-card-item>
-            <div class="title-card-light center-item mb-6">
-              {{ currentTime }} GMT
+            <div class="title-card-light center-item mt-6 justify-center">
+              <!-- {{ currentTime }} GMT -->
+              {{ state.establishetd_date }}
             </div>
           </v-card-item>
           <v-card-text>
@@ -174,53 +182,111 @@
             </v-row>
           </v-card-text>
         </v-card>
+        <v-card
+          class="mx-auto"
+          max-width="344"
+          min-width="200"
+          height="100%"
+          hover
+          color="indigo-darken-3"
+          text-color="white"
+          v-else
+        >
+          <v-card-item>
+            <div class="title-card-light center-item mt-6 justify-center">
+              {{ currentTime }} GMT
+            </div>
+          </v-card-item>
+          <v-card-text class="title-card-light center-item mt-6 justify-center">
+            {{ formattedDate }}
+          </v-card-text>
+        </v-card>
       </v-col>
     </v-row>
   </v-container>
 </template>
-<script setup>
-import { ref } from "vue";
 
-const currentTime = ref("");
-const formattedDate = ref("");
+<script>
+import { watch, ref, reactive, toRefs, onMounted } from "vue";
+export default {
+  props: {
+    lasObj: {
+      type: Object,
+    },
+  },
+  setup(props) {
+    //
+    const currentTime = ref("");
+    const formattedDate = ref("");
 
-const getCurrentTime = () => {
-  const date = new Date();
-  const hours = date.getHours();
-  const minutes = date.getMinutes();
-  currentTime.value = `${hours}:${minutes}`;
+    const getCurrentTime = () => {
+      const date = new Date();
+      const hours = date.getHours();
+      const minutes = date.getMinutes();
+      currentTime.value = `${hours}:${minutes}`;
+    };
+
+    onMounted(async () => {
+      getCurrentTime();
+      getCurrentDate();
+    });
+
+    const getCurrentDate = () => {
+      const date = new Date();
+      const day = date.getDate();
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      const monthIndex = date.getMonth();
+      const year = date.getFullYear();
+      const month = monthNames[monthIndex];
+      formattedDate.value = `${day} ${month} ${year}`;
+    };
+
+    //
+    const { lasObj } = toRefs(props);
+
+    const state = reactive({
+      establishetd_date: "",
+      active_sessions: 0,
+      packet_loss: 0,
+      availability: 0,
+    });
+
+    watch(
+      () => lasObj.value,
+      (val) => {
+        state.active_sessions = val.active_sessions;
+        state.packet_loss = val.packet_loss;
+        state.availability = val.availability;
+        if (val.establishetd_date) {
+          state.establishetd_date = val.establishetd_date;
+          formattedDate.value = "";
+          currentTime.value = "";
+        }
+      }
+    );
+
+    return {
+      state,
+      formattedDate,
+      currentTime,
+    };
+  },
 };
-const getCurrentDate = () => {
-  const date = new Date();
-  const day = date.getDate();
-  const monthNames = [
-    "Jan",
-    "Feb",
-    "Mar",
-    "Apr",
-    "May",
-    "Jun",
-    "Jul",
-    "Aug",
-    "Sep",
-    "Oct",
-    "Nov",
-    "Dec",
-  ];
-  const monthIndex = date.getMonth();
-  const year = date.getFullYear();
-  const month = monthNames[monthIndex];
-  formattedDate.value = `${day} ${month} ${year}`;
-};
-
-getCurrentTime();
-getCurrentDate();
-
-setInterval(() => {
-  getCurrentTime();
-  getCurrentDate();
-}, 1000);
 </script>
+
 <style scoped>
 .subTitle {
   position: relative;

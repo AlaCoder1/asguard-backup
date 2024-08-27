@@ -376,7 +376,7 @@ export default {
               state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = "Configuration saved successfully!";
+              state.textAlert = response.data.msg;
               setTimeout(() => {
                 state.snackbar = false;
                 location.reload();

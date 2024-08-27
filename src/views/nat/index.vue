@@ -1,29 +1,23 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="Nat" :active-menu="activeTab">
+    <base-layout :title="$t('tabs.NAT')" :active-menu="activeTab">
       <template #content>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">
-            <span style="color: #020202">{{ tab.label }}</span>
+            <span style="color: #020202">{{ $t(tab.label) }}</span>
           </v-tab>
         </v-tabs>
 
         <v-window v-model="activeTab">
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="SNAt">
+          <v-window-item
+            v-for="(tab, index) in tabs"
+            :key="index"
+            :value="tab.label"
+          >
             <v-card>
               <v-card-text>
-                <Snat />
+                <component :is="tab.component" />
               </v-card-text>
-            </v-card>
-          </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="One-to-One">
-            <v-card>
-              <v-card-text> <OneToOne /> </v-card-text>
-            </v-card>
-          </v-window-item>
-          <v-window-item v-for="tab in tabs" :key="tab.id" value="DNAT">
-            <v-card>
-              <v-card-text><Dnat /> </v-card-text>
             </v-card>
           </v-window-item>
         </v-window>
@@ -39,20 +33,21 @@ import OneToOne from "./components/OneToOne.vue";
 import Dnat from "./components/Dnat.vue";
 
 export default {
-  name: "Sdwan",
+  name: "Nat",
   components: {
     BaseLayout,
     Snat,
     OneToOne,
     Dnat,
   },
+  inject: ["emitter"],
   data() {
     return {
-      activeTab: "SNAt",
+      activeTab: "",
       tabs: [
-        { id: 1, label: "SNAt" },
-        { id: 2, label: "One-to-One" },
-        { id: 3, label: "DNAT" },
+        { id: 1, label: "tabs.SNAT", component: Snat },
+        { id: 2, label: "tabs.OneToOne", component: OneToOne },
+        { id: 3, label: "tabs.DNAT", component: Dnat },
       ],
     };
   },
@@ -63,8 +58,13 @@ export default {
   },
 
   mounted: async function () {
-    let tab = localStorage.getItem("nat-tab") || "SNAt";
+    let tab = localStorage.getItem("nat-tab") || "tabs.SNAT";
     this.activeTab = tab;
+
+    this.emitter.on("reload-tabs", () => {
+      let tab = localStorage.getItem("nat-tab") || "tabs.SNAT";
+      if (tab) this.activeTab = tab;
+    });
   },
 };
 </script>

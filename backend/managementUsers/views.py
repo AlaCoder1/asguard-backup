@@ -9,7 +9,7 @@ from backend.managementUsers.functions import add_user_group, add_mail_spool, ad
 from backend.managementGroup.serializers import GroupSerializer
 from backend.managementGroup.functions import change_groupname_username, getGroupNameById, getUidGroup
 from backend.managementGroup.models import Group
-from backend.subscription.models import organization
+from backend.subscription.models import Organization
 import json
 from django.core import serializers
 from rest_framework.authentication import SessionAuthentication
@@ -35,6 +35,7 @@ CONSTANT_METHOD_ADD_USER_EMAIL_SERVER = _("with their email in directory server"
 CONSTANT_METHOD_ADD_USER_EMAIL_SYSTEM = _("with simple System email")
 CONSTANT_OR = _("or")
 CONSTANT_AND = _("and")
+CONSTANT_LANGUAGE = _('Language')
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -111,7 +112,7 @@ def create_user(request):
         data = request.data
         username = data['username']
         password = data['password']
-        organisation = organization.objects.get(id=1)
+        organisation = Organization.objects.get(id=1)
         data['organisation'] = organisation.id
         email = data['email']
         
@@ -239,21 +240,16 @@ def create_user(request):
 @authentication_classes([SessionAuthentication])
 def delete_user(request, id):
     """Delete group"""
-    msg = ""
-    if (request.method == 'DELETE'):
-        user = User.objects.get(id=id)
-        group = Group.objects.filter(groupname=user.username)
-        # # Execute the command on the remote machine
-        _, stderr = delete_user_in_system(user.username)
-        # # convert the stderr stream to a string
-        if stderr == "":
-            user.delete()
-            group.delete()
-            msg = f"{user.username} {SUCCESS_MESSAGES_DELETING}"
-        else:
-            msg = f"{ERROR_MESSAGES_DELETING} {CONSTANT_USER}"
-        # return a no content response.
-        return JsonResponse({"msg": msg})
+    user = User.objects.get(id=id)
+    group = Group.objects.filter(groupname=user.username)
+    # # Execute the command on the remote machine
+    _, stderr = delete_user_in_system(user.username)
+    # # convert the stderr stream to a string
+    if stderr == "":
+        user.delete()
+        group.delete()
+        return JsonResponse({"msg": f"{user.username} {SUCCESS_MESSAGES_DELETING}"})
+    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_USER}"}, status=400)
 
 
 @swagger_auto_schema(
@@ -373,66 +369,50 @@ def modify_user(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def update_profile(request):
-    if (request.method == 'PUT'):
-        try:
-            data = request.data
-            user = request.user
-            if User.objects.filter(email=data['email']).exclude(id=user.id).exists():
-                return JsonResponse({"msg": f"Email {ERROR_MESSAGES_EXISTANT}"}, status=400)          
-            user_object = User.objects.get(id=user.id)
-            if valid_input(user.username):
-                if username_exists(data['username']) and  data['username'] != user.username:
-                    msg = f"{CONSTANT_USERNAME} {CONSTANT_OR} email {ERROR_MESSAGES_EXISTANT}"
-                    return JsonResponse({"msg": msg})
-                else:
-                    change_username(data['username'], user.username)
-                    if check_same_groupname_with_username(user.username):
-                        change_groupname_username(user.username, data['username'])
-                        msg = f"{CONSTANT_GROUPNAME} {CONSTANT_AND} {CONSTANT_USERNAME} {SUCCESS_MESSAGES_UPDATING}"
-                    else:
-                        msg = f"{CONSTANT_USERNAME} {SUCCESS_MESSAGES_UPDATING}"
-                    user_object.username = data['username']
-                    user_object.fullname = data['fullname']
-                    user_object.email = data['email']
-                    user_object.save()
-                    
-            else:
-                msg = "invalid "+ user.username
+def update_profile(request, id):
+    try:
+        data = request.data
+        user_object = User.objects.get(id=id)
 
-            # Update profile fields
-            profile = Profile.objects.get(user=user_object)
+        serializer_user = UserSerializerPost(user_object, data=data, partial=True)
+        if serializer_user.is_valid():
+            change_username(data['username'][0], user_object.username)
+            change_groupname_username(user_object.username, data['username'])
+            serializer_user.save()
+        else:
+            return JsonResponse({"msg": list(serializer_user.errors.values())[0][0]}, status=400)
+                
+        # Update profile fields
+        profile = Profile.objects.get(user=user_object)
 
-            if 'photo' in request.FILES:
-                
-                photo = request.FILES['photo']
-                # Create or update the user-specific folder
-                user_folder = os.path.join(settings.MEDIA_ROOT, str(user.id))
-                if not os.path.exists(user_folder):
-                    os.makedirs(user_folder)
-                
-                photo_path = os.path.join(user_folder, photo.name)
-                photo_url = '/media/'+os.path.relpath(photo_path, settings.MEDIA_ROOT)
-                print('photo_url',photo_url)
-                old_photo_url_path = os.path.join(user_folder,profile.photo_url.split('/')[3])
-                print("path:",old_photo_url_path)
-                # Delete the old photo_url file if it exists
-                if os.path.exists(old_photo_url_path):
-                    os.remove(old_photo_url_path)
-                with open(photo_path, 'wb+') as destination:
-                    for chunk in photo.chunks():
-                        destination.write(chunk)
+        if 'photo' in request.FILES:
+            
+            photo = request.FILES['photo']
+            # Create or update the user-specific folder
+            user_folder = os.path.join(settings.MEDIA_ROOT, str(id))
+            if not os.path.exists(user_folder):
+                os.makedirs(user_folder)
+            
+            photo_path = os.path.join(user_folder, photo.name)
+            photo_url = '/media/'+os.path.relpath(photo_path, settings.MEDIA_ROOT)
+            old_photo_url_path = os.path.join(user_folder,profile.photo_url.split('/')[3])
+            # Delete the old photo_url file if it exists
+            if os.path.exists(old_photo_url_path):
+                os.remove(old_photo_url_path)
+            with open(photo_path, 'wb+') as destination:
+                for chunk in photo.chunks():
+                    destination.write(chunk)
             data['photo_url']  = photo_url
-            serializer = ProfileSerializer(profile, data=data, partial=True)
-            if serializer.is_valid():
-                serializer.save()
-                return JsonResponse({'message': f"Profile {SUCCESS_MESSAGES_UPDATING}"})
-            return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-          
-        except ValidationError as e:
-            return JsonResponse({'msg': e.message}, status=400)
-        except Exception as e:
-            return JsonResponse({'msg': str(e)}, status=400)
+        serializer = ProfileSerializer(profile, data=data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return JsonResponse({'message': f"Profile {SUCCESS_MESSAGES_UPDATING}"})
+        return JsonResponse(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+    except ValidationError as e:
+        return JsonResponse({'msg': e.message}, status=400)
+    except Exception as e:
+        return JsonResponse({'msg': str(e)}, status=400)
         
 
 @swagger_auto_schema(
@@ -546,9 +526,8 @@ def change_language(request, id):
         profile = Profile.objects.get(user=User.objects.get(id=id))
         serializer_profile = ProfileSerializer(profile, data=data, partial=True)
         if serializer_profile.is_valid():
-            print("Language is updated")
             serializer_profile.save()
-            return JsonResponse({"msg": "Language is updated"}, status=200)
+            return JsonResponse({"msg":f"{CONSTANT_LANGUAGE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
         return JsonResponse({"error": list(serializer_profile.errors.values())[0][0]}, status=400)
     except (User.DoesNotExist, Profile.DoesNotExist):
-        return JsonResponse({"error": "User does not exist"}, status=400)
+        return JsonResponse({"error":f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

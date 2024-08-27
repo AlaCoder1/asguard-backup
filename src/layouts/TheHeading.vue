@@ -27,10 +27,22 @@
       </div>
       <v-menu>
         <template v-slot:activator="{ props }">
-          <v-avatar class="ml-3 mr-3" size="30" v-bind="props">
-            <v-icon size="30" class="white--text" color="white"
-              >mdi-account-circle-outline</v-icon
-            >
+          <v-avatar
+            class="ml-3 mr-3"
+            size="40"
+            v-bind="props"
+            style="
+              border: 2px solid #fff;
+              cursor: pointer;
+              overflow: hidden;
+              border-radius: 50%;
+            "
+          >
+            <img
+              :src="state.imageURL"
+              alt="avatar"
+              style="width: 100%; height: 100%; object-fit: cover"
+            />
           </v-avatar>
         </template>
         <v-list style="cursor: pointer; padding: 15px">
@@ -72,12 +84,15 @@ export default {
       let userInfo = JSON.parse(retriveInfo);
       let user = userInfo;
       state.currentInfo = { ...user.currentUser };
+      let id = userInfo?.currentUser?.id;
+      getUserById(id);
 
       let getLang = localStorage.getItem("lang");
       if (getLang) selectedLang.value = JSON.parse(getLang);
     });
     const state = reactive({
       currentInfo: {},
+      imageURL: null,
     });
     const selectedLang = ref([
       {
@@ -260,6 +275,19 @@ export default {
         console.error("Error during logout:", error);
       }
     };
+    const getUserById = async (userId) => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios
+        .get(`/users/getUser/${userId}`)
+        .then((response) => {
+          state.imageURL = response.data.profile.photo_url;
+        })
+        .catch((e) => {
+          console.log("e", e.response);
+        });
+    };
     return {
       state,
       langs,
@@ -285,9 +313,7 @@ export default {
 
         axios
           .put(`/users/modifyLanguage/${this.state.currentInfo.id}`, payload)
-          .then((response) => {
-            console.log("response", response);
-          })
+          .then((response) => {})
           .catch((i) => {
             console.log("resp", i.response);
           });

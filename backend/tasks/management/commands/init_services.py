@@ -11,20 +11,20 @@ class Command(BaseCommand):
         try:
             list_info_services=[]
             list_service=[
-            'sshd','dhclient@','suricata','squid','nftables','NetworkManager','openvpn','ipsec','clamv','Asguard-Networking'
+            'sshd','suricata','squid','nftables','NetworkManager','strongswan','Asguard-Networking'
             ]
             for s in list_service:
-                output,error=run_command("sudo systemctl list-unit-files --type service | awk '{print $1}'")
+                output,_=run_command("sudo systemctl list-unit-files --type service | awk '{print $1}'")
                 list_all_services=output.splitlines()
                 status_install=False
                 status_started=False
                 status_enabled=False
                 if s+'.service' in list_all_services:
                     status_install=True
-                    aux_enabled,error=run_command("sudo systemctl is-enabled {}".format(s))
+                    aux_enabled,_=run_command("sudo systemctl is-enabled {}".format(s))
                     if aux_enabled.strip()=="enabled":
                         status_enabled=True
-                    aux_started,error=run_command("sudo systemctl is-active  {}".format(s))
+                    aux_started,_=run_command("sudo systemctl is-active  {}".format(s))
                     if aux_started.strip()=="active":
                         status_started=True
                 service={

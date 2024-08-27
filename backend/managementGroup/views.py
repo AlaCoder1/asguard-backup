@@ -3,12 +3,27 @@ from django.http import JsonResponse
 from .models import *
 from .serializers import *
 import json
+from django.utils.translation import gettext_lazy as _
 from rest_framework.authentication import SessionAuthentication
 from .functions import *
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 from django.core import serializers
-# Create your views here.
+
+# Constants
+CONSTANT_GROUPE_NAME= _('Groupe name')
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+SUCCESS_MESSAGES_UPDATING = _("is updated")
+
+# Error messages
+ERROR_MESSAGES_CREATING = _("Error in creating")
+ERROR_MESSAGES_DELETING = _("Error in deleting")
+ERROR_MESSAGES_INVALID = _("Invalid")
+ERROR_MESSAGES_EXISTANT = _("Already exist")
+
+
 
 
 @api_view(['GET'])
@@ -59,13 +74,13 @@ def createGroup(request):
                 serializer = GroupSerializer(data=data)
                 if (serializer.is_valid()):
                     serializer.save()
-                    msg = groupname+" added sucessfully"
+                    msg = f"{groupname} {SUCCESS_MESSAGES_CREATING}"
                     return JsonResponse({"msg": msg}, status=201)
                 return JsonResponse(serializer.errors, status=400)
             else:
                 msg = stderr
         else:
-            msg = "groupname invalid"
+            msg =f"{CONSTANT_GROUPE_NAME} {ERROR_MESSAGES_INVALID}"
             return JsonResponse({"msg": msg}, status=201)
     return JsonResponse({"msg": msg}, status=201)
 
@@ -82,7 +97,7 @@ def deleteGroup(request, id):
         _, stderr = delete_group(group.groupname)
         if stderr == "":
             group.delete()
-            msg = "delete succesfully"
+            msg = f"{group.groupname} {SUCCESS_MESSAGES_DELETING}"
         else:
             msg = stderr
         return JsonResponse({"msg": msg})
@@ -102,15 +117,15 @@ def changeGroupname(request, id):
         description = data['description']
         if validInput(Newgroupname):
             if group_exists(Newgroupname):
-                msg = f"Group {Newgroupname} exists."
+                msg = f"{Newgroupname} {ERROR_MESSAGES_EXISTANT}"
                 return JsonResponse({"msg": msg})
             else:
                 change_groupname(oldgroupname, Newgroupname)
-                msg = "updated succesfully"
+                msg = f"{CONSTANT_GROUPE_NAME} {SUCCESS_MESSAGES_UPDATING}"
                 group.groupname = Newgroupname
                 group.description = description
                 group.save()
                 return JsonResponse({"msg": msg})
         else:
-            msg = "invalid "+Newgroupname
+            msg =f"{ERROR_MESSAGES_INVALID} {Newgroupname}"
             return JsonResponse({"msg": msg})

@@ -4,6 +4,7 @@ from django.db import IntegrityError
 from backend.waf.constant_variables import LIST_RULES_WAF, PATH_MAIN_WAF, PATH_RULES_WAF
 from backend.waf.models import ConfigWaf, RulesWaf
 from utils.commands_utils import execute_command_without_arguments
+from utils.errors_utils import CommandExecutionError
 
 
 class Command(BaseCommand):
@@ -29,9 +30,19 @@ class Command(BaseCommand):
                 main_file.write(f"Include {PATH_RULES_WAF.format('custom_rules')}")
                 for rule in LIST_RULES_WAF:
                     main_file.write(f"\nInclude {PATH_RULES_WAF.format(rule['name'])}")
-                    rule_waf = RulesWaf(name=rule['name'], created=False, rule_id=rule['id'])
+                    rule_waf = RulesWaf(name=rule['name'],
+                                        description=rule['description_english'], 
+                                        description_english=rule['description_english'], 
+                                        description_french=rule['description_french'], 
+                                        created=False, 
+                                        rule_id=rule['id'])
                     rule_waf.save()
+            
+            # Restart nginx service
+            execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])
 
             return "WAF Config added succesffuly"
         except IntegrityError as e:
             return "Error: " + str(e)
+        except CommandExecutionError:
+            return "Error in initializing WAF modsecurity"

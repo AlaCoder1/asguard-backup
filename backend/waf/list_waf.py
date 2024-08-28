@@ -3,6 +3,7 @@ from django.core import serializers
 from django.db.models import Count
 import json
 
+from backend.managementUsers.models import Profile
 from backend.waf.models import AlertWaf, ApplicationRulesWaf, ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.utils import convert_waf_rule_database
 from backend.waf.utils_alerts import synchronize_database_waf_alert
@@ -25,7 +26,7 @@ def get_list_all_waf_rule():
 
     list_waf = []
     wafs = RulesWaf.objects.exclude(name__in=["REQUEST-900-EXCLUSION-RULES-BEFORE-CRS", 
-                                              "RESPONSE-999-EXCLUSION-RULES-AFTER-CRS"])
+                                              "RESPONSE-999-EXCLUSION-RULES-AFTER-CRS"]).order_by("id")
     waf_dict = serializers.serialize("json", wafs)
     res = json.loads(waf_dict)
     for rule in res:
@@ -33,11 +34,15 @@ def get_list_all_waf_rule():
         rule['fields']['id'] = rule_id
         rule['fields'].pop("rule_content")
         rule['fields'].pop("rule_status")
+
         if rule['fields']['created']:
             rule['fields'] = convert_waf_rule_database(rule['fields'])
+        
+        # Add list of applications using each rule
         list_app = ApplicationRulesWaf.objects.filter(rule_waf_id=rule_id)
         rule['fields']['application'] = [{'id': app.application_waf.pk,
                                           'name': app.application_waf.name} for app in list_app if app.rule_policy]
+
         list_waf.append(rule['fields'])
     return list_waf
 

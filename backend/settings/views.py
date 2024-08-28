@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 # from backend.managementGroup.remoteFunctions import sudo
 from backend.network.models import Interface
+from backend.waf.models import RulesWaf
 from .models import *
 from .serializers import *
 from django.views.decorators.csrf import csrf_exempt
@@ -469,8 +470,18 @@ def change_language(request, id):
         system = System.objects.get()
         serializer_system = SystemSerializer(system, data=data, partial=True)
         if serializer_system.is_valid():
+            # Change language of rule waf description
+            if data.get("language", "") == "en":
+                for rule in RulesWaf.objects.filter(created=False):
+                    rule.description = rule.description_english
+                    rule.save()
+            else:
+                for rule in RulesWaf.objects.filter(created=False):
+                    rule.description = rule.description_french
+                    rule.save()
+
             serializer_system.save()
             return JsonResponse({"msg":f"{CONSTANT_LANGUAGE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
         return JsonResponse({"error": list(serializer_system.errors.values())[0][0]}, status=400)
-    except (System.DoesNotExist):
+    except System.DoesNotExist:
         return JsonResponse({"error":f"{CONSTANT_SYSTEM_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

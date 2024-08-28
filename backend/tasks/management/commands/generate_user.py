@@ -29,6 +29,6 @@ class Command(BaseCommand):
                 password = f'{pw}'
             user=User.objects.create(username=username, password=make_password(password), role = 'root')
             Profile.objects.create(user=user)
-            return "root added succesffuly"
+            return "user added succesffuly"
         except IntegrityError as e:
             return "Error: " + str(e)

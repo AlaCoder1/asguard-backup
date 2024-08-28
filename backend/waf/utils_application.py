@@ -92,25 +92,23 @@ server {{
     app_config_content = f"""
 Include {app_modsecurity_config}
 Include {PATH_CRS_SETUP}
+Include {app_directory}geoip_log_{app_data['name']}.conf
 """
+    rule_geoip_log = f"""SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
+    with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_log_file:
+        rule_log_file.write(rule_geoip_log)
+    with open(PATH_MAIN_WAF, 'a') as main_file:
+        main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
     
-    # Add a GOIP rule
+    # Add a geoip rule block to the config of the app
     if app_data["country"] != []:
-        # Add the geoip rule of log and block to the config of the app
         app_config_content += f"""
-\nInclude {app_directory}geoip_{app_data['name']}.conf
-Include {app_directory}geoip_log_{app_data['name']}.conf"""
+\nInclude {app_directory}geoip_{app_data['name']}.conf"""
         rule_geoip_block = f"""
 SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries: %{{GEO:COUNTRY_CODE}}',logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'"
 SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
-        rule_geoip_log = f"""
-SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
         with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_block_file:
             rule_block_file.write(rule_geoip_block)
-        with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_log_file:
-            rule_log_file.write(rule_geoip_log)
-        with open(PATH_MAIN_WAF, 'a') as main_file:
-            main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
     
     # Add all rules (selected and GEOIP) to the config of the app
     for rule in list_rule_selected:

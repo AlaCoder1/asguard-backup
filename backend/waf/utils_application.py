@@ -14,7 +14,7 @@ def create_application_waf_in_system(app_data):
     app_config = f"{app_directory}{app_data['name']}.conf"
     execute_command_without_arguments(["sudo", "cp", PATH_WAF_CONFIG, app_modsecurity_config])
 
-    # Add reverse proxy config for the app
+    ########### Add reverse proxy config for the app ###########
     modsecurity = f"""
         modsecurity on;
         modsecurity_rules_file {app_config};"""
@@ -26,7 +26,9 @@ def create_application_waf_in_system(app_data):
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
             proxy_set_header X-Forwarded-Proto $scheme;
         }}"""
-    if app_data["application_protocol"] == "http":  # Config for HTTP
+    
+    # Config for HTTP
+    if app_data["application_protocol"] == "http": 
         config_reverse_proxy = f"""
 server {{
         listen {app_data["application_port"]};
@@ -36,7 +38,8 @@ server {{
         {location}
 
 }}"""
-    else:  # Config for HTTPS
+    # Config for HTTPS
+    else:
         # Add SSL settings for the proxy
         location = location.replace("proxy_set_header X-Forwarded-Proto $scheme;", """
             proxy_set_header X-Forwarded-Proto $scheme;
@@ -67,7 +70,12 @@ server {{
         {location}
 
 }}"""
-        
+    # changes of config when using domain name
+    if app_data['application_type'] != 'ip':
+        config_reverse_proxy = config_reverse_proxy.replace("server_name _;", 
+                                                            f"server_name {app_data['application_value']};")
+        config_reverse_proxy = config_reverse_proxy.replace("server_name _l;", 
+                                                            f"server_name {app_data['application_value']};")
     with open(app_sites_available_config, 'w') as reverse_proxy_file:
         reverse_proxy_file.write(config_reverse_proxy)
     
@@ -84,25 +92,23 @@ server {{
     app_config_content = f"""
 Include {app_modsecurity_config}
 Include {PATH_CRS_SETUP}
+Include {app_directory}geoip_log_{app_data['name']}.conf
 """
+    rule_geoip_log = f"""SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
+    with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_log_file:
+        rule_log_file.write(rule_geoip_log)
+    with open(PATH_MAIN_WAF, 'a') as main_file:
+        main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
     
-    # Add a GOIP rule
+    # Add a geoip rule block to the config of the app
     if app_data["country"] != []:
-        # Add the geoip rule of log and block to the config of the app
         app_config_content += f"""
-\nInclude {app_directory}geoip_{app_data['name']}.conf
-Include {app_directory}geoip_log_{app_data['name']}.conf"""
+\nInclude {app_directory}geoip_{app_data['name']}.conf"""
         rule_geoip_block = f"""
 SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries: %{{GEO:COUNTRY_CODE}}',logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'"
 SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
-        rule_geoip_log = f"""
-SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
         with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_block_file:
             rule_block_file.write(rule_geoip_block)
-        with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_log_file:
-            rule_log_file.write(rule_geoip_log)
-        with open(PATH_MAIN_WAF, 'a') as main_file:
-            main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
     
     # Add all rules (selected and GEOIP) to the config of the app
     for rule in list_rule_selected:

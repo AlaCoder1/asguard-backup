@@ -18,13 +18,13 @@ class Command(BaseCommand):
             {"service":"Squid","path":"/var/log/squid/store.log" ,"time":"daily","size":"10M","number":1,"file":"/etc/logrotate.d/squid_store"},
                 
             ]
-            for service in list_rotation:
-                service=service['service']
-                path = service['path']
-                time = service['time']
-                size = service['size']
-                number = service['number']
-                file_path_log = service['file']
+            for rotation in list_rotation:
+                service=rotation['service']
+                path = rotation['path']
+                time = rotation['time']
+                size = rotation['size']
+                number = rotation['number']
+                file_path_log = rotation['file']
                 folder_path = "/".join(path.split("/")[:-1]) + "/backup_logs"
                 contenu_logrotate = f"""
 {path} {{

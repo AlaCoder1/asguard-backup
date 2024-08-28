@@ -28,6 +28,8 @@ class RulesWaf(models.Model):
     created = models.BooleanField(default=True)
     rule_id = models.IntegerField(default=None, null=True, unique=True)
     description = models.TextField(default=None, null=True, blank=True)
+    description_french = models.TextField(default=None, null=True, blank=True)
+    description_english = models.TextField(default=None, null=True, blank=True)
     variables = models.CharField(max_length=1000, default=None, null=True, blank=True)
     operators = models.CharField(max_length=1000, default=None, null=True, blank=True)
     transformations = models.CharField(max_length=1000, default=None, null=True, blank=True)

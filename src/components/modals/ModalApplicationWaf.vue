@@ -395,7 +395,7 @@ export default {
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = params.value;
-      if (params.data.name === "REQUEST-949-BLOCKING-EVALUATION") {
+      if (params.data.name === "REQUEST-949-BLOCKING-EVALUATION" || params.data.name === "REQUEST-901-INITIALIZATION") {
         params.data.rule_policy = true;
         checkbox.disabled = true;
         checkbox.checked = true;

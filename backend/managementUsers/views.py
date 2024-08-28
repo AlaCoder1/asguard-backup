@@ -23,6 +23,8 @@ from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_STRING
 from django.conf import settings
 from rest_framework import status
 
+from backend.waf.models import RulesWaf
+
 
 # Constants
 CONSTANT_USER = _("User")
@@ -526,6 +528,15 @@ def change_language(request, id):
         profile = Profile.objects.get(user=User.objects.get(id=id))
         serializer_profile = ProfileSerializer(profile, data=data, partial=True)
         if serializer_profile.is_valid():
+            # Change language of rule waf description
+            if data.get("language", "") == "en":
+                for rule in RulesWaf.objects.filter(created=False):
+                    rule.description = rule.description_english
+                    rule.save()
+            else:
+                for rule in RulesWaf.objects.filter(created=False):
+                    rule.description = rule.description_french
+                    rule.save()
             serializer_profile.save()
             return JsonResponse({"msg":f"{CONSTANT_LANGUAGE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
         return JsonResponse({"error": list(serializer_profile.errors.values())[0][0]}, status=400)

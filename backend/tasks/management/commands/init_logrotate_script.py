@@ -15,7 +15,7 @@ LOG_FILE="\$1"
 DEST_DIR="\$2"
 SERVICE="\$3"
 # Truncate or clear log file depending on its path
-if [ "\$LOG_FILE" == "/var/log/modsec_audit.log" ||  "\$LOG_FILE" == "/var/log/openvpn/openvpn.log"]; then
+if [ "\$LOG_FILE" == "/var/log/modsec_audit.log" ] || [ "\$LOG_FILE" == "/var/log/openvpn/openvpn.log" ] || [ "\$LOG_FILE" == "/var/log/suricata/suricata.log" ]; then
     # Clear the log file
     > "\$LOG_FILE"
 else
@@ -28,7 +28,7 @@ mkdir -p "\$DEST_DIR"
 
 # Copy log files to backup directory 
 for file in $LOG_FILE-*.gz; do
-    if [ ! -e "\$file" ]; then
+    if [ -e "\$file" ]; then
                 python /asguard/newdms/manage.py init_logrotate_db -f "\$file" -s "\$SERVICE"
                 mv "\$file" "\$DEST_DIR"
 fi

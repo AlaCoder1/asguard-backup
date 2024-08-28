@@ -1,5 +1,5 @@
 import json
-from backend.managementLogs.models import LogsData
+from backend.managementLogs.models import LogrotateData, LogsData
 from backend.network.models import Interface
 from backend.server_dhcp4.models import ServerDhcp4
 from backend.vlan.models import Vlan
@@ -124,3 +124,33 @@ def get_logs_data(request):
             log['fields']['id'] = log["pk"]
             list_logs.append(log['fields'])
         return  list_logs
+    
+    
+    
+    
+
+    
+    
+    
+    
+
+def get_logrotate_data(request):
+    """
+    API to retrieve all logrotate data .
+
+    Parameters:
+    request (HttpRequest): The incoming request object.
+
+    Returns:
+    JsonResponse: A JSON response containing the logrotate data .
+    
+    """
+    if request.method == 'GET':
+        list_logs = []
+        logs_object = LogrotateData.objects.all()
+        logs = serializers.serialize("json", logs_object)
+        res = json.loads(logs)
+        for log in res:
+            log['fields']['id'] = log["pk"]
+            list_logs.append(log['fields'])
+        return list_logs

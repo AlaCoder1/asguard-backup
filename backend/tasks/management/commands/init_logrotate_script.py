@@ -27,12 +27,15 @@ fi
 mkdir -p "\$DEST_DIR" 
 
 # Copy log files to backup directory 
-for file in $LOG_FILE-*.gz; do
+for file in \$LOG_FILE-*.gz; do
     if [ -e "\$file" ]; then
                 python /asguard/newdms/manage.py init_logrotate_db -f "\$file" -s "\$SERVICE"
                 mv "\$file" "\$DEST_DIR"
 fi
 done
+if [ "\$LOG_FILE" == "/var/log/suricata/fast.log" ]; then
+    python /asguard/newdms/manage.py init_alerts_suricata_cron 
+fi
 """
             script_path = "/usr/local/bin/logrotate-script.sh"       
             aux_script = init_script_bash(script, script_path)

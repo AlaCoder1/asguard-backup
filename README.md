@@ -20,8 +20,6 @@ python manage.py migrate
 
 python manage.py generate_root -u root -p root
 
-python manage.py initBD_subscription
-
 python manage.py init_openVPN -u root -p root
 
 
@@ -56,6 +54,14 @@ python manage.py init_services
 
 python manage.py collectstatic //avec debug=False 
 
+#### subscription
+1/ ## init features
+    python manage.py init_features_for_subscription
+2/ ## init subscription
+    python manage.py init_subscription
+3/ ## add new features
+    python manage.py add_feature_in_subscription -f `feature_name` -p `feature_price`
+    
 #### suricata
 
 //commande to correct config file to generate rules 

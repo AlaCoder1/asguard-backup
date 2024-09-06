@@ -1,12 +1,21 @@
 from backend.waf.constant_variables import CONSTANT_JSON_REQUEST, CONSTANT_JSON_REQUEST_COMMENTED, CONSTANT_XML_REQUEST, CONSTANT_XML_REQUEST_COMMENTED, PATH_WAF_CONFIG
+from utils.commands_utils import execute_command_without_arguments
 
 
-def change_waf_config_file(data_config):
+def create_waf_config(config_path, config_data):
+    """Create a specific WAF config for an application"""
+    # Copy the config of the modsecurity to the application
+    execute_command_without_arguments(["sudo", "cp", PATH_WAF_CONFIG, config_path])
+    # Change the config of the application with data input
+    change_waf_config_file(config_data, config_path)
+
+
+def change_waf_config_file(data_config, path_config=PATH_WAF_CONFIG):
     """Change WAF config file with inputs"""
-    with open(PATH_WAF_CONFIG) as waf_config_file:
+    with open(path_config) as waf_config_file:
         waf_config_content = waf_config_file.read()
     config = change_content_config(waf_config_content, data_config)
-    with open(PATH_WAF_CONFIG, 'w') as waf_config_file:
+    with open(path_config, 'w') as waf_config_file:
         waf_config_file.write(config)
 
 

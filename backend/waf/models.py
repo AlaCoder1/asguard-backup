@@ -51,6 +51,7 @@ class ApplicationWaf(models.Model):
     country = models.CharField(max_length=1000, default=None, null=True, blank=True)
     rule_geoip_id = models.IntegerField(default=None, null=True, unique=True)
     rules = models.ManyToManyField(RulesWaf, through="ApplicationRulesWaf")
+    config = models.OneToOneField(ConfigWaf, on_delete=models.CASCADE, default=None, null=True)
 
     class Meta:
         db_table = 'application_waf'

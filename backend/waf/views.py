@@ -295,20 +295,26 @@ def create_waf_application(request):
         data_serializer = data.copy()
         data_serializer['country'] = ','.join(data_serializer['country'])
 
-        if len(data["country"]) > 0:
-            # Give the GEOIP rule a unique id
-            rule_geoip_id = find_possible_id()
-            data["rule_geoip_id"] = rule_geoip_id
-            data_serializer["rule_geoip_id"] = rule_geoip_id
+        # Give the GEOIP rule a unique id
+        rule_geoip_id = find_possible_id()
+        data["rule_geoip_id"] = rule_geoip_id
+        data_serializer["rule_geoip_id"] = rule_geoip_id
         
-        serializer_application_waf = ApplicationWafSerializer(data=data_serializer)
-        if serializer_application_waf.is_valid():
+        data_config = data_serializer.pop("config")
+        config_serializer = ConfigWafSerializer(data=data_config)
+        if config_serializer.is_valid():
+            config_serializer.save()
+            data_serializer["config"] = ConfigWaf.objects.last().pk
+            serializer_application_waf = ApplicationWafSerializer(data=data_serializer)
+            if serializer_application_waf.is_valid():
 
-            create_application_waf_in_system(data)
+                create_application_waf_in_system(data)
 
-            serializer_application_waf.save()
-            return JsonResponse({"msg": f"{CONSTANT_WAF_APPLICATION} {SUCCESS_MESSAGES_CREATING}"}, status=201)
-        return JsonResponse({"error": list(serializer_application_waf.errors.values())[0][0]}, status=400)
+                serializer_application_waf.save()
+                return JsonResponse({"msg": f"{CONSTANT_WAF_APPLICATION} {SUCCESS_MESSAGES_CREATING}"}, status=201)
+
+            return JsonResponse({"error": list(serializer_application_waf.errors.values())[0][0]}, status=400)
+        return JsonResponse({"error": list(config_serializer.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_WAF_APPLICATION}"}, status=400)
@@ -328,6 +334,7 @@ def delete_waf_application(request, id):
         delete_application_waf_in_system(waf_application)
 
         # delete application from database
+        waf_application.config.delete()
         waf_application.delete()
         return JsonResponse({"msg": f"{CONSTANT_WAF_APPLICATION} {SUCCESS_MESSAGES_DELETING}"}, status=201)
         
@@ -335,6 +342,8 @@ def delete_waf_application(request, id):
         return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_WAF_APPLICATION}"}, status=400)
     except ApplicationWaf.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_WAF_APPLICATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    except ConfigWaf.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_WAF_CONFIG} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @swagger_auto_schema('PUT', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -362,6 +371,7 @@ def update_waf_application(request, id):
     """Updating a WAF Application"""
     try:
         waf_application = ApplicationWaf.objects.get(id=id)
+        config = waf_application.config
         data = request.data
 
         # Create another object that make country as a string to be saved in database
@@ -372,21 +382,26 @@ def update_waf_application(request, id):
         if waf_application.rule_geoip_id:
             data["rule_geoip_id"] = waf_application.rule_geoip_id
             data_serializer["rule_geoip_id"] = waf_application.rule_geoip_id
-        elif len(data["country"]) > 0:
+        else:
             # Give the GEOIP rule a unique id
             rule_geoip_id = find_possible_id()
             data["rule_geoip_id"] = rule_geoip_id
             data_serializer["rule_geoip_id"] = rule_geoip_id
         
-        serializer_application_waf = ApplicationWafSerializer(waf_application, data=data_serializer)
-        if serializer_application_waf.is_valid():
+        data_config = data_serializer.pop("config")
+        config_serializer = ConfigWafSerializer(config, data=data_config)
+        if config_serializer.is_valid():
+            config_serializer.save()
+            serializer_application_waf = ApplicationWafSerializer(waf_application, data=data_serializer)
+            if serializer_application_waf.is_valid():
 
-            update_application_waf_in_system(waf_application, data)
+                update_application_waf_in_system(waf_application, data)
 
-            serializer_application_waf.save()
-            return JsonResponse({"msg": f"{CONSTANT_WAF_APPLICATION} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
+                serializer_application_waf.save()
+                return JsonResponse({"msg": f"{CONSTANT_WAF_APPLICATION} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
 
-        return JsonResponse({"error": list(serializer_application_waf.errors.values())[0][0]}, status=400)
+            return JsonResponse({"error": list(serializer_application_waf.errors.values())[0][0]}, status=400)
+        return JsonResponse({"error": list(config_serializer.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_WAF_APPLICATION}"}, status=400)

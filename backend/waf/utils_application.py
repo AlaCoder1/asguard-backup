@@ -1,20 +1,25 @@
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
 from backend.waf.constant_variables import PATH_CRS_SETUP, PATH_MAIN_WAF, PATH_MODESC, PATH_NGINX_SITES_AVAILABLE, PATH_NGINX_SITES_ENABLED, PATH_RULES_WAF, PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
+from backend.waf.utils_config import create_waf_config
 from utils.commands_utils import execute_command_without_arguments, execute_list_commands_without_arguments
 
 
 def create_application_waf_in_system(app_data):
     """Function to add a WAF Application in system"""
-    # Add a modsecurity config file for the app
+    # Paths of the application
     app_modsecurity_config = f"{PATH_MODESC}{app_data['name']}.conf"
     app_sites_available_config = f"{PATH_NGINX_SITES_AVAILABLE}{app_data['name']}.conf"
     app_sites_enabled_config = f"{PATH_NGINX_SITES_ENABLED}{app_data['name']}.conf"
     app_directory = f"{PATH_MODESC}{app_data['name']}/"
     app_config = f"{app_directory}{app_data['name']}.conf"
+    app_param_config = f"{app_directory}{app_data['name']}_param.conf"
+
+    ########## Configuartion of the application ##########
+    # Add a modsecurity config file for the app
     execute_command_without_arguments(["sudo", "cp", PATH_WAF_CONFIG, app_modsecurity_config])
 
-    ########### Add reverse proxy config for the app ###########
+    # Add reverse proxy config for the app 
     modsecurity = f"""
         modsecurity on;
         modsecurity_rules_file {app_config};"""
@@ -85,7 +90,8 @@ server {{
     
     # Add a directory with application name inside modsec path
     execute_command_without_arguments(["sudo", "mkdir", "-p", app_directory])
-    
+
+    ########## Rules of the application ##########
     # Add selected rules configuration for the application
     # Create a list of only selected rules
     list_rule_selected = [rule for rule in app_data["rules"] if rule["rule_policy"]]
@@ -94,21 +100,25 @@ Include {app_modsecurity_config}
 Include {PATH_CRS_SETUP}
 Include {app_directory}geoip_log_{app_data['name']}.conf
 """
-    rule_geoip_log = f"""SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']+1},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
+    rule_geoip_block_id = app_data['rule_geoip_id']
+    rule_geoip_log_id = app_data['rule_geoip_id']
+    
+    # Add a geoip rule block to the config of the app
+    if app_data["country"] != []:
+        rule_geoip_log_id += 1
+        app_config_content += f"""
+\nInclude {app_directory}geoip_{app_data['name']}.conf"""
+        rule_geoip_block = f"""
+SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{rule_geoip_block_id},chain,deny,status:403,msg:'Access from blocked countries: %{{GEO:COUNTRY_CODE}}',logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'"
+SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
+        with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_block_file:
+            rule_block_file.write(rule_geoip_block)
+    
+    rule_geoip_log = f"""SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{rule_geoip_log_id},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
     with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_log_file:
         rule_log_file.write(rule_geoip_log)
     with open(PATH_MAIN_WAF, 'a') as main_file:
         main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
-    
-    # Add a geoip rule block to the config of the app
-    if app_data["country"] != []:
-        app_config_content += f"""
-\nInclude {app_directory}geoip_{app_data['name']}.conf"""
-        rule_geoip_block = f"""
-SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{app_data['rule_geoip_id']},chain,deny,status:403,msg:'Access from blocked countries: %{{GEO:COUNTRY_CODE}}',logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'"
-SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
-        with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_block_file:
-            rule_block_file.write(rule_geoip_block)
     
     # Add all rules (selected and GEOIP) to the config of the app
     for rule in list_rule_selected:
@@ -122,6 +132,9 @@ SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
             app_config_content += f"\nInclude {PATH_RULES_WAF.format(rule_waf.name)}"
     with open(app_config, 'w') as app_config_file:
         app_config_file.write(app_config_content)
+
+    ########## Config of the application ##########
+    create_waf_config(app_param_config, app_data["config"])
     
     # # Reload nginx
     execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])

@@ -3,7 +3,6 @@ from django.core import serializers
 from django.db.models import Count
 import json
 
-from backend.managementUsers.models import Profile
 from backend.waf.models import AlertWaf, ApplicationRulesWaf, ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.utils import convert_waf_rule_database
 from backend.waf.utils_alerts import synchronize_database_waf_alert
@@ -11,12 +10,16 @@ from backend.waf.utils_alerts import synchronize_database_waf_alert
 
 # Configuration WAF
 def get_one_waf_config():
-    """Getting routing by id from database"""
-    routing = ConfigWaf.objects.all()
-    routing_dict = serializers.serialize("json", routing)
-    res = json.loads(routing_dict)
-    routing_id = res[0]['pk']
-    res[0]['fields']['id'] = routing_id
+    """Getting global WAF Config from database"""
+    # Get global config that not used in any application
+    list_config = ConfigWaf.objects.all().order_by("id")
+    for config in list_config:
+        if len(ApplicationWaf.objects.filter(config=config)) == 0:
+            break
+    config_dict = serializers.serialize("json", ConfigWaf.objects.filter(pk=config.pk))
+    res = json.loads(config_dict)
+    config_id = res[0]['pk']
+    res[0]['fields']['id'] = config_id
     return res[0]['fields']
 
 

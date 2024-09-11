@@ -86,6 +86,9 @@
 /backend/waf/migrations/__pycache__/
 /backend/waf/__pycache__/
 
+/backend/ztna/migrations/__pycache__/
+/backend/ztna/__pycache__/
+
 /backend/managementLogs/migrations/__pycache__/
 /backend/managementLogs/__pycache__/
 

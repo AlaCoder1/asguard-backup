@@ -551,6 +551,24 @@ def waf_page(request):
     context = {'waf_conf': json.dumps(waf_conf),'list_rules': json.dumps(list_rules),'list_waf_app': json.dumps(list_waf_app),'waf_alert': json.dumps(waf_alert)}
     return render(request, 'waf_page.html',context)
 
+
+@login_required(login_url='/')
+def ztna(request):
+    # identities=get_identities(request)
+    # routers=get_routers(request)
+    # configs=get_configs(request)
+    # services=get_services(request)
+    # terminators=get_terminators(request)
+    # router_policies=get_edge_router_policies(request)
+    # service_policies=get_service_policies(request)
+    # service_edge_router_policies=get_service_edge_router_policies(request)
+    # token=get_Zt_Token()
+    # context = {'identities': identities,'routers':routers,'configs':configs,'token':token,'services':services, 'terminators':terminators, 'router_policies':router_policies, 'service_policies':service_policies, 'service_edge_router_policies':service_edge_router_policies}
+    # return render(request,'ztna.html',context)
+    return render(request,'ztna.html')
+
+
+
 @login_required(login_url='/')
 def profile_page(request):
     return render(request, 'profile_page.html')

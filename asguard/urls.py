@@ -86,7 +86,7 @@ urlpatterns = [
     path("waf/",include("backend.waf.urls")),
     path("server_dhcp4/",include("backend.server_dhcp4.urls")),
     path("services/server-dhcp4",server_dhcp4_page),
-    
+    path("ztna/",ztna),
     path("ids-ips/",suricata),
     path("firewall/nat/",nat_page),
     path("success/",success),

@@ -335,6 +335,12 @@ export default {
               href: "/waf",
               active: "WAF",
             },
+            {
+              title: "subtitle.ZTNA",
+              icon: "",
+              href: "/ztna",
+              active: "ZTNA",
+            },
           ],
           subMenuVisible: false,
         },

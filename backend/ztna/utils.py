@@ -1,6 +1,8 @@
-from django.http import JsonResponse
 import requests
 import json
+
+from backend.ztna.constant_variables import PATH_START_ZTNA_BASH, PATH_STOP_ZTNA_BASH
+from utils.commands_utils import execute_command_without_arguments, get_current_directory
 
 
 BASE_URL = "https://localhost:1280/edge/management/v1/"
@@ -31,7 +33,7 @@ def get_Zt_Token():
         return None
 
 
-def get_data(request, endpoint):
+def get_data(endpoint):
     url = BASE_URL + endpoint
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id}
@@ -40,12 +42,18 @@ def get_data(request, endpoint):
         "limit": 100,
     }
 
-    response = requests.get(url, headers=headers, params=params,verify=False)
+    response = requests.get(url, headers=headers, params=params, verify=False)
 
     if response.status_code == 200:
         data = response.json()
-        corrected_data = json.dumps(data)
-        return JsonResponse({"message": corrected_data}, status=201)
-    return JsonResponse({"error": "Error in getting identites data"}, status=400)
-    
+        return data["data"]
+    return []
 
+
+def change_status_ztna_service(service_status="start"):
+    current_dir = get_current_directory()
+    if service_status == "start":
+        path_start_ztna = PATH_START_ZTNA_BASH.format(current_dir)
+    else:
+        path_start_ztna = PATH_STOP_ZTNA_BASH.format(current_dir)
+    execute_command_without_arguments(["sudo", "bash", path_start_ztna])

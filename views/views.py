@@ -556,16 +556,16 @@ def waf_page(request):
 
 
 @login_required(login_url='/')
-def ztna(request):
-    identities=get_identities(request)
-    routers=get_routers(request)
-    configs=get_configs(request)
-    services=get_services(request)
-    terminators=get_terminators(request)
-    router_policies=get_edge_router_policies(request)
-    service_policies=get_service_policies(request)
-    service_edge_router_policies=get_service_edge_router_policies(request)
-    token=get_Zt_Token()
+def ztna_page(request):
+    identities = get_identities()
+    routers = get_routers()
+    configs = get_configs()
+    services = get_services()
+    terminators = get_terminators()
+    router_policies = get_edge_router_policies()
+    service_policies = get_service_policies()
+    service_edge_router_policies = get_service_edge_router_policies()
+    token = get_Zt_Token()
     context = {'identities': identities,
                'routers':routers,
                'configs':configs,

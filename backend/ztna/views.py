@@ -1,13 +1,45 @@
 from backend.ztna.utils import BASE_URL
+from utils.constant_variables import ERROR_MESSAGES_START, ERROR_MESSAGES_STOP
+from utils.errors_utils import CommandExecutionError
 from .constant_variables import PATH_ZTNA_IDENTITIES
 from .list_ztna import get_configs, get_identities, get_routers, get_services, get_terminators
-from .utils import get_Zt_Token  
+from .utils import change_status_ztna_service, get_Zt_Token  
 from django.http import JsonResponse
 import requests
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
+
+
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO START ZTNA SERVICE",)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def start_ztna(request):
+    """API to satrt ZTNA service from a script bash"""
+    try:
+        change_status_ztna_service()
+        return JsonResponse({"message": "ZTNA service is started"}, status=200)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_START} ZTNA"}, status=400)
+
+
+@swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO STOP ZTNA SERVICE",)
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def stop_ztna(request):
+    """API to satrt ZTNA service from a script bash"""
+    try:
+        change_status_ztna_service("stop")
+        return JsonResponse({"message": "ZTNA service is stoped"}, status=200)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STOP} ZTNA"}, status=400)
 
 
 ################################
@@ -33,7 +65,7 @@ def add_identities(request):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(BASE_URL + "identities", headers=headers, json=data)
+    response = requests.post(PATH_ZTNA_IDENTITIES, headers=headers, json=data)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA identities is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA identities"}, status=400)
@@ -44,11 +76,11 @@ def add_identities(request):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_identities(request):
+def delete_identities(request, id):
     session_id = get_Zt_Token()
-    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    headers = {"zt-session": session_id}
     data = request.data
-    response = requests.post(BASE_URL + "identities", headers=headers, json=data)
+    response = requests.delete(PATH_ZTNA_IDENTITIES, headers=headers, json=data)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA identities is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA identities"}, status=400)
@@ -57,11 +89,11 @@ def delete_identities(request):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def update_identities(request):
+def update_identities(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(BASE_URL + "identities", headers=headers, json=data)
+    response = requests.put(PATH_ZTNA_IDENTITIES, headers=headers, json=data)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA identities is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA identities"}, status=400)
@@ -101,11 +133,11 @@ def add_routers(request):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_routers(request):
+def delete_routers(request, id):
     session_id = get_Zt_Token()
-    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    headers = {"zt-session": session_id}
     data = request.data
-    response = requests.post(BASE_URL + "routers", headers=headers, json=data)
+    response = requests.delete(BASE_URL + "routers", headers=headers, json=data)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA routers is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA routers"}, status=400)
@@ -114,11 +146,11 @@ def delete_routers(request):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def update_routers(request):
+def update_routers(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(BASE_URL + "routers", headers=headers, json=data)
+    response = requests.put(BASE_URL + "routers", headers=headers, json=data)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA routers is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA routers"}, status=400)
@@ -158,11 +190,11 @@ def add_configs(request):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_configs(request):
+def delete_configs(request, id):
     session_id = get_Zt_Token()
-    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    headers = {"zt-session": session_id}
     data = request.data
-    response = requests.post(BASE_URL + "configs", headers=headers, json=data)
+    response = requests.delete(BASE_URL + "configs", headers=headers, json=data)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA configs is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA configs"}, status=400)
@@ -171,11 +203,11 @@ def delete_configs(request):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def update_configs(request):
+def update_configs(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(BASE_URL + "configs", headers=headers, json=data)
+    response = requests.put(BASE_URL + "configs", headers=headers, json=data)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA configs is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA configs"}, status=400)
@@ -215,11 +247,11 @@ def add_services(request):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_services(request):
+def delete_services(request, id):
     session_id = get_Zt_Token()
-    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    headers = {"zt-session": session_id}
     data = request.data
-    response = requests.post(BASE_URL + "services", headers=headers, json=data)
+    response = requests.delete(BASE_URL + "services", headers=headers, json=data)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA services is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA services"}, status=400)
@@ -228,11 +260,11 @@ def delete_services(request):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def update_services(request):
+def update_services(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(BASE_URL + "services", headers=headers, json=data)
+    response = requests.put(BASE_URL + "services", headers=headers, json=data)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA services is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA services"}, status=400)
@@ -272,11 +304,11 @@ def add_terminators(request):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_terminators(request):
+def delete_terminators(request, id):
     session_id = get_Zt_Token()
-    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    headers = {"zt-session": session_id}
     data = request.data
-    response = requests.post(BASE_URL + "terminators", headers=headers, json=data)
+    response = requests.delete(BASE_URL + "terminators", headers=headers, json=data)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA terminators is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA terminators"}, status=400)
@@ -285,11 +317,11 @@ def delete_terminators(request):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def update_terminators(request):
+def update_terminators(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(BASE_URL + "terminators", headers=headers, json=data)
+    response = requests.put(BASE_URL + "terminators", headers=headers, json=data)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA terminators is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA terminators"}, status=400)

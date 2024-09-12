@@ -34,6 +34,9 @@ import ruamel.yaml
 from backend.settings.models import *
 from collections import defaultdict
 from backend.waf.list_waf import get_alerts, get_list_all_waf_application, get_list_all_waf_rule, get_one_waf_config
+from backend.ztna.list_ztna import get_configs, get_edge_router_policies, get_identities, get_routers, get_service_policies, get_services, get_terminators
+from backend.ztna.utils import get_Zt_Token
+from backend.ztna.list_ztna import get_service_edge_router_policies
 from views.functions import get_logrotate_data, get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
 
 from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
@@ -554,19 +557,25 @@ def waf_page(request):
 
 @login_required(login_url='/')
 def ztna(request):
-    # identities=get_identities(request)
-    # routers=get_routers(request)
-    # configs=get_configs(request)
-    # services=get_services(request)
-    # terminators=get_terminators(request)
-    # router_policies=get_edge_router_policies(request)
-    # service_policies=get_service_policies(request)
-    # service_edge_router_policies=get_service_edge_router_policies(request)
-    # token=get_Zt_Token()
-    # context = {'identities': identities,'routers':routers,'configs':configs,'token':token,'services':services, 'terminators':terminators, 'router_policies':router_policies, 'service_policies':service_policies, 'service_edge_router_policies':service_edge_router_policies}
-    # return render(request,'ztna.html',context)
-    return render(request,'ztna.html')
-
+    identities=get_identities(request)
+    routers=get_routers(request)
+    configs=get_configs(request)
+    services=get_services(request)
+    terminators=get_terminators(request)
+    router_policies=get_edge_router_policies(request)
+    service_policies=get_service_policies(request)
+    service_edge_router_policies=get_service_edge_router_policies(request)
+    token=get_Zt_Token()
+    context = {'identities': identities,
+               'routers':routers,
+               'configs':configs,
+               'token':token,
+               'services':services, 
+               'terminators':terminators, 
+               'router_policies':router_policies, 
+               'service_policies':service_policies, 
+               'service_edge_router_policies':service_edge_router_policies}
+    return render(request,'ztna.html',context)
 
 
 @login_required(login_url='/')

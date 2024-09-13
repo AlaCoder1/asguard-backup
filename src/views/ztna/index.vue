@@ -1,6 +1,6 @@
 <template>
   <v-app id="inspire">
-    <base-layout title="ZTNA" active-menu="activeTab">
+    <base-layout title="ZTNA" active-menu="activeTab" ztnaTab="ztna">
       <template #content>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">

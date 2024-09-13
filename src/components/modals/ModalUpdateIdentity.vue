@@ -134,6 +134,11 @@ export default {
       type: [String, Number],
       required: true,
     },
+    editRow: {
+      type: Object,
+      Array,
+      required: true,
+    },
   },
 
   setup(props) {
@@ -154,12 +159,19 @@ export default {
 
     const emitter = inject("emitter");
 
-    const { isOpen, selectedId } = toRefs(props);
+    const { isOpen, selectedId, editRow } = toRefs(props);
 
     const state = reactive({
       openModal: false,
       itemId: null,
     });
+
+    watch(
+      () => editRow.value,
+      (val) => {
+        populate(val);
+      }
+    );
 
     watch(
       () => isOpen.value,
@@ -175,6 +187,17 @@ export default {
         state.itemId = val;
       }
     );
+
+    const populate = (data) => {
+      console.log("dataIdentityUpdate", data);
+      if (data) {
+        identityId.value = data.id;
+        IdentityName.value = data.name;
+        Description.value = data.description;
+        IdentityAttribute.value = data.roleAttributes;
+        selectedTitle.value = data.type;
+      }
+    };
 
     const updateIdentities = async () => {
       try {

@@ -28,11 +28,16 @@
       {{ $t("ztna.addServicesPolicy") }}
     </v-btn>
   </div>
-  <modal-service-policy :isOpen="state.isModalOpen" />
-  <ModalUpdateServiceP
+  <modal-service-policy
+    :isOpen="state.isModalOpen"
+    :selectedId="state.selectedId"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+  />
+  <!-- <ModalUpdateServiceP
     :isOpen="state.isModalUpdateOpen"
     :selectedId="state.selectedId"
-  />
+  /> -->
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
       <v-card-title class="headline">{{
@@ -93,6 +98,10 @@ export default {
       deleteDialog: false,
       selectedId: null,
       isOpen: null,
+      snackbar: false,
+      color: null,
+      textAlert: "",
+      editRow: {},
     });
 
     const rowDataService = reactive([]);
@@ -144,7 +153,7 @@ export default {
       {
         headerName: serviceRole,
         field: "serviceRoles",
-        cellRenderer: formatedserviceRoles,
+        // cellRenderer: formatedserviceRoles,
         autoHeight: true,
         resizable: true,
 
@@ -155,7 +164,7 @@ export default {
       {
         headerName: identityRole,
         field: "identityRoles",
-        cellRenderer: formatedidentityRoles,
+        // cellRenderer: formatedidentityRoles,
         autoHeight: true,
         resizable: true,
 
@@ -176,7 +185,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        cellRenderer: formatedcreatedAt,
+        // cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
 
@@ -252,8 +261,13 @@ export default {
     const handleActionClient = (action, rowData) => {
       switch (action) {
         case "edit":
-          openModalUpdate(rowData.id);
-          console.log("edit", rowData);
+          // openModalUpdate(rowData.id);
+          // console.log("edit", rowData);
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+          state.editRow = rowData;
+          state.selectedId = rowData.id;
+
           break;
         case "delete":
           OpenDelete(rowData.id);
@@ -266,12 +280,12 @@ export default {
       state.selectedId = itemId;
       state.deleteDialog = true;
     }
-    const openModalUpdate = (id) => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalUpdateOpen = true;
-      state.selectedId = id;
-    };
+    // const openModalUpdate = (id) => {
+    //   state.modalData = {};
+    //   state.modalMode = "create";
+    //   state.isModalUpdateOpen = true;
+    //   state.selectedId = id;
+    // };
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
@@ -305,9 +319,20 @@ export default {
       let service_policiesObject = JSON.parse(service_policiesString);
       // rowDataService.value = service_policiesObject.data;
 
-      rowDataService.value = service_policiesObject?.data
-        ? service_policiesObject.data
-        : [];
+
+      let test = [
+        {
+          name: "name",
+          serviceRoles: "serviceRoles",
+          identityRoles: "identityRoles",
+          createdAt: "createdAt",
+          semantic: "semantic",
+        },
+      ];
+      rowDataService.value = test
+      // rowDataService.value = service_policiesObject?.data
+      //   ? service_policiesObject.data
+      //   : [];
 
       if (gridService.value) {
         gridService.value.setRowData(rowDataService.value);
@@ -317,6 +342,9 @@ export default {
 
       emitter.on("closeServicesModal", () => {
         state.isModalOpen = false;
+        state.isOpen = false;
+        state.modalMode = "";
+        state.editRow = {};
       });
       emitter.on("closeUpdateModal", () => {
         state.isModalUpdateOpen = false;
@@ -336,7 +364,7 @@ export default {
       openModalAdd,
       gridOptions,
       ServiceGRID,
-      openModalUpdate,
+      // openModalUpdate,
       overlayTemplate,
       confirmDelete,
       cancelDelete,

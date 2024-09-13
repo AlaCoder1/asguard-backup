@@ -4,7 +4,12 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5">{{ $t("ztna.addServicesPolicy") }}</span>
+            <span class="headline" v-if="modalMode === 'create'">
+              {{ $t("ztna.addServicesPolicy") }}</span
+            >
+            <span class="headline" v-if="modalMode === 'edit'">
+              {{ $t("ztna.updateServicePolicy") }}</span
+            >
           </v-card-title>
 
           <v-card-text>
@@ -131,7 +136,12 @@
               class="mt-3 ml-2 btn-add"
               type="submit"
             >
-              {{ $t("buttons.create") }}
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+                {{ $t("buttons.create") }}</span
+              >
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -147,6 +157,14 @@ export default {
   props: {
     isOpen: {
       type: Boolean,
+      required: true,
+    },
+    modalMode: {
+      required: true,
+    },
+    editRow: {
+      type: Object,
+      Array,
       required: true,
     },
   },
@@ -171,7 +189,7 @@ export default {
     ];
     const emitter = inject("emitter");
 
-    const { isOpen } = toRefs(props);
+    const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
       openModal: false,
@@ -183,6 +201,30 @@ export default {
         state.openModal = val;
       }
     );
+    watch(
+      () => editRow.value,
+      (val) => {
+        populate(val);
+      }
+    );
+    watch(
+      () => modalMode.value,
+      () => {
+        if (modalMode.value === "create") {
+          // ConfigName.value = "";
+          // adress.value = "";
+          // portLow.value = "";
+          // portHigh.value = "";
+          // Description.value = "";
+          // selectedTitle.value = "tcp";
+        }
+      }
+    );
+    const populate = (data) => {
+      if (modalMode.value === "edit") {
+        console.log("dataHost", data);
+      }
+    };
 
     const submitForm = async () => {
       try {

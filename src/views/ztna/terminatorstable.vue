@@ -31,11 +31,16 @@
         {{ $t("ztna.addTerminator") }}
       </v-btn>
     </div>
-    <ModalTerminators :isOpen="state.isModalOpen" />
-    <ModalUpdateTerminators
+    <ModalTerminators
+      :isOpen="state.isModalOpen"
+      :selectedId="state.selectedId"
+      :editRow="state.editRow"
+      :modalMode="state.modalMode"
+    />
+    <!-- <ModalUpdateTerminators
       :isOpen="state.isModalUpdateOpen"
       :selectedId="state.selectedId"
-    />
+    /> -->
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="headline">{{
@@ -98,6 +103,10 @@ export default {
       isOpen: null,
       deleteDialog: false,
       selectedId: null,
+      snackbar: false,
+      color: null,
+      textAlert: "",
+      editRow: {},
     });
 
     const overlayTemplate = ref(`
@@ -136,7 +145,7 @@ export default {
     const columnTerminator = ref([
       {
         headerName: address,
-        field: "address",
+        field: "address",  
         autoHeight: true,
         resizable: true,
 
@@ -147,7 +156,7 @@ export default {
       {
         headerName: services,
         field: "service",
-        cellRenderer: formatedservice,
+        // cellRenderer: formatedservice,
         autoHeight: true,
         resizable: true,
 
@@ -158,7 +167,7 @@ export default {
       {
         headerName: relays,
         field: "router",
-        cellRenderer: formatedrouter,
+        // cellRenderer: formatedrouter,
         autoHeight: true,
         resizable: true,
 
@@ -179,7 +188,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        cellRenderer: formatedcreatedAt,
+        // cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
 
@@ -256,8 +265,12 @@ export default {
     const handleActionClient = (action, rowData) => {
       switch (action) {
         case "edit":
-          openModalUpdate(rowData.id);
-          console.log("edit", rowData);
+          // openModalUpdate(rowData.id);
+          // console.log("edit", rowData);
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+          state.editRow = rowData;
+          state.selectedId = rowData.id;
           break;
         case "delete":
           OpenDelete(rowData.id);
@@ -270,12 +283,12 @@ export default {
       state.selectedId = itemId;
       state.deleteDialog = true;
     }
-    const openModalUpdate = (id) => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalUpdateOpen = true;
-      state.selectedId = id;
-    };
+    // const openModalUpdate = (id) => {
+    //   state.modalData = {};
+    //   state.modalMode = "create";
+    //   state.isModalUpdateOpen = true;
+    //   state.selectedId = id;
+    // };
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
@@ -314,8 +327,17 @@ export default {
       }
       // terminators.value = terminatorsObject.data;
 
-      terminators.value = terminatorsObject?.data ? terminatorsObject.data : [];
-
+      let test = [
+        {
+          address: "address",
+          service: "service",
+          router: "router",
+          createdAt: "createdAt",
+          binding: "binding",
+        },
+      ];
+      terminators.value = test
+      // terminators.value = terminatorsObject?.data ? terminatorsObject.data : [];
 
       if (gridApi.value) {
         gridApi.value.setRowData(terminators.value);
@@ -327,6 +349,9 @@ export default {
       fetchterminators();
       emitter.on("closeTerminatorsModal", () => {
         state.isModalOpen = false;
+        state.isOpen = false;
+        state.modalMode = "";
+        state.editRow = {};
       });
       emitter.on("closeUpdateModal", () => {
         state.isModalUpdateOpen = false;
@@ -347,7 +372,7 @@ export default {
       openModalAdd,
       fetchterminators,
       gridOptions,
-      openModalUpdate,
+      // openModalUpdate,
       rowDataDnat,
       overlayTemplate,
       paginationLocalization,

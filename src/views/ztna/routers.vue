@@ -31,11 +31,16 @@
         {{ $t("ztna.addRelay") }}
       </v-btn>
     </div>
-    <ModalAddRouter :isOpen="state.isModalOpen" />
-    <ModalUpdateRouter
+    <ModalAddRouter
+      :isOpen="state.isModalOpen"
+      :selectedId="state.selectedId"
+      :editRow="state.editRow"
+      :modalMode="state.modalMode"
+    />
+    <!-- <ModalUpdateRouter
       :isOpen="state.isModalUpdateOpen"
       :selectedId="state.selectedId"
-    />
+    /> -->
 
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
@@ -129,7 +134,6 @@ export default {
         headerName: name,
         field: "name",
         sortable: true,
-
         width: 90,
         minWidth: 150,
         flex: 1,
@@ -164,7 +168,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        cellRenderer: formatedcreatedAt,
+        // cellRenderer: formatedcreatedAt,
 
         width: 90,
         minWidth: 150,
@@ -190,6 +194,7 @@ export default {
       snackbar: false,
       color: null,
       textAlert: "",
+      editRow: {},
     });
 
     function tokenCellRendrer(params) {
@@ -289,7 +294,13 @@ export default {
     const handleActionClient = (action, rowData, index) => {
       switch (action) {
         case "edit":
-          openModalUpdate(rowData.id);
+          // openModalUpdate(rowData.id);
+
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+          state.editRow = rowData;
+          state.selectedId = rowData.id;
+
           break;
         case "copy":
           let text = rowData.enrollmentJwt;
@@ -317,12 +328,12 @@ export default {
       }
     };
 
-    const openModalUpdate = (id) => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalUpdateOpen = true;
-      state.selectedId = id;
-    };
+    // const openModalUpdate = (id) => {
+    //   state.modalData = {};
+    //   state.modalMode = "create";
+    //   state.isModalUpdateOpen = true;
+    //   state.selectedId = id;
+    // };
     const fetchRouters = () => {
       let routersString = document
         .getElementById("app")
@@ -336,8 +347,17 @@ export default {
         routersObject = { data: [] };
       }
       // routers.value = routersObject.data;
-
-      routers.value = routersObject?.data ? routersObject.data : [];
+      let test = [
+        {
+          name: "name",
+          isVerified: "isVerified",
+          isOnline: "isOnline",
+          enrollmentJwt: "enrollmentJwt",
+          createdAt: "createdAt",
+        },
+      ];
+      routers.value = test;
+      // routers.value = routersObject?.data ? routersObject.data : [];
 
       console.log(routers.value);
     };
@@ -349,6 +369,9 @@ export default {
     onMounted(() => {
       emitter.on("closeRouterModal", () => {
         state.isModalOpen = false;
+        state.isOpen = false;
+        state.modalMode = "";
+        state.editRow = {};
       });
       emitter.on("closeUpdateModal", () => {
         state.isModalUpdateOpen = false;

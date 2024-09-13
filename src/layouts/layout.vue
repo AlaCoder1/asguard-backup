@@ -27,7 +27,21 @@
     <v-main class="ml-20">
       <v-toolbar dark fixed app class="asguard_toolbar">
         <v-toolbar-title>
-          {{ title }}
+          <div class="d-flex">
+            <label>{{ title }}</label>
+            <div v-if="ztnaTab">
+              <i
+                class="mdi mdi-play-circle mr-1 ml-1"
+                style="color: #4caf50; font-size: 20px; cursor: pointer"
+                @click="startStopServer('start')"
+              ></i>
+              <i
+                class="mdi mdi-stop-circle"
+                style="color: #b00020; font-size: 20px; cursor: pointer"
+                @click="startStopServer('stop')"
+              ></i>
+            </div>
+          </div>
         </v-toolbar-title>
         <v-spacer />
         <div v-if="back">
@@ -72,6 +86,9 @@ export default {
       type: String,
       default: "Back",
     },
+    ztnaTab: {
+      type: String,
+    },
   },
 };
 </script>
@@ -83,7 +100,6 @@ export default {
   right: 0;
   
 } */
-
 
 .asguard_toolbar {
   background-color: #f8f8f8;
@@ -97,7 +113,6 @@ export default {
   right: 0;
   display: flex;
 }
-
 
 .ag-paging-row-summary-panel {
   display: none;

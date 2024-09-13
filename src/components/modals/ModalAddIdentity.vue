@@ -4,7 +4,12 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> {{ $t("ztna.createNewIdentity") }}</span>
+            <span class="headline" v-if="modalMode === 'create'">
+              {{ $t("ztna.createNewIdentity") }}</span
+            >
+            <span class="headline" v-if="modalMode === 'edit'">
+              {{ $t("ztna.updateIdentity") }}</span
+            >
           </v-card-title>
 
           <v-card-text>
@@ -90,9 +95,7 @@
               class="mt-3 btn-add"
               text
               @click="cancel"
-              >{{
-                $t("buttons.close")
-              }}</v-btn
+              >{{ $t("buttons.close") }}</v-btn
             >
             <!-- <v-btn
                   color="red"
@@ -119,7 +122,12 @@
               class="mt-3 ml-2 btn-add"
               type="submit"
             >
-               {{ $t("buttons.create") }}
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+                {{ $t("buttons.create") }}</span
+              >
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -139,10 +147,19 @@ export default {
       type: Boolean,
       required: true,
     },
+    modalMode: {
+      required: true,
+    },
+    editRow: {
+      type: Object,
+      Array,
+      required: true,
+    },
   },
 
   setup(props) {
     const IdentityName = ref("");
+    const identityId = ref(null);
     const IdentityAttribute = ref("");
     const Description = ref("");
     const isAdmin = ref(false);
@@ -158,7 +175,7 @@ export default {
 
     const emitter = inject("emitter");
 
-    const { isOpen } = toRefs(props);
+    const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
       openModal: false,
@@ -170,6 +187,35 @@ export default {
         state.openModal = val;
       }
     );
+
+    watch(
+      () => editRow.value,
+      (val) => {
+        populate(val);
+      }
+    );
+    watch(
+      () => modalMode.value,
+      () => {
+        if (modalMode.value === "create") {
+          IdentityName.value = "";
+          identityId.value = null;
+          IdentityAttribute.value = "";
+          Description.value = "";
+          isAdmin.value = false;
+          selectedTitle.value = "User";
+        }
+      }
+    );
+    const populate = (data) => {
+      if (modalMode.value === "edit") {
+        identityId.value = data.id;
+        IdentityName.value = data.name;
+        Description.value = data.description;
+        IdentityAttribute.value = data.roleAttributes;
+        selectedTitle.value = data.type;
+      }
+    };
 
     const submitForm = async () => {
       try {
@@ -221,7 +267,6 @@ export default {
 
     const cancel = () => {
       onReset();
-      console.log("test");
       emitter.emit("closeidentityModal");
     };
 

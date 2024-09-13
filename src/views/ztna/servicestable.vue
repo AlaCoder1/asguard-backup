@@ -31,11 +31,16 @@
         {{ $t("ztna.addServices") }}
       </v-btn>
     </div>
-    <ModalServices :isOpen="state.isModalOpen" />
-    <ModalUpdateServices
+    <ModalServices
+      :isOpen="state.isModalOpen"
+      :selectedId="state.selectedId"
+      :editRow="state.editRow"
+      :modalMode="state.modalMode"
+    />
+    <!-- <ModalUpdateServices
       :isOpen="state.isModalUpdateOpen"
       :selectedId="state.selectedId"
-    />
+    /> -->
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="headline">{{
@@ -97,6 +102,10 @@ export default {
       deleteDialog: false,
       selectedId: null,
       isOpen: null,
+      snackbar: false,
+      color: null,
+      textAlert: "",
+      editRow: {},
     });
 
     const overlayTemplate = ref(`
@@ -163,7 +172,7 @@ export default {
       {
         headerName: encryptionRequired,
         field: "encryptionRequired",
-        cellRenderer: formatedEncryption,
+        // cellRenderer: formatedEncryption,
         autoHeight: true,
         resizable: true,
 
@@ -174,7 +183,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        cellRenderer: formatedcreatedAt,
+        // cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
 
@@ -254,8 +263,14 @@ export default {
     const handleActionClient = (action, rowData) => {
       switch (action) {
         case "edit":
-          openModalUpdate(rowData.id);
-          console.log("edit", rowData);
+          // openModalUpdate(rowData.id);
+          // console.log("edit", rowData);
+
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+          state.editRow = rowData;
+          state.selectedId = rowData.id;
+
           break;
         case "delete":
           OpenDelete(rowData.id);
@@ -268,12 +283,12 @@ export default {
       state.selectedId = itemId;
       state.deleteDialog = true;
     }
-    const openModalUpdate = (id) => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalUpdateOpen = true;
-      state.selectedId = id;
-    };
+    // const openModalUpdate = (id) => {
+    //   state.modalData = {};
+    //   state.modalMode = "create";
+    //   state.isModalUpdateOpen = true;
+    //   state.selectedId = id;
+    // };
 
     const confirmDelete = async (itemId) => {
       try {
@@ -310,8 +325,16 @@ export default {
         servicesObject = { data: [] };
       }
       // services.value = servicesObject.data;
-
-      services.value = servicesObject?.data ? servicesObject.data : [];
+      let test = [
+        {
+          name: "name",
+          terminatorStrategy: "terminatorStrategy",
+          encryptionRequired: "encryptionRequired",
+          createdAt: "createdAt",
+        },
+      ];
+      services.value = test;
+      // services.value = servicesObject?.data ? servicesObject.data : [];
 
       if (gridApi.value) {
         gridApi.value.setRowData(services.value);
@@ -354,7 +377,7 @@ export default {
       openModalAdd,
       services,
       gridOptions,
-      openModalUpdate,
+      // openModalUpdate,
       rowDataDnat,
       columnServices,
       overlayTemplate,

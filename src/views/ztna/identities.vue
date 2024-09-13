@@ -25,15 +25,21 @@
     </div>
   </div>
   <br />
-  <ModalAddIdentity :isOpen="state.isModalOpen" />
+  <ModalAddIdentity
+    :isOpen="state.isModalOpen"
+    :selectedId="state.selectedId"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+  />
   <ModalAddEnrollment
     :isOpen="state.isModalEnrollmentOpen"
     :selectedId="state.selectedId"
   />
-  <ModalUpdateIdentity
+  <!-- <ModalUpdateIdentity
     :isOpen="state.isModalUpdateOpen"
     :selectedId="state.selectedId"
-  />
+    :editRow="state.editRow"
+  /> -->
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
       <v-card-title class="headline">{{
@@ -70,9 +76,6 @@
       @click="openModalAdd"
     >
       {{ $t("ztna.addIdentity") }}
-      <!-- <template v-slot:append>
-        <v-icon color="success"></v-icon>
-      </template> -->
     </v-btn>
   </div>
 </template>
@@ -115,6 +118,7 @@ export default {
       snackbar: false,
       color: null,
       textAlert: "",
+      editRow: {},
     });
     const overlayTemplate = ref(
       `
@@ -198,7 +202,7 @@ export default {
       {
         headerName: enrolled,
         field: "enrollment.ott.jwt",
-        cellRenderer: enrollmentCellRendrer,
+        // cellRenderer: enrollmentCellRendrer,
         width: 90,
         minWidth: 150,
         flex: 1,
@@ -206,7 +210,7 @@ export default {
       {
         headerName: "Token",
         field: "enrollment.ott.jwt",
-        cellRenderer: tokenCellRendrer,
+        // cellRenderer: tokenCellRendrer,
         width: 90,
         minWidth: 150,
         flex: 1,
@@ -214,7 +218,7 @@ export default {
       {
         headerName: expirationDate,
         field: "enrollment.ott.expiresAt",
-        cellRenderer: formatedexpiresAt,
+        // cellRenderer: formatedexpiresAt,
         width: 90,
         minWidth: 150,
         flex: 1,
@@ -222,7 +226,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        cellRenderer: formatedcreatedAt,
+        // cellRenderer: formatedcreatedAt,
         width: 90,
         minWidth: 150,
         flex: 1,
@@ -334,7 +338,12 @@ export default {
     const handleActionClient = (action, rowData, index) => {
       switch (action) {
         case "edit":
-          openModalUpdate(rowData.id);
+          // openModalUpdate(rowData);
+
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+          state.editRow = rowData;
+          state.selectedId = rowData.id;
 
           break;
         case "copy":
@@ -378,7 +387,26 @@ export default {
       } catch (error) {
         console.error("Failed to parse Identities string:", error);
       }
-      Identities.value = IdentitiesObject?.data ? IdentitiesObject.data : [];
+      let test = [
+        {
+          id: 1,
+          name: "name",
+          description: "description",
+          type: "Device",
+          roleAttributes: "roleAttributes",
+          envInfo: { hostname: "hostname" },
+          enrollment: {
+            ott: {
+              jwt: "jwt",
+              expiresAt: "expiresAt",
+            },
+          },
+          createdAt: "createdAt",
+        },
+      ];
+
+      // Identities.value = IdentitiesObject?.data ? IdentitiesObject.data : [];
+      Identities.value = test;
       console.log(Identities.value);
     };
     async function OpenDelete(itemId) {
@@ -388,6 +416,9 @@ export default {
     onMounted(() => {
       emitter.on("closeidentityModal", () => {
         state.isModalOpen = false;
+        state.isOpen = false;
+        state.modalMode = "";
+        state.editRow = {};
       });
       emitter.on("closeEnrollmentModal", () => {
         state.isModalEnrollmentOpen = false;
@@ -424,12 +455,12 @@ export default {
       state.selectedId = id;
     };
 
-    const openModalUpdate = (id) => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalUpdateOpen = true;
-      state.selectedId = id;
-    };
+    // const openModalUpdate = (row) => {
+    //   state.modalMode = "edit";
+    //   state.isModalUpdateOpen = true;
+    //   state.editRow = row;
+    //   state.selectedId = row.id;
+    // };
 
     const cancelDelete = () => {
       state.deleteDialog = false;
@@ -491,7 +522,6 @@ export default {
     };
 
     const onGridReady = (params) => {
-      // params.api.sizeColumnsToFit();
       gridApi.value = params.api;
       gridColumnApi.value = params.columnApi;
       if (gridApi.value) {
@@ -509,7 +539,7 @@ export default {
       fetchIdentities,
       OpenDelete,
       openModalEnrollement,
-      openModalUpdate,
+      // openModalUpdate,
       formatDateTime,
       cancelDelete,
       confirmDelete,

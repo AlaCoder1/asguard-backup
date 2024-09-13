@@ -570,7 +570,7 @@
     "identityName": "Identity Name",
     "identityAttribute": "Identity Attribute",
     "isAdmin": "Is Admin",
-    "updateIdentity": "update Identity",
+    "updateIdentity": "Update Identity",
     "listofConfigs": "List of Configs",
     "configType": "Config Type",
     "addInterceptConfig": "Add intercept config",

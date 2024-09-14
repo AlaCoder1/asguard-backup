@@ -73,6 +73,7 @@
 </template>
 
 <script>
+import { getCookie } from "@/mixins/csrftoken.js";
 import ModalServices from "@/components/modals/ModalServices.vue";
 import ModalUpdateServices from "@/components/modals/ModalUpdateServices.vue";
 import { useI18n } from "vue-i18n";
@@ -172,7 +173,7 @@ export default {
       {
         headerName: encryptionRequired,
         field: "encryptionRequired",
-        // cellRenderer: formatedEncryption,
+        cellRenderer: formatedEncryption,
         autoHeight: true,
         resizable: true,
 
@@ -183,7 +184,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        // cellRenderer: formatedcreatedAt,
+        cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
 
@@ -263,6 +264,7 @@ export default {
     const handleActionClient = (action, rowData) => {
       switch (action) {
         case "edit":
+          console.log('edit',rowData)
           // openModalUpdate(rowData.id);
           // console.log("edit", rowData);
 
@@ -291,26 +293,49 @@ export default {
     // };
 
     const confirmDelete = async (itemId) => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
 
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = `/edge/management/v1/services/${itemId}`;
-        await axios.delete(proxyUrl + apiUrl, {
-          headers: { "zt-session": token, "Content-Type": "application/json" },
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      let token = document.getElementById("app").getAttribute("token");
+
+      axios
+        .delete(`/ztna/delete_config/${itemId}`, {
+          headers: {
+            "zt-session": token,
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          // state.snackbar = true;
+          // state.color = "red";
+          // state.textAlert = i.response.data.error;
         });
-        state.snackbar = true;
-        state.color = "success";
-        state.textAlert = "Service deleted successfully";
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-      } catch (error) {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "Delete failure";
-        console.error("Failed to delete item:", error);
-      }
+      // try {
+      //   let token = document.getElementById("app").getAttribute("token");
+
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = `/edge/management/v1/services/${itemId}`;
+      //   await axios.delete(proxyUrl + apiUrl, {
+      //     headers: { "zt-session": token, "Content-Type": "application/json" },
+      //   });
+      //   state.snackbar = true;
+      //   state.color = "success";
+      //   state.textAlert = "Service deleted successfully";
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      // } catch (error) {
+      //   state.snackbar = true;
+      //   state.color = "red";
+      //   state.textAlert = "Delete failure";
+      //   console.error("Failed to delete item:", error);
+      // }
     };
 
     const fetchServices = () => {

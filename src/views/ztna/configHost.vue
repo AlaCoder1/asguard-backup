@@ -74,6 +74,7 @@
 </template>
 
 <script>
+import { getCookie } from "@/mixins/csrftoken.js";
 import { useI18n } from "vue-i18n";
 import { ref, onMounted, reactive, inject, computed } from "vue";
 import BaseLayout from "@/layouts/layout.vue";
@@ -215,34 +216,58 @@ export default {
     }
 
     const confirmDelete = async (deletedItemId) => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
 
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = `/edge/management/v1/configs/${deletedItemId}`;
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      let token = document.getElementById("app").getAttribute("token");
 
-        const response = await axios.delete(proxyUrl + apiUrl, {
+      axios
+        .delete(`/ztna/delete_config/${deletedItemId}`, {
           headers: {
             "zt-session": token,
             "Content-Type": "application/json",
           },
+        })
+        .then((response) => {
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          // state.snackbar = true;
+          // state.color = "red";
+          // state.textAlert = i.response.data.error;
         });
-        state.snackbar = true;
-        state.color = "success";
-        state.textAlert = "Config deleted successfully";
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        state.deleteDialog = false;
-      } catch (error) {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "Delete failure";
-        console.error(
-          "Failed to delete item:",
-          error.response ? error.response.data : error.message
-        );
-      }
+
+      // try {
+      //   let token = document.getElementById("app").getAttribute("token");
+
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = `/edge/management/v1/configs/${deletedItemId}`;
+
+      //   const response = await axios.delete(proxyUrl + apiUrl, {
+      //     headers: {
+      //       "zt-session": token,
+      //       "Content-Type": "application/json",
+      //     },
+      //   });
+      //   state.snackbar = true;
+      //   state.color = "success";
+      //   state.textAlert = "Config deleted successfully";
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      //   state.deleteDialog = false;
+      // } catch (error) {
+      //   state.snackbar = true;
+      //   state.color = "red";
+      //   state.textAlert = "Delete failure";
+      //   console.error(
+      //     "Failed to delete item:",
+      //     error.response ? error.response.data : error.message
+      //   );
+      // }
     };
 
     const cancelDelete = () => {

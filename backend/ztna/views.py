@@ -1,6 +1,6 @@
-from utils.constant_variables import ERROR_MESSAGES_START, ERROR_MESSAGES_STOP
+from utils.constant_variables import ERROR_MESSAGES_START, ERROR_MESSAGES_STOP, SUCCESS_MESSAGES_START, SUCCESS_MESSAGES_STOP
 from utils.errors_utils import CommandExecutionError
-from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_TERMINATORS
+from .constant_variables import CONSTANT_ZTNA, PATH_ZTNA_CONFIGS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_TERMINATORS
 from .list_ztna import get_configs, get_identities, get_routers, get_services, get_terminators
 from .utils import change_status_ztna_service, get_Zt_Token  
 from django.http import JsonResponse
@@ -20,10 +20,10 @@ def start_ztna(request):
     """API to satrt ZTNA service from a script bash"""
     try:
         change_status_ztna_service()
-        return JsonResponse({"message": "ZTNA service is started"}, status=200)
+        return JsonResponse({"message": SUCCESS_MESSAGES_START.format(CONSTANT_ZTNA, "")}, status=200)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_START} ZTNA"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_START.format(CONSTANT_ZTNA, "")}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -35,10 +35,10 @@ def stop_ztna(request):
     """API to satrt ZTNA service from a script bash"""
     try:
         change_status_ztna_service("stop")
-        return JsonResponse({"message": "ZTNA service is stoped"}, status=200)
+        return JsonResponse({"message": SUCCESS_MESSAGES_STOP.format(CONSTANT_ZTNA, "")}, status=200)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STOP} ZTNA"}, status=400)
+        return JsonResponse({"error": ERROR_MESSAGES_STOP.format(CONSTANT_ZTNA, "")}, status=400)
 
 
 ################################
@@ -81,7 +81,7 @@ def delete_identities(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_IDENTITIES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA identities is delted"}, status=200)
+        return JsonResponse({"message": "ZTNA identities is deleted"}, status=200)
     return JsonResponse({"error": "Error in deleting ZTNA identities"}, status=400)
 
 
@@ -94,8 +94,8 @@ def update_identities(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_IDENTITIES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA identities is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA identities"}, status=400)
+        return JsonResponse({"message": "ZTNA identities is updated"}, status=200)
+    return JsonResponse({"error": "Error in updating ZTNA identities"}, status=400)
 
 
 ################################
@@ -122,6 +122,7 @@ def add_routers(request):
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     response = requests.post(PATH_ZTNA_ROUTERS, headers=headers, json=data, verify=False)
+    print(response.text)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA routers is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA routers"}, status=400)
@@ -138,8 +139,8 @@ def delete_routers(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_ROUTERS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA routers is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA routers"}, status=400)
+        return JsonResponse({"message": "ZTNA routers is deleted"}, status=200)
+    return JsonResponse({"error": "Error in deleting ZTNA routers"}, status=400)
 
 
 @api_view(['PUT'])
@@ -151,8 +152,8 @@ def update_routers(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_ROUTERS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA routers is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA routers"}, status=400)
+        return JsonResponse({"message": "ZTNA routers is updated"}, status=200)
+    return JsonResponse({"error": "Error in updating ZTNA routers"}, status=400)
 
 
 ################################
@@ -195,8 +196,8 @@ def delete_configs(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_CONFIGS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA configs is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA configs"}, status=400)
+        return JsonResponse({"message": "ZTNA configs is deleted"}, status=200)
+    return JsonResponse({"error": "Error in deleting ZTNA configs"}, status=400)
 
 
 @api_view(['PUT'])
@@ -208,8 +209,8 @@ def update_configs(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_CONFIGS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA configs is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA configs"}, status=400)
+        return JsonResponse({"message": "ZTNA configs is updated"}, status=200)
+    return JsonResponse({"error": "Error in updating ZTNA configs"}, status=400)
 
 
 ################################
@@ -252,8 +253,8 @@ def delete_services(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_SERVICES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA services is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA services"}, status=400)
+        return JsonResponse({"message": "ZTNA services is deleted"}, status=200)
+    return JsonResponse({"error": "Error in deleting ZTNA services"}, status=400)
 
 
 @api_view(['PUT'])
@@ -265,8 +266,8 @@ def update_services(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_SERVICES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA services is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA services"}, status=400)
+        return JsonResponse({"message": "ZTNA services is updated"}, status=200)
+    return JsonResponse({"error": "Error in updating ZTNA services"}, status=400)
 
 
 ################################
@@ -309,8 +310,8 @@ def delete_terminators(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_TERMINATORS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA terminators is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA terminators"}, status=400)
+        return JsonResponse({"message": "ZTNA terminators is deleted"}, status=200)
+    return JsonResponse({"error": "Error in deleting ZTNA terminators"}, status=400)
 
 
 @api_view(['PUT'])
@@ -322,8 +323,8 @@ def update_terminators(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_TERMINATORS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA terminators is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA terminators"}, status=400)
+        return JsonResponse({"message": "ZTNA terminators is updated"}, status=200)
+    return JsonResponse({"error": "Error in updating ZTNA terminators"}, status=400)
 
 
 ################################

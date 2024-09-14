@@ -61,3 +61,11 @@ def change_status_ztna_service(service_status="start"):
     else:
         path_start_ztna = PATH_STOP_ZTNA_BASH.format(current_dir)
     execute_command_without_arguments(["sudo", "bash", path_start_ztna])
+
+
+def start_router():
+    pass
+
+
+def stop_router():
+    pass

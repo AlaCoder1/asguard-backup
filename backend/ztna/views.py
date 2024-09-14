@@ -2,7 +2,7 @@ from utils.constant_variables import ERROR_MESSAGES_START, ERROR_MESSAGES_STOP, 
 from utils.errors_utils import CommandExecutionError
 from .constant_variables import CONSTANT_ZTNA, PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES, PATH_ZTNA_TERMINATORS
 from .list_ztna import get_configs, get_edge_router_policies, get_identities, get_routers, get_service_edge_router_policies, get_service_policies, get_services, get_terminators
-from .utils import change_status_ztna_service, get_Zt_Token  
+from .utils import change_status_ztna_service, get_Zt_Token, start_router, stop_router  
 from django.http import JsonResponse
 import requests
 from drf_yasg.utils import swagger_auto_schema
@@ -182,6 +182,28 @@ def update_routers(request, id):
     if response.status_code == 200:
         return JsonResponse({"message": "ZTNA routers is updated"}, status=200)
     return JsonResponse({"error": "Error in updating ZTNA routers"}, status=400)
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def start_relay(request, id):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    data = request.data
+    start_router()
+    return JsonResponse({"message": "ZTNA Router is started"}, status=400)
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def stop_relay(request, id):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    data = request.data
+    stop_router()
+    return JsonResponse({"message": "ZTNA Router is stoped"}, status=400)
 
 
 ################################

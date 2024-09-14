@@ -154,7 +154,6 @@
 
 <script>
 import { getCookie } from "@/mixins/csrftoken.js";
-
 import axios from "axios";
 import { toRefs, ref, watch, reactive, inject } from "vue";
 

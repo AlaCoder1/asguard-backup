@@ -138,6 +138,7 @@
 <script>
 import axios from "axios";
 import { toRefs, ref, watch, reactive, inject } from "vue";
+import { getCookie } from "@/mixins/csrftoken.js";
 
 export default {
   props: {
@@ -193,12 +194,12 @@ export default {
       () => modalMode.value,
       () => {
         if (modalMode.value === "create") {
-          // ConfigName.value = "";
-          // adress.value = "";
-          // portLow.value = "";
-          // portHigh.value = "";
-          // Description.value = "";
-          // selectedTitle.value = "tcp";
+          name.value = "";
+          serviceAtt.value = "";
+          encryptionRequired.value = false;
+          host.value = "";
+          configs.value = "";
+          Description.value = "";
         }
       }
     );
@@ -222,39 +223,109 @@ export default {
     };
 
     const submitForm = async () => {
-      try {
-        fetchConfigs();
-        let token = document.getElementById("app").getAttribute("token");
-        let hostId = configs.value.find(
-          (config) => config.name === host.value
-        ).id;
-        let interceptId = configs.value.find(
-          (config) => config.name === intercept.value
-        ).id;
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = "/edge/management/v1/services";
-        const response = await axios.post(
-          proxyUrl + apiUrl,
-          {
-            name: name.value,
-            roleAttributes: [serviceAtt.value],
-            encryptionRequired: encryptionRequired.value,
-            configs: [hostId, interceptId],
-          },
-          {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let hostId = configs.value.find(
+        (config) => config.name === host.value
+      ).id;
+      let interceptId = configs.value.find(
+        (config) => config.name === intercept.value
+      ).id;
+
+      let payload = {
+        name: name.value,
+        roleAttributes: [serviceAtt.value],
+        encryptionRequired: encryptionRequired.value,
+        configs: [hostId, interceptId],
+      };
+
+      let token = document.getElementById("app").getAttribute("token");
+      console.log("payload", payload);
+      console.log("token", token);
+
+      if (modalMode.value === "edit") {
+        axios
+          .put(`/ztna/update_services/${identityId.value}`, payload, {
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",
             },
-          }
-        );
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        emitter.emit("closeServicesModal");
-      } catch (error) {
-        console.error("Failed to submit form:", error);
+          })
+          .then((response) => {
+            if (response.status == "201") {
+              // state.snackbar = true;
+              // state.color = "success";
+              // state.textAlert = response.data.msg;
+              setTimeout(() => {
+                // location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            // state.snackbar = true;
+            // state.color = "red";
+            // state.textAlert = i.response.data.response;
+          });
+      } else {
+        axios
+          .post("/ztna/add_services", payload, {
+            headers: {
+              "zt-session": token,
+              "Content-Type": "application/json",
+            },
+          })
+          .then((response) => {
+            if (response.status == "201") {
+              // state.openModal = false;
+              // state.snackbar = true;
+              // state.color = "success";
+              // state.textAlert = response.data.msg;
+
+              setTimeout(() => {
+                // location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            // state.snackbar = true;
+            // state.color = "red";
+            // state.textAlert = i.response.data.error;
+          });
       }
+      // try {
+      //   fetchConfigs();
+      //   let token = document.getElementById("app").getAttribute("token");
+      //   let hostId = configs.value.find(
+      //     (config) => config.name === host.value
+      //   ).id;
+      //   let interceptId = configs.value.find(
+      //     (config) => config.name === intercept.value
+      //   ).id;
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = "/edge/management/v1/services";
+      //   const response = await axios.post(
+      //     proxyUrl + apiUrl,
+      //     {
+      //       name: name.value,
+      //       roleAttributes: [serviceAtt.value],
+      //       encryptionRequired: encryptionRequired.value,
+      //       configs: [hostId, interceptId],
+      //     },
+      //     {
+      //       headers: {
+      //         "zt-session": token,
+      //         "Content-Type": "application/json",
+      //       },
+      //     }
+      //   );
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      //   emitter.emit("closeServicesModal");
+      // } catch (error) {
+      //   console.error("Failed to submit form:", error);
+      // }
     };
     const resetForm = () => {
       name.value = "";

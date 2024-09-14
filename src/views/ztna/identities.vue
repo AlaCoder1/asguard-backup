@@ -455,15 +455,17 @@ export default {
           },
         })
         .then((response) => {
-
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.message;
           setTimeout(() => {
             location.reload();
           }, 1000);
         })
         .catch((i) => {
-          // state.snackbar = true;
-          // state.color = "red";
-          // state.textAlert = i.response.data.error;
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
         });
 
       // console.log("deletedItemId", deletedItemId);

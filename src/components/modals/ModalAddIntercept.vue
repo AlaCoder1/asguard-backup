@@ -227,14 +227,10 @@ export default {
     };
 
     const submitForm = async () => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = "/edge/management/v1/configs";
-        const response = await axios.post(
-          proxyUrl + apiUrl,
-          {
+      let payload = {
             name: ConfigName.value,
             configTypeId: "g7cIWbcGg",
             data: {
@@ -246,23 +242,104 @@ export default {
                 },
               ],
               protocols: [selectedTitle.value],
-            },
-          },
-          {
+            }
+      };
+
+      let token = document.getElementById("app").getAttribute("token");
+      console.log("payload", payload);
+      console.log("token", token);
+
+      if (modalMode.value === "edit") {
+        axios
+          .put(`/ztna/update_identities/${ConfigId.value}`, payload,{
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",
             },
-          }
-        );
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        emitter.emit("closeInterceptModal");
-      } catch (error) {
-        console.error("Failed to submit form !!:", error);
+          })
+          .then((response) => {
+            if (response.status == "201") {
+              // state.snackbar = true;
+              // state.color = "success";
+              // state.textAlert = response.data.msg;
+              setTimeout(() => {
+                // location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            // state.snackbar = true;
+            // state.color = "red";
+            // state.textAlert = i.response.data.response;
+          });
+      } else {
+        axios
+          .post("/ztna/add_identities", payload, {
+            headers: {
+              "zt-session": token,
+              "Content-Type": "application/json",
+            },
+          })
+          .then((response) => {
+            console.log('re',response)
+            if (response.status == "201") {
+              // state.openModal = false;
+              // state.snackbar = true;
+              // state.color = "success";
+              // state.textAlert = response.data.msg;
+
+              setTimeout(() => {
+                // location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            console.log('re',u.response)
+
+            // state.snackbar = true;
+            // state.color = "red";
+            // state.textAlert = i.response.data.error;
+          });
       }
     };
+
+    // const submitForm = async () => {
+    //   try {
+    //     let token = document.getElementById("app").getAttribute("token");
+
+    //     const proxyUrl = "https://asguard:3000";
+    //     const apiUrl = "/edge/management/v1/configs";
+    //     const response = await axios.post(
+    //       proxyUrl + apiUrl,
+    //       {
+    //         name: ConfigName.value,
+    //         configTypeId: "g7cIWbcGg",
+    //         data: {
+    //           addresses: [adress.value],
+    //           portRanges: [
+    //             {
+    //               high: Number(portHigh.value),
+    //               low: Number(portLow.value),
+    //             },
+    //           ],
+    //           protocols: [selectedTitle.value],
+    //         },
+    //       },
+    //       {
+    //         headers: {
+    //           "zt-session": token,
+    //           "Content-Type": "application/json",
+    //         },
+    //       }
+    //     );
+    //     setTimeout(() => {
+    //       location.reload();
+    //     }, 1000);
+    //     emitter.emit("closeInterceptModal");
+    //   } catch (error) {
+    //     console.error("Failed to submit form !!:", error);
+    //   }
+    // };
     const selectItem = (item) => {
       selectedTitle.value = item.title;
     };

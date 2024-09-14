@@ -14,7 +14,5 @@ else
     echo "Required environment variables are not set."
 fi
 
-sleep 5
-
 "${ZITI_BIN_DIR-}/ziti" edge login Asguard:1280 -u admin -p admin
 

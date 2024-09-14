@@ -5,16 +5,23 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.addInterceptConfig") }}</span>
+              {{ $t("ztna.addInterceptConfig") }}</span
+            >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateConfig") }}</span>
+              {{ $t("ztna.updateConfig") }}</span
+            >
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="ConfigName" v-model="ConfigName" :placeholder="$t('ztna.configName')" :rules="rules"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="ConfigName"
+                    v-model="ConfigName"
+                    :placeholder="$t('ztna.configName')"
+                    :rules="rules"
+                    persistent-placeholder
+                  />
                 </v-col>
 
                 <v-col cols="12">
@@ -31,9 +38,13 @@
                         </template>
 
                         <v-list>
-                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
+                          <v-list-item
+                            v-for="(item, index) in items"
+                            :key="index"
+                            @click="selectItem(item)"
+                          >
                             <v-list-item-title>{{
-                              item.title
+                              item
                             }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
@@ -43,34 +54,55 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="adress" v-model="adress" :placeholder="$t('ztna.address')" :rules="rules"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="adress"
+                    v-model="adress"
+                    :placeholder="$t('ztna.address')"
+                    :rules="rules"
+                    persistent-placeholder
+                  />
                 </v-col>
 
                 <v-col cols="6">
-                  <v-text-field id="portLow" v-model.number="portLow" :placeholder="$t('ztna.lowPorts')" :rules="rules"
-                    persistent-placeholder outlined dense hide-details="auto" />
+                  <v-text-field
+                    id="portLow"
+                    v-model.number="portLow"
+                    :placeholder="$t('ztna.lowPorts')"
+                    :rules="rules"
+                    persistent-placeholder
+                    outlined
+                    dense
+                    hide-details="auto"
+                  />
                 </v-col>
                 <v-col cols="6" class="mb-n6">
-                  <v-text-field id="portHigh" v-model.number="portHigh" :placeholder="$t('ztna.highPorts')"
-                    :rules="rules" persistent-placeholder outlined dense hide-details="auto" />
+                  <v-text-field
+                    id="portHigh"
+                    v-model.number="portHigh"
+                    :placeholder="$t('ztna.highPorts')"
+                    :rules="rules"
+                    persistent-placeholder
+                    outlined
+                    dense
+                    hide-details="auto"
+                  />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="Description"
+                    v-model="Description"
+                    placeholder="Description"
+                    persistent-placeholder
+                  />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
-              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span
-              ></v-btn>
-            <!-- <v-btn
-              color="red"
+            <v-btn
+              color="indigo-darken-3"
               :rounded="true"
               large
               rounded
@@ -78,22 +110,40 @@
               label-color="#213E9F"
               variant="flat"
               class="mt-3 btn-add"
-              type="reset"
+              text
+              @click="cancel"
+              ><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span
+              ></v-btn
             >
-              Reset
-            </v-btn> -->
-            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
-              class="mt-3 ml-2 btn-add" type="submit">
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              color="indigo-darken-3"
+              :rounded="true"
+              variant="flat"
+              class="mt-3 ml-2 btn-add"
+              type="submit"
+            >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span>
+                {{ $t("buttons.create") }}</span
+              >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span>
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -128,7 +178,7 @@ export default {
     const portHigh = ref("");
     const Description = ref("");
     const selectedTitle = ref("tcp");
-    const items = [{ title: "tcp" }, { title: "udp" }];
+    const items = [ "tcp" ,  "udp" ];
     const rules = [
       (value) => {
         if (value) return true;
@@ -179,11 +229,12 @@ export default {
         ConfigId.value = data.id;
         ConfigName.value = data.name;
         adress.value = data.data.addresses ? data.data.addresses[0] : "";
-        portLow.value =  data.data.portRanges ? data.data.portRanges[0].low   : ""  ;
-        portHigh.value = data.data.portRanges ? data.data.portRanges[0].high   : ""  ;
+        portLow.value = data.data.portRanges ? data.data.portRanges[0].low : "";
+        portHigh.value = data.data.portRanges
+          ? data.data.portRanges[0].high
+          : "";
         Description.value = "";
-        selectedTitle.value = data.data.protocols ?  data.data.protocols[0] : "";
-
+        selectedTitle.value = data.data.protocols ? data.data.protocols[0] : "";
       }
     };
 
@@ -203,7 +254,7 @@ export default {
             },
           ],
           protocols: [selectedTitle.value],
-        }
+        },
       };
 
       let token = document.getElementById("app").getAttribute("token");
@@ -295,7 +346,7 @@ export default {
     //   }
     // };
     const selectItem = (item) => {
-      selectedTitle.value = item.title;
+      selectedTitle.value = item;
     };
     const cancel = () => {
       console.log("test");

@@ -96,7 +96,9 @@
               class="mt-3 btn-add"
               text
               @click="cancel"
-              >{{ $t("buttons.close") }}</v-btn
+              ><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span
+              ></v-btn
             >
 
             <v-btn

@@ -36,7 +36,7 @@
               <div v-if="!rail">
                 <v-list-item class="float-left">
                   <span class="ml-5 icon-custom"
-                    ><i :class="item.icon"></i> &nbsp;</span
+                    ><i :class="item.icon"></i></span
                   >
                   <span class="ml-7 sidebarTitle">{{
                     $t(item.title)
@@ -90,7 +90,7 @@
             <v-list-item @click="showSubMenu(item)">
               <div>
                 <span class="ml-5"
-                  ><i :class="item.icon" class="icon-custom"></i> &nbsp;</span
+                  ><i :class="item.icon" class="icon-custom"></i></span
                 >
               </div>
             </v-list-item>

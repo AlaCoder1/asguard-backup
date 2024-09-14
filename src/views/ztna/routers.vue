@@ -296,7 +296,7 @@ export default {
       switch (action) {
         case "edit":
           // openModalUpdate(rowData.id);
-
+ console.log('edi',rowData)
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
@@ -396,15 +396,17 @@ export default {
           },
         })
         .then((response) => {
-
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.message;
           setTimeout(() => {
             location.reload();
           }, 1000);
         })
         .catch((i) => {
-          // state.snackbar = true;
-          // state.color = "red";
-          // state.textAlert = i.response.data.error;
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
         });
 
       // try {

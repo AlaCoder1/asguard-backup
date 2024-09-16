@@ -20,7 +20,13 @@
             <v-list-item @click="showSubMenu(item)">
               <div v-if="!rail">
                 <v-list-item class="float-left">
+<<<<<<< HEAD
                   <span class="ml-5 icon-custom"><i :class="item.icon"></i></span>
+=======
+                  <span class="ml-5 icon-custom"
+                    ><i :class="item.icon"></i></span
+                  >
+>>>>>>> c7e0295b4c47bb7234d34feb70dbc81c569a69a3
                   <span class="ml-7 sidebarTitle">{{
                     $t(item.title)
                     }}</span></v-list-item>
@@ -57,7 +63,13 @@
           <a :href="item.href" style="text-decoration: none; color: black">
             <v-list-item @click="showSubMenu(item)">
               <div>
+<<<<<<< HEAD
                 <span class="ml-5"><i :class="item.icon" class="icon-custom"></i></span>
+=======
+                <span class="ml-5"
+                  ><i :class="item.icon" class="icon-custom"></i></span
+                >
+>>>>>>> c7e0295b4c47bb7234d34feb70dbc81c569a69a3
               </div>
             </v-list-item>
           </a>

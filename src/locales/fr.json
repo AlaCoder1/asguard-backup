@@ -550,7 +550,7 @@
   },
 
   "ztna": {
-    "identité": "IDENTITÉ",
+    "identite": "IDENTITE",
     "configuration": "CONFIGURATIONS",
     "services": "Services",
     "relays": "Relais",

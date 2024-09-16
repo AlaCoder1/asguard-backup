@@ -1,4 +1,8 @@
 PATH_ZTNA = "https://localhost:1280/edge/management/v1/"
 PATH_ZTNA_IDENTITIES = PATH_ZTNA + "identities"
+PATH_ZTNA_ROUTERS = PATH_ZTNA + "routers"
+PATH_ZTNA_CONFIGS = PATH_ZTNA + "configs"
+PATH_ZTNA_SERVICES = PATH_ZTNA + "services"
+PATH_ZTNA_TERMINATORS = PATH_ZTNA + "terminators"
 PATH_START_ZTNA_BASH = "{}/backend/ztna/startZtna.sh"
 PATH_STOP_ZTNA_BASH = "{}/backend/ztna/stopZtna.sh"

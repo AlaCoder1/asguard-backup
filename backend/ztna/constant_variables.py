@@ -7,6 +7,7 @@ CONSTANT_ZTNA_TERMINATORS = CONSTANT_ZTNA + "terminators"
 
 PATH_ZTNA = "https://localhost:1280/edge/management/v1/"
 PATH_ZTNA_IDENTITIES = PATH_ZTNA + "identities"
+PATH_ZTNA_ENROLLMENTS = PATH_ZTNA + "enrollments"
 PATH_ZTNA_ROUTERS = PATH_ZTNA + "routers"
 PATH_ZTNA_CONFIGS = PATH_ZTNA + "configs"
 PATH_ZTNA_SERVICES = PATH_ZTNA + "services"

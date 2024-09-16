@@ -1,6 +1,6 @@
 from utils.constant_variables import ERROR_MESSAGES_START, ERROR_MESSAGES_STOP, SUCCESS_MESSAGES_START, SUCCESS_MESSAGES_STOP
 from utils.errors_utils import CommandExecutionError
-from .constant_variables import CONSTANT_ZTNA, PATH_ZTNA_CONFIGS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_TERMINATORS
+from .constant_variables import CONSTANT_ZTNA, PATH_ZTNA_CONFIGS, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_TERMINATORS
 from .list_ztna import get_configs, get_identities, get_routers, get_services, get_terminators
 from .utils import change_status_ztna_service, get_Zt_Token  
 from django.http import JsonResponse
@@ -96,6 +96,34 @@ def update_identities(request, id):
     if response.status_code == 200:
         return JsonResponse({"message": "ZTNA identities is updated"}, status=200)
     return JsonResponse({"error": "Error in updating ZTNA identities"}, status=400)
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def add_enrollments(request):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    data = request.data
+    response = requests.post(PATH_ZTNA_ENROLLMENTS, headers=headers, json=data, verify=False)
+    if response.status_code == 201:
+        return JsonResponse({"message": "ZTNA enrollment is added"}, status=200)
+    return JsonResponse({"error": "Error in adding ZTNA enrollment"}, status=400)
+
+
+@swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE A ZTNA ENROLLMENT",)
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_enrollments(request, id):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id}
+    data = request.data
+    response = requests.delete(f"{PATH_ZTNA_ENROLLMENTS}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
+        return JsonResponse({"message": "ZTNA enrollment is deleted"}, status=200)
+    return JsonResponse({"error": "Error in deleting ZTNA enrollment"}, status=400)
 
 
 ################################

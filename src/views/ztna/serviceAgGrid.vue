@@ -69,6 +69,7 @@
 </template>
 
 <script>
+import { getCookie } from "@/mixins/csrftoken.js";
 import ModalServicePolicy from "@/components/modals/ModalServicePolicy.vue";
 import ModalUpdateServiceP from "@/components/modals/ModalUpdateServiceP.vue";
 import { useI18n } from "vue-i18n";
@@ -153,7 +154,7 @@ export default {
       {
         headerName: serviceRole,
         field: "serviceRoles",
-        // cellRenderer: formatedserviceRoles,
+        cellRenderer: formatedserviceRoles,
         autoHeight: true,
         resizable: true,
 
@@ -164,7 +165,7 @@ export default {
       {
         headerName: identityRole,
         field: "identityRoles",
-        // cellRenderer: formatedidentityRoles,
+        cellRenderer: formatedidentityRoles,
         autoHeight: true,
         resizable: true,
 
@@ -185,7 +186,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        // cellRenderer: formatedcreatedAt,
+        cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
 
@@ -261,6 +262,7 @@ export default {
     const handleActionClient = (action, rowData) => {
       switch (action) {
         case "edit":
+          console.log('edit',rowData)
           // openModalUpdate(rowData.id);
           // console.log("edit", rowData);
           state.modalMode = "edit";
@@ -291,48 +293,59 @@ export default {
     };
 
     const confirmDelete = async (itemId) => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = `/edge/management/v1/service-policies/${itemId}`;
-        await axios.delete(proxyUrl + apiUrl, {
-          headers: { "zt-session": token, "Content-Type": "application/json" },
+      // try {
+      //   let token = document.getElementById("app").getAttribute("token");
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = `/edge/management/v1/service-policies/${itemId}`;
+      //   await axios.delete(proxyUrl + apiUrl, {
+      //     headers: { "zt-session": token, "Content-Type": "application/json" },
+      //   });
+      //   state.snackbar = true;
+      //   state.color = "success";
+      //   state.textAlert = "Service policy deleted successfully";
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      // } catch (error) {
+      //   state.snackbar = true;
+      //   state.color = "red";
+      //   state.textAlert = "Delete failure";
+      //   console.error("Failed to delete item:", error);
+      // }
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      let token = document.getElementById("app").getAttribute("token");
+
+      axios
+        .delete(`/ztna/delete_services/${itemId}`, {
+          headers: {
+            "zt-session": token,
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          // state.snackbar = true;
+          // state.color = "red";
+          // state.textAlert = i.response.data.error;
         });
-        state.snackbar = true;
-        state.color = "success";
-        state.textAlert = "Service policy deleted successfully";
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-      } catch (error) {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "Delete failure";
-        console.error("Failed to delete item:", error);
-      }
     };
 
     onMounted(() => {
       let service_policiesString = document
         .getElementById("app")
         .getAttribute("service_policies");
+
       let service_policiesObject = JSON.parse(service_policiesString);
-      // rowDataService.value = service_policiesObject.data;
-
-
-      let test = [
-        {
-          name: "name",
-          serviceRoles: "serviceRoles",
-          identityRoles: "identityRoles",
-          createdAt: "createdAt",
-          semantic: "semantic",
-        },
-      ];
-      rowDataService.value = test
-      // rowDataService.value = service_policiesObject?.data
-      //   ? service_policiesObject.data
-      //   : [];
+    console.log('service_policiesObject',service_policiesObject)
+      rowDataService.value = service_policiesObject
+        ? service_policiesObject
+        : [];
 
       if (gridService.value) {
         gridService.value.setRowData(rowDataService.value);

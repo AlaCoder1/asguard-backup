@@ -38,14 +38,14 @@
                           <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
                               item.title
-                            }}</v-list-item-title>
+                              }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
 
                       <label for="IsAdmin" class="mr-3 ml-5">{{
                         $t("ztna.isAdmin")
-                      }}</label>
+                        }}</label>
                       <input type="checkbox" id="IsAdmin" v-model="isAdmin" />
                     </div>
                   </div>
@@ -232,8 +232,7 @@ export default {
       };
 
       let token = document.getElementById("app").getAttribute("token");
-      console.log("payload", payload);
-      console.log("token", token);
+
 
       if (modalMode.value === "edit") {
         axios
@@ -244,13 +243,12 @@ export default {
             },
           })
           .then((response) => {
-            console.log('response', response)
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.msg;
+              state.textAlert = response.data.message;
               setTimeout(() => {
-                // location.reload();
+                location.reload();
               }, 1000);
             }
           })

@@ -299,7 +299,7 @@ export default {
       let token = document.getElementById("app").getAttribute("token");
 
       axios
-        .delete(`/ztna/delete_config/${itemId}`, {
+        .delete(`/ztna/delete_services/${itemId}`, {
           headers: {
             "zt-session": token,
             "Content-Type": "application/json",
@@ -345,21 +345,13 @@ export default {
       let servicesObject;
       try {
         servicesObject = JSON.parse(servicesString);
+        console.log('servicesObject',servicesObject)
       } catch (error) {
         console.error("Failed to parse services string:", error);
         servicesObject = { data: [] };
       }
-      // services.value = servicesObject.data;
-      let test = [
-        {
-          name: "name",
-          terminatorStrategy: "terminatorStrategy",
-          encryptionRequired: "encryptionRequired",
-          createdAt: "createdAt",
-        },
-      ];
-      services.value = test;
-      // services.value = servicesObject?.data ? servicesObject.data : [];
+   
+      services.value = servicesObject ? servicesObject : [];
 
       if (gridApi.value) {
         gridApi.value.setRowData(services.value);

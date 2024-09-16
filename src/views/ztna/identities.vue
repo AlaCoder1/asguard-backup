@@ -1,40 +1,20 @@
 <template>
   <div class="mr-3">
-    <div
-      class="certificats-management mt-6 ml-4"
-      style="display: flex; flex-direction: column"
-    >
+    <div class="certificats-management mt-6 ml-4" style="display: flex; flex-direction: column">
       <h4>{{ $t("ztna.listofIdentities") }}</h4>
       <v-divider></v-divider>
       <div style="overflow: hidden; flex-grow: 1">
-        <ag-grid-vue
-          id="grid-wrapper"
-          domLayout="autoHeight"
-          class="ag-theme-alpine mt-3"
-          style="width: 100%"
-          @grid-ready="onGridReady"
-          :columnDefs="columnIdentities"
-          :rowData="Identities"
-          :gridOptions="gridOptions"
-          :overlayNoRowsTemplate="overlayTemplate"
-          :rowDragManaged="true"
-          :rowDragEntireRow="true"
-          :localeText="paginationLocalization"
-        />
+        <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
+          @grid-ready="onGridReady" :columnDefs="columnIdentities" :rowData="Identities" :gridOptions="gridOptions"
+          :overlayNoRowsTemplate="overlayTemplate" :rowDragManaged="true" :rowDragEntireRow="true"
+          :localeText="paginationLocalization" />
       </div>
     </div>
   </div>
   <br />
-  <ModalAddIdentity
-    :isOpen="state.isModalOpen"
-    :selectedId="state.selectedId"
-    :editRow="state.editRow"
-    :modalMode="state.modalMode"
-  />
-  <ModalAddEnrollment
-    :isOpen="state.isModalEnrollmentOpen"
-    :selectedId="state.selectedId"
-  />
+  <ModalAddIdentity :isOpen="state.isModalOpen" :selectedId="state.selectedId" :editRow="state.editRow"
+    :modalMode="state.modalMode" />
+  <ModalAddEnrollment :isOpen="state.isModalEnrollmentOpen" :selectedId="state.selectedId" />
   <!-- <ModalUpdateIdentity
     :isOpen="state.isModalUpdateOpen"
     :selectedId="state.selectedId"
@@ -51,30 +31,15 @@
         <v-btn color="blue darken-1" text @click="cancelDelete">{{
           $t("buttons.cancel")
         }}</v-btn>
-        <v-btn
-          color="blue darken-1"
-          text
-          @click="confirmDelete(state.selectedId)"
-          >{{ $t("buttons.delete") }}</v-btn
-        >
+        <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
-  <v-snackbar
-    :timeout="2000"
-    v-model="state.snackbar"
-    location="bottom right"
-    :color="state.color"
-  >
+  <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
     {{ state.textAlert }}
   </v-snackbar>
   <div class="d-flex justify-end mt-5 mr-2">
-    <v-btn
-      class="add-button"
-      :rounded="true"
-      color="indigo-darken-3"
-      @click="openModalAdd"
-    >
+    <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalAdd">
       {{ $t("ztna.addIdentity") }}
     </v-btn>
   </div>
@@ -202,7 +167,7 @@ export default {
       {
         headerName: enrolled,
         field: "enrollment.ott.jwt",
-        // cellRenderer: enrollmentCellRendrer,
+        cellRenderer: enrollmentCellRendrer,
         width: 90,
         minWidth: 150,
         flex: 1,
@@ -210,7 +175,7 @@ export default {
       {
         headerName: "Token",
         field: "enrollment.ott.jwt",
-        // cellRenderer: tokenCellRendrer,
+        cellRenderer: tokenCellRendrer,
         width: 90,
         minWidth: 150,
         flex: 1,
@@ -218,7 +183,7 @@ export default {
       {
         headerName: expirationDate,
         field: "enrollment.ott.expiresAt",
-        // cellRenderer: formatedexpiresAt,
+        cellRenderer: formatedexpiresAt,
         width: 90,
         minWidth: 150,
         flex: 1,
@@ -226,7 +191,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        // cellRenderer: formatedcreatedAt,
+        cellRenderer: formatedcreatedAt,
         width: 90,
         minWidth: 150,
         flex: 1,
@@ -339,11 +304,12 @@ export default {
       switch (action) {
         case "edit":
           // openModalUpdate(rowData);
-
+          console.log('rowData', rowData)
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           state.selectedId = rowData.id;
+
 
           break;
         case "copy":
@@ -381,33 +347,19 @@ export default {
       let IdentitiesString = document
         .getElementById("app")
         .getAttribute("Identities");
+
       let IdentitiesObject;
       try {
         IdentitiesObject = JSON.parse(IdentitiesString);
+        console.log('IdentitiesObject', IdentitiesObject)
       } catch (error) {
         console.error("Failed to parse Identities string:", error);
       }
-      let test = [
-        {
-          id: 1,
-          name: "name",
-          description: "description",
-          type: "Device",
-          roleAttributes: "roleAttributes",
-          envInfo: { hostname: "hostname" },
-          enrollment: {
-            ott: {
-              jwt: "jwt",
-              expiresAt: "expiresAt",
-            },
-          },
-          createdAt: "createdAt",
-        },
-      ];
 
-      // Identities.value = IdentitiesObject?.data ? IdentitiesObject.data : [];
-      Identities.value = test;
-      console.log(Identities.value);
+
+      Identities.value = IdentitiesObject ? IdentitiesObject : [];
+      console.log(' Identities.value', Identities.value)
+
     };
     async function OpenDelete(itemId) {
       state.selectedId = itemId;
@@ -489,36 +441,61 @@ export default {
     };
 
     const confirmDelete = async (deletedItemId) => {
-      console.log("deletedItemId", deletedItemId);
-      try {
-        let token = document.getElementById("app").getAttribute("token");
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = `/edge/management/v1/identities/${deletedItemId}`; // This part remains the same
 
-        const response = await axios.delete(proxyUrl + apiUrl, {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let token = document.getElementById("app").getAttribute("token");
+
+      axios
+        .delete(`/ztna/delete_identities/${deletedItemId}`, {
           headers: {
             "zt-session": token,
             "Content-Type": "application/json",
           },
-        });
-        console.log("response", response);
+        })
+        .then((response) => {
 
-        state.snackbar = true;
-        state.color = "success";
-        state.textAlert = "Identity deleted successfully";
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        state.deleteDialog = false;
-      } catch (error) {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "Delete failure";
-        console.error(
-          "Failed to delete item:",
-          error.response ? error.response.data : error.message
-        );
-      }
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          // state.snackbar = true;
+          // state.color = "red";
+          // state.textAlert = i.response.data.error;
+        });
+
+      // console.log("deletedItemId", deletedItemId);
+      // try {
+      //   let token = document.getElementById("app").getAttribute("token");
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = `/edge/management/v1/identities/${deletedItemId}`; // This part remains the same
+
+      //   const response = await axios.delete(proxyUrl + apiUrl, {
+      //     headers: {
+      //       "zt-session": token,
+      //       "Content-Type": "application/json",
+      //     },
+      //   });
+      //   console.log("response", response);
+
+      //   state.snackbar = true;
+      //   state.color = "success";
+      //   state.textAlert = "Identity deleted successfully";
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      //   state.deleteDialog = false;
+      // } catch (error) {
+      //   state.snackbar = true;
+      //   state.color = "red";
+      //   state.textAlert = "Delete failure";
+      //   console.error(
+      //     "Failed to delete item:",
+      //     error.response ? error.response.data : error.message
+      //   );
+      // }
     };
 
     const onGridReady = (params) => {

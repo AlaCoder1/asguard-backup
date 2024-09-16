@@ -128,14 +128,14 @@ export default {
         minWidth: 150,
         flex: 1,
       },
-      {
-        headerName: configType,
-        field: "configType.name",
-        sortable: true,
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-      },
+      // {
+      //   headerName: configType,
+      //   field: "configType.name",
+      //   sortable: true,
+      //   width: 90,
+      //   minWidth: 150,
+      //   flex: 1,
+      // },
       {
         headerName: creationDate,
         field: "createdAt",

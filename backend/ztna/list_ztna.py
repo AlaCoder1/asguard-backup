@@ -7,7 +7,7 @@ def get_identities():
 
 
 def get_routers():
-    endpoint = "edge-routers"
+    endpoint = "routers"
     return get_data(endpoint)
 
 

@@ -73,6 +73,9 @@
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+      {{ state.textAlert }}
+    </v-snackbar>
   </v-row>
 </template>
 
@@ -97,6 +100,7 @@ export default {
   },
 
   setup(props) {
+    const RouterId = ref("");
     const RouterName = ref("");
     const RouterAttribute = ref("");
     const Description = ref("");
@@ -111,6 +115,9 @@ export default {
 
     const state = reactive({
       openModal: false,
+      snackbar: false,
+      color: null,
+      textAlert: "",
     });
 
     watch(
@@ -142,6 +149,13 @@ export default {
     const populate = (data) => {
       if (modalMode.value === "edit") {
         console.log("dataService", data);
+
+        RouterId.value = data.id;
+        RouterName.value = data.name;
+        RouterAttribute.value = "";
+        Tunneler.value = data.disabled;
+        Traversal.value = data.noTraversal;
+        Description.value = "";
       }
     };
 
@@ -170,31 +184,30 @@ export default {
       };
 
       let token = document.getElementById("app").getAttribute("token");
-      console.log("payload", payload);
-      console.log("token", token);
 
       if (modalMode.value === "edit") {
         axios
-          .put(`/ztna/update_routers/${ConfigId.value}`, payload, {
+          .put(`/ztna/update_routers/${RouterId.value}`, payload, {
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",
             },
           })
           .then((response) => {
-            if (response.status == "201") {
-              // state.snackbar = true;
-              // state.color = "success";
-              // state.textAlert = response.data.msg;
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.message;
               setTimeout(() => {
-                // location.reload();
+                location.reload();
               }, 1000);
+
             }
           })
           .catch((i) => {
-            // state.snackbar = true;
-            // state.color = "red";
-            // state.textAlert = i.response.data.response;
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
           });
       } else {
         axios
@@ -205,24 +218,20 @@ export default {
             },
           })
           .then((response) => {
-            console.log('re', response)
-            if (response.status == "201") {
-              // state.openModal = false;
-              // state.snackbar = true;
-              // state.color = "success";
-              // state.textAlert = response.data.msg;
-
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.message;
               setTimeout(() => {
-                // location.reload();
+                location.reload();
               }, 1000);
+
             }
           })
           .catch((i) => {
-            console.log('re', u.response)
-
-            // state.snackbar = true;
-            // state.color = "red";
-            // state.textAlert = i.response.data.error;
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
           });
       }
       // try {
@@ -266,6 +275,11 @@ export default {
     };
 
     const cancel = () => {
+      RouterName.value = "";
+      RouterAttribute.value = "";
+      Description.value = "";
+      Tunneler.value = false;
+      Traversal.value = false;
       console.log("test");
       emitter.emit("closeRouterModal");
     };

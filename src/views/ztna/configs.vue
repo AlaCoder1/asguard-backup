@@ -28,13 +28,13 @@
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-          }}</v-card-title>
+        }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-            }}</v-btn>
+          }}</v-btn>
           <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
         </v-card-actions>
       </v-card>
@@ -51,8 +51,6 @@ import { useI18n } from "vue-i18n";
 import { ref, onMounted, reactive, inject, computed } from "vue";
 import BaseLayout from "@/layouts/layout.vue";
 import ModalAddIntercept from "@/components/modals/ModalAddIntercept.vue";
-import ModalAddHost from "@/components/modals/ModalAddHost.vue";
-import ModalUpdateHost from "@/components/modals/ModalUpdateHost.vue";
 import ModalUpdateIntercept from "@/components/modals/ModalUpdateIntercept.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
@@ -65,11 +63,8 @@ export default {
   components: {
     BaseLayout,
     ModalAddIntercept,
-    ModalAddHost,
-    ModalUpdateHost,
     ModalUpdateIntercept,
     AgGridVue,
-
     configHost,
   },
 
@@ -199,14 +194,17 @@ export default {
 
       try {
         configsObject = JSON.parse(configsString);
-        console.log('configsObject',configsObject)
+        console.log('configsObjectIntercept', configsObject)
+
+
 
       } catch (error) {
         console.error("Failed to parse configs string:", error);
         configsObject = { data: [] }; // Default to an empty array if parsing fails
       }
-      configs.value = configsObject ? configsObject : [];
-      console.log('configs.value',configs.value)
+      let filterInter = configsObject.filter((i) => i.configTypeId === "g7cIWbcGg")
+      configs.value = filterInter ? filterInter : [];
+      console.log('configs.value', configs.value)
 
 
     };
@@ -236,15 +234,17 @@ export default {
           },
         })
         .then((response) => {
-
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.message;
           setTimeout(() => {
             location.reload();
           }, 1000);
         })
         .catch((i) => {
-          // state.snackbar = true;
-          // state.color = "red";
-          // state.textAlert = i.response.data.error;
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
         });
 
 
@@ -348,7 +348,7 @@ export default {
     const handleActionClient = (action, rowData, index) => {
       switch (action) {
         case "edit":
-          console.log('configs.edit',rowData)
+          console.log('configs.edit', rowData)
           state.modalMode = "edit";
           state.isModalInterceptOpen = true;
           state.selectedId = rowData.id;

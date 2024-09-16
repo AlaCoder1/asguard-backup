@@ -4,40 +4,20 @@
     <v-divider></v-divider>
   </div>
   <div style="overflow: hidden; flex-grow: 1">
-    <ag-grid-vue
-      id="grid-wrapperHost"
-      domLayout="autoHeight"
-      class="ag-theme-alpine mt-3"
-      style="width: 100%"
-      @grid-ready="onGridReadyHost"
-      :columnDefs="columnHost"
-      :rowData="configsHost"
-      :gridOptions="gridOptions"
-      :overlayNoRowsTemplate="overlayTemplate"
-      :rowDragManaged="true"
-      :rowDragEntireRow="true"
-      @row-drag-end="onRowDragEnd"
-      :localeText="paginationLocalization"
-    />
+    <ag-grid-vue id="grid-wrapperHost" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
+      @grid-ready="onGridReadyHost" :columnDefs="columnHost" :rowData="configsHost" :gridOptions="gridOptions"
+      :overlayNoRowsTemplate="overlayTemplate" :rowDragManaged="true" :rowDragEntireRow="true"
+      @row-drag-end="onRowDragEnd" :localeText="paginationLocalization" />
   </div>
 
   <div class="d-flex justify-end mt-3 mb-15">
-    <v-btn
-      class="add-button"
-      :rounded="true"
-      color="indigo-darken-3"
-      @click="openModalHostAdd"
-    >
+    <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalHostAdd">
       {{ $t("ztna.addHostConfig") }}
     </v-btn>
   </div>
 
-  <ModalAddHost
-    :isOpen="state.isModalHostOpen"
-    :editRow="state.editRow"
-    :selectedId="state.selectedId"
-    :modalMode="state.modalMode"
-  />
+  <ModalAddHost :isOpen="state.isModalHostOpen" :editRow="state.editRow" :selectedId="state.selectedId"
+    :modalMode="state.modalMode" />
   <!-- <ModalUpdateHost
     :isOpen="state.isModalUpdateHostOpen"
     :selectedId="state.selectedId"
@@ -54,21 +34,11 @@
         <v-btn color="blue darken-1" text @click="cancelDelete">{{
           $t("buttons.cancel")
         }}</v-btn>
-        <v-btn
-          color="blue darken-1"
-          text
-          @click="confirmDelete(state.selectedId)"
-          >{{ $t("buttons.delete") }}</v-btn
-        >
+        <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
-  <v-snackbar
-    :timeout="2000"
-    v-model="state.snackbar"
-    location="bottom right"
-    :color="state.color"
-  >
+  <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
     {{ state.textAlert }}
   </v-snackbar>
 </template>
@@ -169,7 +139,7 @@ export default {
         width: 90,
         minWidth: 150,
         flex: 1,
-        // valueFormatter: (params) => formatDateTime(params.value),
+        valueFormatter: (params) => formatDateTime(params.value),
       },
       {
         headerName: "Actions",
@@ -187,21 +157,15 @@ export default {
 
       try {
         configsObject = JSON.parse(configsString);
+        
       } catch (error) {
         console.error("Failed to parse configs string:", error);
         configsObject = { data: [] }; // Default to an empty array if parsing fails
       }
-      // configs.value = configsObject.data;
-      // configs.value = configsObject?.data ? configsObject.data : [];
+      let filterHost = configsObject.filter((i) => i.configTypeId === "NH5p4FpGR")
+      configsHost.value = filterHost ? filterHost : [];
 
-      let testhOST = [
-        {
-          name: "SOUHAIL",
-          configType: { name: "name" },
-          createdAt: "createdAt",
-        },
-      ];
-      configsHost.value = testhOST;
+
     };
 
     const onGridReadyHost = (params) => {
@@ -230,14 +194,17 @@ export default {
         })
         .then((response) => {
 
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.message;
           setTimeout(() => {
             location.reload();
           }, 1000);
         })
         .catch((i) => {
-          // state.snackbar = true;
-          // state.color = "red";
-          // state.textAlert = i.response.data.error;
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
         });
 
       // try {

@@ -21,7 +21,7 @@
                   <div class="d-flex align-center">
                     <label class="ml-1" for="PROTOCOL">{{
                       $t("ztna.protocol")
-                      }}</label>
+                    }}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
@@ -34,7 +34,7 @@
                           <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
                               item.title
-                              }}</v-list-item-title>
+                            }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -48,9 +48,10 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="PORT" v-model.number="port" placeholder="PORT" :rules="rules"
+                  <v-text-field id="PORT" v-model.number="portHigh" placeholder="PORT" :rules="rules"
                     persistent-placeholder />
                 </v-col>
+
                 <v-col cols="12" class="mb-n6">
                   <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
                     persistent-placeholder />
@@ -86,6 +87,9 @@
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+      {{ state.textAlert }}
+    </v-snackbar>
   </v-row>
 </template>
 
@@ -112,8 +116,10 @@ export default {
 
   setup(props) {
     const ConfigName = ref("");
+    const ConfigId = ref("");
     const adress = ref("");
-    const port = ref();
+    const portLow = ref("");
+    const portHigh = ref("");
     const Description = ref("");
     const selectedTitle = ref("tcp");
     const items = [{ title: "tcp" }, { title: "udp" }];
@@ -130,6 +136,9 @@ export default {
 
     const state = reactive({
       openModal: false,
+      snackbar: false,
+      color: null,
+      textAlert: "",
     });
 
     watch(
@@ -151,9 +160,11 @@ export default {
         if (modalMode.value === "create") {
           ConfigName.value = "";
           adress.value = "";
-          port.value = "";
+          // port.value = "";
           Description.value = "";
           selectedTitle.value = "tcp";
+          portLow.value = "";
+          portHigh.value = "";
 
         }
       }
@@ -161,6 +172,12 @@ export default {
     const populate = (data) => {
       if (modalMode.value === "edit") {
         console.log("dataHost", data);
+        ConfigId.value = data.id;
+        ConfigName.value = data.name;
+        adress.value = data.data.address ? data.data.address : "";
+        portHigh.value = data.data.port ? data.data.port : "";
+        Description.value = "";
+        selectedTitle.value = data.data.protocol ? data.data.protocol : "";
       }
     };
 
@@ -170,13 +187,13 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       let payload = {
-          name: ConfigName.value,
-            configTypeId: "NH5p4FpGR",
-            data: {
-              address: adress.value,
-              port: Number(port.value),
-              protocol: selectedTitle.value
-            }
+        name: ConfigName.value,
+        configTypeId: "NH5p4FpGR",
+        data: {
+          address: adress.value,
+          port: Number(portHigh.value),
+          protocol: selectedTitle.value
+        }
       };
 
       let token = document.getElementById("app").getAttribute("token");
@@ -185,26 +202,27 @@ export default {
 
       if (modalMode.value === "edit") {
         axios
-          .put(`/ztna/update_config/${ConfigId.value}`, payload,{
+          .put(`/ztna/update_config/${ConfigId.value}`, payload, {
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",
             },
           })
           .then((response) => {
-            if (response.status == "201") {
-              // state.snackbar = true;
-              // state.color = "success";
-              // state.textAlert = response.data.msg;
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.message;
               setTimeout(() => {
-                // location.reload();
+                location.reload();
               }, 1000);
+
             }
           })
           .catch((i) => {
-            // state.snackbar = true;
-            // state.color = "red";
-            // state.textAlert = i.response.data.response;
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
           });
       } else {
         axios
@@ -215,61 +233,63 @@ export default {
             },
           })
           .then((response) => {
-            console.log('re',response)
-            if (response.status == "201") {
-              // state.openModal = false;
-              // state.snackbar = true;
-              // state.color = "success";
-              // state.textAlert = response.data.msg;
-
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.message;
               setTimeout(() => {
-                // location.reload();
+                location.reload();
               }, 1000);
             }
           })
           .catch((i) => {
-            console.log('re',u.response)
-
-            // state.snackbar = true;
-            // state.color = "red";
-            // state.textAlert = i.response.data.error;
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
           });
-      // try {
-      //   let token = document.getElementById("app").getAttribute("token");
+        // try {
+        //   let token = document.getElementById("app").getAttribute("token");
 
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = "/edge/management/v1/configs";
-      //   const response = await axios.post(
-      //     proxyUrl + apiUrl,
-      //     {
-      //       name: ConfigName.value,
-      //       configTypeId: "NH5p4FpGR",
-      //       data: {
-      //         address: adress.value,
-      //         port: Number(port.value),
-      //         protocol: selectedTitle.value,
-      //       },
-      //     },
-      //     {
-      //       headers: {
-      //         "zt-session": token,
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   emitter.emit("closeHostModal");
-      // } catch (error) {
-      //   console.error("Failed to submit form !!:", error);
-      // }
-        }
+        //   const proxyUrl = "https://asguard:3000";
+        //   const apiUrl = "/edge/management/v1/configs";
+        //   const response = await axios.post(
+        //     proxyUrl + apiUrl,
+        //     {
+        //       name: ConfigName.value,
+        //       configTypeId: "NH5p4FpGR",
+        //       data: {
+        //         address: adress.value,
+        //         port: Number(port.value),
+        //         protocol: selectedTitle.value,
+        //       },
+        //     },
+        //     {
+        //       headers: {
+        //         "zt-session": token,
+        //         "Content-Type": "application/json",
+        //       },
+        //     }
+        //   );
+        //   setTimeout(() => {
+        //     location.reload();
+        //   }, 1000);
+        //   emitter.emit("closeHostModal");
+        // } catch (error) {
+        //   console.error("Failed to submit form !!:", error);
+        // }
+      }
     };
     const selectItem = (item) => {
       selectedTitle.value = item.title;
     };
     const cancel = () => {
+      ConfigName.value = "";
+      adress.value = "";
+      // port.value = "";
+      portLow.value = "";
+      portHigh.value = "";
+      Description.value = "";
+      selectedTitle.value = "tcp";
       emitter.emit("closeHostModal");
     };
 
@@ -279,7 +299,8 @@ export default {
       emitter,
       ConfigName,
       adress,
-      port,
+      portLow,
+      portHigh,
       Description,
       selectedTitle,
       items,

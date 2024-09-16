@@ -74,6 +74,7 @@
 </template>
 
 <script>
+import { getCookie } from "@/mixins/csrftoken.js";
 import ModalAddRouter from "@/components/modals/ModalAddRouter.vue";
 import ModalUpdateRouter from "@/components/modals/ModalUpdateRouter.vue";
 import { useI18n } from "vue-i18n";
@@ -168,7 +169,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        // cellRenderer: formatedcreatedAt,
+        cellRenderer: formatedcreatedAt,
 
         width: 90,
         minWidth: 150,
@@ -341,23 +342,14 @@ export default {
       let routersObject;
       try {
         routersObject = JSON.parse(routersString);
+        console.log('routersObject',routersObject)
         console.log(routersObject);
       } catch (error) {
         console.error("Failed to parse routers string:", error);
         routersObject = { data: [] };
       }
-      // routers.value = routersObject.data;
-      let test = [
-        {
-          name: "name",
-          isVerified: "isVerified",
-          isOnline: "isOnline",
-          enrollmentJwt: "enrollmentJwt",
-          createdAt: "createdAt",
-        },
-      ];
-      routers.value = test;
-      // routers.value = routersObject?.data ? routersObject.data : [];
+      
+      routers.value = routersObject ? routersObject : [];
 
       console.log(routers.value);
     };
@@ -391,32 +383,56 @@ export default {
     };
 
     const confirmDelete = async (deletedItemId) => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = `/edge/management/v1/edge-routers/${deletedItemId}`;
-        await axios.delete(proxyUrl + apiUrl, {
+
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      let token = document.getElementById("app").getAttribute("token");
+
+      axios
+        .delete(`/ztna/delete_routers/${deletedItemId}`, {
           headers: {
             "zt-session": token,
             "Content-Type": "application/json",
           },
+        })
+        .then((response) => {
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          // state.snackbar = true;
+          // state.color = "red";
+          // state.textAlert = i.response.data.error;
         });
-        state.snackbar = true;
-        state.color = "success";
-        state.textAlert = "Relay deleted successfully";
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        state.deleteDialog = false;
-      } catch (error) {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "Delete failure";
-        console.error(
-          "Failed to delete item:",
-          error.response ? error.response.data : error.message
-        );
-      }
+
+      // try {
+      //   let token = document.getElementById("app").getAttribute("token");
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = `/edge/management/v1/edge-routers/${deletedItemId}`;
+      //   await axios.delete(proxyUrl + apiUrl, {
+      //     headers: {
+      //       "zt-session": token,
+      //       "Content-Type": "application/json",
+      //     },
+      //   });
+      //   state.snackbar = true;
+      //   state.color = "success";
+      //   state.textAlert = "Relay deleted successfully";
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      //   state.deleteDialog = false;
+      // } catch (error) {
+      //   state.snackbar = true;
+      //   state.color = "red";
+      //   state.textAlert = "Delete failure";
+      //   console.error(
+      //     "Failed to delete item:",
+      //     error.response ? error.response.data : error.message
+      //   );
+      // }
     };
 
     const cancelDelete = () => {

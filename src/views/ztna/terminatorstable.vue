@@ -73,6 +73,7 @@
 </template>
 
 <script>
+import { getCookie } from "@/mixins/csrftoken.js";
 import ModalTerminators from "@/components/modals/ModalTerminators.vue";
 import ModalUpdateTerminators from "@/components/modals/ModalUpdateTerminators.vue";
 import { useI18n } from "vue-i18n";
@@ -156,7 +157,7 @@ export default {
       {
         headerName: services,
         field: "service",
-        // cellRenderer: formatedservice,
+        cellRenderer: formatedservice,
         autoHeight: true,
         resizable: true,
 
@@ -167,7 +168,7 @@ export default {
       {
         headerName: relays,
         field: "router",
-        // cellRenderer: formatedrouter,
+        cellRenderer: formatedrouter,
         autoHeight: true,
         resizable: true,
 
@@ -188,7 +189,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        // cellRenderer: formatedcreatedAt,
+        cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
 
@@ -294,25 +295,48 @@ export default {
     };
 
     const confirmDelete = async (itemId) => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = `/edge/management/v1/terminators/${itemId}`;
-        await axios.delete(proxyUrl + apiUrl, {
-          headers: { "zt-session": token, "Content-Type": "application/json" },
+
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      let token = document.getElementById("app").getAttribute("token");
+
+      axios
+        .delete(`/ztna/delete_terminators/${itemId}`, {
+          headers: {
+            "zt-session": token,
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          // state.snackbar = true;
+          // state.color = "red";
+          // state.textAlert = i.response.data.error;
         });
-        state.snackbar = true;
-        state.color = "success";
-        state.textAlert = "Terminator deleted successfully";
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-      } catch (error) {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "Delete failure";
-        console.error("Failed to delete item:", error);
-      }
+      // try {
+      //   let token = document.getElementById("app").getAttribute("token");
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = `/edge/management/v1/terminators/${itemId}`;
+      //   await axios.delete(proxyUrl + apiUrl, {
+      //     headers: { "zt-session": token, "Content-Type": "application/json" },
+      //   });
+      //   state.snackbar = true;
+      //   state.color = "success";
+      //   state.textAlert = "Terminator deleted successfully";
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      // } catch (error) {
+      //   state.snackbar = true;
+      //   state.color = "red";
+      //   state.textAlert = "Delete failure";
+      //   console.error("Failed to delete item:", error);
+      // }
     };
 
     async function fetchterminators() {
@@ -322,22 +346,13 @@ export default {
       let terminatorsObject;
       try {
         terminatorsObject = JSON.parse(terminatorsString);
+        console.log('terminatorsObject',terminatorsObject)
       } catch (error) {
         console.error("Failed to parse terminators string:", error);
       }
-      // terminators.value = terminatorsObject.data;
 
-      let test = [
-        {
-          address: "address",
-          service: "service",
-          router: "router",
-          createdAt: "createdAt",
-          binding: "binding",
-        },
-      ];
-      terminators.value = test
-      // terminators.value = terminatorsObject?.data ? terminatorsObject.data : [];
+   
+      terminators.value = terminatorsObject ? terminatorsObject : [];
 
       if (gridApi.value) {
         gridApi.value.setRowData(terminators.value);

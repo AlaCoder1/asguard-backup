@@ -5,34 +5,22 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.createNewIdentity") }}</span
-            >
+              {{ $t("ztna.createNewIdentity") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateIdentity") }}</span
-            >
+              {{ $t("ztna.updateIdentity") }}</span>
           </v-card-title>
 
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="IdentityName"
-                    v-model="IdentityName"
-                    :placeholder="$t('ztna.identityName')"
-                    :rules="rules"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="IdentityName" v-model="IdentityName" :placeholder="$t('ztna.identityName')"
+                    :rules="rules" persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="IdentityAttribute"
-                    v-model="IdentityAttribute"
-                    :placeholder="$t('ztna.identityAttribute')"
-                    :rules="rules"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="IdentityAttribute" v-model="IdentityAttribute"
+                    :placeholder="$t('ztna.identityAttribute')" :rules="rules" persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12">
@@ -47,11 +35,7 @@
                         </template>
 
                         <v-list>
-                          <v-list-item
-                            v-for="(item, index) in items"
-                            :key="index"
-                            @click="selectItem(item)"
-                          >
+                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
                               item.title
                             }}</v-list-item-title>
@@ -73,30 +57,15 @@
                 </v-col> -->
 
                 <v-col cols="12">
-                  <v-text-field
-                    id="Description"
-                    v-model="Description"
-                    placeholder="Description"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="Description" v-model="Description" placeholder="Description"
+                    persistent-placeholder />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              class="mt-3 btn-add"
-              text
-              @click="cancel"
-              >{{ $t("buttons.close") }}</v-btn
-            >
+            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
+              class="mt-3 btn-add" text @click="cancel">{{ $t("buttons.close") }}</v-btn>
             <!-- <v-btn
                   color="red"
                   :rounded="true"
@@ -111,34 +80,18 @@
                 >
                   Reset
                 </v-btn> -->
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 ml-2 btn-add"
-              type="submit"
-            >
+            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
+              class="mt-3 ml-2 btn-add" type="submit">
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span
-              >
+                {{ $t("buttons.create") }}</span>
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
-              >
+                {{ $t("buttons.update") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -284,14 +237,15 @@ export default {
 
       if (modalMode.value === "edit") {
         axios
-          .put(`/ztna/update_identities/${identityId.value}`, payload,{
+          .put(`/ztna/update_identities/${identityId.value}`, payload, {
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",
             },
           })
           .then((response) => {
-            if (response.status == "201") {
+            console.log('response', response)
+            if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
               state.textAlert = response.data.msg;
@@ -301,6 +255,7 @@ export default {
             }
           })
           .catch((i) => {
+            console.log('response', i.response)
             state.snackbar = true;
             state.color = "red";
             state.textAlert = i.response.data.response;
@@ -314,18 +269,18 @@ export default {
             },
           })
           .then((response) => {
-            if (response.status == "201") {
+            if (response.status == "200") {
               state.openModal = false;
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.msg;
-
+              state.textAlert = response.data.message;
               setTimeout(() => {
-                // location.reload();
+                location.reload();
               }, 1000);
             }
           })
           .catch((i) => {
+            console.log('response', iresponse)
             state.snackbar = true;
             state.color = "red";
             state.textAlert = i.response.data.error;

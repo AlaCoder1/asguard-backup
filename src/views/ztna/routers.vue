@@ -5,38 +5,18 @@
       <v-divider></v-divider>
     </div>
     <div style="overflow: hidden; flex-grow: 1">
-      <ag-grid-vue
-        id="grid-wrapper"
-        domLayout="autoHeight"
-        class="ag-theme-alpine mt-3"
-        style="width: 100%"
-        @grid-ready="onGridReady"
-        :columnDefs="columnRouters"
-        :rowData="routers"
-        :gridOptions="gridOptions"
-        :overlayNoRowsTemplate="overlayTemplate"
-        :rowDragManaged="true"
-        :rowDragEntireRow="true"
-        @row-drag-end="onRowDragEnd"
-        :localeText="paginationLocalization"
-      />
+      <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
+        @grid-ready="onGridReady" :columnDefs="columnRouters" :rowData="routers" :gridOptions="gridOptions"
+        :overlayNoRowsTemplate="overlayTemplate" :rowDragManaged="true" :rowDragEntireRow="true"
+        @row-drag-end="onRowDragEnd" :localeText="paginationLocalization" />
     </div>
     <div class="d-flex justify-end mt-3">
-      <v-btn
-        class="add-button"
-        :rounded="true"
-        color="indigo-darken-3"
-        @click="openModalAdd"
-      >
+      <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalAdd">
         {{ $t("ztna.addRelay") }}
       </v-btn>
     </div>
-    <ModalAddRouter
-      :isOpen="state.isModalOpen"
-      :selectedId="state.selectedId"
-      :editRow="state.editRow"
-      :modalMode="state.modalMode"
-    />
+    <ModalAddRouter :isOpen="state.isModalOpen" :selectedId="state.selectedId" :editRow="state.editRow"
+      :modalMode="state.modalMode" />
     <!-- <ModalUpdateRouter
       :isOpen="state.isModalUpdateOpen"
       :selectedId="state.selectedId"
@@ -46,28 +26,18 @@
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-        }}</v-card-title>
+          }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-          }}</v-btn>
-          <v-btn
-            color="blue darken-1"
-            text
-            @click="confirmDelete(state.selectedId)"
-            >{{ $t("buttons.delete") }}</v-btn
-          >
+            }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-container>
@@ -204,12 +174,17 @@ export default {
       let isCurrentRowEditing = editingCells.some((cell) => {
         return cell.rowIndex === params.node.rowIndex;
       });
+      // <button class="action-button copy" data-action="copy">
+      //   <i class="mdi mdi-content-copy" style="color: #086eae; font-size: 20px;"></i>
+      // </button>
 
       if (params.node.data?.enrollmentJwt) {
         eGui.innerHTML = `
-      <button class="action-button copy" data-action="copy">
-        <i class="mdi mdi-content-copy" style="color: #086eae; font-size: 20px;"></i>
-      </button>
+          <button
+           class="action-button download"
+           data-action="download">
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+           </button>
     `;
 
         eGui.querySelectorAll(".action-button").forEach((button) => {
@@ -296,16 +271,31 @@ export default {
       switch (action) {
         case "edit":
           // openModalUpdate(rowData.id);
- console.log('edi',rowData)
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           state.selectedId = rowData.id;
 
           break;
-        case "copy":
+        case "download":
+          console.log('test', rowData.enrollmentJwtow)
           let text = rowData.enrollmentJwt;
-          copyContent(text);
+          // copyContent(text);
+          const blob = new Blob([text], {
+            type: "application/x-x509-ca-cert",
+          });
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = `${rowData.name}.txt`;
+
+          document.body.appendChild(a);
+          a.click();
+
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
           break;
         case "delete":
           opendelete(rowData.id);
@@ -342,13 +332,13 @@ export default {
       let routersObject;
       try {
         routersObject = JSON.parse(routersString);
-        console.log('routersObject',routersObject)
+        console.log('routersObject', routersObject)
         console.log(routersObject);
       } catch (error) {
         console.error("Failed to parse routers string:", error);
         routersObject = { data: [] };
       }
-      
+
       routers.value = routersObject ? routersObject : [];
 
       console.log(routers.value);
@@ -505,10 +495,12 @@ export default {
   border-collapse: collapse;
   border: 0.5px solid #000;
 }
+
 .table thead tr:first-child {
   border-bottom: 0.5px solid #000;
   background-color: ghostwhite;
 }
+
 .table tbody tr:last-child {
   border-bottom: 0.5px solid #000;
 }

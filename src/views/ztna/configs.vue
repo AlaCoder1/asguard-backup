@@ -199,6 +199,8 @@ export default {
 
       try {
         configsObject = JSON.parse(configsString);
+        console.log('configsObject',configsObject)
+
       } catch (error) {
         console.error("Failed to parse configs string:", error);
         configsObject = { data: [] }; // Default to an empty array if parsing fails

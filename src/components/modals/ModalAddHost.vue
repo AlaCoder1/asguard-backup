@@ -5,30 +5,23 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.addHostConfig") }}</span
-            >
+              {{ $t("ztna.addHostConfig") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateHostConfig") }}</span
-            >
+              {{ $t("ztna.updateHostConfig") }}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="ConfigName"
-                    v-model="ConfigName"
-                    :placeholder="$t('ztna.configName')"
-                    :rules="rules"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="ConfigName" v-model="ConfigName" :placeholder="$t('ztna.configName')" :rules="rules"
+                    persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12">
                   <div class="d-flex align-center">
                     <label class="ml-1" for="PROTOCOL">{{
                       $t("ztna.protocol")
-                    }}</label>
+                      }}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
@@ -38,14 +31,10 @@
                         </template>
 
                         <v-list>
-                          <v-list-item
-                            v-for="(item, index) in items"
-                            :key="index"
-                            @click="selectItem(item)"
-                          >
+                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
                               item.title
-                            }}</v-list-item-title>
+                              }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -54,51 +43,25 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="adress"
-                    v-model="adress"
-                    :placeholder="$t('ztna.address')"
-                    :rules="rules"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="adress" v-model="adress" :placeholder="$t('ztna.address')" :rules="rules"
+                    persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="PORT"
-                    v-model.number="port"
-                    placeholder="PORT"
-                    :rules="rules"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="PORT" v-model.number="port" placeholder="PORT" :rules="rules"
+                    persistent-placeholder />
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="Description"
-                    v-model="Description"
-                    placeholder="Description"
-                    :rules="rules"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
+                    persistent-placeholder />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              class="mt-3 btn-add"
-              text
-              @click="cancel"
-              >{{ $t("buttons.close") }}</v-btn
-            >
+            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
+              class="mt-3 btn-add" text @click="cancel">{{ $t("buttons.close") }}</v-btn>
             <!-- <v-btn
               color="red"
               :rounded="true"
@@ -112,23 +75,12 @@
             >
               Reset
             </v-btn> -->
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 ml-2 btn-add"
-              type="submit"
-            >
+            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
+              class="mt-3 ml-2 btn-add" type="submit">
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span
-              >
+                {{ $t("buttons.create") }}</span>
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
-              >
+                {{ $t("buttons.update") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -138,6 +90,7 @@
 </template>
 
 <script>
+import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
 import { toRefs, ref, watch, reactive, inject } from "vue";
 
@@ -196,12 +149,12 @@ export default {
       () => modalMode.value,
       () => {
         if (modalMode.value === "create") {
-          // ConfigName.value = "";
-          // adress.value = "";
-          // portLow.value = "";
-          // portHigh.value = "";
-          // Description.value = "";
-          // selectedTitle.value = "tcp";
+          ConfigName.value = "";
+          adress.value = "";
+          port.value = "";
+          Description.value = "";
+          selectedTitle.value = "tcp";
+
         }
       }
     );
@@ -212,36 +165,106 @@ export default {
     };
 
     const submitForm = async () => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
 
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = "/edge/management/v1/configs";
-        const response = await axios.post(
-          proxyUrl + apiUrl,
-          {
-            name: ConfigName.value,
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let payload = {
+          name: ConfigName.value,
             configTypeId: "NH5p4FpGR",
             data: {
               address: adress.value,
               port: Number(port.value),
-              protocol: selectedTitle.value,
-            },
-          },
-          {
+              protocol: selectedTitle.value
+            }
+      };
+
+      let token = document.getElementById("app").getAttribute("token");
+      console.log("payload", payload);
+      console.log("token", token);
+
+      if (modalMode.value === "edit") {
+        axios
+          .put(`/ztna/update_config/${ConfigId.value}`, payload,{
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",
             },
-          }
-        );
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        emitter.emit("closeHostModal");
-      } catch (error) {
-        console.error("Failed to submit form !!:", error);
-      }
+          })
+          .then((response) => {
+            if (response.status == "201") {
+              // state.snackbar = true;
+              // state.color = "success";
+              // state.textAlert = response.data.msg;
+              setTimeout(() => {
+                // location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            // state.snackbar = true;
+            // state.color = "red";
+            // state.textAlert = i.response.data.response;
+          });
+      } else {
+        axios
+          .post("/ztna/add_config", payload, {
+            headers: {
+              "zt-session": token,
+              "Content-Type": "application/json",
+            },
+          })
+          .then((response) => {
+            console.log('re',response)
+            if (response.status == "201") {
+              // state.openModal = false;
+              // state.snackbar = true;
+              // state.color = "success";
+              // state.textAlert = response.data.msg;
+
+              setTimeout(() => {
+                // location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            console.log('re',u.response)
+
+            // state.snackbar = true;
+            // state.color = "red";
+            // state.textAlert = i.response.data.error;
+          });
+      // try {
+      //   let token = document.getElementById("app").getAttribute("token");
+
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = "/edge/management/v1/configs";
+      //   const response = await axios.post(
+      //     proxyUrl + apiUrl,
+      //     {
+      //       name: ConfigName.value,
+      //       configTypeId: "NH5p4FpGR",
+      //       data: {
+      //         address: adress.value,
+      //         port: Number(port.value),
+      //         protocol: selectedTitle.value,
+      //       },
+      //     },
+      //     {
+      //       headers: {
+      //         "zt-session": token,
+      //         "Content-Type": "application/json",
+      //       },
+      //     }
+      //   );
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      //   emitter.emit("closeHostModal");
+      // } catch (error) {
+      //   console.error("Failed to submit form !!:", error);
+      // }
+        }
     };
     const selectItem = (item) => {
       selectedTitle.value = item.title;

@@ -153,6 +153,8 @@
 </template>
 
 <script>
+import { getCookie } from "@/mixins/csrftoken.js";
+
 import axios from "axios";
 import { toRefs, ref, watch, reactive, inject } from "vue";
 
@@ -251,7 +253,7 @@ export default {
 
       if (modalMode.value === "edit") {
         axios
-          .put(`/ztna/update_identities/${ConfigId.value}`, payload,{
+          .put(`/ztna/update_config/${ConfigId.value}`, payload,{
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",
@@ -274,7 +276,7 @@ export default {
           });
       } else {
         axios
-          .post("/ztna/add_identities", payload, {
+          .post("/ztna/add_config", payload, {
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",

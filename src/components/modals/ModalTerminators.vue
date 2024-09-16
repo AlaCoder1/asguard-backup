@@ -79,7 +79,9 @@
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="indigo-darken-3" :rounded="true" large outlined label-color="#213E9F" variant="flat"
-              class="mt-3 btn-add" text @click="cancel">{{ $t("buttons.close") }}</v-btn>
+              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span
+              ></v-btn>
             <!-- <VBtn
               color="red"
               :rounded="true"

@@ -18,6 +18,8 @@ urlpatterns = [
     path('add_routers', views.add_routers, name='add_routers'),
     path('delete_routers/<str:id>', views.delete_routers, name='delete_routers'),
     path('update_routers/<str:id>', views.update_routers, name='update_routers'),
+    path('add_enrollments', views.add_enrollments, name='add_enrollments'),
+    path('delete_enrollments/<str:id>', views.delete_enrollments, name='delete_enrollments'),
     
     ########## Config Paths ##########
     path('get_configs/', views.get_all_configs, name='get_configs'),

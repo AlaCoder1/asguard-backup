@@ -566,15 +566,15 @@ def ztna_page(request):
     service_policies = get_service_policies()
     service_edge_router_policies = get_service_edge_router_policies()
     token = get_Zt_Token()
-    context = {'identities': identities,
-               'routers':routers,
-               'configs':configs,
-               'token':token,
-               'services':services, 
-               'terminators':terminators, 
-               'router_policies':router_policies, 
-               'service_policies':service_policies, 
-               'service_edge_router_policies':service_edge_router_policies}
+    context = {'identities': json.dumps(identities),
+               'routers':json.dumps(routers) ,
+               'configs':json.dumps(configs),
+               'token':json.dumps(token),
+               'services': json.dumps(services), 
+               'terminators': json.dumps(terminators),
+               'router_policies': json.dumps(router_policies), 
+               'service_policies': json.dumps(service_policies), 
+               'service_edge_router_policies':json.dumps(service_edge_router_policies)}
     return render(request,'ztna.html',context)
 
 

@@ -133,6 +133,14 @@
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
+      {{ state.textAlert }}
+    </v-snackbar>
   </v-row>
 </template>
 
@@ -141,6 +149,7 @@ import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
 import { required, helpers, requiredIf } from "@vuelidate/validators";
+import { getCookie } from "@/mixins/csrftoken.js";
 export default {
   props: {
     isOpen: {
@@ -179,6 +188,9 @@ export default {
 
     const state = reactive({
       openModal: false,
+      snackbar: false,
+      color: "",
+      textAlert: "",
     });
 
     watch(
@@ -213,44 +225,111 @@ export default {
         IdentityName.value = data.name;
         Description.value = data.description;
         IdentityAttribute.value = data.roleAttributes;
-        selectedTitle.value = data.type;
+        selectedTitle.value = data.typeId;
+        isAdmin.value = data.isAdmin;
       }
     };
 
+    // const submitForm = async () => {
+    //   try {
+    //     let token = document.getElementById("app").getAttribute("token");
+    //     console.log("token", token);
+
+    //     const proxyUrl = "https://asguard:3000"; // Adjust this to your proxy server's URL
+    //     const apiUrl = "/edge/management/v1/identities"; // This part remains the same
+
+    //     const response = await axios.post(
+    //       proxyUrl + apiUrl,
+    //       {
+    //         name: IdentityName.value,
+    //         type: selectedTitle.value,
+    //         isAdmin: isAdmin.value,
+    //         roleAttributes: [IdentityAttribute.value],
+    //       },
+    //       {
+    //         headers: {
+    //           "zt-session": token,
+    //           "Content-Type": "application/json",
+    //         },
+    //       }
+    //     );
+
+    //     setTimeout(() => {
+    //       location.reload();
+    //     }, 1000);
+
+    //     emitter.emit("closeidentityModal");
+    //   } catch (error) {
+    //     console.error(
+    //       "Failed to submit form:",
+    //       error.response ? error.response.data : error.message
+    //     );
+    //   }
+    // };
+
     const submitForm = async () => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
-        console.log("token", token);
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-        const proxyUrl = "https://asguard:3000"; // Adjust this to your proxy server's URL
-        const apiUrl = "/edge/management/v1/identities"; // This part remains the same
+      let payload = {
+        name: IdentityName.value,
+        type: selectedTitle.value,
+        isAdmin: isAdmin.value,
+        roleAttributes: [IdentityAttribute.value],
+      };
 
-        const response = await axios.post(
-          proxyUrl + apiUrl,
-          {
-            name: IdentityName.value,
-            type: selectedTitle.value,
-            isAdmin: isAdmin.value,
-            roleAttributes: [IdentityAttribute.value],
-          },
-          {
+      let token = document.getElementById("app").getAttribute("token");
+      console.log("payload", payload);
+      console.log("token", token);
+
+      if (modalMode.value === "edit") {
+        axios
+          .put(`/ztna/update_identities/${identityId.value}`, payload,{
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",
             },
-          }
-        );
+          })
+          .then((response) => {
+            if (response.status == "201") {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              setTimeout(() => {
+                // location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.response;
+          });
+      } else {
+        axios
+          .post("/ztna/add_identities", payload, {
+            headers: {
+              "zt-session": token,
+              "Content-Type": "application/json",
+            },
+          })
+          .then((response) => {
+            if (response.status == "201") {
+              state.openModal = false;
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
 
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-
-        emitter.emit("closeidentityModal");
-      } catch (error) {
-        console.error(
-          "Failed to submit form:",
-          error.response ? error.response.data : error.message
-        );
+              setTimeout(() => {
+                // location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          });
       }
     };
 

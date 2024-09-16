@@ -10,21 +10,11 @@
             <v-container>
               <v-row>
                 <v-col cols="12">
-                  <v-text-field
-                    v-model="date"
-                    label="Date"
-                    prepend-icon="mdi-calendar"
-                    type="date"
-                  ></v-text-field>
+                  <v-text-field v-model="date" label="Date" prepend-icon="mdi-calendar" type="date"></v-text-field>
                 </v-col>
                 <v-col cols="12">
-                  <v-text-field
-                    v-model="time"
-                    label="Time"
-                    prepend-icon="mdi-clock"
-                    type="time"
-                    class="ml-1"
-                  ></v-text-field>
+                  <v-text-field v-model="time" label="Time" prepend-icon="mdi-clock" type="time"
+                    class="ml-1"></v-text-field>
                 </v-col>
 
                 <v-col cols="12">
@@ -39,11 +29,7 @@
                         </template>
 
                         <v-list>
-                          <v-list-item
-                            v-for="(item, index) in items"
-                            :key="index"
-                            @click="selectItem(item)"
-                          >
+                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
                               item.title
                             }}</v-list-item-title>
@@ -58,19 +44,8 @@
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              class="mt-3 btn-add"
-              text
-              @click="cancel"
-              >{{ $t("buttons.close") }}</v-btn
-            >
+            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
+              class="mt-3 btn-add" text @click="cancel">{{ $t("buttons.close") }}</v-btn>
             <!-- <VBtn
               color="red"
               :rounded="true"
@@ -84,17 +59,8 @@
             >
               Reset
             </VBtn> -->
-            <VBtn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 ml-2 btn-add"
-              type="submit"
-            >
+            <VBtn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
+              class="mt-3 ml-2 btn-add" type="submit">
               {{ $t("buttons.create") }}
             </VBtn>
           </v-card-actions>
@@ -106,6 +72,7 @@
 
 <script>
 import axios from "axios";
+import { getCookie } from "@/mixins/csrftoken.js";
 import { toRefs, ref, watch, reactive, inject } from "vue";
 
 export default {
@@ -155,38 +122,42 @@ export default {
     );
 
     const submitForm = async () => {
-      try {
-        console.log(state.itemId);
-        let dateTime = `${date.value}T${time.value}:00Z`;
-        let token = document.getElementById("app").getAttribute("token");
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = "/edge/management/v1/enrollments";
+      let token = document.getElementById("app").getAttribute("token");
 
-        const enrollResponse = await axios.post(
-          proxyUrl + apiUrl,
-          {
-            expiresAt: dateTime,
-            method: selectedTitle.value,
-            identityId: state.itemId,
-          },
-          {
-            headers: {
-              "zt-session": token,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        emitter.emit("closeEnrollmentModal");
-      } catch (error) {
-        console.error(
-          "Failed to submit:",
-          error.response ? error.response.data : error.message
-        );
+      let payload = {
+        expiresAt: dateTime,
+        method: selectedTitle.value,
+        identityId: state.itemId,
       }
+      axios
+        .post("/ztna/add_enrollment", payload, {
+          headers: {
+            "zt-session": token,
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          console.log('response', response)
+          if (response.status == "201") {
+            // state.openModal = false;
+            // state.snackbar = true;
+            // state.color = "success";
+            // state.textAlert = response.data.msg;
+
+            setTimeout(() => {
+              // location.reload();
+            }, 1000);
+          }
+        })
+        .catch((i) => {
+          console.log('r', i.response)
+          // state.snackbar = true;
+          // state.color = "red";
+          // state.textAlert = i.response.data.error;
+        });
     };
 
     const selectItem = (item) => {

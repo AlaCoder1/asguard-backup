@@ -5,41 +5,21 @@
       <v-divider></v-divider>
     </div>
     <div style="overflow: hidden; flex-grow: 1">
-      <ag-grid-vue
-        id="grid-wrapper"
-        domLayout="autoHeight"
-        class="ag-theme-alpine mt-3"
-        style="width: 100%"
-        @grid-ready="onGridReady"
-        :columnDefs="columnConfigs"
-        :rowData="configs"
-        :gridOptions="gridOptions"
-        :overlayNoRowsTemplate="overlayTemplate"
-        :rowDragManaged="true"
-        :rowDragEntireRow="true"
-        @row-drag-end="onRowDragEnd"
-        :localeText="paginationLocalization"
-      />
+      <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
+        @grid-ready="onGridReady" :columnDefs="columnConfigs" :rowData="configs" :gridOptions="gridOptions"
+        :overlayNoRowsTemplate="overlayTemplate" :rowDragManaged="true" :rowDragEntireRow="true"
+        @row-drag-end="onRowDragEnd" :localeText="paginationLocalization" />
     </div>
 
     <div class="d-flex justify-end mt-3 mb-3">
-      <v-btn
-        class="add-button"
-        :rounded="true"
-        color="indigo-darken-3"
-        @click="openModalInterceptAdd"
-      >
+      <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalInterceptAdd">
         {{ $t("ztna.addInterceptConfig") }}
       </v-btn>
     </div>
     <configHost />
 
-    <ModalAddIntercept
-      :isOpen="state.isModalInterceptOpen"
-      :selectedId="state.selectedId"
-      :editRow="state.editRow"
-      :modalMode="state.modalMode"
-    />
+    <ModalAddIntercept :isOpen="state.isModalInterceptOpen" :selectedId="state.selectedId" :editRow="state.editRow"
+      :modalMode="state.modalMode" />
     <!-- <ModalUpdateIntercept
       :isOpen="state.isModalUpdateInterceptOpen"
       :selectedId="state.selectedId"
@@ -48,28 +28,18 @@
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-        }}</v-card-title>
+          }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-          }}</v-btn>
-          <v-btn
-            color="blue darken-1"
-            text
-            @click="confirmDelete(state.selectedId)"
-            >{{ $t("buttons.delete") }}</v-btn
-          >
+            }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-container>
@@ -88,6 +58,7 @@ import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { getCookie } from "@/mixins/csrftoken.js";
 
 export default {
   name: "configsComponent",
@@ -177,7 +148,7 @@ export default {
         width: 90,
         minWidth: 150,
         flex: 1,
-        // valueFormatter: (params) => formatDateTime(params.value),
+        valueFormatter: (params) => formatDateTime(params.value),
       },
       {
         headerName: "Actions",
@@ -210,7 +181,7 @@ export default {
         width: 90,
         minWidth: 150,
         flex: 1,
-        // valueFormatter: (params) => formatDateTime(params.value),
+        valueFormatter: (params) => formatDateTime(params.value),
       },
       {
         headerName: "Actions",
@@ -232,13 +203,10 @@ export default {
         console.error("Failed to parse configs string:", error);
         configsObject = { data: [] }; // Default to an empty array if parsing fails
       }
-      // configs.value = configsObject.data;
-      // configs.value = configsObject?.data ? configsObject.data : [];
+      configs.value = configsObject ? configsObject : [];
+      console.log('configs.value',configs.value)
 
-      let test = [
-        { name: "name", configType: { name: "name" }, createdAt: "createdAt" },
-      ];
-      configs.value = test;
+
     };
 
     const onGridReady = (params) => {
@@ -253,34 +221,59 @@ export default {
     }
 
     const confirmDelete = async (deletedItemId) => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
 
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = `/edge/management/v1/configs/${deletedItemId}`;
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      let token = document.getElementById("app").getAttribute("token");
 
-        const response = await axios.delete(proxyUrl + apiUrl, {
+      axios
+        .delete(`/ztna/delete_config/${deletedItemId}`, {
           headers: {
             "zt-session": token,
             "Content-Type": "application/json",
           },
+        })
+        .then((response) => {
+
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          // state.snackbar = true;
+          // state.color = "red";
+          // state.textAlert = i.response.data.error;
         });
-        state.snackbar = true;
-        state.color = "success";
-        state.textAlert = "Config deleted successfully";
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        state.deleteDialog = false;
-      } catch (error) {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "Delete failure";
-        console.error(
-          "Failed to delete item:",
-          error.response ? error.response.data : error.message
-        );
-      }
+
+
+      // try {
+      //   let token = document.getElementById("app").getAttribute("token");
+
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = `/edge/management/v1/configs/${deletedItemId}`;
+
+      //   const response = await axios.delete(proxyUrl + apiUrl, {
+      //     headers: {
+      //       "zt-session": token,
+      //       "Content-Type": "application/json",
+      //     },
+      //   });
+      //   state.snackbar = true;
+      //   state.color = "success";
+      //   state.textAlert = "Config deleted successfully";
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      //   state.deleteDialog = false;
+      // } catch (error) {
+      //   state.snackbar = true;
+      //   state.color = "red";
+      //   state.textAlert = "Delete failure";
+      //   console.error(
+      //     "Failed to delete item:",
+      //     error.response ? error.response.data : error.message
+      //   );
+      // }
     };
 
     const cancelDelete = () => {
@@ -353,6 +346,7 @@ export default {
     const handleActionClient = (action, rowData, index) => {
       switch (action) {
         case "edit":
+          console.log('configs.edit',rowData)
           state.modalMode = "edit";
           state.isModalInterceptOpen = true;
           state.selectedId = rowData.id;

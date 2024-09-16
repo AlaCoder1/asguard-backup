@@ -253,6 +253,7 @@ export default {
     };
 
     const cancel = () => {
+     
       emitter.emit("closeUpdateModal");
     };
 

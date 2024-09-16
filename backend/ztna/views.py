@@ -64,7 +64,7 @@ def add_identities(request):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_IDENTITIES, headers=headers, json=data)
+    response = requests.post(PATH_ZTNA_IDENTITIES, headers=headers, json=data, verify=False)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA identities is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA identities"}, status=400)
@@ -79,10 +79,10 @@ def delete_identities(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id}
     data = request.data
-    response = requests.delete(f"{PATH_ZTNA_IDENTITIES}/{id}", headers=headers, json=data)
-    if response.status_code == 201:
-        return JsonResponse({"message": "ZTNA identities is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA identities"}, status=400)
+    response = requests.delete(f"{PATH_ZTNA_IDENTITIES}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
+        return JsonResponse({"message": "ZTNA identities is delted"}, status=200)
+    return JsonResponse({"error": "Error in deleting ZTNA identities"}, status=400)
 
 
 @api_view(['PUT'])
@@ -92,8 +92,8 @@ def update_identities(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.put(f"{PATH_ZTNA_IDENTITIES}/{id}", headers=headers, json=data)
-    if response.status_code == 201:
+    response = requests.put(f"{PATH_ZTNA_IDENTITIES}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
         return JsonResponse({"message": "ZTNA identities is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA identities"}, status=400)
 
@@ -121,7 +121,7 @@ def add_routers(request):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_ROUTERS, headers=headers, json=data)
+    response = requests.post(PATH_ZTNA_ROUTERS, headers=headers, json=data, verify=False)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA routers is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA routers"}, status=400)
@@ -136,8 +136,8 @@ def delete_routers(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id}
     data = request.data
-    response = requests.delete(f"{PATH_ZTNA_ROUTERS}/{id}", headers=headers, json=data)
-    if response.status_code == 201:
+    response = requests.delete(f"{PATH_ZTNA_ROUTERS}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
         return JsonResponse({"message": "ZTNA routers is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA routers"}, status=400)
 
@@ -149,8 +149,8 @@ def update_routers(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.put(f"{PATH_ZTNA_ROUTERS}/{id}", headers=headers, json=data)
-    if response.status_code == 201:
+    response = requests.put(f"{PATH_ZTNA_ROUTERS}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
         return JsonResponse({"message": "ZTNA routers is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA routers"}, status=400)
 
@@ -178,7 +178,7 @@ def add_configs(request):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_CONFIGS, headers=headers, json=data)
+    response = requests.post(PATH_ZTNA_CONFIGS, headers=headers, json=data, verify=False)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA configs is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA configs"}, status=400)
@@ -193,8 +193,8 @@ def delete_configs(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id}
     data = request.data
-    response = requests.delete(f"{PATH_ZTNA_CONFIGS}/{id}", headers=headers, json=data)
-    if response.status_code == 201:
+    response = requests.delete(f"{PATH_ZTNA_CONFIGS}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
         return JsonResponse({"message": "ZTNA configs is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA configs"}, status=400)
 
@@ -206,8 +206,8 @@ def update_configs(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.put(f"{PATH_ZTNA_CONFIGS}/{id}", headers=headers, json=data)
-    if response.status_code == 201:
+    response = requests.put(f"{PATH_ZTNA_CONFIGS}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
         return JsonResponse({"message": "ZTNA configs is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA configs"}, status=400)
 
@@ -235,7 +235,7 @@ def add_services(request):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_SERVICES, headers=headers, json=data)
+    response = requests.post(PATH_ZTNA_SERVICES, headers=headers, json=data, verify=False)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA services is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA services"}, status=400)
@@ -250,8 +250,8 @@ def delete_services(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id}
     data = request.data
-    response = requests.delete(f"{PATH_ZTNA_SERVICES}/{id}", headers=headers, json=data)
-    if response.status_code == 201:
+    response = requests.delete(f"{PATH_ZTNA_SERVICES}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
         return JsonResponse({"message": "ZTNA services is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA services"}, status=400)
 
@@ -263,8 +263,8 @@ def update_services(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.put(f"{PATH_ZTNA_SERVICES}/{id}", headers=headers, json=data)
-    if response.status_code == 201:
+    response = requests.put(f"{PATH_ZTNA_SERVICES}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
         return JsonResponse({"message": "ZTNA services is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA services"}, status=400)
 
@@ -292,7 +292,7 @@ def add_terminators(request):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_TERMINATORS, headers=headers, json=data)
+    response = requests.post(PATH_ZTNA_TERMINATORS, headers=headers, json=data, verify=False)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA terminators is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA terminators"}, status=400)
@@ -307,8 +307,8 @@ def delete_terminators(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id}
     data = request.data
-    response = requests.delete(f"{PATH_ZTNA_TERMINATORS}/{id}", headers=headers, json=data)
-    if response.status_code == 201:
+    response = requests.delete(f"{PATH_ZTNA_TERMINATORS}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
         return JsonResponse({"message": "ZTNA terminators is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA terminators"}, status=400)
 
@@ -320,8 +320,8 @@ def update_terminators(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.put(f"{PATH_ZTNA_TERMINATORS}/{id}", headers=headers, json=data)
-    if response.status_code == 201:
+    response = requests.put(f"{PATH_ZTNA_TERMINATORS}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
         return JsonResponse({"message": "ZTNA terminators is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA terminators"}, status=400)
 

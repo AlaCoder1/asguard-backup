@@ -100,7 +100,7 @@ export default {
     return {
       activeTab: "",
       tabs: [
-        { id: 1, label: "ztna.identité", component: identities },
+        { id: 1, label: "ztna.identite", component: identities },
         { id: 2, label: "ztna.configuration", component: configs },
         { id: 3, label: "ztna.services", component: Services },
         { id: 4, label: "ztna.relays", component: routers },
@@ -118,11 +118,11 @@ export default {
     },
   },
   mounted: async function () {
-    let tab = localStorage.getItem("identities") || "ztna.identité";
+    let tab = localStorage.getItem("identities") || "ztna.identite";
     this.activeTab = tab;
 
     this.emitter.on("reload-tabs", () => {
-      let tab = localStorage.getItem("identities") || "ztna.identité";
+      let tab = localStorage.getItem("identities") || "ztna.identite";
       if (tab) this.activeTab = tab;
     });
   },

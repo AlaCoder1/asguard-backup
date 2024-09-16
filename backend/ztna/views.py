@@ -1,7 +1,7 @@
 from utils.constant_variables import ERROR_MESSAGES_START, ERROR_MESSAGES_STOP, SUCCESS_MESSAGES_START, SUCCESS_MESSAGES_STOP
 from utils.errors_utils import CommandExecutionError
-from .constant_variables import CONSTANT_ZTNA, PATH_ZTNA_CONFIGS, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_TERMINATORS
-from .list_ztna import get_configs, get_identities, get_routers, get_services, get_terminators
+from .constant_variables import CONSTANT_ZTNA, PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES, PATH_ZTNA_TERMINATORS
+from .list_ztna import get_configs, get_edge_router_policies, get_identities, get_routers, get_service_edge_router_policies, get_service_policies, get_services, get_terminators
 from .utils import change_status_ztna_service, get_Zt_Token  
 from django.http import JsonResponse
 import requests
@@ -358,3 +358,166 @@ def update_terminators(request, id):
 ################################
 ########### Policies ###########
 ################################
+
+# Edge routers policies
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL ZTNA EDGE ROUTERS POLICIES",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_edge_routers_policies(request):
+    """Getting all edge routers from database"""
+    list_edge_routers_policies = []
+    if (request.method == 'GET'):
+        list_edge_routers_policies = get_edge_router_policies()
+    return JsonResponse(list_edge_routers_policies, safe=False)
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def add_edge_routers_policies(request):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    data = request.data
+    response = requests.post(PATH_ZTNA_EDGE_ROUTERS_POLICIES, headers=headers, json=data, verify=False)
+    if response.status_code == 201:
+        return JsonResponse({"message": "ZTNA edge routers policies is added"}, status=200)
+    return JsonResponse({"error": "Error in adding ZTNA edge routers policies"}, status=400)
+
+
+@swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE A ZTNA EDGE ROUTERS POLICIES",)
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_edge_routers_policies(request, id):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id}
+    data = request.data
+    response = requests.delete(f"{PATH_ZTNA_EDGE_ROUTERS_POLICIES}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
+        return JsonResponse({"message": "ZTNA edge routers policies is deleted"}, status=200)
+    return JsonResponse({"error": "Error in deleting ZTNA edge routers policies"}, status=400)
+
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def update_edge_routers_policies(request, id):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    data = request.data
+    response = requests.put(f"{PATH_ZTNA_EDGE_ROUTERS_POLICIES}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
+        return JsonResponse({"message": "ZTNA edge routers policies is updated"}, status=200)
+    return JsonResponse({"error": "Error in updating ZTNA edge routers policies"}, status=400)
+
+
+# Services policies
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL ZTNA SERVICES POLICIES",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_services_policies(request):
+    """Getting all services from database"""
+    list_services_policies = []
+    if (request.method == 'GET'):
+        list_services_policies = get_service_policies()
+    return JsonResponse(list_services_policies, safe=False)
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def add_services_policies(request):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    data = request.data
+    response = requests.post(PATH_ZTNA_SERVICES_POLICIES, headers=headers, json=data, verify=False)
+    if response.status_code == 201:
+        return JsonResponse({"message": "ZTNA services policies is added"}, status=200)
+    return JsonResponse({"error": "Error in adding ZTNA services policies"}, status=400)
+
+
+@swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE A ZTNA ROUTERS POLICIES",)
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_services_policies(request, id):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id}
+    data = request.data
+    response = requests.delete(f"{PATH_ZTNA_SERVICES_POLICIES}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
+        return JsonResponse({"message": "ZTNA services policies is deleted"}, status=200)
+    return JsonResponse({"error": "Error in deleting ZTNA services policies"}, status=400)
+
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def update_services_policies(request, id):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    data = request.data
+    response = requests.put(f"{PATH_ZTNA_SERVICES_POLICIES}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
+        return JsonResponse({"message": "ZTNA services policies is updated"}, status=200)
+    return JsonResponse({"error": "Error in updating ZTNA services policies"}, status=400)
+
+# Services Edge routers policies
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET LIST OF ALL ZTNA SERVICES EDGE ROUTERS POLICIES",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_services_edge_routers_policies(request):
+    """Getting all services edge routers from database"""
+    list_services_edge_routers_policies = []
+    if (request.method == 'GET'):
+        list_services_edge_routers_policies = get_service_edge_router_policies()
+    return JsonResponse(list_services_edge_routers_policies, safe=False)
+
+
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def add_services_edge_routers_policies(request):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    data = request.data
+    response = requests.post(PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, headers=headers, json=data, verify=False)
+    if response.status_code == 201:
+        return JsonResponse({"message": "ZTNA services edge routers policies is added"}, status=200)
+    return JsonResponse({"error": "Error in adding ZTNA services edge routers policies"}, status=400)
+
+
+@swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE A ZTNA SERVICES EDGE ROUTERS POLICIES",)
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_services_edge_routers_policies(request, id):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id}
+    data = request.data
+    response = requests.delete(f"{PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
+        return JsonResponse({"message": "ZTNA services edge routers policies is deleted"}, status=200)
+    return JsonResponse({"error": "Error in deleting ZTNA services edge routers policies"}, status=400)
+
+
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def update_services_edge_routers_policies(request, id):
+    session_id = get_Zt_Token()
+    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    data = request.data
+    response = requests.put(f"{PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES}/{id}", headers=headers, json=data, verify=False)
+    if response.status_code == 200:
+        return JsonResponse({"message": "ZTNA services edge routers policies is updated"}, status=200)
+    return JsonResponse({"error": "Error in updating ZTNA services edge routers policies"}, status=400)

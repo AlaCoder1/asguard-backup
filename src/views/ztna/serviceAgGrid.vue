@@ -314,25 +314,28 @@ export default {
       // }
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
       let token = document.getElementById("app").getAttribute("token");
 
       axios
-        .delete(`/ztna/delete_services/${itemId}`, {
+        .delete(`/ztna/delete_services_policies/${itemId}`, {
           headers: {
             "zt-session": token,
             "Content-Type": "application/json",
           },
         })
         .then((response) => {
-
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.message;
           setTimeout(() => {
             location.reload();
           }, 1000);
         })
         .catch((i) => {
-          // state.snackbar = true;
-          // state.color = "red";
-          // state.textAlert = i.response.data.error;
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
         });
     };
 

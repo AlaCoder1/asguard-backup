@@ -106,6 +106,7 @@ def add_enrollments(request):
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     response = requests.post(PATH_ZTNA_ENROLLMENTS, headers=headers, json=data, verify=False)
+    print(response.text)
     if response.status_code == 201:
         return JsonResponse({"message": "ZTNA enrollment is added"}, status=200)
     return JsonResponse({"error": "Error in adding ZTNA enrollment"}, status=400)
@@ -194,6 +195,8 @@ def start_routers(request, id):
         data = request.data
         router_name = data.get("name")
         token = data.get("token")
+        print(router_name)
+        print(token)
         start_router(router_name, token)
         return JsonResponse({"message": "ZTNA Router is started"}, status=200)
     except CommandExecutionError:

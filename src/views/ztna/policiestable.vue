@@ -5,37 +5,19 @@
       <v-divider></v-divider>
     </div>
     <div style="overflow: hidden; flex-grow: 1">
-      <ag-grid-vue
-        id="grid-wrapperRouter"
-        domLayout="autoHeight"
-        class="ag-theme-alpine mt-3"
-        style="width: 100%"
-        @grid-ready="onGridReadyRouter"
-        :columnDefs="columnsALLRouter"
-        :rowData="rowDataRouter.value"
-        :gridOptions="gridOptions"
-        :overlayNoRowsTemplate="overlayTemplate"
-        :localeText="paginationLocalization"
-      />
+      <ag-grid-vue id="grid-wrapperRouter" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
+        @grid-ready="onGridReadyRouter" :columnDefs="columnsALLRouter" :rowData="rowDataRouter.value"
+        :gridOptions="gridOptions" :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
     </div>
     <div class="d-flex justify-end mt-3">
-      <v-btn
-        class="add-button"
-        :rounded="true"
-        color="indigo-darken-3"
-        @click="openModalRouter"
-      >
+      <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalRouter">
         {{ $t("ztna.addRelaysPolicy") }}
       </v-btn>
     </div>
     <serviceAgGrid />
     <policyAgGrid />
-    <modal-router-policy
-      :isOpen="state.isModalOpenRouter"
-      :selectedId="state.selectedId"
-      :editRow="state.editRow"
-      :modalMode="state.modalMode"
-    />
+    <modal-router-policy :isOpen="state.isModalOpenRouter" :selectedId="state.selectedId" :editRow="state.editRow"
+      :modalMode="state.modalMode" />
     <!-- <ModalUpdateRouterP
       :isOpen="state.isModalUpdateOpen"
       :selectedId="state.selectedId"
@@ -44,33 +26,24 @@
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-        }}</v-card-title>
+          }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-          }}</v-btn>
-          <v-btn
-            color="blue darken-1"
-            text
-            @click="confirmDelete(state.selectedId)"
-            >{{ $t("buttons.delete") }}</v-btn
-          >
+            }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-container>
 </template>
 <script>
+import { getCookie } from "@/mixins/csrftoken.js";
 import ModalRouterPolicy from "@/components/modals/ModalRouterPolicy.vue";
 import ModalUpdateRouterP from "@/components/modals/ModalUpdateRouterP.vue";
 import serviceAgGrid from "./serviceAgGrid.vue";
@@ -161,7 +134,7 @@ export default {
       {
         headerName: edgeRelaysRole,
         field: "edgeRouterRoles",
-        // cellRenderer: formatededgeRouterRoles,
+        cellRenderer: formatededgeRouterRoles,
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -171,7 +144,7 @@ export default {
       {
         headerName: identityRole,
         field: "identityRoles",
-        // cellRenderer: formatedidentityRoles,
+        cellRenderer: formatedidentityRoles,
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -190,7 +163,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        // cellRenderer: formatedcreatedAt,
+        cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -266,6 +239,7 @@ export default {
     const handleActionClient = (action, rowData) => {
       switch (action) {
         case "edit":
+          console.log('edit', rowData)
           // openModalUpdate(rowData.id);
           // console.log("edit", rowData);
 
@@ -297,25 +271,51 @@ export default {
     };
 
     const confirmDelete = async (itemId) => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = `/edge/management/v1/edge-router-policies/${itemId}`;
-        await axios.delete(proxyUrl + apiUrl, {
-          headers: { "zt-session": token, "Content-Type": "application/json" },
+
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let token = document.getElementById("app").getAttribute("token");
+
+      axios
+        .delete(`/ztna/delete_edge_routers_policies/${itemId}`, {
+          headers: {
+            "zt-session": token,
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.message;
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
         });
-        state.snackbar = true;
-        state.color = "success";
-        state.textAlert = "Relay policy deleted successfully";
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-      } catch (error) {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "Delete failure";
-        console.error("Failed to delete item:", error);
-      }
+      // try {
+      //   let token = document.getElementById("app").getAttribute("token");
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = `/edge/management/v1/edge-router-policies/${itemId}`;
+      //   await axios.delete(proxyUrl + apiUrl, {
+      //     headers: { "zt-session": token, "Content-Type": "application/json" },
+      //   });
+      //   state.snackbar = true;
+      //   state.color = "success";
+      //   state.textAlert = "Relay policy deleted successfully";
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      // } catch (error) {
+      //   state.snackbar = true;
+      //   state.color = "red";
+      //   state.textAlert = "Delete failure";
+      //   console.error("Failed to delete item:", error);
+      // }
     };
 
     onMounted(() => {
@@ -325,21 +325,13 @@ export default {
 
       let router_policiesObject = JSON.parse(router_policiesString);
 
-      // rowDataRouter.value = router_policiesObject?.data;
+      console.log('router_policiesObject', router_policiesObject)
 
-      let test = [
-        {
-          name: "name",
-          edgeRouterRoles: "edgeRouterRoles",
-          identityRoles: "identityRoles",
-          createdAt: "createdAt",
-          semantic: "semantic",
-        },
-      ];
-      rowDataRouter.value = test;
-      // rowDataRouter.value = router_policiesObject?.data
-      //   ? router_policiesObject.data
-      //   : [];
+
+
+      rowDataRouter.value = router_policiesObject
+        ? router_policiesObject
+        : [];
 
       if (gridApiRouter.value) {
         gridApiRouter.value.setRowData(rowDataRouter.value);

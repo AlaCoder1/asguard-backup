@@ -1,6 +1,6 @@
 <template>
   <div class="mt-6" style="display: flex; flex-direction: column">
-    <h4>{{ $t("ztna.listofConfigs") }}</h4>
+    <h4>{{ $t("ztna.listofHostConfigs") }}</h4>
     <v-divider></v-divider>
   </div>
   <div style="overflow: hidden; flex-grow: 1">

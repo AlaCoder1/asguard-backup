@@ -1,14 +1,39 @@
-from utils.constant_variables import ERROR_MESSAGES_START, ERROR_MESSAGES_STOP, SUCCESS_MESSAGES_START, SUCCESS_MESSAGES_STOP
 from utils.errors_utils import CommandExecutionError
-from .constant_variables import CONSTANT_ZTNA, PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES, PATH_ZTNA_TERMINATORS
+from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES, PATH_ZTNA_TERMINATORS
 from .list_ztna import get_configs, get_edge_router_policies, get_identities, get_routers, get_service_edge_router_policies, get_service_policies, get_services, get_terminators
 from .utils import change_status_ztna_service, get_Zt_Token, start_router, stop_router  
 from django.http import JsonResponse
+from django.utils.translation import gettext_lazy as _
 import requests
 from drf_yasg.utils import swagger_auto_schema
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
+
+
+# Constants
+CONSTANT_ZTNA = _('ZTNA')
+CONSTANT_IDENTITIE = _('Identitie')
+CONSTANT_ENROLLMENT = _('Enrollment')
+CONSTANT_RELAY = _('Relay')
+CONSTANT_CONFIGURATION = _('Configuration')
+CONSTANT_SERVICE = _('Service')
+CONSTANT_TERMINATOR = _('Terminator')
+CONSTANT_EDGE_ROUTER_POLICIE = _('Edge Router Policy')
+CONSTANT_SERVICE_POLICIE = _('Service Policy')
+CONSTANT_SERVICE_EDGE_ROUTER_POLICIE = _('Service Edge Router Policy')
+# Success messages
+SUCCESS_MESSAGES_CREATING = _("is created")
+SUCCESS_MESSAGES_DELETING = _("is deleted")
+SUCCESS_MESSAGES_UPDATING = _("is updated")
+SUCCESS_MESSAGES_STARTING = _("is started")
+SUCCESS_MESSAGES_STOPING = _("is stoped")
+# Error messages
+ERROR_MESSAGES_CREATING = _("Error in creating")
+ERROR_MESSAGES_DELETING = _("Error in deleting")
+ERROR_MESSAGES_UPDATING = _("Error in updating")
+ERROR_MESSAGES_STARTING = _("Error in starting")
+ERROR_MESSAGES_STOPING = _("Error in stoping")
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -20,10 +45,10 @@ def start_ztna(request):
     """API to satrt ZTNA service from a script bash"""
     try:
         change_status_ztna_service()
-        return JsonResponse({"message": SUCCESS_MESSAGES_START.format(CONSTANT_ZTNA, "")}, status=200)
+        return JsonResponse({"message": f"{CONSTANT_ZTNA} {SUCCESS_MESSAGES_STARTING}"}, status=200)
         
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_START.format(CONSTANT_ZTNA, "")}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_ZTNA}"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -35,10 +60,10 @@ def stop_ztna(request):
     """API to satrt ZTNA service from a script bash"""
     try:
         change_status_ztna_service("stop")
-        return JsonResponse({"message": SUCCESS_MESSAGES_STOP.format(CONSTANT_ZTNA, "")}, status=200)
+        return JsonResponse({"message": f"{CONSTANT_ZTNA} {SUCCESS_MESSAGES_STOPING}"}, status=200)
         
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_STOP.format(CONSTANT_ZTNA, "")}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_ZTNA}"}, status=400)
 
 
 ################################
@@ -66,8 +91,8 @@ def add_identities(request):
     data = request.data
     response = requests.post(PATH_ZTNA_IDENTITIES, headers=headers, json=data, verify=False)
     if response.status_code == 201:
-        return JsonResponse({"message": "ZTNA identities is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA identities"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_IDENTITIE}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
@@ -81,8 +106,8 @@ def delete_identities(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_IDENTITIES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA identities is deleted"}, status=200)
-    return JsonResponse({"error": "Error in deleting ZTNA identities"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_IDENTITIE}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -94,8 +119,8 @@ def update_identities(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_IDENTITIES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA identities is updated"}, status=200)
-    return JsonResponse({"error": "Error in updating ZTNA identities"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_IDENTITIE}"}, status=400)
 
 
 @api_view(['POST'])
@@ -106,10 +131,9 @@ def add_enrollments(request):
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     response = requests.post(PATH_ZTNA_ENROLLMENTS, headers=headers, json=data, verify=False)
-    print(response.text)
     if response.status_code == 201:
-        return JsonResponse({"message": "ZTNA enrollment is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA enrollment"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_ENROLLMENT} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ENROLLMENT}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
@@ -123,8 +147,8 @@ def delete_enrollments(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_ENROLLMENTS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA enrollment is deleted"}, status=200)
-    return JsonResponse({"error": "Error in deleting ZTNA enrollment"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_ENROLLMENT} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_ENROLLMENT}"}, status=400)
 
 
 ################################
@@ -151,10 +175,9 @@ def add_routers(request):
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     response = requests.post(PATH_ZTNA_ROUTERS, headers=headers, json=data, verify=False)
-    print(response.text)
     if response.status_code == 201:
-        return JsonResponse({"message": "ZTNA routers is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA routers"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_RELAY}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
@@ -168,8 +191,8 @@ def delete_routers(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_ROUTERS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA routers is deleted"}, status=200)
-    return JsonResponse({"error": "Error in deleting ZTNA routers"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_RELAY}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -181,8 +204,8 @@ def update_routers(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_ROUTERS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA routers is updated"}, status=200)
-    return JsonResponse({"error": "Error in updating ZTNA routers"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RELAY}"}, status=400)
 
 
 @api_view(['POST'])
@@ -190,17 +213,13 @@ def update_routers(request, id):
 @permission_classes([IsAuthenticated])
 def start_routers(request, id):
     try:
-        session_id = get_Zt_Token()
-        headers = {"zt-session": session_id, "Content-Type": "application/json"}
         data = request.data
         router_name = data.get("name")
         token = data.get("token")
-        print(router_name)
-        print(token)
         start_router(router_name, token)
-        return JsonResponse({"message": "ZTNA Router is started"}, status=200)
+        return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_START.format(CONSTANT_ZTNA, "Router")}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_RELAY}"}, status=400)
 
 
 @api_view(['POST'])
@@ -208,14 +227,12 @@ def start_routers(request, id):
 @permission_classes([IsAuthenticated])
 def stop_routers(request, id):
     try:
-        session_id = get_Zt_Token()
-        headers = {"zt-session": session_id, "Content-Type": "application/json"}
         data = request.data
         router_name = data.get("name")
         stop_router(router_name)
-        return JsonResponse({"message": "ZTNA Router is stoped"}, status=200)
+        return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STOPING}"}, status=200)
     except CommandExecutionError:
-        return JsonResponse({"error": ERROR_MESSAGES_STOP.format(CONSTANT_ZTNA, "Router")}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_RELAY}"}, status=400)
 
 
 ################################
@@ -243,8 +260,8 @@ def add_configs(request):
     data = request.data
     response = requests.post(PATH_ZTNA_CONFIGS, headers=headers, json=data, verify=False)
     if response.status_code == 201:
-        return JsonResponse({"message": "ZTNA configs is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA configs"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_CONFIGURATION}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
@@ -258,8 +275,8 @@ def delete_configs(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_CONFIGS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA configs is deleted"}, status=200)
-    return JsonResponse({"error": "Error in deleting ZTNA configs"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_CONFIGURATION}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -271,8 +288,8 @@ def update_configs(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_CONFIGS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA configs is updated"}, status=200)
-    return JsonResponse({"error": "Error in updating ZTNA configs"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_CONFIGURATION}"}, status=400)
 
 
 ################################
@@ -300,8 +317,8 @@ def add_services(request):
     data = request.data
     response = requests.post(PATH_ZTNA_SERVICES, headers=headers, json=data, verify=False)
     if response.status_code == 201:
-        return JsonResponse({"message": "ZTNA services is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA services"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
@@ -315,8 +332,8 @@ def delete_services(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_SERVICES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA services is deleted"}, status=200)
-    return JsonResponse({"error": "Error in deleting ZTNA services"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SERVICE}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -328,8 +345,8 @@ def update_services(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_SERVICES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA services is updated"}, status=200)
-    return JsonResponse({"error": "Error in updating ZTNA services"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SERVICE}"}, status=400)
 
 
 ################################
@@ -357,8 +374,8 @@ def add_terminators(request):
     data = request.data
     response = requests.post(PATH_ZTNA_TERMINATORS, headers=headers, json=data, verify=False)
     if response.status_code == 201:
-        return JsonResponse({"message": "ZTNA terminators is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA terminators"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_TERMINATOR} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_TERMINATOR}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
@@ -372,8 +389,8 @@ def delete_terminators(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_TERMINATORS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA terminators is deleted"}, status=200)
-    return JsonResponse({"error": "Error in deleting ZTNA terminators"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_TERMINATOR} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_TERMINATOR}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -385,8 +402,8 @@ def update_terminators(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_TERMINATORS}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA terminators is updated"}, status=200)
-    return JsonResponse({"error": "Error in updating ZTNA terminators"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_TERMINATOR} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_TERMINATOR}"}, status=400)
 
 
 ################################
@@ -416,8 +433,8 @@ def add_edge_routers_policies(request):
     data = request.data
     response = requests.post(PATH_ZTNA_EDGE_ROUTERS_POLICIES, headers=headers, json=data, verify=False)
     if response.status_code == 201:
-        return JsonResponse({"message": "ZTNA edge routers policies is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA edge routers policies"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
@@ -431,8 +448,8 @@ def delete_edge_routers_policies(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_EDGE_ROUTERS_POLICIES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA edge routers policies is deleted"}, status=200)
-    return JsonResponse({"error": "Error in deleting ZTNA edge routers policies"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -444,8 +461,8 @@ def update_edge_routers_policies(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_EDGE_ROUTERS_POLICIES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA edge routers policies is updated"}, status=200)
-    return JsonResponse({"error": "Error in updating ZTNA edge routers policies"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
 
 
 # Services policies
@@ -471,8 +488,8 @@ def add_services_policies(request):
     data = request.data
     response = requests.post(PATH_ZTNA_SERVICES_POLICIES, headers=headers, json=data, verify=False)
     if response.status_code == 201:
-        return JsonResponse({"message": "ZTNA services policies is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA services policies"}, status=400)
+        return JsonResponse({"message":f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE_POLICIE}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
@@ -486,8 +503,8 @@ def delete_services_policies(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_SERVICES_POLICIES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA services policies is deleted"}, status=200)
-    return JsonResponse({"error": "Error in deleting ZTNA services policies"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SERVICE_POLICIE}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -499,8 +516,8 @@ def update_services_policies(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_SERVICES_POLICIES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA services policies is updated"}, status=200)
-    return JsonResponse({"error": "Error in updating ZTNA services policies"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SERVICE_POLICIE}"}, status=400)
 
 # Services Edge routers policies
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -525,8 +542,8 @@ def add_services_edge_routers_policies(request):
     data = request.data
     response = requests.post(PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, headers=headers, json=data, verify=False)
     if response.status_code == 201:
-        return JsonResponse({"message": "ZTNA services edge routers policies is added"}, status=200)
-    return JsonResponse({"error": "Error in adding ZTNA services edge routers policies"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE_EDGE_ROUTER_POLICIE}"}, status=400)
 
 
 @swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
@@ -540,8 +557,8 @@ def delete_services_edge_routers_policies(request, id):
     data = request.data
     response = requests.delete(f"{PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA services edge routers policies is deleted"}, status=200)
-    return JsonResponse({"error": "Error in deleting ZTNA services edge routers policies"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SERVICE_EDGE_ROUTER_POLICIE}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -553,5 +570,5 @@ def update_services_edge_routers_policies(request, id):
     data = request.data
     response = requests.put(f"{PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES}/{id}", headers=headers, json=data, verify=False)
     if response.status_code == 200:
-        return JsonResponse({"message": "ZTNA services edge routers policies is updated"}, status=200)
-    return JsonResponse({"error": "Error in updating ZTNA services edge routers policies"}, status=400)
+        return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SERVICE_EDGE_ROUTER_POLICIE}"}, status=400)

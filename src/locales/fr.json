@@ -570,6 +570,8 @@
     "isAdmin": "Est administrateur",
     "updateIdentity": "Mettre à jour l'identité",
     "listofConfigs": "Liste des Configs",
+    "listofInterceptConfigs": "List des Intercept Configs",
+    "listofHostConfigs": "List des Host Configs",
     "configType": "Type de config",
     "addInterceptConfig": "Ajouter Config d'interception",
     "configName": "Nom de Configuration",

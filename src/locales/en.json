@@ -572,6 +572,8 @@
     "isAdmin": "Is Admin",
     "updateIdentity": "Update Identity",
     "listofConfigs": "List of Configs",
+    "listofInterceptConfigs": "List of Intercept Configs",
+    "listofHostConfigs": "List of Host Configs",
     "configType": "Config Type",
     "addInterceptConfig": "Add intercept config",
     "configName": "Config Name",

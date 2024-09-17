@@ -34,7 +34,7 @@
                         <v-list>
                           <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
-                              item.title
+                              item
                               }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
@@ -119,7 +119,8 @@ export default {
     const identityatt = ref("");
     const Description = ref("");
     const selectedTitle = ref("AllOf");
-    const items = ref([{ title: "AllOf" }, { title: "AnyOf" }]);
+    const items = ref([ "AllOf" , "AnyOf" ]);
+
     const rules = [
       (value) => {
         if (value) return true;
@@ -293,7 +294,7 @@ export default {
       emitter.emit("closeRouteModal");
     };
     const selectItem = (item) => {
-      selectedTitle.value = item.title;
+      selectedTitle.value = item;
     };
 
     return {

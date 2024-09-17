@@ -615,7 +615,9 @@
     "serviceRoleAttribute": "Attribut du Rôle de Service",
     "updateServicePolicy": "Modifier la politique de service",
     "servicesEdgeRelaysPolicies": "Services Relais de Périphérie Politiques",
-    "addService": "Ajouter un Service"
+    "addService": "Ajouter un Service",
+    "edgeRelaysPolicies":"Politiques des relais Edge",
+    "servicesPolicies":"Politiques des services"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",

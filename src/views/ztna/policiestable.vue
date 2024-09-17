@@ -1,23 +1,41 @@
 <template>
   <v-container class="axe-media-print-hide" fluid>
     <div class="mt-6" style="display: flex; flex-direction: column">
-      <h4>{{ $t("ztna.listOfRelays") }}</h4>
+      <h4>{{ $t("ztna.edgeRelaysPolicies") }}</h4>
       <v-divider></v-divider>
     </div>
     <div style="overflow: hidden; flex-grow: 1">
-      <ag-grid-vue id="grid-wrapperRouter" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-        @grid-ready="onGridReadyRouter" :columnDefs="columnsALLRouter" :rowData="rowDataRouter.value"
-        :gridOptions="gridOptions" :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
+      <ag-grid-vue
+        id="grid-wrapperRouter"
+        domLayout="autoHeight"
+        class="ag-theme-alpine mt-3"
+        style="width: 100%"
+        @grid-ready="onGridReadyRouter"
+        :columnDefs="columnsALLRouter"
+        :rowData="rowDataRouter.value"
+        :gridOptions="gridOptions"
+        :overlayNoRowsTemplate="overlayTemplate"
+        :localeText="paginationLocalization"
+      />
     </div>
     <div class="d-flex justify-end mt-3">
-      <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalRouter">
+      <v-btn
+        class="add-button"
+        :rounded="true"
+        color="indigo-darken-3"
+        @click="openModalRouter"
+      >
         {{ $t("ztna.addRelaysPolicy") }}
       </v-btn>
     </div>
     <serviceAgGrid />
     <policyAgGrid />
-    <modal-router-policy :isOpen="state.isModalOpenRouter" :selectedId="state.selectedId" :editRow="state.editRow"
-      :modalMode="state.modalMode" />
+    <modal-router-policy
+      :isOpen="state.isModalOpenRouter"
+      :selectedId="state.selectedId"
+      :editRow="state.editRow"
+      :modalMode="state.modalMode"
+    />
     <!-- <ModalUpdateRouterP
       :isOpen="state.isModalUpdateOpen"
       :selectedId="state.selectedId"
@@ -26,18 +44,28 @@
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-          }}</v-card-title>
+        }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-            }}</v-btn>
-          <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
+          }}</v-btn>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="confirmDelete(state.selectedId)"
+            >{{ $t("buttons.delete") }}</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-container>
@@ -239,7 +267,7 @@ export default {
     const handleActionClient = (action, rowData) => {
       switch (action) {
         case "edit":
-          console.log('edit', rowData)
+          console.log("edit", rowData);
           // openModalUpdate(rowData.id);
           // console.log("edit", rowData);
 
@@ -271,7 +299,6 @@ export default {
     };
 
     const confirmDelete = async (itemId) => {
-
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -325,13 +352,9 @@ export default {
 
       let router_policiesObject = JSON.parse(router_policiesString);
 
-      console.log('router_policiesObject', router_policiesObject)
+      console.log("router_policiesObject", router_policiesObject);
 
-
-
-      rowDataRouter.value = router_policiesObject
-        ? router_policiesObject
-        : [];
+      rowDataRouter.value = router_policiesObject ? router_policiesObject : [];
 
       if (gridApiRouter.value) {
         gridApiRouter.value.setRowData(rowDataRouter.value);

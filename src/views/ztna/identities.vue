@@ -326,7 +326,7 @@ export default {
           const a = document.createElement("a");
           a.style.display = "none";
           a.href = url;
-          a.download = `${rowData.name}.txt`;
+          a.download = `${rowData.name}.jwt`;
 
           document.body.appendChild(a);
           a.click();

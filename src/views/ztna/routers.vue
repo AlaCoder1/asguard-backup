@@ -127,15 +127,15 @@ export default {
         minWidth: 150,
         flex: 1,
       },
-      {
-        headerName: "Token",
-        field: "enrollmentJwt",
-        cellRenderer: tokenCellRendrer,
+      // {
+      //   headerName: "Token",
+      //   field: "enrollmentJwt",
+      //   cellRenderer: tokenCellRendrer,
 
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-      },
+      //   width: 90,
+      //   minWidth: 150,
+      //   flex: 1,
+      // },
       {
         headerName: creationDate,
         field: "createdAt",

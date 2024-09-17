@@ -1,6 +1,6 @@
 <template>
   <div class="mt-3" style="display: flex; flex-direction: column">
-    <h4>{{ $t("ztna.listofServices") }}</h4>
+    <h4>{{ $t("ztna.servicesPolicies") }}</h4>
     <v-divider></v-divider>
   </div>
 

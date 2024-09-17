@@ -617,7 +617,9 @@
     "serviceRoleAttribute": "Service Role Attribute",
     "updateServicePolicy": "Update Service Policy",
     "servicesEdgeRelaysPolicies": "Services Edge Relays Policies",
-    "addService": "Add Service"
+    "addService": "Add Service",
+    "edgeRelaysPolicies":"Edge Relays Policies",
+    "servicesPolicies":"Services Policies"
   },
 
   "titleAgGrid": {

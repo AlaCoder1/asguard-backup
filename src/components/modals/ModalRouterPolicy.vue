@@ -7,7 +7,7 @@
             <span class="headline" v-if="modalMode === 'create'">
               {{ $t("ztna.addRelaysPolicy") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateRelaysPolicy") }}</span>
+              {{ $t("ztna.updateRelaysPolicy") }}s</span>
           </v-card-title>
 
           <v-card-text>
@@ -76,7 +76,7 @@
             >
               Reset
             </VBtn> -->
-            <v-btn large rounded outlined label-color="#213E9F" @click="submitForm" color="indigo-darken-3"
+            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3"
               variant="flat" class="mt-3 ml-2 btn-add" type="submit">
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
                 {{ $t("buttons.create") }}</span>

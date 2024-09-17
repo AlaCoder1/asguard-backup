@@ -69,6 +69,7 @@
 </template>
 
 <script>
+import { getCookie } from "@/mixins/csrftoken.js";
 import ModalServiceRouterPolicy from "@/components/modals/ModalServiceRouterPolicy.vue";
 import ModalUpdateServiceRouterP from "@/components/modals/ModalUpdateServiceRouterP.vue";
 import { useI18n } from "vue-i18n";
@@ -151,7 +152,7 @@ export default {
       {
         headerName: serviceRole,
         field: "serviceRoles",
-        // cellRenderer: formatedserviceRoles,
+        cellRenderer: formatedserviceRoles,
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -161,7 +162,7 @@ export default {
       {
         headerName: edgeRelaysRole,
         field: "edgeRouterRoles",
-        // cellRenderer: formatededgeRouterRoles,
+        cellRenderer: formatededgeRouterRoles,
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -180,7 +181,7 @@ export default {
       {
         headerName: creationDate,
         field: "createdAt",
-        // cellRenderer: formatedcreatedAt,
+        cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -255,7 +256,7 @@ export default {
       switch (action) {
         case "edit":
           // openModalUpdate(rowData.id);
-          // console.log("edit", rowData);
+          console.log("edit", rowData);
 
           state.modalMode = "edit";
           state.isModalOpen = true;
@@ -284,25 +285,51 @@ export default {
     };
 
     const confirmDelete = async (itemId) => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = `/edge/management/v1/service-edge-router-policies/${itemId}`;
-        await axios.delete(proxyUrl + apiUrl, {
-          headers: { "zt-session": token, "Content-Type": "application/json" },
+
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      let token = document.getElementById("app").getAttribute("token");
+
+      axios
+        .delete(`/ztna/delete_services_edge_routers_policies/${itemId}`, {
+          headers: {
+            "zt-session": token,
+            "Content-Type": "application/json",
+          },
+        })
+        .then((response) => {
+          state.snackbar = true;
+          state.color = "success";
+          state.textAlert = response.data.message;
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = i.response.data.error;
         });
-        state.snackbar = true;
-        state.color = "success";
-        state.textAlert = "Service-relay policy deleted successfully";
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-      } catch (error) {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "Delete failure";
-        console.error("Failed to delete item:", error);
-      }
+      // try {
+      //   let token = document.getElementById("app").getAttribute("token");
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = `/edge/management/v1/service-edge-router-policies/${itemId}`;
+      //   await axios.delete(proxyUrl + apiUrl, {
+      //     headers: { "zt-session": token, "Content-Type": "application/json" },
+      //   });
+      //   state.snackbar = true;
+      //   state.color = "success";
+      //   state.textAlert = "Service-relay policy deleted successfully";
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      // } catch (error) {
+      //   state.snackbar = true;
+      //   state.color = "red";
+      //   state.textAlert = "Delete failure";
+      //   console.error("Failed to delete item:", error);
+      // }
     };
 
     onMounted(() => {
@@ -312,21 +339,12 @@ export default {
       let service_edge_router_policiesObject = JSON.parse(
         service_edge_router_policiesString
       );
-      // rowDataPolicy.value = service_edge_router_policiesObject?.data;
+     
 
-      // rowDataPolicy.value = service_edge_router_policiesObject?.data
-      //   ? service_edge_router_policiesObject.data
-      //   : [];
-      let test = [
-        {
-          name: "name",
-          edgeRouterRoles: "edgeRouterRoles",
-          identityRoles: "identityRoles",
-          createdAt: "createdAt",
-          semantic: "semantic",
-        },
-      ];
-      rowDataPolicy.value = test;
+      rowDataPolicy.value = service_edge_router_policiesObject
+        ? service_edge_router_policiesObject
+        : [];
+    
 
       if (gridPolicy.value) {
         gridPolicy.value.setRowData(rowDataPolicy.value);

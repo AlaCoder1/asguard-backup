@@ -5,24 +5,17 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.addServicesPolicy") }}</span
-            >
+              {{ $t("ztna.addServicesPolicy") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateServicePolicy") }}</span
-            >
+              {{ $t("ztna.updateServicePolicy") }}</span>
           </v-card-title>
 
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="PolicyName"
-                    v-model="name"
-                    :placeholder="$t('ztna.policyName')"
-                    :rules="rules"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rules"
+                    persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12">
@@ -37,14 +30,10 @@
                         </template>
 
                         <v-list>
-                          <v-list-item
-                            v-for="(item, index) in items"
-                            :key="index"
-                            @click="selectItem(item)"
-                          >
+                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
-                              item.title
-                            }}</v-list-item-title>
+                              item
+                              }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -56,7 +45,7 @@
                   <div class="d-flex align-center">
                     <label class="ml-1" for="PROTOCOL">{{
                       $t("ztna.semantic")
-                    }}</label>
+                      }}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
@@ -66,14 +55,10 @@
                         </template>
 
                         <v-list>
-                          <v-list-item
-                            v-for="(item, index) in semantic"
-                            :key="index"
-                            @click="selectsemantic(item)"
-                          >
+                          <v-list-item v-for="(item, index) in semantic" :key="index" @click="selectsemantic(item)">
                             <v-list-item-title>{{
-                              item.title
-                            }}</v-list-item-title>
+                              item
+                              }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -82,78 +67,46 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="serviceRA"
-                    v-model="serviceRA"
-                    :placeholder="$t('ztna.serviceRoleAttribute')"
-                    :rules="rules"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="serviceRA" v-model="serviceRA" :placeholder="$t('ztna.serviceRoleAttribute')"
+                    :rules="rules" persistent-placeholder />
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="identityatt"
-                    v-model="identityatt"
-                    :placeholder="$t('ztna.identityRoleAttribute')"
-                    :rules="rules"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
+                    :rules="rules" persistent-placeholder />
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="Description"
-                    v-model="Description"
-                    placeholder="Description"
-                    :rules="rules"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
+                    persistent-placeholder />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              class="mt-3 btn-add"
-              text
-              @click="cancel"
-              ><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span
-              ></v-btn
-            >
+            <v-btn color="indigo-darken-3" :rounded="true" large outlined label-color="#213E9F" variant="flat"
+              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span></v-btn>
 
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              color="indigo-darken-3"
-              variant="flat"
-              class="mt-3 ml-2 btn-add"
-              type="submit"
-            >
+            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" variant="flat"
+              class="mt-3 ml-2 btn-add" type="submit">
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span
-              >
+                {{ $t("buttons.create") }}</span>
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
-              >
+                {{ $t("buttons.update") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+      {{ state.textAlert }}
+    </v-snackbar>
   </v-row>
 </template>
 <script>
 import axios from "axios";
 import { toRefs, ref, watch, reactive, inject } from "vue";
+import { getCookie } from "@/mixins/csrftoken.js";
 
 export default {
   props: {
@@ -172,17 +125,18 @@ export default {
   },
   setup(props) {
     const name = ref("");
+    const idServ = ref("");
     const serviceRA = ref("");
     const identityatt = ref("");
     const Description = ref("");
     const selectedTitle = ref("Dial");
     const selectedsemantic = ref("AllOf");
     const items = ref([
-      { title: "Dial" },
-      { title: "Bind" },
-      { title: "Invalid" },
+      "Dial",
+      "Bind",
+      "Invalid",
     ]);
-    const semantic = ref([{ title: "AllOf" }, { title: "AnyOf" }]);
+    const semantic = ref(["AllOf", "AnyOf"]);
     const rules = [
       (value) => {
         if (value) return true;
@@ -195,6 +149,9 @@ export default {
 
     const state = reactive({
       openModal: false,
+      snackbar: false,
+      color: "",
+      textAlert: "",
     });
 
     watch(
@@ -213,51 +170,131 @@ export default {
       () => modalMode.value,
       () => {
         if (modalMode.value === "create") {
-          // ConfigName.value = "";
-          // adress.value = "";
-          // portLow.value = "";
-          // portHigh.value = "";
-          // Description.value = "";
-          // selectedTitle.value = "tcp";
+          name.value = "";
+          serviceRA.value = "";
+          identityatt.value = "";
+          Description.value = "";
+          selectedTitle.value = "Dial";
+          selectedsemantic.value = "AllOf";
         }
       }
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
         console.log("dataHost", data);
+        idServ.value = data.id
+        name.value = data.name;
+
+
+        Description.value = "";
+        selectedTitle.value = data.type;
+        selectedsemantic.value = data.semantic;
+
+        let Identity = data.identityRoles[0].split("#");
+        identityatt.value = Identity[1];
+        let service = data.serviceRoles[0].split("#");
+        serviceRA.value = service[1];
       }
     };
 
     const submitForm = async () => {
-      try {
-        let token = document.getElementById("app").getAttribute("token");
-        let identityAttribute = `#${identityatt.value}`;
-        let serviceAttribute = `#${serviceRA.value}`;
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = "/edge/management/v1/service-policies";
-        await axios.post(
-          proxyUrl + apiUrl,
-          {
-            name: name.value,
-            type: selectedTitle.value,
-            semantic: selectedsemantic.value,
-            identityRoles: [identityAttribute],
-            serviceRoles: [serviceAttribute],
-          },
-          {
+
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+
+      let identityAttribute = `#${identityatt.value}`;
+      let serviceAttribute = `#${serviceRA.value}`;
+
+      let payload = {
+        name: name.value,
+        type: selectedTitle.value,
+        semantic: selectedsemantic.value,
+        identityRoles: [identityAttribute],
+        serviceRoles: [serviceAttribute],
+      };
+
+      let token = document.getElementById("app").getAttribute("token");
+
+      if (modalMode.value === "edit") {
+        axios
+          .put(`/ztna/update_services_policies/${idServ.value}`, payload, {
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",
             },
-          }
-        );
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        emitter.emit("closeServicesModal");
-      } catch (error) {
-        console.error("Failed to submit form:", error);
+          })
+          .then((response) => {
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.message;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            console.log("response", i.response);
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.response;
+          });
+      } else {
+        axios
+          .post("/ztna/add_services_policies", payload, {
+            headers: {
+              "zt-session": token,
+              "Content-Type": "application/json",
+            },
+          })
+          .then((response) => {
+            if (response.status == "200") {
+              state.openModal = false;
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.message;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            console.log("response", i.response);
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          });
       }
+      // try {
+      //   let token = document.getElementById("app").getAttribute("token");
+      //   let identityAttribute = `#${identityatt.value}`;
+      //   let serviceAttribute = `#${serviceRA.value}`;
+      //   const proxyUrl = "https://asguard:3000";
+      //   const apiUrl = "/edge/management/v1/service-policies";
+      //   await axios.post(
+      //     proxyUrl + apiUrl,
+      //     {
+      //       name: name.value,
+      //       type: selectedTitle.value,
+      //       semantic: selectedsemantic.value,
+      //       identityRoles: [identityAttribute],
+      //       serviceRoles: [serviceAttribute],
+      //     },
+      //     {
+      //       headers: {
+      //         "zt-session": token,
+      //         "Content-Type": "application/json",
+      //       },
+      //     }
+      //   );
+      //   setTimeout(() => {
+      //     location.reload();
+      //   }, 1000);
+      //   emitter.emit("closeServicesModal");
+      // } catch (error) {
+      //   console.error("Failed to submit form:", error);
+      // }
     };
     const resetForm = () => {
       name.value = "";
@@ -273,10 +310,10 @@ export default {
       emitter.emit("closeServicesModal");
     };
     const selectItem = (item) => {
-      selectedTitle.value = item.title;
+      selectedTitle.value = item;
     };
     const selectsemantic = (item) => {
-      selectedsemantic.value = item.title;
+      selectedsemantic.value = item;
     };
 
     return {

@@ -188,22 +188,31 @@ def update_routers(request, id):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def start_routers(request, id):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id, "Content-Type": "application/json"}
-    data = request.data
-    start_router()
-    return JsonResponse({"message": "ZTNA Router is started"}, status=400)
+    try:
+        session_id = get_Zt_Token()
+        headers = {"zt-session": session_id, "Content-Type": "application/json"}
+        data = request.data
+        router_name = data.get("name")
+        token = data.get("token")
+        start_router(router_name, token)
+        return JsonResponse({"message": "ZTNA Router is started"}, status=200)
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_START.format(CONSTANT_ZTNA, "Router")}, status=400)
 
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def stop_routers(request, id):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id, "Content-Type": "application/json"}
-    data = request.data
-    stop_router()
-    return JsonResponse({"message": "ZTNA Router is stoped"}, status=400)
+    try:
+        session_id = get_Zt_Token()
+        headers = {"zt-session": session_id, "Content-Type": "application/json"}
+        data = request.data
+        router_name = data.get("name")
+        stop_router(router_name)
+        return JsonResponse({"message": "ZTNA Router is stoped"}, status=200)
+    except CommandExecutionError:
+        return JsonResponse({"error": ERROR_MESSAGES_STOP.format(CONSTANT_ZTNA, "Router")}, status=400)
 
 
 ################################

@@ -1,8 +1,8 @@
 import requests
 import json
 
-from backend.ztna.constant_variables import PATH_START_ZTNA_BASH, PATH_STOP_ZTNA_BASH
-from utils.commands_utils import execute_command_without_arguments, get_current_directory
+from backend.ztna.constant_variables import PATH_START_ZTNA_BASH, PATH_START_ZTNA_ROUTER_BASH, PATH_STOP_ZTNA_BASH, PATH_STOP_ZTNA_ROUTER_BASH
+from utils.commands_utils import execute_command_with_arguments, execute_command_without_arguments, get_current_directory
 
 
 BASE_URL = "https://localhost:1280/edge/management/v1/"
@@ -63,9 +63,9 @@ def change_status_ztna_service(service_status="start"):
     execute_command_without_arguments(["sudo", "bash", path_start_ztna])
 
 
-def start_router():
-    pass
+def start_router(router_name, token):
+    execute_command_with_arguments(["sudo", "bash", PATH_START_ZTNA_ROUTER_BASH], f"{router_name}\n{token}\n", 3)
 
 
-def stop_router():
-    pass
+def stop_router(router_name):
+    execute_command_with_arguments(["sudo", "bash", PATH_STOP_ZTNA_ROUTER_BASH], f"{router_name}\n", 3)

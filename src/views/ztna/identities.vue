@@ -212,9 +212,11 @@ export default {
 
       if (params.node.data.enrollment?.ott?.jwt) {
         eGui.innerHTML = `
-      <button class="action-button copy" data-action="copy">
-        <i class="mdi mdi-content-copy" style="color: #086eae; font-size: 20px;"></i>
-      </button>
+          <button
+           class="action-button download"
+           data-action="download">
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+           </button>
     `;
 
         eGui.querySelectorAll(".action-button").forEach((button) => {
@@ -312,9 +314,26 @@ export default {
 
 
           break;
-        case "copy":
+        case "download":
           let text = rowData.enrollment.ott.jwt;
-          copyContent(text);
+          // copyContent(text);
+
+          const blob = new Blob([text], {
+            type: "application/x-x509-ca-cert",
+          });
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = `${rowData.name}.txt`;
+
+          document.body.appendChild(a);
+          a.click();
+
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          
           break;
         case "enroll":
           openModalEnrollement(rowData.id);

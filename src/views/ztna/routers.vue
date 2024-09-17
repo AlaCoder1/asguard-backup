@@ -26,13 +26,13 @@
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-          }}</v-card-title>
+        }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-            }}</v-btn>
+          }}</v-btn>
           <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
         </v-card-actions>
       </v-card>
@@ -246,6 +246,18 @@ export default {
               `;
       } else {
         eGui.innerHTML = `
+         <button
+          id="play"
+          class="action-button play"
+          data-action="play">
+             <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
+          </button>
+             <button
+          id="stop"
+          class="action-button stop"
+          data-action="stop">
+             <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
+          </button>
               <button
                 class="action-button edit"
                 data-action="edit" title="Edit Server">
@@ -268,6 +280,8 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData, index) => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "edit":
           // openModalUpdate(rowData.id);
@@ -278,7 +292,7 @@ export default {
 
           break;
         case "download":
-          console.log('test', rowData.enrollmentJwtow)
+          console.log("test", rowData.enrollmentJwt);
           let text = rowData.enrollmentJwt;
           // copyContent(text);
           const blob = new Blob([text], {
@@ -299,6 +313,74 @@ export default {
           break;
         case "delete":
           opendelete(rowData.id);
+
+          break;
+        case "play":
+          console.log("play");
+          let payloadStart = {
+            name: rowData.name,
+            token: rowData.enrollmentJwt
+          };
+
+          let tokenStart = document.getElementById("app").getAttribute("token");
+
+          axios
+            .post(`/ztna/start_routers/${rowData.id}`, payloadStart, {
+              headers: {
+                "zt-session": tokenStart,
+                "Content-Type": "application/json",
+              },
+            })
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.message;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
+
+          break;
+        case "stop":
+          console.log("stop");
+
+          console.log("play");
+          let payload = {
+            name: rowData.name,
+            token: rowData.enrollmentJwt
+          };
+
+          let token = document.getElementById("app").getAttribute("token");
+
+          axios
+            .post(`/ztna/stop_routers/${rowData.id}`, payload, {
+              headers: {
+                "zt-session": token,
+                "Content-Type": "application/json",
+              },
+            })
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.message;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            });
 
           break;
         default:
@@ -332,7 +414,7 @@ export default {
       let routersObject;
       try {
         routersObject = JSON.parse(routersString);
-        console.log('routersObject', routersObject)
+        console.log("routersObject", routersObject);
         console.log(routersObject);
       } catch (error) {
         console.error("Failed to parse routers string:", error);
@@ -373,7 +455,6 @@ export default {
     };
 
     const confirmDelete = async (deletedItemId) => {
-
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       let token = document.getElementById("app").getAttribute("token");

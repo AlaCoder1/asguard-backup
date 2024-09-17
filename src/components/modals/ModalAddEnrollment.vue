@@ -69,6 +69,9 @@
         </v-card>
       </form>
     </v-dialog>
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+      {{ state.textAlert }}
+    </v-snackbar>
   </v-row>
 </template>
 
@@ -106,6 +109,9 @@ export default {
     const state = reactive({
       openModal: false,
       itemId: null,
+      snackbar: false,
+      color: null,
+      textAlert: ""
     });
 
     watch(
@@ -129,37 +135,37 @@ export default {
 
       let token = document.getElementById("app").getAttribute("token");
 
+      let dateTime = `${date.value}T${time.value}:00Z`;
+
+
       let payload = {
         expiresAt: dateTime,
         method: selectedTitle.value,
         identityId: state.itemId,
       }
       axios
-        .post("/ztna/add_enrollment", payload, {
+        .post("/ztna/add_enrollments", payload, {
           headers: {
             "zt-session": token,
             "Content-Type": "application/json",
           },
         })
         .then((response) => {
-          console.log('response', response)
-          if (response.status == "201") {
-            // state.openModal = false;
-            // state.snackbar = true;
-            // state.color = "success";
-            // state.textAlert = response.data.msg;
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.message;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
 
-            setTimeout(() => {
-              // location.reload();
-            }, 1000);
-          }
-        })
-        .catch((i) => {
-          console.log('r', i.response)
-          // state.snackbar = true;
-          // state.color = "red";
-          // state.textAlert = i.response.data.error;
-        });
+            }
+          })
+          .catch((i) => {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          });
     };
 
     const selectItem = (item) => {

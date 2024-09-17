@@ -46,7 +46,7 @@
                         <v-list>
                           <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
-                              item.title
+                              item
                               }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
@@ -142,7 +142,7 @@ export default {
     const address = ref("");
     const port = ref("");
     const selectedTitle = ref("tcp");
-    const items = [{ title: "tcp" }, { title: "udp" }];
+    const items = [ "tcp" ,   "udp" ];
     const router = ref("");
     const Description = ref("");
     const rules = [
@@ -399,7 +399,7 @@ export default {
     };
 
     const selectItem = (item) => {
-      selectedTitle.value = item.title;
+      selectedTitle.value = item;
     };
 
     return {

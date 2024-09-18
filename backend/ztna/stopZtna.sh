@@ -1,18 +1,15 @@
 #!/bin/bash
 
-# Source the environment file
-source /root/.ziti/quickstart/Asguard/Asguard.env
+# Search for the process of running the Ziti controller
+process=$(ps aux | grep "controller run"  | grep -v grep)
+echo "process id = $process"
 
-# Introduce a delay using sleep. For example, wait for 5 seconds.
-sleep 5
-
-# Check if required environment variables are set and then stop the Ziti controller in background detached mode
-if [ -n "$ZITI_BIN_DIR" ] && [ -n "$ZITI_HOME" ] && [ -n "$ZITI_CTRL_NAME" ]; then
-    nohup "${ZITI_BIN_DIR-}/ziti" controller stop "${ZITI_HOME}/${ZITI_CTRL_NAME}.yaml" &>/dev/null &
-    disown $!
+# Check if the process was found
+if [ -z "$process" ]; then
+    echo "ZTNA is not running"
 else
-    echo "Required environment variables are not set."
+    # Extract the PID of the process
+    pid=$(echo "$process" | awk '{print $2}')
+    kill $pid && echo "ZTNA stopped successfully." || echo "Failed to stop ZTNA."
 fi
-
-"${ZITI_BIN_DIR-}/ziti" edge login Asguard:1280 -u admin -p admin
 

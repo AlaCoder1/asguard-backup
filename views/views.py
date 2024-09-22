@@ -761,9 +761,12 @@ def server_dhcp4_page(request):
 
 @login_required(login_url='/')
 def logrotate_page(request):
-    list_logrotate=get_logrotate_data(request)
-    list_logrotate=json.dumps(list_logrotate)
-    context = {'logrotate':list_logrotate}
+    list_service={"WAF":[],"OpenVPN":[],"IDS/IPS":[],"Squid":[]}
+    for service in list_service.keys():
+        list_logrotate=get_logrotate_data(request,service)
+        list_service[service]=list_logrotate
+    list_service=json.dumps(list_service)
+    context = {'logrotate':list_service}
     return render(request, 'logrotate.html',context)
 
 ################## generale information ##################

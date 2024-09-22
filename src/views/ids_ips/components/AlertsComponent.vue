@@ -151,22 +151,22 @@ export default {
     });
 
     const columnRules = ref([
-      {
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
-        rowDrag: true,
-        editable: false,
-      },
-      {
-        headerCheckboxSelection: false,
-        checkboxSelection: true,
-        editable: false,
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
-        sortable: false,
-      },
+      // {
+      //   width: 50,
+      //   minWidth: 50,
+      //   maxWidth: 50,
+      //   rowDrag: true,
+      //   editable: false,
+      // },
+      // {
+      //   headerCheckboxSelection: false,
+      //   checkboxSelection: true,
+      //   editable: false,
+      //   width: 50,
+      //   minWidth: 50,
+      //   maxWidth: 50,
+      //   sortable: false,
+      // },
       {
         headerName: LINUXTimestamp,
         field: "timestamp",

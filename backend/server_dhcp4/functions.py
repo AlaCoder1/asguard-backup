@@ -177,7 +177,7 @@ EOF""".format(ifname,'\n'.join(list_config)),
     """cat <<EOF > /etc/default/isc-dhcp-server
 {} 
 EOF""".format('\n'.join(config_server_interface)),
-    "systemctl enable --quiet dhcpd4.service && systemctl restart  --quiet dhcpd4.service"
+    "systemctl enable --quiet dhcpd4.service && sudo systemctl restart  --quiet dhcpd4.service"
     ]
     for cmd in commandes:
         _, error = execute_cmd(cmd)

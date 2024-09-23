@@ -1004,7 +1004,9 @@
     "country": "Country",
     "blockedRequests": "Blocked Requests",
     "timestamp": "Timestamp",
-    "method": "Method"
+    "method": "Method",
+    "parameters":"Parameters",
+    "rulesList":"Rules List"
   },
   "settings": {
     "GENERALPARAMETERS": "GENERAL PARAMETERS",

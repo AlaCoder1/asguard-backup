@@ -31,9 +31,9 @@ def execute_command_with_arguments(command:list, arguments:str, time_sleep=0.5):
 
             create_error_command(process, command)
     except subprocess.CalledProcessError as e:
-        print(f'Command failed with error: {e}')
+        create_error_command(process, command)
     except Exception as e:
-        print(f'An unexpected error occurred: {e}')
+        create_error_command(process, command)
 
 
 def execute_list_commands_with_arguments(list_commands, time_sleep=0.5):

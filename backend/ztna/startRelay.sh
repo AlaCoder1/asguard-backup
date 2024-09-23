@@ -46,4 +46,4 @@ if [ "$create_and_enroll" = true ]; then
 fi
 
 # Run the router using nohup to keep it running after logout
-nohup $command_path router run $router_config_file &
+nohup $command_path router run $router_config_file &>/dev/null &

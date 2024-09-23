@@ -118,7 +118,7 @@ export default {
       isModalOpen: false,
       isOpen: null,
       editRow: {},
-      modalMode: "create",
+      modalMode: "",
     });
 
     const appName = computed(() => {

@@ -33,123 +33,356 @@
           <v-card-text>
             <v-container>
               <v-row>
-                <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    :label="$t('Waf.applicationName')"
-                    v-model="state.applicationName"
-                  ></v-text-field>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.applicationName.$error"
-                  >
-                    {{ v$.applicationName.$errors[0].$message }}
-                  </p>
-                </v-col>
-                <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.type"
-                    label="Type"
-                    item-title="name"
-                    item-value="slug"
-                    :items="state.listType"
-                    return-object
-                    :no-data-text="$t('certificat.certificatlist')"
-                  ></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.type.$error">
-                    {{ v$.type.$errors[0].$message }}
-                  </p>
-                </v-col>
-                <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.protocol"
-                    :label="$t('firewall.protocol')"
-                    item-title="name"
-                    item-value="slug"
-                    :items="state.listProtocol"
-                    return-object
-                    :no-data-text="$t('certificat.certificatlist')"
-                  ></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.protocol.$error">
-                    {{ v$.protocol.$errors[0].$message }}
-                  </p>
-                </v-col>
-                <v-col
-                  cols="12"
-                  class="mb-n6"
-                  v-if="state.protocol.slug === 'https'"
-                >
-                  <v-select
-                    :label="$t('openvpn.ServeurCertificate')"
-                    v-model="state.serverCertif"
-                    item-title="name"
-                    item-value="id"
-                    :items="state.filtredMapCertif"
-                    :no-data-text="$t('certificat.certificatlist')"
-                    return-object
-                  ></v-select>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.serverCertif.$errors.length"
-                  >
-                    {{ v$.serverCertif.$errors?.[0].$message }}
-                  </p>
-                </v-col>
+                <v-col cols="12" class="mb-n5 mb-1 mt-0">
+                  <v-expansion-panels v-model="state.panel">
+                    <v-expansion-panel>
+                      <v-expansion-panel-title>{{
+                        $t("Waf.parameters")
+                      }}</v-expansion-panel-title>
+                      <v-expansion-panel-text>
+                        <v-col cols="12" class="mb-n6">
+                          <v-text-field
+                            :label="$t('Waf.applicationName')"
+                            v-model="state.applicationName"
+                          ></v-text-field>
+                          <p
+                            class="error-feedback mb-5"
+                            v-if="v$.applicationName.$error"
+                          >
+                            {{ v$.applicationName.$errors[0].$message }}
+                          </p>
+                        </v-col>
+                        <v-col cols="12" class="mb-n6">
+                          <v-select
+                            v-model="state.type"
+                            label="Type"
+                            item-title="name"
+                            item-value="slug"
+                            :items="state.listType"
+                            return-object
+                            :no-data-text="$t('certificat.certificatlist')"
+                          ></v-select>
+                          <p class="error-feedback mb-5" v-if="v$.type.$error">
+                            {{ v$.type.$errors[0].$message }}
+                          </p>
+                        </v-col>
+                        <v-col cols="12" class="mb-n6">
+                          <v-select
+                            v-model="state.protocol"
+                            :label="$t('firewall.protocol')"
+                            item-title="name"
+                            item-value="slug"
+                            :items="state.listProtocol"
+                            return-object
+                            :no-data-text="$t('certificat.certificatlist')"
+                          ></v-select>
+                          <p
+                            class="error-feedback mb-5"
+                            v-if="v$.protocol.$error"
+                          >
+                            {{ v$.protocol.$errors[0].$message }}
+                          </p>
+                        </v-col>
+                        <v-col
+                          cols="12"
+                          class="mb-n6"
+                          v-if="state.protocol.slug === 'https'"
+                        >
+                          <v-select
+                            :label="$t('openvpn.ServeurCertificate')"
+                            v-model="state.serverCertif"
+                            item-title="name"
+                            item-value="id"
+                            :items="state.filtredMapCertif"
+                            :no-data-text="$t('certificat.certificatlist')"
+                            return-object
+                          ></v-select>
+                          <p
+                            class="error-feedback mb-5"
+                            v-if="v$.serverCertif.$errors.length"
+                          >
+                            {{ v$.serverCertif.$errors?.[0].$message }}
+                          </p>
+                        </v-col>
 
-                <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    :label="$t('squid.value')"
-                    v-model="state.value"
-                  ></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.value.$error">
-                    {{ v$.value.$errors[0].$message }}
-                  </p>
-                </v-col>
-                <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    label="Port"
-                    v-model="state.port"
-                  ></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.port.$error">
-                    {{ v$.port.$errors[0].$message }}
-                  </p>
-                </v-col>
-                <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    label="Description"
-                    v-model="state.description"
-                  ></v-text-field>
-                </v-col>
-                <v-col cols="12" class="mb-n6">
-                  <v-autocomplete
-                    multiple
-                    v-model="state.country"
-                    :label="$t('certificat.country')"
-                    item-title="countryName"
-                    item-value="countryCode"
-                    return-object
-                    :items="state.countriesList"
-                  ></v-autocomplete>
-                  <!-- <p class="error-feedback mb-5" v-if="v$.country.$error">
+                        <v-col cols="12" class="mb-n6">
+                          <v-text-field
+                            :label="$t('squid.value')"
+                            v-model="state.value"
+                          ></v-text-field>
+                          <p class="error-feedback mb-5" v-if="v$.value.$error">
+                            {{ v$.value.$errors[0].$message }}
+                          </p>
+                        </v-col>
+                        <v-col cols="12" class="mb-n6">
+                          <v-text-field
+                            label="Port"
+                            v-model="state.port"
+                          ></v-text-field>
+                          <p class="error-feedback mb-5" v-if="v$.port.$error">
+                            {{ v$.port.$errors[0].$message }}
+                          </p>
+                        </v-col>
+                        <v-col cols="12" class="mb-n6">
+                          <v-text-field
+                            label="Description"
+                            v-model="state.description"
+                          ></v-text-field>
+                        </v-col>
+                        <v-col cols="12" class="mb-n6">
+                          <v-autocomplete
+                            multiple
+                            v-model="state.country"
+                            :label="$t('certificat.country')"
+                            item-title="countryName"
+                            item-value="countryCode"
+                            return-object
+                            :items="state.countriesList"
+                          ></v-autocomplete>
+                          <!-- <p class="error-feedback mb-5" v-if="v$.country.$error">
                     {{ v$.country.$errors[0].$message }}
                   </p> -->
-                </v-col>
+                        </v-col>
+                      </v-expansion-panel-text>
+                    </v-expansion-panel>
+                    <v-expansion-panel>
+                      <v-expansion-panel-title>{{
+                        $t("Waf.rulesList")
+                      }}</v-expansion-panel-title>
+                      <v-expansion-panel-text>
+                        <ag-grid-vue
+                          id="grid-wrapper"
+                          domLayout="autoHeight"
+                          class="ag-theme-alpine mt-3"
+                          :columnDefs="columnWafApp"
+                          :alwaysShowHorizontalScroll="false"
+                          :alwaysShowVarticalScroll="false"
+                          :rowData="rowDataWafApp.value"
+                          style="width: 100%; height: 100%"
+                          :overlayNoRowsTemplate="overlayTemplate"
+                          @grid-ready="onGridReady"
+                          :pagination="false"
+                          :paginationPageSize="20"
+                          :localeText="paginationLocalization"
+                        />
+                      </v-expansion-panel-text>
+                    </v-expansion-panel>
+                    <v-expansion-panel>
+                      <v-expansion-panel-title
+                        >Configuration</v-expansion-panel-title
+                      >
+                      <v-expansion-panel-text>
+                        <v-row class="mt-2">
+                          <v-col cols="12" class="mb-n6">
+                            <v-select
+                              v-model="state.rule_engine"
+                              :label="$t('Waf.Ruleengine')"
+                              item-title="name"
+                              item-value="slug"
+                              clearable
+                              return-object
+                              :items="state.engineList"
+                            ></v-select>
+                            <p
+                              class="error-feedback mb-5"
+                              v-if="v$.rule_engine.$error"
+                            >
+                              {{ v$.rule_engine.$errors[0].$message }}
+                            </p>
+                          </v-col>
 
-                <v-col cols="12" class="mb-n5 mb-1 mt-0">
-                  <ag-grid-vue
-                    id="grid-wrapper"
-                    domLayout="autoHeight"
-                    class="ag-theme-alpine mt-3"
-                    :columnDefs="columnWafApp"
-                    :alwaysShowHorizontalScroll="false"
-                    :alwaysShowVarticalScroll="false"
-                    :rowData="rowDataWafApp.value"
-                    style="width: 100%; height: 100%"
-                    :overlayNoRowsTemplate="overlayTemplate"
-                    @grid-ready="onGridReady"
-                    :pagination="true"
-                    :paginationPageSize="10"
-                    :localeText="paginationLocalization"
-                  />
+                          <v-col cols="12" class="mb-n6">
+                            <input
+                              type="checkbox"
+                              hide-details
+                              v-model="state.access_request"
+                            />
+                            <label class="ml-2">
+                              {{ $t("Waf.EnableAccessrequestbodies") }}</label
+                            >
+                          </v-col>
+
+                          <v-col cols="12" class="mb-n6">
+                            <input
+                              type="checkbox"
+                              hide-details
+                              v-model="state.xml_request"
+                            />
+                            <label class="ml-2">{{
+                              $t("Waf.EnableXMLrequestbodyparser")
+                            }}</label>
+                          </v-col>
+
+                          <v-col cols="12">
+                            <input
+                              type="checkbox"
+                              hide-details
+                              v-model="state.json_request"
+                            />
+                            <label class="ml-2">{{
+                              $t("Waf.EnableJSONrequestbodyparser")
+                            }}</label>
+                          </v-col>
+
+                          <v-col cols="12" class="mb-n6">
+                            <v-text-field
+                              :label="$t('Waf.Maximumrequestbodysize')"
+                              v-model="state.maximum_request"
+                            ></v-text-field>
+                            <p
+                              class="error-feedback mb-5"
+                              v-if="v$.maximum_request.$error"
+                            >
+                              {{ v$.maximum_request.$errors[0].$message }}
+                            </p>
+                          </v-col>
+
+                          <v-col cols="12" class="mb-n6">
+                            <v-text-field
+                              :label="$t('Waf.Requestbodysizefiles')"
+                              v-model="state.size_file"
+                            ></v-text-field>
+                            <p
+                              class="error-feedback mb-5"
+                              v-if="v$.size_file.$error"
+                            >
+                              {{ v$.size_file.$errors[0].$message }}
+                            </p>
+                          </v-col>
+
+                          <v-col cols="12" class="mb-n6">
+                            <v-select
+                              v-model="state.limit_action"
+                              :label="$t('Waf.RequestBodyLimitAction')"
+                              item-title="name"
+                              item-value="slug"
+                              clearable
+                              return-object
+                              :items="state.requestBodyList"
+                            ></v-select>
+                            <p
+                              class="error-feedback mb-5"
+                              v-if="v$.limit_action.$error"
+                            >
+                              {{ v$.limit_action.$errors[0].$message }}
+                            </p>
+                          </v-col>
+
+                          <v-col cols="12" class="mb-n6">
+                            <v-text-field
+                              :label="$t('Waf.Maximumparsingdepth')"
+                              v-model="state.max_parsing"
+                            ></v-text-field>
+                            <p
+                              class="error-feedback mb-5"
+                              v-if="v$.max_parsing.$error"
+                            >
+                              {{ v$.max_parsing.$errors[0].$message }}
+                            </p>
+                          </v-col>
+
+                          <v-col cols="12" class="mb-n6">
+                            <v-text-field
+                              :label="$t('Waf.Maximumnumberofargs/request')"
+                              v-model="state.max_number"
+                            ></v-text-field>
+                            <p
+                              class="error-feedback mb-5"
+                              v-if="v$.max_number.$error"
+                            >
+                              {{ v$.max_number.$errors[0].$message }}
+                            </p>
+                          </v-col>
+
+                          <v-col cols="12" class="mb-n6">
+                            <v-text-field
+                              :label="$t('Waf.PcreMatchLimit')"
+                              v-model="state.pcre_match_limit"
+                            ></v-text-field>
+                            <p
+                              class="error-feedback mb-5"
+                              v-if="v$.pcre_match_limit.$error"
+                            >
+                              {{ v$.pcre_match_limit.$errors[0].$message }}
+                            </p>
+                          </v-col>
+
+                          <v-col cols="12" class="mb-n6">
+                            <v-text-field
+                              :label="$t('Waf.PcreMatchLimitRecursion')"
+                              v-model="state.pcre_limit_recursion"
+                            ></v-text-field>
+                            <p
+                              class="error-feedback mb-5"
+                              v-if="v$.pcre_limit_recursion.$error"
+                            >
+                              {{ v$.pcre_limit_recursion.$errors[0].$message }}
+                            </p>
+                          </v-col>
+
+                          <v-col cols="12">
+                            <input
+                              type="checkbox"
+                              hide-details
+                              v-model="state.access_bodies"
+                            />
+                            <label class="ml-2">
+                              {{ $t("Waf.Enableaccessresponsebodies") }}</label
+                            >
+                          </v-col>
+
+                          <v-col cols="12" class="mb-n6">
+                            <v-select
+                              v-model="state.body_mimetype"
+                              :label="$t('Waf.ResponseBodyMimeType')"
+                              item-title="name"
+                              item-value="slug"
+                              clearable
+                              return-object
+                              :items="state.bodyMimeTypeList"
+                            ></v-select>
+                            <p
+                              class="error-feedback mb-5"
+                              v-if="v$.body_mimetype.$error"
+                            >
+                              {{ v$.body_mimetype.$errors[0].$message }}
+                            </p>
+                          </v-col>
+
+                          <v-col cols="12" class="mb-n6">
+                            <v-text-field
+                              :label="$t('Waf.ResponseBodyLimit')"
+                              v-model="state.response_body_limit"
+                            ></v-text-field>
+                            <p
+                              class="error-feedback mb-5"
+                              v-if="v$.response_body_limit.$error"
+                            >
+                              {{ v$.response_body_limit.$errors[0].$message }}
+                            </p>
+                          </v-col>
+
+                          <v-col cols="12" class="mb-n6">
+                            <v-select
+                              v-model="state.response_limit_action"
+                              :label="$t('Waf.ResponseBodyLimitAction')"
+                              item-title="name"
+                              item-value="slug"
+                              clearable
+                              return-object
+                              :items="state.responseBodyList"
+                            ></v-select>
+                            <p
+                              class="error-feedback mb-5"
+                              v-if="v$.response_limit_action.$error"
+                            >
+                              {{ v$.response_limit_action.$errors[0].$message }}
+                            </p>
+                          </v-col>
+                        </v-row>
+                      </v-expansion-panel-text>
+                    </v-expansion-panel>
+                  </v-expansion-panels>
                 </v-col>
               </v-row>
             </v-container>
@@ -212,7 +445,7 @@ import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
-import { required, helpers, requiredIf } from "@vuelidate/validators";
+import { required, helpers, requiredIf, email } from "@vuelidate/validators";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { CheckboxCellEditor } from "ag-grid-community";
 
@@ -277,6 +510,7 @@ export default {
     const gridColumnApi = ref(null);
 
     const state = reactive({
+      panel: null,
       loading: false,
       isLoadingDialogue: false,
       listType: ["ip", "domain"],
@@ -301,6 +535,45 @@ export default {
       applicationName: "",
       country: [],
       port: "",
+      //config
+
+      loading: false,
+      isLoadingDialogue: false,
+      id: null,
+      //
+      engineList: ["On", "Off", "Detection only"],
+      requestBodyList: ["Accept", "Reject"],
+      responseBodyList: [
+        "ProcessPartial",
+        "Reject",
+        "log",
+        "log allow",
+        "pass",
+      ],
+      bodyMimeTypeList: ["text/*", "text/html", "text/xml", "text/plain"],
+      //
+
+      rule_engine: null,
+      response_body_limit: "",
+      access_request: false,
+      xml_request: false,
+      json_request: false,
+      body_mimetype: null,
+      access_bodies: false,
+
+      maximum_request: null,
+      size_file: null,
+      limit_action: null,
+      response_limit_action: null,
+      max_parsing: null,
+      max_number: null,
+      pcre_match_limit: null,
+      pcre_limit_recursion: null,
+      //
+
+      snackbar: false,
+      color: "",
+      textAlert: "",
     });
 
     watch(
@@ -323,8 +596,9 @@ export default {
     );
     watch(
       () => modalMode.value,
-      () => {
+      (val) => {
         if (modalMode.value === "create") {
+          initialConfig();
           state.type = "";
           state.applicationName = "";
           state.value = "";
@@ -332,11 +606,32 @@ export default {
           state.country = [];
           state.port = "";
           state.serverCertif = "";
-          state.state.protocol = "";
+          state.protocol = "";
         }
       }
     );
 
+    const initialConfig = () => {
+      //config
+      let wafConf = document.getElementById("app").attributes["waf_conf"].value;
+      let configuration = JSON.parse(wafConf);
+      state.rule_engine = configuration?.rule_engine_initialization;
+      state.access_request = configuration?.access_request_bodies;
+      state.xml_request = configuration?.xml_request_body_parser;
+      state.json_request = configuration?.json_request_body_parser;
+      state.maximum_request = configuration?.maximum_request_body_size;
+      state.size_file = configuration?.request_body_size_files_excluded;
+      state.limit_action = configuration?.request_body_limit_action;
+      state.max_parsing = configuration?.maximum_parsing_depth_json;
+      state.max_number = configuration?.maximum_number_args_request;
+      state.pcre_match_limit = configuration?.pcre_match_limit;
+      state.pcre_limit_recursion = configuration?.pcre_match_limit_recursion;
+      state.access_bodies = configuration?.response_body_access;
+      state.body_mimetype = configuration?.response_body_mimetype;
+      state.response_body_limit = configuration?.response_body_limit;
+      state.response_limit_action = configuration?.response_body_limit_action;
+      state.panel = null;
+    };
     const getCertif = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -395,7 +690,10 @@ export default {
       const checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.checked = params.value;
-      if (params.data.name === "REQUEST-949-BLOCKING-EVALUATION" || params.data.name === "REQUEST-901-INITIALIZATION") {
+      if (
+        params.data.name === "REQUEST-949-BLOCKING-EVALUATION" ||
+        params.data.name === "REQUEST-901-INITIALIZATION"
+      ) {
         params.data.rule_policy = true;
         checkbox.disabled = true;
         checkbox.checked = true;
@@ -448,6 +746,22 @@ export default {
           );
           state.serverCertif = filtredCertif[0];
         }
+        //config
+        state.rule_engine = data?.config?.rule_engine_initialization;
+        state.access_request = data?.config?.access_request_bodies;
+        state.xml_request = data?.config?.xml_request_body_parser;
+        state.json_request = data?.config?.json_request_body_parser;
+        state.maximum_request = data?.config?.maximum_request_body_size;
+        state.size_file = data?.config?.request_body_size_files_excluded;
+        state.limit_action = data?.config?.request_body_limit_action;
+        state.max_parsing = data?.config?.maximum_parsing_depth_json;
+        state.max_number = data?.config?.maximum_number_args_request;
+        state.pcre_match_limit = data?.config?.pcre_match_limit;
+        state.pcre_limit_recursion = data?.config?.pcre_match_limit_recursion;
+        state.access_bodies = data?.config?.response_body_access;
+        state.body_mimetype = data?.config?.response_body_mimetype;
+        state.response_body_limit = data?.config?.response_body_limit;
+        state.response_limit_action = data?.config?.response_body_limit_action;
       }
     };
 
@@ -481,6 +795,23 @@ export default {
           description: state.description,
           country: mapedCountry,
           rules: mapedRuleApp,
+          config: {
+            rule_engine_initialization: state.rule_engine,
+            access_request_bodies: state.access_request,
+            xml_request_body_parser: state.xml_request,
+            json_request_body_parser: state.json_request,
+            maximum_request_body_size: state.maximum_request,
+            request_body_size_files_excluded: state.size_file,
+            request_body_limit_action: state.limit_action,
+            maximum_parsing_depth_json: state.max_parsing,
+            maximum_number_args_request: state.max_number,
+            pcre_match_limit: state.pcre_match_limit,
+            pcre_match_limit_recursion: state.pcre_limit_recursion,
+            response_body_access: state.access_bodies,
+            response_body_mimetype: state.body_mimetype,
+            response_body_limit: state.response_body_limit,
+            response_body_limit_action: state.response_limit_action,
+          },
         };
         if (state.protocol.slug === "https") {
           payload = { ...payload, certificate_name: state.serverCertif.name };
@@ -554,7 +885,8 @@ export default {
         state.country = [];
         state.port = "";
         state.serverCertif = "";
-        state.state.protocol = "";
+        state.protocol = "";
+        initialConfig();
         v$.value.$reset();
       }
     };
@@ -598,6 +930,13 @@ export default {
       return t("champs.indication");
     });
 
+    const champonlyNumber = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
+    const champ = computed(() => {
+      return t("errors.valueRequired");
+    });
+
     const rules = computed(() => {
       return {
         applicationName: {
@@ -632,6 +971,67 @@ export default {
           required: helpers.withMessage(error, required),
           isValidPort: helpers.withMessage(
             onlynumbers,
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        //config
+        limit_action: { required },
+        size_file: {
+          required: helpers.withMessage(champ, required),
+          isValidSizeFile: helpers.withMessage(
+            champonlyNumber,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        rule_engine: { required },
+        maximum_request: {
+          required: helpers.withMessage(champ, required),
+          isValidMaxRequest: helpers.withMessage(
+            champonlyNumber,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        max_parsing: {
+          required: helpers.withMessage(champ, required),
+          isValidMaxParsing: helpers.withMessage(
+            champonlyNumber,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        body_mimetype: { required },
+        response_limit_action: { required },
+        response_body_limit: {
+          required: helpers.withMessage(champ, required),
+          isValidResponseBodyLimit: helpers.withMessage(
+            champonlyNumber,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        max_number: {
+          required: helpers.withMessage(champ, required),
+          isValidMaxNumber: helpers.withMessage(
+            champonlyNumber,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        pcre_limit_recursion: {
+          required: helpers.withMessage(champ, required),
+          isValidPcreLimitRecursion: helpers.withMessage(
+            champonlyNumber,
+
+            helpers.regex(/^[0-9]+$/)
+          ),
+        },
+        pcre_match_limit: {
+          required: helpers.withMessage(champ, required),
+          isValidPcreMatchLimit: helpers.withMessage(
+            champonlyNumber,
+
             helpers.regex(/^[0-9]+$/)
           ),
         },

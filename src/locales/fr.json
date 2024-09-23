@@ -1001,7 +1001,9 @@
     "country": "Pays",
     "blockedRequests": "Demandes Bloquées",
     "timestamp": "Horodatage",
-    "method": "Methode"
+    "method": "Methode",
+    "parameters":"Parameters",
+    "rulesList":"Liste des règles"
   },
   "settings": {
     "GENERALPARAMETERS": "PARAMÈTRES GÉNÉRAUX",

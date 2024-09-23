@@ -596,8 +596,9 @@ export default {
     );
     watch(
       () => modalMode.value,
-      () => {
+      (val) => {
         if (modalMode.value === "create") {
+          initialConfig();
           state.type = "";
           state.applicationName = "";
           state.value = "";
@@ -606,29 +607,29 @@ export default {
           state.port = "";
           state.serverCertif = "";
           state.protocol = "";
-
-          resetConfig();
         }
       }
     );
 
-    const resetConfig = () => {
+    const initialConfig = () => {
       //config
-      state.rule_engine = "";
-      state.access_request = "";
-      state.xml_request = "";
-      state.json_request = "";
-      state.maximum_request = "";
-      state.size_file = "";
-      state.limit_action = "";
-      state.max_parsing = "";
-      state.max_number = "";
-      state.pcre_match_limit = "";
-      state.pcre_limit_recursion = "";
-      state.access_bodies = "";
-      state.body_mimetype = "";
-      state.response_body_limit = "";
-      state.response_limit_action = "";
+      let wafConf = document.getElementById("app").attributes["waf_conf"].value;
+      let configuration = JSON.parse(wafConf);
+      state.rule_engine = configuration?.rule_engine_initialization;
+      state.access_request = configuration?.access_request_bodies;
+      state.xml_request = configuration?.xml_request_body_parser;
+      state.json_request = configuration?.json_request_body_parser;
+      state.maximum_request = configuration?.maximum_request_body_size;
+      state.size_file = configuration?.request_body_size_files_excluded;
+      state.limit_action = configuration?.request_body_limit_action;
+      state.max_parsing = configuration?.maximum_parsing_depth_json;
+      state.max_number = configuration?.maximum_number_args_request;
+      state.pcre_match_limit = configuration?.pcre_match_limit;
+      state.pcre_limit_recursion = configuration?.pcre_match_limit_recursion;
+      state.access_bodies = configuration?.response_body_access;
+      state.body_mimetype = configuration?.response_body_mimetype;
+      state.response_body_limit = configuration?.response_body_limit;
+      state.response_limit_action = configuration?.response_body_limit_action;
       state.panel = null;
     };
     const getCertif = () => {
@@ -746,21 +747,21 @@ export default {
           state.serverCertif = filtredCertif[0];
         }
         //config
-        state.rule_engine = data?.rule_engine_initialization;
-        state.access_request = data?.access_request_bodies;
-        state.xml_request = data?.xml_request_body_parser;
-        state.json_request = data?.json_request_body_parser;
-        state.maximum_request = data?.maximum_request_body_size;
-        state.size_file = data?.request_body_size_files_excluded;
-        state.limit_action = data?.request_body_limit_action;
-        state.max_parsing = data?.maximum_parsing_depth_json;
-        state.max_number = data?.maximum_number_args_request;
-        state.pcre_match_limit = data?.pcre_match_limit;
-        state.pcre_limit_recursion = data?.pcre_match_limit_recursion;
-        state.access_bodies = data?.response_body_access;
-        state.body_mimetype = data?.response_body_mimetype;
-        state.response_body_limit = data?.response_body_limit;
-        state.response_limit_action = data?.response_body_limit_action;
+        state.rule_engine = data?.config?.rule_engine_initialization;
+        state.access_request = data?.config?.access_request_bodies;
+        state.xml_request = data?.config?.xml_request_body_parser;
+        state.json_request = data?.config?.json_request_body_parser;
+        state.maximum_request = data?.config?.maximum_request_body_size;
+        state.size_file = data?.config?.request_body_size_files_excluded;
+        state.limit_action = data?.config?.request_body_limit_action;
+        state.max_parsing = data?.config?.maximum_parsing_depth_json;
+        state.max_number = data?.config?.maximum_number_args_request;
+        state.pcre_match_limit = data?.config?.pcre_match_limit;
+        state.pcre_limit_recursion = data?.config?.pcre_match_limit_recursion;
+        state.access_bodies = data?.config?.response_body_access;
+        state.body_mimetype = data?.config?.response_body_mimetype;
+        state.response_body_limit = data?.config?.response_body_limit;
+        state.response_limit_action = data?.config?.response_body_limit_action;
       }
     };
 
@@ -885,7 +886,7 @@ export default {
         state.port = "";
         state.serverCertif = "";
         state.protocol = "";
-        resetConfig();
+        initialConfig();
         v$.value.$reset();
       }
     };

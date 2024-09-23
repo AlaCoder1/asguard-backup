@@ -87,6 +87,11 @@ def get_list_all_waf_application():
                                                "rule_name": rule.rule_waf.name,
                                                "rule_policy": rule.rule_policy,
                                                "rule_log": rule.rule_log,} for rule in waf_application_rules]
+        # Return the application config as an object
+        waf_application_config = ApplicationWaf.objects.get(id=waf_application_id).config
+        waf_application_config_dict = serializers.serialize("json", ConfigWaf.objects.filter(id=waf_application_config.pk))
+        waf_application['fields']['config'] = json.loads(waf_application_config_dict)
+        waf_application['fields']['config'] = waf_application['fields']['config'][0]['fields']
         list_waf_application.append(waf_application['fields'])
     return list_waf_application
 

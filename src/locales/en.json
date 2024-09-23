@@ -126,7 +126,10 @@
     "eventLogs":"Event logs",
     "subscription":"Subscription",
     "routing":"Routing",
-    "systemLog":"System Log"
+    "systemLog":"System Log",
+    "logManagement":"Log Management",
+    "archivedLog":"Archived Logs"
+
     },
   "header":{
     "profile":"Profile",
@@ -1022,6 +1025,13 @@
       "pleaseChoose":"Please choose an image file",
       "fileBig":"Your file is too big! Please select an image under 1MB",
       "GotIt":"Got it!"
+    },
+    "logrotate": {
+      "id":"ID",
+      "filename":"File name",
+      "original_path":"Original file path",
+      "backup_path":"Backup file path",
+      "date":"Date"
     }
 
 

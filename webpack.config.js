@@ -37,6 +37,7 @@ Encore.setOutputPath("static/")
   .addEntry("profile", "./src/middleware/profile.js")
   .addEntry("systemLog", "./src/middleware/systemLog.js")
   .addEntry("settings", "./src/middleware/settings.js")
+  .addEntry("logrotate", "./src/middleware/logrotate.js")
   .enableVueLoader(() => {}, {
     version: 3,
   })

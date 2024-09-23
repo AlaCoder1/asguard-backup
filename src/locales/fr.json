@@ -128,7 +128,9 @@
     "eventLogs":"Journaux d'événements",
     "subscription":"Abonnement",
     "routing":"Routage",
-    "systemLog":"Journal du système"
+    "systemLog":"Journal du système",
+    "logManagement":"Gestion des journaux",
+    "archivedLog":"Journaux archivés"
 
   },
   "header":{
@@ -1021,7 +1023,13 @@
       "pleaseChoose":"Veuillez choisir un fichier image",
       "fileBig":"Votre fichier est trop volumineux ! Veuillez sélectionner une image de moins de 1MB",
       "GotIt":"Je l'ai!"
+    },
+    "logrotate": {
+      "id":"ID",
+      "filename":"Nom de fichier",
+      "original_path":"Chemin d'accès au fichier d'origine",
+      "backup_path":"Chemin du fichier de sauvegarde",
+      "date":"Date"
     }
-    
     
   }

@@ -3,8 +3,8 @@ from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
-from backend.managementUsers.models import Profile, User
-from backend.managementUsers.serializers import PermissionSerializer, ProfileSerializer, UserSerializerGet, UserSerializerPost, UserSerializerPostWithoutGroupAndPermission
+from backend.managementUsers.models import Profile, User, Roles
+from backend.managementUsers.serializers import PermissionSerializer, ProfileSerializer, UserSerializerGet, UserSerializerPost, UserSerializerPostWithoutGroupAndPermission,RoleSerializer
 from backend.managementUsers.functions import add_user_group, add_mail_spool, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password
 from backend.managementGroup.serializers import GroupSerializer
 from backend.managementGroup.functions import change_groupname_username, getGroupNameById, getUidGroup
@@ -24,8 +24,7 @@ from django.conf import settings
 from rest_framework import status
 
 from backend.waf.models import RulesWaf
-
-
+from .decorator import has_functionality
 # Constants
 CONSTANT_USER = _("User")
 CONSTANT_USERNAME = _("username")
@@ -74,8 +73,63 @@ def get_all_users(request):
             res[i]['fields'].pop('password')
             res[i]['fields']['id'] = user_id
             list_users.append(res[i]['fields'])
-        return list_users
+            
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_roles(request):
+    """Get all roles from database"""
+    list_roles = []
+    if (request.method == 'GET'):
+        roles = Roles.objects.all()
+        role_dict = serializers.serialize("json", roles)
+        res = json.loads(role_dict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            role_id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = role_id
+            list_roles.append(res[i]['fields'])
+        
+        return JsonResponse({"list_roles":list_roles})
 
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+@has_functionality('all')
+def create_role(request):
+    if (request.method == 'POST'):
+        data = request.data
+        serializer = RoleSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return JsonResponse({'msg': serializer.error_messages}, status=400) 
+        return JsonResponse({'msg': data}, status=200) 
+    
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def modify_role(request,id):
+    if (request.method == 'PUT'):
+        role = Roles.objects.get(id=id)
+        data = request.data
+        serializer = RoleSerializer(role,data=data)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return JsonResponse({'msg': serializer.error_messages}, status=400) 
+        return JsonResponse({'msg': data}, status=200) 
+    
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_role(request, id):
+    """Delete role"""
+    print('dddd')
+    role = Roles.objects.get(id=id)
+    role.delete()
+    return JsonResponse({"msg": f"{SUCCESS_MESSAGES_DELETING}"})
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET USER BY ID",
@@ -113,6 +167,7 @@ def create_user(request):
     email_founded = False
     if request.method == 'POST':
         data = request.data
+        print({"data":data})
         username = data['username']
         password = data['password']
         organisation = Organization.objects.get(id=1)
@@ -180,6 +235,7 @@ def create_user(request):
                     uid = get_uid_user()
                     data['password'] = make_password(data['password'])
                     data['uid'] = uid
+                    # data['role_id'] = 
                     if 'group' in data:
                         groups = data['group']
                         for i in range(0, len(groups)):

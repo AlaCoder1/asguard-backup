@@ -17,17 +17,22 @@ class Command(BaseCommand):
     
     def add_arguments(self, parser):
         # Optional argument
-        parser.add_argument('-u', '--name', type=str, help='Define a username name')
-        parser.add_argument('-p', '--pw', type=str, help='Define a username password')
+        parser.add_argument('-u', '--name', type=str, help='Define a user name')
+        parser.add_argument('-p', '--pw', type=str, help='Define a user password')
+        parser.add_argument('-r', '--role', type=str, help='Define a user role')
     def handle(self, *args, **kwargs):
         # Your code to add data to the database here
         try:
             name = kwargs['name']
             pw = kwargs['pw']
-            if name and pw:
+            role = kwargs['role']
+            if name and pw and role:
                 username = f'{name}'
                 password = f'{pw}'
-            user=User.objects.create(username=username, password=make_password(password), role = 'root')
+                role = f'{role}'
+            role_db = Roles.objects.get(name=role)
+            user=User.objects.create(username=username, password=make_password(password), role = role_db)
+            # user=User.objects.create(username=username, password=make_password(password), role = 'root')
             Profile.objects.create(user=user)
             return "user added succesffuly"
         except IntegrityError as e:

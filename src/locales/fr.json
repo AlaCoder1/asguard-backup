@@ -609,7 +609,7 @@
     "policyName": "Nom de la Politique",
     "semantic": "Sémantique",
     "edgeRelaysRole": "Rôle des Relais Edge",
-    "identityRoleAttribute": "Attribut de rôle d’identité",
+    "identityRoleAttribute": "Rôle identitaire",
     "updateRelaysPolicy": "Modifier la politique des relais",
     "identityRole": "Rôle d'identité",
     "addServicesPolicy": "Ajouter une Politique de Service",
@@ -617,7 +617,7 @@
     "serviceRoleAttribute": "Attribut du Rôle de Service",
     "updateServicePolicy": "Modifier la politique de service",
     "servicesEdgeRelaysPolicies": "Services Relais de Périphérie Politiques",
-    "addService": "Ajouter un Service",
+    "addService": "Ajouter une Politique de Service de Relai de Périphérie",
     "edgeRelaysPolicies":"Politiques des relais Edge",
     "servicesPolicies":"Politiques des services"
   },

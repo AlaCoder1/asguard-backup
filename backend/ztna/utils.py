@@ -65,7 +65,7 @@ def change_status_ztna_service(service_status="start"):
 
 def start_router(router_name, token):
     current_dir = get_current_directory()
-    execute_command_with_arguments(["sudo", "bash", PATH_START_ZTNA_ROUTER_BASH.format(current_dir)], f"{router_name}\n{token}", 3)
+    execute_command_with_arguments(["sudo", "bash", PATH_START_ZTNA_ROUTER_BASH.format(current_dir)], f"{router_name}\n{token}\n", 3)
 
 
 def stop_router(router_name):

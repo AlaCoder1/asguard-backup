@@ -219,15 +219,13 @@ export default {
 
       const filePath = `${rowData.backup_path}${rowData.filename}`;
 
-      axios.get(`/system_log/downloadLogrotate`, {
-        params: {
-          file_path: filePath 
-        },
-        responseType: "blob",  
-      })
+      axios.post(`/system_log/downloadLogrotate`, {  
+    file_path: filePath   
+  }, {
+    responseType: "blob", 
+  })
         .then((response) => {
           const blob = new Blob([response.data], { type: "application/gzip" });
-
           const url = window.URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.style.display = "none";
@@ -243,6 +241,7 @@ export default {
           state.color = "green";
         })
         .catch((error) => {
+          console.log("error===>",error)
           state.textAlert =  t("logrotate.download_fail");
           state.snackbar = true;
           state.color = "red";

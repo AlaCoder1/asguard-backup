@@ -100,53 +100,8 @@ def get_logrotate_data(request):
             log['fields']['id'] = log["pk"]
             list_logs.append(log['fields'])
         return JsonResponse({"data": list_logs})   
-# @swagger_auto_schema(
-#     method='get',
-#     operation_description="API to download all logrotate data.",
-#     manual_parameters=[
-#         openapi.Parameter(
-#             'file_path',
-#             openapi.IN_QUERY,
-#             description="Path to the logrotate file to be downloaded.",
-#             type=openapi.TYPE_STRING
-#         )
-#     ],
-#     responses={
-#         200: 'Logrotate file successfully downloaded.',
-#         500: 'Error: File does not exist or an unexpected error occurred.',
-#     }
-# )    
-# @api_view(['GET'])
-# @authentication_classes([SessionAuthentication])
-# def download_logrotate_data(request):
-#     """
-#     API to download logrotate data.
 
-#     Parameters:
-#     request (HttpRequest): The incoming request object.
-#     file_path (str): Path to the file on the server.
-
-#     Returns:
-#     HttpResponse: The logrotate `.gz` file as an attachment or an error response.
-#     """
-#     if request.method == 'GET':
-#         try:
-#             data=request.data 
-#             file_path=data.get("file_path",None)
-#             print(data)
-#             if file_path is not None and  not os.path.exists(file_path):
-#                 return HttpResponse("Error: File does not exist!", status=404)
-
-#             with gzip.open(file_path, 'rb') as f:
-#                 file_content = f.read()
-
-#             response = HttpResponse(file_content, content_type='application/gzip')
-#             response['Content-Disposition'] = f'attachment; filename={os.path.basename(file_path)}'
-#             return response
-
-#         except Exception as e:
-#             return HttpResponse(f"Error: {str(e)}", status=500)
-@api_view(['GET'])
+@api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def download_logrotate_data(request):
     """
@@ -158,9 +113,9 @@ def download_logrotate_data(request):
     Returns:
     HttpResponse: The logrotate `.gz` file as an attachment or an error response.
     """
-    if request.method == 'GET':
+    if request.method == 'POST':
         try:
-            file_path = request.GET.get("file_path", None)
+            file_path = request.data.get("file_path", None)
             if file_path is None:
                 return HttpResponse("Error: file_path is missing!", status=400)
 
@@ -172,7 +127,7 @@ def download_logrotate_data(request):
             with gzip.open(file_path, 'rb') as f:
                 file_content = f.read()
             response = HttpResponse(file_content, content_type='application/gzip')
-            response['Content-Disposition'] = f'attachment; filename={os.path.basename(file_path.strip(".gz"))}'
+            response['Content-Disposition'] = f'attachment; filename={os.path.basename(file_path.strip('.gz'))}'
             return response
 
         except Exception as e:

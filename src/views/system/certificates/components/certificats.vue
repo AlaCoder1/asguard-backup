@@ -145,6 +145,7 @@
 </template>
 
 <script>
+import { user_privilege } from "@/mixins/user_privilege.js";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
 import { helpers, sameAs } from "@vuelidate/validators";

@@ -14,12 +14,12 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="ServiceName" v-model="name" :placeholder="$t('ztna.serviceName')" :rules="rules"
+                  <v-text-field id="ServiceName" v-model="name" :placeholder="$t('ztna.serviceName')" :rules="rulesName"
                     persistent-placeholder />
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field id="ServiceAttribute" v-model="serviceAtt" :placeholder="$t('ztna.serviceAttribute')"
-                    :rules="rules" persistent-placeholder />
+                    :rules="rulesName" persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n3">
@@ -31,9 +31,6 @@
                 </v-col>
 
                 <v-col cols="6">
-                  <!-- <v-text-field id="intercept" v-model="intercept" placeholder="INTERCEPT" :rules="rules"
-                    persistent-placeholder class="mr-6" outlined dense hide-details="auto" /> -->
-
                     <v-select
                     v-model="intercept"
                     label="INTERCEPT"
@@ -50,8 +47,6 @@
 
                 </v-col>
                 <v-col cols="6" class="mb-n6">
-                  <!-- <v-text-field id="host" v-model="host" :placeholder="$t('ztna.host')" :rules="rules"
-                    persistent-placeholder outlined dense hide-details="auto" /> -->
 
                     <v-select
                     v-model="host"
@@ -69,7 +64,7 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
+                  <v-text-field id="Description" v-model="Description" placeholder="Description" 
                     persistent-placeholder />
                 </v-col>
               </v-row>
@@ -135,6 +130,7 @@ export default {
     const name = ref("");
     const servId = ref("");
     const serviceAtt = ref("");
+    const Services = ref([]);
     const encryptionRequired = ref(false);
     const intercept = ref("");
     const host = ref("");
@@ -145,6 +141,38 @@ export default {
         return "You must enter a value.";
       },
     ];
+    const rulesName = [
+  (value) => {
+    if (!value) return true;
+    if (existingName(value)) return "The name already exists";
+    return ValidName(value) ? true : "Please enter a valid name.";
+  },
+];
+function existingName(value) {
+      const existingservice = Services.value.find(service => service.name === value);
+
+      if (existingservice) {
+        return true;
+      }
+
+      return false;
+    }
+const fetchServices = async () => {
+      try {
+        const ServicesString = await document.getElementById("app").getAttribute("Services");
+        const ServicesObject = JSON.parse(ServicesString);
+
+        const ServicesArray = Array.isArray(ServicesObject) ? ServicesObject : [];
+
+        Services.value = ServicesArray.map(service => ({ name: service.name }));
+
+        console.log('Services.value', Services.value);
+      } catch (error) {
+        console.error("Failed to fetch Services:", error);
+        Services.value = [];
+      }
+    };
+
     const interceptList = ref([]);
     const hostList = ref([]);
     const emitter = inject("emitter");
@@ -161,6 +189,7 @@ export default {
     onMounted(()=>{
       fetchHostConfigs()
       fetchInterceptConfigs()
+      fetchServices()
     })
 
     watch(
@@ -247,6 +276,15 @@ export default {
       hostList.value = configsObject;
       console.log('host,',hostList.value)
     };
+    function ValidName(value){
+      const hostnamePattern = /^[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
+
+  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+    return true;
+  }
+  
+  return false;
+}
 
     const submitForm = async () => {
       const csrfToken = getCookie("csrftoken");
@@ -311,39 +349,6 @@ export default {
             state.textAlert = i.response.data.error;
           });
       }
-      // try {
-      //   fetchConfigs();
-      //   let token = document.getElementById("app").getAttribute("token");
-      //   let hostId = configs.value.find(
-      //     (config) => config.name === host.value
-      //   ).id;
-      //   let interceptId = configs.value.find(
-      //     (config) => config.name === intercept.value
-      //   ).id;
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = "/edge/management/v1/services";
-      //   const response = await axios.post(
-      //     proxyUrl + apiUrl,
-      //     {
-      //       name: name.value,
-      //       roleAttributes: [serviceAtt.value],
-      //       encryptionRequired: encryptionRequired.value,
-      //       configs: [hostId, interceptId],
-      //     },
-      //     {
-      //       headers: {
-      //         "zt-session": token,
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   emitter.emit("closeServicesModal");
-      // } catch (error) {
-      //   console.error("Failed to submit form:", error);
-      // }
     };
     const resetForm = () => {
       name.value = "";
@@ -376,6 +381,7 @@ export default {
       submitForm,
       resetForm,
       cancel,
+      rulesName,
     };
   },
 };

@@ -1,4 +1,14 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-row justify="center">
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm">
@@ -16,20 +26,13 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="RouterName" v-model="RouterName" :placeholder="$t('ztna.relayName')" :rules="rules"
+                  <v-text-field id="RouterName" v-model="RouterName" :placeholder="$t('ztna.relayName')" :rules="rulesName"
                     persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field id="RouterAttribute" v-model="RouterAttribute" :placeholder="$t('ztna.relayAttribute')"
-                    :rules="rules" persistent-placeholder />
-                </v-col>
-
-                <v-col cols="12" class="mb-n3">
-                  <label for="Tunneler" class="mr-3">{{
-                    $t("ztna.tunneler")
-                    }}</label>
-                  <input type="checkbox" id="Tunneler" value="Tunneler" v-model="Tunneler" />
+                    :rules="rulesName" persistent-placeholder />
                 </v-col>
                 <v-col cols="12" class="mb-n3">
                   <label for="Traversal" class="mr-3">{{
@@ -51,19 +54,6 @@
               class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
                 {{ $t("buttons.close") }}</span
               ></v-btn>
-            <!-- <v-btn
-              color="red"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              class="mt-3 btn-add"
-              type="reset"
-            >
-              Reset
-            </v-btn> -->
             <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
               class="mt-3 ml-2 btn-add" type="submit">
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
@@ -84,7 +74,7 @@
 <script>
 import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
-import { toRefs, ref, watch, reactive, inject } from "vue";
+import { toRefs, ref, watch, reactive, inject , onMounted} from "vue";
 export default {
   props: {
     isOpen: {
@@ -106,16 +96,43 @@ export default {
     const RouterName = ref("");
     const RouterAttribute = ref("");
     const Description = ref("");
-    const Tunneler = ref(false);
+    const Relays = ref([])
+    const Tunneler = ref(true);
     const Traversal = ref(false);
     const rules = [(value) => !!value || "You must enter a value."];
     const emitter = inject("emitter");
 
     const { isOpen, editRow, modalMode } = toRefs(props);
+    const rulesName = [
+  (value) => {
+    if (!value) return true;
+    if (existingName(value)) return "The name already exists";
+    return ValidName(value) ? true : "Please enter a valid name.";
+  },
+];
 
+function existingName(value) {
+      const existingIdentity = Relays.value.find(identity => identity.name === value);
 
+      if (existingIdentity) {
+        return true;
+      }
 
+      return false;
+    }
+
+    function ValidName(value){
+      const hostnamePattern = /^[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
+
+  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+    return true;
+  }
+  
+  return false;
+}
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       openModal: false,
       snackbar: false,
       color: null,
@@ -142,7 +159,6 @@ export default {
           RouterName.value = "";
           RouterAttribute.value = "";
           Description.value = "";
-          Tunneler.value = false;
           Traversal.value = false;
 
         }
@@ -155,11 +171,31 @@ export default {
         RouterId.value = data.id;
         RouterName.value = data.name;
         RouterAttribute.value = data.attribute_relay;
-        Tunneler.value = data.tunneler;
         Traversal.value = data.traversal;
         Description.value = data.description;
       }
     };
+    const fetchRelays = async () => {
+      try {
+        const RelaysString = await document.getElementById("app").getAttribute("routers");
+        const RelaysObject = JSON.parse(RelaysString);
+
+        const RelaysArray = Array.isArray(RelaysObject) ? RelaysObject : [];
+
+        Relays.value = RelaysArray.map(identity => ({ name: identity.name }));
+
+        console.log('Relays.value', Relays.value);
+      } catch (error) {
+        console.error("Failed to fetch Relays:", error);
+        Relays.value = [];
+      }
+    };
+
+
+
+    onMounted(() => {
+      fetchRelays();
+    });
 
     const submitForm = async () => {
 
@@ -167,16 +203,9 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-
-
       if (Traversal.value === "Traversal") {
         Traversal.value = true;
       }
-
-      if (Tunneler.value === "Tunneler") {
-        Tunneler.value = true;
-      }
-
 
       let payload = {
         name: RouterName.value,
@@ -187,6 +216,7 @@ export default {
       };
 
       let token = document.getElementById("app").getAttribute("token");
+      
 
       if (modalMode.value === "edit") {
         axios
@@ -201,6 +231,8 @@ export default {
               state.snackbar = true;
               state.color = "success";
               state.textAlert = response.data.message;
+              state.loading = true;
+              state.isLoadingDialogue = true;
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -211,6 +243,8 @@ export default {
             state.snackbar = true;
             state.color = "red";
             state.textAlert = i.response.data.error;
+            state.loading = false;
+            state.isLoadingDialogue = false;
           });
       } else {
         axios
@@ -224,7 +258,11 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
+              state.loading = true;
+              state.isLoadingDialogue = true;
               state.textAlert = response.data.message;
+              state.loading = false;
+              state.isLoadingDialogue = false;
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -235,46 +273,11 @@ export default {
             state.snackbar = true;
             state.color = "red";
             state.textAlert = i.response.data.error;
+            state.loading = false;
+            state.isLoadingDialogue = false;
           });
       }
-      // try {
-      //   if (Traversal.value === "Traversal") {
-      //     Traversal.value = true;
-      //   }
 
-      //   if (Tunneler.value === "Tunneler") {
-      //     Tunneler.value = true;
-      //   }
-      //   let token = document.getElementById("app").getAttribute("token");
-
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = "/edge/management/v1/edge-routers";
-      //   const response = await axios.post(
-      //     proxyUrl + apiUrl,
-      //     {
-      //       name: RouterName.value,
-      //       noTraversal: Traversal.value,
-      //       isTunnelerEnabled: Tunneler.value,
-      //       roleAttributes: [RouterAttribute.value],
-      //     },
-      //     {
-      //       headers: {
-      //         "zt-session": token,
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-
-      //   emitter.emit("closeRouterModal");
-      // } catch (error) {
-      //   console.error(
-      //     "Failed to submit form:",
-      //     error.response ? error.response.data : error.message
-      //   );
-      // }
     };
 
     const cancel = () => {
@@ -283,7 +286,6 @@ export default {
       Description.value = "";
       Tunneler.value = false;
       Traversal.value = false;
-      console.log("test");
       emitter.emit("closeRouterModal");
     };
 
@@ -298,6 +300,7 @@ export default {
       Traversal,
       rules,
       submitForm,
+      rulesName,
     };
   },
 };

@@ -7,13 +7,13 @@
             <span class="headline" v-if="modalMode === 'create'">
               {{ $t("ztna.addService") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateService") }} </span>
+              {{ $t("ztna.updateService") }} Relay Policy </span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rules"
+                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rulesName"
                     persistent-placeholder />
                 </v-col>
 
@@ -47,7 +47,7 @@
                     :rules="rules" persistent-placeholder /> -->
 
                   <v-select v-model="serviceRA" :label="$t('ztna.serviceRoleAttribute')" density="compact"
-                    item-title="name" item-value="id" return-object :rules="rules" :items="ServList"
+                    item-title="attribute_service" item-value="id" return-object :rules="rules" :items="ServList"
                     background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
@@ -55,7 +55,7 @@
                 <v-col cols="12" class="mb-n6">
                   <!-- <v-text-field id="routerR" v-model="routerR" :placeholder="$t('ztna.edgeRelaysRole')" :rules="rules"
                     persistent-placeholder /> -->
-                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact" item-title="name"
+                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact" item-title="attribute_relay"
                     item-value="id" return-object :rules="rules" :items="routersList" background-color="#fffffff"
                     :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
@@ -112,6 +112,7 @@ export default {
   },
   setup(props) {
     const idServRouter = ref("");
+    const SerRelPolicies = ref([])
     const ServList = ref([]);
     const routersList = ref([]);
     const name = ref("");
@@ -126,8 +127,48 @@ export default {
         return "You must enter a value.";
       },
     ];
-    const emitter = inject("emitter");
+    const rulesName = [
+  (value) => {
+    if (!value) return true;
+    if (existingName(value)) return "The name already exists";
+    return ValidName(value) ? true : "Please enter a valid name.";
+  },
+];
+function existingName(value) {
+      const existingIdentity = SerRelPolicies.value.find(identity => identity.name === value);
 
+      if (existingIdentity) {
+        return true;
+      }
+
+      return false;
+    }
+    const fetchSerRelPolicies = async () => {
+      try {
+        const SerRelPoliciesString = await document.getElementById("app").getAttribute("service_edge_router_policies");
+        const SerRelPoliciesObject = JSON.parse(SerRelPoliciesString);
+
+        const SerRelPoliciesArray = Array.isArray(SerRelPoliciesObject) ? SerRelPoliciesObject : [];
+
+        SerRelPolicies.value = SerRelPoliciesArray.map(identity => ({ name: identity.name }));
+
+        console.log('SerRelPolicies.value', SerRelPolicies.value);
+      } catch (error) {
+        console.error("Failed to fetch SerRelPolicies:", error);
+        SerRelPolicies.value = [];
+      }
+    };
+
+    const emitter = inject("emitter");
+    function ValidName(value){
+      const hostnamePattern = /^[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
+
+  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+    return true;
+  }
+  
+  return false;
+}
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
@@ -137,6 +178,7 @@ export default {
       textAlert: "",
     });
     onMounted(() => {
+      fetchSerRelPolicies()
       let servicesString = document
         .getElementById("app")
         .getAttribute("services");
@@ -254,7 +296,7 @@ export default {
             console.log("response", i.response);
             state.snackbar = true;
             state.color = "red";
-            state.textAlert = i.response.data.response;
+            state.textAlert = i.response.data.error;
           });
       } else {
         axios
@@ -282,34 +324,6 @@ export default {
             state.textAlert = i.response.data.error;
           });
       }
-      // try {
-      //   let token = document.getElementById("app").getAttribute("token");
-      //   let routerAttribute = `#${routerR.value}`;
-      //   let serviceAttribute = `#${serviceRA.value}`;
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = "/edge/management/v1/service-edge-router-policies";
-      //   await axios.post(
-      //     proxyUrl + apiUrl,
-      //     {
-      //       name: name.value,
-      //       semantic: selectedsemantic.value,
-      //       edgeRouterRoles: [routerAttribute],
-      //       serviceRoles: [serviceAttribute],
-      //     },
-      //     {
-      //       headers: {
-      //         "zt-session": token,
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   emitter.emit("closeServiceRouterPolicyModal");
-      // } catch (error) {
-      //   console.error("Failed to submit form:", error);
-      // }
     };
     const resetForm = () => {
       name.value = "";
@@ -320,7 +334,6 @@ export default {
     };
 
     const cancel = () => {
-      console.log("tes");
       emitter.emit("closeServiceRouterPolicyModal");
     };
     const selectsemantic = (item) => {
@@ -342,6 +355,7 @@ export default {
       cancel,
       selectedsemantic,
       selectsemantic,
+      rulesName,
     };
   },
 };

@@ -347,7 +347,6 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData, index) => {
-      let token = document.getElementById("app").getAttribute("token");
       switch (action) {
         case "edit":
           state.modalMode = "edit";
@@ -462,7 +461,7 @@ export default {
 
       Identities.value = IdentitiesObject ? IdentitiesObject : [];
 
-
+console.log('Identities',Identities.values)
       let linuxfileString = document
         .getElementById("app")
         .getAttribute("linux_file");

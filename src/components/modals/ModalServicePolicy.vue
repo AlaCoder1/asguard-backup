@@ -14,7 +14,7 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rules"
+                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rulesName"
                     persistent-placeholder />
                 </v-col>
 
@@ -33,7 +33,7 @@
                           <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
                               item
-                              }}</v-list-item-title>
+                            }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -45,7 +45,7 @@
                   <div class="d-flex align-center">
                     <label class="ml-1" for="PROTOCOL">{{
                       $t("ztna.semantic")
-                      }}</label>
+                    }}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
@@ -58,7 +58,7 @@
                           <v-list-item v-for="(item, index) in semantic" :key="index" @click="selectsemantic(item)">
                             <v-list-item-title>{{
                               item
-                              }}</v-list-item-title>
+                            }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -69,21 +69,21 @@
                 <v-col cols="12" class="mb-n6">
                   <!-- <v-text-field id="serviceRA" v-model="serviceRA" :placeholder="$t('ztna.serviceRoleAttribute')"
                     :rules="rules" persistent-placeholder /> -->
-                    <v-select v-model="serviceRA" :label="$t('ztna.serviceRoleAttribute')" density="compact" item-title="name"
-                    item-value="id" return-object :rules="rules" :items="ServList" background-color="#fffffff"
-                    :no-data-text="$t('certificat.certificatlist')">
+                  <v-select v-model="serviceRA" :label="$t('ztna.serviceRoleAttribute')" density="compact"
+                    item-title="attribute_service" item-value="id" return-object :rules="rules" :items="ServList"
+                    background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <!-- <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
                     :rules="rules" persistent-placeholder /> -->
-                    <v-select v-model="identityatt" :label="$t('ztna.identityRoleAttribute')" density="compact"
-                    item-title="name" item-value="id" return-object :rules="rules" :items="identityList"
+                  <v-select v-model="identityatt" :label="$t('ztna.identityRoleAttribute')" density="compact"
+                    item-title="attribute_identitie" item-value="id" return-object :rules="rules" :items="identityList"
                     background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
+                  <v-text-field id="Description" v-model="Description" placeholder="Description"
                     persistent-placeholder />
                 </v-col>
               </v-row>
@@ -134,6 +134,7 @@ export default {
   },
   setup(props) {
     const name = ref("");
+    const ServicePolicies = ref([])
     const ServList = ref([]);
     const identityList = ref([]);
     const idServ = ref("");
@@ -142,6 +143,13 @@ export default {
     const Description = ref("");
     const selectedTitle = ref("Dial");
     const selectedsemantic = ref("AllOf");
+    const rulesName = [
+      (value) => {
+        if (!value) return true;
+        if (existingName(value)) return "The name already exists";
+        return ValidName(value) ? true : "Please enter a valid name.";
+      },
+    ];
     const items = ref([
       "Dial",
       "Bind",
@@ -157,7 +165,25 @@ export default {
     const emitter = inject("emitter");
 
     const { isOpen, editRow, modalMode } = toRefs(props);
+    function existingName(value) {
+      const existingIdentity = ServicePolicies.value.find(identity => identity.name === value);
 
+      if (existingIdentity) {
+        return true;
+      }
+
+      return false;
+    }
+
+    function ValidName(value) {
+      const hostnamePattern = /^[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
+
+      if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+        return true;
+      }
+
+      return false;
+    }
     const state = reactive({
       openModal: false,
       snackbar: false,
@@ -190,7 +216,24 @@ export default {
         }
       }
     );
-    onMounted(()=>{
+    const fetchServicePolicies = async () => {
+      try {
+        const ServicePoliciesString = await document.getElementById("app").getAttribute("service_policies");
+        const ServicePoliciesObject = JSON.parse(ServicePoliciesString);
+
+        const ServicePoliciesArray = Array.isArray(ServicePoliciesObject) ? ServicePoliciesObject : [];
+
+        ServicePolicies.value = ServicePoliciesArray.map(identity => ({ name: identity.name }));
+
+        console.log('ServicePolicies.value', ServicePolicies.value);
+      } catch (error) {
+        console.error("Failed to fetch ServicePolicies:", error);
+        ServicePolicies.value = [];
+      }
+    };
+
+    onMounted(() => {
+      fetchServicePolicies()
       let servicesString = document
         .getElementById("app")
         .getAttribute("services");
@@ -202,7 +245,7 @@ export default {
       }
 
       ServList.value = servicesObject
-
+      console.log("hetha services", ServList.value)
       let IdentitiesString = document
         .getElementById("app")
         .getAttribute("Identities");
@@ -228,7 +271,7 @@ export default {
         for (let i = 0; i < ServList.value.length; i++) {
           if (ServList.value[i].id === data.service) {
             service = ServList.value[i];
-            break;  
+            break;
           }
         }
 
@@ -238,8 +281,8 @@ export default {
             break;
           }
         }
-        serviceRA.value=service;
-        identityatt.value=identity
+        serviceRA.value = service;
+        identityatt.value = identity
 
       }
     };
@@ -258,7 +301,7 @@ export default {
         semantic: selectedsemantic.value,
         identityRoles: [identityAttribute],
         serviceRoles: [serviceAttribute],
-        Description:Description.value
+        Description: Description.value
       };
 
       let token = document.getElementById("app").getAttribute("token");
@@ -285,7 +328,7 @@ export default {
             console.log("response", i.response);
             state.snackbar = true;
             state.color = "red";
-            state.textAlert = i.response.data.response;
+            state.textAlert = i.response.data.error;
           });
       } else {
         axios
@@ -313,35 +356,6 @@ export default {
             state.textAlert = i.response.data.error;
           });
       }
-      // try {
-      //   let token = document.getElementById("app").getAttribute("token");
-      //   let identityAttribute = `#${identityatt.value}`;
-      //   let serviceAttribute = `#${serviceRA.value}`;
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = "/edge/management/v1/service-policies";
-      //   await axios.post(
-      //     proxyUrl + apiUrl,
-      //     {
-      //       name: name.value,
-      //       type: selectedTitle.value,
-      //       semantic: selectedsemantic.value,
-      //       identityRoles: [identityAttribute],
-      //       serviceRoles: [serviceAttribute],
-      //     },
-      //     {
-      //       headers: {
-      //         "zt-session": token,
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   emitter.emit("closeServicesModal");
-      // } catch (error) {
-      //   console.error("Failed to submit form:", error);
-      // }
     };
     const resetForm = () => {
       name.value = "";
@@ -377,6 +391,7 @@ export default {
       rules,
       submitForm,
       resetForm,
+      rulesName,
       cancel,
       selectItem,
       selectedsemantic,

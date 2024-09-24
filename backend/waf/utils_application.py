@@ -97,6 +97,7 @@ server {{
     list_rule_selected = [rule for rule in app_data["rules"] if rule["rule_policy"]]
     app_config_content = f"""
 Include {app_modsecurity_config}
+Include {app_param_config}
 Include {PATH_CRS_SETUP}
 Include {app_directory}geoip_log_{app_data['name']}.conf
 """

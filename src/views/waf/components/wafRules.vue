@@ -160,7 +160,8 @@ export default {
       },
       {
         headerName: "Description",
-        field: "description",
+        // field: "description",
+        cellRenderer: actionDescription,
         autoHeight: true,
         width: 90,
         minWidth: 50,
@@ -172,6 +173,23 @@ export default {
         field: "action",
       },
     ]);
+
+    function actionDescription(data) {
+      console.log('data',data.data)
+      const longString = data.data.description;
+      const chunks = longString.match(/.{1,60}/g);
+
+      const resultWithBr = chunks.map((chunk) => chunk + "<br>").join("");
+
+      let eGui = document.createElement("div");
+
+      eGui.innerHTML = `${resultWithBr}
+        `;
+      eGui.style.lineHeight = "2";
+      return eGui;
+    }
+
+
     const rowDataRules = reactive({});
     const gridApi = ref(null);
     const overlayTemplate = ref("");

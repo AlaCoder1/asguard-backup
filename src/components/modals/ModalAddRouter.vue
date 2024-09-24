@@ -154,8 +154,8 @@ export default {
 
         RouterId.value = data.id;
         RouterName.value = data.name;
-        RouterAttribute.value = "";
-        Tunneler.value = data.disabled;
+        RouterAttribute.value = data.roleAttributes[0];
+        Tunneler.value = data.isTunnelerEnabled;
         Traversal.value = data.noTraversal;
         Description.value = "";
       }

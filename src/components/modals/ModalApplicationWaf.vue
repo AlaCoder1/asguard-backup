@@ -973,6 +973,15 @@ export default {
             onlynumbers,
             helpers.regex(/^[0-9]+$/)
           ),
+          endsWith443: helpers.withMessage(
+            "Port must end with 443",
+            (value) => {
+              if (state.protocol.slug === "https") {
+                return value.toString().endsWith("443");
+              }
+              return true;
+            }
+          ),
         },
         //config
         limit_action: { required },

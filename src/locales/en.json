@@ -614,7 +614,7 @@
     "policyName": "Policy Name",
     "semantic": "Semantic",
     "edgeRelaysRole": "Edge Relays Role",
-    "identityRoleAttribute": "Identity Role Attribute",
+    "identityRoleAttribute": "Identity Role",
     "updateRelaysPolicy": "Update Relays Policy",
     "identityRole": "Identity Role",
     "addServicesPolicy": "Add Service Policy",
@@ -622,7 +622,7 @@
     "serviceRoleAttribute": "Service Role Attribute",
     "updateServicePolicy": "Update Service Policy",
     "servicesEdgeRelaysPolicies": "Services Edge Relays Policies",
-    "addService": "Add Service",
+    "addService": "Add Service Edge Relay Policy",
     "edgeRelaysPolicies":"Edge Relays Policies",
     "servicesPolicies":"Services Policies"
   },

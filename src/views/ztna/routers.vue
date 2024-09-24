@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-container class="axe-media-print-hide" fluid>
     <div class="mt-6" style="display: flex; flex-direction: column">
       <h4>{{ $t("ztna.listOfRelays") }}</h4>
@@ -154,6 +173,8 @@ export default {
     ]);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       deleteDialog: false,
       deletedItemId: null,
       modalData: {},
@@ -323,6 +344,8 @@ export default {
           };
 
           let tokenStart = document.getElementById("app").getAttribute("token");
+          state.loading= true;
+          state.isLoadingDialogue= true;
 
           axios
             .post(`/ztna/start_routers/${rowData.id}`, payloadStart, {
@@ -336,6 +359,8 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.message;
+                state.loading= false;
+                state.isLoadingDialogue= false;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -345,6 +370,8 @@ export default {
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;
+              state.loading= false;
+              state.isLoadingDialogue= false;
             });
 
           break;
@@ -358,6 +385,8 @@ export default {
           };
 
           let token = document.getElementById("app").getAttribute("token");
+          state.loading= true;
+          state.isLoadingDialogue= true;
 
           axios
             .post(`/ztna/stop_routers/${rowData.id}`, payload, {
@@ -371,6 +400,8 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.message;
+                state.loading= false;
+                state.isLoadingDialogue= false;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -380,6 +411,8 @@ export default {
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;
+                state.loading= false;
+                state.isLoadingDialogue= false;
             });
 
           break;

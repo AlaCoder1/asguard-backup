@@ -50,8 +50,12 @@
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
-                    :rules="rules" persistent-placeholder />
+                  <!-- <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
+                    :rules="rules" persistent-placeholder /> -->
+                  <v-select v-model="identityatt" :label="$t('ztna.identityRoleAttribute')" density="compact"
+                    item-title="name" item-value="id" return-object :rules="rules" :items="identityList"
+                    background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
+                  </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
@@ -118,11 +122,12 @@ export default {
     const name = ref("");
     const relayId = ref("");
     const routerR = ref(null);
-    const identityatt = ref("");
+    const identityatt = ref(null);
     const Description = ref("");
     const selectedTitle = ref("AllOf");
     const items = ref(["AllOf", "AnyOf"]);
     const routersList = ref([]);
+    const identityList = ref([]);
 
     const rules = [
       (value) => {
@@ -174,8 +179,19 @@ export default {
         .getAttribute("routers");
       let routersObject;
       routersObject = JSON.parse(routersString);
-      console.log('routersObject00--------------:',routersObject)
+      console.log('routersObject00--------------:', routersObject)
       routersList.value = routersObject ? routersObject : [];
+
+
+      let IdentitiesString = document
+        .getElementById("app")
+        .getAttribute("Identities");
+
+      let IdentitiesObject;
+
+      IdentitiesObject = JSON.parse(IdentitiesString);
+      identityList.value = IdentitiesObject ? IdentitiesObject : [];
+
     })
     const populate = (data) => {
       if (modalMode.value === "edit") {
@@ -187,14 +203,13 @@ export default {
         Description.value = "";
 
         let edgeRelay = data.edgeRouterRoles[0].split("#");
+        let filterRoute = routersList.value.filter((i) => i.name === edgeRelay[1])
+        routerR.value = filterRoute[0];
 
         let edgeIdentity = data.identityRoles[0].split("#");
-
-        let filterRoute = routersList.value.filter((i) => i.name === edgeRelay[1])
-
-        routerR.value = filterRoute[0];
-        identityatt.value = edgeIdentity[1];
-
+        let filterIdentity = identityList.value.filter((i) => i.name === edgeIdentity[1])
+        identityatt.value = filterIdentity[0];
+        
       }
     };
 
@@ -204,7 +219,7 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       let routerAttribute = `#${routerR.value.name}`;
-      let identityAttribute = `#${identityatt.value}`;
+      let identityAttribute = `#${identityatt.value.name}`;
 
       let payload = {
         name: name.value,
@@ -319,6 +334,7 @@ export default {
       Description,
       selectedTitle,
       routersList,
+      identityList,
       items,
       rules,
       submitForm,

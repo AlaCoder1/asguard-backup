@@ -126,7 +126,7 @@
 
           <div class="d-flex justify-end mt-5 mb-10">
             <div class="mr-3 flex center">
-              <VButton
+              <!-- <VButton
                 rounded
                 outlined
                 color="#ffffff"
@@ -134,7 +134,7 @@
                 :label="$t('buttons.cancel')"
                 :isLarge="true"
                 @click="cancel"
-              />
+              /> -->
               <VButton
                 rounded
                 outlined

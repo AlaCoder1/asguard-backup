@@ -4,6 +4,14 @@ from utils.errors_utils import create_error_command
 import subprocess
 
 
+def execute_command_str(command):
+    """function to execute command"""
+    command="sudo "+command
+    process = subprocess.run(command, shell=True, capture_output=True, text=True)
+    create_error_command(process, command)
+    return process.stdout
+
+
 def execute_command_without_arguments(command:list, decode=True, shell=False):
     """Function that execute a command line without arguments"""
     print(f'command: {" ".join(command)}')
@@ -54,3 +62,14 @@ def get_current_directory():
     current_directory = current_directory[:len(current_directory)-1]
     return current_directory
 
+
+def read_file_from_system(path_file):
+    """A function to read content from system using command line"""
+    file_content = execute_command_without_arguments(["sudo", "cat", path_file])
+    return file_content.stdout
+
+
+def write_file_from_system(path_file, content_file):
+    """A function to create a file if it doesn't exist and write on it using command lines"""
+    execute_command_without_arguments(["sudo", "touch", path_file])
+    execute_command_str(f"""echo '{content_file}' | cat >> {path_file}""")

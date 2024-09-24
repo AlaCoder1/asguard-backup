@@ -2,7 +2,7 @@
 
 
 from backend.waf.constant_variables import PATH_RULES_WAF
-from utils.commands_utils import execute_command_without_arguments
+from utils.commands_utils import execute_command_without_arguments, read_file_from_system
 
 
 def create_rule_waf_in_system(rule_waf):
@@ -30,8 +30,7 @@ def update_rule_waf_in_system(previous_rule_content, rule_waf):
 def update_content_in_rules_file(file_path, previous_content, new_content):
     """Function to update a content in rules file"""
     # Get the custom rules file content
-    with open(file_path) as rule_file:
-        rule_file_content = rule_file.read()
+    rule_file_content = read_file_from_system(file_path)
     # Delete rule line
     rule_file_content = rule_file_content.replace(previous_content, new_content)
     # Set the new custom rules file content

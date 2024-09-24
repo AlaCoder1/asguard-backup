@@ -16,15 +16,16 @@ from backend.LdapServer.models import ADServer
 from drf_yasg.utils import swagger_auto_schema
 from datetime import datetime, timedelta
 from django.templatetags import static
-
-from backend.subscription.models import Features, plan 
+ 
+from backend.subscription.models import Features, plan
 from .models import VerificationCode
 import json
 import stripe
 import ldap
-
-
+ 
+ 
 # Constants
+CONSTANT_LDAP_SERVER = _('in Directory Server')
 CONSTANT_USER = _("User")
 CONSTANT_VERIFIFCATION_CODE = _("verification code")
 # Success messages
@@ -34,12 +35,14 @@ SUCCESS_MESSAGES_SENT = _("is sent successfully")
 SUCCESS_MESSAGES_RESENT = _("is re-sent successfully")
 # Error messages
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_INVALID_CREDENTIALS_SERVER_AD = _("Invalid credentials for directory server login")
 ERROR_MESSAGES_INVALID_CREDENTIALS = _("Invalid credentials")
 ERROR_MESSAGES_NO_SERVERS = _("No directory servers registered")
 ERROR_MESSAGES_SERVER_UNREACHABLE = _("Directory server is unreachable")
+ERROR_MESSAGES_USER_NOTASSIGNED = _("Email exists in AD but isn't assigned in Asguard ")
 ERROR_MESSAGES_EXPIRED = _("has expired")
-
-
+ 
+ 
 @swagger_auto_schema('POST', responses={201: 'Created', 400: 'Bad Request'},
                      security=[{"session_auth": []}],  # Specify the security requirement
                      operation_summary="Summary of your API endpoint",
@@ -57,36 +60,40 @@ def authentication(request):
             if not ad_servers.exists():
                 return JsonResponse({'message': ERROR_MESSAGES_NO_SERVERS}, status=400)
             if not user_session:
-                return JsonResponse({'message': f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}"}, status=401)
+                return JsonResponse({'message': f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}{CONSTANT_LDAP_SERVER}"}, status=401)
             else:
                 authentication_server = False
                 if user_session.id_server_id:
                     server = ADServer.objects.get(id = user_session.id_server_id)
                     ldap_uri = f"{'ldaps' if server.ssl_tls_activation else 'ldap'}://{server.server_url}:{server.port}"
                     ldap_conn = ldap.initialize(ldap_uri)
+                    ldap_conn.set_option(ldap.OPT_NETWORK_TIMEOUT, 5)
                     if server.server_type=="ad":
                         try :  
-                            ldap_conn.simple_bind_s(username, password) 
-                            result = ldap_conn.search_s(server.search_base, ldap.SCOPE_SUBTREE, 
+                            ldap_conn.simple_bind_s(username, password)
+                            result = ldap_conn.search_s(server.search_base, ldap.SCOPE_SUBTREE,
                                                         "(objectClass=user)", ['userPrincipalName'])
                             if result:
                                 authentication_server=True
                         except ldap.INVALID_CREDENTIALS:
-                            return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)
+                            return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS_SERVER_AD}, status=400)
                         except ldap.SERVER_DOWN:
                             return JsonResponse({'message': ERROR_MESSAGES_SERVER_UNREACHABLE}, status=400)    
                     else: # server_type is openldap
-                        try : 
+                        try :
                             dn_user = user_session.dn_user
                             ldap_conn.simple_bind_s(dn_user,password)
                             authenticated_dn = ldap_conn.whoami_s()
                             if authenticated_dn:
                                 authentication_server=True
                         except ldap.INVALID_CREDENTIALS:
-                            return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)   
+                            return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS_SERVER_AD}, status=400)  
                         except ldap.SERVER_DOWN:
-                            return JsonResponse({'message': ERROR_MESSAGES_SERVER_UNREACHABLE}, status=400)   
-            print({"authentication_server":authentication_server})
+                            return JsonResponse({'message': ERROR_MESSAGES_SERVER_UNREACHABLE}, status=400)  
+                       
+                else:
+                    return JsonResponse({'message': ERROR_MESSAGES_USER_NOTASSIGNED}, status=400)    
+               
             if authentication_server:
                 print('22222222222222222')
                 user_object = User.objects.get(email=data['username'])
@@ -105,28 +112,27 @@ def authentication(request):
                       }
                 if not profile.is_enable_2FA:
                     login(request, user_session)
-                    
+                   
                     settings.CurrentUserId = user_dict['id']
                     ldap_conn.unbind()
-                    return JsonResponse({'message': SUCCESS_MESSAGES_LOGIN, 
-                                         "currentUser": current_user}, 
+                    return JsonResponse({'message': SUCCESS_MESSAGES_LOGIN,
+                                         "currentUser": current_user},
                                          status=200)
                 else:
                     if send_verification_code(user_dict['email'],user_dict['username']):
-
-                        return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {SUCCESS_MESSAGES_SENT}", 
+ 
+                        return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {SUCCESS_MESSAGES_SENT}",
                                          "currentUser": current_user,"redirect":True},status=200)
-                    else:
-                        return JsonResponse({"message": "incorrect code , please try again", 
+                    return JsonResponse({"message": "incorrect code , please try again",
                                          "currentUser": current_user,"redirect":True}, status=401)
-                
+               
             return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=401)
-
+ 
         # Connection with username and password
         message, current_user, status =normal_connect(request,data)
         return JsonResponse({'message': message, "currentUser": current_user}, status=status)
-
-
+ 
+ 
 @swagger_auto_schema('GET', responses={201: 'Created', 400: 'Bad Request'},
                      security=[{"session_auth": []}],  # Specify the security requirement
                      operation_summary="Summary of your API endpoint",
@@ -136,8 +142,8 @@ def authentication(request):
 def logout_view(request):
     logout(request)
     return JsonResponse({"msg": SUCCESS_MESSAGES_LOGOUT})
-
-
+ 
+ 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def create_checkout_session(request):
@@ -151,25 +157,25 @@ def create_checkout_session(request):
     else:
         features_queryset = Features.objects.all()
         features = [(feature.features, feature.price) for feature in features_queryset]
-
+ 
         all_combinations_with_details = []
-
+ 
         combination_number = 1
         for r in range(1, len(features) + 1):
             combinations_object = itertools.combinations(features, r)
             combinations_list = list(combinations_object)
-            
+           
             for combo in combinations_list:
                 total_price = sum(feature[1] for feature in combo)
                 feature_names = tuple(feature[0] for feature in combo)
                 all_combinations_with_details.append((combination_number, feature_names, total_price))
                 combination_number += 1
-
+ 
         for combo_number, feature_names, total_price in all_combinations_with_details:
             feature_with_combinations = ["Firewall L4","Networking L2 L3","VPN IPSEC","LDAP","Double Masque","IDS/IPS","VPN SSL","Proxy"] + list(feature_names)
             if list_features == feature_with_combinations:
                 subscription_plan = plan.objects.get(slug=f"Custom{combo_number}")
-
+ 
     status = data['status']
     price = data['price']
     card_type = 'card'
@@ -204,11 +210,11 @@ def create_checkout_session(request):
             success_url = f'{url}/success/?subscription_id={subscription_plan.pk}',
             cancel_url= f'{url}/asguard/subscription/'
         )
-
+ 
         return Response(checkout_session)
     except Exception as e:
         return JsonResponse({'error': str(e)})
-
+ 
 @csrf_exempt
 def verify_code(request,id):
     if request.method == 'POST':
@@ -223,13 +229,13 @@ def verify_code(request,id):
                     login(request, user)
                     return JsonResponse({"message": SUCCESS_MESSAGES_LOGIN}, status=200)
                 return JsonResponse({"message": ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)
-            
+           
             # Verification code expired
             verification_code.delete()
             return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_EXPIRED}"}, status=200)
         except VerificationCode.DoesNotExist:
             return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
-
+ 
 @csrf_exempt
 def resend_verification_code(request,id):
     if request.method == 'POST':
@@ -237,6 +243,6 @@ def resend_verification_code(request,id):
         verification_code = generate_verification_code()
         send_email_to_user(user.email, verification_code, user.username)
         expiration_time = datetime.now() + timedelta(minutes=30)
-        VerificationCode.objects.update_or_create(user=user, 
+        VerificationCode.objects.update_or_create(user=user,
                                                   defaults={'code': verification_code, 'expiration_time': expiration_time})
         return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {SUCCESS_MESSAGES_RESENT}"})

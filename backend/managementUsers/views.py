@@ -36,6 +36,7 @@ CONSTANT_METHOD_ADD_USER_EMAIL_SYSTEM = _("with simple System email")
 CONSTANT_OR = _("or")
 CONSTANT_AND = _("and")
 CONSTANT_LANGUAGE = _('Language')
+CONSTANT_LDAP_UNREACHABLE=_("Directory Server unreachable")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -47,7 +48,6 @@ ERROR_MESSAGES_UPDATING = _("Error in updating")
 ERROR_MESSAGES_RESET = _("Error in reset")
 ERROR_MESSAGES_EXISTANT = _("already exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
-ERROR_MESSAGES_INVALID_CREDENTIALS = _("Invalid credentials")
 ERROR_MESSAGES_INVALID_PASSWORD = _("Invalid password")
 ERROR_MESSAGES_CONNECTION = _("Error connecting to directory server")
 
@@ -209,10 +209,9 @@ def create_user(request):
                         return JsonResponse({'msg': ERROR_MESSAGES_INVALID_PASSWORD}, status=400)   
                     
                 except ldap.SERVER_DOWN:
-                # LDAP authentication failed
-                    return JsonResponse({'msg': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)
+                    return JsonResponse({'msg': f"{CONSTANT_LDAP_UNREACHABLE}"}, status=400)
                 except ldap.LDAPError:
-                    return JsonResponse({'msg': ERROR_MESSAGES_CONNECTION}, status=400)
+                    return JsonResponse({'msg': f"{ERROR_MESSAGES_CONNECTION}"}, status=400)
             else:
                 return JsonResponse({'msg': f"{CONSTANT_DIRECTORY_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
        
@@ -371,9 +370,9 @@ def modify_user(request, id):
                     return JsonResponse({'msg': ERROR_MESSAGES_INVALID_PASSWORD}, status=400)    
             except ldap.SERVER_DOWN:
                 # LDAP authentication failed
-                return JsonResponse({'msg': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)        
+                return JsonResponse({'msg':f"{CONSTANT_LDAP_UNREACHABLE}"}, status=400)        
             except ldap.LDAPError:
-                return JsonResponse({'msg': ERROR_MESSAGES_CONNECTION}, status=400)  
+                return JsonResponse({'msg':f"{ERROR_MESSAGES_CONNECTION}"}, status=400)  
             
         if User.objects.filter(email=data['email']).exclude(id=id).exists():
             return JsonResponse({"msg": f"Email {ERROR_MESSAGES_EXISTANT}"}, status=400)    

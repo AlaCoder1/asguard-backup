@@ -1,5 +1,5 @@
 from backend.waf.constant_variables import CONSTANT_JSON_REQUEST, CONSTANT_JSON_REQUEST_COMMENTED, CONSTANT_XML_REQUEST, CONSTANT_XML_REQUEST_COMMENTED, PATH_WAF_CONFIG
-from utils.commands_utils import execute_command_without_arguments
+from utils.commands_utils import execute_command_without_arguments, read_file_from_system
 
 
 def create_waf_config(config_path, config_data):
@@ -12,8 +12,7 @@ def create_waf_config(config_path, config_data):
 
 def change_waf_config_file(data_config, path_config=PATH_WAF_CONFIG):
     """Change WAF config file with inputs"""
-    with open(path_config) as waf_config_file:
-        waf_config_content = waf_config_file.read()
+    waf_config_content = read_file_from_system(path_config)
     config = change_content_config(waf_config_content, data_config)
     with open(path_config, 'w') as waf_config_file:
         waf_config_file.write(config)

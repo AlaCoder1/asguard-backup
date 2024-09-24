@@ -132,7 +132,7 @@ export default {
           minWidth: 50,
           flex: 1,
         },
-        { headerName: "Actions", cellRenderer: this.actionCellRenderer },
+        { headerName: "Actions",width: 150, minWidth: 50, cellRenderer: this.actionCellRenderer },
       ],
       rowData: [], // Initialize rowData as an empty array
       gridOptions: {

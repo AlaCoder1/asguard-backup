@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from backend.managementUsers.models import Profile, User, Roles
 from backend.managementUsers.serializers import PermissionSerializer, ProfileSerializer, UserSerializerGet, UserSerializerPost, UserSerializerPostWithoutGroupAndPermission,RoleSerializer
-from backend.managementUsers.functions import add_user_group, add_mail_spool, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password
+from backend.managementUsers.functions import add_user_group, add_mail_spool, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password,delete_directory
 from backend.managementGroup.serializers import GroupSerializer
 from backend.managementGroup.functions import change_groupname_username, getGroupNameById, getUidGroup
 from backend.managementGroup.models import Group
@@ -24,7 +24,6 @@ from django.conf import settings
 from rest_framework import status
 
 from backend.waf.models import RulesWaf
-from .decorator import has_functionality
 # Constants
 CONSTANT_USER = _("User")
 CONSTANT_USERNAME = _("username")
@@ -96,7 +95,6 @@ def get_all_roles(request):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-@has_functionality('all')
 def create_role(request):
     if (request.method == 'POST'):
         data = request.data
@@ -303,11 +301,13 @@ def delete_user(request, id):
     group = Group.objects.filter(groupname=user.username)
     # # Execute the command on the remote machine
     _, stderr = delete_user_in_system(user.username)
+    _, stderr_dir = delete_directory(user.username)
     # # convert the stderr stream to a string
     if stderr == "":
-        user.delete()
-        group.delete()
-        return JsonResponse({"msg": f"{user.username} {SUCCESS_MESSAGES_DELETING}"})
+        if stderr_dir == "":
+            user.delete()
+            group.delete()
+            return JsonResponse({"msg": f"{user.username} {SUCCESS_MESSAGES_DELETING}"})
     return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_USER}"}, status=400)
 
 

@@ -1068,7 +1068,12 @@
     "filename":"File name",
     "original_path":"Original file path",
     "backup_path":"Backup file path",
-    "date":"Date"
+    "date":"Date",
+    "download_succes":"File downloaded successfully!",
+    "download_fail":"Error downloading the file",
+    "delete_succes":"File deleted successfully!",
+    "delete_fail":"Error deleting the file"
+    
   }
 
 }

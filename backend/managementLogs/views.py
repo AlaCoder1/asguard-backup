@@ -161,7 +161,6 @@ def download_logrotate_data(request):
     if request.method == 'GET':
         try:
             file_path = request.GET.get("file_path", None)
-
             if file_path is None:
                 return HttpResponse("Error: file_path is missing!", status=400)
 
@@ -173,7 +172,7 @@ def download_logrotate_data(request):
             with gzip.open(file_path, 'rb') as f:
                 file_content = f.read()
             response = HttpResponse(file_content, content_type='application/gzip')
-            response['Content-Disposition'] = f'attachment; filename={os.path.basename(file_path)}'
+            response['Content-Disposition'] = f'attachment; filename={os.path.basename(file_path.strip(".gz"))}'
             return response
 
         except Exception as e:
@@ -198,17 +197,17 @@ def delete_logrotate_file(request, file_id):
         try:
             log_file = LogrotateData.objects.get(id=file_id)
 
-            file_path = os.path.join(log_file.backup_path, log_file.filename)
+            # file_path = os.path.join(log_file.backup_path, log_file.filename)
 
-            if os.path.exists(file_path):
-                os.remove(file_path)
+            # if os.path.exists(file_path):
+            #     os.remove(file_path)
 
             log_file.delete()
 
-            return JsonResponse({"msg":"File {log_file.filename} deleted successfully from both system and database." }, status=200)
+            return JsonResponse({"msg":"File  deleted successfully ." }, status=200)
 
         except LogrotateData.DoesNotExist:
-            return JsonResponse({"msg":"Error: File does not exist in the database!"}, status=404)
+            return JsonResponse({"msg":"Error: File does not exist "}, status=404)
 
         except Exception as e:
             return JsonResponse({"msg":f"Error: {str(e)}"}, status=500)

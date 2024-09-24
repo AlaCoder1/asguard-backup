@@ -5,13 +5,13 @@
         <div class="mr-3">
           <v-tabs v-model="activeTab" background-color="#f5f5f5" color="black" :class="{ 'elevation-0': true }"
             :slider-color="'#FFC300'">
-            <v-tab v-for="tab in tabs" :key="tab.service" :value="tab.service">
+            <v-tab v-for="tab in groupedTabs" :key="tab.service" :value="tab.service">
               <span style="color: #020202">{{ tab.service }}</span>
             </v-tab>
           </v-tabs>
 
           <v-window v-model="activeTab">
-            <v-window-item v-for="tab in tabs" :key="tab.service" :value="tab.service">
+            <v-window-item v-for="tab in groupedTabs" :key="tab.service" :value="tab.service">
               <v-card>
                 <v-card-text>
                   <h4>{{ $t('subtitle.archivedLog') }} </h4>
@@ -32,20 +32,44 @@
                       </div>
                     </v-col>
                   </v-row>
+
+                  
+
                 </v-card-text>
               </v-card>
             </v-window-item>
           </v-window>
         </div>
+        <v-snackbar
+    :timeout="2000"
+    v-model="state.snackbar"
+    location="bottom right"
+    :color="state.color"
+  >
+    {{ state.textAlert }}
+  </v-snackbar>
       </template>
     </base-layout>
+
+    <!-- Delete Confirmation Dialog -->
+    <v-dialog v-model="state.deleteDialog" max-width="500px">
+      <v-card>
+        <v-card-title class="headline">{{ $t("firewall.delete_confirm") }}</v-card-title>
+        <v-card-text>{{ $t("nat.msg_confirm_delete") }}</v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn color="blue darken-1" text @click="cancelDelete">{{ $t("firewall.cancel") }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete(state.deletedRow)">{{ $t("firewall.delete") }}</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-app>
 </template>
 
 <script>
 import { useI18n } from "vue-i18n";
 import axios from "axios";
-import { reactive, ref, onMounted, inject } from "vue";
+import { computed, ref, reactive, onMounted } from "vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -61,7 +85,6 @@ export default {
   setup() {
     const { t } = useI18n();
     const paginationLocalization = reactive({ of: "/" });
-    const emitter = inject("emitter");
     const overlayTemplate = ref("");
     const activeTab = ref("");  // Use ref for activeTab
 
@@ -71,8 +94,17 @@ export default {
       deletedRow: null,
       snackbar: false,
       color: null,
-      textAlert: "",
+      textAlert: [],
       socket: null,
+      deletedRow: null,
+      snackbar: false,
+      color: null,
+      textAlert: "",
+      modalData: {},
+      isModalOpen: false,
+      isOpen: null,
+      editRow: {},
+      
     });
 
     const tabs = ref([]);
@@ -119,46 +151,58 @@ export default {
     const onGridReady = (params) => {
       gridApi.value = params.api;
       if (gridApi.value) {
-        gridApi.value.setRowData(rowDataKeys.value);
+        console.log(logData.value)
+        gridApi.value.setRowData(logData.value);
       } else {
         console.error("Grid API is not available.");
       }
     };
+    const groupedTabs = computed(() => {
+    // Group tabs by service
+    const grouped = {};
+    logData.value.forEach((log) => {
+      if (!grouped[log.service]) {
+        grouped[log.service] = [];
+      }
+      grouped[log.service].push(log);
+    });
+    return Object.keys(grouped).map(service => ({
+      service,
+      logs: grouped[service],
+    }));
+  });
 
     const onFilterTextBoxChanged = () => {
       gridApi.value.setQuickFilter(state.filterText);
     };
 
-    
-
     function actionCellRenderer(params) {
-    const eGui = document.createElement("div");
+      const eGui = document.createElement("div");
 
-    eGui.innerHTML = `
-      <button class="action-button delete" data-action="delete">
-        <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
-      </button>
-      <button class="action-button download" data-action="download">
-        <i class="mdi mdi-download-circle" style="color: #086EAE; font-size: 20px;"></i>
-      </button>
-    `;
-    
-    eGui.querySelectorAll(".action-button").forEach((button) => {
-      button.addEventListener("click", () => {
-        const action = button.getAttribute("data-action");
-        handleActionLog(action, params.node.data);
+      eGui.innerHTML = `
+        <button class="action-button delete" data-action="delete">
+          <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+        <button class="action-button download" data-action="download">
+          <i class="mdi mdi-download-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+      `;
+
+      eGui.querySelectorAll(".action-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.getAttribute("data-action");
+          handleActionLog(action, params.node.data);
+        });
       });
-    });
 
-    return eGui;
-  }
+      return eGui;
+    }
 
     const handleActionLog = (action, rowData) => {
       switch (action) {
         case "delete":
-          confirmDelete(rowData);
-          state.deleteDialog = true;
-          state.deletedRow = rowData;
+          state.deletedRow = rowData;  // Set the row to be deleted
+          state.deleteDialog = true;   // Open the delete confirmation dialog
           break;
         case "download":
           downloadLogsForRow(rowData);
@@ -168,68 +212,79 @@ export default {
       }
     };
 
-  const downloadLogsForRow = (rowData) => {
-  console.log("Downloading logs for row:", rowData);
-  const csrfToken = getCookie("csrftoken");
-  axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    const downloadLogsForRow = (rowData) => {
+      console.log("Downloading logs for row:", rowData);
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-  const filePath = `${rowData.backup_path}${rowData.filename}`;
+      const filePath = `${rowData.backup_path}${rowData.filename}`;
 
-  axios.get(`/system_log/downloadLogrotate`, {
-    params: {
-      file_path: filePath 
-    },
-    responseType: "blob",  
-  })
-    .then((response) => {
-      const blob = new Blob([response.data], { type: "application/gzip" });  
+      axios.get(`/system_log/downloadLogrotate`, {
+        params: {
+          file_path: filePath 
+        },
+        responseType: "blob",  
+      })
+        .then((response) => {
+          const blob = new Blob([response.data], { type: "application/gzip" });
 
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.style.display = "none";
-      a.href = url;
-      a.download = `${rowData.filename}`; 
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    })
-    .catch((error) => {
-      console.error("Error downloading file:", error);
-    });
-};
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = `${rowData.filename}`;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+
+          state.textAlert =  t("logrotate.download_succes");
+          state.snackbar = true;
+          state.color = "green";
+        })
+        .catch((error) => {
+          state.textAlert =  t("logrotate.download_fail");
+          state.snackbar = true;
+          state.color = "red";
+        });
+    };
+
+    const confirmDelete = (rowData) => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.delete(`/system_log/deleteLogrotate/${rowData.id}`)
+      .then((response) => {
+        state.textAlert =  t("logrotate.delete_succes");
+        state.snackbar = true;
+        state.color = "green";
+        setTimeout(() => location.reload(), 1000);  
+      })
+      .catch((error) => {
+        state.textAlert = t("logrotate.delete_fail");
+        state.snackbar = true;
+        state.color = "red";
+        setTimeout(() => location.reload(), 1000);  
+      });
+
+      state.deleteDialog = false;  
+    };
 
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
 
-    const confirmDelete = (rowdata) => {
-    const csrfToken = getCookie("csrftoken");
-    axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-   
-    axios.delete(`/system_log/deleteLogrotate/${rowData.id}`)
-      .then(response => {
-        state.snackbar = true;
-        state.color = "success";
-        state.textAlert = response.data; 
-        setTimeout(() => location.reload(), 1000);  
-      })
-      .catch(error => {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = error.response.data;  
-      });
-  };
-
     return {
+      t,
+      columnKeys,
       state,
       tabs,
+      groupedTabs,
       activeTab,
-      columnKeys,
-      getRowDataByService,
-      overlayTemplate,
       paginationLocalization,
+      overlayTemplate,
+      getRowDataByService,
+      onGridReady,
       onFilterTextBoxChanged,
       cancelDelete,
       confirmDelete,
@@ -238,4 +293,10 @@ export default {
 };
 </script>
 
-
+<style scoped>
+.action-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+</style>

@@ -1065,7 +1065,11 @@
     "filename":"Nom de fichier",
     "original_path":"Chemin d'accès au fichier d'origine",
     "backup_path":"Chemin du fichier de sauvegarde",
-    "date":"Date"
+    "date":"Date",
+    "download_succes":"Fichier téléchargé avec succès !!",
+    "download_fail":"Erreur lors du téléchargement du fichier",
+    "delete_succes":"Fichier supprimé avec succès!",
+    "delete_fail":"Erreur lors de la suppression du fichier"
   }
 
 }

@@ -22,7 +22,7 @@
                   <div class="d-flex align-center">
                     <label class="ml-1" for="PROTOCOL">{{
                       $t("ztna.semantic")
-                      }}</label>
+                    }}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
@@ -35,7 +35,7 @@
                           <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
                               item
-                              }}</v-list-item-title>
+                            }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -44,8 +44,10 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="routerR" v-model="routerR" :placeholder="$t('ztna.edgeRelaysRole')" :rules="rules"
-                    persistent-placeholder />
+                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact" item-title="name"
+                    item-value="id" return-object :rules="rules" :items="routersList" background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')">
+                  </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
@@ -76,8 +78,8 @@
             >
               Reset
             </VBtn> -->
-            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3"
-              variant="flat" class="mt-3 ml-2 btn-add" type="submit">
+            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" variant="flat"
+              class="mt-3 ml-2 btn-add" type="submit">
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
                 {{ $t("buttons.create") }}</span>
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
@@ -94,7 +96,7 @@
 </template>
 <script>
 import axios from "axios";
-import { toRefs, ref, watch, reactive, inject } from "vue";
+import { toRefs, ref, watch, reactive, inject, onMounted } from "vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 
 export default {
@@ -115,11 +117,12 @@ export default {
   setup(props) {
     const name = ref("");
     const relayId = ref("");
-    const routerR = ref("");
+    const routerR = ref(null);
     const identityatt = ref("");
     const Description = ref("");
     const selectedTitle = ref("AllOf");
-    const items = ref([ "AllOf" , "AnyOf" ]);
+    const items = ref(["AllOf", "AnyOf"]);
+    const routersList = ref([]);
 
     const rules = [
       (value) => {
@@ -165,6 +168,15 @@ export default {
         }
       }
     );
+    onMounted(() => {
+      let routersString = document
+        .getElementById("app")
+        .getAttribute("routers");
+      let routersObject;
+      routersObject = JSON.parse(routersString);
+      console.log('routersObject00--------------:',routersObject)
+      routersList.value = routersObject ? routersObject : [];
+    })
     const populate = (data) => {
       if (modalMode.value === "edit") {
         console.log("dataHost", data);
@@ -178,7 +190,9 @@ export default {
 
         let edgeIdentity = data.identityRoles[0].split("#");
 
-        routerR.value = edgeRelay[1];
+        let filterRoute = routersList.value.filter((i) => i.name === edgeRelay[1])
+
+        routerR.value = filterRoute[0];
         identityatt.value = edgeIdentity[1];
 
       }
@@ -189,7 +203,7 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      let routerAttribute = `#${routerR.value}`;
+      let routerAttribute = `#${routerR.value.name}`;
       let identityAttribute = `#${identityatt.value}`;
 
       let payload = {
@@ -251,34 +265,34 @@ export default {
             state.textAlert = i.response.data.error;
           });
       }
-      // try {
-      //   let token = document.getElementById("app").getAttribute("token");
-      //   let routerAttribute = `#${routerR.value}`;
-      //   let identityAttribute = `#${identityatt.value}`;
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = "/edge/management/v1/edge-router-policies";
-      //   const response = await axios.post(
-      //     proxyUrl + apiUrl,
-      //     {
-      //       name: name.value,
-      //       semantic: selectedTitle.value,
-      //       edgeRouterRoles: [routerAttribute],
-      //       identityRoles: [identityAttribute],
-      //     },
-      //     {
-      //       headers: {
-      //         "zt-session": token,
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   emitter.emit("closeRouteModal");
-      // } catch (error) {
-      //   console.error("Failed to submit form:", error);
-      // }
+      try {
+        let token = document.getElementById("app").getAttribute("token");
+        let routerAttribute = `#${routerR.value}`;
+        let identityAttribute = `#${identityatt.value}`;
+        const proxyUrl = "https://asguard:3000";
+        const apiUrl = "/edge/management/v1/edge-router-policies";
+        const response = await axios.post(
+          proxyUrl + apiUrl,
+          {
+            name: name.value,
+            semantic: selectedTitle.value,
+            edgeRouterRoles: [routerAttribute],
+            identityRoles: [identityAttribute],
+          },
+          {
+            headers: {
+              "zt-session": token,
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        setTimeout(() => {
+          location.reload();
+        }, 1000);
+        emitter.emit("closeRouteModal");
+      } catch (error) {
+        console.error("Failed to submit form:", error);
+      }
     };
     const resetForm = () => {
       name.value = "";
@@ -304,6 +318,7 @@ export default {
       identityatt,
       Description,
       selectedTitle,
+      routersList,
       items,
       rules,
       submitForm,

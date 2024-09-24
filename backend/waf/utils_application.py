@@ -13,7 +13,7 @@ def create_application_waf_in_system(app_data):
     app_sites_enabled_config = f"{PATH_NGINX_SITES_ENABLED}{app_data['name']}.conf"
     app_directory = f"{PATH_MODESC}{app_data['name']}/"
     app_config = f"{app_directory}{app_data['name']}.conf"
-    app_param_config = f"{app_directory}{app_data['name']}_param.conf"
+    app_param_config = f"{PATH_MODESC}{app_data['name']}_param.conf"
 
     ########## Configuartion of the application ##########
     # Add a modsecurity config file for the app
@@ -96,7 +96,7 @@ server {{
     # Create a list of only selected rules
     list_rule_selected = [rule for rule in app_data["rules"] if rule["rule_policy"]]
     app_config_content = f"""
-# Include {app_modsecurity_config}
+Include {app_modsecurity_config}
 Include {app_param_config}
 Include {PATH_CRS_SETUP}
 Include {app_directory}geoip_log_{app_data['name']}.conf
@@ -146,10 +146,12 @@ def delete_application_waf_in_system(application:ApplicationWaf):
     app_sites_available_config = f"{PATH_NGINX_SITES_AVAILABLE}{application.name}.conf"
     app_sites_enabled_config = f"{PATH_NGINX_SITES_ENABLED}{application.name}.conf"
     app_directory = f"{PATH_MODESC}{application.name}/"
+    app_param_config = f"{PATH_MODESC}{application.name}_param.conf"
     list_delete_commands = [["sudo", "rm", "-rf", app_directory],
                             ["sudo", "rm", "-f", app_modsecurity_config],
                             ["sudo", "rm", "-f", app_sites_available_config],
-                            ["sudo", "rm", "-f", app_sites_enabled_config],]
+                            ["sudo", "rm", "-f", app_sites_enabled_config],
+                            ["sudo", "rm", "-f", app_param_config],]
     execute_list_commands_without_arguments(list_delete_commands)
     with open(PATH_MAIN_WAF) as main_file:
         main_content = main_file.read()

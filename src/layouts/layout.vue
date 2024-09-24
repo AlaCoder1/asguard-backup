@@ -41,9 +41,9 @@
           <div class="d-flex">
             <label>{{ title }}</label>
             <div v-if="ztnaTab">
-              <i class="mdi mdi-play-circle mr-1 ml-1" style="color: #4caf50; font-size: 20px; cursor: pointer"
-                @click="startStopServer('start')"></i>
-              <i class="mdi mdi-stop-circle" style="color: #b00020; font-size: 20px; cursor: pointer"
+              <i v-if="!status" class="mdi mdi-play-circle mr-1 ml-1"
+                style="color: #4caf50; font-size: 20px; cursor: pointer" @click="startStopServer('start')"></i>
+              <i v-if="status" class="mdi mdi-stop-circle" style="color: #b00020; font-size: 20px; cursor: pointer"
                 @click="startStopServer('stop')"></i>
             </div>
           </div>
@@ -108,10 +108,20 @@ export default {
     return {
       isLoadingDialogue: false,
       loading: false,
-      textAlert:'',
-      color:'',
-      snackbar:false
+      textAlert: '',
+      color: '',
+      snackbar: false,
+      status: false
     };
+  },
+  mounted() {
+    const csrfToken = getCookie("csrftoken");
+    axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+    axios.get("/ztna/status_ztna").then((response) => {
+      console.log('re', response.data)
+      this.status=response.data.data
+    })
   },
   methods: {
     startStopServer(status) {

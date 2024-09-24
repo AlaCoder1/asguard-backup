@@ -147,7 +147,7 @@ def get_logrotate_data(request):
     """
     if request.method == 'GET':
         list_logs = []
-        logs_object = LogrotateData.objects.all()
+        logs_object = LogrotateData.objects.all().order_by('-id')
         logs = serializers.serialize("json", logs_object)
         res = json.loads(logs)
         for log in res:

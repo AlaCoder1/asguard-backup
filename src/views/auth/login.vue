@@ -173,7 +173,7 @@ export default {
           this.message = error.response.data.message;
           setTimeout(() => {
             this.message = "";
-          }, 1000);
+          }, 3000);
         });
     },
 
@@ -196,7 +196,7 @@ export default {
           this.message = error.response.data.message;
           setTimeout(() => {
             this.message = "";
-          }, 1000);
+          }, 2000);
         });
     },
     async verifyOtp() {
@@ -228,7 +228,7 @@ export default {
           this.message = error.response.data.message;
           setTimeout(() => {
             this.message = "";
-          }, 1000);
+          }, 2000);
         });
     },
   },

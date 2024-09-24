@@ -1,7 +1,7 @@
 from utils.errors_utils import CommandExecutionError
 from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES, PATH_ZTNA_TERMINATORS
 from .list_ztna import get_configs, get_edge_router_policies, get_identities, get_routers, get_service_edge_router_policies, get_service_policies, get_services, get_terminators
-from .utils import change_status_ztna_service, get_Zt_Token, start_router, stop_router  
+from .utils import change_status_ztna_service, get_Zt_Token, get_status_ztna_service, start_router, stop_router  
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 import requests
@@ -36,13 +36,30 @@ ERROR_MESSAGES_STARTING = _("Error in starting")
 ERROR_MESSAGES_STOPING = _("Error in stoping")
 
 
+@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
+                     operation_summary="API TO GET ZTNA SERVICE STATUS",)
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def status_ztna(request):
+    """API to get ZTNA service status from a script bash"""
+    try:
+        status = get_status_ztna_service()
+        if status:
+            return JsonResponse({"data": True}, status=200)
+        return JsonResponse({"data": False}, status=200)
+        
+    except CommandExecutionError:
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_ZTNA}"}, status=400)
+
+
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO START ZTNA SERVICE",)
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def start_ztna(request):
-    """API to satrt ZTNA service from a script bash"""
+    """API to start ZTNA service from a script bash"""
     try:
         change_status_ztna_service()
         return JsonResponse({"message": f"{CONSTANT_ZTNA} {SUCCESS_MESSAGES_STARTING}"}, status=200)
@@ -57,7 +74,7 @@ def start_ztna(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def stop_ztna(request):
-    """API to satrt ZTNA service from a script bash"""
+    """API to stop ZTNA service from a script bash"""
     try:
         change_status_ztna_service("stop")
         return JsonResponse({"message": f"{CONSTANT_ZTNA} {SUCCESS_MESSAGES_STOPING}"}, status=200)

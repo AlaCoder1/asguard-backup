@@ -79,7 +79,6 @@ export default {
       let tab = localStorage.getItem("identities") || "ztna.identite";
       if (tab) this.activeTab = tab;
     });
-    console.log(this.isZTNArunning)
     this.checkZTNA();
   },
   methods: {

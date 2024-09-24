@@ -1,20 +1,11 @@
 <template>
   <div class="mt-3 ml-3">
     <v-overlay v-model="state.loading">
-      <v-dialog
-        v-model="state.isLoadingDialogue"
-        :scrim="false"
-        persistent
-        width="auto"
-      >
+      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
         <v-card color="#193286">
           <v-card-text>
             {{ $t("sdwan.pleaseWait") }}
-            <v-progress-linear
-              indeterminate
-              color="white"
-              class="mb-0"
-            ></v-progress-linear>
+            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -23,53 +14,23 @@
     <v-divider class="mb-2"></v-divider>
 
     <div style="overflow: hidden; flex-grow: 1">
-      <ag-grid-vue
-        id="grid-wrapper"
-        domLayout="autoHeight"
-        class="ag-theme-alpine mt-3"
-        style="width: 100%"
-        @grid-ready="onGridReady"
-        :columnDefs="columnRules"
-        :rowData="rowDataRules.value"
-        :gridOptions="gridOptions"
-        :overlayNoRowsTemplate="overlayTemplate"
-        :localeText="paginationLocalization"
-      />
+      <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
+        @grid-ready="onGridReady" :columnDefs="columnRules" :rowData="rowDataRules.value" :gridOptions="gridOptions"
+        :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
     </div>
     <div class="d-flex justify-end mt-3 mb-15">
-      <VButton
-        rounded
-        outlined
-        color="#213E9F"
-        label-color="#ffffff"
-        :label="$t('buttons.Add')"
-        :isLarge="true"
-        type="submit"
-        class="ml-2"
-        @click="openModalAdd"
-      />
+      <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.Add')" :isLarge="true"
+        type="submit" class="ml-2" @click="openModalAdd" />
     </div>
   </div>
 
-  <v-snackbar
-    :timeout="2000"
-    v-model="state.snackbar"
-    location="bottom right"
-    :color="state.color"
-  >
+  <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
     {{ state.textAlert }}
   </v-snackbar>
 
-  <ModalRuleWaf
-    :isOpen="state.isModalOpen"
-    :editRow="state.editRow"
-    :modalMode="state.modalMode"
-  />
-  <ModalShowAppWaf
-    :isOpen="state.isModalShowAppOpen"
-    :editRow="state.editRow"
-    :modalMode="state.modalMode"
-  />
+  <ModalRuleWaf :isOpen="state.isModalOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
+  <ModalShowAppWaf :isOpen="state.isModalShowAppOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
+  <ModalShowDescWaf :isOpen="state.isModalShowDescOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
       <v-card-title class="headline">{{
@@ -100,6 +61,7 @@ import VButton from "@/components/VButton.vue";
 import { reactive, ref, computed, onMounted, inject } from "vue";
 import ModalRuleWaf from "@/components/modals/ModalRuleWaf.vue";
 import ModalShowAppWaf from "@/components/modals/ModalShowAppWaf.vue";
+import ModalShowDescWaf from "@/components/modals/ModalShowDescWaf.vue";
 
 export default {
   name: "Rules",
@@ -108,6 +70,7 @@ export default {
     AgGridVue,
     ModalRuleWaf,
     ModalShowAppWaf,
+    ModalShowDescWaf
   },
   setup() {
     const emitter = inject("emitter");
@@ -128,6 +91,7 @@ export default {
       loading: false,
       isLoadingDialogue: false,
       isModalShowAppOpen: false,
+      isModalShowDescOpen: false,
     });
 
     const RequestAction = computed(() => {
@@ -161,7 +125,7 @@ export default {
       {
         headerName: "Description",
         // field: "description",
-        cellRenderer: actionDescription,
+        cellRenderer: actionDescriptionRenderer,
         autoHeight: true,
         width: 90,
         minWidth: 50,
@@ -174,20 +138,20 @@ export default {
       },
     ]);
 
-    function actionDescription(data) {
-      console.log('data',data.data)
-      const longString = data.data.description;
-      const chunks = longString.match(/.{1,60}/g);
+    // function actionDescription(data) {
+    //   console.log('data', data.data)
+    //   const longString = data.data.description;
+    //   const chunks = longString.match(/.{1,66}/g);
 
-      const resultWithBr = chunks.map((chunk) => chunk + "<br>").join("");
+    //   const resultWithBr = chunks.map((chunk) => chunk + "<br>").join("");
 
-      let eGui = document.createElement("div");
+    //   let eGui = document.createElement("div");
 
-      eGui.innerHTML = `${resultWithBr}
-        `;
-      eGui.style.lineHeight = "2";
-      return eGui;
-    }
+    //   eGui.innerHTML = `${resultWithBr}
+    //     `;
+    //   eGui.style.lineHeight = "2";
+    //   return eGui;
+    // }
 
 
     const rowDataRules = reactive({});
@@ -198,6 +162,47 @@ export default {
       paginationPageSize: 9,
       rowSelection: "single",
     });
+
+    function actionDescriptionRenderer(params) {
+      let eGui = document.createElement("div");
+      let editingCells = params.api.getEditingCells();
+      let isCurrentRowEditing = editingCells.some((cell) => {
+        return cell.rowIndex === params.node.rowIndex;
+      });
+      if (isCurrentRowEditing) {
+        eGui.innerHTML = `
+        <button
+          class="action-button update"
+          data-action="update">
+               update
+        </button>
+        <button
+          class="action-button cancel"
+          data-action="cancel">
+               cancel
+        </button>
+        `;
+      } else {
+
+        eGui.innerHTML = `
+             <button
+                class="action-button description"
+                data-action="description">
+                   <i class="mdi mdi-comment-text-outline" style="color: #086EAE; font-size: 24px;"></i>
+                </button>
+       `;
+      }
+
+      eGui.querySelectorAll(".action-button").forEach((button) => {
+        button.addEventListener("click", () => {
+          const action = button.getAttribute("data-action");
+          handleActionDescription(action, params.node.data);
+        });
+      });
+      return eGui;
+
+
+    }
 
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
@@ -279,6 +284,20 @@ export default {
       }
     };
 
+    const handleActionDescription = (action, rowData, index) => {
+      switch (action) {
+        case "description":
+          console.log('description')
+          state.isModalShowDescOpen = true;
+          state.editRow = rowData;
+          state.modalMode = "show";
+          break;
+
+        default:
+          break;
+      }
+    };
+
     const onGridReady = (params) => {
       gridApi.value = params.api;
 
@@ -310,6 +329,12 @@ export default {
     });
     emitter.on("closeModalSHOW", () => {
       state.isModalShowAppOpen = false;
+      state.isOpen = false;
+      state.modalMode = "";
+      state.editRow = {};
+    });
+    emitter.on("closeModalSHOWDescription", () => {
+      state.isModalShowDescOpen = false;
       state.isOpen = false;
       state.modalMode = "";
       state.editRow = {};

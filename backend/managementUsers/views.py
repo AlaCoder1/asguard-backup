@@ -41,6 +41,7 @@ CONSTANT_LDAP_UNREACHABLE=_("Directory Server unreachable")
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
+SUCCESS_PASSWORD_MESSAGES_UPDATING = _("password is updated")
 # Error messages
 ERROR_MESSAGES_CREATING = _("Error in creating")
 ERROR_MESSAGES_DELETING = _("Error in deleting")
@@ -124,7 +125,6 @@ def modify_role(request,id):
 @permission_classes([IsAuthenticated])
 def delete_role(request, id):
     """Delete role"""
-    print('dddd')
     role = Roles.objects.get(id=id)
     role.delete()
     return JsonResponse({"msg": f"{SUCCESS_MESSAGES_DELETING}"})
@@ -165,7 +165,6 @@ def create_user(request):
     email_founded = False
     if request.method == 'POST':
         data = request.data
-        print({"data":data})
         username = data['username']
         password = data['password']
         organisation = Organization.objects.get(id=1)
@@ -487,19 +486,17 @@ def reset_password_by_admin(request, id):
     if (request.method == 'PUT'):
         user_object = User.objects.get(id=id)
         data = request.data
-        # instanciate with the serializer
-        serializer = UserSerializerGet()
         new_password = data['new_password']
         confirm_password = data['confirm_password']
-        if new_password != confirm_password:
+        if new_password != confirm_password:            
             return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_PASSWORD}"}, status=400)
         # run 'passwd' command to change password
-        _, stderr = reset_password_by_admin_in_system(new_password, user_object.username)
+        rslt = reset_password_by_admin_in_system(new_password, user_object.username)
         # check if password change was successful
-        if stderr == "":
+        if rslt == True:
             user_object.password = make_password(new_password)
             user_object.save()
-            return JsonResponse(serializer.data, status=201)
+            return JsonResponse({"msg": f"{SUCCESS_PASSWORD_MESSAGES_UPDATING}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_PASSWORD}"}, status=400)
 
 

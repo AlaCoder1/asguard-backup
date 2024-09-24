@@ -37,7 +37,6 @@ def add_user(username, password):
     """function to add user"""
     result = subprocess.run(['sudo', 'useradd', '-m', username], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     error_useradd  = result.stderr.decode('utf-8')
-    print({"error_useradd":error_useradd})
     proc = subprocess.Popen(['sudo', 'chpasswd'], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout_password, stderr_password = proc.communicate(input=f"{username}:{password}".encode())
 
@@ -107,23 +106,25 @@ def reset_password_by_admin_in_system(new_password, username):
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout.split("\n")
     error = completed_process.stderr
-    return output,error
+    if "password updated successfully" in error:
+        return True
+    else:
+        return False
 
 
 def reset_password(username, new_password):
     cmd = f"echo '{username}:{new_password}' | sudo chpasswd"
-    process = subprocess.Popen(
-            cmd,
-            shell=True,  
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True 
-        )
-    stdout, stderr = process.communicate()
-    print(process.returncode)
-    print ( stdout, stderr)
-    if process.returncode == 0:
-        return (stdout, stderr)
+    
+    result = subprocess.run(
+        cmd,
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    if result.returncode == 0:
+        return (result.stdout, result.stderr)
     
 
     # function to get group users

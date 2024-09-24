@@ -392,7 +392,7 @@ def modify_user(request, id):
             msg = f"{CONSTANT_USER} {SUCCESS_MESSAGES_UPDATING}"
             user_object.fullname = newfullname
             user_object.email = newmail
-            user_object.role = newrole
+            user_object.role_id = newrole
             user_object.dn_user=data['dn_user']
             if email_founded:
                 user_object.id_server=ad_server

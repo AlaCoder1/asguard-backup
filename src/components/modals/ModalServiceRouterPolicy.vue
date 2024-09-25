@@ -21,7 +21,7 @@
                   <div class="d-flex align-center">
                     <label class="ml-1" for="PROTOCOL">{{
                       $t("ztna.semantic")
-                    }}</label>
+                      }}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
@@ -34,7 +34,7 @@
                           <v-list-item v-for="(item, index) in semantic" :key="index" @click="selectsemantic(item)">
                             <v-list-item-title>{{
                               item
-                            }}</v-list-item-title>
+                              }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -43,13 +43,22 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="serviceRA" v-model="serviceRA" :placeholder="$t('ztna.serviceRoleAttribute')"
-                    :rules="rules" persistent-placeholder />
+                  <!-- <v-text-field id="serviceRA" v-model="serviceRA" :placeholder="$t('ztna.serviceRoleAttribute')"
+                    :rules="rules" persistent-placeholder /> -->
+
+                  <v-select v-model="serviceRA" :label="$t('ztna.serviceRoleAttribute')" density="compact"
+                    item-title="name" item-value="id" return-object :rules="rules" :items="ServList"
+                    background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
+                  </v-select>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="routerR" v-model="routerR" :placeholder="$t('ztna.edgeRelaysRole')" :rules="rules"
-                    persistent-placeholder />
+                  <!-- <v-text-field id="routerR" v-model="routerR" :placeholder="$t('ztna.edgeRelaysRole')" :rules="rules"
+                    persistent-placeholder /> -->
+                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact" item-title="name"
+                    item-value="id" return-object :rules="rules" :items="routersList" background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')">
+                  </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
@@ -83,6 +92,7 @@
 <script>
 import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
+import { onMounted } from "vue";
 import { toRefs, ref, watch, reactive, inject } from "vue";
 
 export default {
@@ -102,9 +112,11 @@ export default {
   },
   setup(props) {
     const idServRouter = ref("");
+    const ServList = ref([]);
+    const routersList = ref([]);
     const name = ref("");
-    const serviceRA = ref("");
-    const routerR = ref("");
+    const serviceRA = ref(null);
+    const routerR = ref(null);
     const Description = ref("");
     const selectedsemantic = ref("AllOf");
     const semantic = ref(["AllOf", "AnyOf"]);
@@ -124,6 +136,28 @@ export default {
       color: "",
       textAlert: "",
     });
+    onMounted(() => {
+      let servicesString = document
+        .getElementById("app")
+        .getAttribute("services");
+      let servicesObject;
+      try {
+        servicesObject = JSON.parse(servicesString);
+      } catch (error) {
+        console.error("Failed to parse services string:", error);
+      }
+
+      ServList.value = servicesObject
+
+      let routersString = document
+        .getElementById("app")
+        .getAttribute("routers");
+      let routersObject;
+      routersObject = JSON.parse(routersString);
+      routersList.value = routersObject ? routersObject : [];
+
+
+    })
 
     watch(
       () => isOpen.value,
@@ -158,10 +192,19 @@ export default {
         idServRouter.value = data.id
         name.value = data.name;
         selectedsemantic.value = data.semantic;
+
+
+
         let service = data.serviceRoles[0].split("#");
-        serviceRA.value = service[1];
+        let filterServ = ServList.value.filter((i) => i.name === service[1])
+        serviceRA.value = filterServ[0];
+
+
+
+
         let router = data.edgeRouterRoles[0].split("#");
-        routerR.value = router[1];
+        let filterRoute = routersList.value.filter((i) => i.name === router[1])
+        routerR.value = filterRoute[0];
         Description.value = "";
       }
     };
@@ -171,8 +214,8 @@ export default {
 
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      let routerAttribute = `#${routerR.value}`;
-      let serviceAttribute = `#${serviceRA.value}`;
+      let routerAttribute = `#${routerR.value.name}`;
+      let serviceAttribute = `#${serviceRA.value.name}`;
 
       let payload = {
         name: name.value,
@@ -283,6 +326,8 @@ export default {
       name,
       serviceRA,
       routerR,
+      routersList,
+      ServList,
       Description,
       semantic,
       rules,

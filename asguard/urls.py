@@ -97,8 +97,9 @@ urlpatterns = [
     path('routing/', include('backend.routing.urls')),
     path("profile/",profile_page),
     path("vxlan/",include('backend.vxlan.urls')),
-    path("system_log/", system_log),
-    path("system_log/", include('backend.managementLogs.urls')),
+    path("system_log/",system_log),
+    path("logrotate/",logrotate_page),
+    path("system_log/",include('backend.managementLogs.urls')),
 
 
 

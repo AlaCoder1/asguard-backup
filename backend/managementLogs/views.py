@@ -10,6 +10,7 @@ import gzip
 from django.http import HttpResponse
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+import os
 # Create your views here.
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -99,42 +100,114 @@ def get_logrotate_data(request):
             log['fields']['id'] = log["pk"]
             list_logs.append(log['fields'])
         return JsonResponse({"data": list_logs})   
-@swagger_auto_schema(
-    method='get',
-    operation_description="API to download all logrotate data.",
-    manual_parameters=[
-        openapi.Parameter(
-            'file_path',
-            openapi.IN_QUERY,
-            description="Path to the logrotate file to be downloaded.",
-            type=openapi.TYPE_STRING
-        )
-    ],
-    responses={
-        200: 'Logrotate file successfully downloaded.',
-        500: 'Error: File does not exist or an unexpected error occurred.',
-    }
-)    
+# @swagger_auto_schema(
+#     method='get',
+#     operation_description="API to download all logrotate data.",
+#     manual_parameters=[
+#         openapi.Parameter(
+#             'file_path',
+#             openapi.IN_QUERY,
+#             description="Path to the logrotate file to be downloaded.",
+#             type=openapi.TYPE_STRING
+#         )
+#     ],
+#     responses={
+#         200: 'Logrotate file successfully downloaded.',
+#         500: 'Error: File does not exist or an unexpected error occurred.',
+#     }
+# )    
+# @api_view(['GET'])
+# @authentication_classes([SessionAuthentication])
+# def download_logrotate_data(request):
+#     """
+#     API to download logrotate data.
+
+#     Parameters:
+#     request (HttpRequest): The incoming request object.
+#     file_path (str): Path to the file on the server.
+
+#     Returns:
+#     HttpResponse: The logrotate `.gz` file as an attachment or an error response.
+#     """
+#     if request.method == 'GET':
+#         try:
+#             data=request.data 
+#             file_path=data.get("file_path",None)
+#             print(data)
+#             if file_path is not None and  not os.path.exists(file_path):
+#                 return HttpResponse("Error: File does not exist!", status=404)
+
+#             with gzip.open(file_path, 'rb') as f:
+#                 file_content = f.read()
+
+#             response = HttpResponse(file_content, content_type='application/gzip')
+#             response['Content-Disposition'] = f'attachment; filename={os.path.basename(file_path)}'
+#             return response
+
+#         except Exception as e:
+#             return HttpResponse(f"Error: {str(e)}", status=500)
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
-def download_logrotate_data(request,file_path):
+def download_logrotate_data(request):
     """
-    API to download all logrotate data .
+    API to download logrotate data.
 
     Parameters:
     request (HttpRequest): The incoming request object.
-
+    
     Returns:
-    JsonResponse: A JSON response containing the logrotate data .
-
+    HttpResponse: The logrotate `.gz` file as an attachment or an error response.
     """
     if request.method == 'GET':
         try:
+            file_path = request.GET.get("file_path", None)
+            if file_path is None:
+                return HttpResponse("Error: file_path is missing!", status=400)
+
+            if not isinstance(file_path, str):
+                return HttpResponse("Error: file_path must be a valid string!", status=400)
+            if not os.path.exists(file_path):
+                return HttpResponse("Error: File does not exist!", status=404)
+
             with gzip.open(file_path, 'rb') as f:
                 file_content = f.read()
-
             response = HttpResponse(file_content, content_type='application/gzip')
-            response['Content-Disposition'] = f'attachment; filename={file_path.split("/")[-1]}'
+            response['Content-Disposition'] = f'attachment; filename={os.path.basename(file_path.strip(".gz"))}'
             return response
+
         except Exception as e:
-            return HttpResponse(f"Error:File not exist!", status=500)
+            return HttpResponse(f"Error: {str(e)}", status=500)        
+        
+
+
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
+def delete_logrotate_file(request, file_id):
+    """
+    API to delete a logrotate file from both the file system and database.
+
+    Parameters:
+    request (HttpRequest): The incoming request object.
+    file_id (int): ID of the logrotate file in the database.
+
+    Returns:
+    HttpResponse: A success message if the file is deleted or an error message.
+    """
+    if request.method == 'DELETE':
+        try:
+            log_file = LogrotateData.objects.get(id=file_id)
+
+            # file_path = os.path.join(log_file.backup_path, log_file.filename)
+
+            # if os.path.exists(file_path):
+            #     os.remove(file_path)
+
+            log_file.delete()
+
+            return JsonResponse({"msg":"File  deleted successfully ." }, status=200)
+
+        except LogrotateData.DoesNotExist:
+            return JsonResponse({"msg":"Error: File does not exist "}, status=404)
+
+        except Exception as e:
+            return JsonResponse({"msg":f"Error: {str(e)}"}, status=500)

@@ -4,6 +4,7 @@ from . import views
 
 urlpatterns = [
     path('get_Zt_Token', views.get_Zt_Token, name="get_Zt_Token"),
+    path('status_ztna', views.status_ztna, name="status_ztna"),
     path('start_ztna', views.start_ztna, name="start_ztna"),
     path('stop_ztna', views.stop_ztna, name="stop_ztna"),
 

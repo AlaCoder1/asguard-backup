@@ -55,7 +55,7 @@ def get_data(endpoint):
 
 
 def get_status_ztna_service():
-    """Get Status of ZTNA service and return id of the process"""
+    """Get Status of ZTNA service"""
     current_dir = get_current_directory()
     path_status_ztna = PATH_STATUS_ZTNA_BASH.format(current_dir)
     status = execute_command_without_arguments(["sudo", "bash", path_status_ztna])
@@ -65,6 +65,7 @@ def get_status_ztna_service():
 
 
 def change_status_ztna_service(service_status="start"):
+    """Change status of ZTNA service by starting or stoping it"""
     current_dir = get_current_directory()
     path_change_status_ztna = PATH_START_ZTNA_BASH.format(current_dir)
     if service_status == "stop":
@@ -72,11 +73,11 @@ def change_status_ztna_service(service_status="start"):
     execute_command_without_arguments(["sudo", "bash", path_change_status_ztna])
 
 
-def start_router(router_name, token):
+def change_status_router(router_name, router_status, token=""):
+    """Change status of a ZTNA Router by starting or stoping it"""
     current_dir = get_current_directory()
-    execute_command_with_arguments(["sudo", "bash", PATH_START_ZTNA_ROUTER_BASH.format(current_dir)], f"{router_name}\n{token}\n", 3)
-
-
-def stop_router(router_name):
-    current_dir = get_current_directory()
-    execute_command_with_arguments(["sudo", "bash", PATH_STOP_ZTNA_ROUTER_BASH.format(current_dir)], f"{router_name}", 3)
+    if router_status == "start":
+        execute_command_with_arguments(["sudo", "bash", PATH_START_ZTNA_ROUTER_BASH.format(current_dir)], 
+                                       f"{router_name}\n{token}\n", 3)
+    else:
+        execute_command_with_arguments(["sudo", "bash", PATH_STOP_ZTNA_ROUTER_BASH.format(current_dir)], f"{router_name}", 3)

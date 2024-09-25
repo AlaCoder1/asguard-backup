@@ -321,7 +321,7 @@ export default {
     const state = reactive({
       formData: {
         certifName: "",
-        method: "",
+        method: null,
         certificatData: "",
         privateKey: "",
         serialNumber: "",
@@ -387,62 +387,32 @@ export default {
           certificatData: {
             requiredIfFuction: helpers.withMessage(
               error,
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                    "Import an existing Certificate Authority" ||
-                  state.formData.method.name ===
-                    "Importer une autorité de certification existante"
-              )
+              requiredIf(() => state.formData.method?.slug === "import")
             ),
           },
 
           keyLength: {
             requiredIfFuction: helpers.withMessage(
               error,
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                    "Create Certificate Authority" ||
-                  state.formData.method.name ===
-                    "Créer une autorité de certification"
-              )
+              requiredIf(() => state.formData.method?.slug === "create")
             ),
           },
           hashAlgo: {
             requiredIfFuction: helpers.withMessage(
               error,
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                    "Create Certificate Authority" ||
-                  state.formData.method.name ===
-                    "Créer une autorité de certification"
-              )
+              requiredIf(() => state.formData.method?.slug === "create")
             ),
           },
           keyType: {
             requiredIfFuction: helpers.withMessage(
               error,
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                    "Create Certificate Authority" ||
-                  state.formData.method.name ===
-                    "Créer une autorité de certification"
-              )
+              requiredIf(() => state.formData.method?.slug === "create")
             ),
           },
           lifeTime: {
             requiredIfFuction: helpers.withMessage(
               error,
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                    "Create Certificate Authority" ||
-                  state.formData.method.name ===
-                    "Créer une autorité de certification"
-              )
+              requiredIf(() => state.formData.method?.slug === "create")
             ),
             isValidlifeTime: helpers.withMessage(
               champNumber,
@@ -453,25 +423,13 @@ export default {
           country: {
             requiredIfFuction: helpers.withMessage(
               error,
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                    "Create Certificate Authority" ||
-                  state.formData.method.name ===
-                    "Créer une autorité de certification"
-              )
+              requiredIf(() => state.formData.method?.slug === "create")
             ),
           },
           state: {
             requiredIfFuction: helpers.withMessage(
               error,
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                    "Create Certificate Authority" ||
-                  state.formData.method.name ===
-                    "Créer une autorité de certification"
-              )
+              requiredIf(() => state.formData.method?.slug === "create")
             ),
             isValidState: helpers.withMessage(
               champletter,
@@ -482,13 +440,7 @@ export default {
           place: {
             requiredIfFuction: helpers.withMessage(
               error,
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                    "Create Certificate Authority" ||
-                  state.formData.method.name ===
-                    "Créer une autorité de certification"
-              )
+              requiredIf(() => state.formData.method?.slug === "create")
             ),
             isValidPlace: helpers.withMessage(
               champplaceletter,
@@ -499,38 +451,20 @@ export default {
           organisation: {
             requiredIfFuction: helpers.withMessage(
               error,
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                    "Create Certificate Authority" ||
-                  state.formData.method.name ===
-                    "Créer une autorité de certification"
-              )
+              requiredIf(() => state.formData.method?.slug === "create")
             ),
           },
           mail: {
             requiredIfFuction: helpers.withMessage(
               error,
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                    "Create Certificate Authority" ||
-                  state.formData.method.name ===
-                    "Créer une autorité de certification"
-              )
+              requiredIf(() => state.formData.method?.slug === "create")
             ),
             email,
           },
           communName: {
             requiredIfFuction: helpers.withMessage(
               error,
-              requiredIf(
-                () =>
-                  state.formData.method.name ===
-                    "Create Certificate Authority" ||
-                  state.formData.method.name ===
-                    "Créer une autorité de certification"
-              )
+              requiredIf(() => state.formData.method?.slug === "create")
             ),
             isValidCommne: helpers.withMessage(
               champ,
@@ -563,19 +497,10 @@ export default {
   },
   computed: {
     isImportCetif() {
-      return (
-        this.state.formData.method.name ===
-          "Import an existing Certificate Authority" ||
-        this.state.formData.method.name ===
-          "Importer une autorité de certification existante"
-      );
+      return this.state.formData.method?.slug === "import";
     },
     isCreateCetif() {
-      return (
-        this.state.formData.method.name === "Create Certificate Authority" ||
-        this.state.formData.method.name ===
-          "Créer une autorité de certification"
-      );
+      return this.state.formData.method?.slug === "create";
     },
   },
 
@@ -655,11 +580,7 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         let payload = {};
-        if (
-          this.state.formData.method.name == "Create Certificate Authority" ||
-          this.state.formData.method.name ===
-            "Créer une autorité de certification"
-        ) {
+        if (this.state.formData.method?.slug === "create") {
           payload = {
             name: this.state.formData?.certifName,
             method: {

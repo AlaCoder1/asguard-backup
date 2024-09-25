@@ -6,11 +6,13 @@ from django.core import serializers
 from backend.managementLogs.functions import get_logs_sys
 from backend.managementLogs.models import LogrotateData, LogsData
 from django.http import JsonResponse
-import gzip
 from django.http import HttpResponse
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 import os
+import gzip
+import zipfile
+from io import BytesIO
 # Create your views here.
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -105,33 +107,41 @@ def get_logrotate_data(request):
 @authentication_classes([SessionAuthentication])
 def download_logrotate_data(request):
     """
-    API to download logrotate data.
-
+    API to convert a .gz file to a .zip file and return it as a download.
+    
     Parameters:
     request (HttpRequest): The incoming request object.
     
     Returns:
-    HttpResponse: The logrotate `.gz` file as an attachment or an error response.
+    HttpResponse: The .zip file as an attachment or an error response.
     """
-    if request.method == 'POST':
-        try:
-            file_path = request.data.get("file_path", None)
-            if file_path is None:
-                return HttpResponse("Error: file_path is missing!", status=400)
+    try:
+        file_path = request.data.get("file_path", None)
+        if not file_path:
+            return HttpResponse("Error: file_path is missing!", status=400)
 
-            if not isinstance(file_path, str):
-                return HttpResponse("Error: file_path must be a valid string!", status=400)
-            if not os.path.exists(file_path):
-                return HttpResponse("Error: File does not exist!", status=404)
+        if not os.path.exists(file_path):
+            return HttpResponse("Error: File does not exist!", status=404)
 
-            with gzip.open(file_path, 'rb') as f:
-                file_content = f.read()
-            response = HttpResponse(file_content, content_type='application/gzip')
-            response['Content-Disposition'] = f'attachment; filename={os.path.basename(file_path.strip('.gz'))}'
-            return response
+        with gzip.open(file_path, 'rb') as gz_file:
+            file_content = gz_file.read()  
 
-        except Exception as e:
-            return HttpResponse(f"Error: {str(e)}", status=500)        
+        zip_buffer = BytesIO()
+
+        zip_filename = os.path.basename(file_path).replace('.gz', '.zip')
+        file_inside_zip = os.path.basename(file_path).replace('.gz', '.txt')
+
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr(file_inside_zip, file_content)  
+
+        zip_buffer.seek(0)
+        response = HttpResponse(zip_buffer, content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename={zip_filename}'
+
+        return response
+
+    except Exception as e:
+        return HttpResponse(f"Error: {str(e)}", status=500)     
         
 
 

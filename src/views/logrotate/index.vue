@@ -225,28 +225,35 @@ export default {
     responseType: "blob", 
   })
         .then((response) => {
-          const blob = new Blob([response.data], { type: "application/gzip" });
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = `${rowData.filename}`;
-          document.body.appendChild(a);
-          a.click();
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+          const blob = new Blob([response.data], { type: "application/zip" });
+        const url = window.URL.createObjectURL(blob);
 
-          state.textAlert =  t("logrotate.download_succes");
-          state.snackbar = true;
-          state.color = "green";
-        })
-        .catch((error) => {
-          console.log("error===>",error)
-          state.textAlert =  t("logrotate.download_fail");
-          state.snackbar = true;
-          state.color = "red";
-        });
-    };
+        const a = document.createElement("a");
+        a.style.display = "none";
+        a.href = url;
+
+        let filename = rowData.filename;
+        if (filename.endsWith('.gz')) {
+            filename = filename.slice(0, -3) + ".zip";  
+        }
+        
+        a.download = filename;  
+        document.body.appendChild(a);
+        a.click();  
+        window.URL.revokeObjectURL(url);  
+        document.body.removeChild(a);
+
+        state.textAlert = t("logrotate.download_success");
+        state.snackbar = true;
+        state.color = "green";
+    })
+    .catch((error) => {
+        console.error("Error downloading file:", error);
+        state.textAlert = t("logrotate.download_fail");
+        state.snackbar = true;
+        state.color = "red";
+    });
+};
 
     const confirmDelete = (rowData) => {
       const csrfToken = getCookie("csrftoken");

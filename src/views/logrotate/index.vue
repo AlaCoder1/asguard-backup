@@ -243,7 +243,7 @@ export default {
         window.URL.revokeObjectURL(url);  
         document.body.removeChild(a);
 
-        state.textAlert = t("logrotate.download_success");
+        state.textAlert = t("logrotate.download_succes");
         state.snackbar = true;
         state.color = "green";
     })

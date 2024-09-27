@@ -6,10 +6,13 @@ from django.core import serializers
 from backend.managementLogs.functions import get_logs_sys
 from backend.managementLogs.models import LogrotateData, LogsData
 from django.http import JsonResponse
-import gzip
 from django.http import HttpResponse
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+import os
+import gzip
+import zipfile
+from io import BytesIO
 # Create your views here.
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
@@ -99,42 +102,77 @@ def get_logrotate_data(request):
             log['fields']['id'] = log["pk"]
             list_logs.append(log['fields'])
         return JsonResponse({"data": list_logs})   
-@swagger_auto_schema(
-    method='get',
-    operation_description="API to download all logrotate data.",
-    manual_parameters=[
-        openapi.Parameter(
-            'file_path',
-            openapi.IN_QUERY,
-            description="Path to the logrotate file to be downloaded.",
-            type=openapi.TYPE_STRING
-        )
-    ],
-    responses={
-        200: 'Logrotate file successfully downloaded.',
-        500: 'Error: File does not exist or an unexpected error occurred.',
-    }
-)    
-@api_view(['GET'])
+
+@api_view(['POST'])
 @authentication_classes([SessionAuthentication])
-def download_logrotate_data(request,file_path):
+def download_logrotate_data(request):
     """
-    API to download all logrotate data .
+    API to convert a .gz file to a .zip file and return it as a download.
+    
+    Parameters:
+    request (HttpRequest): The incoming request object.
+    
+    Returns:
+    HttpResponse: The .zip file as an attachment or an error response.
+    """
+    try:
+        file_path = request.data.get("file_path", None)
+        if not file_path:
+            return HttpResponse("Error: file_path is missing!", status=400)
+
+        if not os.path.exists(file_path):
+            return HttpResponse("Error: File does not exist!", status=404)
+
+        with gzip.open(file_path, 'rb') as gz_file:
+            file_content = gz_file.read()  
+
+        zip_buffer = BytesIO()
+
+        zip_filename = os.path.basename(file_path).replace('.gz', '.zip')
+        file_inside_zip = os.path.basename(file_path).replace('.gz', '.txt')
+
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            zip_file.writestr(file_inside_zip, file_content)  
+
+        zip_buffer.seek(0)
+        response = HttpResponse(zip_buffer, content_type='application/zip')
+        response['Content-Disposition'] = f'attachment; filename={zip_filename}'
+
+        return response
+
+    except Exception as e:
+        return HttpResponse(f"Error: {str(e)}", status=500)     
+        
+
+
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
+def delete_logrotate_file(request, file_id):
+    """
+    API to delete a logrotate file from both the file system and database.
 
     Parameters:
     request (HttpRequest): The incoming request object.
+    file_id (int): ID of the logrotate file in the database.
 
     Returns:
-    JsonResponse: A JSON response containing the logrotate data .
-
+    HttpResponse: A success message if the file is deleted or an error message.
     """
-    if request.method == 'GET':
+    if request.method == 'DELETE':
         try:
-            with gzip.open(file_path, 'rb') as f:
-                file_content = f.read()
+            log_file = LogrotateData.objects.get(id=file_id)
 
-            response = HttpResponse(file_content, content_type='application/gzip')
-            response['Content-Disposition'] = f'attachment; filename={file_path.split("/")[-1]}'
-            return response
+            # file_path = os.path.join(log_file.backup_path, log_file.filename)
+
+            # if os.path.exists(file_path):
+            #     os.remove(file_path)
+
+            log_file.delete()
+
+            return JsonResponse({"msg":"File  deleted successfully ." }, status=200)
+
+        except LogrotateData.DoesNotExist:
+            return JsonResponse({"msg":"Error: File does not exist "}, status=404)
+
         except Exception as e:
-            return HttpResponse(f"Error:File not exist!", status=500)
+            return JsonResponse({"msg":f"Error: {str(e)}"}, status=500)

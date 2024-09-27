@@ -1,19 +1,10 @@
 <template>
   <v-overlay v-model="state.loading">
-    <v-dialog
-      v-model="state.isLoadingDialogue"
-      :scrim="false"
-      persistent
-      width="auto"
-    >
+    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear
-            indeterminate
-            color="white"
-            class="mb-0"
-          ></v-progress-linear>
+          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -266,13 +257,29 @@ export default {
               </button>
               `;
       } else {
-        eGui.innerHTML = `
+        if (!params.data.isOnline) {
+          eGui.innerHTML = `
          <button
           id="play"
           class="action-button play"
           data-action="play">
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
+              <button
+                class="action-button edit"
+                data-action="edit" title="Edit Server">
+                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+                <button
+                class="action-button delete"
+                data-action="delete" title="Delete ">
+                  <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+      
+                `;
+        }
+        else {
+          eGui.innerHTML = `
              <button
           id="stop"
           class="action-button stop"
@@ -291,6 +298,7 @@ export default {
                 </button>
       
                 `;
+        }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -344,8 +352,8 @@ export default {
           };
 
           let tokenStart = document.getElementById("app").getAttribute("token");
-          state.loading= true;
-          state.isLoadingDialogue= true;
+          state.loading = true;
+          state.isLoadingDialogue = true;
 
           axios
             .post(`/ztna/start_routers/${rowData.id}`, payloadStart, {
@@ -359,8 +367,8 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.message;
-                state.loading= false;
-                state.isLoadingDialogue= false;
+                state.loading = false;
+                state.isLoadingDialogue = false;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -370,23 +378,21 @@ export default {
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;
-              state.loading= false;
-              state.isLoadingDialogue= false;
+              state.loading = false;
+              state.isLoadingDialogue = false;
             });
 
           break;
         case "stop":
-          console.log("stop");
-
-          console.log("play");
+          
           let payload = {
             name: rowData.name,
             token: rowData.enrollmentJwt
           };
 
           let token = document.getElementById("app").getAttribute("token");
-          state.loading= true;
-          state.isLoadingDialogue= true;
+          state.loading = true;
+          state.isLoadingDialogue = true;
 
           axios
             .post(`/ztna/stop_routers/${rowData.id}`, payload, {
@@ -400,8 +406,8 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.message;
-                state.loading= false;
-                state.isLoadingDialogue= false;
+                state.loading = false;
+                state.isLoadingDialogue = false;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -411,8 +417,8 @@ export default {
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;
-                state.loading= false;
-                state.isLoadingDialogue= false;
+              state.loading = false;
+              state.isLoadingDialogue = false;
             });
 
           break;

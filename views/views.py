@@ -764,7 +764,8 @@ def server_dhcp4_page(request):
 @login_required(login_url='/')
 def logrotate_page(request):
     list_logrotate=get_logrotate_data(request)
-    context = {'list_logrotate':list_logrotate}
+    list_logrotate=json.dumps(list_logrotate)
+    context = {'logrotate':list_logrotate}
     return render(request, 'logrotate.html',context)
 
 ################## generale information ##################

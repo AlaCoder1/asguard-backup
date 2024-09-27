@@ -140,6 +140,12 @@ export default {
               active: "System Log",
             },
             {
+              title: "subtitle.archivedLog",
+              icon: "",
+              href: "/logrotate",
+              active: "Archived Logs",
+            },
+            {
               title: "subtitle.settings",
               icon: "",
               href: "/settings",

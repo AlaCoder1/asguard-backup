@@ -268,12 +268,9 @@ def add_routers(request):
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        print(payload)
         serializer_relay = RelaysSerializerGet(data=payload)
         if serializer_relay.is_valid():
             serializer_relay.save()
-        else:
-            print(serializer_relay.errors)
         return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_RELAY}"}, status=400)
 
@@ -371,10 +368,8 @@ def add_configs(request):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    print(data)
     response = requests.post(PATH_ZTNA_CONFIGS, headers=headers, json=data, verify=False)
     response_dict = json.loads(response.text)
-    print(response_dict)
     if response.status_code == 201:
         ############### intercept ###############
         if data["configTypeId"] == 'g7cIWbcGg':
@@ -633,22 +628,16 @@ def add_edge_routers_policies(request):
             cleaned_identity_att= identity_att[1:]
         payload['relay_attribute']=cleaned_relay_att
         payload['identity_attribute']=cleaned_identity_att
-        print(cleaned_relay_att,'****',cleaned_identity_att)
         relay = Relays.objects.get(attribute_relay=payload['relay_attribute'])
-        print('relay',relay)
         identity = Identities.objects.get(attribute_identitie=payload['identity_attribute'])
         payload['identity_id']=identity.pk
         payload['relay_id']=relay.pk
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        print(payload)
         serializer = RelaysPolicySerializerGet(data=payload)
         if serializer.is_valid():
             serializer.save()
-            print('saved')
-        else:
-            print(serializer.errors)
         return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
 
@@ -730,13 +719,9 @@ def add_services_policies(request):
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        print(payload)
         serializer = ServicesPolicySerializerGet(data=payload)
         if serializer.is_valid():
             serializer.save()
-            print('saved')
-        else:
-            print(serializer.errors)
         return JsonResponse({"message":f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE_POLICIE}"}, status=400)
 
@@ -816,13 +801,9 @@ def add_services_edge_routers_policies(request):
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        print(payload)
         serializer = ServicesRelaysPolicySerializerGet(data=payload)
         if serializer.is_valid():
             serializer.save()
-            print('saved')
-        else:
-            print(serializer.errors)
         return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE_EDGE_ROUTER_POLICIE}"}, status=400)
 

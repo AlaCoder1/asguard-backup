@@ -1,7 +1,7 @@
 from utils.errors_utils import CommandExecutionError
 from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES, PATH_ZTNA_TERMINATORS
 from .list_ztna import get_configs, get_edge_router_policies, get_identities, get_routers, get_service_edge_router_policies, get_service_policies, get_services, get_terminators
-from .utils import change_status_ztna_service, get_Zt_Token, get_status_ztna_service, start_router, stop_router  
+from .utils import change_status_router, change_status_ztna_service, get_Zt_Token, get_status_ztna_service
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 import requests
@@ -233,7 +233,7 @@ def start_routers(request, id):
         data = request.data
         router_name = data.get("name")
         token = data.get("token")
-        start_router(router_name, token)
+        change_status_router(router_name, "start", token)
         return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_RELAY}"}, status=400)
@@ -246,7 +246,7 @@ def stop_routers(request, id):
     try:
         data = request.data
         router_name = data.get("name")
-        stop_router(router_name)
+        change_status_router(router_name, "stop")
         return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STOPING}"}, status=200)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_RELAY}"}, status=400)

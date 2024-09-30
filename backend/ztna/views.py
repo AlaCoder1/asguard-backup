@@ -1,3 +1,6 @@
+import json
+from backend.ztna.models import Identities,HostConfigs,InterceptConfigs, Relays, Services
+from backend.ztna.serializers import EnrollementsSerializerGet, IdentitiesSerializerGet, IdentitiesSerializerUpdate, InterceptConfigsSerializerGet,HostConfigsSerializerGet, RelaySerializerUpdate, RelaysPolicySerializerGet, RelaysSerializerGet, ServicesPolicySerializerGet, ServicesRelaysPolicySerializerGet, ServicesSerializerGet
 from utils.errors_utils import CommandExecutionError
 from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES, PATH_ZTNA_TERMINATORS
 from .list_ztna import get_configs, get_edge_router_policies, get_identities, get_routers, get_service_edge_router_policies, get_service_policies, get_services, get_terminators
@@ -9,6 +12,7 @@ from drf_yasg.utils import swagger_auto_schema
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
+from datetime import datetime
 
 
 # Constants
@@ -103,12 +107,35 @@ def get_all_identities(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_identities(request):
+    payload = {}
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     response = requests.post(PATH_ZTNA_IDENTITIES, headers=headers, json=data, verify=False)
+    response_dict = json.loads(response.text)
+    identity_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
-        return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+        payload['ref_identitie'] = identity_id
+        payload['name'] = data['name']
+        if data['roleAttributes'][0] == "": 
+            payload['attribute_identitie'] == None
+        else:
+            payload['attribute_identitie'] = data['roleAttributes'][0]
+        payload['type'] = data['type']
+        if 'description' in data:
+            payload['description'] = data['description']
+        else:
+            payload['description'] = None
+        payload['isAdmin'] = data['isAdmin']
+        now = datetime.now()
+        formatted_now = now.strftime("%Y-%m-%d %H:%M")
+        payload['date_creation'] = formatted_now
+        serializer_identitie = IdentitiesSerializerGet(data=payload)
+        if serializer_identitie.is_valid():
+            serializer_identitie.save()
+            return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+        else:
+            return JsonResponse({"msg":serializer_identitie.errors}, status=400)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_IDENTITIE}"}, status=400)
 
 
@@ -144,12 +171,35 @@ def update_identities(request, id):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_enrollments(request):
+    pyload = {}
+    payload_update_identiti = {}
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
+    dt = datetime.fromisoformat(data['expiresAt'][:-1]) 
+    date = dt.date()
+    time = dt.time()
     response = requests.post(PATH_ZTNA_ENROLLMENTS, headers=headers, json=data, verify=False)
     if response.status_code == 201:
-        return JsonResponse({"message": f"{CONSTANT_ENROLLMENT} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+        pyload['date']=date
+        pyload['time']=time
+        pyload['type']=data['method']
+        identitie = Identities.objects.get(ref_identitie=data['identityId'])
+        pyload['identitie_id']=identitie.pk
+        serializer_enrollement = EnrollementsSerializerGet(data=pyload)
+        if serializer_enrollement.is_valid():
+            serializer_enrollement.save()
+            list_identities = get_identities()
+            payload_update_identiti['token'] = list_identities[0]['enrollment'][f'{data['method']}']['jwt']
+            combined_datetime = datetime.strptime(f"{date} {time}", "%Y-%m-%d %H:%M:%S")
+            payload_update_identiti['date_expiration'] = combined_datetime
+            serializer_update_identitie = IdentitiesSerializerUpdate(identitie, data=payload_update_identiti, partial=True) 
+            if serializer_update_identitie.is_valid():
+                serializer_update_identitie.save()
+                return JsonResponse({"message": f"{CONSTANT_ENROLLMENT} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+            return JsonResponse(serializer_update_identitie.errors, status=400)
+        else:
+            return JsonResponse({"msg":serializer_enrollement.errors}, status=400)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ENROLLMENT}"}, status=400)
 
 
@@ -188,11 +238,39 @@ def get_all_routers(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_routers(request):
+    payload={}
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     response = requests.post(PATH_ZTNA_ROUTERS, headers=headers, json=data, verify=False)
+    response_dict = json.loads(response.text)
+    relay_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
+        relays_list=get_routers()
+        corresponding_relay=0
+        for i in range(0,len(relays_list)):
+            if relays_list[i]['id']==relay_id:
+                corresponding_relay=i
+        payload['ref_relay'] = relay_id
+        payload['name'] = data['name']
+        payload['online']=relays_list[corresponding_relay]['isOnline']
+        payload['verified']=relays_list[corresponding_relay]['isVerified']
+        payload['traversal']=data['noTraversal']
+        payload['tunneler']=data['isTunnelerEnabled']
+        if data['roleAttributes'][0] == "": 
+            payload['attribute_relay'] == None
+        else:
+            payload['attribute_relay'] = data['roleAttributes'][0]
+        if 'description' in data:
+            payload['description'] = data['description']
+        else:
+            payload['description'] = None
+        now = datetime.now()
+        formatted_now = now.strftime("%Y-%m-%d %H:%M")
+        payload['date_creation'] = formatted_now
+        serializer_relay = RelaysSerializerGet(data=payload)
+        if serializer_relay.is_valid():
+            serializer_relay.save()
         return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_RELAY}"}, status=400)
 
@@ -230,10 +308,17 @@ def update_routers(request, id):
 @permission_classes([IsAuthenticated])
 def start_routers(request, id):
     try:
+        payload={}
         data = request.data
         router_name = data.get("name")
         token = data.get("token")
-        change_status_router(router_name, "start", token)
+        relay = Relays.objects.get(name=router_name)
+        payload['online'] = True
+        payload['verified'] = True
+        serializer = RelaySerializerUpdate(relay,data=payload, partial=True)
+        if serializer.is_valid():
+            change_status_router(router_name, "start", token)
+            serializer.save()
         return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_RELAY}"}, status=400)
@@ -244,10 +329,17 @@ def start_routers(request, id):
 @permission_classes([IsAuthenticated])
 def stop_routers(request, id):
     try:
+        payload={}
         data = request.data
         router_name = data.get("name")
-        change_status_router(router_name, "stop")
-        return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STOPING}"}, status=200)
+        relay = Relays.objects.get(name=router_name)
+        payload['online'] = False
+        payload['verified'] = True
+        serializer = RelaySerializerUpdate(relay,data=payload, partial=True)
+        if serializer.is_valid():
+            change_status_router(router_name, "stop")
+            serializer.save()
+        return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_RELAY}"}, status=400)
 
@@ -272,12 +364,54 @@ def get_all_configs(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_configs(request):
+    payload={}
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     response = requests.post(PATH_ZTNA_CONFIGS, headers=headers, json=data, verify=False)
+    response_dict = json.loads(response.text)
     if response.status_code == 201:
-        return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+        ############### intercept ###############
+        if data["configTypeId"] == 'g7cIWbcGg':
+            payload['ref_intercept'] = response_dict.get('data', {}).get('id')
+            payload['name'] = data['name']
+            
+            # Correctly accessing protocols from data['data']
+            payload['protocol'] = data['data']['protocols'][0]  # Changed here
+            payload['address'] = data['data']["addresses"][0]
+            payload['low'] = data['data']["portRanges"][0]["low"]  # Fixed to access first port range
+            payload['high'] = data['data']["portRanges"][0]["high"]  # Fixed to access first port range
+
+            # Optional field handling
+            payload['description'] = data.get('description', None)
+            now = datetime.now()
+            formatted_now = now.strftime("%Y-%m-%d %H:%M")
+            payload['date_creation'] = formatted_now
+            # Serialize and save the payload
+            serializer_intercept = InterceptConfigsSerializerGet(data=payload)
+            if serializer_intercept.is_valid():
+                serializer_intercept.save()
+                return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+            else:
+                return JsonResponse({"msg": serializer_intercept.errors}, status=400)
+        # return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+        ############### host ###############
+        else :
+            payload['ref_host'] = response_dict.get('data', {}).get('id')
+            payload['name'] = data['name']
+            payload['protocol'] = data['data']['protocol']  
+            payload['address'] = data['data']["address"]
+            payload['port'] = data['data']["port"] 
+            payload['description'] = data.get('description', None)
+            now = datetime.now()
+            formatted_now = now.strftime("%Y-%m-%d %H:%M")
+            payload['date_creation'] = formatted_now
+            serializer_host = HostConfigsSerializerGet(data=payload)
+            if serializer_host.is_valid():
+                serializer_host.save()
+                return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+            else:
+                return JsonResponse({"msg": serializer_host.errors}, status=400)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_CONFIGURATION}"}, status=400)
 
 
@@ -329,12 +463,38 @@ def get_all_services(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def add_services(request):
+    payload={}
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     response = requests.post(PATH_ZTNA_SERVICES, headers=headers, json=data, verify=False)
+    response_dict = json.loads(response.text)
+    service_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
+        payload['ref_service'] = service_id
+        payload['name'] = data['name']
+        if data['roleAttributes'][0] == "": 
+            payload['attribute_service'] == None
+        else:
+            payload['attribute_service'] = data['roleAttributes'][0]
+        payload['encryption'] = data['encryptionRequired']
+        host = HostConfigs.objects.get(ref_host=data['configs'][1])
+        payload['host_id']=host.pk
+        intercept = InterceptConfigs.objects.get(ref_intercept=data['configs'][0])
+        payload['intercept_id']=intercept.pk
+        if 'description' in data:
+            payload['description'] = data['description']
+        else:
+            payload['description'] = None
+        now = datetime.now()
+        formatted_now = now.strftime("%Y-%m-%d %H:%M")
+        payload['date_creation'] = formatted_now
+        serializer_service = ServicesSerializerGet(data=payload)
+        if serializer_service.is_valid():
+            serializer_service.save()
         return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+        # else:
+        #     return JsonResponse({"msg":serializer_identitie.errors}, status=400)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE}"}, status=400)
 
 
@@ -446,10 +606,38 @@ def get_all_edge_routers_policies(request):
 @permission_classes([IsAuthenticated])
 def add_edge_routers_policies(request):
     session_id = get_Zt_Token()
+    payload={}
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     response = requests.post(PATH_ZTNA_EDGE_ROUTERS_POLICIES, headers=headers, json=data, verify=False)
+    response_dict = json.loads(response.text)
+    relay_policy_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
+        payload['ref_relay_policy'] = relay_policy_id
+        payload['name'] = data['name']
+        payload['semantique'] = data['semantic']
+        if 'description' in data:
+            payload['description'] = data['description']
+        else:
+            payload['description'] = None
+        relay_att=data['edgeRouterRoles'][0]
+        identity_att=data['identityRoles'][0]
+        if relay_att.startswith('#'):
+            cleaned_relay_att= relay_att[1:]
+        if identity_att.startswith('#'):
+            cleaned_identity_att= identity_att[1:]
+        payload['relay_attribute']=cleaned_relay_att
+        payload['identity_attribute']=cleaned_identity_att
+        relay = Relays.objects.get(attribute_relay=payload['relay_attribute'])
+        identity = Identities.objects.get(attribute_identitie=payload['identity_attribute'])
+        payload['identity_id']=identity.pk
+        payload['relay_id']=relay.pk
+        now = datetime.now()
+        formatted_now = now.strftime("%Y-%m-%d %H:%M")
+        payload['date_creation'] = formatted_now
+        serializer = RelaysPolicySerializerGet(data=payload)
+        if serializer.is_valid():
+            serializer.save()
         return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
 
@@ -501,10 +689,39 @@ def get_all_services_policies(request):
 @permission_classes([IsAuthenticated])
 def add_services_policies(request):
     session_id = get_Zt_Token()
+    payload={}
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     response = requests.post(PATH_ZTNA_SERVICES_POLICIES, headers=headers, json=data, verify=False)
+    response_dict = json.loads(response.text)
+    service_policy_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
+        payload['ref_service_policy'] = service_policy_id
+        payload['name'] = data['name']
+        payload['semantique'] = data['semantic']
+        payload['type'] = data['type']
+        if 'description' in data:
+            payload['description'] = data['description']
+        else:
+            payload['description'] = None
+        Service_att=data['serviceRoles'][0]
+        identity_att=data['identityRoles'][0]
+        if Service_att.startswith('#'):
+            cleaned_Service_att= Service_att[1:]
+        if identity_att.startswith('#'):
+            cleaned_identity_att= identity_att[1:]
+        payload['service_attribute']=cleaned_Service_att
+        payload['identity_attribute']=cleaned_identity_att
+        service = Services.objects.get(attribute_service=payload['service_attribute'])
+        identity = Identities.objects.get(attribute_identitie=payload['identity_attribute'])
+        payload['identity_id']=identity.pk
+        payload['service_id']=service.pk
+        now = datetime.now()
+        formatted_now = now.strftime("%Y-%m-%d %H:%M")
+        payload['date_creation'] = formatted_now
+        serializer = ServicesPolicySerializerGet(data=payload)
+        if serializer.is_valid():
+            serializer.save()
         return JsonResponse({"message":f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE_POLICIE}"}, status=400)
 
@@ -555,10 +772,38 @@ def get_all_services_edge_routers_policies(request):
 @permission_classes([IsAuthenticated])
 def add_services_edge_routers_policies(request):
     session_id = get_Zt_Token()
+    payload={}
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     response = requests.post(PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, headers=headers, json=data, verify=False)
+    response_dict = json.loads(response.text)
+    relay_policy_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
+        payload['ref_service_relay_policy'] = relay_policy_id
+        payload['name'] = data['name']
+        payload['semantique'] = data['semantic']
+        if 'description' in data:
+            payload['description'] = data['description']
+        else:
+            payload['description'] = None
+        relay_att=data['edgeRouterRoles'][0]
+        Service_att=data['serviceRoles'][0]
+        if relay_att.startswith('#'):
+            cleaned_relay_att= relay_att[1:]
+        if Service_att.startswith('#'):
+            cleaned_Service_att= Service_att[1:]
+        payload['relay_attribute']=cleaned_relay_att
+        payload['service_attribute']=cleaned_Service_att
+        relay = Relays.objects.get(attribute_relay=payload['relay_attribute'])
+        service = Services.objects.get(attribute_service=payload['service_attribute'])
+        payload['service_id']=service.pk
+        payload['relay_id']=relay.pk
+        now = datetime.now()
+        formatted_now = now.strftime("%Y-%m-%d %H:%M")
+        payload['date_creation'] = formatted_now
+        serializer = ServicesRelaysPolicySerializerGet(data=payload)
+        if serializer.is_valid():
+            serializer.save()
         return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE_EDGE_ROUTER_POLICIE}"}, status=400)
 

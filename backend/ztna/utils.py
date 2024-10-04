@@ -1,7 +1,7 @@
 import requests
 import json
 
-from backend.ztna.constant_variables import PATH_START_ZTNA_BASH, PATH_START_ZTNA_ROUTER_BASH, PATH_STATUS_ZTNA_BASH, PATH_STOP_ZTNA_BASH, PATH_STOP_ZTNA_ROUTER_BASH
+from backend.ztna.constant_variables import PATH_START_ZTNA_BASH, PATH_START_ZTNA_ROUTER_BASH, PATH_STATUS_ZTNA_BASH, PATH_STOP_ZTNA_BASH, PATH_STOP_ZTNA_ROUTER_BASH, PATH_ZTNA_ROUTER
 from utils.commands_utils import execute_command_with_arguments, execute_command_without_arguments, get_current_directory
 
 
@@ -80,3 +80,21 @@ def change_status_router(router_name, router_status, token=""):
                                        f"{router_name}\n{token}\n", 3)
     else:
         execute_command_with_arguments(["sudo", "bash", PATH_STOP_ZTNA_ROUTER_BASH.format(current_dir)], f"{router_name}", 3)
+
+
+def change_ports_yaml_file(router_name, link_port=10080, listeners_port=3022):
+    """Change ports of link and listeners of router yaml file which is by default 10080 and 3022"""
+
+    # Get contents of the yaml router file
+    with open(f"{PATH_ZTNA_ROUTER}{router_name}.yaml") as router_yaml_file:
+        router_yaml_content = router_yaml_file.read()
+    
+    # Change default ports by the unique ports of the router
+    router_yaml_content = router_yaml_content.replace("tls:0.0.0.0:10080", f"tls:0.0.0.0:{link_port}")
+    router_yaml_content = router_yaml_content.replace("tls:Asguard:10080", f"tls:Asguard:{link_port}")
+    router_yaml_content = router_yaml_content.replace("tls:0.0.0.0:3022", f"tls:0.0.0.0:{listeners_port}")
+    router_yaml_content = router_yaml_content.replace("Asguard:3022", f"Asguard:{listeners_port}")
+
+    # Change contents of the yaml router file
+    with open(f"{PATH_ZTNA_ROUTER}{router_name}.yaml", "w") as router_yaml_file:
+        router_yaml_file.write(router_yaml_content)

@@ -18,5 +18,6 @@ PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES = PATH_ZTNA + "service-edge-router-poli
 PATH_STATUS_ZTNA_BASH = "{}/backend/ztna/statusZtna.sh"
 PATH_START_ZTNA_BASH = "{}/backend/ztna/startZtna.sh"
 PATH_STOP_ZTNA_BASH = "{}/backend/ztna/stopZtna.sh"
+PATH_ZTNA_ROUTER = "{}/backend/ztna/{}/"
 PATH_START_ZTNA_ROUTER_BASH = "{}/backend/ztna/startRelay.sh"
 PATH_STOP_ZTNA_ROUTER_BASH = "{}/backend/ztna/stopRelay.sh"

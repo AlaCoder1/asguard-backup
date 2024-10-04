@@ -38,6 +38,7 @@ ERROR_MESSAGES_DELETING = _("Error in deleting")
 ERROR_MESSAGES_UPDATING = _("Error in updating")
 ERROR_MESSAGES_STARTING = _("Error in starting")
 ERROR_MESSAGES_STOPING = _("Error in stoping")
+ERROR_MESSAGES_STATUS = _("Error in getting status")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -69,7 +70,7 @@ def start_ztna(request):
         return JsonResponse({"message": f"{CONSTANT_ZTNA} {SUCCESS_MESSAGES_STARTING}"}, status=200)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_ZTNA}"}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STATUS} {CONSTANT_ZTNA}"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -97,9 +98,7 @@ def stop_ztna(request):
 @permission_classes([IsAuthenticated])
 def get_all_identities(request):
     """Getting all identities from database"""
-    list_identities = []
-    if (request.method == 'GET'):
-        list_identities = get_identities()
+    list_identities = get_identities()
     return JsonResponse(list_identities, safe=False)
 
 
@@ -228,9 +227,7 @@ def delete_enrollments(request, id):
 @permission_classes([IsAuthenticated])
 def get_all_routers(request):
     """Getting all routers from database"""
-    list_routers = []
-    if (request.method == 'GET'):
-        list_routers = get_routers()
+    list_routers = get_routers()
     return JsonResponse(list_routers, safe=False)
 
 
@@ -354,9 +351,7 @@ def stop_routers(request, id):
 @permission_classes([IsAuthenticated])
 def get_all_configs(request):
     """Getting all configs from database"""
-    list_configs = []
-    if (request.method == 'GET'):
-        list_configs = get_configs()
+    list_configs = get_configs()
     return JsonResponse(list_configs, safe=False)
 
 
@@ -453,9 +448,7 @@ def update_configs(request, id):
 @permission_classes([IsAuthenticated])
 def get_all_services(request):
     """Getting all services from database"""
-    list_services = []
-    if (request.method == 'GET'):
-        list_services = get_services()
+    list_services = get_services()
     return JsonResponse(list_services, safe=False)
 
 
@@ -536,9 +529,7 @@ def update_services(request, id):
 @permission_classes([IsAuthenticated])
 def get_all_terminators(request):
     """Getting all terminators from database"""
-    list_terminators = []
-    if (request.method == 'GET'):
-        list_terminators = get_terminators()
+    list_terminators = get_terminators()
     return JsonResponse(list_terminators, safe=False)
 
 
@@ -595,9 +586,7 @@ def update_terminators(request, id):
 @permission_classes([IsAuthenticated])
 def get_all_edge_routers_policies(request):
     """Getting all edge routers from database"""
-    list_edge_routers_policies = []
-    if (request.method == 'GET'):
-        list_edge_routers_policies = get_edge_router_policies()
+    list_edge_routers_policies = get_edge_router_policies()
     return JsonResponse(list_edge_routers_policies, safe=False)
 
 
@@ -678,9 +667,7 @@ def update_edge_routers_policies(request, id):
 @permission_classes([IsAuthenticated])
 def get_all_services_policies(request):
     """Getting all services from database"""
-    list_services_policies = []
-    if (request.method == 'GET'):
-        list_services_policies = get_service_policies()
+    list_services_policies = get_service_policies()
     return JsonResponse(list_services_policies, safe=False)
 
 
@@ -761,9 +748,7 @@ def update_services_policies(request, id):
 @permission_classes([IsAuthenticated])
 def get_all_services_edge_routers_policies(request):
     """Getting all services edge routers from database"""
-    list_services_edge_routers_policies = []
-    if (request.method == 'GET'):
-        list_services_edge_routers_policies = get_service_edge_router_policies()
+    list_services_edge_routers_policies = get_service_edge_router_policies()
     return JsonResponse(list_services_edge_routers_policies, safe=False)
 
 

@@ -10,21 +10,11 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.interface"
-                    label="Interface"
-                    item-title="name"
-                    item-value="id"
-                    return-object
-                    :items="state.mapedInterface"
-                    background-color="#fffffff"
-                  >
+                  <v-select v-model="state.interface" label="Interface" item-title="name" item-value="id" return-object
+                    :items="state.mapedInterface" background-color="#fffffff">
                   </v-select>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.interface.$errors.length"
-                  >
-                    {{ v$.interface.$errors?.[0].$message }}
+                  <p class="error-feedback mb-5" v-if="v_interface$.interface.$errors.length">
+                    {{ v_interface$.interface.$errors?.[0].$message }}
                   </p>
 
                   <p class="error-feedback mb-5" v-if="isExist">
@@ -39,173 +29,87 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    :label="$t('suricata.thread')"
-                    v-model="state.thread"
-                  ></v-text-field>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.thread.$errors.length"
-                  >
-                    {{ v$.thread.$errors?.[0].$message }}
+                  <v-text-field :label="$t('suricata.thread')" v-model="state.thread"></v-text-field>
+                  <p class="error-feedback mb-5" v-if="v_interface$.thread.$errors.length">
+                    {{ v_interface$.thread.$errors?.[0].$message }}
                   </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.defrag"
-                    label="Defrag"
-                    item-title="name"
-                    item-value="slug"
-                    return-object
-                    :items="state.defragList"
-                    background-color="#fffffff"
-                  >
+                  <v-select v-model="state.defrag" label="Defrag" item-title="name" item-value="slug" return-object
+                    :items="state.defragList" background-color="#fffffff">
                   </v-select>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.defrag.$errors.length"
-                  >
-                    {{ v$.defrag.$errors?.[0].$message }}
+                  <p class="error-feedback mb-5" v-if="v_interface$.defrag.$errors.length">
+                    {{ v_interface$.defrag.$errors?.[0].$message }}
                   </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    :label="$t('suricata.clusterId')"
-                    v-model="state.clusterId"
-                  ></v-text-field>
+                  <v-text-field :label="$t('suricata.clusterId')" v-model="state.clusterId"></v-text-field>
                   <p class="error-feedback mb-5" v-if="isExistClusterId">
                     {{ $t("suricata.ClusterIdExist") }}
                   </p>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.clusterId.$errors.length"
-                  >
-                    {{ v$.clusterId.$errors?.[0].$message }}
+                  <p class="error-feedback mb-5" v-if="v_interface$.clusterId.$errors.length">
+                    {{ v_interface$.clusterId.$errors?.[0].$message }}
                   </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.clusterType"
-                    :label="$t('suricata.clusterType')"
-                    item-title="name"
-                    item-value="slug"
-                    return-object
-                    :items="state.clusterTypeList"
-                    background-color="#fffffff"
-                  >
+                  <v-select v-model="state.clusterType" :label="$t('suricata.clusterType')" item-title="name"
+                    item-value="slug" return-object :items="state.clusterTypeList" background-color="#fffffff">
                   </v-select>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.clusterType.$errors.length"
-                  >
-                    {{ v$.clusterType.$errors?.[0].$message }}
+                  <p class="error-feedback mb-5" v-if="v_interface$.clusterType.$errors.length">
+                    {{ v_interface$.clusterType.$errors?.[0].$message }}
                   </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.copyMode"
-                    :label="$t('suricata.copyMode')"
-                    item-title="name"
-                    item-value="slug"
-                    return-object
-                    :items="state.copyModeList"
-                    background-color="#fffffff"
-                  >
+                  <v-select v-model="state.copyMode" :label="$t('suricata.copyMode')" item-title="name"
+                    item-value="slug" return-object :items="state.copyModeList" background-color="#fffffff">
                   </v-select>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.copyIface"
-                    :label="$t('suricata.copyIface')"
-                    item-title="name"
-                    item-value="id"
-                    return-object
-                    :items="state.copyIfaceList"
-                    background-color="#fffffff"
-                  >
+                  <v-select v-model="state.copyIface" :label="$t('suricata.copyIface')" item-title="name"
+                    item-value="id" return-object :items="state.copyIfaceList" background-color="#fffffff">
                   </v-select>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    :label="$t('suricata.bufferSize')"
-                    v-model="state.bufferSize"
-                  ></v-text-field>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.bufferSize.$errors.length"
-                  >
-                    {{ v$.bufferSize.$errors?.[0].$message }}
+                  <v-text-field :label="$t('suricata.bufferSize')" v-model="state.bufferSize"></v-text-field>
+                  <p class="error-feedback mb-5" v-if="v_interface$.bufferSize.$errors.length">
+                    {{ v_interface$.bufferSize.$errors?.[0].$message }}
                   </p>
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select
-                    v-model="state.useNmp"
-                    :label="$t('suricata.useMmap')"
-                    item-title="name"
-                    item-value="slug"
-                    return-object
-                    :items="state.useNmpList"
-                    background-color="#fffffff"
-                  >
+                  <v-select v-model="state.useNmp" :label="$t('suricata.useMmap')" item-title="name" item-value="slug"
+                    return-object :items="state.useNmpList" background-color="#fffffff">
                   </v-select>
-                  <p
-                    class="error-feedback mb-5"
-                    v-if="v$.useNmp.$errors.length"
-                  >
-                    {{ v$.useNmp.$errors?.[0].$message }}
+                  <p class="error-feedback mb-5" v-if="v_interface$.useNmp.$errors.length">
+                    {{ v_interface$.useNmp.$errors?.[0].$message }}
                   </p>
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="outlined"
-              @click="closeModal"
-              class="mt-3 btn-add"
-            >
+            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F"
+              variant="outlined" @click="closeModal" class="mt-3 btn-add">
               <span class="pr-3 pl-3">{{ $t("buttons.close") }}</span>
             </v-btn>
 
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              type="submit"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 btn-add"
-              :disabled="isExist || isExistClusterId"
-            >
+            <v-btn large rounded outlined label-color="#213E9F" type="submit" color="indigo-darken-3" :rounded="true"
+              variant="flat" class="mt-3 btn-add" :disabled="isExist || isExistClusterId">
               <span class="text-white pr-3 pl-3">{{
                 $t("buttons.create")
-              }}</span>
+                }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
 
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -275,6 +179,7 @@ export default {
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      mode: '',
       rowList: [],
       editValue: null,
       copyIfaceList: [],
@@ -421,6 +326,7 @@ export default {
       () => modalMode.value,
       (val) => {
         if (val === "create") {
+          state.mode = 'create'
           state.interface = "";
           state.bufferSize = "";
           state.copyIface = null;
@@ -459,10 +365,10 @@ export default {
     );
 
     const submitForm = async () => {
-      const result = await v$.value.$validate();
+      const resultInterface = await v_interface$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (result) {
+      if (resultInterface) {
         let payload = {
           uuid: modalMode.value === "create" ? uuidv4() : state.editValue,
           id: +state.interface.id,
@@ -487,9 +393,9 @@ export default {
         }
 
         closeModal();
-        v$.value.$reset();
+        v_interface$.value.$reset();
       } else {
-        console.log("v$", v$.value);
+        console.log("v_interface$", v_interface$.value);
       }
     };
 
@@ -505,6 +411,7 @@ export default {
       state.thread = "";
       state.useNmp = "";
       state.copyModeList = [];
+      state.mode = ''
     };
     const error = computed(() => {
       return t("errors.valueRequired");
@@ -513,11 +420,20 @@ export default {
       return t("errors.ChampIncludeOnlyNumbers");
     });
 
-    const rules = computed(() => {
+    const rulesInterface = computed(() => {
       return {
-        interface: { required: helpers.withMessage(error, required) },
+        interface: {
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.mode === "create")
+          ),
+
+        }, 
         bufferSize: {
-          required: helpers.withMessage(error, required),
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.mode === "create")
+          ),
           isValidBufferSize: helpers.withMessage(
             champInclude,
 
@@ -526,7 +442,10 @@ export default {
         },
 
         clusterId: {
-          required: helpers.withMessage(error, required),
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.mode === "create")
+          ),
           isValidClusterId: helpers.withMessage(
             champInclude,
 
@@ -534,21 +453,41 @@ export default {
           ),
         },
 
-        clusterType: { required: helpers.withMessage(error, required) },
-        defrag: { required: helpers.withMessage(error, required) },
-        thread: { required: helpers.withMessage(error, required) },
-        useNmp: { required: helpers.withMessage(error, required) },
+        clusterType: {
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.mode === "create")
+          ),
+        },
+        defrag: {
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.mode === "create")
+          ),
+        },
+        thread: {
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.mode === "create")
+          ),
+        },
+        useNmp: {
+          requiredIfFuction: helpers.withMessage(
+            error,
+            requiredIf(() => state.mode === "create")
+          ),
+        },
       };
     });
 
-    const v$ = useValidate(rules, state);
+    const v_interface$ = useValidate(rulesInterface, state);
 
     return {
       isExist,
       isExistClusterId,
       state,
       emitter,
-      v$,
+      v_interface$,
       closeModal,
       submitForm,
       getCookie,
@@ -561,6 +500,7 @@ export default {
   color: red !important;
   font-size: 0.85em;
 }
+
 .actionBtn {
   justify-content: center;
 }

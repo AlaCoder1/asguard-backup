@@ -23,7 +23,6 @@ def get_Zt_Token():
         
         # Send the POST request
         response = requests.post(url, data=json.dumps(payload), headers=headers, verify=False)
-        
         # Check if the request was successful
         if response.status_code == 200:
             response_json = response.json()

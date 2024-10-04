@@ -5,37 +5,19 @@
       <v-divider></v-divider>
     </div>
     <div style="overflow: hidden; flex-grow: 1">
-      <ag-grid-vue
-        id="grid-wrapperRouter"
-        domLayout="autoHeight"
-        class="ag-theme-alpine mt-3"
-        style="width: 100%"
-        @grid-ready="onGridReadyRouter"
-        :columnDefs="columnsALLRouter"
-        :rowData="rowDataRouter.value"
-        :gridOptions="gridOptions"
-        :overlayNoRowsTemplate="overlayTemplate"
-        :localeText="paginationLocalization"
-      />
+      <ag-grid-vue id="grid-wrapperRouter" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
+        @grid-ready="onGridReadyRouter" :columnDefs="columnsALLRouter" :rowData="rowDataRouter.value"
+        :gridOptions="gridOptions" :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
     </div>
     <div class="d-flex justify-end mt-3">
-      <v-btn
-        class="add-button"
-        :rounded="true"
-        color="indigo-darken-3"
-        @click="openModalRouter"
-      >
+      <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalRouter">
         {{ $t("ztna.addRelaysPolicy") }}
       </v-btn>
     </div>
     <serviceAgGrid />
     <policyAgGrid />
-    <modal-router-policy
-      :isOpen="state.isModalOpenRouter"
-      :selectedId="state.selectedId"
-      :editRow="state.editRow"
-      :modalMode="state.modalMode"
-    />
+    <modal-router-policy :isOpen="state.isModalOpenRouter" :selectedId="state.selectedId" :editRow="state.editRow"
+      :modalMode="state.modalMode" />
     <!-- <ModalUpdateRouterP
       :isOpen="state.isModalUpdateOpen"
       :selectedId="state.selectedId"
@@ -44,28 +26,18 @@
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-        }}</v-card-title>
+          }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-          }}</v-btn>
-          <v-btn
-            color="blue darken-1"
-            text
-            @click="confirmDelete(state.selectedId)"
-            >{{ $t("buttons.delete") }}</v-btn
-          >
+            }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-container>
@@ -161,7 +133,7 @@ export default {
       },
       {
         headerName: edgeRelaysRole,
-        field: "edgeRouterRoles",
+        field: "relay_attribute",
         cellRenderer: formatededgeRouterRoles,
         autoHeight: true,
         resizable: true,
@@ -171,7 +143,7 @@ export default {
       },
       {
         headerName: identityRole,
-        field: "identityRoles",
+        field: "identity_attribute",
         cellRenderer: formatedidentityRoles,
         autoHeight: true,
         resizable: true,
@@ -181,7 +153,7 @@ export default {
       },
       {
         headerName: semantic,
-        field: "semantic",
+        field: "semantique",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -190,7 +162,7 @@ export default {
       },
       {
         headerName: creationDate,
-        field: "createdAt",
+        field: "date_creation",
         cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
@@ -220,23 +192,22 @@ export default {
     };
 
     function formatededgeRouterRoles(data) {
-      const resultMessage = data.data.edgeRouterRoles;
+      const resultMessage = data.data.relay_attribute;
       let eGui = document.createElement("div");
       eGui.innerHTML = resultMessage ? `${resultMessage}` : "";
       return eGui;
     }
 
     function formatedidentityRoles(data) {
-      const resultMessage = data.data.identityRoles
-        .map((e) => e + "<br>")
-        .join("");
+      const resultMessage = data.data.identity_attribute;
       let eGui = document.createElement("div");
       eGui.innerHTML = `${resultMessage}`;
       return eGui;
     }
 
+
     function formatedcreatedAt(data) {
-      const resultMessage = formatDateTime(data.data.createdAt);
+      const resultMessage = formatDateTime(data.data.date_creation);
       let eGui = document.createElement("div");
       eGui.innerHTML = resultMessage ? `${resultMessage}` : "";
       return eGui;

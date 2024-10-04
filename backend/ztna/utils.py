@@ -1,8 +1,10 @@
+from datetime import datetime
 import requests
 import json
 
 from backend.ztna.constant_variables import PATH_START_ZTNA_BASH, PATH_START_ZTNA_ROUTER_BASH, PATH_STATUS_ZTNA_BASH, PATH_STOP_ZTNA_BASH, PATH_STOP_ZTNA_ROUTER_BASH
 from utils.commands_utils import execute_command_with_arguments, execute_command_without_arguments, get_current_directory
+from rest_framework import serializers
 
 
 BASE_URL = "https://localhost:1280/edge/management/v1/"
@@ -80,3 +82,4 @@ def change_status_router(router_name, router_status, token=""):
                                        f"{router_name}\n{token}\n", 3)
     else:
         execute_command_with_arguments(["sudo", "bash", PATH_STOP_ZTNA_ROUTER_BASH.format(current_dir)], f"{router_name}", 3)
+    

@@ -80,7 +80,7 @@ import BaseLayout from "@/layouts/layout.vue";
 import identities from "./identities.vue";
 import routers from "./routers.vue";
 import configs from "./configs.vue";
-import Terminators from "./terminatorstable.vue";
+// import Terminators from "./terminatorstable.vue";
 import Services from "./servicestable.vue";
 import Policies from "./policiestable.vue";
 
@@ -91,7 +91,7 @@ export default {
     identities,
     routers,
     configs,
-    Terminators,
+    // Terminators,
     Services,
     Policies,
   },
@@ -104,8 +104,8 @@ export default {
         { id: 2, label: "ztna.configuration", component: configs },
         { id: 3, label: "ztna.services", component: Services },
         { id: 4, label: "ztna.relays", component: routers },
-        { id: 5, label: "ztna.terminators", component: Terminators },
-        { id: 6, label: "ztna.policies", component: Policies },
+        // { id: 5, label: "ztna.terminators", component: Terminators },
+        { id: 5, label: "ztna.policies", component: Policies },
       ],
       rowDataServers: [],
       serverInfo: null,

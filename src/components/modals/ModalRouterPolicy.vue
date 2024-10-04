@@ -121,8 +121,8 @@ export default {
   setup(props) {
     const name = ref("");
     const relayId = ref("");
-    const routerR = ref(null);
-    const identityatt = ref(null);
+    const routerR = ref("");
+    const identityatt = ref("");
     const Description = ref("");
     const selectedTitle = ref("AllOf");
     const items = ref(["AllOf", "AnyOf"]);
@@ -218,9 +218,9 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      let routerAttribute = `#${routerR.value.name}`;
-      let identityAttribute = `#${identityatt.value.name}`;
-
+      let routerAttribute = `#${routerR.value.attribute_relay}`;
+      let identityAttribute = `#${identityatt.value.attribute_identitie}`;
+      console.log(routerAttribute,'=========',identityAttribute)
       let payload = {
         name: name.value,
         semantic: selectedTitle.value,

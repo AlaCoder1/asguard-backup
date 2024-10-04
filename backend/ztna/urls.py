@@ -25,7 +25,8 @@ urlpatterns = [
     path('stop_routers/<str:id>', views.stop_routers, name='stop_routers'),
     
     ########## Config Paths ##########
-    path('get_configs', views.get_all_configs, name='get_configs'),
+    path('get_host_configs', views.get_host_configs, name='get_host_configs'),
+    path('get_intercept_configs', views.get_intercept_configs, name='get_intercept_configs'),
     path('add_config', views.add_configs, name='add_config'),
     path('delete_config/<str:id>', views.delete_configs, name='delete_config'),
     path('update_config/<str:id>', views.update_configs, name='update_config'),

@@ -242,9 +242,9 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
 
-      let identityAttribute = `#${identityatt.value.name}`;
-      let serviceAttribute = `#${serviceRA.value.name}`;
-
+      let identityAttribute = `#${identityatt.value.attribute_identitie}`;
+      let serviceAttribute = `#${serviceRA.value.attribute_service}`;
+      console.log(serviceAttribute,'======',identityAttribute)
       let payload = {
         name: name.value,
         type: selectedTitle.value,

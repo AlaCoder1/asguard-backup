@@ -124,7 +124,7 @@ export default {
     watch(
       () => selectedId.value,
       (val) => {
-        console.log(val);
+        console.log('valeur',val);
         state.itemId = val;
       }
     );
@@ -141,7 +141,7 @@ export default {
       let payload = {
         expiresAt: dateTime,
         method: selectedTitle.value,
-        identityId: state.itemId,
+        identityId: state.itemId
       }
       axios
         .post("/ztna/add_enrollments", payload, {

@@ -214,9 +214,8 @@ export default {
 
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      let routerAttribute = `#${routerR.value.name}`;
-      let serviceAttribute = `#${serviceRA.value.name}`;
-
+      let routerAttribute = `#${routerR.value.attribute_relay}`;
+      let serviceAttribute = `#${serviceRA.value.attribute_service}`;
       let payload = {
         name: name.value,
         semantic: selectedsemantic.value,

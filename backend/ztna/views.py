@@ -41,6 +41,7 @@ ERROR_MESSAGES_DELETING = _("Error in deleting")
 ERROR_MESSAGES_UPDATING = _("Error in updating")
 ERROR_MESSAGES_STARTING = _("Error in starting")
 ERROR_MESSAGES_STOPING = _("Error in stoping")
+ERROR_MESSAGES_STATUS = _("Error in getting status")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -72,7 +73,7 @@ def start_ztna(request):
         return JsonResponse({"message": f"{CONSTANT_ZTNA} {SUCCESS_MESSAGES_STARTING}"}, status=200)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_ZTNA}"}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STATUS} {CONSTANT_ZTNA}"}, status=400)
 
 
 @swagger_auto_schema('POST', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -575,9 +576,7 @@ def update_services(request, id):
 @permission_classes([IsAuthenticated])
 def get_all_terminators(request):
     """Getting all terminators from database"""
-    list_terminators = []
-    if (request.method == 'GET'):
-        list_terminators = get_terminators()
+    list_terminators = get_terminators()
     return JsonResponse(list_terminators, safe=False)
 
 

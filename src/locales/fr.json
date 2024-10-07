@@ -120,7 +120,10 @@
     "eventLogs": "Journaux d'événements",
     "subscription": "Abonnement",
     "routing": "Routage",
-    "systemLog": "Journal du système"
+    "systemLog": "Journal du système",
+    "logManagement":"Gestion des journaux",
+    "archivedLog":"Journaux archivés"
+
   },
   "header": {
     "profile": "Profil",
@@ -570,6 +573,8 @@
     "isAdmin": "Est administrateur",
     "updateIdentity": "Mettre à jour l'identité",
     "listofConfigs": "Liste des Configs",
+    "listofInterceptConfigs": "List des Intercept Configs",
+    "listofHostConfigs": "List des Host Configs",
     "configType": "Type de config",
     "addInterceptConfig": "Ajouter Config d'interception",
     "configName": "Nom de Configuration",
@@ -607,7 +612,7 @@
     "policyName": "Nom de la Politique",
     "semantic": "Sémantique",
     "edgeRelaysRole": "Rôle des Relais Edge",
-    "identityRoleAttribute": "Attribut de rôle d’identité",
+    "identityRoleAttribute": "Rôle identitaire",
     "updateRelaysPolicy": "Modifier la politique des relais",
     "identityRole": "Rôle d'identité",
     "addServicesPolicy": "Ajouter une Politique de Service",
@@ -615,7 +620,9 @@
     "serviceRoleAttribute": "Attribut du Rôle de Service",
     "updateServicePolicy": "Modifier la politique de service",
     "servicesEdgeRelaysPolicies": "Services Relais de Périphérie Politiques",
-    "addService": "Ajouter un Service"
+    "addService": "Ajouter une Politique de Service de Relai de Périphérie",
+    "edgeRelaysPolicies":"Politiques des relais Edge",
+    "servicesPolicies":"Politiques des services"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",
@@ -997,7 +1004,9 @@
     "country": "Pays",
     "blockedRequests": "Demandes Bloquées",
     "timestamp": "Horodatage",
-    "method": "Methode"
+    "method": "Methode",
+    "parameters":"Parameters",
+    "rulesList":"Liste des règles"
   },
   "settings": {
     "GENERALPARAMETERS": "PARAMÈTRES GÉNÉRAUX",
@@ -1050,5 +1059,17 @@
     "pleaseChoose": "Veuillez choisir un fichier image",
     "fileBig": "Votre fichier est trop volumineux ! Veuillez sélectionner une image de moins de 1MB",
     "GotIt": "Je l'ai!"
+  },
+  "logrotate": {
+    "id":"ID",
+    "filename":"Nom de fichier",
+    "original_path":"Chemin d'accès au fichier d'origine",
+    "backup_path":"Chemin du fichier de sauvegarde",
+    "date":"Date",
+    "download_succes":"Fichier téléchargé avec succès !!",
+    "download_fail":"Erreur lors du téléchargement du fichier",
+    "delete_succes":"Fichier supprimé avec succès!",
+    "delete_fail":"Erreur lors de la suppression du fichier"
   }
+
 }

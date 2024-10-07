@@ -140,6 +140,12 @@ export default {
               active: "System Log",
             },
             {
+              title: "subtitle.archivedLog",
+              icon: "",
+              href: "/logrotate",
+              active: "Archived Logs",
+            },
+            {
               title: "subtitle.settings",
               icon: "",
               href: "/settings",
@@ -259,12 +265,12 @@ export default {
             //   href: "/services/ip-filter-double-masque",
             //   active: "IP Filter double masque",
             // },
-            {
-              title: "subtitle.clamAV",
-              icon: "",
-              href: "/clamaV",
-              active: "Clam AV",
-            },
+            // {
+            //   title: "subtitle.clamAV",
+            //   icon: "",
+            //   href: "/clamaV",
+            //   active: "Clam AV",
+            // },
             {
               title: "subtitle.DHCPV4",
               icon: "",

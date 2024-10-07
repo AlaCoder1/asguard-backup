@@ -67,12 +67,20 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="serviceRA" v-model="serviceRA" :placeholder="$t('ztna.serviceRoleAttribute')"
-                    :rules="rules" persistent-placeholder />
+                  <!-- <v-text-field id="serviceRA" v-model="serviceRA" :placeholder="$t('ztna.serviceRoleAttribute')"
+                    :rules="rules" persistent-placeholder /> -->
+                    <v-select v-model="serviceRA" :label="$t('ztna.serviceRoleAttribute')" density="compact" item-title="name"
+                    item-value="id" return-object :rules="rules" :items="ServList" background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')">
+                  </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
-                    :rules="rules" persistent-placeholder />
+                  <!-- <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
+                    :rules="rules" persistent-placeholder /> -->
+                    <v-select v-model="identityatt" :label="$t('ztna.identityRoleAttribute')" density="compact"
+                    item-title="name" item-value="id" return-object :rules="rules" :items="identityList"
+                    background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
+                  </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
@@ -107,6 +115,7 @@
 import axios from "axios";
 import { toRefs, ref, watch, reactive, inject } from "vue";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { onMounted } from "vue";
 
 export default {
   props: {
@@ -125,9 +134,11 @@ export default {
   },
   setup(props) {
     const name = ref("");
+    const ServList = ref([]);
+    const identityList = ref([]);
     const idServ = ref("");
-    const serviceRA = ref("");
-    const identityatt = ref("");
+    const serviceRA = ref(null);
+    const identityatt = ref(null);
     const Description = ref("");
     const selectedTitle = ref("Dial");
     const selectedsemantic = ref("AllOf");
@@ -179,6 +190,28 @@ export default {
         }
       }
     );
+    onMounted(()=>{
+      let servicesString = document
+        .getElementById("app")
+        .getAttribute("services");
+      let servicesObject;
+      try {
+        servicesObject = JSON.parse(servicesString);
+      } catch (error) {
+        console.error("Failed to parse services string:", error);
+      }
+
+      ServList.value = servicesObject
+
+      let IdentitiesString = document
+        .getElementById("app")
+        .getAttribute("Identities");
+
+      let IdentitiesObject;
+
+      IdentitiesObject = JSON.parse(IdentitiesString);
+      identityList.value = IdentitiesObject ? IdentitiesObject : [];
+    })
     const populate = (data) => {
       if (modalMode.value === "edit") {
         console.log("dataHost", data);
@@ -188,12 +221,26 @@ export default {
 
         Description.value = "";
         selectedTitle.value = data.type;
-        selectedsemantic.value = data.semantic;
+        selectedsemantic.value = data.semantique;
 
-        let Identity = data.identityRoles[0].split("#");
-        identityatt.value = Identity[1];
-        let service = data.serviceRoles[0].split("#");
-        serviceRA.value = service[1];
+        let service = "";
+        let identity = "";
+        for (let i = 0; i < ServList.value.length; i++) {
+          if (ServList.value[i].id === data.service) {
+            service = ServList.value[i];
+            break;  
+          }
+        }
+
+        for (let i = 0; i < identityList.value.length; i++) {
+          if (identityList.value[i].id === data.identity) {
+            identity = identityList.value[i];
+            break;
+          }
+        }
+        serviceRA.value=service;
+        identityatt.value=identity
+
       }
     };
 
@@ -203,9 +250,8 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
 
-      let identityAttribute = `#${identityatt.value}`;
-      let serviceAttribute = `#${serviceRA.value}`;
-
+      let identityAttribute = `#${identityatt.value.attribute_identitie}`;
+      let serviceAttribute = `#${serviceRA.value.attribute_service}`;
       let payload = {
         name: name.value,
         type: selectedTitle.value,
@@ -319,8 +365,10 @@ export default {
     return {
       state,
       name,
+      ServList,
       serviceRA,
       identityatt,
+      identityList,
       Description,
       selectedTitle,
       items,

@@ -136,9 +136,8 @@ export default {
     const servId = ref("");
     const serviceAtt = ref("");
     const encryptionRequired = ref(false);
-    const host = ref("");
-    const configs = ref([]);
     const intercept = ref("");
+    const host = ref("");
     const Description = ref("");
     const rules = [
       (value) => {
@@ -159,7 +158,10 @@ export default {
       textAlert: "",
     });
 
-    onMounted(()=>{fetchConfigs()})
+    onMounted(()=>{
+      fetchHostConfigs()
+      fetchInterceptConfigs()
+    })
 
     watch(
       () => isOpen.value,
@@ -193,25 +195,32 @@ export default {
         console.log("dataService", data);
         servId.value = data.id
         name.value = data.name;
-        serviceAtt.value = data.roleAttributes[0];
-        encryptionRequired.value = data.encryptionRequired;
+        serviceAtt.value = data.attribute_service;
+        encryptionRequired.value = data.encryption;
         Description.value = "";
-        
-        let filtredInter = interceptList.value.filter(
-          (i) => i.id === data.configs[1]
-        );
-        let filtredHost = hostList.value.filter(
-          (i) => i.id === data.configs[0]
-        );
-        
-        host.value = filtredHost[0];
-        intercept.value = filtredInter[0];
-      }
+        let hostobj = "";
+        let interceptobj = "";
+        for (let i = 0; i < hostList.value.length; i++) {
+          if (hostList.value[i].id === data.host) {
+            hostobj = hostList.value[i];
+            break;  
+          }
+        }
+
+        for (let i = 0; i < interceptList.value.length; i++) {
+          if (interceptList.value[i].id === data.intercept) {
+            interceptobj = interceptList.value[i];
+            break;
+          }
+        }
+        host.value=hostobj;
+        intercept.value=interceptobj
+  }
     };
-    const fetchConfigs = () => {
+    const fetchInterceptConfigs = () => {
       let configsString = document
         .getElementById("app")
-        .getAttribute("configs");
+        .getAttribute("interceptconfigs");
       let configsObject;
 
       try {
@@ -219,17 +228,28 @@ export default {
       } catch (error) {
         console.error("Failed to parse configs string:", error);
       }
-
-      let filterInter = configsObject.filter((i) => i.configTypeId === "g7cIWbcGg")
-      interceptList.value = filterInter
-
-      let filterHost = configsObject.filter((i) => i.configTypeId === "NH5p4FpGR")
       
-      hostList.value = filterHost;
+      interceptList.value = configsObject;
+      console.log('intercept',interceptList.value)
+    };
+
+    const fetchHostConfigs = () => {
+      let configsString = document
+        .getElementById("app")
+        .getAttribute("hostconfigs");
+      let configsObject;
+
+      try {
+        configsObject = JSON.parse(configsString);
+      } catch (error) {
+        console.error("Failed to parse configs string:", error);
+      }
+        
+      hostList.value = configsObject;
+      console.log('host,',hostList.value)
     };
 
     const submitForm = async () => {
-      fetchConfigs()
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -237,7 +257,7 @@ export default {
         name: name.value,
         roleAttributes: [serviceAtt.value],
         encryptionRequired: encryptionRequired.value,
-        configs: [intercept.value.id, host.value.id]
+        configs: [intercept.value.ref_intercept, host.value.ref_host]
       };
 
       let token = document.getElementById("app").getAttribute("token");
@@ -350,7 +370,8 @@ export default {
       Description,
       rules,
       host,
-      configs,
+      hostList,
+      interceptList,
       intercept,
       submitForm,
       resetForm,

@@ -1,7 +1,7 @@
 <template>
   <v-container class="axe-media-print-hide" fluid>
     <div class="mt-6" style="display: flex; flex-direction: column">
-      <h4>{{ $t("ztna.listOfRelays") }}</h4>
+      <h4>{{ $t("ztna.edgeRelaysPolicies") }}</h4>
       <v-divider></v-divider>
     </div>
     <div style="overflow: hidden; flex-grow: 1">
@@ -133,7 +133,7 @@ export default {
       },
       {
         headerName: edgeRelaysRole,
-        field: "edgeRouterRoles",
+        field: "relay_attribute",
         cellRenderer: formatededgeRouterRoles,
         autoHeight: true,
         resizable: true,
@@ -143,7 +143,7 @@ export default {
       },
       {
         headerName: identityRole,
-        field: "identityRoles",
+        field: "identity_attribute",
         cellRenderer: formatedidentityRoles,
         autoHeight: true,
         resizable: true,
@@ -153,7 +153,7 @@ export default {
       },
       {
         headerName: semantic,
-        field: "semantic",
+        field: "semantique",
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -162,7 +162,7 @@ export default {
       },
       {
         headerName: creationDate,
-        field: "createdAt",
+        field: "date_creation",
         cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
@@ -192,23 +192,22 @@ export default {
     };
 
     function formatededgeRouterRoles(data) {
-      const resultMessage = data.data.edgeRouterRoles;
+      const resultMessage = data.data.relay_attribute;
       let eGui = document.createElement("div");
       eGui.innerHTML = resultMessage ? `${resultMessage}` : "";
       return eGui;
     }
 
     function formatedidentityRoles(data) {
-      const resultMessage = data.data.identityRoles
-        .map((e) => e + "<br>")
-        .join("");
+      const resultMessage = data.data.identity_attribute;
       let eGui = document.createElement("div");
       eGui.innerHTML = `${resultMessage}`;
       return eGui;
     }
 
+
     function formatedcreatedAt(data) {
-      const resultMessage = formatDateTime(data.data.createdAt);
+      const resultMessage = formatDateTime(data.data.date_creation);
       let eGui = document.createElement("div");
       eGui.innerHTML = resultMessage ? `${resultMessage}` : "";
       return eGui;
@@ -239,7 +238,7 @@ export default {
     const handleActionClient = (action, rowData) => {
       switch (action) {
         case "edit":
-          console.log('edit', rowData)
+          console.log("edit", rowData);
           // openModalUpdate(rowData.id);
           // console.log("edit", rowData);
 
@@ -271,7 +270,6 @@ export default {
     };
 
     const confirmDelete = async (itemId) => {
-
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -325,13 +323,9 @@ export default {
 
       let router_policiesObject = JSON.parse(router_policiesString);
 
-      console.log('router_policiesObject', router_policiesObject)
+      console.log("router_policiesObject", router_policiesObject);
 
-
-
-      rowDataRouter.value = router_policiesObject
-        ? router_policiesObject
-        : [];
+      rowDataRouter.value = router_policiesObject ? router_policiesObject : [];
 
       if (gridApiRouter.value) {
         gridApiRouter.value.setRowData(rowDataRouter.value);

@@ -183,7 +183,6 @@ export default {
     watch(
       () => selectedId.value,
       (val) => {
-        console.log(val);
         state.itemId = val;
       }
     );
@@ -222,7 +221,6 @@ export default {
           requestBody.roleAttributes.push(...IdentityAttribute.value);
         }
         console.log(requestBody);
-
         const proxyUrl = "https://asguard:3000";
         const apiUrl = `/edge/management/v1/identities/${state.itemId}`;
         const response = await axios.patch(proxyUrl + apiUrl, requestBody, {

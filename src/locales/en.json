@@ -120,7 +120,10 @@
     "eventLogs": "Event logs",
     "subscription": "Subscription",
     "routing": "Routing",
-    "systemLog": "System Log"
+    "systemLog": "System Log",
+    "logManagement":"Log Management",
+    "archivedLog":"Archived Logs"
+
   },
   "header": {
     "profile": "Profile",
@@ -572,6 +575,8 @@
     "isAdmin": "Is Admin",
     "updateIdentity": "Update Identity",
     "listofConfigs": "List of Configs",
+    "listofInterceptConfigs": "List of Intercept Configs",
+    "listofHostConfigs": "List of Host Configs",
     "configType": "Config Type",
     "addInterceptConfig": "Add intercept config",
     "configName": "Config Name",
@@ -609,7 +614,7 @@
     "policyName": "Policy Name",
     "semantic": "Semantic",
     "edgeRelaysRole": "Edge Relays Role",
-    "identityRoleAttribute": "Identity Role Attribute",
+    "identityRoleAttribute": "Identity Role",
     "updateRelaysPolicy": "Update Relays Policy",
     "identityRole": "Identity Role",
     "addServicesPolicy": "Add Service Policy",
@@ -617,7 +622,9 @@
     "serviceRoleAttribute": "Service Role Attribute",
     "updateServicePolicy": "Update Service Policy",
     "servicesEdgeRelaysPolicies": "Services Edge Relays Policies",
-    "addService": "Add Service"
+    "addService": "Add Service Edge Relay Policy",
+    "edgeRelaysPolicies":"Edge Relays Policies",
+    "servicesPolicies":"Services Policies"
   },
 
   "titleAgGrid": {
@@ -1000,7 +1007,9 @@
     "country": "Country",
     "blockedRequests": "Blocked Requests",
     "timestamp": "Timestamp",
-    "method": "Method"
+    "method": "Method",
+    "parameters":"Parameters",
+    "rulesList":"Rules List"
   },
   "settings": {
     "GENERALPARAMETERS": "GENERAL PARAMETERS",
@@ -1053,5 +1062,18 @@
     "pleaseChoose": "Please choose an image file",
     "fileBig": "Your file is too big! Please select an image under 1MB",
     "GotIt": "Got it!"
+  },
+  "logrotate": {
+    "id":"ID",
+    "filename":"File name",
+    "original_path":"Original file path",
+    "backup_path":"Backup file path",
+    "date":"Date",
+    "download_succes":"File downloaded successfully!",
+    "download_fail":"Error downloading the file",
+    "delete_succes":"File deleted successfully!",
+    "delete_fail":"Error deleting the file"
+    
   }
+
 }

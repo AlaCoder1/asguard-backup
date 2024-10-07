@@ -1,4 +1,14 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-container class="axe-media-print-hide" fluid>
     <div class="mt-6" style="display: flex; flex-direction: column">
       <h4>{{ $t("ztna.listOfRelays") }}</h4>
@@ -111,7 +121,7 @@ export default {
       },
       {
         headerName: verified,
-        field: "isVerified",
+        field: "verified",
         cellRenderer: enrollmentCellRendrer,
 
         width: 90,
@@ -120,25 +130,25 @@ export default {
       },
       {
         headerName: online,
-        field: "isOnline",
+        field: "online",
         cellRenderer: IsOnlineCellRendrer,
 
         width: 90,
         minWidth: 150,
         flex: 1,
       },
-      {
-        headerName: "Token",
-        field: "enrollmentJwt",
-        cellRenderer: tokenCellRendrer,
+      // {
+      //   headerName: "Token",
+      //   field: "enrollmentJwt",
+      //   cellRenderer: tokenCellRendrer,
 
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-      },
+      //   width: 90,
+      //   minWidth: 150,
+      //   flex: 1,
+      // },
       {
         headerName: creationDate,
-        field: "createdAt",
+        field: "date_creation",
         cellRenderer: formatedcreatedAt,
 
         width: 90,
@@ -154,6 +164,8 @@ export default {
     ]);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       deleteDialog: false,
       deletedItemId: null,
       modalData: {},
@@ -207,7 +219,7 @@ export default {
         return cell.rowIndex === params.node.rowIndex;
       });
 
-      if (params.node.data.isVerified === true) {
+      if (params.node.data.verified === true) {
         eGui.innerHTML = `<i class="mdi mdi-check-circle" style="color: green; font-size: 20px;"></i>`;
       } else {
         eGui.innerHTML = `
@@ -245,13 +257,29 @@ export default {
               </button>
               `;
       } else {
-        eGui.innerHTML = `
+        if (!params.data.online) {
+          eGui.innerHTML = `
          <button
           id="play"
           class="action-button play"
           data-action="play">
              <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
           </button>
+              <button
+                class="action-button edit"
+                data-action="edit" title="Edit Server">
+                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+                <button
+                class="action-button delete"
+                data-action="delete" title="Delete ">
+                  <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+      
+                `;
+        }
+        else {
+          eGui.innerHTML = `
              <button
           id="stop"
           class="action-button stop"
@@ -270,6 +298,7 @@ export default {
                 </button>
       
                 `;
+        }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -323,6 +352,8 @@ export default {
           };
 
           let tokenStart = document.getElementById("app").getAttribute("token");
+          state.loading = true;
+          state.isLoadingDialogue = true;
 
           axios
             .post(`/ztna/start_routers/${rowData.id}`, payloadStart, {
@@ -336,6 +367,8 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.message;
+                state.loading = false;
+                state.isLoadingDialogue = false;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -345,19 +378,21 @@ export default {
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;
+              state.loading = false;
+              state.isLoadingDialogue = false;
             });
 
           break;
         case "stop":
-          console.log("stop");
-
-          console.log("play");
+          
           let payload = {
             name: rowData.name,
             token: rowData.enrollmentJwt
           };
 
           let token = document.getElementById("app").getAttribute("token");
+          state.loading = true;
+          state.isLoadingDialogue = true;
 
           axios
             .post(`/ztna/stop_routers/${rowData.id}`, payload, {
@@ -371,6 +406,8 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.message;
+                state.loading = false;
+                state.isLoadingDialogue = false;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -380,6 +417,8 @@ export default {
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;
+              state.loading = false;
+              state.isLoadingDialogue = false;
             });
 
           break;
@@ -518,7 +557,7 @@ export default {
         return cell.rowIndex === params.node.rowIndex;
       });
 
-      if (params.node.data.isOnline === true) {
+      if (params.node.data.online === true) {
         eGui.innerHTML = `<i class="mdi mdi-check-circle" style="color: green; font-size: 20px;"></i>`;
       } else {
         eGui.innerHTML = `
@@ -544,8 +583,7 @@ export default {
     };
 
     function formatedcreatedAt(data) {
-      console.log(data.data.createdAt);
-      const resultMessage = formatDateTime(data.data.createdAt);
+      const resultMessage = formatDateTime(data.data.date_creation);
       let eGui = document.createElement("div");
       eGui.innerHTML = resultMessage ? `${resultMessage}` : "--";
       return eGui;

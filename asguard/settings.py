@@ -48,7 +48,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'corsheaders',
     "backend.authentification",
-    "backend.clamav",
     "backend.dashboard",
     "backend.gateway",
     "backend.ids_ips",

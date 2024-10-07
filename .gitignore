@@ -3,6 +3,8 @@
 /backend/authentification/__pycache__/
 /backend/authentification/migrations/__pycache__/
 
+/backend/clamav/migrations/__pycache__/
+/backend/clamav/__pycache__/
 
 /backend/dashboard/__pycache__/
 /backend/dashboard/migrations/__pycache__/

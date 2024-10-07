@@ -16,7 +16,6 @@ from backend.routing.list_routing import get_list_all_gateway, get_list_all_rout
 from backend.rules.models import Rule
 from backend.gateway.models import Gateway, GatewayInterface
 from backend.dashboard.functions import get_system_infomations
-from backend.clamav.list_configurations import getclamavconfigurations
 from backend.openvpn.list_servers_clients import get_list_all_client_openvpn,  get_list_all_server_openvpn
 from backend.managementKeypairs.list_key_pairs import get_list_all_private_key, get_list_all_public_key
 from backend.ipsec.list_ipsec import get_list_all_server_ipsec, get_status_ipsec
@@ -598,11 +597,7 @@ def setting_page(request):
     context = {'time_zone':json.dumps(time_zone),'generale_settings':json.dumps(generale_settings),"network_info":json.dumps(network_info),"gateway":json.dumps(gateway)}
     return render(request, 'settings_page.html',context)
 
-@login_required(login_url='/')
-def clamav_page(request):
-    config= getclamavconfigurations()
-    context = {'config':config}
-    return render(request, 'clamaV_page.html',context)
+
 
 
 @login_required(login_url='/')

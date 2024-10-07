@@ -188,7 +188,7 @@ export default {
       let token = document.getElementById("app").getAttribute("token");
 
       axios
-        .delete(`/ztna/delete_config/${deletedItemId}`, {
+        .delete(`/ztna/delete_host_config/${deletedItemId}`, {
           headers: {
             "zt-session": token,
             "Content-Type": "application/json",

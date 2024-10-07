@@ -349,7 +349,7 @@ export default {
 
           break;
         case "delete":
-          OpenDelete(rowData.ref_identitie);
+          OpenDelete(rowData.id);
 
           break;
         default:

@@ -1,10 +1,10 @@
 import json
-from backend.ztna.models import Identities,HostConfigs,InterceptConfigs, Relays, RelaysPolicy, Services, ServicesPolicy, ServicesRelaysPolicy
+from backend.ztna.models import Enrollements, Identities,HostConfigs,InterceptConfigs, Relays, RelaysPolicy, Services, ServicesPolicy, ServicesRelaysPolicy
 from backend.ztna.serializers import EnrollementsSerializer, IdentitiesSerializer, IdentitiesSerializerUpdate, InterceptConfigsSerializer,HostConfigsSerializer, RelaySerializerUpdate, RelaysPolicySerializer, RelaysSerializer, ServicesPolicySerializer, ServicesRelaysPolicySerializer, ServicesSerializer
 from utils.errors_utils import CommandExecutionError
-from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES, PATH_ZTNA_TERMINATORS
-from .list_ztna import get_identities_from_ziti, get_routers_from_ziti, get_service_edge_router_policies, get_service_policies, get_services, get_terminators
-from .utils import change_status_router, change_status_ztna_service, get_Zt_Token, get_status_ztna_service
+from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES
+from .list_ztna import get_service_edge_router_policies, get_service_policies, get_services
+from .utils import change_status_router, change_status_ztna_service, get_Zt_Token, get_identities_from_ziti, get_routers_from_ziti, get_status_ztna_service
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 import requests
@@ -42,6 +42,7 @@ ERROR_MESSAGES_UPDATING = _("Error in updating")
 ERROR_MESSAGES_STARTING = _("Error in starting")
 ERROR_MESSAGES_STOPING = _("Error in stoping")
 ERROR_MESSAGES_STATUS = _("Error in getting status")
+ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -156,13 +157,18 @@ def add_identities(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_identities(request, id):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id}
-    data = request.data
-    response = requests.delete(f"{PATH_ZTNA_IDENTITIES}/{id}", headers=headers, json=data, verify=False)
-    if response.status_code == 200:
-        return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
-    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_IDENTITIE}"}, status=400)
+    try:
+        identitie = Identities.objects.get(id=id)
+        session_id = get_Zt_Token()
+        headers = {"zt-session": session_id}
+        data = request.data
+        response = requests.delete(f"{PATH_ZTNA_IDENTITIES}/{identitie.ref_identitie}", headers=headers, json=data, verify=False)
+        if response.status_code == 200:
+            identitie.delete()
+            return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_IDENTITIE}"}, status=400)
+    except Identities.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_IDENTITIE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -304,13 +310,18 @@ def add_routers(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_routers(request, id):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id}
-    data = request.data
-    response = requests.delete(f"{PATH_ZTNA_ROUTERS}/{id}", headers=headers, json=data, verify=False)
-    if response.status_code == 200:
-        return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_DELETING}"}, status=200)
-    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_RELAY}"}, status=400)
+    try:
+        relay = Relays.objects.get(id=id)
+        session_id = get_Zt_Token()
+        headers = {"zt-session": session_id}
+        data = request.data
+        response = requests.delete(f"{PATH_ZTNA_ROUTERS}/{relay.ref_relay}", headers=headers, json=data, verify=False)
+        if response.status_code == 200:
+            relay.delete()
+            return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_RELAY}"}, status=400)
+    except Relays.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_RELAY} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -459,14 +470,37 @@ def add_configs(request):
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def delete_configs(request, id):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id}
-    data = request.data
-    response = requests.delete(f"{PATH_ZTNA_CONFIGS}/{id}", headers=headers, json=data, verify=False)
-    if response.status_code == 200:
-        return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_DELETING}"}, status=200)
-    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_CONFIGURATION}"}, status=400)
+def delete_intercept_configs(request, id):
+    try:
+        intercept_config = InterceptConfigs.objects.get(id=id)
+        session_id = get_Zt_Token()
+        headers = {"zt-session": session_id}
+        data = request.data
+        response = requests.delete(f"{PATH_ZTNA_CONFIGS}/{intercept_config.ref_intercept}", headers=headers, json=data, verify=False)
+        if response.status_code == 200:
+            return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_CONFIGURATION}"}, status=400)
+    except InterceptConfigs.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+
+
+@swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
+                     operation_summary="API TO DELETE A ZTNA CONFIGURATION",)
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_host_configs(request, id):
+    try:
+        host_config = HostConfigs.objects.get(id=id)
+        session_id = get_Zt_Token()
+        headers = {"zt-session": session_id}
+        data = request.data
+        response = requests.delete(f"{PATH_ZTNA_CONFIGS}/{host_config.ref_host}", headers=headers, json=data, verify=False)
+        if response.status_code == 200:
+            return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_CONFIGURATION}"}, status=400)
+    except HostConfigs.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_CONFIGURATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -544,13 +578,18 @@ def add_services(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_services(request, id):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id}
-    data = request.data
-    response = requests.delete(f"{PATH_ZTNA_SERVICES}/{id}", headers=headers, json=data, verify=False)
-    if response.status_code == 200:
-        return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
-    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SERVICE}"}, status=400)
+    try:
+        service = Services.objects.get(id=id)
+        session_id = get_Zt_Token()
+        headers = {"zt-session": session_id}
+        data = request.data
+        response = requests.delete(f"{PATH_ZTNA_SERVICES}/{service.ref_service}", headers=headers, json=data, verify=False)
+        if response.status_code == 200:
+            service.delete()
+            return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SERVICE}"}, status=400)
+    except Services.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_SERVICE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -564,61 +603,6 @@ def update_services(request, id):
     if response.status_code == 200:
         return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SERVICE}"}, status=400)
-
-
-################################
-########## Terminators #########
-################################
-@swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
-                     operation_summary="API TO GET LIST OF ALL ZTNA TERMINATORS",)
-@api_view(['GET'])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def get_all_terminators(request):
-    """Getting all terminators from database"""
-    list_terminators = get_terminators()
-    return JsonResponse(list_terminators, safe=False)
-
-
-@api_view(['POST'])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def add_terminators(request):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id, "Content-Type": "application/json"}
-    data = request.data
-    response = requests.post(PATH_ZTNA_TERMINATORS, headers=headers, json=data, verify=False)
-    if response.status_code == 201:
-        return JsonResponse({"message": f"{CONSTANT_TERMINATOR} {SUCCESS_MESSAGES_CREATING}"}, status=200)
-    return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_TERMINATOR}"}, status=400)
-
-
-@swagger_auto_schema('DELETE', responses={200: 'deleted', 400: 'Bad Request'}, 
-                     operation_summary="API TO DELETE A ZTNA TERMINATOR",)
-@api_view(['DELETE'])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def delete_terminators(request, id):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id}
-    data = request.data
-    response = requests.delete(f"{PATH_ZTNA_TERMINATORS}/{id}", headers=headers, json=data, verify=False)
-    if response.status_code == 200:
-        return JsonResponse({"message": f"{CONSTANT_TERMINATOR} {SUCCESS_MESSAGES_DELETING}"}, status=200)
-    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_TERMINATOR}"}, status=400)
-
-
-@api_view(['PUT'])
-@authentication_classes([SessionAuthentication])
-@permission_classes([IsAuthenticated])
-def update_terminators(request, id):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id, "Content-Type": "application/json"}
-    data = request.data
-    response = requests.put(f"{PATH_ZTNA_TERMINATORS}/{id}", headers=headers, json=data, verify=False)
-    if response.status_code == 200:
-        return JsonResponse({"message": f"{CONSTANT_TERMINATOR} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
-    return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_TERMINATOR}"}, status=400)
 
 
 ################################
@@ -688,13 +672,17 @@ def add_edge_routers_policies(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_edge_routers_policies(request, id):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id}
-    data = request.data
-    response = requests.delete(f"{PATH_ZTNA_EDGE_ROUTERS_POLICIES}/{id}", headers=headers, json=data, verify=False)
-    if response.status_code == 200:
-        return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
-    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
+    try:
+        relays_policy = RelaysPolicy.objects.get(id=id)
+        session_id = get_Zt_Token()
+        headers = {"zt-session": session_id}
+        data = request.data
+        response = requests.delete(f"{PATH_ZTNA_EDGE_ROUTERS_POLICIES}/{relays_policy.ref_relay_policy}", headers=headers, json=data, verify=False)
+        if response.status_code == 200:
+            return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
+    except RelaysPolicy.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_EDGE_ROUTER_POLICIE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -774,13 +762,17 @@ def add_services_policies(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_services_policies(request, id):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id}
-    data = request.data
-    response = requests.delete(f"{PATH_ZTNA_SERVICES_POLICIES}/{id}", headers=headers, json=data, verify=False)
-    if response.status_code == 200:
-        return JsonResponse({"message": f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
-    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SERVICE_POLICIE}"}, status=400)
+    try:
+        service_policy = ServicesPolicy.objects.get(id=id)
+        session_id = get_Zt_Token()
+        headers = {"zt-session": session_id}
+        data = request.data
+        response = requests.delete(f"{PATH_ZTNA_SERVICES_POLICIES}/{ServicesPolicy.ref_service_policy}", headers=headers, json=data, verify=False)
+        if response.status_code == 200:
+            return JsonResponse({"message": f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SERVICE_POLICIE}"}, status=400)
+    except ServicesPolicy.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_SERVICE_POLICIE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @api_view(['PUT'])
@@ -858,13 +850,17 @@ def add_services_edge_routers_policies(request):
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def delete_services_edge_routers_policies(request, id):
-    session_id = get_Zt_Token()
-    headers = {"zt-session": session_id}
-    data = request.data
-    response = requests.delete(f"{PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES}/{id}", headers=headers, json=data, verify=False)
-    if response.status_code == 200:
-        return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
-    return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SERVICE_EDGE_ROUTER_POLICIE}"}, status=400)
+    try:
+        service_relay_policy = ServicesRelaysPolicy.objects.get(id=id)
+        session_id = get_Zt_Token()
+        headers = {"zt-session": session_id}
+        data = request.data
+        response = requests.delete(f"{PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES}/{service_relay_policy.ref_service_relay_policy}", headers=headers, json=data, verify=False)
+        if response.status_code == 200:
+            return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_SERVICE_EDGE_ROUTER_POLICIE}"}, status=400)
+    except ServicesRelaysPolicy.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
 
 @api_view(['PUT'])

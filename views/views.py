@@ -34,7 +34,7 @@ import ruamel.yaml
 from backend.settings.models import *
 from collections import defaultdict
 from backend.waf.list_waf import get_alerts, get_list_all_waf_application, get_list_all_waf_rule, get_one_waf_config
-from backend.ztna.list_ztna import get_edge_router_policies, get_host_configs, get_identities, get_intercept_configs, get_routers, get_service_policies, get_services, get_terminators
+from backend.ztna.list_ztna import get_edge_router_policies, get_host_configs, get_identities, get_intercept_configs, get_routers, get_service_policies, get_services
 from backend.ztna.utils import get_Zt_Token
 from backend.ztna.list_ztna import get_service_edge_router_policies
 from views.functions import get_logrotate_data, get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
@@ -562,7 +562,6 @@ def ztna_page(request):
     hostconfigs = get_host_configs()
     interceptconfigs = get_intercept_configs()
     services = get_services()
-    terminators = get_terminators()
     router_policies = get_edge_router_policies()
     service_policies = get_service_policies()
     service_edge_router_policies = get_service_edge_router_policies()
@@ -573,7 +572,6 @@ def ztna_page(request):
                'interceptconfigs':json.dumps(interceptconfigs),
                'token':json.dumps(token),
                'services': json.dumps(services), 
-               'terminators': json.dumps(terminators),
                'router_policies': json.dumps(router_policies), 
                'service_policies': json.dumps(service_policies), 
                'service_edge_router_policies':json.dumps(service_edge_router_policies)}

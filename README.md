@@ -50,10 +50,6 @@ sudo python manage.py init_config_suricata
 
 #### suricata
 
-// commande to init default values clamav
-
-python manage.py init_clamav
-
 // commande to init squid 
 
 python manage.py create_files_squid

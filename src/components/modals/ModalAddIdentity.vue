@@ -222,13 +222,14 @@ export default {
       }
     );
     const populate = (data) => {
+      console.log(data)
       if (modalMode.value === "edit") {
         identityId.value = data.id;
         IdentityName.value = data.name;
         Description.value = data.description;
-        IdentityAttribute.value = data.roleAttributes;
-        selectedTitle.value = data.typeId;
-        isAdmin.value = data.isAdmin;
+        IdentityAttribute.value = data.attribute_identitie;
+        selectedTitle.value = "User";
+        isAdmin.value = data.is_admin;
       }
     };
 
@@ -283,8 +284,9 @@ export default {
       let token = document.getElementById("app").getAttribute("token");
 
       if (modalMode.value === "edit") {
+        console.log('id====',)
         axios
-          .put(`/ztna/update_identities/${identityId.value}`, payload, {
+          .patch(`/ztna/update_identities/${identityId.value}`, payload, {
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",

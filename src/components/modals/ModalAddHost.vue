@@ -176,10 +176,10 @@ export default {
         console.log("dataHost", data);
         ConfigId.value = data.id;
         ConfigName.value = data.name;
-        adress.value = data.data.address ? data.data.address : "";
-        portHigh.value = data.data.port ? data.data.port : "";
+        adress.value = data.address;
+        portHigh.value = data.port;
         Description.value = "";
-        selectedTitle.value = data.data.protocol ? data.data.protocol : "";
+        selectedTitle.value = data.protocol;
       }
     };
 
@@ -204,7 +204,7 @@ export default {
 
       if (modalMode.value === "edit") {
         axios
-          .put(`/ztna/update_config/${ConfigId.value}`, payload, {
+          .put(`/ztna/update_host_config/${ConfigId.value}`, payload, {
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",

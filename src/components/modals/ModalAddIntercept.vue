@@ -228,13 +228,11 @@ export default {
 
         ConfigId.value = data.id;
         ConfigName.value = data.name;
-        adress.value = data.data.addresses ? data.data.addresses[0] : "";
-        portLow.value = data.data.portRanges ? data.data.portRanges[0].low : "";
-        portHigh.value = data.data.portRanges
-          ? data.data.portRanges[0].high
-          : "";
+        adress.value = data.address;
+        portLow.value = data.low;
+        portHigh.value = data.high;
         Description.value = "";
-        selectedTitle.value = data.data.protocols ? data.data.protocols[0] : "";
+        selectedTitle.value = data.protocol;
       }
     };
 
@@ -261,7 +259,7 @@ export default {
 
       if (modalMode.value === "edit") {
         axios
-          .put(`/ztna/update_config/${ConfigId.value}`, payload, {
+          .put(`/ztna/update_intercept_config/${ConfigId.value}`, payload, {
             headers: {
               "zt-session": token,
               "Content-Type": "application/json",

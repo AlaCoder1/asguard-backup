@@ -199,17 +199,25 @@ export default {
         relayId.value = data.id
         name.value = data.name;
 
-        selectedTitle.value = data.semantic;
+        selectedTitle.value = data.semantique;
         Description.value = "";
+        let relay = "";
+        let identity = "";
+        for (let i = 0; i < routersList.value.length; i++) {
+          if (routersList.value[i].id === data.relay) {
+            relay = routersList.value[i];
+            break;  
+          }
+        }
 
-        let edgeRelay = data.edgeRouterRoles[0].split("#");
-        let filterRoute = routersList.value.filter((i) => i.name === edgeRelay[1])
-        routerR.value = filterRoute[0];
-
-        let edgeIdentity = data.identityRoles[0].split("#");
-        let filterIdentity = identityList.value.filter((i) => i.name === edgeIdentity[1])
-        identityatt.value = filterIdentity[0];
-        
+        for (let i = 0; i < identityList.value.length; i++) {
+          if (identityList.value[i].id === data.identity) {
+            identity = identityList.value[i];
+            break;
+          }
+        }
+        routerR.value=relay;
+        identityatt.value=identity
       }
     };
 
@@ -220,7 +228,6 @@ export default {
 
       let routerAttribute = `#${routerR.value.attribute_relay}`;
       let identityAttribute = `#${identityatt.value.attribute_identitie}`;
-      console.log(routerAttribute,'=========',identityAttribute)
       let payload = {
         name: name.value,
         semantic: selectedTitle.value,

@@ -74,6 +74,8 @@ urlpatterns = [
     path('settings/', setting_page),
     path('waf/', waf_page),
     path('sdwan/', include('backend.sdwan.urls')),
+    path('clamaV/', clamav_page),
+    path('clamaV/', include('backend.clamav.urls')),
     path('rules/', include('backend.rules.urls')),
     path('gateway/', include('backend.gateway.urls')),
     path("monitoring/",include("backend.dashboard.urls")),

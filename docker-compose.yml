@@ -22,7 +22,7 @@ services:
       # POSTGRES_PASSWORD: mypassword
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_PASSWORD=RouiT?159753?
     ports:
       - '5391:5432'
 

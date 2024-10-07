@@ -29,7 +29,6 @@ def get_identities():
         return list_identities
 
 
-
 def get_routers():
     status = get_status_ztna_service()
     relays = Relays.objects.all()
@@ -55,6 +54,7 @@ def get_routers():
             list_relays.append(res[i]['fields'])
         return list_relays
 
+
 def get_intercept_configs():
     status = get_status_ztna_service()
     if status:
@@ -69,6 +69,7 @@ def get_intercept_configs():
             res[i]['fields']['id'] = relay_id
             list_intercept.append(res[i]['fields'])
         return list_intercept
+
 
 def get_host_configs():
     status = get_status_ztna_service()
@@ -100,11 +101,6 @@ def get_services():
             res[i]['fields']['id'] = relay_id
             list_services.append(res[i]['fields'])
         return list_services
-
-
-def get_terminators():
-    endpoint = "terminators"
-    return get_data(endpoint)
 
 
 def get_edge_router_policies():
@@ -153,12 +149,3 @@ def get_service_edge_router_policies():
             res[i]['fields']['id'] = relay_id
             list_services_relays_policies.append(res[i]['fields'])
         return list_services_relays_policies
-
-def get_identities_from_ziti(id):
-    endpoint = f"identities/{id}"
-    return get_data(endpoint)
-
-def get_routers_from_ziti(id):
-    endpoint = f"edge-routers/{id}"
-    return get_data(endpoint)
-

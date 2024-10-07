@@ -1,10 +1,8 @@
-from datetime import datetime
 import requests
 import json
 
 from backend.ztna.constant_variables import PATH_START_ZTNA_BASH, PATH_START_ZTNA_ROUTER_BASH, PATH_STATUS_ZTNA_BASH, PATH_STOP_ZTNA_BASH, PATH_STOP_ZTNA_ROUTER_BASH, PATH_ZTNA_ROUTER
 from utils.commands_utils import execute_command_with_arguments, execute_command_without_arguments, get_current_directory
-from rest_framework import serializers
 
 
 BASE_URL = "https://localhost:1280/edge/management/v1/"
@@ -100,3 +98,13 @@ def change_ports_yaml_file(router_name, link_port=10080, listeners_port=3022):
     # Change contents of the yaml router file
     with open(f"{PATH_ZTNA_ROUTER}{router_name}.yaml", "w") as router_yaml_file:
         router_yaml_file.write(router_yaml_content)
+
+
+def get_identities_from_ziti(id):
+    endpoint = f"identities/{id}"
+    return get_data(endpoint)
+
+
+def get_routers_from_ziti(id):
+    endpoint = f"edge-routers/{id}"
+    return get_data(endpoint)

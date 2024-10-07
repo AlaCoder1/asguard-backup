@@ -31,6 +31,7 @@ class SuricataInterfaceSerializer(serializers.ModelSerializer):
     class Meta:
             model = SuricataInterface
             fields = '__all__'
+
 #Alert       
 class AlertSerializer(serializers.ModelSerializer):
     suricatafile = serializers.PrimaryKeyRelatedField(queryset=suricatafile.objects.all())
@@ -40,3 +41,13 @@ class AlertSerializer(serializers.ModelSerializer):
                       'protocol','src_addr','src_port','dst_addr',
                       'dst_port','suricatafile','message','alert'
                       ]
+
+class SuricataLogsSerializer(serializers.ModelSerializer):
+    class Meta:
+            model = SuricataLogs
+            fields = '__all__'
+            
+class StatsLogsSerializer(serializers.ModelSerializer):
+    class Meta:
+            model = StatsLogs
+            fields = '__all__'

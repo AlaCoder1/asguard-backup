@@ -16,6 +16,7 @@ class Command(BaseCommand):
             {"service":"Squid","path":"/var/log/squid/cache.log" ,"time":"daily","size":"10M","number":1,"file":"/etc/logrotate.d/squid_cache"},
             {"service":"Squid","path":"/var/log/squid/access.log" ,"time":"daily","size":"10M","number":1,"file":"/etc/logrotate.d/squid_access"},
             {"service":"Squid","path":"/var/log/squid/store.log" ,"time":"daily","size":"10M","number":1,"file":"/etc/logrotate.d/squid_store"},
+            {"service":"ZTNA","path":"/root/.ziti/quickstart/Asguard/Asguard.log" ,"time":"daily","size":"10M","number":1,"file":"/etc/logrotate.d/ztna"},
                 
             ]
             for rotation in list_rotation:

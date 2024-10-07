@@ -16,8 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from backend.dashboard import consumers
+from backend.ids_ips import consumers_stats, consumers_suricata
 from backend.ipsecmonitoring import consumers_ipsec
 from backend.managementLogs import consumers_logs
+from backend.openvpn import consumers_logs_vpn
 from backend.openvpn_monitoring import consumers_openvpn
 from views.views import *
 from django.conf.urls import handler404
@@ -111,7 +113,11 @@ websocket_urlpatterns = [
       path('ws/data/', consumers.DashboardConsumer.as_asgi()),
       path('ws/vpnmonitoring/', consumers_openvpn.OpenVpnConsumer.as_asgi()),
       path('ws/ipsecmonitoring/', consumers_ipsec.IPSECConsumer.as_asgi()),
-      path('ws/logs/',consumers_logs.LogsdConsumer.as_asgi())
+      path('ws/logs/',consumers_logs.LogsdConsumer.as_asgi()),
+      path('ws/logs_vpn/',consumers_logs_vpn.LogsVPNConsumer.as_asgi()),
+      path('ws/logs_stats/',consumers_stats.LogsStatsConsumer.as_asgi()),
+      path('ws/logs_suricata/',consumers_suricata.LogsSuricataConsumer.as_asgi()),
+      
       
 ]
 

@@ -29,7 +29,8 @@ urlpatterns = [
     path('get_intercept_configs', views.get_intercept_configs, name='get_intercept_configs'),
     path('add_config', views.add_configs, name='add_config'),
     path('delete_config/<str:id>', views.delete_configs, name='delete_config'),
-    path('update_config/<str:id>', views.update_configs, name='update_config'),
+    path('update_intercept_config/<str:id>', views.update_intercept_configs, name='update_intercept_config'),
+    path('update_host_config/<str:id>', views.update_host_configs, name='update_host_config'),
     
     ########## Services Paths ##########
     path('get_services', views.get_all_services, name='get_services'),

@@ -1,6 +1,6 @@
 import json
 from backend.ztna.models import Identities,HostConfigs,InterceptConfigs, Relays, RelaysPolicy, Services, ServicesPolicy, ServicesRelaysPolicy
-from backend.ztna.serializers import EnrollementsSerializer, IdentitiesSerializer, IdentitiesSerializerUpdate, InterceptConfigsSerializer,HostConfigsSerializer, RelaySerializerUpdate, RelaysPolicySerializer, RelaysSerializer, ServicesPolicySerializer, ServicesRelaysPolicySerializer, ServicesSerializer
+from backend.ztna.serializers import EnrollementsSerializer, HostSerializerUpdate, IdentitiesSerializer, IdentitiesSerializerUpdate, InterceptConfigsSerializer,HostConfigsSerializer, InterceptSerializerUpdate, RelaySerializerUpdate, RelaysPolicySerializer, RelaysSerializer, ServicesPolicySerializer, ServicesRelaysPolicySerializer, ServicesSerializer, ServicesSerializerUpdate
 from utils.errors_utils import CommandExecutionError
 from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES, PATH_ZTNA_TERMINATORS
 from .list_ztna import get_identities_from_ziti, get_routers_from_ziti, get_service_edge_router_policies, get_service_policies, get_services, get_terminators
@@ -165,7 +165,7 @@ def delete_identities(request, id):
     return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_IDENTITIE}"}, status=400)
 
 
-@api_view(['PUT'])
+@api_view(['PATCH'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def update_identities(request, id):
@@ -175,7 +175,7 @@ def update_identities(request, id):
     data = request.data
     payload['name'] = data['name']
     if data['roleAttributes'][0] == "": 
-        payload['attribute_identitie'] == None
+        payload['attribute_identitie'] = None
     else:
         payload['attribute_identitie'] = data['roleAttributes'][0]
     payload['type'] = data['type']
@@ -184,12 +184,14 @@ def update_identities(request, id):
     else:
         payload['description'] = None
     payload['is_admin'] = data['isAdmin']
-    identitie = Identities.objects.get(ref_identitie=id)
+    identitie = Identities.objects.get(id=id)
+    print("identitie",identitie)
     serializer_update_identity = IdentitiesSerializerUpdate(identitie, data=payload, partial=True) 
     if serializer_update_identity.is_valid():
-        response = requests.put(f"{PATH_ZTNA_IDENTITIES}/{id}", headers=headers, json=data, verify=False)
+        response = requests.patch(f"{PATH_ZTNA_IDENTITIES}/{identitie}", headers=headers, json=data, verify=False)
         serializer_update_identity.save()
         return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    print(serializer_update_identity.errors)
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_IDENTITIE}"}, status=400)
 
 
@@ -468,17 +470,49 @@ def delete_configs(request, id):
         return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_DELETING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_CONFIGURATION}"}, status=400)
 
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def update_host_configs(request, id):
+    session_id = get_Zt_Token()
+    payload={}
+    headers = {"zt-session": session_id, "Content-Type": "application/json"}
+    data = request.data
+    payload['name'] = data['name']
+    payload['protocol'] = data['data']['protocol']  
+    payload['address'] = data['data']["address"]
+    payload['port'] = data['data']["port"] 
+    payload['description'] = data.get('description', None)
+    host = HostConfigs.objects.get(id=id)
+    serializer_update_host = HostSerializerUpdate(host,data=payload, partial=True)
+    if serializer_update_host.is_valid():
+        serializer_update_host.save()
+        response = requests.put(f"{PATH_ZTNA_CONFIGS}/{host}", headers=headers, json=data, verify=False)
+        return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+    return JsonResponse({"error": serializer_update_host.errors}, status=400)
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-def update_configs(request, id):
+def update_intercept_configs(request, id):
     session_id = get_Zt_Token()
+    payload={}
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.put(f"{PATH_ZTNA_CONFIGS}/{id}", headers=headers, json=data, verify=False)
-    if response.status_code == 200:
-        return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    if data["configTypeId"] == 'g7cIWbcGg':
+        payload['name'] = data['name']
+        payload['protocol'] = data['data']['protocols'][0]  
+        payload['address'] = data['data']["addresses"][0]
+        payload['low'] = data['data']["portRanges"][0]["low"]  
+        payload['high'] = data['data']["portRanges"][0]["high"] 
+        payload['description'] = data.get('description', None)
+        intercept = InterceptConfigs.objects.get(id=id)
+        serializer_update_intercept = InterceptSerializerUpdate(intercept,data=payload, partial=True)
+        if serializer_update_intercept.is_valid():
+            serializer_update_intercept.save()
+            response = requests.put(f"{PATH_ZTNA_CONFIGS}/{intercept}", headers=headers, json=data, verify=False)
+            return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+        return JsonResponse({"error": serializer_update_intercept.errors}, status=400)     
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_CONFIGURATION}"}, status=400)
 
 
@@ -560,10 +594,33 @@ def update_services(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.put(f"{PATH_ZTNA_SERVICES}/{id}", headers=headers, json=data, verify=False)
-    if response.status_code == 200:
+    payload={}
+    print(data)
+    payload['name'] = data['name']
+    if data['roleAttributes'][0] == "": 
+        payload['attribute_service'] == None
+    else:
+        payload['attribute_service'] = data['roleAttributes'][0]
+    payload['encryption'] = data['encryptionRequired']
+    host = HostConfigs.objects.get(ref_host=data['configs'][1])
+    payload['host_id']=host.pk
+    intercept = InterceptConfigs.objects.get(ref_intercept=data['configs'][0])
+    payload['intercept_id']=intercept.pk
+    services = Services.objects.get(id=id)
+    if 'description' in data:
+        payload['description'] = data['description']
+    else:
+        payload['description'] = None
+    serializer_update_service = ServicesSerializerUpdate(services,data=payload, partial=True)
+    if serializer_update_service.is_valid():
+        serializer_update_service.save()
+        response = requests.put(f"{PATH_ZTNA_SERVICES}/{services}", headers=headers, json=data, verify=False)
         return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
-    return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SERVICE}"}, status=400)
+    return JsonResponse({"error": serializer_update_service.errors}, status=400)
+    
+    # if response.status_code == 200:
+    #     return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+    # return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SERVICE}"}, status=400)
 
 
 ################################
@@ -848,7 +905,7 @@ def add_services_edge_routers_policies(request):
         serializer = ServicesRelaysPolicySerializer(data=payload)
         if serializer.is_valid():
             serializer.save()
-        return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+            return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE_EDGE_ROUTER_POLICIE}"}, status=400)
 
 

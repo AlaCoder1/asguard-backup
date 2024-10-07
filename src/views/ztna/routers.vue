@@ -121,7 +121,7 @@ export default {
       },
       {
         headerName: verified,
-        field: "isVerified",
+        field: "verified",
         cellRenderer: enrollmentCellRendrer,
 
         width: 90,
@@ -130,7 +130,7 @@ export default {
       },
       {
         headerName: online,
-        field: "isOnline",
+        field: "online",
         cellRenderer: IsOnlineCellRendrer,
 
         width: 90,
@@ -148,7 +148,7 @@ export default {
       // },
       {
         headerName: creationDate,
-        field: "createdAt",
+        field: "date_creation",
         cellRenderer: formatedcreatedAt,
 
         width: 90,
@@ -219,7 +219,7 @@ export default {
         return cell.rowIndex === params.node.rowIndex;
       });
 
-      if (params.node.data.isVerified === true) {
+      if (params.node.data.verified === true) {
         eGui.innerHTML = `<i class="mdi mdi-check-circle" style="color: green; font-size: 20px;"></i>`;
       } else {
         eGui.innerHTML = `
@@ -257,7 +257,7 @@ export default {
               </button>
               `;
       } else {
-        if (!params.data.isOnline) {
+        if (!params.data.online) {
           eGui.innerHTML = `
          <button
           id="play"
@@ -557,7 +557,7 @@ export default {
         return cell.rowIndex === params.node.rowIndex;
       });
 
-      if (params.node.data.isOnline === true) {
+      if (params.node.data.online === true) {
         eGui.innerHTML = `<i class="mdi mdi-check-circle" style="color: green; font-size: 20px;"></i>`;
       } else {
         eGui.innerHTML = `
@@ -583,8 +583,7 @@ export default {
     };
 
     function formatedcreatedAt(data) {
-      console.log(data.data.createdAt);
-      const resultMessage = formatDateTime(data.data.createdAt);
+      const resultMessage = formatDateTime(data.data.date_creation);
       let eGui = document.createElement("div");
       eGui.innerHTML = resultMessage ? `${resultMessage}` : "--";
       return eGui;

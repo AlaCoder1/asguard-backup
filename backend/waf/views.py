@@ -249,7 +249,6 @@ def update_waf_rule(request, id):
 @permission_classes([IsAuthenticated])
 def get_all_waf_application(request):
     """Getting all waf applications from database"""
-    list_waf_application = []
     list_waf_application = get_list_all_waf_application()
     return JsonResponse(list_waf_application, safe=False)
 
@@ -317,6 +316,8 @@ def create_waf_application(request):
         return JsonResponse({"error": list(config_serializer.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
+        # Delete application from system
+        delete_application_waf_in_system(data["name"])
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_WAF_APPLICATION}"}, status=400)
 
 
@@ -331,7 +332,7 @@ def delete_waf_application(request, id):
         waf_application = ApplicationWaf.objects.get(id=id)
 
         # Delete application from system
-        delete_application_waf_in_system(waf_application)
+        delete_application_waf_in_system(waf_application.name)
 
         # delete application from database
         waf_application.config.delete()

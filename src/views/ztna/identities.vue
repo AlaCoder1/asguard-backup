@@ -130,7 +130,7 @@ export default {
     const columnIdentities = ref([
       {
         headerName: "ID",
-        field: "id",
+        field: "ref_identitie",
         sortable: true,
         filter: true,
         width: 90,
@@ -148,7 +148,7 @@ export default {
       },
       {
         headerName: attribute,
-        field: "roleAttributes",
+        field: "attribute_identitie",
         sortable: true,
         filter: true,
         width: 90,
@@ -157,7 +157,7 @@ export default {
       },
       {
         headerName: hostname,
-        field: "envInfo.hostname",
+        field: "hostname",
         sortable: true,
         filter: true,
         width: 90,
@@ -166,7 +166,7 @@ export default {
       },
       {
         headerName: enrolled,
-        field: "enrollment.ott.jwt",
+        field: "token",
         cellRenderer: enrollmentCellRendrer,
         width: 90,
         minWidth: 150,
@@ -174,7 +174,7 @@ export default {
       },
       {
         headerName: "Token",
-        field: "enrollment.ott.jwt",
+        field: "token",
         cellRenderer: tokenCellRendrer,
         width: 90,
         minWidth: 150,
@@ -182,7 +182,7 @@ export default {
       },
       {
         headerName: expirationDate,
-        field: "enrollment.ott.expiresAt",
+        field: "date_expiration",
         cellRenderer: formatedexpiresAt,
         width: 90,
         minWidth: 150,
@@ -190,7 +190,7 @@ export default {
       },
       {
         headerName: creationDate,
-        field: "createdAt",
+        field: "date_creation",
         cellRenderer: formatedcreatedAt,
         width: 90,
         minWidth: 150,
@@ -201,7 +201,7 @@ export default {
         field: "actions",
         width: 150,
         cellRenderer: actionCellRenderer,
-      },
+      }
     ]);
     function tokenCellRendrer(params) {
       let eGui = document.createElement("div");
@@ -210,7 +210,7 @@ export default {
         return cell.rowIndex === params.node.rowIndex;
       });
 
-      if (params.node.data.enrollment?.ott?.jwt) {
+      if (params.node.data.token) {
         eGui.innerHTML = `
           <button
            class="action-button download"
@@ -233,15 +233,24 @@ export default {
     }
 
     function enrollmentCellRendrer(params) {
+      const currentDate = new Date();
+      const expirationDate = new Date(params.node.data.date_expiration);
       let eGui = document.createElement("div");
       let editingCells = params.api.getEditingCells();
       let isCurrentRowEditing = editingCells.some((cell) => {
         return cell.rowIndex === params.node.rowIndex;
       });
 
-      if (params.node.data.enrollment?.ott?.jwt) {
+      if (params.node.data.token) {
         eGui.innerHTML = `<i class="mdi mdi-check-circle" style="color: green; font-size: 20px;"></i>`;
-      } else {
+      }
+      else if(params.node.data.hostname && currentDate <= expirationDate){
+        eGui.innerHTML = ` <span class="action-icon active-token">
+  <i class="mdi mdi-router-network-wireless"></i>
+</span>
+`
+      } 
+      else {
         eGui.innerHTML = `
     
       <button class="action-button enroll" data-action="enroll">
@@ -310,12 +319,12 @@ export default {
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
-          state.selectedId = rowData.id;
+          state.selectedId = rowData.ref_identitie;
 
 
           break;
         case "download":
-          let text = rowData.enrollment.ott.jwt;
+          let text = rowData.token;
           // copyContent(text);
 
           const blob = new Blob([text], {
@@ -336,7 +345,7 @@ export default {
           
           break;
         case "enroll":
-          openModalEnrollement(rowData.id);
+          openModalEnrollement(rowData.ref_identitie);
 
           break;
         case "delete":
@@ -381,6 +390,7 @@ export default {
 
     };
     async function OpenDelete(itemId) {
+
       state.selectedId = itemId;
       state.deleteDialog = true;
     }
@@ -438,15 +448,15 @@ export default {
     };
 
     function formatedcreatedAt(data) {
-      const resultMessage = formatDateTime(data.data.createdAt);
+      const resultMessage = formatDateTime(data.data.date_creation);
       let eGui = document.createElement("div");
       eGui.innerHTML = resultMessage ? `${resultMessage}` : "--";
       return eGui;
     }
     function formatedexpiresAt(data) {
-      if (data.data.enrollment.ott) {
+      if (data.data.token) {
         const resultMessage = formatDateTime(
-          data.data.enrollment.ott.expiresAt
+          data.data.date_expiration
         );
         let eGui = document.createElement("div");
         eGui.innerHTML = resultMessage ? `${resultMessage}` : "--";
@@ -566,4 +576,24 @@ export default {
 .table tbody tr:last-child {
   border-bottom: 0.5px solid #000;
 }
+.action-icon.active-token {
+  position: relative;
+  background-color: #45B450; 
+  color: white;
+  border-radius: 50%; 
+  width: 20px; 
+  height: 20px; 
+  font-size: 12px; 
+  line-height: 40px; 
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+}
+
+.action-icon.active-token:hover,
+.action-icon.active-token:focus {
+  background-color: #4CAF50; 
+}
+
 </style>

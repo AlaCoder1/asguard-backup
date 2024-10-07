@@ -115,8 +115,8 @@ export default {
     const name = computed(() => {
       return t("ztna.name");
     });
-    const configType = computed(() => {
-      return t("ztna.configType");
+    const address = computed(() => {
+      return t("ztna.address");
     });
 
     const columnConfigs = ref([
@@ -128,42 +128,9 @@ export default {
         minWidth: 150,
         flex: 1,
       },
-      // {
-      //   headerName: configType,
-      //   field: "configType.name",
-      //   sortable: true,
-      //   width: 90,
-      //   minWidth: 150,
-      //   flex: 1,
-      // },
       {
-        headerName: creationDate,
-        field: "createdAt",
-        sortable: true,
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-        valueFormatter: (params) => formatDateTime(params.value),
-      },
-      {
-        headerName: "Actions",
-        field: "actions",
-        cellRenderer: actionCellRenderer,
-        width: 150,
-      },
-    ]);
-    const columnHost = ref([
-      {
-        headerName: name,
-        field: "name",
-        sortable: true,
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-      },
-      {
-        headerName: configType,
-        field: "configType.name",
+        headerName: address,
+        field: "address",
         sortable: true,
         width: 90,
         minWidth: 150,
@@ -171,7 +138,7 @@ export default {
       },
       {
         headerName: creationDate,
-        field: "createdAt",
+        field: "date_creation",
         sortable: true,
         width: 90,
         minWidth: 150,
@@ -189,24 +156,16 @@ export default {
     const fetchConfigs = () => {
       let configsString = document
         .getElementById("app")
-        .getAttribute("configs");
+        .getAttribute("interceptconfigs");
       let configsObject;
 
       try {
         configsObject = JSON.parse(configsString);
-        console.log('configsObjectIntercept', configsObject)
-
-
-
       } catch (error) {
         console.error("Failed to parse configs string:", error);
-        configsObject = { data: [] }; // Default to an empty array if parsing fails
+        configsObject = { data: [] }; 
       }
-      let filterInter = configsObject.filter((i) => i.configTypeId === "g7cIWbcGg")
-      configs.value = filterInter ? filterInter : [];
-      console.log('configs.value', configs.value)
-
-
+       configs.value = configsObject;
     };
 
     const onGridReady = (params) => {
@@ -227,7 +186,7 @@ export default {
       let token = document.getElementById("app").getAttribute("token");
 
       axios
-        .delete(`/ztna/delete_config/${deletedItemId}`, {
+        .delete(`/ztna/delete_intercept_config/${deletedItemId}`, {
           headers: {
             "zt-session": token,
             "Content-Type": "application/json",
@@ -354,9 +313,9 @@ export default {
           state.selectedId = rowData.id;
           state.editRow = rowData;
 
-          // if (rowData.configTypeId === "NH5p4FpGR") {
+          // if (rowData.adressId === "NH5p4FpGR") {
           //   openModalHostUpdate(rowData.id);
-          // } else if (rowData.configTypeId === "g7cIWbcGg") {
+          // } else if (rowData.adressId === "g7cIWbcGg") {
           //   console.log("f,v skv,s");
           //   openModalInterceptUpdate(rowData.id);
           // }

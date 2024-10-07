@@ -221,17 +221,25 @@ export default {
 
         Description.value = "";
         selectedTitle.value = data.type;
-        selectedsemantic.value = data.semantic;
+        selectedsemantic.value = data.semantique;
 
-        let Identity = data.identityRoles[0].split("#");
-        
-        let filterIdentity = identityList.value.filter((i) => i.name === Identity[1])
-        identityatt.value = filterIdentity[0];
+        let service = "";
+        let identity = "";
+        for (let i = 0; i < ServList.value.length; i++) {
+          if (ServList.value[i].id === data.service) {
+            service = ServList.value[i];
+            break;  
+          }
+        }
 
-        let service = data.serviceRoles[0].split("#");
-        let filterServ = ServList.value.filter((i) => i.name === service[1])
-        serviceRA.value = filterServ[0];
-
+        for (let i = 0; i < identityList.value.length; i++) {
+          if (identityList.value[i].id === data.identity) {
+            identity = identityList.value[i];
+            break;
+          }
+        }
+        serviceRA.value=service;
+        identityatt.value=identity
 
       }
     };
@@ -242,9 +250,8 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
 
-      let identityAttribute = `#${identityatt.value.name}`;
-      let serviceAttribute = `#${serviceRA.value.name}`;
-
+      let identityAttribute = `#${identityatt.value.attribute_identitie}`;
+      let serviceAttribute = `#${serviceRA.value.attribute_service}`;
       let payload = {
         name: name.value,
         type: selectedTitle.value,

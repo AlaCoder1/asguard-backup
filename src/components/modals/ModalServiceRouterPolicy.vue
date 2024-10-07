@@ -191,20 +191,27 @@ export default {
 
         idServRouter.value = data.id
         name.value = data.name;
-        selectedsemantic.value = data.semantic;
+        selectedsemantic.value = data.semantique;
 
 
 
-        let service = data.serviceRoles[0].split("#");
-        let filterServ = ServList.value.filter((i) => i.name === service[1])
-        serviceRA.value = filterServ[0];
+        let relay = "";
+        let service = "";
+        for (let i = 0; i < routersList.value.length; i++) {
+          if (routersList.value[i].id === data.relay) {
+            relay = routersList.value[i];
+            break;  
+          }
+        }
 
-
-
-
-        let router = data.edgeRouterRoles[0].split("#");
-        let filterRoute = routersList.value.filter((i) => i.name === router[1])
-        routerR.value = filterRoute[0];
+        for (let i = 0; i < ServList.value.length; i++) {
+          if (ServList.value[i].id === data.service) {
+            service = ServList.value[i];
+            break;  
+          }
+        }
+        routerR.value=relay;
+        serviceRA.value=service;
         Description.value = "";
       }
     };
@@ -214,9 +221,8 @@ export default {
 
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      let routerAttribute = `#${routerR.value.name}`;
-      let serviceAttribute = `#${serviceRA.value.name}`;
-
+      let routerAttribute = `#${routerR.value.attribute_relay}`;
+      let serviceAttribute = `#${serviceRA.value.attribute_service}`;
       let payload = {
         name: name.value,
         semantic: selectedsemantic.value,

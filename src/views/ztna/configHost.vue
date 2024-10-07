@@ -111,8 +111,8 @@ export default {
     const name = computed(() => {
       return t("ztna.name");
     });
-    const configType = computed(() => {
-      return t("ztna.configType");
+    const address = computed(() => {
+      return t("ztna.address");
     });
 
     const columnHost = ref([
@@ -124,17 +124,17 @@ export default {
         minWidth: 150,
         flex: 1,
       },
-      // {
-      //   headerName: configType,
-      //   field: "configType.name",
-      //   sortable: true,
-      //   width: 90,
-      //   minWidth: 150,
-      //   flex: 1,
-      // },
+      {
+        headerName: address,
+        field: "address",
+        sortable: true,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
+      },
       {
         headerName: creationDate,
-        field: "createdAt",
+        field: "date_creation",
         sortable: true,
         width: 90,
         minWidth: 150,
@@ -152,18 +152,20 @@ export default {
     const fetchConfigs = () => {
       let configsString = document
         .getElementById("app")
-        .getAttribute("configs");
+        .getAttribute("hostconfigs");
       let configsObject;
 
       try {
         configsObject = JSON.parse(configsString);
+        console.log('configsObjecthost', configsObject)
         
       } catch (error) {
         console.error("Failed to parse configs string:", error);
         configsObject = { data: [] }; // Default to an empty array if parsing fails
       }
-      let filterHost = configsObject.filter((i) => i.configTypeId === "NH5p4FpGR")
-      configsHost.value = filterHost ? filterHost : [];
+      // let filterHost = configsObject.filter((i) => i.addressId === "NH5p4FpGR")
+      configsHost.value = configsObject
+      console.log('host conf',configsHost.value)
 
 
     };
@@ -186,7 +188,7 @@ export default {
       let token = document.getElementById("app").getAttribute("token");
 
       axios
-        .delete(`/ztna/delete_config/${deletedItemId}`, {
+        .delete(`/ztna/delete_host_config/${deletedItemId}`, {
           headers: {
             "zt-session": token,
             "Content-Type": "application/json",
@@ -310,9 +312,9 @@ export default {
           state.selectedId = rowData.id;
           state.editRow = rowData;
 
-          // if (rowData.configTypeId === "NH5p4FpGR") {
+          // if (rowData.addressId === "NH5p4FpGR") {
           //   openModalHostUpdate(rowData.id);
-          // } else if (rowData.configTypeId === "g7cIWbcGg") {
+          // } else if (rowData.addressId === "g7cIWbcGg") {
           //   console.log("f,v skv,s");
           //   openModalInterceptUpdate(rowData.id);
           // }

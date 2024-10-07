@@ -1,5 +1,4 @@
 from django.db import models
-from datetime import datetime
 
 # Create your models here.
 
@@ -8,11 +7,12 @@ class Identities(models.Model):
     name = models.CharField(max_length=500, unique=True)
     attribute_identitie = models.CharField(max_length=500, null=True, blank=True)
     type = models.CharField(max_length=200)
+    hostname = models.CharField(max_length=200,null=True, blank=True)
     description = models.CharField(max_length=800,null=True)
     is_admin = models.BooleanField(default=False)
     date_creation = models.DateTimeField()
     date_expiration = models.DateTimeField(null=True, blank=True)
-    token = models.CharField(max_length=1000, unique=True, null=True, blank=True)
+    token = models.CharField(max_length=1000, null=True, blank=True)
     class Meta:
         db_table = 'identities'
     def __str__(self):
@@ -73,6 +73,7 @@ class Relays(models.Model):
     traversal = models.BooleanField(default=False)
     online = models.BooleanField(default=False)
     verified = models.BooleanField(default=False)
+    token = models.CharField(max_length=1000, unique=True, null=True, blank=True)
     date_creation = models.DateTimeField()
     description = models.CharField(max_length=800,null=True)
     class Meta:
@@ -100,8 +101,8 @@ class ServicesPolicy(models.Model):
     semantique = models.CharField(max_length=10, blank=False)
     type = models.CharField(max_length=10, blank=False)
     description = models.CharField(max_length=800,null=True)
-    service_attribute = models.CharField(max_length=10, blank=False)
-    identity_attribute = models.CharField(max_length=10, blank=False)
+    service_attribute = models.CharField(max_length=100, blank=False)
+    identity_attribute = models.CharField(max_length=100, blank=False)
     service = models.ForeignKey(Services, on_delete=models.CASCADE)
     identity = models.ForeignKey(Identities, on_delete=models.CASCADE)
     date_creation = models.DateTimeField()
@@ -113,8 +114,8 @@ class ServicesRelaysPolicy(models.Model):
     name = models.CharField(max_length=500, unique=True)
     semantique = models.CharField(max_length=10, blank=False)
     description = models.CharField(max_length=800,null=True)
-    service_attribute = models.CharField(max_length=10, blank=False)
-    relay_attribute = models.CharField(max_length=10, blank=False)
+    service_attribute = models.CharField(max_length=100, blank=False)
+    relay_attribute = models.CharField(max_length=100, blank=False)
     service = models.ForeignKey(Services, on_delete=models.CASCADE)
     relay = models.ForeignKey(Relays, on_delete=models.CASCADE)
     date_creation = models.DateTimeField()

@@ -154,9 +154,9 @@ export default {
 
         RouterId.value = data.id;
         RouterName.value = data.name;
-        RouterAttribute.value = data.roleAttributes[0];
-        Tunneler.value = data.isTunnelerEnabled;
-        Traversal.value = data.noTraversal;
+        RouterAttribute.value = data.attribute_relay;
+        Tunneler.value = data.tunneler;
+        Traversal.value = data.traversal;
         Description.value = "";
       }
     };

@@ -153,7 +153,7 @@ export default {
       },
       {
         headerName: serviceRole,
-        field: "serviceRoles",
+        field: "service_attribute",
         cellRenderer: formatedserviceRoles,
         autoHeight: true,
         resizable: true,
@@ -164,7 +164,7 @@ export default {
       },
       {
         headerName: identityRole,
-        field: "identityRoles",
+        field: "identity_attribute",
         cellRenderer: formatedidentityRoles,
         autoHeight: true,
         resizable: true,
@@ -175,7 +175,7 @@ export default {
       },
       {
         headerName: semantic,
-        field: "semantic",
+        field: "semantique",
         autoHeight: true,
         resizable: true,
 
@@ -185,7 +185,7 @@ export default {
       },
       {
         headerName: creationDate,
-        field: "createdAt",
+        field: "date_creation",
         cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
@@ -217,20 +217,20 @@ export default {
     };
 
     function formatedidentityRoles(data) {
-      const resultMessage = data.data.identityRoles;
+      const resultMessage = data.data.identity_attribute;
       let eGui = document.createElement("div");
       eGui.innerHTML = `${resultMessage}`;
       return eGui;
     }
 
     function formatedserviceRoles(data) {
-      const resultMessage = data.data.serviceRoles;
+      const resultMessage = data.data.service_attribute;
       let eGui = document.createElement("div");
       eGui.innerHTML = resultMessage ? `${resultMessage}` : "";
       return eGui;
     }
     function formatedcreatedAt(data) {
-      const resultMessage = formatDateTime(data.data.createdAt);
+      const resultMessage = formatDateTime(data.data.date_creation);
       let eGui = document.createElement("div");
       eGui.innerHTML = resultMessage ? `${resultMessage}` : "";
       return eGui;

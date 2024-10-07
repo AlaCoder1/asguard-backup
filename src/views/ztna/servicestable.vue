@@ -160,19 +160,19 @@ export default {
         minWidth: 150,
         flex: 1,
       },
-      {
-        headerName: terminatorStrategy,
-        field: "terminatorStrategy",
-        autoHeight: true,
-        resizable: true,
+      // {
+      //   headerName: terminatorStrategy,
+      //   field: "terminatorStrategy",
+      //   autoHeight: true,
+      //   resizable: true,
 
-        width: 90,
-        minWidth: 150,
-        flex: 1,
-      },
+      //   width: 90,
+      //   minWidth: 150,
+      //   flex: 1,
+      // },
       {
         headerName: encryptionRequired,
-        field: "encryptionRequired",
+        field: "encryption",
         cellRenderer: formatedEncryption,
         autoHeight: true,
         resizable: true,
@@ -183,7 +183,7 @@ export default {
       },
       {
         headerName: creationDate,
-        field: "createdAt",
+        field: "date_creation",
         cellRenderer: formatedcreatedAt,
         autoHeight: true,
         resizable: true,
@@ -209,7 +209,7 @@ export default {
     const gridColumnApi = ref(null);
 
     function formatedcreatedAt(data) {
-      const resultMessage = formatDateTime(data.data.createdAt);
+      const resultMessage = formatDateTime(data.data.date_creation);
       let eGui = document.createElement("div");
       eGui.innerHTML = resultMessage ? `${resultMessage}` : "";
       return eGui;
@@ -238,13 +238,14 @@ export default {
       return eGui;
     }
     function formatedEncryption(params) {
+      console.log('sharp dressed man',params.node.data.encryption)
       let eGui = document.createElement("div");
       let editingCells = params.api.getEditingCells();
       let isCurrentRowEditing = editingCells.some((cell) => {
         return cell.rowIndex === params.node.rowIndex;
       });
 
-      if (params.node.data.encryptionRequired === true) {
+      if (params.node.data.encryption === true) {
         eGui.innerHTML = `<i class="mdi mdi-check-circle" style="color: green; font-size: 20px;"></i>`;
       } else {
         eGui.innerHTML = `

@@ -1,58 +1,30 @@
-1- Connecter a l'aide du VS au machine virtuelle (SSH)
+###### Initialization for the generation of the ISO
 
-2- Lancer les containers
+pip install -r requirements.txt --break-system-packages
 
-// avec détails d'exécution
+yarn install
 
-docker-compose up
-
-// sans détails
+yarn build
 
 docker-compose up -d
-
-3- Ouvrir deux autre terminal en //
-
-dans le 1 er terminal lancer
 
 python manage.py makemigrations
 
 python manage.py migrate
 
-python manage.py generate_root -u root -p root
-
-python manage.py init_openVPN -u root -p root
-
-
-python manage.py init_ASGUARD 
-
-
 python manage.py create_wheel_group
 
-python manage.py conf_nftable_dhclient -u root -p root
+python manage.py generate_user -u root -p root
 
-// a ne pas exécuter python manage.py confInterfaces -u root -p root 
+python manage.py init_ASGUARD
 
-python manage.py init_bd_interfaces -u root -p root
-
-python manage.py init_network
-
-//need to pull and migrate 
-
-pip install -r requirements.txt --break-system-packages
-
-dans l'autre terminal pour la build des assets lors la modification de n'importe quel fichier JS
-
-yarn install
-
-yarn build / yarn watch
-
-//initialiser les services 
+###### Init Firewall services
 
 python manage.py init_services
 
 //to collect static data of swagger UI in production
 
-python manage.py collectstatic //avec debug=False 
+python manage.py collectstatic //with making DEBUG=False 
 
 #### subscription
 1/ ## init features

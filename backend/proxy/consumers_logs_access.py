@@ -4,11 +4,13 @@ import subprocess
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from backend.openvpn.models import OpenVpnLogs
-from backend.openvpn.serializers import LogsVpnDataSerializer
+
+from backend.proxy.models import AccessLogs
+from backend.proxy.serializers import AccessLogsSerializer
+
 
 logger = logging.getLogger(__name__) 
-class LogsVPNConsumer(AsyncWebsocketConsumer):
+class LogsAccessConsumer(AsyncWebsocketConsumer):
     async def connect(self):
         logger.info('WebSocket connection established')
         await self.accept()
@@ -30,11 +32,11 @@ class LogsVPNConsumer(AsyncWebsocketConsumer):
         """"
         function to save logs in database 
         """
-        logs_erializer = LogsVpnDataSerializer(data=data)
+        logs_erializer = AccessLogsSerializer(data=data)
         if logs_erializer.is_valid() :
-            count = OpenVpnLogs.objects.count()
+            count = AccessLogs.objects.count()
             if count >= 10000:
-                min_timestamp_record = OpenVpnLogs.objects.order_by('id').first()
+                min_timestamp_record = AccessLogs.objects.order_by('id').first()
                 if min_timestamp_record:
                     min_timestamp_record.delete()
             logs_erializer.save()
@@ -42,7 +44,7 @@ class LogsVPNConsumer(AsyncWebsocketConsumer):
     async def start_data_loop_global_chart(self):
         while True:
             list_data=[]
-            file_path="/var/log/openvpn/openvpn.log"
+            file_path="/var/log/squid/access.log"
             command = f"sudo cat {file_path} "
             completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
             output = completed_process.stdout.splitlines()

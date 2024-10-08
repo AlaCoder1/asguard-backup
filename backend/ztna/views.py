@@ -1,6 +1,6 @@
 import json
 from backend.ztna.models import Enrollements, Identities,HostConfigs,InterceptConfigs, Relays, RelaysPolicy, Services, ServicesPolicy, ServicesRelaysPolicy
-from backend.ztna.serializers import EnrollementsSerializer, HostSerializerUpdate, IdentitiesSerializer, IdentitiesSerializerUpdate, InterceptConfigsSerializer,HostConfigsSerializer, InterceptSerializerUpdate, RelaysPolicySerializerUpdate, RelaysSerializerUpdate, RelaysPolicySerializer, RelaysSerializer, RelaysSerializerUpdate, ServicesPolicySerializer, ServicesPolicySerializerUpdate, ServicesRelaysPolicySerializer, ServicesSerializer, ServicesSerializerUpdate
+from backend.ztna.serializers import EnrollementsSerializer, HostSerializerUpdate, IdentitiesSerializer, IdentitiesSerializerUpdate, InterceptConfigsSerializer,HostConfigsSerializer, InterceptSerializerUpdate, RelaysPolicySerializerUpdate, RelaysSerializerUpdate, RelaysPolicySerializer, RelaysSerializer, RelaysSerializerUpdate, ServicesPolicySerializer, ServicesPolicySerializerUpdate, ServicesRelaysPolicySerializer, ServicesRelaysPolicySerializerUpdate, ServicesSerializer, ServicesSerializerUpdate
 from utils.errors_utils import CommandExecutionError
 from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES
 from .list_ztna import get_service_edge_router_policies, get_service_policies, get_services
@@ -710,6 +710,7 @@ def add_edge_routers_policies(request):
     response_dict = json.loads(response.text)
     relay_policy_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
+        print('here')
         payload['ref_relay_policy'] = relay_policy_id
         payload['name'] = data['name']
         payload['semantique'] = data['semantic']
@@ -732,6 +733,7 @@ def add_edge_routers_policies(request):
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
+        print('###########################################',formatted_now)
         serializer = RelaysPolicySerializer(data=payload)
         if serializer.is_valid():
             serializer.save()
@@ -864,7 +866,7 @@ def delete_services_policies(request, id):
         session_id = get_Zt_Token()
         headers = {"zt-session": session_id}
         data = request.data
-        response = requests.delete(f"{PATH_ZTNA_SERVICES_POLICIES}/{ServicesPolicy.ref_service_policy}", headers=headers, json=data, verify=False)
+        response = requests.delete(f"{PATH_ZTNA_SERVICES_POLICIES}/{service_policy.ref_service_policy}", headers=headers, json=data, verify=False)
         if response.status_code == 200:
             service_policy.delete()
             return JsonResponse({"message": f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_DELETING}"}, status=200)
@@ -1014,7 +1016,7 @@ def update_services_edge_routers_policies(request, id):
     payload['service_id']=service.pk
     payload['relay_id']=relay.pk
     svc_relay_policy = ServicesRelaysPolicy.objects.get(id=id)
-    serializer = RelaysPolicySerializerUpdate(svc_relay_policy,data=payload, partial=True)
+    serializer = ServicesRelaysPolicySerializerUpdate(svc_relay_policy,data=payload, partial=True)
     if serializer.is_valid():
         serializer.save()
         response = requests.put(f"{PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES}/{svc_relay_policy}", headers=headers, json=data, verify=False)

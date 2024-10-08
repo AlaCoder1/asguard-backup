@@ -119,6 +119,7 @@ class RelaysPolicySerializer(serializers.ModelSerializer):
             'identity_id',
             'identity_attribute',
             'relay_attribute',
+            'date_creation'
         ]
 
 
@@ -136,7 +137,6 @@ class RelaysPolicySerializerUpdate(serializers.ModelSerializer):
             'identity_id',
             'identity_attribute',
             'relay_attribute',
-            'date_creation'
         ]
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
@@ -205,7 +205,7 @@ class ServicesRelaysPolicySerializer(serializers.ModelSerializer):
         ]
 
 
-class ServicesPolicySerializerUpdate(serializers.ModelSerializer):
+class ServicesRelaysPolicySerializerUpdate(serializers.ModelSerializer):
     service_id = serializers.PrimaryKeyRelatedField(source='service', queryset=Services.objects.all())
     relay_id = serializers.PrimaryKeyRelatedField(source='relay', queryset=Relays.objects.all())
     class Meta:

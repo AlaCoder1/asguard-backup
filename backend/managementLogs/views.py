@@ -3,7 +3,7 @@ from django.shortcuts import render
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, authentication_classes
 from django.core import serializers
-from backend.managementLogs.functions import get_logs_sys
+from backend.managementLogs.functions import get_logs_service, get_logs_sys
 from backend.managementLogs.models import LogrotateData, LogsData
 from django.http import JsonResponse
 from django.http import HttpResponse
@@ -38,6 +38,7 @@ def download_logs_data(request):
         logs_data=get_logs_sys()
         return JsonResponse({"data": logs_data})
     
+  
     
     
 @swagger_auto_schema(
@@ -176,3 +177,12 @@ def delete_logrotate_file(request, file_id):
 
         except Exception as e:
             return JsonResponse({"msg":f"Error: {str(e)}"}, status=500)
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+def download_logs_service(request,file_path):
+    """API to get data to download it into file"""
+    if request.method == 'GET':
+        logs_data=get_logs_service(file_path)
+        return JsonResponse({"data": logs_data})

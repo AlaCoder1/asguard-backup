@@ -38,3 +38,21 @@ class ProxyUser(models.Model):
     
     class Meta:
         db_table = 'proxy_user'  
+        
+        
+class CacheLogs(models.Model):
+    log=models.TextField()
+
+    class Meta:
+        db_table = 'cache_logs'    
+class AccessLogs(models.Model):
+    log=models.TextField()
+
+    class Meta:
+        db_table = 'access_logs'    
+        
+class StoreLogs(models.Model):
+    log=models.TextField()
+
+    class Meta:
+        db_table = 'store_logs'    

@@ -16,4 +16,5 @@ class LogrotateData(models.Model):
     backup_path = models.CharField(max_length=200, blank=True,unique=False)
     date=models.CharField(max_length=200, blank=True,unique=False)
     class Meta:
-        db_table = 'logrotate_data'    
+        db_table = 'logrotate_data'  
+          

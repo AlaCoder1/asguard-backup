@@ -226,3 +226,16 @@ class ServicesRelaysPolicySerializerUpdate(serializers.ModelSerializer):
         instance.save()
         return instance
     
+
+
+class ZtnaControllerLogsSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = ZtnaControllerLogs
+        fields = "__all__"
+
+class ZtnaRouterLogsSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = ZtnaRouterLogs
+        fields = "__all__"

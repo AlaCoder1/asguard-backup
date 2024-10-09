@@ -28,6 +28,13 @@ def get_logs_sys():
     output = completed_process.stdout
     return output
 
+def get_logs_service(file_path):
+    """" function to get all logs system"""
+    command = f"sudo cat {file_path}"
+    completed_process = subprocess.run(command, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout
+    return output
+
 def save_logs_database(data):
     """
     function to save logs in database 

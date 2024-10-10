@@ -7,7 +7,7 @@ def create_tls_file(tls_auth, path_tls):
     """Create TLS file by importing tls key or generating it"""
     print("Creating tls file:")
     if tls_auth['generate']:
-        command = ['openvpn', '--genkey', 'secret', f'{path_tls}']
+        command = ['sudo', 'openvpn', '--genkey', 'secret', f'{path_tls}']
         execute_command_without_arguments(command)
     else:
         with open(path_tls, 'w') as tls_file:

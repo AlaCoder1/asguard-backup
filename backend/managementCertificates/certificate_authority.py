@@ -10,7 +10,7 @@ def create_ca_in_system(ca_name, common_name, updated_fields_vars):
     current_dir = get_current_directory()
 
     execute_command_with_arguments(['sudo', 'easyrsa', 'init-pki'], 'yes\nyes')
-    command = ['cp', PATH_VARS_INITIALIZE, PATH_PKI_VARS.format(current_dir)]
+    command = ['sudo', 'cp', PATH_VARS_INITIALIZE, PATH_PKI_VARS.format(current_dir)]
     execute_command_without_arguments(command)
     change_vars(current_dir, updated_fields_vars)
     time_sleep = 1.5

@@ -69,11 +69,11 @@ def revoke_list_certs(current_dir, ca_name, list_revoked_cert):
 
     for revoked_cert in list_revoked_cert:
         if revoked_cert.certificate_type == 'server':
-            command =['cp', PATH_SERVER_CERT_CRT.format(revoked_cert.name), PATH_PKI_CERT.format(current_dir, 'server')]
+            command =['sudo', 'cp', PATH_SERVER_CERT_CRT.format(revoked_cert.name), PATH_PKI_CERT.format(current_dir, 'server')]
             execute_command_without_arguments(command)
             execute_command_with_arguments(['sudo', 'easyrsa', 'revoke', 'server'], 'yes\n')
         elif revoked_cert.certificate_type == 'client':
-            command = ['cp', PATH_CLIENT_CERT_CRT.format(revoked_cert.name), PATH_PKI_CERT.format(current_dir, revoked_cert.name)]
+            command = ['sudo', 'cp', PATH_CLIENT_CERT_CRT.format(revoked_cert.name), PATH_PKI_CERT.format(current_dir, revoked_cert.name)]
             execute_command_without_arguments(command)
             execute_command_with_arguments(['sudo', 'easyrsa', 'revoke', f'{revoked_cert.name}'], 'yes\n')
 

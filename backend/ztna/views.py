@@ -4,7 +4,7 @@ from backend.ztna.serializers import EnrollementsSerializer, HostSerializerUpdat
 from utils.errors_utils import CommandExecutionError
 from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES
 from .list_ztna import get_service_edge_router_policies, get_service_policies, get_services
-from .utils import change_status_router, change_status_ztna_service, get_Zt_Token, get_identities_from_ziti, get_routers_from_ziti, get_status_ztna_service
+from .utils import change_ports_yaml_file, change_status_router, change_status_ztna_service, create_router, delete_router, get_Zt_Token, get_identities_from_ziti, get_routers_from_ziti, get_status_router_from_system, get_status_ztna_service, update_router
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 import requests
@@ -300,7 +300,10 @@ def add_routers(request):
         payload['date_creation'] = formatted_now
         serializer_relay = RelaysSerializer(data=payload)
         if serializer_relay.is_valid():
-            serializer_relay.save()
+            saved_instance=serializer_relay.save()
+            create_router(payload['name'],payload['token'])
+            created_id = saved_instance.id
+            change_ports_yaml_file(payload['name'],created_id)
         return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_RELAY}"}, status=400)
 
@@ -316,9 +319,12 @@ def delete_routers(request, id):
         session_id = get_Zt_Token()
         headers = {"zt-session": session_id}
         data = request.data
+        # Stop relay before deleting
+        change_status_router(relay.name, "stop")
         response = requests.delete(f"{PATH_ZTNA_ROUTERS}/{relay.ref_relay}", headers=headers, json=data, verify=False)
         if response.status_code == 200:
             relay.delete()
+            delete_router(relay.name)
             return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_DELETING}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_RELAY}"}, status=400)
     except Relays.DoesNotExist:
@@ -345,10 +351,13 @@ def update_routers(request, id):
     else:
         payload['description'] = None
     relay = Relays.objects.get(id=id)
+    old_name=relay.name
     serializer_update_relay = RelaysSerializerUpdate(relay,data=payload, partial=True)
     if serializer_update_relay.is_valid():
         serializer_update_relay.save()
         response = requests.put(f"{PATH_ZTNA_ROUTERS}/{relay}", headers=headers, json=data, verify=False)
+        if old_name!=payload['name']:
+            update_router(old_name,payload['name'])
         return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RELAY}"}, status=400)
 
@@ -358,20 +367,13 @@ def update_routers(request, id):
 @permission_classes([IsAuthenticated])
 def start_routers(request, id):
     try:
-        payload={}
-        data = request.data
-        router_name = data.get("name")
-        relay = Relays.objects.get(name=router_name)
-        relay_created=get_routers_from_ziti(relay)
-        token=''
-        if 'enrollmentJwt' in relay_created:
-            token = relay_created['enrollmentJwt']
-        serializer = RelaysSerializerUpdate(relay,data=payload, partial=True)
-        if serializer.is_valid():
-            change_status_router(router_name, "start", token)
-            serializer.save()
+        relay = Relays.objects.get(id=id)
+        router_status = get_status_router_from_system(relay.name)
+        status = get_status_ztna_service()
+        if ("Router is not running" in router_status) and (status):
+            change_status_router(relay.name, "start")
             return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
-        return JsonResponse({"error": serializer.errors}, status=400)    
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_RELAY}"}, status=400)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_RELAY}"}, status=400)
 
@@ -381,18 +383,13 @@ def start_routers(request, id):
 @permission_classes([IsAuthenticated])
 def stop_routers(request, id):
     try:
-        payload={}
-        data = request.data
-        router_name = data.get("name")
-        relay = Relays.objects.get(name=router_name)
-        payload['online'] = False
-        payload['verified'] = True
-        serializer = RelaysSerializerUpdate(relay,data=payload, partial=True)
-        if serializer.is_valid():
-            change_status_router(router_name, "stop")
-            serializer.save()
-            return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
-        return JsonResponse({"error": serializer.errors}, status=400)
+        relay = Relays.objects.get(id=id)
+        router_status = get_status_router_from_system(relay.name)
+        status = get_status_ztna_service()
+        if ("Router is not running" not in router_status) and (status):
+            change_status_router(relay.name, "stop")
+            return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STOPING}"}, status=200)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_RELAY}"}, status=400)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_STOPING} {CONSTANT_RELAY}"}, status=400)
 
@@ -882,7 +879,6 @@ def update_services_policies(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    print(data)
     payload={}
     payload['name'] = data['name']
     payload['semantique'] = data['semantic']

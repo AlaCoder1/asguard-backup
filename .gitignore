@@ -85,6 +85,7 @@
 
 /backend/ztna/migrations/__pycache__/
 /backend/ztna/__pycache__/
+/backend/ztna/relays_folder/
 
 /backend/managementLogs/migrations/__pycache__/
 /backend/managementLogs/__pycache__/

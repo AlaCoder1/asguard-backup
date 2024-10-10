@@ -27,13 +27,17 @@ def execute_command_with_arguments(command:list, arguments:str, time_sleep=0.5):
             for arg in range(len(list_arg)):
                 print(f"argument {arg}: {list_arg[arg]}")
             time.sleep(time_sleep)
-            process.communicate(input=arguments)
+            stdout, stderr = process.communicate(input=arguments)
 
             create_error_command(process, command)
+            return process, stdout, stderr
+
     except subprocess.CalledProcessError as e:
         create_error_command(process, command)
+        return None, None, None
     except Exception as e:
         create_error_command(process, command)
+        return None, None, None
 
 
 def execute_list_commands_with_arguments(list_commands, time_sleep=0.5):
@@ -49,3 +53,4 @@ def get_current_directory():
     current_directory = process.stdout
     current_directory = current_directory[:len(current_directory)-1]
     return current_directory
+

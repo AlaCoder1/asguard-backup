@@ -121,3 +121,17 @@ class ServicesRelaysPolicy(models.Model):
     date_creation = models.DateTimeField()
     class Meta:
         db_table = 'servicerelaypolicies'
+        
+        
+        
+class ZtnaControllerLogs(models.Model):
+    log=models.TextField()
+
+    class Meta:
+        db_table = 'ztna_controller_logs'    
+class ZtnaRouterLogs(models.Model):
+    file_path=models.CharField(max_length=100, blank=False)
+    log=models.TextField()
+
+    class Meta:
+        db_table = 'ztna_router_logs'    

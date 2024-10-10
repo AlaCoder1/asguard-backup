@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ServerOpenvpn, ClientOpenvpn
+from .models import OpenVpnLogs, ServerOpenvpn, ClientOpenvpn
 
 
 class ServerOpenvpnSerializer(serializers.ModelSerializer):
@@ -24,4 +24,9 @@ class ServerOpenvpnSerializer(serializers.ModelSerializer):
 class ClientOpenvpnSerializer(serializers.ModelSerializer):
     class Meta:
             model = ClientOpenvpn
+            fields = '__all__'
+            
+class LogsVpnDataSerializer(serializers.ModelSerializer):
+     class Meta:
+            model = OpenVpnLogs
             fields = '__all__'

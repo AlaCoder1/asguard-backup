@@ -20,3 +20,16 @@ class ProxyUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = ProxyUser
         fields = ('username')
+        
+class CacheLogsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CacheLogs
+        fields = "__all__"
+class AccessLogsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AccessLogs
+        fields = "__all__"
+class StoreLogsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StoreLogs
+        fields = "__all__"

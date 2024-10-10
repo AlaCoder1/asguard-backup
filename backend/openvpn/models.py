@@ -79,3 +79,9 @@ class ClientOpenvpn(models.Model):
 
     class Meta:
         db_table = 'client_openvpn'
+
+class OpenVpnLogs(models.Model):
+    log=models.TextField()
+
+    class Meta:
+        db_table = 'openvpn_logs'    

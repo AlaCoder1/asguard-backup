@@ -19,7 +19,7 @@ def find_nat_in_ruleset(rule_set:str, chain="postrouting"):
 def save_ruleset_nft():
     """Save all ruleset in ruleset.nft file. This backup makes it easy to restore the configuration after a system reboot"""
     current_dir = get_current_directory()
-    ruleset_process = execute_command_without_arguments(["nft", "list", "table", "nat"])
+    ruleset_process = execute_command_without_arguments(["sudo", "nft", "list", "table", "nat"])
     with open(PATH_RULESET_NFT.format(current_dir), 'w') as rulset_file:
         rulset_file.write(ruleset_process.stdout)
 

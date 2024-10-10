@@ -145,7 +145,7 @@ def stop_sdwan_rule_in_system():
 def synchronize_routing_table():
     """Synchronize routing tables with database"""
     # Get list of all routing tables from system
-    list_routing_table_system = execute_command_without_arguments(["ip", "rule", "show"])
+    list_routing_table_system = execute_command_without_arguments(["sudo", "ip", "rule", "show"])
     list_routing_table_system = list_routing_table_system.stdout.splitlines()
     
     # Removing the three default routing table from list

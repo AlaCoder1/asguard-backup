@@ -25,7 +25,7 @@ def install_server_openvpn_in_system(server_name, ca_name, tls_auth, dh_length, 
     commands_list_without_arguments = [['sudo', 'mkdir', '-p', PATH_LOG_OPENVPN],
                                        ['sudo', 'touch', PATH_STATUS_LOG],
                                        ['sudo', 'chown', '777', PATH_STATUS_LOG],
-                                       ['cp', PATH_DH_FILES.format(dh_length), PATH_SERVER_DH.format(server_name)]
+                                       ['sudo', 'cp', PATH_DH_FILES.format(dh_length), PATH_SERVER_DH.format(server_name)]
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 

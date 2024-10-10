@@ -15,7 +15,7 @@ class Command(BaseCommand):
             config_waf.save()
 
             # Initialization of WAF Rules
-            command = ["cp", f"{PATH_RULES_WAF.format('RESPONSE-999-EXCLUSION-RULES-AFTER-CRS')}.example", 
+            command = ["sudo", "cp", f"{PATH_RULES_WAF.format('RESPONSE-999-EXCLUSION-RULES-AFTER-CRS')}.example", 
                        f"{PATH_RULES_WAF.format('RESPONSE-999-EXCLUSION-RULES-AFTER-CRS')}"]
             execute_command_without_arguments(command)
             # Remove line that include all conf file (using *.conf) and set each line individually

@@ -29,9 +29,9 @@ def create_certificate_in_system(cert_name, common_name, ca_name, cert_type, upd
         cert_path = PATH_CLIENT_CERT_CRT.format(cert_name)
         cert_private_key = PATH_CLIENT_CERT_KEY.format(cert_name)
 
-    commands_list_without_arguments = [['cp', PATH_PKI_VARS.format(current_dir), cert_vars],
-                                       ['cp', PATH_PKI_CERT.format(current_dir, common_name), cert_path],
-                                       ['cp', PATH_PKI_CERT_KEY.format(current_dir, common_name), cert_private_key],
+    commands_list_without_arguments = [['sudo', 'cp', PATH_PKI_VARS.format(current_dir), cert_vars],
+                                       ['sudo', 'cp', PATH_PKI_CERT.format(current_dir, common_name), cert_path],
+                                       ['sudo', 'cp', PATH_PKI_CERT_KEY.format(current_dir, common_name), cert_private_key],
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
@@ -72,11 +72,11 @@ def import_certificate_in_system(cert_name, input_fields):
         cert_path = PATH_CLIENT_CERT_CRT.format(cert_name)
         cert_private_key = PATH_CLIENT_CERT_KEY.format(cert_name)
 
-    commands_list_without_arguments = [['cp', PATH_PKI_VARS.format(current_dir), cert_vars],
-                                       ['cp', PATH_PKI_CERT.format(current_dir, cert_name), cert_path],
+    commands_list_without_arguments = [['sudo', 'cp', PATH_PKI_VARS.format(current_dir), cert_vars],
+                                       ['sudo', 'cp', PATH_PKI_CERT.format(current_dir, cert_name), cert_path],
                                        ]
     if input_fields["certificate_private_key"] != "":
-        commands_list_without_arguments.append(['cp', PATH_PKI_CERT_KEY.format(current_dir, cert_name), cert_private_key])
+        commands_list_without_arguments.append(['sudo', 'cp', PATH_PKI_CERT_KEY.format(current_dir, cert_name), cert_private_key])
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
     return serial, start_date, end_date, lifetime, distingushed_name, cert_type
@@ -112,8 +112,8 @@ def revoke_certificates_in_system(ca_name, cert, list_revoked_cert):
 
     # Revoking certificates
     revoke_list_certs(current_dir, ca_name, list_revoked_cert)
-    commands_list_without_arguments = [['mkdir', '-p', PATH_REVOKED],
-                                       ['cp', PATH_PKI_CERT_REVOKED.format(current_dir, cert.serial), PATH_REVOKED_CERT.format(cert.serial)]]
+    commands_list_without_arguments = [['sudo', 'mkdir', '-p', PATH_REVOKED],
+                                       ['sudo', 'cp', PATH_PKI_CERT_REVOKED.format(current_dir, cert.serial), PATH_REVOKED_CERT.format(cert.serial)]]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
 def unrevoke_certificates_in_system(ca_name, cert, list_revoked_cert):
@@ -145,7 +145,7 @@ def export_certificate_in_system(cert_name, cert_type, download_type, password='
         cert_value = read_certificate_value(cert_key_path)
     else:  # .p12 file
         # execute_command_without_arguments(["sudo", "rm", "-f", PATH_DOWNLOADS_CERTS_P12.format(cert_name)])
-        execute_command_without_arguments(["openssl", "pkcs12", "-export", "-out", PATH_DOWNLOADS_CERTS_P12.format(cert_name),
+        execute_command_without_arguments(["sudo", "openssl", "pkcs12", "-export", "-out", PATH_DOWNLOADS_CERTS_P12.format(cert_name),
                                            "-inkey", cert_key_path, "-in", cert_path,
                                            "-passout", f'pass:{password}'])
         cert_value = "Certificate p12"

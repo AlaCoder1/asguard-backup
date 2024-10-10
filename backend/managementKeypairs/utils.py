@@ -23,7 +23,7 @@ from utils.commands_utils import execute_command_without_arguments
 def get_finger_print(private_key_name):
     """Returns the finger print of a public key"""
     # Command 1: Save the public key in DER format to a temporary file
-    process = execute_command_without_arguments(["openssl", "rsa", "-in", f"{PATH_IPSEC_D_PRIVATE}{private_key_name}.key", "-pubout", "-outform", "DER"])
+    process = execute_command_without_arguments(["sudo", "openssl", "rsa", "-in", f"{PATH_IPSEC_D_PRIVATE}{private_key_name}.key", "-pubout", "-outform", "DER"])
     with open(f"/etc/ipsec.d/finger_prints/{private_key_name}.der", "w") as der_file:
         der_file.write(process.stdout)
 

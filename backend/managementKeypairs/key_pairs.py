@@ -18,7 +18,7 @@ def delete_private_key_in_system(private_key_name):
 
 def create_public_key_in_system(private_key_name, public_key_name):
     """Function to create in system a private key"""
-    commands_list_without_arguments = [['mkdir', '-p', PATH_IPSEC_D_FINGER_PRINTS],
+    commands_list_without_arguments = [['sudo', 'mkdir', '-p', PATH_IPSEC_D_FINGER_PRINTS],
                                        ['sudo', 'openssl', 'rsa', '-in', f'{PATH_IPSEC_D_PRIVATE}{private_key_name}.pem', '-pubout', '-out', f'{PATH_IPSEC_D_CERTS}{public_key_name}.pem'],
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)

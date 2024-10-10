@@ -8,7 +8,7 @@ from utils.commands_utils import execute_command_without_arguments
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         try:
-            execute_command_without_arguments(["mkdir", "-p", PATH_RULESET_NAT_DIRECTORY])
+            execute_command_without_arguments(["sudo", "mkdir", "-p", PATH_RULESET_NAT_DIRECTORY])
             with open(PATH_NFTABLES_CONF, "w") as nftables_file:
                 nftables_file.write(f"include \"{PATH_RULESET_NFT}\";\n")
             with open(PATH_RULESET_NFT, "w") as ruleset_file:

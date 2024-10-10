@@ -15,7 +15,7 @@ def get_rule_handle_with_position(list_nat_rules:list[str], position):
 
 def get_rule_handle_in_system(nat_type="postrouting", rule_position=0):
     """Return the last rule handle from ruleset"""
-    rule_set = execute_command_without_arguments(["nft", "-a", "list", "table", "nat"])
+    rule_set = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
 
     list_nat_rules = find_nat_in_ruleset(rule_set.stdout, nat_type)
     handle_number = get_rule_handle_with_position(list_nat_rules, rule_position)
@@ -35,7 +35,7 @@ def save_handle_from_system_to_database(list_routing_from_db, list_routing_from_
 
 def save_rules_handle_after_reboot():
     # Get list of nat rules from system: postrouting (SNAT and One To One) and prerouting (DNAT)
-    ruleset = execute_command_without_arguments(["nft", "-a", "list", "table", "nat"])
+    ruleset = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
     list_postrouting_from_system = find_nat_in_ruleset(ruleset.stdout, "postrouting")
     list_prerouting_from_system = find_nat_in_ruleset(ruleset.stdout, "prerouting")
 
@@ -57,7 +57,7 @@ def update_position_nat(chain="postrouting"):
     """Update the activated rules position after the changes like adding or deleting a rule"""
     
     # Get list of nat rules from system: postrouting (SNAT and One To One) or prerouting (DNAT)
-    ruleset = execute_command_without_arguments(["nft", "-a", "list", "table", "nat"])
+    ruleset = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
     list_routing_from_system = find_nat_in_ruleset(ruleset.stdout, chain)
     if chain == "postrouting":
         SNat.objects.filter(rule_status=True).update(postrouting_position=None)

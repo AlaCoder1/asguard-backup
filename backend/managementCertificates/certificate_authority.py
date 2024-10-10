@@ -9,7 +9,7 @@ def create_ca_in_system(ca_name, common_name, updated_fields_vars):
     """Function to create in system an authority certificate"""
     current_dir = get_current_directory()
 
-    execute_command_with_arguments(['sudo', 'easyrsa', 'init-pki'], 'yes\n')
+    execute_command_with_arguments(['sudo', 'easyrsa', 'init-pki'], 'yes\nyes')
     command = ['cp', PATH_VARS_INITIALIZE, PATH_PKI_VARS.format(current_dir)]
     execute_command_without_arguments(command)
     change_vars(current_dir, updated_fields_vars)
@@ -21,9 +21,9 @@ def create_ca_in_system(ca_name, common_name, updated_fields_vars):
     execute_command_with_arguments(['sudo', 'easyrsa', 'build-ca', 'nopass'], f'\n\n\n\n\n{common_name}\n\n\n', time_sleep)
     save_certificate_in_text_format(PATH_PKI_CA.format(current_dir))
 
-    commands_list_without_arguments = [['cp', PATH_PKI_VARS.format(current_dir), PATH_VARS.format(ca_name)],
-                                       ['cp', PATH_PKI_CA.format(current_dir), PATH_CA_CRT.format(ca_name)],
-                                       ['cp', PATH_PKI_CA_KEY.format(current_dir), PATH_CA_KEY.format(ca_name)],
+    commands_list_without_arguments = [['sudo', 'cp', PATH_PKI_VARS.format(current_dir), PATH_VARS.format(ca_name)],
+                                       ['sudo', 'cp', PATH_PKI_CA.format(current_dir), PATH_CA_CRT.format(ca_name)],
+                                       ['sudo', 'cp', PATH_PKI_CA_KEY.format(current_dir), PATH_CA_KEY.format(ca_name)],
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
     
@@ -37,10 +37,10 @@ def create_ca_in_system(ca_name, common_name, updated_fields_vars):
 
 def import_ca_in_system(ca_name, input_fields:dict):
     current_dir = get_current_directory()
-    execute_command_with_arguments(['sudo', 'easyrsa', 'init-pki'], 'yes\n')
+    execute_command_with_arguments(['sudo', 'easyrsa', 'init-pki'], 'yes\nyes')
     execute_command_with_arguments(['sudo', 'easyrsa', 'build-ca', 'nopass'], f'{ca_name}\n')
-    commands_list_without_arguments = [['cp', PATH_VARS_INITIALIZE, PATH_PKI_VARS.format(current_dir)],
-                                       ['cp', PATH_VARS_INITIALIZE, PATH_VARS.format(ca_name)]]
+    commands_list_without_arguments = [['sudo', 'cp', PATH_VARS_INITIALIZE, PATH_PKI_VARS.format(current_dir)],
+                                       ['sudo', 'cp', PATH_VARS_INITIALIZE, PATH_VARS.format(ca_name)]]
     execute_list_commands_without_arguments(commands_list_without_arguments)
     with open(PATH_CA_CRT.format(ca_name), "w+") as ca_file:
         ca_file.write(input_fields["certificate_data"])
@@ -60,8 +60,8 @@ def import_ca_in_system(ca_name, input_fields:dict):
     # Test existance of private key to create a revocation list
     if input_fields["certificate_private_key"] != "":
 
-        commands_list_without_arguments = [['cp', PATH_CA_CRT.format(ca_name), PATH_PKI_CA.format(current_dir)],
-                                           ['cp', PATH_CA_KEY.format(ca_name), PATH_PKI_CA_KEY.format(current_dir)]
+        commands_list_without_arguments = [['sudo', 'cp', PATH_CA_CRT.format(ca_name), PATH_PKI_CA.format(current_dir)],
+                                           ['sudo', 'cp', PATH_CA_KEY.format(ca_name), PATH_PKI_CA_KEY.format(current_dir)]
                                            ]
         execute_list_commands_without_arguments(commands_list_without_arguments)
         create_list_rev_in_system(current_dir, ca_name)
@@ -91,16 +91,16 @@ def export_ca_in_system(ca_path):
 def create_list_rev_in_system(current_dir, ca_name):
     """Create a list of revocation of a CA certificate in system"""
     commands_list_without_arguments = [['sudo', 'easyrsa', 'gen-crl'],
-                                       ['cp', PATH_PKI_CA_CRL.format(current_dir), PATH_CA_CRL_PEM.format(ca_name)],
+                                       ['sudo', 'cp', PATH_PKI_CA_CRL.format(current_dir), PATH_CA_CRL_PEM.format(ca_name)],
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
 
 def export_ca_list_rev_in_system(ca_name):
     """Export a list of revocation of a CA certificate from system"""
-    commands_list_without_arguments = [['cp', PATH_CA_CRL_PEM.format(ca_name), 
+    commands_list_without_arguments = [['sudo', 'cp', PATH_CA_CRL_PEM.format(ca_name), 
                                         PATH_CA_CRL_PEM.format(ca_name).replace(".pem", "_copy.pem")],
-                                       ['mv', PATH_CA_CRL_PEM.format(ca_name).replace(".pem", "_copy.pem"), 
+                                       ['sudo', 'mv', PATH_CA_CRL_PEM.format(ca_name).replace(".pem", "_copy.pem"), 
                                         PATH_CA_CRL.format(ca_name)],
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)

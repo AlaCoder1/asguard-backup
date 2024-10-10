@@ -23,17 +23,17 @@
       </div>
       <v-menu>
         <template v-slot:activator="{ props }">
-          <!-- <v-avatar class="ml-3 mr-3" size="40" v-bind="props" style="
+          <v-avatar class="ml-3 mr-3" size="40" v-bind="props" style="
               border: 2px solid #fff;
               cursor: pointer;
               overflow: hidden;
               border-radius: 50%;
             ">
             <img :src="state.imageURL" alt="avatar" style="width: 100%; height: 100%; object-fit: cover" />
-          </v-avatar> -->
-          <v-avatar class="ml-3 mr-3" size="30" v-bind="props">
-            <v-icon size="30" class="white--text" color="white">mdi-account-circle-outline</v-icon>
           </v-avatar>
+          <!-- <v-avatar class="ml-3 mr-3" size="30" v-bind="props">
+            <v-icon size="30" class="white--text" color="white">mdi-account-circle-outline</v-icon>
+          </v-avatar> -->
 
         </template>
         <v-list style="cursor: pointer; padding: 15px">

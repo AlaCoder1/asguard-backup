@@ -142,10 +142,10 @@ def connect_to_ad(request):
             
             except ldap.SERVER_DOWN:
                 # LDAP authentication failed
-                return JsonResponse({'msg': f"{CONSTANT_LDAP_SERVER} {CONSTANT_LDAP_UNREACHABLE}"},status=500)
+                return JsonResponse({'msg': f"{CONSTANT_LDAP_SERVER} {CONSTANT_LDAP_UNREACHABLE}"},status=400)
             except ldap.LDAPError as e:
                 # LDAP authentication failed
-                return JsonResponse({'msg': f"{CONSTANT_LDAP_SERVER} {CONSTANT_LDAP_AUTH}"},status=500)
+                return JsonResponse({'msg': f"{CONSTANT_LDAP_SERVER} {CONSTANT_LDAP_AUTH}"},status=400)
 
         
         except Exception as e:

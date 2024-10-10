@@ -126,7 +126,7 @@ def unrevoke_certificates_in_system(ca_name, cert, list_revoked_cert):
     # Revoking certificates
     revoke_list_certs(current_dir, ca_name, list_revoked_cert)
 
-    command = ['rm', '-f', PATH_REVOKED_CERT.format(cert.serial)]
+    command = ['sudo', 'rm', '-f', PATH_REVOKED_CERT.format(cert.serial)]
     execute_command_without_arguments(command)
 
 

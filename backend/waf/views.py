@@ -61,7 +61,7 @@ def get_waf_config(request):
                                      'json_request_body_parser':Schema(type=TYPE_BOOLEAN),
                                      'maximum_request_body_size': Schema(type=TYPE_INTEGER),
                                      'request_body_size_files_excluded': Schema(type=TYPE_INTEGER),
-                                     'request_body_limit_action': Schema(type=TYPE_STRING, enum=["Accept", "Reject"]),
+                                     'request_body_limit_action': Schema(type=TYPE_STRING, enum=["ProcessPartial", "Reject"]),
                                      'maximum_parsing_depth_json': Schema(type=TYPE_INTEGER),
                                      'maximum_number_args_request': Schema(type=TYPE_INTEGER),
                                      'pcre_match_limit': Schema(type=TYPE_INTEGER),

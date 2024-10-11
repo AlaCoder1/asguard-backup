@@ -46,7 +46,7 @@ def add_user(username, password):
 
 def delete_user_in_system(username):
     """function to delete user"""
-    cmd = "userdel " + "-r " + username
+    cmd = "sudo userdel " + "-r " + username
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout
     error = completed_process.stderr
@@ -94,7 +94,7 @@ def add_mail_spool(username):
         os.system(i)
 
 
-def change_password_by_admin(new_password, username):
+def reset_password_by_admin_in_system(new_password, username):
     # run 'passwd' command to change password
     cmd = f"echo '{new_password}\n{new_password}\n' | sudo passwd {username}"
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)

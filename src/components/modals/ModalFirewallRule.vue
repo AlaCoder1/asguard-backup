@@ -121,7 +121,12 @@
                 color="#213E9F"
                 label-color="#ffffff"
                 :disabled="
-                  equal || dportCheck || sportCheck || daddrCheck || saddrCheck
+                  equal ||
+                  dportCheck ||
+                  sportCheck ||
+                  daddrCheck ||
+                  saddrCheck ||
+                  dropReject
                 "
                 :isLarge="true"
                 class="ml-2"
@@ -222,6 +227,24 @@ export default {
       editValue: null,
       type_rule: "",
       status: "",
+    });
+
+    const dropReject = computed(() => {
+      let dropReject = false;
+      if (
+        state.formData.policy === "reject" ||
+        state.formData.policy === "drop"
+      ) {
+        if (
+          state.formData.saddr === "ALL" &&
+          state.formData.sport === "ALL" &&
+          state.formData.daddr === "ALL" &&
+          state.formData.dport === "ALL"
+        )
+          dropReject = true;
+      } else dropReject = false;
+
+      return dropReject;
     });
 
     const saddrCheck = computed(() => {
@@ -556,6 +579,7 @@ export default {
       equal,
       policyList,
       protocolList,
+      dropReject,
       v$,
       emitter,
       closeModal,

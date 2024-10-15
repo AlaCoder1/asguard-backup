@@ -3,9 +3,8 @@ from backend.ztna.models import Enrollements, Identities,HostConfigs,InterceptCo
 from backend.ztna.serializers import EnrollementsSerializer, HostSerializerUpdate, IdentitiesSerializer, IdentitiesSerializerUpdate, InterceptConfigsSerializer,HostConfigsSerializer, InterceptSerializerUpdate, RelaysPolicySerializerUpdate, RelaysSerializerUpdate, RelaysPolicySerializer, RelaysSerializer, RelaysSerializerUpdate, ServicesPolicySerializer, ServicesPolicySerializerUpdate, ServicesRelaysPolicySerializer, ServicesRelaysPolicySerializerUpdate, ServicesSerializer, ServicesSerializerUpdate
 from utils.errors_utils import CommandExecutionError
 from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES
-from .list_ztna import get_service_edge_router_policies, get_service_policies, get_services
-from .utils import change_ports_yaml_file, change_status_router, change_status_ztna_service, create_router, delete_router, get_Zt_Token, get_identities_from_ziti, get_routers_from_ziti, get_status_router_from_system, get_status_ztna_service, update_router
-from django.http import JsonResponse
+from .utils import change_ports_yaml_file, change_status_router, change_status_ztna_service, check_host_templates, create_router, delete_router, get_Zt_Token, get_identities_from_ziti, get_routers_from_ziti, get_status_router_from_system, get_status_ztna_service, local_domain_linux_name, local_domain_windows_name, update_router
+from django.http import HttpResponse, JsonResponse
 from django.utils.translation import gettext_lazy as _
 import requests
 from drf_yasg.utils import swagger_auto_schema
@@ -14,7 +13,6 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime
 from django.forms.models import model_to_dict
-from rest_framework.response import Response
 from django.core import serializers
 
 
@@ -54,6 +52,7 @@ def status_ztna(request):
     """API to get ZTNA service status from a script bash"""
     try:
         status = get_status_ztna_service()
+        status_templates = check_host_templates()
         if status:
             return JsonResponse({"data": True}, status=200)
         return JsonResponse({"data": False}, status=200)
@@ -116,6 +115,40 @@ def get_all_identities(request):
         return JsonResponse(list_identities, safe=False)
 
 
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def local_domain_linux(request):
+    # Get the file content for Linux
+    file_content = local_domain_linux_name()
+
+    if file_content is not None:
+        # Return the file content as a JSON response
+        return JsonResponse({
+    'os': 'linux',
+    'content': file_content
+        })
+    else:
+        return JsonResponse({'error': 'Linux file not found or unreadable'}, status=404)
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def local_domain_windows(request):
+
+    file_content = local_domain_windows_name()
+
+    if file_content is not None:
+        # Return the file content as a JSON response
+        return JsonResponse({
+    'os': 'windows',
+    'content': file_content
+        })
+    else:
+        return JsonResponse({'error': 'Windows file not found or unreadable'}, status=404)
+    
+    
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -124,7 +157,9 @@ def add_identities(request):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_IDENTITIES, headers=headers, json=data, verify=False)
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key not in ['Description', 'os']}
+    response = requests.post(PATH_ZTNA_IDENTITIES, headers=headers, json=data_without_description, verify=False)
     response_dict = json.loads(response.text)
     identity_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
@@ -135,15 +170,16 @@ def add_identities(request):
         else:
             payload['attribute_identitie'] = data['roleAttributes'][0]
         payload['type'] = data['type']
-        if 'description' in data:
-            payload['description'] = data['description']
+        if 'Description' in data:
+            payload['description'] = data['Description']
         else:
             payload['description'] = None
         payload['isAdmin'] = data['isAdmin']
+        payload['os'] = data['os']
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        serializer_identitie = IdentitiesSerializer(data=payload)
+        serializer_identitie = IdentitiesSerializer(data=payload,partial=True)
         if serializer_identitie.is_valid():
             serializer_identitie.save()
             return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
@@ -179,24 +215,26 @@ def update_identities(request, id):
     payload={}
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
     payload['name'] = data['name']
     if data['roleAttributes'][0] == "": 
         payload['attribute_identitie'] = None
     else:
         payload['attribute_identitie'] = data['roleAttributes'][0]
     payload['type'] = data['type']
-    if 'description' in data:
-        payload['description'] = data['description']
+    if 'Description' in data:
+        payload['description'] = data['Description']
     else:
         payload['description'] = None
     payload['is_admin'] = data['isAdmin']
+    payload['os']= data['os']
     identitie = Identities.objects.get(id=id)
     serializer_update_identity = IdentitiesSerializerUpdate(identitie, data=payload, partial=True) 
     if serializer_update_identity.is_valid():
-        response = requests.patch(f"{PATH_ZTNA_IDENTITIES}/{identitie}", headers=headers, json=data, verify=False)
+        response = requests.patch(f"{PATH_ZTNA_IDENTITIES}/{identitie}", headers=headers, json=data_without_description, verify=False)
         serializer_update_identity.save()
         return JsonResponse({"message": f"{CONSTANT_IDENTITIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
-    print(serializer_update_identity.errors)
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_IDENTITIE}"}, status=400)
 
 
@@ -275,7 +313,9 @@ def add_routers(request):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_ROUTERS, headers=headers, json=data, verify=False)
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
+    response = requests.post(PATH_ZTNA_ROUTERS, headers=headers, json=data_without_description, verify=False)
     response_dict = json.loads(response.text)
     relay_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
@@ -291,14 +331,14 @@ def add_routers(request):
             payload['attribute_relay'] == None
         else:
             payload['attribute_relay'] = data['roleAttributes'][0]
-        if 'description' in data:
-            payload['description'] = data['description']
+        if 'Description' in data:
+            payload['description'] = data['Description']
         else:
             payload['description'] = None
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        serializer_relay = RelaysSerializer(data=payload)
+        serializer_relay = RelaysSerializer(data=payload,partial=True)     
         if serializer_relay.is_valid():
             saved_instance=serializer_relay.save()
             create_router(payload['name'],payload['token'])
@@ -339,6 +379,8 @@ def update_routers(request, id):
     payload={}
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
     payload['name'] = data['name']
     payload['traversal']=data['noTraversal']
     payload['tunneler']=data['isTunnelerEnabled']
@@ -346,8 +388,8 @@ def update_routers(request, id):
         payload['attribute_relay'] == None
     else:
         payload['attribute_relay'] = data['roleAttributes'][0]
-    if 'description' in data:
-        payload['description'] = data['description']
+    if 'Description' in data:
+        payload['description'] = data['Description']
     else:
         payload['description'] = None
     relay = Relays.objects.get(id=id)
@@ -355,7 +397,7 @@ def update_routers(request, id):
     serializer_update_relay = RelaysSerializerUpdate(relay,data=payload, partial=True)
     if serializer_update_relay.is_valid():
         serializer_update_relay.save()
-        response = requests.put(f"{PATH_ZTNA_ROUTERS}/{relay}", headers=headers, json=data, verify=False)
+        response = requests.put(f"{PATH_ZTNA_ROUTERS}/{relay}", headers=headers, json=data_without_description, verify=False)
         if old_name!=payload['name']:
             update_router(old_name,payload['name'])
         return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
@@ -368,10 +410,11 @@ def update_routers(request, id):
 def start_routers(request, id):
     try:
         relay = Relays.objects.get(id=id)
+        local_domain_name()
         router_status = get_status_router_from_system(relay.name)
         status = get_status_ztna_service()
         if ("Router is not running" in router_status) and (status):
-            change_status_router(relay.name, "start")
+            # change_status_router(relay.name, "start")
             return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_RELAY}"}, status=400)
     except CommandExecutionError:
@@ -433,7 +476,9 @@ def add_configs(request):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_CONFIGS, headers=headers, json=data, verify=False)
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
+    response = requests.post(PATH_ZTNA_CONFIGS, headers=headers, json=data_without_description, verify=False)
     response_dict = json.loads(response.text)
     if response.status_code == 201:
         ############### intercept ###############
@@ -448,12 +493,12 @@ def add_configs(request):
             payload['high'] = data['data']["portRanges"][0]["high"]  # Fixed to access first port range
 
             # Optional field handling
-            payload['description'] = data.get('description', None)
+            payload['description'] = data.get('Description', None)
             now = datetime.now()
             formatted_now = now.strftime("%Y-%m-%d %H:%M")
             payload['date_creation'] = formatted_now
             # Serialize and save the payload
-            serializer_intercept = InterceptConfigsSerializer(data=payload)
+            serializer_intercept = InterceptConfigsSerializer(data=payload,partial=True)
             if serializer_intercept.is_valid():
                 serializer_intercept.save()
                 return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
@@ -466,11 +511,11 @@ def add_configs(request):
             payload['protocol'] = data['data']['protocol']  
             payload['address'] = data['data']["address"]
             payload['port'] = data['data']["port"] 
-            payload['description'] = data.get('description', None)
+            payload['description'] = data.get('Description', None)
             now = datetime.now()
             formatted_now = now.strftime("%Y-%m-%d %H:%M")
             payload['date_creation'] = formatted_now
-            serializer_host = HostConfigsSerializer(data=payload)
+            serializer_host = HostConfigsSerializer(data=payload,partial=True)
             if serializer_host.is_valid():
                 serializer_host.save()
                 return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
@@ -525,16 +570,18 @@ def update_host_configs(request, id):
     payload={}
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
     payload['name'] = data['name']
     payload['protocol'] = data['data']['protocol']  
     payload['address'] = data['data']["address"]
     payload['port'] = data['data']["port"] 
-    payload['description'] = data.get('description', None)
+    payload['description'] = data.get('Description', None)
     host = HostConfigs.objects.get(id=id)
     serializer_update_host = HostSerializerUpdate(host,data=payload, partial=True)
     if serializer_update_host.is_valid():
         serializer_update_host.save()
-        response = requests.put(f"{PATH_ZTNA_CONFIGS}/{host}", headers=headers, json=data, verify=False)
+        response = requests.put(f"{PATH_ZTNA_CONFIGS}/{host}", headers=headers, json=data_without_description, verify=False)
         return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": serializer_update_host.errors}, status=400)
 
@@ -546,18 +593,20 @@ def update_intercept_configs(request, id):
     payload={}
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
     if data["configTypeId"] == 'g7cIWbcGg':
         payload['name'] = data['name']
         payload['protocol'] = data['data']['protocols'][0]  
         payload['address'] = data['data']["addresses"][0]
         payload['low'] = data['data']["portRanges"][0]["low"]  
         payload['high'] = data['data']["portRanges"][0]["high"] 
-        payload['description'] = data.get('description', None)
+        payload['description'] = data.get('Description', None)
         intercept = InterceptConfigs.objects.get(id=id)
         serializer_update_intercept = InterceptSerializerUpdate(intercept,data=payload, partial=True)
         if serializer_update_intercept.is_valid():
             serializer_update_intercept.save()
-            response = requests.put(f"{PATH_ZTNA_CONFIGS}/{intercept}", headers=headers, json=data, verify=False)
+            response = requests.put(f"{PATH_ZTNA_CONFIGS}/{intercept}", headers=headers, json=data_without_description, verify=False)
             return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
         return JsonResponse({"error": serializer_update_intercept.errors}, status=400)     
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_CONFIGURATION}"}, status=400)
@@ -589,7 +638,9 @@ def add_services(request):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_SERVICES, headers=headers, json=data, verify=False)
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
+    response = requests.post(PATH_ZTNA_SERVICES, headers=headers, json=data_without_description, verify=False)
     response_dict = json.loads(response.text)
     service_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
@@ -604,14 +655,14 @@ def add_services(request):
         payload['host_id']=host.pk
         intercept = InterceptConfigs.objects.get(ref_intercept=data['configs'][0])
         payload['intercept_id']=intercept.pk
-        if 'description' in data:
-            payload['description'] = data['description']
+        if 'Description' in data:
+            payload['description'] = data['Description']
         else:
             payload['description'] = None
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        serializer_service = ServicesSerializer(data=payload)
+        serializer_service = ServicesSerializer(data=payload,partial=True)
         if serializer_service.is_valid():
             serializer_service.save()
             return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
@@ -647,7 +698,8 @@ def update_services(request, id):
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
     payload={}
-    print(data)
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
     payload['name'] = data['name']
     if data['roleAttributes'][0] == "": 
         payload['attribute_service'] == None
@@ -659,20 +711,16 @@ def update_services(request, id):
     intercept = InterceptConfigs.objects.get(ref_intercept=data['configs'][0])
     payload['intercept_id']=intercept.pk
     services = Services.objects.get(id=id)
-    if 'description' in data:
-        payload['description'] = data['description']
+    if 'Description' in data:
+        payload['description'] = data['Description']
     else:
         payload['description'] = None
     serializer_update_service = ServicesSerializerUpdate(services,data=payload, partial=True)
     if serializer_update_service.is_valid():
         serializer_update_service.save()
-        response = requests.put(f"{PATH_ZTNA_SERVICES}/{services}", headers=headers, json=data, verify=False)
+        response = requests.put(f"{PATH_ZTNA_SERVICES}/{services}", headers=headers, json=data_without_description, verify=False)
         return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
     return JsonResponse({"error": serializer_update_service.errors}, status=400)
-    
-    # if response.status_code == 200:
-    #     return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
-    # return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SERVICE}"}, status=400)
 
 
 ################################
@@ -703,16 +751,17 @@ def add_edge_routers_policies(request):
     payload={}
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_EDGE_ROUTERS_POLICIES, headers=headers, json=data, verify=False)
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
+    response = requests.post(PATH_ZTNA_EDGE_ROUTERS_POLICIES, headers=headers, json=data_without_description, verify=False)
     response_dict = json.loads(response.text)
     relay_policy_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
-        print('here')
         payload['ref_relay_policy'] = relay_policy_id
         payload['name'] = data['name']
         payload['semantique'] = data['semantic']
-        if 'description' in data:
-            payload['description'] = data['description']
+        if 'Description' in data:
+            payload['description'] = data['Description']
         else:
             payload['description'] = None
         relay_att=data['edgeRouterRoles'][0]
@@ -730,11 +779,10 @@ def add_edge_routers_policies(request):
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        print('###########################################',formatted_now)
-        serializer = RelaysPolicySerializer(data=payload)
+        serializer = RelaysPolicySerializer(data=payload, partial=True)
         if serializer.is_valid():
             serializer.save()
-        return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+            return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
 
 
@@ -765,12 +813,13 @@ def update_edge_routers_policies(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
     payload={}
-    print(data)
     payload['name'] = data['name']
     payload['semantique']=data['semantic']
-    if 'description' in data:
-        payload['description'] = data['description']
+    if 'Description' in data:
+        payload['description'] = data['Description']
     else:
         payload['description'] = None
     relay_att=data['edgeRouterRoles'][0]
@@ -789,7 +838,7 @@ def update_edge_routers_policies(request, id):
     serializer = RelaysPolicySerializerUpdate(relay_policy,data=payload, partial=True)
     if serializer.is_valid():
         serializer.save()
-        response = requests.put(f"{PATH_ZTNA_EDGE_ROUTERS_POLICIES}/{relay_policy}", headers=headers, json=data, verify=False)
+        response = requests.put(f"{PATH_ZTNA_EDGE_ROUTERS_POLICIES}/{relay_policy}", headers=headers, json=data_without_description, verify=False)
         return JsonResponse({"message": f"{CONSTANT_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_EDGE_ROUTER_POLICIE}"}, status=400)
 
@@ -818,7 +867,9 @@ def add_services_policies(request):
     payload={}
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_SERVICES_POLICIES, headers=headers, json=data, verify=False)
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
+    response = requests.post(PATH_ZTNA_SERVICES_POLICIES, headers=headers, json=data_without_description, verify=False)
     response_dict = json.loads(response.text)
     service_policy_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
@@ -826,8 +877,8 @@ def add_services_policies(request):
         payload['name'] = data['name']
         payload['semantique'] = data['semantic']
         payload['type'] = data['type']
-        if 'description' in data:
-            payload['description'] = data['description']
+        if 'Description' in data:
+            payload['description'] = data['Description']
         else:
             payload['description'] = None
         Service_att=data['serviceRoles'][0]
@@ -845,10 +896,10 @@ def add_services_policies(request):
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        serializer = ServicesPolicySerializer(data=payload)
+        serializer = ServicesPolicySerializer(data=payload,partial=True)
         if serializer.is_valid():
             serializer.save()
-        return JsonResponse({"message":f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
+            return JsonResponse({"message":f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE_POLICIE}"}, status=400)
 
 
@@ -879,12 +930,14 @@ def update_services_policies(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
     payload={}
     payload['name'] = data['name']
     payload['semantique'] = data['semantic']
     payload['type'] = data['type']
-    if 'description' in data:
-        payload['description'] = data['description']
+    if 'Description' in data:
+        payload['description'] = data['Description']
     else:
         payload['description'] = None
     Service_att=data['serviceRoles'][0]
@@ -903,7 +956,7 @@ def update_services_policies(request, id):
     serializer_svc_policy_update = ServicesPolicySerializerUpdate(service_policy,data=payload, partial=True)
     if serializer_svc_policy_update.is_valid():
         serializer_svc_policy_update.save()
-        response = requests.put(f"{PATH_ZTNA_SERVICES_POLICIES}/{service_policy}", headers=headers, json=data, verify=False)
+        response = requests.put(f"{PATH_ZTNA_SERVICES_POLICIES}/{service_policy}", headers=headers, json=data_without_description, verify=False)
         return JsonResponse({"message": f"{CONSTANT_SERVICE_POLICIE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SERVICE_POLICIE}"}, status=400)
 
@@ -931,15 +984,17 @@ def add_services_edge_routers_policies(request):
     payload={}
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    response = requests.post(PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, headers=headers, json=data, verify=False)
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
+    response = requests.post(PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, headers=headers, json=data_without_description, verify=False)
     response_dict = json.loads(response.text)
     relay_policy_id = response_dict.get('data', {}).get('id')
     if response.status_code == 201:
         payload['ref_service_relay_policy'] = relay_policy_id
         payload['name'] = data['name']
         payload['semantique'] = data['semantic']
-        if 'description' in data:
-            payload['description'] = data['description']
+        if 'Description' in data:
+            payload['description'] = data['Description']
         else:
             payload['description'] = None
         relay_att=data['edgeRouterRoles'][0]
@@ -957,7 +1012,7 @@ def add_services_edge_routers_policies(request):
         now = datetime.now()
         formatted_now = now.strftime("%Y-%m-%d %H:%M")
         payload['date_creation'] = formatted_now
-        serializer = ServicesRelaysPolicySerializer(data=payload)
+        serializer = ServicesRelaysPolicySerializer(data=payload,partial=True)
         if serializer.is_valid():
             serializer.save()
             return JsonResponse({"message": f"{CONSTANT_SERVICE_EDGE_ROUTER_POLICIE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
@@ -991,12 +1046,13 @@ def update_services_edge_routers_policies(request, id):
     session_id = get_Zt_Token()
     headers = {"zt-session": session_id, "Content-Type": "application/json"}
     data = request.data
-    print(data)
+    datacopy = request.data.copy()  
+    data_without_description = {key: value for key, value in datacopy.items() if key != 'Description'} 
     payload={}
     payload['name'] = data['name']
     payload['semantique'] = data['semantic']
-    if 'description' in data:
-        payload['description'] = data['description']
+    if 'Description' in data:
+        payload['description'] = data['Description']
     else:
         payload['description'] = None
     relay_att=data['edgeRouterRoles'][0]

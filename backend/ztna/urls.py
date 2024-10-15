@@ -15,6 +15,8 @@ urlpatterns = [
     path('update_identities/<int:id>', views.update_identities, name='update_identities'),
     path('add_enrollments', views.add_enrollments, name='add_enrollments'),
     path('delete_enrollments/<int:id>', views.delete_enrollments, name='delete_enrollments'),
+    path('local_domain_linux/', views.local_domain_linux, name='local_domain_linux'),
+    path('local_domain_windows/', views.local_domain_windows, name='local_domain_windows'),
     
     ########## Routers Paths ##########
     path('get_routers', views.get_all_routers, name='get_routers'),

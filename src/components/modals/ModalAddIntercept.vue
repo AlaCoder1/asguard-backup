@@ -231,7 +231,7 @@ export default {
         adress.value = data.address;
         portLow.value = data.low;
         portHigh.value = data.high;
-        Description.value = "";
+        Description.value = data.description;
         selectedTitle.value = data.protocol;
       }
     };
@@ -253,6 +253,7 @@ export default {
           ],
           protocols: [selectedTitle.value],
         },
+        Description:Description.value
       };
 
       let token = document.getElementById("app").getAttribute("token");

@@ -16,7 +16,7 @@ create_and_enroll=true
 get_router_folder_path() {
     local router_name="$1"
     local script_dir="$(dirname "${BASH_SOURCE[0]}")"
-    echo "$script_dir/relays_folder/${router_name}"  # Always place inside relays_folder
+    echo "$script_dir/../relays_folder/${router_name}"  # Always place inside relays_folder
 }
 
 # Check if at least one of the files exists

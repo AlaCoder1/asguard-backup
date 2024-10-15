@@ -311,13 +311,24 @@ export default {
     const handleActionClient = (action, rowData, index) => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      let token = document.getElementById("app").getAttribute("token");
+
       switch (action) {
         case "edit":
-          // openModalUpdate(rowData.id);
-          state.modalMode = "edit";
+if (token && token !== "null") {
+  state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           state.selectedId = rowData.id;
+} 
+else {
+  state.snackbar = true;
+  state.color = "red";
+  state.textAlert = "ZTNA is not running";
+
+}
+          // openModalUpdate(rowData.id);
+
 
           break;
         case "download":
@@ -345,7 +356,8 @@ export default {
 
           break;
         case "play":
-          console.log("play");
+if (token && token !== "null") {
+  console.log("play");
           let payloadStart = {
             name: rowData.name,
             token: rowData.enrollmentJwt
@@ -382,10 +394,19 @@ export default {
               state.isLoadingDialogue = false;
             });
 
+} 
+else {
+  state.snackbar = true;
+  state.color = "red";
+  state.textAlert = "ZTNA is not running";
+
+}
+
           break;
         case "stop":
-          
-          let payload = {
+
+if (token && token !== "null") {
+  let payload = {
             name: rowData.name,
             token: rowData.enrollmentJwt
           };
@@ -420,6 +441,13 @@ export default {
               state.loading = false;
               state.isLoadingDialogue = false;
             });
+} 
+else {
+  state.snackbar = true;
+  state.color = "red";
+  state.textAlert = "ZTNA is not running";
+
+}
 
           break;
         default:
@@ -483,14 +511,36 @@ export default {
     });
 
     const openModalAdd = () => {
-      state.modalData = {};
+      let token = document.getElementById("app").getAttribute("token");
+
+if (token && token !== "null") {
+  state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
+} 
+else {
+  state.snackbar = true;
+  state.color = "red";
+  state.textAlert = "ZTNA is not running";
+
+}
+
     };
 
     const opendelete = (itemId) => {
-      state.selectedId = itemId;
-      state.deleteDialog = true;
+      let token = document.getElementById("app").getAttribute("token");
+
+if (token && token !== "null") {
+  state.selectedId = itemId;
+  state.deleteDialog = true;
+} 
+else {
+  state.snackbar = true;
+  state.color = "red";
+  state.textAlert = "ZTNA is not running";
+
+}
+ 
     };
 
     const confirmDelete = async (deletedItemId) => {
@@ -518,33 +568,6 @@ export default {
           state.color = "red";
           state.textAlert = i.response.data.error;
         });
-
-      // try {
-      //   let token = document.getElementById("app").getAttribute("token");
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = `/edge/management/v1/edge-routers/${deletedItemId}`;
-      //   await axios.delete(proxyUrl + apiUrl, {
-      //     headers: {
-      //       "zt-session": token,
-      //       "Content-Type": "application/json",
-      //     },
-      //   });
-      //   state.snackbar = true;
-      //   state.color = "success";
-      //   state.textAlert = "Relay deleted successfully";
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   state.deleteDialog = false;
-      // } catch (error) {
-      //   state.snackbar = true;
-      //   state.color = "red";
-      //   state.textAlert = "Delete failure";
-      //   console.error(
-      //     "Failed to delete item:",
-      //     error.response ? error.response.data : error.message
-      //   );
-      // }
     };
 
     const cancelDelete = () => {

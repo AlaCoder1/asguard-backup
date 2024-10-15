@@ -1,5 +1,5 @@
 from backend.ztna.models import Identities, Relays, Services, RelaysPolicy,ServicesPolicy, ServicesRelaysPolicy, InterceptConfigs, HostConfigs
-from backend.ztna.utils import get_data
+from backend.ztna.utils import get_data, local_domain_linux_name, local_domain_windows_name
 from django.core import serializers
 import json
 
@@ -142,3 +142,32 @@ def get_service_edge_router_policies():
         res[i]['fields']['id'] = relay_id
         list_services_relays_policies.append(res[i]['fields'])
     return list_services_relays_policies
+
+
+def get_local_domain_linux():
+    list_content = []  
+
+    file_content = local_domain_linux_name()
+
+    if file_content is not None:
+        content_dict = {
+            'os': 'linux',
+            'content': file_content
+        }
+
+        list_content.append(content_dict)
+    return list_content
+
+def get_local_domain_windows():
+    list_content = []  
+
+    file_content = local_domain_windows_name()
+
+    if file_content is not None:
+        content_dict = {
+            'os': 'windows',
+            'content': file_content
+        }
+
+        list_content.append(content_dict)
+    return list_content

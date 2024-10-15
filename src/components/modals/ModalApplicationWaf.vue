@@ -936,6 +936,12 @@ export default {
     const champ = computed(() => {
       return t("errors.valueRequired");
     });
+    const nbre = computed(() => {
+      return t("Waf.nombreMustBe");
+    });
+    const and = computed(() => {
+      return t("Waf.and");
+    });
 
     const rules = computed(() => {
       return {
@@ -992,6 +998,13 @@ export default {
 
             helpers.regex(/^[0-9]+$/)
           ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1 ${and.value} 1073741824`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1 && num <= 1073741824;
+            }
+          ),
         },
         rule_engine: { required },
         maximum_request: {
@@ -1001,6 +1014,13 @@ export default {
 
             helpers.regex(/^[0-9]+$/)
           ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1 ${and.value} 1073741824`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1 && num <= 1073741824;
+            }
+          ),
         },
         max_parsing: {
           required: helpers.withMessage(champ, required),
@@ -1008,6 +1028,13 @@ export default {
             champonlyNumber,
 
             helpers.regex(/^[0-9]+$/)
+          ),
+          interval: helpers.withMessage(
+            `${nbre.value} 100 ${and.value} 10000`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 100 && num <= 10000;
+            }
           ),
         },
         body_mimetype: { required },
@@ -1019,6 +1046,13 @@ export default {
 
             helpers.regex(/^[0-9]+$/)
           ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1 ${and.value} 1073741824`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1 && num <= 1073741824;
+            }
+          ),
         },
         max_number: {
           required: helpers.withMessage(champ, required),
@@ -1026,6 +1060,13 @@ export default {
             champonlyNumber,
 
             helpers.regex(/^[0-9]+$/)
+          ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1 ${and.value} 1000`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1 && num <= 1000;
+            }
           ),
         },
         pcre_limit_recursion: {
@@ -1035,6 +1076,13 @@ export default {
 
             helpers.regex(/^[0-9]+$/)
           ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1000 ${and.value} 50000`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1000 && num <= 50000;
+            }
+          ),
         },
         pcre_match_limit: {
           required: helpers.withMessage(champ, required),
@@ -1042,6 +1090,13 @@ export default {
             champonlyNumber,
 
             helpers.regex(/^[0-9]+$/)
+          ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1000 ${and.value} 50000`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1000 && num <= 50000;
+            }
           ),
         },
       };

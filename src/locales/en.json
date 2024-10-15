@@ -1009,7 +1009,9 @@
     "timestamp": "Timestamp",
     "method": "Method",
     "parameters":"Parameters",
-    "rulesList":"Rules List"
+    "rulesList":"Rules List",
+    "nombreMustBe":"Number must be between",
+    "and":"and"
   },
   "settings": {
     "GENERALPARAMETERS": "GENERAL PARAMETERS",

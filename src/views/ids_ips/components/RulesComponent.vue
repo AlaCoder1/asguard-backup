@@ -125,7 +125,7 @@
           </v-card>
 
           <div class="d-flex justify-end mt-5 mb-10">
-            <div class="mr-3 flex center">
+            <!-- <div class="mr-3 flex center">
               <VButton
                 rounded
                 outlined
@@ -145,7 +145,7 @@
                 class="ml-2"
                 @click="save"
               />
-            </div>
+            </div> -->
           </div>
         </div>
       </v-col>
@@ -303,7 +303,7 @@ export default {
         headerName: "Source",
         field: "source_ip",
         // editable: true,
-        minWidth: 300,
+        minWidth: 150,
         autoHeight: true,
         cellStyle: { whiteSpace: "pre-wrap", lineHeight: "2" },
         sortable: false,
@@ -319,7 +319,7 @@ export default {
         headerName: "Destination",
         field: "destination_ip",
         // editable: true,
-        minWidth: 300,
+        minWidth: 150,
         autoHeight: true,
         cellStyle: { whiteSpace: "pre-wrap", lineHeight: "2" },
         sortable: false,

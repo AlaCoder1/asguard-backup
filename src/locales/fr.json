@@ -121,9 +121,8 @@
     "subscription": "Abonnement",
     "routing": "Routage",
     "systemLog": "Journal du système",
-    "logManagement":"Gestion des journaux",
-    "archivedLog":"Journaux archivés"
-
+    "logManagement": "Gestion des journaux",
+    "archivedLog": "Journaux archivés"
   },
   "header": {
     "profile": "Profil",
@@ -621,8 +620,8 @@
     "updateServicePolicy": "Modifier la politique de service",
     "servicesEdgeRelaysPolicies": "Services Relais de Périphérie Politiques",
     "addService": "Ajouter une Politique de Service de Relai de Périphérie",
-    "edgeRelaysPolicies":"Politiques des relais Edge",
-    "servicesPolicies":"Politiques des services"
+    "edgeRelaysPolicies": "Politiques des relais Edge",
+    "servicesPolicies": "Politiques des services"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",
@@ -1005,8 +1004,10 @@
     "blockedRequests": "Demandes Bloquées",
     "timestamp": "Horodatage",
     "method": "Methode",
-    "parameters":"Parameters",
-    "rulesList":"Liste des règles"
+    "parameters": "Parameters",
+    "rulesList": "Liste des règles",
+    "nombreMustBe": "Nombre doit etre compris entre",
+    "and": "et"
   },
   "settings": {
     "GENERALPARAMETERS": "PARAMÈTRES GÉNÉRAUX",
@@ -1061,15 +1062,14 @@
     "GotIt": "Je l'ai!"
   },
   "logrotate": {
-    "id":"ID",
-    "filename":"Nom de fichier",
-    "original_path":"Chemin d'accès au fichier d'origine",
-    "backup_path":"Chemin du fichier de sauvegarde",
-    "date":"Date",
-    "download_succes":"Fichier téléchargé avec succès !!",
-    "download_fail":"Erreur lors du téléchargement du fichier",
-    "delete_succes":"Fichier supprimé avec succès!",
-    "delete_fail":"Erreur lors de la suppression du fichier"
+    "id": "ID",
+    "filename": "Nom de fichier",
+    "original_path": "Chemin d'accès au fichier d'origine",
+    "backup_path": "Chemin du fichier de sauvegarde",
+    "date": "Date",
+    "download_succes": "Fichier téléchargé avec succès !!",
+    "download_fail": "Erreur lors du téléchargement du fichier",
+    "delete_succes": "Fichier supprimé avec succès!",
+    "delete_fail": "Erreur lors de la suppression du fichier"
   }
-
 }

@@ -260,16 +260,24 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData) => {
+      let token = document.getElementById("app").getAttribute("token");
+
       switch (action) {
         case "edit":
-          console.log('edit',rowData)
-          // openModalUpdate(rowData.id);
-          // console.log("edit", rowData);
-          state.modalMode = "edit";
+
+if (token && token !== "null") {
+  state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           state.selectedId = rowData.id;
 
+} 
+else {
+  state.snackbar = true;
+  state.color = "red";
+  state.textAlert = "ZTNA is not running";
+
+}
           break;
         case "delete":
           OpenDelete(rowData.id);
@@ -279,39 +287,27 @@ export default {
       }
     };
     async function OpenDelete(itemId) {
-      state.selectedId = itemId;
-      state.deleteDialog = true;
+      let token = document.getElementById("app").getAttribute("token");
+
+      if (token && token !== "null") {
+        state.selectedId = itemId;
+        state.deleteDialog = true;
+
+} 
+else {
+  state.snackbar = true;
+  state.color = "red";
+  state.textAlert = "ZTNA is not running";
+
+}
+      
     }
-    // const openModalUpdate = (id) => {
-    //   state.modalData = {};
-    //   state.modalMode = "create";
-    //   state.isModalUpdateOpen = true;
-    //   state.selectedId = id;
-    // };
+    
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
 
     const confirmDelete = async (itemId) => {
-      // try {
-      //   let token = document.getElementById("app").getAttribute("token");
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = `/edge/management/v1/service-policies/${itemId}`;
-      //   await axios.delete(proxyUrl + apiUrl, {
-      //     headers: { "zt-session": token, "Content-Type": "application/json" },
-      //   });
-      //   state.snackbar = true;
-      //   state.color = "success";
-      //   state.textAlert = "Service policy deleted successfully";
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      // } catch (error) {
-      //   state.snackbar = true;
-      //   state.color = "red";
-      //   state.textAlert = "Delete failure";
-      //   console.error("Failed to delete item:", error);
-      // }
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -368,9 +364,20 @@ export default {
     });
 
     const openModalAdd = () => {
-      state.modalData = {};
+      let token = document.getElementById("app").getAttribute("token");
+      if (token && token !== "null") {
+        state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
+
+} 
+else {
+  state.snackbar = true;
+  state.color = "red";
+  state.textAlert = "ZTNA is not running";
+
+}
+      
     };
 
     return {

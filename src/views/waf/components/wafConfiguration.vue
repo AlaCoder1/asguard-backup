@@ -307,9 +307,6 @@ export default {
       responseBodyList: [
         "ProcessPartial",
         "Reject",
-        "log",
-        "log allow",
-        "pass",
       ],
       bodyMimeTypeList: ["text/*", "text/html", "text/xml", "text/plain"],
       //

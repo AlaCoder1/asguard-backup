@@ -162,7 +162,7 @@ def delete_application_waf_in_system(application_name):
 
 def update_application_waf_in_system(application:ApplicationWaf, app_data):
     """Function to update a WAF Application in system"""
-    delete_application_waf_in_system(application)
+    delete_application_waf_in_system(application.name)
     create_application_waf_in_system(app_data)
 
 

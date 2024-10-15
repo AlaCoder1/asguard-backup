@@ -66,7 +66,31 @@
                     </div>
                   </div>
                 </v-col>
-
+                <v-col cols="12">
+                  <div class="d-flex align-center">
+                    <label class="ml-1" for="Type">OS Type</label>
+                    <div class="ml-5 mt-1">
+                    <v-menu open-on-hover>
+                        <template v-slot:activator="{ props }">
+                          <v-btn color="#FAFAFA" v-bind="props">
+                            {{ selectedOs }}
+                          </v-btn>
+                        </template>
+                      <v-list>
+                          <v-list-item
+                            v-for="(item, index) in OS"
+                            :key="index"
+                            @click="selectOs(item)"
+                          >
+                            <v-list-item-title>{{
+                              item.title
+                            }}</v-list-item-title>
+                          </v-list-item>
+                        </v-list>
+                      </v-menu>
+                    </div>
+                  </div>
+                </v-col>
                 <!-- <v-col cols="12" class="ml-2">
                   <label for="IsAdmin" class="mr-3">Is Admin</label>
                   <input type="checkbox" id="IsAdmin" v-model="isAdmin" />
@@ -148,9 +172,7 @@
 
 <script>
 import axios from "axios";
-import useValidate from "@vuelidate/core";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
-import { required, helpers, requiredIf } from "@vuelidate/validators";
 import { getCookie } from "@/mixins/csrftoken.js";
 export default {
   props: {
@@ -175,6 +197,7 @@ export default {
     const Description = ref("");
     const isAdmin = ref(false);
     const selectedTitle = ref("User");
+    const selectedOs = ref("windows")
     const items = [
       { title: "User" },
       { title: "Device" },
@@ -182,6 +205,10 @@ export default {
       { title: "Router" },
       { title: "Default" },
     ];
+    const OS =[
+      { title: "windows"},
+      { title: "linux"},
+    ]
     const rules = [(value) => !!value || "You must enter a value."];
 
     const emitter = inject("emitter");
@@ -222,7 +249,6 @@ export default {
       }
     );
     const populate = (data) => {
-      console.log(data)
       if (modalMode.value === "edit") {
         identityId.value = data.id;
         IdentityName.value = data.name;
@@ -233,43 +259,6 @@ export default {
       }
     };
 
-    // const submitForm = async () => {
-    //   try {
-    //     let token = document.getElementById("app").getAttribute("token");
-    //     console.log("token", token);
-
-    //     const proxyUrl = "https://asguard:3000"; // Adjust this to your proxy server's URL
-    //     const apiUrl = "/edge/management/v1/identities"; // This part remains the same
-
-    //     const response = await axios.post(
-    //       proxyUrl + apiUrl,
-    //       {
-    //         name: IdentityName.value,
-    //         type: selectedTitle.value,
-    //         isAdmin: isAdmin.value,
-    //         roleAttributes: [IdentityAttribute.value],
-    //       },
-    //       {
-    //         headers: {
-    //           "zt-session": token,
-    //           "Content-Type": "application/json",
-    //         },
-    //       }
-    //     );
-
-    //     setTimeout(() => {
-    //       location.reload();
-    //     }, 1000);
-
-    //     emitter.emit("closeidentityModal");
-    //   } catch (error) {
-    //     console.error(
-    //       "Failed to submit form:",
-    //       error.response ? error.response.data : error.message
-    //     );
-    //   }
-    // };
-
     const submitForm = async () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -279,12 +268,13 @@ export default {
         type: selectedTitle.value,
         isAdmin: isAdmin.value,
         roleAttributes: [IdentityAttribute.value],
+        Description:Description.value,
+        os:selectedOs.value
       };
 
       let token = document.getElementById("app").getAttribute("token");
 
       if (modalMode.value === "edit") {
-        console.log('id====',)
         axios
           .patch(`/ztna/update_identities/${identityId.value}`, payload, {
             headers: {
@@ -347,6 +337,10 @@ export default {
       selectedTitle.value = item.title;
     };
 
+    const selectOs = (item) => {
+      selectedOs.value = item.title;
+    };
+
     const cancel = () => {
       onReset();
       emitter.emit("closeidentityModal");
@@ -364,6 +358,9 @@ export default {
       isAdmin,
       selectedTitle,
       selectItem,
+      selectedOs,
+      selectOs,
+      OS,
       items,
       onReset,
     };

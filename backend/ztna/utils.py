@@ -1,7 +1,7 @@
 import requests
 import json
 
-from backend.ztna.constant_variables import PATH_CREATE_ROUTER_BASH, PATH_DELETE_ROUTER_BASH, PATH_START_ZTNA_BASH, PATH_START_ZTNA_ROUTER_BASH, PATH_STATUS_ZTNA_BASH, PATH_STATUS_ZTNA_ROUTER_BASH, PATH_STOP_ZTNA_BASH, PATH_STOP_ZTNA_ROUTER_BASH, PATH_UPDATE_ROUTER_BASH, PATH_ZTNA_ROUTER
+from backend.ztna.constant_variables import PATH_CHECK_TEMPLATE_BASH, PATH_CREATE_ROUTER_BASH, PATH_DELETE_ROUTER_BASH, PATH_LINUX_TEMPLATE_BASH, PATH_START_ZTNA_BASH, PATH_START_ZTNA_ROUTER_BASH, PATH_STATUS_ZTNA_BASH, PATH_STATUS_ZTNA_ROUTER_BASH, PATH_STOP_ZTNA_BASH, PATH_STOP_ZTNA_ROUTER_BASH, PATH_UPDATE_ROUTER_BASH, PATH_WINDOWS_TEMPLATE_BASH, PATH_ZTNA_ROUTER
 from utils.commands_utils import execute_command_with_arguments, execute_command_without_arguments, get_current_directory
 
 
@@ -142,6 +142,32 @@ def get_status_router_from_system(router_name):
     else:
         print("Failed to execute the command.")
     return stdout
-    # if status_router.stdout.find("Router is not running") >= 0:
-    #     return False
-    # return True
+
+
+def local_domain_linux_name():
+    try:
+        current_dir = get_current_directory()
+        file_path=PATH_LINUX_TEMPLATE_BASH.format(current_dir)
+        with open(f"{file_path}") as host_append_shell:
+            linux_host = host_append_shell.read()
+            return linux_host
+    except Exception as e:
+        print("error: ",e)
+
+def local_domain_windows_name():
+    try:
+        current_dir = get_current_directory()
+        file_path=PATH_WINDOWS_TEMPLATE_BASH.format(current_dir)
+        with open(f"{file_path}") as host_append_shell:
+            windows_host = host_append_shell.read()
+            return windows_host
+    except Exception as e:
+        print("error: ",e)    
+def check_host_templates():
+   
+    current_dir = get_current_directory()
+    check_file_path=PATH_CHECK_TEMPLATE_BASH.format(current_dir)
+    status = execute_command_without_arguments(["sudo", "bash", check_file_path])
+    if status.stdout.find("IP address has not changed. Exiting.") >= 0:
+        return True
+    return False

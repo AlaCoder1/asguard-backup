@@ -178,7 +178,7 @@ export default {
         ConfigName.value = data.name;
         adress.value = data.address;
         portHigh.value = data.port;
-        Description.value = "";
+        Description.value = data.description;
         selectedTitle.value = data.protocol;
       }
     };
@@ -195,7 +195,8 @@ export default {
           address: adress.value,
           port: Number(portHigh.value),
           protocol: selectedTitle.value
-        }
+        },
+        Description:Description.value
       };
 
       let token = document.getElementById("app").getAttribute("token");

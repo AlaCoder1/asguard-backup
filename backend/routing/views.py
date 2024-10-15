@@ -201,6 +201,6 @@ def update_routing(request, id):
         return JsonResponse({"error": list(serializer_routing.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_UPDATING}"}, status=400)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ROUTE}"}, status=400)
     except Routing.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

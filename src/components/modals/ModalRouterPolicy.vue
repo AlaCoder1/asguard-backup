@@ -200,7 +200,7 @@ export default {
         name.value = data.name;
 
         selectedTitle.value = data.semantique;
-        Description.value = "";
+        Description.value = data.description;
         let relay = "";
         let identity = "";
         for (let i = 0; i < routersList.value.length; i++) {
@@ -233,6 +233,7 @@ export default {
         semantic: selectedTitle.value,
         edgeRouterRoles: [routerAttribute],
         identityRoles: [identityAttribute],
+        Description:Description.value
       };
 
       let token = document.getElementById("app").getAttribute("token");

@@ -219,7 +219,7 @@ export default {
         name.value = data.name;
 
 
-        Description.value = "";
+        Description.value = data.description;
         selectedTitle.value = data.type;
         selectedsemantic.value = data.semantique;
 
@@ -258,6 +258,7 @@ export default {
         semantic: selectedsemantic.value,
         identityRoles: [identityAttribute],
         serviceRoles: [serviceAttribute],
+        Description:Description.value
       };
 
       let token = document.getElementById("app").getAttribute("token");

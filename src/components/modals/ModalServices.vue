@@ -197,7 +197,7 @@ export default {
         name.value = data.name;
         serviceAtt.value = data.attribute_service;
         encryptionRequired.value = data.encryption;
-        Description.value = "";
+        Description.value = data.description;
         let hostobj = "";
         let interceptobj = "";
         for (let i = 0; i < hostList.value.length; i++) {
@@ -257,7 +257,8 @@ export default {
         name: name.value,
         roleAttributes: [serviceAtt.value],
         encryptionRequired: encryptionRequired.value,
-        configs: [intercept.value.ref_intercept, host.value.ref_host]
+        configs: [intercept.value.ref_intercept, host.value.ref_host],
+        Description:Description.value
       };
 
       let token = document.getElementById("app").getAttribute("token");

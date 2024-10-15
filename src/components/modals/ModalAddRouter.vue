@@ -157,7 +157,7 @@ export default {
         RouterAttribute.value = data.attribute_relay;
         Tunneler.value = data.tunneler;
         Traversal.value = data.traversal;
-        Description.value = "";
+        Description.value = data.description;
       }
     };
 
@@ -183,6 +183,7 @@ export default {
         noTraversal: Traversal.value,
         isTunnelerEnabled: Tunneler.value,
         roleAttributes: [RouterAttribute.value],
+        Description:Description.value
       };
 
       let token = document.getElementById("app").getAttribute("token");

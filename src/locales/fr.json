@@ -1009,6 +1009,8 @@
     "nombreMustBe": "Nombre doit etre compris entre",
     "and": "et"
   },
+  "rangeFrom": "La plage",
+  "outBounds": "est hors limites.",
   "settings": {
     "GENERALPARAMETERS": "PARAMÈTRES GÉNÉRAUX",
     "System": "Système",

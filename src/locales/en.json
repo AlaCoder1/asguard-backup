@@ -121,9 +121,8 @@
     "subscription": "Subscription",
     "routing": "Routing",
     "systemLog": "System Log",
-    "logManagement":"Log Management",
-    "archivedLog":"Archived Logs"
-
+    "logManagement": "Log Management",
+    "archivedLog": "Archived Logs"
   },
   "header": {
     "profile": "Profile",
@@ -623,8 +622,8 @@
     "updateServicePolicy": "Update Service Policy",
     "servicesEdgeRelaysPolicies": "Services Edge Relays Policies",
     "addService": "Add Service Edge Relay Policy",
-    "edgeRelaysPolicies":"Edge Relays Policies",
-    "servicesPolicies":"Services Policies"
+    "edgeRelaysPolicies": "Edge Relays Policies",
+    "servicesPolicies": "Services Policies"
   },
 
   "titleAgGrid": {
@@ -1008,11 +1007,13 @@
     "blockedRequests": "Blocked Requests",
     "timestamp": "Timestamp",
     "method": "Method",
-    "parameters":"Parameters",
-    "rulesList":"Rules List",
-    "nombreMustBe":"Number must be between",
-    "and":"and"
+    "parameters": "Parameters",
+    "rulesList": "Rules List",
+    "nombreMustBe": "Number must be between",
+    "and": "and"
   },
+  "rangeFrom": "Range",
+  "outBounds": "is out of bounds.",
   "settings": {
     "GENERALPARAMETERS": "GENERAL PARAMETERS",
     "System": "System",
@@ -1066,16 +1067,14 @@
     "GotIt": "Got it!"
   },
   "logrotate": {
-    "id":"ID",
-    "filename":"File name",
-    "original_path":"Original file path",
-    "backup_path":"Backup file path",
-    "date":"Date",
-    "download_succes":"File downloaded successfully!",
-    "download_fail":"Error downloading the file",
-    "delete_succes":"File deleted successfully!",
-    "delete_fail":"Error deleting the file"
-    
+    "id": "ID",
+    "filename": "File name",
+    "original_path": "Original file path",
+    "backup_path": "Backup file path",
+    "date": "Date",
+    "download_succes": "File downloaded successfully!",
+    "download_fail": "Error downloading the file",
+    "delete_succes": "File deleted successfully!",
+    "delete_fail": "Error deleting the file"
   }
-
 }

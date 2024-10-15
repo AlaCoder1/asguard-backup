@@ -143,7 +143,7 @@
                   />
                 </v-col>
 
-                <v-col cols="12" class="mb-n6" v-if="!state.isActivated">
+                <!-- <v-col cols="12" class="mb-n6" v-if="!state.isActivated">
                   <v-select
                     multiple
                     v-model="state.transformationFun"
@@ -154,15 +154,15 @@
                     return-object
                     :no-data-text="$t('certificat.certificatlist')"
                   ></v-select>
-                  <!-- <p
+                  <p
                     class="error-feedback mb-5"
                     v-if="v$.transformationFun.$error"
                   >
                     {{ v$.transformationFun.$errors[0].$message }}
-                  </p> -->
-                </v-col>
+                  </p>
+                </v-col> -->
 
-                <v-col cols="4">
+                <!-- <v-col cols="4">
                   <label>{{ $t("Waf.activate") }}</label>
                 </v-col>
                 <v-col cols="8" class="mb-n6">
@@ -172,10 +172,13 @@
                     v-model="state.isActivated"
                   />
                   <label class="ml-2">{{ $t("Waf.useTransformation") }}</label>
-                </v-col>
+                </v-col> -->
 
-                <template v-if="state.isActivated">
-                  <v-col cols="12" class="d-flex justify-end mb-n6">
+                <template v-if="!state.isActivated">
+                  <v-col size="6" class="mt-2">
+                    <label for="">{{ $t("Waf.transformations") }}</label>
+                  </v-col>
+                  <v-col cols="6" class="d-flex justify-end mb-n6">
                     <v-btn
                       color="#F6F6F6"
                       class="text-none"

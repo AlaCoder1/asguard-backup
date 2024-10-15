@@ -39,7 +39,7 @@
     {{ state.textAlert }}
   </v-snackbar>
   <div class="d-flex justify-end mt-5 mr-2">
-    <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalAdd">
+    <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="checkTokenBeforeAdd">
       {{ $t("ztna.addIdentity") }}
     </v-btn>
   </div>
@@ -70,6 +70,8 @@ export default {
   setup() {
     const { t } = useI18n();
     const Identities = ref();
+    const linux=ref();
+    const windows=ref();
     const emitter = inject("emitter");
     const state = reactive({
       deleteDialog: false,
@@ -300,6 +302,11 @@ export default {
                 data-action="delete" title="Delete ">
                   <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
+                    <button
+           class="action-button download"
+           data-action="downloadhost">
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+           </button>
       
                 `;
       }
@@ -312,16 +319,62 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData, index) => {
+      let token = document.getElementById("app").getAttribute("token");
       switch (action) {
         case "edit":
-          // openModalUpdate(rowData);
-          console.log('rowData', rowData)
+        if (token && token !== "null") {
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           state.selectedId = rowData.ref_identitie;
 
+      } else {
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = "ZTNA is not running";
+      } 
 
+          break;
+        case "downloadhost":
+          if(rowData.os==="windows"){
+            let text = windows.value[0].content;
+
+const blob = new Blob([text], {
+  type: "application/x-x509-ca-cert",
+});
+
+const url = window.URL.createObjectURL(blob);
+const a = document.createElement("a");
+a.style.display = "none";
+a.href = url;
+a.download = `host_appender.bat`;
+
+document.body.appendChild(a);
+a.click();
+
+window.URL.revokeObjectURL(url);
+document.body.removeChild(a);
+          }
+          else{
+            let text = linux.value[0].content;
+
+          const blob = new Blob([text], {
+            type: "application/x-x509-ca-cert",
+          });
+
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.style.display = "none";
+          a.href = url;
+          a.download = `host_appender.sh`;
+
+          document.body.appendChild(a);
+          a.click();
+
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          }
+        
           break;
         case "download":
           let text = rowData.token;
@@ -388,12 +441,47 @@ export default {
       Identities.value = IdentitiesObject ? IdentitiesObject : [];
       console.log(' Identities.value', Identities.value)
 
+
+      let linuxfileString = document
+        .getElementById("app")
+        .getAttribute("linux_file");
+        let linuxObject;
+      try {
+        linuxObject = JSON.parse(linuxfileString);
+        console.log('linuxObject', linuxObject)
+      } catch (error) {
+        console.error("Failed to parse linux string:", error);
+      }
+      linux.value = linuxObject ? linuxObject : [];
+      console.log(' linux.value', linux.value)
+
+      let windowsfileString = document
+        .getElementById("app")
+        .getAttribute("windows_file");
+        let windowsObject;
+      try {
+        windowsObject = JSON.parse(windowsfileString);
+        console.log('windowsObject', windowsObject)
+      } catch (error) {
+        console.error("Failed to parse windows string:", error);
+      }
+      windows.value = windowsObject ? windowsObject : [];
+      console.log(' windows.value', windows.value[0].content)
+
     };
     async function OpenDelete(itemId) {
+      let token = document.getElementById("app").getAttribute("token");
 
+      if (token && token !== "null") {
       state.selectedId = itemId;
       state.deleteDialog = true;
-    }
+      } 
+      else {
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = "ZTNA is not running";
+
+    }}
     onMounted(() => {
       emitter.on("closeidentityModal", () => {
         state.isModalOpen = false;
@@ -430,10 +518,19 @@ export default {
     };
 
     const openModalEnrollement = (id) => {
-      state.modalData = {};
+      let token = document.getElementById("app").getAttribute("token");
+
+      if (token && token !== "null") {
+        state.modalData = {};
       state.modalMode = "create";
       state.isModalEnrollmentOpen = true;
-      state.selectedId = id;
+      state.selectedId = id; 
+      } else {
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = "ZTNA is not running";
+      }
+
     };
 
     // const openModalUpdate = (row) => {
@@ -446,6 +543,18 @@ export default {
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
+
+    function checkTokenBeforeAdd() {
+  let token = document.getElementById("app").getAttribute("token");  
+  if (token && token !== "null") {
+    openModalAdd();
+  } else {
+    state.snackbar = true;
+    state.color = "red";
+    state.textAlert = "ZTNA is not running";
+  }
+}
+
 
     function formatedcreatedAt(data) {
       const resultMessage = formatDateTime(data.data.date_creation);
@@ -547,7 +656,7 @@ export default {
       fetchIdentities,
       OpenDelete,
       openModalEnrollement,
-      // openModalUpdate,
+      checkTokenBeforeAdd,
       formatDateTime,
       cancelDelete,
       confirmDelete,

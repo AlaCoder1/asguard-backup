@@ -7,7 +7,7 @@
             <span class="headline" v-if="modalMode === 'create'">
               {{ $t("ztna.addService") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateService") }}</span>
+              {{ $t("ztna.updateService") }} </span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -21,7 +21,7 @@
                   <div class="d-flex align-center">
                     <label class="ml-1" for="PROTOCOL">{{
                       $t("ztna.semantic")
-                      }}</label>
+                    }}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
@@ -34,7 +34,7 @@
                           <v-list-item v-for="(item, index) in semantic" :key="index" @click="selectsemantic(item)">
                             <v-list-item-title>{{
                               item
-                              }}</v-list-item-title>
+                            }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -61,8 +61,8 @@
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
-                    persistent-placeholder />
+                  <v-text-field id="name_description" v-model="name_description" placeholder="Description" 
+                     />
                 </v-col>
               </v-row>
             </v-container>
@@ -117,7 +117,7 @@ export default {
     const name = ref("");
     const serviceRA = ref(null);
     const routerR = ref(null);
-    const Description = ref("");
+    const name_description = ref(null);
     const selectedsemantic = ref("AllOf");
     const semantic = ref(["AllOf", "AnyOf"]);
     const rules = [
@@ -180,39 +180,38 @@ export default {
           name.value = "";
           serviceRA.value = "";
           routerR.value = "";
-          Description.value = "";
+          name_description.value = "";
           selectedsemantic.value = "AllOf";
         }
       }
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("dataHost", data);
+        console.log("name_description", data.description);
 
         idServRouter.value = data.id
         name.value = data.name;
         selectedsemantic.value = data.semantique;
-
-
+        name_description.value = data.description;
+        console.log("namcription", name_description.value);
 
         let relay = "";
         let service = "";
         for (let i = 0; i < routersList.value.length; i++) {
           if (routersList.value[i].id === data.relay) {
             relay = routersList.value[i];
-            break;  
+            break;
           }
         }
 
         for (let i = 0; i < ServList.value.length; i++) {
           if (ServList.value[i].id === data.service) {
             service = ServList.value[i];
-            break;  
+            break;
           }
         }
-        routerR.value=relay;
-        serviceRA.value=service;
-        Description.value = "";
+        routerR.value = relay;
+        serviceRA.value = service;
       }
     };
 
@@ -228,6 +227,7 @@ export default {
         semantic: selectedsemantic.value,
         edgeRouterRoles: [routerAttribute],
         serviceRoles: [serviceAttribute],
+        Description: name_description.value
       };
 
       let token = document.getElementById("app").getAttribute("token");
@@ -315,7 +315,7 @@ export default {
       name.value = "";
       serviceRA.value = "";
       routerR.value = "";
-      Description.value = "";
+      name_description.value = "";
       selectedsemantic.value = "AllOf";
     };
 
@@ -334,7 +334,7 @@ export default {
       routerR,
       routersList,
       ServList,
-      Description,
+      name_description,
       semantic,
       rules,
       submitForm,

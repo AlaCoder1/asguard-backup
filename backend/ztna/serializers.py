@@ -17,7 +17,7 @@ class IdentitiesSerializer(serializers.ModelSerializer):
 class IdentitiesSerializerUpdate(serializers.ModelSerializer):
     class Meta:
         model = Identities
-        fields = ['token', 'date_expiration','name','attribute_identitie','type','is_admin', 'hostname']
+        fields = ['token', 'date_expiration','name','attribute_identitie','type','is_admin', 'hostname','description','os']
 
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
@@ -77,7 +77,7 @@ class ServicesSerializerUpdate(serializers.ModelSerializer):
 
     class Meta:
         model = Services
-        fields = ['name', 'attribute_service','encryption','intercept_id','host_id']
+        fields = ['name', 'attribute_service','encryption','intercept_id','host_id','description']
 
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():

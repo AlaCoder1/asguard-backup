@@ -177,8 +177,19 @@ export default {
       }
     };
     async function OpenDelete(itemId) {
-      state.selectedId = itemId;
-      state.deleteDialog = true;
+      let token = document.getElementById("app").getAttribute("token");
+
+if (token && token !== "null") {
+  state.selectedId = itemId;
+  state.deleteDialog = true;
+} 
+else {
+  state.snackbar = true;
+  state.color = "red";
+  state.textAlert = "ZTNA is not running";
+
+}
+ 
     }
 
     const confirmDelete = async (deletedItemId) => {
@@ -250,9 +261,17 @@ export default {
     };
 
     const openModalHostAdd = () => {
-      state.modalData = {};
+      let token = document.getElementById("app").getAttribute("token");
+      if (token && token !== "null") {
+        state.modalData = {};
       state.modalMode = "create";
       state.isModalHostOpen = true;
+      } else {
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = "ZTNA is not running";
+      }
+
     };
 
     // const openModalHostUpdate = (id) => {
@@ -305,20 +324,24 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData, index) => {
+      let token = document.getElementById("app").getAttribute("token");
+
       switch (action) {
         case "edit":
-          state.modalMode = "edit";
+        let token = document.getElementById("app").getAttribute("token");
+
+if (token && token !== "null") {
+  state.modalMode = "edit";
           state.isModalHostOpen = true;
           state.selectedId = rowData.id;
           state.editRow = rowData;
+} 
+else {
+  state.snackbar = true;
+  state.color = "red";
+  state.textAlert = "ZTNA is not running";
 
-          // if (rowData.addressId === "NH5p4FpGR") {
-          //   openModalHostUpdate(rowData.id);
-          // } else if (rowData.addressId === "g7cIWbcGg") {
-          //   console.log("f,v skv,s");
-          //   openModalInterceptUpdate(rowData.id);
-          // }
-
+}
           break;
         case "delete":
           OpenDelete(rowData.id);

@@ -245,8 +245,8 @@ EMAIL_HOST = 'smtp.office365.com'
 EMAIL_PORT = 587
 # EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
 # EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-EMAIL_HOST_USER = '' 
-EMAIL_HOST_PASSWORD = ''
+EMAIL_HOST_USER = 'it@numeryx.fr' 
+EMAIL_HOST_PASSWORD = 'Dn2k00+5409sut+'
 
 # Celery configuration
 CELERY_BROKER_URL = 'redis://localhost:6379/0'

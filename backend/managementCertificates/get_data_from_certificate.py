@@ -4,7 +4,7 @@ from utils.commands_utils import execute_command_without_arguments
 
 def read_certificate_value(certificate_path, decode=True):
     """This function take a certificate path and return the certificate value from system file"""
-    command = ['cat', f'{certificate_path}']
+    command = ['sudo', 'cat', f'{certificate_path}']
     process = execute_command_without_arguments(command, decode)
     return process.stdout
 
@@ -19,7 +19,7 @@ def get_certificates_details(cert_path):
 
 def get_certifcate_serial_number(cert_path):
     """Get the serial number of certificate"""
-    command = ['openssl', 'x509', '-in', f'{cert_path}', '-noout', '-serial']
+    command = ['sudo', 'openssl', 'x509', '-in', f'{cert_path}', '-noout', '-serial']
     process = execute_command_without_arguments(command)
     serial = process.stdout
     serial = serial.replace('serial=', '')

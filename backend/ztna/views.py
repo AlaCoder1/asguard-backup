@@ -303,7 +303,7 @@ def get_all_routers(request):
             relays = Relays.objects.all()
             return JsonResponse(list(relays.values()), safe=False)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=400)
 
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
@@ -452,7 +452,7 @@ def get_host_configs(request):
             host_configs = list(map(model_to_dict, HostConfigs.objects.all()))   
             return JsonResponse(host_configs, safe=False)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 @api_view(['GET'])
@@ -465,7 +465,7 @@ def get_intercept_configs(request):
             intercept_configs = list(map(model_to_dict, InterceptConfigs.objects.all()))   
             return JsonResponse(intercept_configs, safe=False)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=400)
     
 
 @api_view(['POST'])
@@ -627,7 +627,7 @@ def get_all_services(request):
             services = Services.objects.all()
             return JsonResponse(list(services.values()), safe=False)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 @api_view(['POST'])
@@ -740,7 +740,7 @@ def get_all_edge_routers_policies(request):
             relay_policy = RelaysPolicy.objects.all()
             return JsonResponse(list(relay_policy.values()), safe=False)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 @api_view(['POST'])
@@ -856,7 +856,7 @@ def get_all_services_policies(request):
             service_policy = ServicesPolicy.objects.all()
             return JsonResponse(list(service_policy.values()), safe=False)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 @api_view(['POST'])
@@ -973,7 +973,7 @@ def get_all_services_edge_routers_policies(request):
             service_relay_policy = ServicesRelaysPolicy.objects.all()
             return JsonResponse(list(service_relay_policy.values()), safe=False)
     except Exception as e:
-        return JsonResponse({'error': str(e)}, status=500)
+        return JsonResponse({'error': str(e)}, status=400)
 
 
 @api_view(['POST'])

@@ -41,19 +41,19 @@ def initialize_ca(current_dir, ca_name='test'):
     """This function initialize the openvpn and easyrsa in system"""
 
     # Initialize a fresh PKI and creating a CA
-    list_of_commands_with_arguments = [{'command': ['sudo', 'easyrsa', 'init-pki'], 'arguments': 'yes\n'},
+    list_of_commands_with_arguments = [{'command': ['sudo', 'easyrsa', 'init-pki'], 'arguments': 'yes\nyes'},
                                        {'command': ['sudo', 'easyrsa', 'build-ca', 'nopass'], 'arguments': f'{ca_name}\n'}]
     execute_list_commands_with_arguments(list_of_commands_with_arguments)
 
     # Importing an existing CA to the standard easyrsa path
-    commands_list_without_arguments = [['cp', PATH_VARS.format(ca_name), PATH_PKI_VARS.format(current_dir)],
-                                       ['cp', PATH_CA_CRT.format(ca_name), PATH_PKI_CA.format(current_dir)],
+    commands_list_without_arguments = [['sudo', 'cp', PATH_VARS.format(ca_name), PATH_PKI_VARS.format(current_dir)],
+                                       ['sudo', 'cp', PATH_CA_CRT.format(ca_name), PATH_PKI_CA.format(current_dir)],
                                        ]
 
     # Test if the CA has a private key and import it with crl
     if os.path.isfile(PATH_CA_KEY.format(ca_name)):
-        commands_list_without_arguments.append(['cp', PATH_CA_KEY.format(ca_name), PATH_PKI_CA_KEY.format(current_dir)])
-        commands_list_without_arguments.append(['cp', PATH_CA_CRL_PEM.format(ca_name), PATH_PKI_CA_CRL.format(current_dir)])
+        commands_list_without_arguments.append(['sudo', 'cp', PATH_CA_KEY.format(ca_name), PATH_PKI_CA_KEY.format(current_dir)])
+        commands_list_without_arguments.append(['sudo', 'cp', PATH_CA_CRL_PEM.format(ca_name), PATH_PKI_CA_CRL.format(current_dir)])
                                         
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
@@ -69,17 +69,17 @@ def revoke_list_certs(current_dir, ca_name, list_revoked_cert):
 
     for revoked_cert in list_revoked_cert:
         if revoked_cert.certificate_type == 'server':
-            command =['cp', PATH_SERVER_CERT_CRT.format(revoked_cert.name), PATH_PKI_CERT.format(current_dir, 'server')]
+            command =['sudo', 'cp', PATH_SERVER_CERT_CRT.format(revoked_cert.name), PATH_PKI_CERT.format(current_dir, 'server')]
             execute_command_without_arguments(command)
             execute_command_with_arguments(['sudo', 'easyrsa', 'revoke', 'server'], 'yes\n')
         elif revoked_cert.certificate_type == 'client':
-            command = ['cp', PATH_CLIENT_CERT_CRT.format(revoked_cert.name), PATH_PKI_CERT.format(current_dir, revoked_cert.name)]
+            command = ['sudo', 'cp', PATH_CLIENT_CERT_CRT.format(revoked_cert.name), PATH_PKI_CERT.format(current_dir, revoked_cert.name)]
             execute_command_without_arguments(command)
             execute_command_with_arguments(['sudo', 'easyrsa', 'revoke', f'{revoked_cert.name}'], 'yes\n')
 
     # Generate crl file containing all the revoked certificates
     commands_list_without_arguments = [['sudo', 'easyrsa', 'gen-crl'],
-                                       ['cp', PATH_PKI_CA_CRL.format(current_dir), PATH_CA_CRL_PEM.format(ca_name)],
+                                       ['sudo', 'cp', PATH_PKI_CA_CRL.format(current_dir), PATH_CA_CRL_PEM.format(ca_name)],
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 
@@ -95,9 +95,9 @@ def save_certificate(current_dir, cert_name, cert_type):
         cert_path = PATH_CLIENT_CERT_CRT.format(cert_name)
         cert_private_key = PATH_CLIENT_CERT_KEY.format(cert_name)
 
-    commands_list_without_arguments = [['cp', PATH_PKI_VARS.format(current_dir), cert_vars],
-                                       ['cp', PATH_PKI_CERT.format(current_dir, cert_name), cert_path],
-                                       ['cp', PATH_PKI_CERT_KEY.format(current_dir, cert_name), cert_private_key],
+    commands_list_without_arguments = [['sudo', 'cp', PATH_PKI_VARS.format(current_dir), cert_vars],
+                                       ['sudo', 'cp', PATH_PKI_CERT.format(current_dir, cert_name), cert_path],
+                                       ['sudo', 'cp', PATH_PKI_CERT_KEY.format(current_dir, cert_name), cert_private_key],
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
 

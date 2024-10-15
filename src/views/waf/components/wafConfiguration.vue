@@ -295,13 +295,10 @@ export default {
       id: null,
       //
       engineList: ["On", "Off", "Detection only"],
-      requestBodyList: ["Accept", "Reject"],
+      requestBodyList: ["ProcessPartial", "Reject"],
       responseBodyList: [
         "ProcessPartial",
         "Reject",
-        "log",
-        "log allow",
-        "pass",
       ],
       bodyMimeTypeList: ["text/*", "text/html", "text/xml", "text/plain"],
       //

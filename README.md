@@ -22,6 +22,8 @@ python manage.py generate_user -u root -p root
 
 python manage.py init_ASGUARD
 
+python manage.py init_organisation -o Asguard
+
 ###### Init Firewall services
 
 #### subscription

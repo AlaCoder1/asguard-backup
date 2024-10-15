@@ -142,7 +142,7 @@ def download_logrotate_data(request):
         return response
 
     except Exception as e:
-        return HttpResponse(f"Error: {str(e)}", status=500)     
+        return HttpResponse(f"Error: {str(e)}", status=400)     
         
 
 
@@ -176,7 +176,7 @@ def delete_logrotate_file(request, file_id):
             return JsonResponse({"msg":"Error: File does not exist "}, status=404)
 
         except Exception as e:
-            return JsonResponse({"msg":f"Error: {str(e)}"}, status=500)
+            return JsonResponse({"msg":f"Error: {str(e)}"}, status=400)
 
 
 @api_view(['GET'])

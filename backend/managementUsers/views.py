@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from backend.managementUsers.models import Profile, User
 from backend.managementUsers.serializers import PermissionSerializer, ProfileSerializer, UserSerializerGet, UserSerializerPost, UserSerializerPostWithoutGroupAndPermission
-from backend.managementUsers.functions import add_user_group, add_mail_spool, add_user, change_password_by_admin, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, username_exists, valid_input, valid_password
+from backend.managementUsers.functions import add_user_group, add_mail_spool, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password
 from backend.managementGroup.serializers import GroupSerializer
 from backend.managementGroup.functions import change_groupname_username, getGroupNameById, getUidGroup
 from backend.managementGroup.models import Group
@@ -46,6 +46,7 @@ SUCCESS_MESSAGES_UPDATING = _("is updated")
 ERROR_MESSAGES_CREATING = _("Error in creating")
 ERROR_MESSAGES_DELETING = _("Error in deleting")
 ERROR_MESSAGES_UPDATING = _("Error in updating")
+ERROR_MESSAGES_RESET = _("Error in reset")
 ERROR_MESSAGES_EXISTANT = _("already exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_INVALID_CREDENTIALS = _("Invalid credentials")
@@ -426,7 +427,7 @@ def update_profile(request, id):
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 #@permission_classes([IsAuthenticated])
-def change_password_by_admin(request, id):
+def reset_password_by_admin(request, id):
     """Change password user"""
     if (request.method == 'PUT'):
         user_object = User.objects.get(id=id)
@@ -436,16 +437,15 @@ def change_password_by_admin(request, id):
         new_password = data['new_password']
         confirm_password = data['confirm_password']
         if new_password != confirm_password:
-            return JsonResponse({"msg": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_PASSWORD}"})
-        else:
-            # run 'passwd' command to change password
-            _, stderr = change_password_by_admin(
-                new_password, user_object.username)
-            # check if password change was successful
-            if stderr == "":
-                user_object.password = make_password(new_password)
-                user_object.save()
-        return JsonResponse(serializer.data, status=201)
+            return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_PASSWORD}"}, status=400)
+        # run 'passwd' command to change password
+        _, stderr = reset_password_by_admin_in_system(new_password, user_object.username)
+        # check if password change was successful
+        if stderr == "":
+            user_object.password = make_password(new_password)
+            user_object.save()
+            return JsonResponse(serializer.data, status=201)
+        return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_PASSWORD}"}, status=400)
 
 
 @swagger_auto_schema(

@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            {{$t('requiredfield.attente')}}
+            {{ $t("requiredfield.attente") }}
             <v-progress-linear
               indeterminate
               color="white"
@@ -20,7 +20,7 @@
       </v-dialog>
     </v-overlay>
     <div class="ml-3 mr-3 mt-5">
-      <h4> {{$t('openvpn.Generalinformation')}}</h4>
+      <h4>{{ $t("openvpn.Generalinformation") }}</h4>
 
       <v-divider class="mb-2"></v-divider>
     </div>
@@ -28,7 +28,7 @@
       <v-col cols="6">
         <v-row class="mt-2">
           <v-col cols="4" class="mt-5">
-            <label> {{$t('Waf.Ruleengineinitialization')}}</label>
+            <label> {{ $t("Waf.Ruleengineinitialization") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
@@ -46,7 +46,7 @@
           </v-col>
 
           <v-col cols="4">
-            <label> {{$t('Waf.Accessrequestbodies')}}</label>
+            <label> {{ $t("Waf.Accessrequestbodies") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input
@@ -54,27 +54,33 @@
               hide-details
               v-model="state.access_request"
             />
-            <label class="ml-2"> {{$t('Waf.EnableAccessrequestbodies')}}</label>
+            <label class="ml-2">
+              {{ $t("Waf.EnableAccessrequestbodies") }}</label
+            >
           </v-col>
 
           <v-col cols="4">
-            <label>{{$t('Waf.XMLrequestbodyparser')}}</label>
+            <label>{{ $t("Waf.XMLrequestbodyparser") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input type="checkbox" hide-details v-model="state.xml_request" />
-            <label class="ml-2">{{$t('Waf.EnableXMLrequestbodyparser')}}</label>
+            <label class="ml-2">{{
+              $t("Waf.EnableXMLrequestbodyparser")
+            }}</label>
           </v-col>
 
           <v-col cols="4">
-            <label>{{$t('Waf.JSONrequestbodyparser')}}</label>
+            <label>{{ $t("Waf.JSONrequestbodyparser") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input type="checkbox" hide-details v-model="state.json_request" />
-            <label class="ml-2">{{$t('Waf.EnableJSONrequestbodyparser')}}</label>
+            <label class="ml-2">{{
+              $t("Waf.EnableJSONrequestbodyparser")
+            }}</label>
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>{{$t('Waf.Maximumrequestbodysize')}}</label>
+            <label>{{ $t("Waf.Maximumrequestbodysize") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
@@ -87,7 +93,7 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>{{$t('Waf.Requestbodysizefilesexcluded')}}</label>
+            <label>{{ $t("Waf.Requestbodysizefilesexcluded") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
@@ -100,7 +106,7 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>{{$t('Waf.RequestBodyLimitAction')}} </label>
+            <label>{{ $t("Waf.RequestBodyLimitAction") }} </label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
@@ -118,7 +124,7 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>{{$t('Waf.MaximumparsingdepthforJSON')}} </label>
+            <label>{{ $t("Waf.MaximumparsingdepthforJSON") }} </label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
@@ -131,7 +137,7 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>{{$t('Waf.Maximumnumberofargs/request')}}</label>
+            <label>{{ $t("Waf.Maximumnumberofargs/request") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
@@ -144,7 +150,7 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>{{$t('Waf.PcreMatchLimit')}}</label>
+            <label>{{ $t("Waf.PcreMatchLimit") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
@@ -157,7 +163,7 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>{{$t('Waf.PcreMatchLimitRecursion')}}</label>
+            <label>{{ $t("Waf.PcreMatchLimitRecursion") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
@@ -173,15 +179,17 @@
           </v-col>
 
           <v-col cols="4">
-            <label>{{$t('Waf.ResponseBodyAccess')}}</label>
+            <label>{{ $t("Waf.ResponseBodyAccess") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <input type="checkbox" hide-details v-model="state.access_bodies" />
-            <label class="ml-2"> {{$t('Waf.Enableaccessresponsebodies')}}</label>
+            <label class="ml-2">
+              {{ $t("Waf.Enableaccessresponsebodies") }}</label
+            >
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>{{$t('Waf.ResponseBodyMimeType')}}</label>
+            <label>{{ $t("Waf.ResponseBodyMimeType") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
@@ -199,7 +207,7 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>{{$t('Waf.ResponseBodyLimit')}}</label>
+            <label>{{ $t("Waf.ResponseBodyLimit") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-text-field
@@ -212,7 +220,7 @@
           </v-col>
 
           <v-col cols="4" class="mt-5">
-            <label>{{$t('Waf.ResponseBodyLimitAction')}}</label>
+            <label>{{ $t("Waf.ResponseBodyLimitAction") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
             <v-select
@@ -387,6 +395,13 @@ export default {
       return t("errors.valueRequired");
     });
 
+    const nbre = computed(() => {
+      return t("Waf.nombreMustBe");
+    });
+    const and = computed(() => {
+      return t("Waf.and");
+    });
+
     const rules = computed(() => {
       return {
         limit_action: { required },
@@ -397,22 +412,43 @@ export default {
 
             helpers.regex(/^[0-9]+$/)
           ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1 ${and.value} 1073741824`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1 && num <= 1073741824;
+            }
+          ),
         },
         rule_engine: { required },
         maximum_request: {
           required: helpers.withMessage(champ, required),
           isValidMaxRequest: helpers.withMessage(
             champonlyNumber,
-         
+
             helpers.regex(/^[0-9]+$/)
+          ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1 ${and.value} 1073741824`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1 && num <= 1073741824;
+            }
           ),
         },
         max_parsing: {
           required: helpers.withMessage(champ, required),
           isValidMaxParsing: helpers.withMessage(
             champonlyNumber,
-     
+
             helpers.regex(/^[0-9]+$/)
+          ),
+          interval: helpers.withMessage(
+            `${nbre.value} 100 ${and.value} 10000`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 100 && num <= 10000;
+            }
           ),
         },
         body_mimetype: { required },
@@ -421,33 +457,60 @@ export default {
           required: helpers.withMessage(champ, required),
           isValidResponseBodyLimit: helpers.withMessage(
             champonlyNumber,
-           
+
             helpers.regex(/^[0-9]+$/)
+          ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1 ${and.value} 1073741824`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1 && num <= 1073741824;
+            }
           ),
         },
         max_number: {
           required: helpers.withMessage(champ, required),
           isValidMaxNumber: helpers.withMessage(
             champonlyNumber,
-        
+
             helpers.regex(/^[0-9]+$/)
+          ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1 ${and.value} 1000`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1 && num <= 1000;
+            }
           ),
         },
         pcre_limit_recursion: {
           required: helpers.withMessage(champ, required),
           isValidPcreLimitRecursion: helpers.withMessage(
             champonlyNumber,
-         
+
             helpers.regex(/^[0-9]+$/)
+          ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1000 ${and.value} 50000`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1000 && num <= 50000;
+            }
           ),
         },
         pcre_match_limit: {
           required: helpers.withMessage(champ, required),
           isValidPcreMatchLimit: helpers.withMessage(
             champonlyNumber,
-            
 
             helpers.regex(/^[0-9]+$/)
+          ),
+          interval: helpers.withMessage(
+            `${nbre.value} 1000 ${and.value} 50000`,
+            (value) => {
+              const num = Number(value);
+              return !isNaN(num) && num >= 1000 && num <= 50000;
+            }
           ),
         },
       };

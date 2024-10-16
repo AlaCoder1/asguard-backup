@@ -227,6 +227,7 @@
       :editRow="state.editRow"
       :modalMode="state.modalMode"
       :rowDataList="rowDataRanges.value"
+      :initialRanges="state.available_range"
     />
 
     <v-row class="flex py-8 mb-5">
@@ -369,6 +370,7 @@ export default {
     state.subnet_addr = props.configInfo.subnet_addr;
     state.subnet_mask = props.configInfo.subnet_mask;
     state.available_range = props.configInfo.available_range;
+    console.log("state.available_range", state.available_range);
     state.range_from = props.configInfo.range_from;
     state.range_to = props.configInfo.range_to;
     state.dns_server = props.configInfo.dns_server;

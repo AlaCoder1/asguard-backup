@@ -130,41 +130,91 @@ def activer_suricata_update(request, id):
         cmd="sudo suricata-update"
         _,error=execute_cmd(cmd)
         if error.strip()=="":
-            rules_db = ids_ips_rule.objects.all()  # Retrieve all alerts from the database
             rules_sys = get_suricata_default_rules()
-            rules_add=[]
-            rules_delete=[]
-            rules_list=[]
-            serializer = RuleIdsIpsSerializer(rules_db, many=True)
-            rules_list=serializer.data
-            rules_list=[l['sid'] for l in rules_list]
-            rules_sys_list=[l['sid'] for l in prepare_rule_attribut(rules_sys)]
-            if len(list(set(rules_list)-set(rules_sys_list))) != 0:
+            if rules_sys is not None:
+                rules_list=[l['rule'] for l in RuleIdsIpsSerializer(ids_ips_rule.objects.all() , many=True).data]
                 rules_add = [log for log in rules_sys if log not in rules_list]
-                rules_delete = [log for log in rules_list if log not in rules_sys]   
-                if len(rules_add) != 0:
-                    rules_add = prepare_rule_attribut(rules_add)
-                    # Browse the retrieved logs and add them to the database
-                    for rule in rules_add:
-                        rule['suricatafile'] = int(id)
-                        if not ids_ips_rule.objects.filter(sid=rule['sid']).exists():
-                            serializer_rules = RuleIdsIpsSerializer(data=rule)
-                            if serializer_rules.is_valid():
-                                serializer_rules.save()
-                            else:
-                                return JsonResponse({"message": str(serializer_rules.errors)},status=400)
-                  
+                rules_delete = [log for log in rules_list if log not in rules_sys] 
+                if len(rules_add)!=0:
+                    add_rule_database(rules_add,id)
                 if len(rules_delete)!=0:
-                    rules_delete=prepare_rule_attribut(rules_delete)
-                    for l in rules_delete:
-                        if ids_ips_rule.objects.filter(sid=l['sid']).exists():
-                            rule = ids_ips_rule.objects.get(sid=l['sid'])
-                            rule.delete()
-                        else:
-                            return JsonResponse({"message": f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"},status=400)
-            return JsonResponse({"message": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
-        else:
-            return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"},status=400)
+                    delete_rule_database(rules_delete)
+                return JsonResponse({"message": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
+            
+        return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"},status=400)
+# def activer_suricata_update(request, id):
+# @api_view(['POST'])
+# @authentication_classes([SessionAuthentication])
+# def activer_suricata_update(request, id):
+#     """Add default suricata rules in database"""
+#     if request.method=="POST":
+#         cmd="sudo suricata-update"
+#         _,error=execute_cmd(cmd)
+#         if error.strip()=="":
+#             ids_ips_rule.objects.all().delete() 
+#             rules_sys = get_suricata_default_rules()
+            
+#             if rules_sys is not None:
+#                 rules_add=prepare_rule_attribut(rules_sys)
+#                 rule_objects = []
+#                 for rule in rules_add:
+#                     rule['suricatafile'] = int(id)
+#                     serializer_rules = RuleIdsIpsSerializer(data=rule)
+#                     if serializer_rules.is_valid():
+#                         rule_objects.append(ids_ips_rule(**serializer_rules.validated_data))
+#                         # serializer_rules.save()
+#                     else:
+#                         continue
+#                 ids_ips_rule.objects.bulk_create(rule_objects)
+              
+#             return JsonResponse({"message": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
+#         else:
+#             return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"},status=400)
+# # def activer_suricata_update(request, id):
+#     """Add default suricata rules in database"""
+#     if request.method=="POST":
+#         cmd="sudo suricata-update"
+#         _,error=execute_cmd(cmd)
+#         if error.strip()=="":
+#             print("hello error in database")
+#             rules_db = ids_ips_rule.objects.all()  # Retrieve all alerts from the database
+#             rules_sys = get_suricata_default_rules()
+#             rules_add=[]
+#             rules_delete=[]
+#             rules_list=[]
+#             serializer = RuleIdsIpsSerializer(rules_db, many=True)
+#             rules_list=serializer.data
+#             rules_list=[l['sid'] for l in rules_list]
+#             rules_sys_list=[l['sid'] for l in prepare_rule_attribut(rules_sys)]
+#             print({"rules_delete":rules_delete,"rules_add":rules_sys})
+
+#             if len(list(set(rules_list)-set(rules_sys_list))) != 0:
+#                 rules_add = [log for log in rules_sys if log not in rules_list]
+#                 rules_delete = [log for log in rules_list if log not in rules_sys]   
+#                 if len(rules_add) != 0:
+#                     rules_add = prepare_rule_attribut(rules_add)
+#                     # Browse the retrieved logs and add them to the database
+#                     for rule in rules_add:
+#                         rule['suricatafile'] = int(id)
+#                         if not ids_ips_rule.objects.filter(sid=rule['sid']).exists():
+#                             serializer_rules = RuleIdsIpsSerializer(data=rule)
+#                             if serializer_rules.is_valid():
+#                                 serializer_rules.save()
+#                             else:
+#                                 return JsonResponse({"message": str(serializer_rules.errors)},status=400)
+                  
+#                 if len(rules_delete)!=0:
+#                     # rules_delete=prepare_rule_attribut(rules_delete)
+#                     for l in rules_delete:
+#                         if ids_ips_rule.objects.filter(sid=l).exists():
+#                             rule = ids_ips_rule.objects.get(sid=l)
+#                             rule.delete()
+#                         else:
+#                             return JsonResponse({"message": f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"},status=400)
+#             return JsonResponse({"message": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
+#         else:
+#             print("hello error in system==>",error)
+#             return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"},status=400)
 
 
 @api_view(['GET'])
@@ -212,97 +262,135 @@ def save_rules_suricata(request, id):
     file_path = '/var/lib/suricata/rules/suricata.rules'
     list_msg=[]
     if request.method == 'POST':
-        # Analyse des données JSON de la requête POST
         data_list = request.data
         for data in data_list:
-            # Récupération des données de la règle
-            action=None if data.get('action', None) == "" else data.get('action', None)
-            protocol=None if data.get('protocol', None) == "" else data.get('protocol', None)
-            source_ip=None if data.get('source_ip', None) == "" else data.get('source_ip', None)
-            direction=None if data.get('direction', None) == "" else data.get('direction', None)
-            destination_ip=None if data.get('destination_ip', None) == "" else data.get('destination_ip', None)
-            msg=None if data.get('msg', None) == "" else data.get('msg', None)
-            rev=None if data.get('rev', None) == "" else data.get('rev', None)
-            sid=None if data.get('sid', None) == "" else data.get('sid', None)
-            activate_rule=None if data.get('activate_rule', None) == "" else data.get('activate_rule', None)
-            # Recherche du fichier SuricataFile par ID
-            try:
-                suricatafile_obj = suricatafile.objects.get(id=id)
-            except suricatafile.DoesNotExist:
-                return Response({"message": f"{CONSTANT_SURICATA_FILE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
-            contenu = {
-                    "action": action,
-                    "protocol": protocol,
-                    "source_ip": source_ip,
-                    "direction": direction,
-                    "destination_ip": destination_ip,
-                    "msg": msg,
-                    "rev": rev,
-                    "sid": sid,
-                    "activate_rule": activate_rule,
-                    
-                 }
-            # Ajout de "#" selon la valeur de activate_rule
-            if activate_rule:
-                must_be_comment = False
-            else:
-                must_be_comment = True  # Ajouter "#" à la règle si activate_rule est False
-            # Mise à jour de l'ID du fichier SuricataFile dans les données de la règle
             id_rule=None if data.get('id', None) == "" else data.get('id', None)
-            # Appel de la fonction pour ajouter la règle dans le système Suricata
-            if id_rule is None:
-                data["default_rule"]=False
-                if ids_ips_rule.objects.filter(sid=sid).exists():
-                    message = f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
-                    status=400
-                else:
-                    output, rule,error = add_rule_remote(must_be_comment, contenu,file_path)
-                    data['suricatafile'] = suricatafile_obj.id
-                    data['rule']=rule
-                    if error=="":
-                        rules_serializer = RuleIdsIpsSerializer(data=data)
-                        if rules_serializer.is_valid():
-                            rules_serializer.save()
-                            message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_CREATING}"
-                            status=200
-                        else:
-                            message = rules_serializer.errors
-                            status=400
-                        
-            else:
-                # Obtenir la ligne à supprimer en utilisant la fonction get_line_by_sid
-                line_to_update = get_line_by_sid( sid)
-                # Vérification des erreurs lors de la suppression de la ligne
-                if line_to_update is not None:
-                    must_be_comment = not activate_rule  # Ajouter "#" à la règle si activate_rule est False
-                    
-                    # Ajouter la nouvelle règle dans le système distant en spécifiant si elle doit être activée ou désactivée
-                    output, rule,error = update_rule_remote(must_be_comment,contenu,line_to_update,file_path)
-                    # Vérification des erreurs lors de l'ajout de la nouvelle règle
-                    if error == '':
-                        # Mettre à jour la règle dans la base de données locale
-                        ids_ips_rule_from_db = ids_ips_rule.objects.get(sid=sid)
-                        ids_ips_rule_from_db.action = action
-                        ids_ips_rule_from_db.protocol = protocol
-                        ids_ips_rule_from_db.source_ip = source_ip
-                        ids_ips_rule_from_db.direction = direction
-                        ids_ips_rule_from_db.destination_ip = destination_ip
-                        ids_ips_rule_from_db.msg = msg
-                        ids_ips_rule_from_db.rev = rev
-                        ids_ips_rule_from_db.activate_rule = activate_rule
-                        ids_ips_rule_from_db.rule=rule
-                        ids_ips_rule_from_db.save()
+            activate_rule=None if data.get('activate_rule', None) == "" else data.get('activate_rule', None)
+            sid=ids_ips_rule.objects.get(id=id_rule).sid           
+            line_to_update = get_line_by_sid(sid)
+            if line_to_update is not None:
+                _, rule,error = update_rule_remote(sid,activate_rule,line_to_update,file_path)
+                if error == '':
+                    contenu = {
+                    "activate_rule": activate_rule,
+                    "rule":rule,
+                    "suricatafile":id,
+                        }
+                    ids_ips_rule_from_db = ids_ips_rule.objects.get(sid=sid)
+                    serializer_rule=RuleIdsIpsSerializer(ids_ips_rule_from_db,data=contenu)
+                    if serializer_rule.is_valid():
+                        serializer_rule.save()
                         message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"
                         status=200
                     else:
-                        message = error
+                        message = str(serializer_rule.errors)
                         status=400
                 else:
-                    message = f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
+                    message = error
                     status=400
+            else:
+                message = f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
+                status=400
             list_msg.append({"message":message,"status":status,"sid":sid})
         # Retourne une réponse JSON avec le message de statut
     return Response({"message": list_msg})
+# @api_view(['POST'])
+# @authentication_classes([SessionAuthentication])
+# def save_rules_suricata(request, id):
+#     # Initialisation d'une chaîne vide pour stocker les messages de réponse
+#     message = ""
+#     file_path = '/var/lib/suricata/rules/suricata.rules'
+#     list_msg=[]
+#     if request.method == 'POST':
+#         # Analyse des données JSON de la requête POST
+#         data_list = request.data
+#         for data in data_list:
+#             # Récupération des données de la règle
+#             action=None if data.get('action', None) == "" else data.get('action', None)
+#             protocol=None if data.get('protocol', None) == "" else data.get('protocol', None)
+#             source_ip=None if data.get('source_ip', None) == "" else data.get('source_ip', None)
+#             direction=None if data.get('direction', None) == "" else data.get('direction', None)
+#             destination_ip=None if data.get('destination_ip', None) == "" else data.get('destination_ip', None)
+#             msg=None if data.get('msg', None) == "" else data.get('msg', None)
+#             rev=None if data.get('rev', None) == "" else data.get('rev', None)
+#             sid=None if data.get('sid', None) == "" else data.get('sid', None)
+#             activate_rule=None if data.get('activate_rule', None) == "" else data.get('activate_rule', None)
+#             # Recherche du fichier SuricataFile par ID
+#             try:
+#                 suricatafile_obj = suricatafile.objects.get(id=id)
+#             except suricatafile.DoesNotExist:
+#                 return Response({"message": f"{CONSTANT_SURICATA_FILE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+#             contenu = {
+#                     "action": action,
+#                     "protocol": protocol,
+#                     "source_ip": source_ip,
+#                     "direction": direction,
+#                     "destination_ip": destination_ip,
+#                     "msg": msg,
+#                     "rev": rev,
+#                     "sid": sid,
+#                     "activate_rule": activate_rule,
+                    
+#                  }
+#             # Ajout de "#" selon la valeur de activate_rule
+#             if activate_rule:
+#                 must_be_comment = False
+#             else:
+#                 must_be_comment = True  # Ajouter "#" à la règle si activate_rule est False
+#             # Mise à jour de l'ID du fichier SuricataFile dans les données de la règle
+#             id_rule=None if data.get('id', None) == "" else data.get('id', None)
+#             # Appel de la fonction pour ajouter la règle dans le système Suricata
+#             if id_rule is None:
+#                 data["default_rule"]=False
+#                 if ids_ips_rule.objects.filter(sid=sid).exists():
+#                     message = f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
+#                     status=400
+#                 else:
+#                     output, rule,error = add_rule_remote(must_be_comment, contenu,file_path)
+#                     data['suricatafile'] = suricatafile_obj.id
+#                     data['rule']=rule
+#                     if error=="":
+#                         rules_serializer = RuleIdsIpsSerializer(data=data)
+#                         if rules_serializer.is_valid():
+#                             rules_serializer.save()
+#                             message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_CREATING}"
+#                             status=200
+#                         else:
+#                             message = rules_serializer.errors
+#                             status=400
+                        
+#             else:
+#                 line_to_update = get_line_by_sid( sid)
+#                 if line_to_update is not None:
+#                     must_be_comment = not activate_rule  
+                    
+#                     # Ajouter la nouvelle règle dans le système distant en spécifiant si elle doit être activée ou désactivée
+#                     output, rule,error = update_rule_remote(must_be_comment,contenu,line_to_update,file_path)
+#                     # Vérification des erreurs lors de l'ajout de la nouvelle règle
+#                     if error == '':
+#                         # Mettre à jour la règle dans la base de données locale
+#                         ids_ips_rule_from_db = ids_ips_rule.objects.get(sid=sid)
+#                         ids_ips_rule_from_db.action = action
+#                         ids_ips_rule_from_db.protocol = protocol
+#                         ids_ips_rule_from_db.source_ip = source_ip
+#                         ids_ips_rule_from_db.direction = direction
+#                         ids_ips_rule_from_db.destination_ip = destination_ip
+#                         ids_ips_rule_from_db.msg = msg
+#                         ids_ips_rule_from_db.rev = rev
+#                         ids_ips_rule_from_db.activate_rule = activate_rule
+#                         ids_ips_rule_from_db.rule=rule
+#                         ids_ips_rule_from_db.save()
+#                         message = f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"
+#                         status=200
+#                     else:
+#                         message = error
+#                         status=400
+#                 else:
+#                     message = f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
+#                     status=400
+#             list_msg.append({"message":message,"status":status,"sid":sid})
+#         # Retourne une réponse JSON avec le message de statut
+#     return Response({"message": list_msg})
 
 
 @swagger_auto_schema(

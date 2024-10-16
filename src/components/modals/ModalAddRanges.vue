@@ -5,14 +5,15 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("dhcpV4.addRange") }}</span
-            >
+              {{ $t("dhcpV4.addRange") }}
+            </span>
             <span class="headline" v-if="modalMode === 'edit'">
               {{ $t("dhcpV4.editRange") }}</span
             >
           </v-card-title>
           <v-card-text>
             <v-container>
+              <h4 class="mb-3">Available Range : {{ initialRanges }}</h4>
               <v-row>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
@@ -25,6 +26,12 @@
                   >
                     {{ v$.rangeFrom.$errors?.[0].$message }}
                   </p>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="state.messageRangeFrom && state.rangeFrom"
+                  >
+                    {{ state.messageRangeFrom }}
+                  </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
@@ -36,6 +43,12 @@
                     v-if="v$.rangeTo.$errors.length"
                   >
                     {{ v$.rangeTo.$errors?.[0].$message }}
+                  </p>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="state.messageRangeTo && state.rangeTo"
+                  >
+                    {{ state.messageRangeTo }}
                   </p>
                 </v-col>
               </v-row>
@@ -60,6 +73,7 @@
               large
               rounded
               outlined
+              :disabled="!computedTestRange"
               label-color="#213E9F"
               type="submit"
               color="indigo-darken-3"
@@ -113,6 +127,10 @@ export default {
       type: String,
       required: true,
     },
+    initialRanges: {
+      type: String,
+      required: true,
+    },
   },
 
   setup(props) {
@@ -123,15 +141,24 @@ export default {
         console.log("id", id);
         state.confId = id;
       });
+
+      let ranges = initialRanges.value.split("-").map((part) => part.trim());
+
+      state.initialFrom = ranges[0];
+      state.initialTo = ranges[1];
     });
 
-    const { isOpen, editRow, modalMode } = toRefs(props);
+    const { isOpen, editRow, modalMode, initialRanges } = toRefs(props);
 
     const state = reactive({
       rangeTo: "",
       rangeFrom: "",
       editValue: null,
       confId: null,
+      initialFrom: null,
+      initialTo: null,
+      messageRangeFrom: null,
+      messageRangeTo: null,
     });
 
     watch(
@@ -140,6 +167,7 @@ export default {
         state.openModal = val;
       }
     );
+
     watch(
       () => editRow.value,
       (val) => {
@@ -165,6 +193,59 @@ export default {
         }
       }
     );
+
+    function ipToNumber(ip) {
+      return ip
+        .split(".")
+        .reduce((acc, octet) => (acc << 8) | parseInt(octet, 10), 0);
+    }
+
+    function isIpInRange(ip, start, end) {
+      const ipNum = ipToNumber(ip);
+      const startNum = ipToNumber(start);
+      const endNum = ipToNumber(end);
+      return ipNum >= startNum && ipNum <= endNum;
+    }
+
+    function validateRange(inputFrom, inputTo) {
+      const isFromValid = isIpInRange(
+        inputFrom,
+        state.initialFrom,
+        state.initialTo
+      );
+      const isToValid = isIpInRange(
+        inputTo,
+        state.initialFrom,
+        state.initialTo
+      );
+
+      if (!isFromValid) {
+        state.messageRangeFrom = `${t("rangeFrom")} ${inputFrom} ${t(
+          "outBounds"
+        )}`;
+      } else {
+        state.messageRangeFrom = null;
+      }
+      if (!isToValid) {
+        state.messageRangeTo = `${t("rangeFrom")} ${inputTo} ${t("outBounds")}`;
+      } else {
+        state.messageRangeTo = null;
+      }
+
+      return isFromValid && isToValid;
+    }
+
+    const computedTestRange = computed(() => {
+      let isValidRange = false;
+      if (validateRange(state.rangeFrom, state.rangeTo)) {
+        console.log("Both ranges are valid.");
+        isValidRange = true;
+      } else {
+        console.log("Invalid range input.");
+        isValidRange = false;
+      }
+      return isValidRange;
+    });
 
     const submitForm = async () => {
       const result = await v$.value.$validate();
@@ -237,6 +318,7 @@ export default {
       v$,
       closeModal,
       submitForm,
+      computedTestRange,
     };
   },
 };

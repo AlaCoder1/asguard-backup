@@ -2,6 +2,8 @@ import subprocess
 from backend.ids_ips.models import SuricataInterface, ids_ips_rule 
 from django.db.models import Q
 
+from backend.ids_ips.serializers import RuleIdsIpsSerializer
+
 
 def execute_cmd(command):
     """function to execute command"""
@@ -106,6 +108,26 @@ def update_config(status_enabled):
     return True
    
 #*********** Les régles ****************
+def add_rule_database(rules_add,id):
+    """ function to add rule in database to refresh table rule suricata"""
+    rules_add=prepare_rule_attribut(rules_add)
+    rule_objects = []
+    for rule in rules_add:
+        rule['suricatafile'] = int(id)
+        serializer_rules = RuleIdsIpsSerializer(data=rule)
+        if serializer_rules.is_valid():
+            rule_objects.append(ids_ips_rule(**serializer_rules.validated_data))
+        else:
+            continue
+    ids_ips_rule.objects.bulk_create(rule_objects)
+def delete_rule_database(rules_delete):
+    """ function to delete rule from database to refresh table rule suricata"""
+    for l in rules_delete:
+        if ids_ips_rule.objects.filter(rule=l).exists():
+            rule = ids_ips_rule.objects.get(rule=l)
+            rule.delete()
+        else:
+            continue
 def format_dict_as_suricata_rules(content):    
     """Format des régles  """
     rule_template = "{action} {protocol} {source_ip} {direction} {destination_ip} (msg:\"{msg}\"; rev:{rev};sid:{sid};)"
@@ -133,72 +155,82 @@ EOF'""".format(file_path,formatted_content)
     output, error = execute_cmd(cmd)
     return output,formatted_content, error
 
-def update_rule_remote(comment,contenu,line_to_update,file_path):
+def update_rule_remote(sid,activate_rule,line_to_update,file_path):
     """mise à jour une régle suricata"""
-    rule = line_to_update.strip()  # Supprimez les espaces inutiles
-    action=None
-    protocol=None
-    sid=None
-    src_ip=None
-    direction=None
-    dest_ip=None
-    msg=None
-    rev=None
-    rule=rule.strip()
-    action=rule.split(" ")[0].strip()
-    protocol=rule.split(" ")[1].strip()
-    if rule.find("sid")!=-1:
-        rule_inter=rule[rule.find("sid:"):]
-        sid=int(rule_inter[rule_inter.find("sid:")+len("sid:"):rule_inter.find(";")])
-    if rule[1:].find("->")!=-1:
-        src_ip=rule[rule.find(protocol)+len(protocol):rule.find("->")].strip()
-        direction="->"
-        dest_ip=rule[rule.find("->")+len("->"):rule.find("(msg")].strip()
-    if rule.find("msg:")!=-1:
-        msg=rule[rule.find("msg:")+len("msg:"): rule.find('";')].strip()
-    if rule.find("rev:")!=-1:
-        rev=rule[rule.find("rev:")+len("rev:"): rule.find(";sid")].strip(";")
-        if rev.isdigit():
-            rev=int(rev)
-        else:
-            rev=None
-    action=action if action!="" else None    
-    protocol=protocol if protocol!="" else None  
-    src_ip=src_ip if src_ip!="" else None    
-    direction=direction if direction!="" else None  
-    dest_ip=dest_ip if dest_ip!="" else None    
-    msg=msg if msg!="" else None   
-    protocol=protocol if protocol!="" else None
-    if contenu['action'] is not None:
-        if contenu["activate_rule"] is False:
-            contenu['action']="#"+contenu['action']
-        else:
-            rule=rule.strip("#")
-            contenu['action'].strip().strip("#")
-        rule=rule.replace(action,contenu['action'])
-    if contenu['protocol'] is not None:
-        rule=rule.replace(protocol,contenu['protocol'])
-    if  contenu['source_ip'] is not None:
-        rule=rule.replace(src_ip,contenu['source_ip'])
-        
-    if  contenu['direction'] is not None:
-        rule=rule.replace(direction,contenu['direction'])      
-    
-    if  contenu['destination_ip'] is not None:
-        rule=rule.replace(dest_ip,contenu['destination_ip'])  
-
-    if  contenu['msg'] is not None and rule.find("msg")!=-1:
-        rule=rule.replace(msg,'"'+contenu['msg'])    
-    
-    if  contenu['rev'] is not None and rule.find("rev")!=-1:
-        rule=rule.replace(str(rev),str(contenu['rev']))    
-        
-    if  contenu['sid'] is not None:
-        rule=rule.replace(str(sid),str(contenu['sid']))   
-        
+    rule = line_to_update.strip()  
+    if activate_rule is True:
+        rule=rule.strip("#")
+    else:
+        rule="#"+rule
     cmd = "sudo sed -i '/sid:{}/ s|{}|{}|' {}".format(sid, line_to_update.strip(), rule.strip(), file_path)
     output, error = execute_cmd(cmd)
     return output,rule, error
+# def update_rule_remote(comment,contenu,line_to_update,file_path):
+#     """mise à jour une régle suricata"""
+#     rule = line_to_update.strip()  # Supprimez les espaces inutiles
+#     action=None
+#     protocol=None
+#     sid=None
+#     src_ip=None
+#     direction=None
+#     dest_ip=None
+#     msg=None
+#     rev=None
+#     rule=rule.strip()
+#     action=rule.split(" ")[0].strip()
+#     protocol=rule.split(" ")[1].strip()
+#     if rule.find("sid")!=-1:
+#         rule_inter=rule[rule.find("sid:"):]
+#         sid=int(rule_inter[rule_inter.find("sid:")+len("sid:"):rule_inter.find(";")])
+#     if rule[1:].find("->")!=-1:
+#         src_ip=rule[rule.find(protocol)+len(protocol):rule.find("->")].strip()
+#         direction="->"
+#         dest_ip=rule[rule.find("->")+len("->"):rule.find("(msg")].strip()
+#     if rule.find("msg:")!=-1:
+#         msg=rule[rule.find("msg:")+len("msg:"): rule.find('";')].strip()
+#     if rule.find("rev:")!=-1:
+#         rev=rule[rule.find("rev:")+len("rev:"): rule.find(";sid")].strip(";")
+#         if rev.isdigit():
+#             rev=int(rev)
+#         else:
+#             rev=None
+#     action=action if action!="" else None    
+#     protocol=protocol if protocol!="" else None  
+#     src_ip=src_ip if src_ip!="" else None    
+#     direction=direction if direction!="" else None  
+#     dest_ip=dest_ip if dest_ip!="" else None    
+#     msg=msg if msg!="" else None   
+#     protocol=protocol if protocol!="" else None
+#     if contenu['action'] is not None:
+#         if contenu["activate_rule"] is False:
+#             contenu['action']="#"+contenu['action']
+#         else:
+#             rule=rule.strip("#")
+#             contenu['action'].strip().strip("#")
+#         rule=rule.replace(action,contenu['action'])
+#     if contenu['protocol'] is not None:
+#         rule=rule.replace(protocol,contenu['protocol'])
+#     if  contenu['source_ip'] is not None:
+#         rule=rule.replace(src_ip,contenu['source_ip'])
+        
+#     if  contenu['direction'] is not None:
+#         rule=rule.replace(direction,contenu['direction'])      
+    
+#     if  contenu['destination_ip'] is not None:
+#         rule=rule.replace(dest_ip,contenu['destination_ip'])  
+
+#     if  contenu['msg'] is not None and rule.find("msg")!=-1:
+#         rule=rule.replace(msg,'"'+contenu['msg'])    
+    
+#     if  contenu['rev'] is not None and rule.find("rev")!=-1:
+#         rule=rule.replace(str(rev),str(contenu['rev']))    
+        
+#     if  contenu['sid'] is not None:
+#         rule=rule.replace(str(sid),str(contenu['sid']))   
+        
+#     cmd = "sudo sed -i '/sid:{}/ s|{}|{}|' {}".format(sid, line_to_update.strip(), rule.strip(), file_path)
+#     output, error = execute_cmd(cmd)
+#     return output,rule, error
 
 # //
 def get_line_by_sid( sid):
@@ -225,19 +257,16 @@ def delete_line_in_remote_file(file_path, line_to_delete):
 def get_suricata_default_rules():
     file_path = '/var/lib/suricata/rules/suricata.rules'
     try:
-        # Utilisez la commande 'cat' pour lire le contenu du fichier
         cmd_read = f"cat {file_path}"
         output, error = execute_cmd(cmd_read)
         if not error:
-            # La sortie de la commande contient le contenu du fichier
             rules = output.splitlines()
             return rules
         else:
             return None
-            # print(f"Erreur lors de la lecture des règles : {error}")
     except Exception :
         # print(f"Erreur : {str(e)}")
-        return []
+        return None
 
 ###prepare rules attributs
 def prepare_rule_attribut(rules):
@@ -297,7 +326,7 @@ def prepare_rule_attribut(rules):
                 "rule": rule,
                 "suricatafile":id,
                 "activate_rule":active,
-                    "default_rule":True
+                "default_rule":True
                 }
             list_attributs_rules.append(data)
     return list_attributs_rules

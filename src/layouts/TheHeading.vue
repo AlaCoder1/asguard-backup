@@ -43,7 +43,7 @@
             </v-list-item>
           </a>
 
-          <v-list-item> {{ $t("subtitle.settings") }} </v-list-item>
+          <!-- <v-list-item> {{ $t("subtitle.settings") }} </v-list-item> -->
 
           <v-list-item>
             <span @click="logout">{{ $t("header.logout") }}</span>
@@ -274,7 +274,6 @@ export default {
         .get(`/users/getUser/${userId}`)
         .then((response) => {
           state.imageURL = response.data.profile.photo_url;
-          console.log('response.data', response.data)
         })
         .catch((e) => {
           console.log("e", e.response);

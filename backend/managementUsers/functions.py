@@ -6,7 +6,7 @@ import re
 
 def get_uid_user():
     """function to get UID from system"""
-    return subprocess.run(["getent", "passwd"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
+    return subprocess.run(["sudo","getent", "passwd"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
 
 
 def valid_input(var):

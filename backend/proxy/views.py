@@ -80,7 +80,7 @@ def run_command(command):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def restart(request):
-    process = subprocess.run(['systemctl', 'restart', 'squid'], capture_output=True, text=True)
+    process = subprocess.run(['sudo','systemctl', 'restart', 'squid'], capture_output=True, text=True)
     if process.returncode == 0:
         server_satus = ServerSatus.objects.get(id=1)
         server_satus.status_server = False
@@ -101,7 +101,7 @@ def restart(request):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def start(request):
-    process = subprocess.run(['systemctl', 'start', 'squid'], capture_output=True, text=True)
+    process = subprocess.run(['sudo','systemctl', 'start', 'squid'], capture_output=True, text=True)
     if process.returncode == 0:
         msg = f"{CONSTANT_SQUID} {SUCCESS_MESSAGES_STARTING}"
         status = 200
@@ -120,7 +120,7 @@ def start(request):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def stop(request):
-    process = subprocess.run(['systemctl', 'stop', 'squid'], capture_output=True, text=True)
+    process = subprocess.run(['sudo','systemctl', 'stop', 'squid'], capture_output=True, text=True)
     if process.returncode == 0:
         msg = f"{CONSTANT_SQUID} {SUCCESS_MESSAGES_STOPING}"
         status = 200

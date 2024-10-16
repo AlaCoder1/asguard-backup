@@ -15,7 +15,7 @@ def validInput(var):
 
 def addGroup(groupname):
     """Add a new group to the system."""
-    cmd = "groupadd " + groupname
+    cmd = "sudo "+"groupadd " + groupname
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout.split("\n")
     error = completed_process.stderr
@@ -23,7 +23,7 @@ def addGroup(groupname):
 
 def delete_group(groupname):
     """DElete a group from the system."""
-    cmd = "groupdel " + groupname
+    cmd = "sudo "+"groupdel " + groupname
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout.split("\n")
     error = completed_process.stderr
@@ -31,7 +31,7 @@ def delete_group(groupname):
 
 def change_groupname(oldgroupname, Newgroupname):
     """Change groupname in the system."""
-    cmd = "groupmod -n " + Newgroupname + " "+oldgroupname
+    cmd = "sudo "+"groupmod -n " + Newgroupname + " "+oldgroupname
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout.split("\n")
     error = completed_process.stderr
@@ -40,11 +40,11 @@ def change_groupname(oldgroupname, Newgroupname):
 
 def getLastGroupName():
     """Get the last groupname from the system."""
-    return subprocess.run(["getent", "group"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[0]
+    return subprocess.run(["sudo","getent", "group"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[0]
 
 def getUidGroup():
     """Get a Uuid group from the system."""
-    return subprocess.run(["getent", "group"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
+    return subprocess.run(["sudo","getent", "group"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
 
 def group_exists(group_name):
     """Check if a group exists on the system."""

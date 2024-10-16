@@ -336,6 +336,8 @@ export default {
 
           break;
         case "downloadhost":
+        if (token && token !== "null") {
+
           if(rowData.os==="windows"){
             let text = windows.value[0].content;
 
@@ -374,7 +376,12 @@ document.body.removeChild(a);
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
           }
-        
+        }else {
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = "ZTNA is not running";
+      } 
+
           break;
         case "download":
           let text = rowData.token;

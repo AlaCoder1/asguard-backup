@@ -410,11 +410,10 @@ def update_routers(request, id):
 def start_routers(request, id):
     try:
         relay = Relays.objects.get(id=id)
-        local_domain_name()
         router_status = get_status_router_from_system(relay.name)
         status = get_status_ztna_service()
         if ("Router is not running" in router_status) and (status):
-            # change_status_router(relay.name, "start")
+            change_status_router(relay.name, "start")
             return JsonResponse({"message": f"{CONSTANT_RELAY} {SUCCESS_MESSAGES_STARTING}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_RELAY}"}, status=400)
     except CommandExecutionError:

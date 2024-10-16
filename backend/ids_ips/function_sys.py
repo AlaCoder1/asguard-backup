@@ -1,8 +1,8 @@
 import subprocess
-from backend.ids_ips.models import SuricataInterface, ids_ips_rule 
+from backend.ids_ips.models import Alert, SuricataInterface, ids_ips_rule 
 from django.db.models import Q
 
-from backend.ids_ips.serializers import RuleIdsIpsSerializer
+from backend.ids_ips.serializers import AlertSerializer, RuleIdsIpsSerializer
 
 
 def execute_cmd(command):
@@ -380,8 +380,28 @@ def prepare_alert_attribut(lines):
                 "alert":line.strip(),
                     })  
     return logs
+def add_alert_suricata(logs_add,id):
+    for log in logs_add:
+        log['suricatafile']=int(id)
+        if not Alert.objects.filter(alert=log['alert']).exists():
+            serializer_alert = AlertSerializer(data=log)
+            if serializer_alert.is_valid():
+                serializer_alert.save()
+                
+            else:
+                return str(serializer_alert.errors)
+    return True
 
-
+def delete_alert_suricata(logs_delete):
+     for l in logs_delete:
+        print("data to delete ==>",l)
+        if Alert.objects.filter(alert=l).exists():
+            alert = Alert.objects.get(alert=l)
+            alert.delete()
+           
+        else:
+            return False
+     return True
 ########
 def init_logrotate_conf(contenu,file_path):
     """

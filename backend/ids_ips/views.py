@@ -133,12 +133,13 @@ def activer_suricata_update(request, id):
             rules_sys = get_suricata_default_rules()
             if rules_sys is not None:
                 rules_list=[l['rule'] for l in RuleIdsIpsSerializer(ids_ips_rule.objects.all() , many=True).data]
-                rules_add = [log for log in rules_sys if log not in rules_list]
-                rules_delete = [log for log in rules_list if log not in rules_sys] 
-                if len(rules_add)!=0:
-                    add_rule_database(rules_add,id)
-                if len(rules_delete)!=0:
-                    delete_rule_database(rules_delete)
+                if (len(list(set(rules_sys)-set(rules_list))))!=0:
+                    rules_add = [log for log in rules_sys if log not in rules_list]
+                    rules_delete = [log for log in rules_list if log not in rules_sys] 
+                    if len(rules_add)!=0:
+                        add_rule_database(rules_add,id)
+                    if len(rules_delete)!=0:
+                        delete_rule_database(rules_delete)
                 return JsonResponse({"message": f"{CONSTANT_RULE} {SUCCESS_MESSAGES_UPDATING}"},status=200)
             
         return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"},status=400)
@@ -449,40 +450,59 @@ def delete_rule(request, sid):
 def add_alerts_to_database(request,id):
     if request.method=="POST":
         logs = read_suricata_log()
-        alerts = Alert.objects.all()  # Get alerts from database
-        logs_add=[]
-        logs_delete=[]
-        if len(alerts)==0:
-            logs_add=prepare_alert_attribut(logs)
-        else:
-            alert_list=[]
-            serializer = AlertSerializer(alerts, many=True)
-            alert_list=serializer.data
-            alert_list=[l['alert'] for l in alert_list]
+        if logs is not None:
+            alert_list=[l['alert'] for l in AlertSerializer( Alert.objects.all(), many=True).data]
             logs_add = [log for log in logs if log not in alert_list]
             logs_add=prepare_alert_attribut(logs_add)
             logs_delete = [log for log in alert_list if log not in logs]   
+            if len(list(set(logs)-set(alert_list)))!=0:
+                if len(logs_add)!=0:
+                    aux_add=add_alert_suricata(logs_add,id)
+                    if aux_add is not True:
+                        return JsonResponse({"message": aux_add},status=400)
+                if len(logs_delete)!=0:
+                    delete_alert_suricata(logs_delete)
+            return JsonResponse({"message": f"{CONSTANT_ALERT} {SUCCESS_MESSAGES_UPDATING}"},status=200) 
+        else:
+            return JsonResponse({"message": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ALERT}"},status=400)
+             
+                    
+# def add_alerts_to_database(request,id):
+#     if request.method=="POST":
+#         logs = read_suricata_log()
+#         alerts = Alert.objects.all()  # Get alerts from database
+#         logs_add=[]
+#         logs_delete=[]
+#         if len(alerts)==0:
+#             logs_add=prepare_alert_attribut(logs)
+#         else:
+#             alert_list=[]
+#             serializer = AlertSerializer(alerts, many=True)
+#             alert_list=serializer.data
+#             alert_list=[l['alert'] for l in alert_list]
+#             logs_add = [log for log in logs if log not in alert_list]
+#             logs_add=prepare_alert_attribut(logs_add)
+#             logs_delete = [log for log in alert_list if log not in logs]   
             
-        if len(logs_add) != 0:
-            # Looping throw the retrieved logs and add them to the database
-            for log in logs_add:
-                suricatafile_obj = suricatafile.objects.get(pk=id)  
-                log['suricatafile']=int(suricatafile_obj.id)
-                if not Alert.objects.filter(alert=log['alert']).exists():
-                    serializer_alert = AlertSerializer(data=log)
-                    if serializer_alert.is_valid():
-                        serializer_alert.save()
-                    else:
-                        return str(serializer_alert.errors)
+#         if len(logs_add) != 0:
+#             # Looping throw the retrieved logs and add them to the database
+#             for log in logs_add:
+#                 log['suricatafile']=int(id)
+#                 if not Alert.objects.filter(alert=log['alert']).exists():
+#                     serializer_alert = AlertSerializer(data=log)
+#                     if serializer_alert.is_valid():
+#                         serializer_alert.save()
+#                     else:
+#                         return JsonResponse({"message": str(serializer_alert.errors)},status=400)
                
-        elif len(logs_delete)!=0:
-            for l in logs_delete:
-                if Alert.objects.filter(alert=l).exists():
-                    alert = Alert.objects.get(alert=l)
-                    alert.delete()
-                else:
-                    return JsonResponse({"message": f"{CONSTANT_ALERT} {ERROR_MESSAGES_INEXISTANT}"},status=400)
-        return JsonResponse({"message": f"{CONSTANT_ALERT} {SUCCESS_MESSAGES_UPDATING}"},status=200) 
+#         if len(logs_delete)!=0:
+#             for l in logs_delete:
+#                 if Alert.objects.filter(alert=l).exists():
+#                     alert = Alert.objects.get(alert=l)
+#                     alert.delete()
+#                 else:
+#                     return JsonResponse({"message": f"{CONSTANT_ALERT} {ERROR_MESSAGES_INEXISTANT}"},status=400)
+#         return JsonResponse({"message": f"{CONSTANT_ALERT} {SUCCESS_MESSAGES_UPDATING}"},status=200) 
 
     
 #Afficher les alertes de la BD avec la pagination//

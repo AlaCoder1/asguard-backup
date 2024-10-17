@@ -171,7 +171,7 @@ def create_user(request):
                 error_useradd, stdout_password, stderr_password  = add_user(username, password)
                 # Convert the stderr stream to a string
                 if error_useradd == '':
-                    add_mail_spool(username)
+                    # add_mail_spool(username)
                     if email_founded:
                         msg = f"{username} {SUCCESS_MESSAGES_CREATING} {CONSTANT_METHOD_ADD_USER_EMAIL_SERVER}"
                         data['id_server_id']= ad_server.id

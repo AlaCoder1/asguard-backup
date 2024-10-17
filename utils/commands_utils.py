@@ -54,3 +54,7 @@ def get_current_directory():
     current_directory = current_directory[:len(current_directory)-1]
     return current_directory
 
+
+def read_file_from_system(path_file):
+    file_content = execute_command_without_arguments(["sudo", "cat", path_file])
+    return file_content.stdout

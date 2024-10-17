@@ -2,7 +2,7 @@ from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_C
 from backend.waf.constant_variables import PATH_CRS_SETUP, PATH_MAIN_WAF, PATH_MODESC, PATH_NGINX_SITES_AVAILABLE, PATH_NGINX_SITES_ENABLED, PATH_RULES_WAF, PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
 from backend.waf.utils_config import create_waf_config
-from utils.commands_utils import execute_command_without_arguments, execute_list_commands_without_arguments
+from utils.commands_utils import execute_command_without_arguments, execute_list_commands_without_arguments, read_file_from_system
 
 
 def create_application_waf_in_system(app_data):
@@ -152,8 +152,7 @@ def delete_application_waf_in_system(application_name):
                             ["sudo", "rm", "-f", app_sites_enabled_config],
                             ["sudo", "rm", "-f", app_param_config],]
     execute_list_commands_without_arguments(list_delete_commands)
-    with open(PATH_MAIN_WAF) as main_file:
-        main_content = main_file.read()
+    main_content = read_file_from_system(PATH_MAIN_WAF)
     main_content = main_content.replace(f"\nInclude {app_directory}geoip_log_{application_name}.conf", "")
     with open(PATH_MAIN_WAF, 'w') as main_file:
         main_file.write(main_content)

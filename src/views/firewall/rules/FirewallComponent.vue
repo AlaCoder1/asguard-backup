@@ -777,6 +777,7 @@ export default defineComponent({
       let parsedArray = JSON.parse(rulesAttribute);
 
       rules.value = parsedArray;
+      console.log('rules.value',rules.value)
 
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;

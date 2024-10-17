@@ -169,14 +169,6 @@
           <v-card-actions>
             <span></span>
             <v-spacer></v-spacer>
-            <v-btn
-              type="submit"
-              color="asguard_primary_light"
-              :rounded="true"
-              class="mt-3 btn-add"
-            >
-              <span class="text-white">{{ $t("buttons.save") }}</span>
-            </v-btn>
 
             <v-btn
               color="asguard_primary_light"
@@ -184,7 +176,17 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white">{{ $t("buttons.close") }}</span>
+            <span class="pr-3 pl-3 text-white" style="color: #213e9f"
+                >{{$t('buttons.close')}}</span
+              >
+            </v-btn>
+            <v-btn
+              type="submit"
+              color="asguard_primary_light"
+              :rounded="true"
+              class="mt-3 btn-add"
+            >
+              <span class="text-white pr-3 pl-3">{{ $t("buttons.create") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>

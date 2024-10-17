@@ -5,7 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="text-h5"
-              >{{ mode === "create" ? $t("modal.create") : $t("modal.update") }} group</span
+              >{{
+                mode === "create" ? $t("modal.create") : $t("modal.update")
+              }}
+              group</span
             >
           </v-card-title>
           <v-card-text>
@@ -43,7 +46,9 @@
               </v-row>
             </v-container>
 
-            <small class="mt-10">*{{$t("requiredfield.indicatesrequiredfield")}}</small>
+            <small class="mt-10 ml-5"
+              >*{{ $t("requiredfield.indicatesrequiredfield") }}</small
+            >
           </v-card-text>
           <v-card-actions>
             <!-- <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
@@ -51,23 +56,26 @@
               textAlertDanger
             }}</span> -->
             <v-spacer></v-spacer>
+
             <v-btn
               :rounded="true"
               class="mt-3 btn-add"
-              color="blue-darken-1"
+              color="asguard_primary_light"
               variant="text"
-              type="submit"
+              @click="closeModal"
             >
-              <span class="text-white">{{ $t("buttons.save") }}</span>
+            <span class="pr-3 pl-3 text-white" style="color: #213e9f"
+                >{{$t('buttons.close')}}</span
+              >
             </v-btn>
             <v-btn
               :rounded="true"
               class="mt-3 btn-add"
-              color="blue-darken-1"
+              color="asguard_primary_light"
               variant="text"
-              @click="closeModal"
+              type="submit"
             >
-              <span class="text-white">{{ $t("buttons.close") }}</span>
+              <span class="text-white pr-3 pl-3">{{ $t("buttons.create") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -128,10 +136,7 @@ export default {
       return {
         formData: {
           groupname: {
-            required: helpers.withMessage(
-              error,
-              required
-            ),
+            required: helpers.withMessage(error, required),
             isValidName: helpers.withMessage(
               startwithletter,
 
@@ -139,10 +144,7 @@ export default {
             ),
           },
           description: {
-            required: helpers.withMessage(
-              error,
-              required
-            ),
+            required: helpers.withMessage(error, required),
           },
         },
       };

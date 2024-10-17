@@ -140,7 +140,7 @@ export default {
         flex: 1,
       },
       {
-        headerName: "protocol",
+        headerName: "Type",
         field: "application_type",
         autoHeight: true,
         width: 90,
@@ -159,6 +159,7 @@ export default {
       {
         headerName: value,
         field: "application_value",
+        cellRenderer: formatedValue,
         autoHeight: true,
         resizable: true,
         width: 90,
@@ -180,6 +181,12 @@ export default {
         field: "action",
       },
     ]);
+
+    function formatedValue(data) {
+      let eGui = document.createElement("div");
+      eGui.innerHTML = `${data.data.application_value} :  ${data.data.application_port}`;
+      return eGui;
+    }
 
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");

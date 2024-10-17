@@ -44,24 +44,26 @@
             <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
             <v-spacer></v-spacer>
             <v-btn
-              :rounded="true"
-              class="mt-3 btn-add text-white"
-              color="blue-darken-1"
-              variant="text"
-              type="submit"
+            :rounded="true"
+            class="mt-3 btn-add text-white"
+            color="blue-darken-1"
+            variant="text"
+            @click="closeModal"
             >
-              <span class="text-white">Save</span>
-            </v-btn>
-            <v-btn
-              :rounded="true"
-              class="mt-3 btn-add text-white"
-              color="blue-darken-1"
-              variant="text"
-              @click="closeModal"
-            >
-              <span class="text-white">Close</span>
-            </v-btn>
-          </v-card-actions>
+            <span class="pr-3 pl-3 text-white" style="color: #213e9f"
+                >{{$t('buttons.close')}}</span
+              >
+          </v-btn>
+          <v-btn
+            :rounded="true"
+            class="mt-3 btn-add text-white"
+            color="blue-darken-1"
+            variant="text"
+            type="submit"
+          >
+            <span class="text-white pr-3 pl-3">Save</span>
+          </v-btn>
+        </v-card-actions>
         </v-card>
       </form>
     </v-dialog>

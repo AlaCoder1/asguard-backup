@@ -186,11 +186,13 @@ export default {
           </button>
     `;
       } else {
-        if (params.data.name === "adult") {
-          eGui.innerHTML = `${t("squid.noAdult")}`;
-        } else {
-          if (params.data.status === "Blocked") {
-            eGui.innerHTML = `
+        // if (params.data.name === "adult") {
+        //   eGui.innerHTML = `${t("squid.noAdult")}`;
+        // }
+
+        // else {
+        if (params.data.status === "Blocked") {
+          eGui.innerHTML = `
             <button
               class="action-button edit"
               data-action="edit" >
@@ -205,8 +207,8 @@ export default {
             
 
     `;
-          } else {
-            eGui.innerHTML = `
+        } else {
+          eGui.innerHTML = `
           
             <button
               class="action-button enable"
@@ -215,8 +217,8 @@ export default {
               </button>
 
     `;
-          }
         }
+        // }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {

@@ -103,21 +103,8 @@
               </v-row>
             </v-container>
           </v-card-text>
-
+          
           <v-card-actions class="mt-3 actionBtnServer">
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              type="submit"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 btn-add"
-            >
-              <span class="text-white pr-3 pl-3">{{ modalMode === 'create' ? $t("buttons.create") : $t("buttons.update") }}</span>
-            </v-btn>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"
@@ -132,6 +119,19 @@
               <span class="pr-3 pl-3 text-white" style="color: #213e9f"
                 >{{$t('buttons.close')}}</span
               >
+            </v-btn>
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              type="submit"
+              color="indigo-darken-3"
+              :rounded="true"
+              variant="flat"
+              class="mt-3 btn-add"
+            >
+              <span class="text-white pr-3 pl-3">{{ modalMode === 'create' ? $t("buttons.create") : $t("buttons.update") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>

@@ -134,7 +134,7 @@ def get_logs_data(request):
     
     
 
-def get_logrotate_data(request):
+def get_logrotate_data(request,service):
     """
     API to retrieve all logrotate data .
 
@@ -147,7 +147,7 @@ def get_logrotate_data(request):
     """
     if request.method == 'GET':
         list_logs = []
-        logs_object = LogrotateData.objects.all().order_by('-id')
+        logs_object = LogrotateData.objects.filter(service=service).order_by('-id')
         logs = serializers.serialize("json", logs_object)
         res = json.loads(logs)
         for log in res:

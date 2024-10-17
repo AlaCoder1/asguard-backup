@@ -16,12 +16,13 @@ class Command(BaseCommand):
             rules_sys = get_suricata_default_rules()
             if rules_sys is not None:
                 rules_list=[l['rule'] for l in RuleIdsIpsSerializer(ids_ips_rule.objects.all() , many=True).data]
-                rules_add = [log for log in rules_sys if log not in rules_list]
-                rules_delete = [log for log in rules_list if log not in rules_sys] 
-                if len(rules_add)!=0:
-                    add_rule_database(rules_add,id)
-                if len(rules_delete)!=0:
-                    delete_rule_database(rules_delete)
+                if (len(list(set(rules_sys)-set(rules_list))))!=0:
+                    rules_add = [log for log in rules_sys if log not in rules_list]
+                    rules_delete = [log for log in rules_list if log not in rules_sys] 
+                    if len(rules_add)!=0:
+                        add_rule_database(rules_add,id)
+                    if len(rules_delete)!=0:
+                        delete_rule_database(rules_delete)
                 return "Rules updated successfully!"
             else:
                 return "Error in reading from file rules!!"

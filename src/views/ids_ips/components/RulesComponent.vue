@@ -125,7 +125,7 @@
           </v-card>
 
           <div class="d-flex justify-end mt-5 mb-10">
-            <!-- <div class="mr-3 flex center">
+            <div class="mr-3 flex center">
               <VButton
                 rounded
                 outlined
@@ -140,12 +140,12 @@
                 outlined
                 color="#213E9F"
                 label-color="#ffffff"
-                :label="$t('buttons.save')"
+                :label="$t('buttons.update')"
                 :isLarge="true"
                 class="ml-2"
                 @click="save"
               />
-            </div> -->
+            </div>
           </div>
         </div>
       </v-col>
@@ -200,22 +200,22 @@ export default {
     });
 
     const columnRules = ref([
-      {
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
-        rowDrag: true,
-        editable: false,
-      },
-      {
-        headerCheckboxSelection: false,
-        checkboxSelection: true,
-        editable: false,
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
-        sortable: false,
-      },
+      // {
+      //   width: 50,
+      //   minWidth: 50,
+      //   maxWidth: 50,
+      //   rowDrag: true,
+      //   editable: false,
+      // },
+      // {
+      //   headerCheckboxSelection: false,
+      //   checkboxSelection: true,
+      //   editable: false,
+      //   width: 50,
+      //   minWidth: 50,
+      //   maxWidth: 50,
+      //   sortable: false,
+      // },
       {
         headerName: "id",
         field: "id",

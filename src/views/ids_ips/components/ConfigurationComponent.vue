@@ -634,11 +634,7 @@ export default {
           state.snackbar = true;
           state.color = "error";
           state.textAlert = t("suricata.failed");
-          // Automatically close the snackbar after 3000 milliseconds (3 seconds)
-          setTimeout(() => {
-            state.snackbar = false;
-            location.reload();
-          }, 1000);
+        
         }
       } catch (error) {
         state.loading = false;
@@ -646,11 +642,7 @@ export default {
         state.snackbar = true;
         state.color = "error";
         state.textAlert = error;
-        // Automatically close the snackbar after 3000 milliseconds (3 seconds)
-        setTimeout(() => {
-          state.snackbar = false;
-          location.reload();
-        }, 1000);
+      
       }
     };
 

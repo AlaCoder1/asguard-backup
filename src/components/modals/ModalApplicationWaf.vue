@@ -543,10 +543,7 @@ export default {
       //
       engineList: ["On", "Off", "Detection only"],
       requestBodyList: ["ProcessPartial", "Reject"],
-      responseBodyList: [
-        "ProcessPartial",
-        "Reject",
-      ],
+      responseBodyList: ["ProcessPartial", "Reject"],
       bodyMimeTypeList: ["text/*", "text/html", "text/xml", "text/plain"],
       //
 
@@ -718,6 +715,7 @@ export default {
         state.type = data.application_type;
         state.applicationName = data.name;
         state.value = data.application_value;
+        console.log("application_value***", data.application_value);
         state.description = data.description;
         state.port = data.application_port;
 

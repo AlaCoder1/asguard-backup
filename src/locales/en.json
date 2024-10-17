@@ -49,7 +49,7 @@
   },
 
   "ldap": {
-    "ActivateLdap": "Activate  LDAP",
+    "ActivateLdap": "Save to LDAP",
     "TLS": "SSL/TLS encryption",
     "Activateecnryption": "Activate encryption"
   },

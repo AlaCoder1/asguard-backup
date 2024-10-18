@@ -13,6 +13,7 @@ from rest_framework.permissions import IsAuthenticated
 from backend.network.models import IP4Config, Interface
 from backend.openvpn.constant_variables import PATH_SERVER_STATIC
 from backend.openvpn.list_servers_clients import get_list_all_client_openvpn, get_list_all_server_openvpn, get_one_client_openvpn, get_one_server_openvpn
+from utils.commands_utils import read_file_from_system
 from utils.errors_utils import CommandExecutionError
 from .servers_status import change_status_server_openvpn
 from .models import ServerOpenvpn, ClientOpenvpn
@@ -702,8 +703,7 @@ def create_client_openvpn(request):
             # Add the client to the database
             client_serializer.save()
             return JsonResponse({"msg": f"{data['name']} {SUCCESS_MESSAGES_CREATING}"}, status=201)
-        else:
-            return JsonResponse({"error": list(client_serializer.errors.values())[0][0]}, status=400)
+        return JsonResponse({"error": list(client_serializer.errors.values())[0][0]}, status=400)
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_OPENVPN_CLIENT}"}, status=400)
     except ServerOpenvpn.DoesNotExist:
@@ -920,10 +920,9 @@ def generate_client_openvpn(request, id):
         data['password'] = ''
         data['renegotiate_time'] = ''
         # Get the same TLS as the server
-        with open(PATH_SERVER_STATIC.format(server.name)) as tls_file:
-            tls_key = tls_file.read()
-            tls_auth = {"generate": False,
-                        "tls_key": tls_key}
+        tls_key = read_file_from_system(PATH_SERVER_STATIC.format(name))
+        tls_auth = {"generate": False,
+                    "tls_key": tls_key}
         data['tls_auth'] = tls_auth
         data['ca_name'] = server.ca_name
         cert_name = data.get('client_cert', '')

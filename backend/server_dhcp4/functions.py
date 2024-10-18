@@ -87,7 +87,7 @@ def prepare_conf_server(id_interface,ip_address4,netmask4):
 def create_dhcpv4_db(id_interface,ip_address4,netmask4):
     """"save server in database after config ipv4 static on interface if exist update it if not create new one"""
     data_save,subnet_addr,subnet_addr=prepare_conf_server(id_interface,ip_address4,netmask4)
-    if not ServerDhcp4.objects.filter(Q(subnet_addr=subnet_addr)|Q(available_range=subnet_addr)).exists() :
+    if not ServerDhcp4.objects.filter(Q(subnet_addr=subnet_addr)|Q(available_range=subnet_addr)).exists() and netmask4!=32:
         if ServerDhcp4.objects.filter(Q(interface_id=id_interface)).exists():
             server_object=ServerDhcp4.objects.get(interface_id=id_interface)
             # data_save['interface']=server_object.interface_id

@@ -89,7 +89,8 @@
   },
   "subtitle": {
     "assistant": "Assistante",
-    "userCertificatemanagement": "Utilisateurs & Certificats",
+    "user": "Utilisateurs",
+    "cert": "Certificats",
     "networkManagement": "Gestion du Réseau",
     "systemConfig": "Configuration du système",
     "settings": "Paramètres",
@@ -133,7 +134,8 @@
   "english": "Anglais",
   "networkAdmins": "Administrateurs de réseaux",
   "networksGroups": "Groupes de réseaux",
-  "networksServers": "Serveurs de réseaux",
+  "networksServers": "Serveur d'authentification",
+  "noInterfaces":"Il n'y a pas d'interfaces",
 
   "delete": {
     "DeleteConfirmation": "Confirmation de Suppression",
@@ -533,8 +535,8 @@
   },
 
   "tabs": {
-    "userManagement": "Gestion des utilisateurs",
-    "certificateManagement": "Gestion des certificats",
+    "userManagement": "Utilisateurs",
+    "certificateManagement": "Certificats",
     "configuration": "CONFIGURATION",
     "rules": "REGLES",
     "alerts": "ALERTS",

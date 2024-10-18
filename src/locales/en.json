@@ -89,7 +89,8 @@
   },
   "subtitle": {
     "assistant": "Assistant",
-    "userCertificatemanagement": "Users & Certificate Management",
+    "user": "Users",
+    "cert": "Certificates",
     "networkManagement": "Network Management",
     "systemConfig": "System configuration",
     "settings": "Settings",
@@ -133,7 +134,8 @@
   "english": "English",
   "networkAdmins": "Networks admins",
   "networksGroups": "Networks groups",
-  "networksServers": "Networks Servers",
+  "networksServers": "Authentication Server",
+  "noInterfaces":"There are no interfaces",
 
   "delete": {
     "DeleteConfirmation": "Delete Confirmation",
@@ -535,8 +537,8 @@
   },
 
   "tabs": {
-    "userManagement": "User Management",
-    "certificateManagement": "Certificate Management",
+    "userManagement": "Users",
+    "certificateManagement": "Certificates",
     "configuration": "CONFIGURATION",
     "rules": "RULES",
     "alerts": "ALERTS",

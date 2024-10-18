@@ -135,7 +135,7 @@
   "networkAdmins": "Networks admins",
   "networksGroups": "Networks groups",
   "networksServers": "Authentication Server",
-  "noInterfaces":"There are no interfaces",
+  "noInterfaces": "There are no interfaces",
 
   "delete": {
     "DeleteConfirmation": "Delete Confirmation",
@@ -1078,5 +1078,10 @@
     "download_fail": "Error downloading the file",
     "delete_succes": "File deleted successfully!",
     "delete_fail": "Error deleting the file"
-  }
+  },
+  "roles": "Roles",
+  "roleLabel": "Role label",
+  "priveleges": "Priveleges",
+  "addRole": "Add Role",
+  "editRole": "Edit Role"
 }

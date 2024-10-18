@@ -188,6 +188,8 @@ export default {
 
       {
         headerName: action,
+        width: 150,
+        minWidth: 50,
         cellRenderer: actionCellRendererArea,
         field: "action",
       },

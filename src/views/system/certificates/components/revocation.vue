@@ -26,7 +26,7 @@
     </div>
 
     <div style="display: flex; justify-content: flex-end; margin-top: 20px">
-      <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-user">
+      <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn">
         <span class="text-white" style="text-transform: lowercase"
           >Ajouter révocation</span
         >

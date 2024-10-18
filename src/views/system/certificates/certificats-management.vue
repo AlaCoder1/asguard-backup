@@ -1,12 +1,22 @@
 <template>
-  <div class="ml-3">
-    <authorites :authoritesData="authoritesData" />
-    <certificats :certifData="certifData" :authoritesData="authoritesData" />
-    <revocation :authoritesData="authoritesData" />
-  </div>
+  <v-app id="inspire">
+    <base-layout :title="$t('subtitle.cert')">
+      <template #content>
+        <div class="ml-5 mr-5 mt-5 mb-5">
+          <authorites :authoritesData="authoritesData" />
+          <certificats
+            :certifData="certifData"
+            :authoritesData="authoritesData"
+          />
+          <revocation :authoritesData="authoritesData" />
+        </div>
+      </template>
+    </base-layout>
+  </v-app>
 </template>
 
 <script>
+import BaseLayout from "../../../layouts/layout.vue";
 import axios from "axios";
 import { AgGridVue } from "ag-grid-vue3";
 import authorites from "./components/authorites.vue";
@@ -18,6 +28,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 export default {
   name: "CertificatsManagement",
   components: {
+    BaseLayout,
     AgGridVue,
     authorites,
     certificats,
@@ -80,4 +91,7 @@ export default {
 };
 </script>
 <style lang="scss">
+.btn-add {
+  background: #213e9f;
+}
 </style>

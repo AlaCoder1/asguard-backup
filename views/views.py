@@ -465,12 +465,16 @@ def get_alerts_from_database(request):
 
 
 @login_required(login_url='/')
-def user_certificate_managment_page(request):
+def user_managment_page(request):
     usr=getUsers(request)
     grp=get_groups(request)
     servers=get_list_ad_servers()
     context = {'users':usr,"groups":grp,"servers":servers}
-    return render(request, 'user_certificate_managment.html',context)
+    return render(request, 'user_managment.html',context)
+
+@login_required(login_url='/')
+def certificate_managment_page(request):
+    return render(request, 'certificate_managment.html')
 
 
 @login_required(login_url='/')
@@ -761,9 +765,12 @@ def server_dhcp4_page(request):
 
 @login_required(login_url='/')
 def logrotate_page(request):
-    list_logrotate=get_logrotate_data(request)
-    list_logrotate=json.dumps(list_logrotate)
-    context = {'logrotate':list_logrotate}
+    list_service={"WAF":[],"OpenVPN":[],"IDS/IPS":[],"Squid":[]}
+    for service in list_service.keys():
+        list_logrotate=get_logrotate_data(request,service)
+        list_service[service]=list_logrotate
+    list_service=json.dumps(list_service)
+    context = {'logrotate':list_service}
     return render(request, 'logrotate.html',context)
 
 ################## generale information ##################

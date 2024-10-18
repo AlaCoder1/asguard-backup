@@ -32,13 +32,13 @@
                     @update:search="searchAclItem"
                   >
                     <template v-slot:item="{ props, item }">
+                      <!-- :subtitle="item?.raw?.status" -->
                       <!-- <div class="d-flex justify-space-between"> -->
                       <v-list-item
                         color="gray"
                         class="my-hover-color"
                         v-bind="props"
                         :title="item?.raw?.url"
-                        :subtitle="item?.raw?.status"
                         :append-icon="
                           item?.raw?.status === true
                             ? 'mdi mdi-lock'

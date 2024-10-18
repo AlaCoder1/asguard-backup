@@ -6,7 +6,7 @@ import re
 
 def get_uid_user():
     """function to get UID from system"""
-    return subprocess.run(["getent", "passwd"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
+    return subprocess.run(["sudo","getent", "passwd"], capture_output=True).stdout.decode().strip().split('\n')[-1].split(':')[2]
 
 
 def valid_input(var):
@@ -46,7 +46,7 @@ def add_user(username, password):
 
 def delete_user_in_system(username):
     """function to delete user"""
-    cmd = "sudo userdel " + "-r " + username
+    cmd = "sudo " +"userdel " + username
     completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
     output = completed_process.stdout
     error = completed_process.stderr
@@ -55,13 +55,13 @@ def delete_user_in_system(username):
 
 def change_username(newusername, oldusername):
     """functio to change username"""
-    return os.system("usermod -l " + newusername + " "+oldusername)
+    return os.system("sudo usermod -l " + newusername + " "+oldusername)
 
 
 def add_user_group(groupname, username):
     """function to add user in group"""
     try:
-        return os.system("usermod -aG " + groupname + " "+username)
+        return os.system("sudo usermod -aG " + groupname + " "+username)
     except:
         print("Failed to add user in group.")
         sys.exit(1)
@@ -69,7 +69,7 @@ def add_user_group(groupname, username):
 
 def check_same_groupname_with_username(username):
     """function  to check if username=groupname"""
-    out = os.popen("id "+username).readline().strip('\n').strip()
+    out = os.popen("sudo "+"id "+username).readline().strip('\n').strip()
     if (out[out.find("groups")+len("groups")+1:len(out)].find(username) != -1):
         return True
     return False
@@ -77,12 +77,12 @@ def check_same_groupname_with_username(username):
 
 def delete_user_group(groupname, username):
     """function to delete user from group"""
-    return os.system("gpasswd -d "+username+" "+groupname)
+    return os.system("sudo gpasswd -d "+username+" "+groupname)
 
 
 def add_user_group(groupname, username):
     """function to add user to group"""
-    return os.system("gpasswd -a "+username+" "+groupname)
+    return os.system("sudo gpasswd -a "+username+" "+groupname)
 
 
 def add_mail_spool(username):

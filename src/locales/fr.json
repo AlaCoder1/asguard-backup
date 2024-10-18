@@ -135,7 +135,7 @@
   "networkAdmins": "Administrateurs de réseaux",
   "networksGroups": "Groupes de réseaux",
   "networksServers": "Serveur d'authentification",
-  "noInterfaces":"Il n'y a pas d'interfaces",
+  "noInterfaces": "Il n'y a pas d'interfaces",
 
   "delete": {
     "DeleteConfirmation": "Confirmation de Suppression",
@@ -1076,5 +1076,10 @@
     "download_fail": "Erreur lors du téléchargement du fichier",
     "delete_succes": "Fichier supprimé avec succès!",
     "delete_fail": "Erreur lors de la suppression du fichier"
-  }
+  },
+  "roles": "Rôles",
+  "roleLabel": "Label de rôle",
+  "priveleges": "Privilèges",
+  "addRole": "Ajouter un rôle",
+  "editRole": "Modifier le rôle"
 }

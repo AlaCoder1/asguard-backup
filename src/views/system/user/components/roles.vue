@@ -1,7 +1,7 @@
 <template>
   <div>
     <div style="display: flex; flex-direction: column">
-      <h4>{{ $t("networksServers") }}</h4>
+      <h4>{{ $t("roles") }}</h4>
       <!-- <v-divider></v-divider> -->
 
       <div style="overflow: hidden; flex-grow: 1">
@@ -25,11 +25,11 @@
           class="mt-3 btn-add"
           @click="openModalAdd"
         >
-          <span class="text-white"> {{ $t("button.addServer") }}</span>
+          <span class="text-white"> Add Role</span>
         </v-btn>
       </div>
 
-      <Modal
+      <ModalRoles
         :modalMode="state.modalMode"
         :isOpen="state.isModalOpen"
         :editRow="state.editRow"
@@ -72,13 +72,13 @@ import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
-import Modal from "@/components/modals/Modal.vue";
+import ModalRoles from "@/components/modals/ModalRoles.vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 
 export default {
   name: "Sdwan",
   components: {
-    Modal,
+    ModalRoles,
     BaseLayout,
     AgGridVue,
     VButton,
@@ -110,26 +110,34 @@ export default {
       rowSelection: "single",
     });
 
-    const servername = computed(() => {
-      return t("PageGeneral.ServerName");
+    const roleLabel = computed(() => {
+      return t("roleLabel");
+    });
+    const priveleges = computed(() => {
+      return t("priveleges");
     });
 
     const columnDefs = ref([
       {
-        headerName: servername,
+        headerName: roleLabel,
         field: "server_name",
         width: 90,
         minWidth: 50,
         flex: 1,
       },
       {
-        headerName: "Url",
+        headerName: priveleges,
         field: "server_url",
         width: 90,
         minWidth: 50,
         flex: 1,
       },
-      { headerName: "Actions",width: 150, minWidth: 50, cellRenderer: actionCellRenderer },
+      {
+        headerName: "Actions",
+        width: 150,
+        minWidth: 50,
+        cellRenderer: actionCellRenderer,
+      },
     ]);
 
     const rowData = reactive({});
@@ -160,32 +168,32 @@ export default {
       });
       if (isCurrentRowEditing) {
         eGui.innerHTML = `
-              <button
-                class="action-button update"
-                data-action="update">
-                     update
-              </button>
-              <button
-                class="action-button cancel"
-                data-action="cancel">
-                     cancel
-              </button>
-              `;
-      } else {
-        eGui.innerHTML = `
-         
-              <button
-                class="action-button edit"
-                data-action="edit">
-                   <i class="far fa-edit" style="color: #086EAE;"></i>
+                <button
+                  class="action-button update"
+                  data-action="update">
+                       update
                 </button>
                 <button
-                class="action-button delete"
-                data-action="delete">
-                  <i class="fas fa-times" style="color: #086EAE;"></i>
+                  class="action-button cancel"
+                  data-action="cancel">
+                       cancel
                 </button>
-      
                 `;
+      } else {
+        eGui.innerHTML = `
+           
+                <button
+                  class="action-button edit"
+                  data-action="edit">
+                     <i class="far fa-edit" style="color: #086EAE;"></i>
+                  </button>
+                  <button
+                  class="action-button delete"
+                  data-action="delete">
+                    <i class="fas fa-times" style="color: #086EAE;"></i>
+                  </button>
+        
+                  `;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -222,24 +230,24 @@ export default {
     };
 
     onMounted(() => {
-      emitter.on("closeServerModal", () => {
+      emitter.on("closeModalRoles", () => {
         state.isModalOpen = false;
         state.isOpen = false;
         state.modalMode = "";
         state.editRow = {};
       });
       overlayTemplate.value = `
-      <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
-      <path
-        d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
-        style="fill: #E8EAF6"
-        data-name="Unbox"
-      />
-     </svg></span>`;
-      let allLisServers =
+        <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
+        <path
+          d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
+          style="fill: #E8EAF6"
+          data-name="Unbox"
+        />
+       </svg></span>`;
+      let allLisRoles =
         document.getElementById("app").attributes["servers"].value;
 
-      const parsedArray = JSON.parse(allLisServers);
+      const parsedArray = JSON.parse(allLisRoles);
 
       rowData.value = parsedArray;
     });
@@ -253,7 +261,7 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       axios
-        .delete(`/ldap/deleteldap_Server/${state.deletedRow.id}`)
+        .delete(`/users/deleteRole/${state.deletedRow.id}`)
         .then((response) => {
           console.log("response.data", response.data);
           state.snackbar = true;

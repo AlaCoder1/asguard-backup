@@ -9,10 +9,9 @@
       :overlayNoRowsTemplate="overlayTemplate" :rowDragManaged="true" :rowDragEntireRow="true"
       @row-drag-end="onRowDragEnd" :localeText="paginationLocalization" />
   </div>
-
   <div class="d-flex justify-end mt-3 mb-15">
-    <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalHostAdd">
-      {{ $t("ztna.addHostConfig") }}
+    <v-btn class="add-button" :rounded="true" color="indigo-darken-3"  :disabled="!tokenStatus"  @click="openModalHostAdd">
+      {{ $t("ztna.addHostConfig")}}
     </v-btn>
   </div>
 
@@ -68,6 +67,7 @@ export default {
     const { t } = useI18n();
     const configsHost = ref([]);
     const emitter = inject("emitter");
+    const tokenStatus = ref('')
 
     const gridApiHost = ref(null);
 
@@ -150,11 +150,17 @@ export default {
     ]);
 
     const fetchConfigs = () => {
+      let token = document.getElementById("app").getAttribute("token");
       let configsString = document
         .getElementById("app")
         .getAttribute("hostconfigs");
       let configsObject;
-
+      if (token && token !== "null") {
+        tokenStatus.value = true
+      } 
+      else {
+        tokenStatus.value = false
+    }
       try {
         configsObject = JSON.parse(configsString);
         console.log('configsObjecthost', configsObject)
@@ -219,35 +225,6 @@ else {
           state.color = "red";
           state.textAlert = i.response.data.error;
         });
-
-      // try {
-      //   let token = document.getElementById("app").getAttribute("token");
-
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = `/edge/management/v1/configs/${deletedItemId}`;
-
-      //   const response = await axios.delete(proxyUrl + apiUrl, {
-      //     headers: {
-      //       "zt-session": token,
-      //       "Content-Type": "application/json",
-      //     },
-      //   });
-      //   state.snackbar = true;
-      //   state.color = "success";
-      //   state.textAlert = "Config deleted successfully";
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   state.deleteDialog = false;
-      // } catch (error) {
-      //   state.snackbar = true;
-      //   state.color = "red";
-      //   state.textAlert = "Delete failure";
-      //   console.error(
-      //     "Failed to delete item:",
-      //     error.response ? error.response.data : error.message
-      //   );
-      // }
     };
 
     const cancelDelete = () => {
@@ -261,25 +238,12 @@ else {
     };
 
     const openModalHostAdd = () => {
-      let token = document.getElementById("app").getAttribute("token");
-      if (token && token !== "null") {
         state.modalData = {};
       state.modalMode = "create";
       state.isModalHostOpen = true;
-      } else {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "ZTNA is not running";
-      }
 
     };
 
-    // const openModalHostUpdate = (id) => {
-    //   state.modalData = {};
-    //   state.modalMode = "create";
-    //   state.isModalUpdateHostOpen = true;
-    //   state.selectedId = id;
-    // };
 
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
@@ -300,7 +264,22 @@ else {
                        cancel
                 </button>
                 `;
-      } else {
+      } else if(!tokenStatus.value) {
+        eGui.innerHTML = `
+                <button
+                  class="action-button edit"
+                  disabled title="Edit Server">
+                     <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                  </button>
+                  <button
+                  class="action-button delete"
+                  disabled title="Delete ">
+                    <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                  </button>
+        
+                  `;
+      }
+      else {
         eGui.innerHTML = `
                 <button
                   class="action-button edit"
@@ -324,24 +303,13 @@ else {
       return eGui;
     }
     const handleActionClient = (action, rowData, index) => {
-      let token = document.getElementById("app").getAttribute("token");
-
       switch (action) {
         case "edit":
-        let token = document.getElementById("app").getAttribute("token");
 
-if (token && token !== "null") {
   state.modalMode = "edit";
           state.isModalHostOpen = true;
           state.selectedId = rowData.id;
           state.editRow = rowData;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
           break;
         case "delete":
           OpenDelete(rowData.id);
@@ -393,6 +361,7 @@ else {
       cancelDelete,
       formatDateTime,
       onGridReadyHost,
+      tokenStatus,
     };
   },
 };

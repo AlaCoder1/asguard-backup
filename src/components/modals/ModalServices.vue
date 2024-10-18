@@ -185,14 +185,13 @@ export default {
           encryptionRequired.value = false;
           host.value = "";
           intercept.value = "";
-          configs.value = "";
+          // configs.value = "";
           Description.value = "";
         }
       }
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("dataService", data);
         servId.value = data.id
         name.value = data.name;
         serviceAtt.value = data.attribute_service;

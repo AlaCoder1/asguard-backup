@@ -20,9 +20,11 @@ from django.http import JsonResponse
 
 # Constants
 CONSTANT_LDAP_SERVER = _('Directory Server')
-CONSTANT_LDAP_UNREACHABLE= _('Directory Server unreachable')
+CONSTANT_LDAP_UNREACHABLE= _('Directory Server unreachable, verify IP address or port')
 CONSTANT_LDAP_AUTH = _("Authentication failed")
+CONSTANT_LDAP_SEARCH_BASE = _("Please provide a valid Search Base")
 CONSTANT_INVALID_REQUEST = _("Invalid request method")
+CONSTANT_LDAP_UNVALID_CREDENTIENLS= _('Invalid Server Credentials')
 
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
@@ -115,7 +117,7 @@ def connect_to_ad(request):
             # Connect to AD server
             ldap_uri = f"{'ldaps' if ssl_tls_activation else 'ldap'}://{server_url}:{port}"
             ldap_conn = ldap.initialize(ldap_uri)
-
+            ldap_conn.set_option(ldap.OPT_NETWORK_TIMEOUT, 5)
             try:
                 ldap_conn.simple_bind_s(bind_user_dn,password_ldap)
 
@@ -140,12 +142,15 @@ def connect_to_ad(request):
 
                 return JsonResponse({ 'msg':f"{CONSTANT_LDAP_SERVER} {SUCCESS_MESSAGES_CREATING}"},status=200)
             
+            except ldap.INVALID_CREDENTIALS:
+                return JsonResponse({'msg': f"{CONSTANT_LDAP_UNVALID_CREDENTIENLS}"},status=400)
+            
             except ldap.SERVER_DOWN:
                 # LDAP authentication failed
-                return JsonResponse({'msg': f"{CONSTANT_LDAP_SERVER} {CONSTANT_LDAP_UNREACHABLE}"},status=400)
+                return JsonResponse({'msg': f"{CONSTANT_LDAP_UNREACHABLE}"},status=400)
             except ldap.LDAPError as e:
                 # LDAP authentication failed
-                return JsonResponse({'msg': f"{CONSTANT_LDAP_SERVER} {CONSTANT_LDAP_AUTH}"},status=400)
+                return JsonResponse({'msg': f"{CONSTANT_LDAP_SEARCH_BASE}"},status=400)
 
         
         except Exception as e:
@@ -198,7 +203,4 @@ def deleteldap_server(request,id):
             ldap_servers = ADServer.objects.get(id=id)
             ldap_servers.delete()
             msg=f"{CONSTANT_LDAP_SERVER} {SUCCESS_MESSAGES_DELETING}"
-    return JsonResponse({"msg": msg})      
-
-
-
+    return JsonResponse({"msg": msg}, status=200)

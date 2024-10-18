@@ -213,6 +213,12 @@ export default {
               href: "/interfaces/type-of-interface",
               active: "Type of interface",
             },
+            {
+              title: "subtitle.DHCPV4",
+              icon: "",
+              href: "/services/server-dhcp4",
+              active: "DHCP V4",
+            },
             // {
             //   title: "subtitle.overview",
             //   icon: "",
@@ -311,12 +317,7 @@ export default {
             //   href: "/clamaV",
             //   active: "Clam AV",
             // },
-            {
-              title: "subtitle.DHCPV4",
-              icon: "",
-              href: "/services/server-dhcp4",
-              active: "DHCP V4",
-            },
+
             // {
             //   title: "subtitle.DHCPV6",
             //   icon: "",

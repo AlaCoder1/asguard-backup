@@ -20,6 +20,9 @@
           <v-col cols="6" style="height: 100%">
             <group-management :DataList="groups" />
           </v-col>
+          <v-col cols="6" style="height: 100%">
+            <roles />
+          </v-col>
         </v-row>
 
         <v-row
@@ -45,6 +48,7 @@ import BaseLayout from "../../../layouts/layout.vue";
 import UserManagement from "../user/components/user-management.vue";
 import GroupManagement from "../user/components/group-management.vue";
 import NetworkServerManagement from "../user/components/network-server-management.vue";
+import roles from "../user/components/roles.vue";
 
 export default {
   name: "DataManagment",
@@ -53,6 +57,7 @@ export default {
     UserManagement,
     NetworkServerManagement,
     GroupManagement,
+    roles
   },
 
   data() {

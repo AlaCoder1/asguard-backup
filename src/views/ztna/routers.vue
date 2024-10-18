@@ -21,7 +21,7 @@
         @row-drag-end="onRowDragEnd" :localeText="paginationLocalization" />
     </div>
     <div class="d-flex justify-end mt-3">
-      <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalAdd">
+      <v-btn class="add-button" :rounded="true" color="indigo-darken-3"   :disabled="!tokenStatus"  @click="openModalAdd">
         {{ $t("ztna.addRelay") }}
       </v-btn>
     </div>
@@ -75,6 +75,7 @@ export default {
     const { t } = useI18n();
     const emitter = inject("emitter");
     const routers = ref([]);
+    const tokenStatus = ref('')
 
     const overlayTemplate = ref(
       `
@@ -137,15 +138,6 @@ export default {
         minWidth: 150,
         flex: 1,
       },
-      // {
-      //   headerName: "Token",
-      //   field: "enrollmentJwt",
-      //   cellRenderer: tokenCellRendrer,
-
-      //   width: 90,
-      //   minWidth: 150,
-      //   flex: 1,
-      // },
       {
         headerName: creationDate,
         field: "date_creation",
@@ -186,9 +178,6 @@ export default {
       let isCurrentRowEditing = editingCells.some((cell) => {
         return cell.rowIndex === params.node.rowIndex;
       });
-      // <button class="action-button copy" data-action="copy">
-      //   <i class="mdi mdi-content-copy" style="color: #086eae; font-size: 20px;"></i>
-      // </button>
 
       if (params.node.data?.enrollmentJwt) {
         eGui.innerHTML = `
@@ -258,8 +247,28 @@ export default {
               `;
       } else {
         if (!params.data.online) {
+          if(!tokenStatus.value) {
           eGui.innerHTML = `
          <button
+          id="play"
+          class="action-button play"
+          disabled>
+             <i class="mdi mdi-play-circle" style="color: #4CAF50; font-size: 20px;"></i>
+          </button>
+              <button
+                class="action-button edit"
+                disabled title="Edit Server">
+                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+                <button
+                class="action-button delete"
+                disabled title="Delete ">
+                  <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button> 
+                `;}
+              else{
+                 eGui.innerHTML = `
+                <button
           id="play"
           class="action-button play"
           data-action="play">
@@ -275,11 +284,32 @@ export default {
                 data-action="delete" title="Delete ">
                   <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
-      
                 `;
+              }
         }
         else {
-          eGui.innerHTML = `
+          if(!tokenStatus.value) {
+            eGui.innerHTML = `
+             <button
+          id="stop"
+          class="action-button stop"
+          disabled>
+             <i class="mdi mdi-stop-circle" style="color: #B00020; font-size: 20px;"></i>
+          </button>
+              <button
+                class="action-button edit"
+               disabled title="Edit Server">
+                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+                <button
+                class="action-button delete"
+                disabled title="Delete ">
+                  <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+      
+                `;}
+                else {
+                  eGui.innerHTML = `
              <button
           id="stop"
           class="action-button stop"
@@ -298,6 +328,8 @@ export default {
                 </button>
       
                 `;
+                }
+          
         }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
@@ -311,25 +343,12 @@ export default {
     const handleActionClient = (action, rowData, index) => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      let token = document.getElementById("app").getAttribute("token");
-
       switch (action) {
         case "edit":
-if (token && token !== "null") {
   state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           state.selectedId = rowData.id;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
-          // openModalUpdate(rowData.id);
-
-
           break;
         case "download":
           console.log("test", rowData.enrollmentJwt);
@@ -356,8 +375,6 @@ else {
 
           break;
         case "play":
-if (token && token !== "null") {
-  console.log("play");
           let payloadStart = {
             name: rowData.name,
             token: rowData.enrollmentJwt
@@ -394,18 +411,10 @@ if (token && token !== "null") {
               state.isLoadingDialogue = false;
             });
 
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
-
           break;
         case "stop":
 
-if (token && token !== "null") {
+
   let payload = {
             name: rowData.name,
             token: rowData.enrollmentJwt
@@ -441,14 +450,6 @@ if (token && token !== "null") {
               state.loading = false;
               state.isLoadingDialogue = false;
             });
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
-
           break;
         default:
           break;
@@ -468,17 +469,18 @@ else {
       }
     };
 
-    // const openModalUpdate = (id) => {
-    //   state.modalData = {};
-    //   state.modalMode = "create";
-    //   state.isModalUpdateOpen = true;
-    //   state.selectedId = id;
-    // };
     const fetchRouters = () => {
+      let token = document.getElementById("app").getAttribute("token");
       let routersString = document
         .getElementById("app")
         .getAttribute("routers");
       let routersObject;
+      if (token && token !== "null") {
+        tokenStatus.value = true
+      } 
+      else {
+        tokenStatus.value = false
+    }
       try {
         routersObject = JSON.parse(routersString);
         console.log("routersObject", routersObject);
@@ -511,35 +513,14 @@ else {
     });
 
     const openModalAdd = () => {
-      let token = document.getElementById("app").getAttribute("token");
-
-if (token && token !== "null") {
   state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
-
     };
 
     const opendelete = (itemId) => {
-      let token = document.getElementById("app").getAttribute("token");
-
-if (token && token !== "null") {
   state.selectedId = itemId;
   state.deleteDialog = true;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
  
     };
 
@@ -626,6 +607,7 @@ else {
       opendelete,
       confirmDelete,
       cancelDelete,
+      tokenStatus,
     };
   },
 };

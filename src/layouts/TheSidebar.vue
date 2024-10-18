@@ -1,15 +1,30 @@
 <template>
-  <v-navigation-drawer v-model="drawer" :rail="rail" hover permanent foating :rail-width="67" class="global-drawer"
-    :class="{ 'w-auto': rail, 'w-20': !rail }">
+  <v-navigation-drawer
+    v-model="drawer"
+    :rail="rail"
+    hover
+    permanent
+    foating
+    :rail-width="67"
+    class="global-drawer"
+    :class="{ 'w-auto': rail, 'w-20': !rail }"
+  >
     <div v-if="!rail">
-      <div dense flat class="row-pointer asguard_primary_dark" @click.stop="closeSidebar">
+      <div
+        dense
+        flat
+        class="row-pointer asguard_primary_dark"
+        @click.stop="closeSidebar"
+      >
         <div class="d-flex">
           <v-toolbar-title class="ml-5 mt-5">
             <span>Asguard</span>
           </v-toolbar-title>
 
           <div class="ml-5 mt-5 mr-5">
-            <v-icon v-if="!rail"><i class="mdi mdi-close icon-custom"></i></v-icon>
+            <v-icon v-if="!rail"
+              ><i class="mdi mdi-close icon-custom"></i
+            ></v-icon>
           </div>
         </div>
       </div>
@@ -20,27 +35,41 @@
             <v-list-item @click="showSubMenu(item)">
               <div v-if="!rail">
                 <v-list-item class="float-left">
-                  <span class="ml-5 icon-custom"><i :class="item.icon"></i></span>
+                  <span class="ml-5 icon-custom"
+                    ><i :class="item.icon"></i
+                  ></span>
                   <span class="ml-7 sidebarTitle">{{
                     $t(item.title)
-                    }}</span></v-list-item>
+                  }}</span></v-list-item
+                >
 
-                <v-list-item-title class="float-right justify-end mr-5" style="margin-top: 15px"
-                  v-if="item.subItems.length > 0">
-                  <v-icon v-if="item.subMenuVisible"><i class="mdi mdi-chevron-up" aria-hidden="true"></i>
+                <v-list-item-title
+                  class="float-right justify-end mr-5"
+                  style="margin-top: 15px"
+                  v-if="item.subItems.length > 0"
+                >
+                  <v-icon v-if="item.subMenuVisible"
+                    ><i class="mdi mdi-chevron-up" aria-hidden="true"></i>
                   </v-icon>
-                  <v-icon v-else><i class="mdi mdi-chevron-down" aria-hidden="true"></i></v-icon>
+                  <v-icon v-else
+                    ><i class="mdi mdi-chevron-down" aria-hidden="true"></i
+                  ></v-icon>
                 </v-list-item-title>
               </div>
             </v-list-item>
           </a>
-          <v-list-item v-if="item.subMenuVisible" v-for="subItem in item.subItems" :key="subItem.title"
-            :class="{ 'sub-menu-visible': item.subMenuVisible }" class="sub-menu-item">
+          <v-list-item
+            v-if="item.subMenuVisible"
+            v-for="subItem in item.subItems"
+            :key="subItem.title"
+            :class="{ 'sub-menu-visible': item.subMenuVisible }"
+            class="sub-menu-item"
+          >
             <a :href="subItem.href" class="custom-sub-a">
               <v-list-item>
                 <v-list-item-title class="text-white-space">{{
                   $t(subItem.title)
-                  }}</v-list-item-title>
+                }}</v-list-item-title>
               </v-list-item>
             </a>
           </v-list-item>
@@ -48,7 +77,10 @@
       </v-list>
     </div>
     <div v-else>
-      <div class="ml-5 mt-5 mr-5 row-pointer asguard_primary_dark" @click="closeSidebar">
+      <div
+        class="ml-5 mt-5 mr-5 row-pointer asguard_primary_dark"
+        @click="closeSidebar"
+      >
         <v-icon v-if="rail"><i class="mdi mdi-menu icon-custom"></i></v-icon>
       </div>
 
@@ -57,7 +89,9 @@
           <a :href="item.href" style="text-decoration: none; color: black">
             <v-list-item @click="showSubMenu(item)">
               <div>
-                <span class="ml-5"><i :class="item.icon" class="icon-custom"></i></span>
+                <span class="ml-5"
+                  ><i :class="item.icon" class="icon-custom"></i
+                ></span>
               </div>
             </v-list-item>
           </a>
@@ -110,10 +144,16 @@ export default {
             //   active: "Assistante",
             // },
             {
-              title: "subtitle.userCertificatemanagement",
+              title: "tabs.userManagement",
               icon: "",
-              href: "/system/user-certificat-management",
-              active: "User & certificat management",
+              href: "/system/user-management",
+              active: "User management",
+            },
+            {
+              title: "tabs.certificateManagement",
+              icon: "",
+              href: "/system/certificat-management",
+              active: "certificat management",
             },
             // {
             //   title: "subtitle.networkManagement",
@@ -172,6 +212,12 @@ export default {
               icon: "",
               href: "/interfaces/type-of-interface",
               active: "Type of interface",
+            },
+            {
+              title: "subtitle.DHCPV4",
+              icon: "",
+              href: "/services/server-dhcp4",
+              active: "DHCP V4",
             },
             // {
             //   title: "subtitle.overview",
@@ -271,12 +317,7 @@ export default {
             //   href: "/clamaV",
             //   active: "Clam AV",
             // },
-            {
-              title: "subtitle.DHCPV4",
-              icon: "",
-              href: "/services/server-dhcp4",
-              active: "DHCP V4",
-            },
+
             // {
             //   title: "subtitle.DHCPV6",
             //   icon: "",

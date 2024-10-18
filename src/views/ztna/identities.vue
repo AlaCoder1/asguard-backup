@@ -15,22 +15,17 @@
   <ModalAddIdentity :isOpen="state.isModalOpen" :selectedId="state.selectedId" :editRow="state.editRow"
     :modalMode="state.modalMode" />
   <ModalAddEnrollment :isOpen="state.isModalEnrollmentOpen" :selectedId="state.selectedId" />
-  <!-- <ModalUpdateIdentity
-    :isOpen="state.isModalUpdateOpen"
-    :selectedId="state.selectedId"
-    :editRow="state.editRow"
-  /> -->
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
       <v-card-title class="headline">{{
         $t("delete.DeleteConfirmation")
-      }}</v-card-title>
+        }}</v-card-title>
       <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="cancelDelete">{{
           $t("buttons.cancel")
-        }}</v-btn>
+          }}</v-btn>
         <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
       </v-card-actions>
     </v-card>
@@ -39,7 +34,8 @@
     {{ state.textAlert }}
   </v-snackbar>
   <div class="d-flex justify-end mt-5 mr-2">
-    <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="checkTokenBeforeAdd">
+    <v-btn class="add-button" :rounded="true" color="indigo-darken-3" :disabled="!tokenStatus"
+      @click="checkTokenBeforeAdd">
       {{ $t("ztna.addIdentity") }}
     </v-btn>
   </div>
@@ -70,8 +66,9 @@ export default {
   setup() {
     const { t } = useI18n();
     const Identities = ref();
-    const linux=ref();
-    const windows=ref();
+    const tokenStatus = ref('')
+    const linux = ref();
+    const windows = ref();
     const emitter = inject("emitter");
     const state = reactive({
       deleteDialog: false,
@@ -211,9 +208,17 @@ export default {
       let isCurrentRowEditing = editingCells.some((cell) => {
         return cell.rowIndex === params.node.rowIndex;
       });
-
-      if (params.node.data.token) {
+      if (params.node.data.token && !tokenStatus.value) {
         eGui.innerHTML = `
+          <button
+           class="action-button download"
+           disabled>
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+           </button>
+    `;
+      } else
+        if (params.node.data.token) {
+          eGui.innerHTML = `
           <button
            class="action-button download"
            data-action="download">
@@ -221,15 +226,15 @@ export default {
            </button>
     `;
 
-        eGui.querySelectorAll(".action-button").forEach((button) => {
-          button.addEventListener("click", () => {
-            const action = button.getAttribute("data-action");
-            handleActionClient(action, params.node.data);
+          eGui.querySelectorAll(".action-button").forEach((button) => {
+            button.addEventListener("click", () => {
+              const action = button.getAttribute("data-action");
+              handleActionClient(action, params.node.data);
+            });
           });
-        });
-      } else {
-        eGui.innerHTML = `--`;
-      }
+        } else {
+          eGui.innerHTML = `--`;
+        }
 
       return eGui;
     }
@@ -246,16 +251,21 @@ export default {
       if (params.node.data.token) {
         eGui.innerHTML = `<i class="mdi mdi-check-circle" style="color: green; font-size: 20px;"></i>`;
       }
-      else if(params.node.data.hostname && currentDate <= expirationDate){
+      else if (params.node.data.hostname && currentDate <= expirationDate) {
         eGui.innerHTML = ` <span class="action-icon active-token">
   <i class="mdi mdi-router-network-wireless"></i>
 </span>
 `
-      } 
+      }
+      else if (!tokenStatus.value) {
+        eGui.innerHTML = ` <button class="action-button enroll" disabled >
+        <i class="mdi mdi-alert-circle" style="color: red; font-size: 20px;"></i>
+      </button>
+`
+      }
       else {
-        eGui.innerHTML = `
-    
-      <button class="action-button enroll" data-action="enroll">
+        eGui.innerHTML = `    
+      <button class="action-button enroll" data-action="enroll"   >
         <i class="mdi mdi-alert-circle" style="color: red; font-size: 20px;"></i>
       </button>
     `;
@@ -281,30 +291,48 @@ export default {
         eGui.innerHTML = `
               <button
                 class="action-button edit"
-                data-action="edit">
+                data-action="edit"  >
                      edit
               </button>
               <button
                 class="action-button cancel"
-                data-action="cancel">
+                data-action="cancel"  >
                      cancel
               </button>
               `;
-      } else {
+      } else if (!tokenStatus.value) {
         eGui.innerHTML = `
               <button
                 class="action-button edit"
-                data-action="edit" title="Edit Server">
+                  disabled >
                    <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
                 <button
                 class="action-button delete"
-                data-action="delete" title="Delete ">
+                 disabled >
+                  <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+                    <button
+           class="action-button download" disabled>
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+           </button>
+                `;
+      }
+      else {
+        eGui.innerHTML = `
+              <button
+                class="action-button edit"
+                data-action="edit" title="Edit Server"   >
+                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+                <button
+                class="action-button delete"
+                data-action="delete" title="Delete "  >
                   <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
                     <button
            class="action-button download"
-           data-action="downloadhost">
+           data-action="downloadhost"   >
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
       
@@ -322,71 +350,54 @@ export default {
       let token = document.getElementById("app").getAttribute("token");
       switch (action) {
         case "edit":
-        if (token && token !== "null") {
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           state.selectedId = rowData.ref_identitie;
-
-      } else {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "ZTNA is not running";
-      } 
-
           break;
         case "downloadhost":
-        if (token && token !== "null") {
 
-          if(rowData.os==="windows"){
+          if (rowData.os === "windows") {
             let text = windows.value[0].content;
 
-const blob = new Blob([text], {
-  type: "application/x-x509-ca-cert",
-});
+            const blob = new Blob([text], {
+              type: "application/x-x509-ca-cert",
+            });
 
-const url = window.URL.createObjectURL(blob);
-const a = document.createElement("a");
-a.style.display = "none";
-a.href = url;
-a.download = `host_appender.bat`;
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = `host_appender.bat`;
 
-document.body.appendChild(a);
-a.click();
+            document.body.appendChild(a);
+            a.click();
 
-window.URL.revokeObjectURL(url);
-document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
           }
-          else{
+          else {
             let text = linux.value[0].content;
 
-          const blob = new Blob([text], {
-            type: "application/x-x509-ca-cert",
-          });
+            const blob = new Blob([text], {
+              type: "application/x-x509-ca-cert",
+            });
 
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = `host_appender.sh`;
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = `host_appender.sh`;
 
-          document.body.appendChild(a);
-          a.click();
+            document.body.appendChild(a);
+            a.click();
 
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
           }
-        }else {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "ZTNA is not running";
-      } 
-
           break;
         case "download":
           let text = rowData.token;
-          // copyContent(text);
-
           const blob = new Blob([text], {
             type: "application/x-x509-ca-cert",
           });
@@ -402,7 +413,7 @@ document.body.removeChild(a);
 
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
-          
+
           break;
         case "enroll":
           openModalEnrollement(rowData.ref_identitie);
@@ -431,7 +442,12 @@ document.body.removeChild(a);
     };
     const fetchIdentities = () => {
       let token = document.getElementById("app").getAttribute("token");
-      console.log("token", token);
+      if (token && token !== "null") {
+        tokenStatus.value = true
+      }
+      else {
+        tokenStatus.value = false
+      }
       let IdentitiesString = document
         .getElementById("app")
         .getAttribute("Identities");
@@ -439,56 +455,39 @@ document.body.removeChild(a);
       let IdentitiesObject;
       try {
         IdentitiesObject = JSON.parse(IdentitiesString);
-        console.log('IdentitiesObject', IdentitiesObject)
       } catch (error) {
         console.error("Failed to parse Identities string:", error);
       }
 
 
       Identities.value = IdentitiesObject ? IdentitiesObject : [];
-      console.log(' Identities.value', Identities.value)
 
 
       let linuxfileString = document
         .getElementById("app")
         .getAttribute("linux_file");
-        let linuxObject;
+      let linuxObject;
       try {
         linuxObject = JSON.parse(linuxfileString);
-        console.log('linuxObject', linuxObject)
       } catch (error) {
-        console.error("Failed to parse linux string:", error);
       }
       linux.value = linuxObject ? linuxObject : [];
-      console.log(' linux.value', linux.value)
 
       let windowsfileString = document
         .getElementById("app")
         .getAttribute("windows_file");
-        let windowsObject;
+      let windowsObject;
       try {
         windowsObject = JSON.parse(windowsfileString);
-        console.log('windowsObject', windowsObject)
       } catch (error) {
-        console.error("Failed to parse windows string:", error);
       }
       windows.value = windowsObject ? windowsObject : [];
-      console.log(' windows.value', windows.value[0].content)
 
     };
     async function OpenDelete(itemId) {
-      let token = document.getElementById("app").getAttribute("token");
-
-      if (token && token !== "null") {
       state.selectedId = itemId;
       state.deleteDialog = true;
-      } 
-      else {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "ZTNA is not running";
-
-    }}
+    }
     onMounted(() => {
       emitter.on("closeidentityModal", () => {
         state.isModalOpen = false;
@@ -525,42 +524,27 @@ document.body.removeChild(a);
     };
 
     const openModalEnrollement = (id) => {
-      let token = document.getElementById("app").getAttribute("token");
-
-      if (token && token !== "null") {
-        state.modalData = {};
+      state.modalData = {};
       state.modalMode = "create";
       state.isModalEnrollmentOpen = true;
-      state.selectedId = id; 
-      } else {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "ZTNA is not running";
-      }
+      state.selectedId = id;
 
     };
-
-    // const openModalUpdate = (row) => {
-    //   state.modalMode = "edit";
-    //   state.isModalUpdateOpen = true;
-    //   state.editRow = row;
-    //   state.selectedId = row.id;
-    // };
 
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
 
     function checkTokenBeforeAdd() {
-  let token = document.getElementById("app").getAttribute("token");  
-  if (token && token !== "null") {
-    openModalAdd();
-  } else {
-    state.snackbar = true;
-    state.color = "red";
-    state.textAlert = "ZTNA is not running";
-  }
-}
+      let token = document.getElementById("app").getAttribute("token");
+      if (token && token !== "null") {
+        openModalAdd();
+      } else {
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = "ZTNA is not running";
+      }
+    }
 
 
     function formatedcreatedAt(data) {
@@ -612,37 +596,6 @@ document.body.removeChild(a);
           state.color = "red";
           state.textAlert = i.response.data.error;
         });
-
-      // console.log("deletedItemId", deletedItemId);
-      // try {
-      //   let token = document.getElementById("app").getAttribute("token");
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = `/edge/management/v1/identities/${deletedItemId}`; // This part remains the same
-
-      //   const response = await axios.delete(proxyUrl + apiUrl, {
-      //     headers: {
-      //       "zt-session": token,
-      //       "Content-Type": "application/json",
-      //     },
-      //   });
-      //   console.log("response", response);
-
-      //   state.snackbar = true;
-      //   state.color = "success";
-      //   state.textAlert = "Identity deleted successfully";
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   state.deleteDialog = false;
-      // } catch (error) {
-      //   state.snackbar = true;
-      //   state.color = "red";
-      //   state.textAlert = "Delete failure";
-      //   console.error(
-      //     "Failed to delete item:",
-      //     error.response ? error.response.data : error.message
-      //   );
-      // }
     };
 
     const onGridReady = (params) => {
@@ -671,6 +624,7 @@ document.body.removeChild(a);
       columnIdentities,
       overlayTemplate,
       paginationLocalization,
+      tokenStatus,
       onGridReady,
     };
   },
@@ -692,15 +646,16 @@ document.body.removeChild(a);
 .table tbody tr:last-child {
   border-bottom: 0.5px solid #000;
 }
+
 .action-icon.active-token {
   position: relative;
-  background-color: #45B450; 
+  background-color: #45B450;
   color: white;
-  border-radius: 50%; 
-  width: 20px; 
-  height: 20px; 
-  font-size: 12px; 
-  line-height: 40px; 
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  line-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -709,7 +664,6 @@ document.body.removeChild(a);
 
 .action-icon.active-token:hover,
 .action-icon.active-token:focus {
-  background-color: #4CAF50; 
+  background-color: #4CAF50;
 }
-
 </style>

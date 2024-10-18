@@ -177,6 +177,18 @@ export default {
             enabled: false,
           },
         },
+        yaxis: {
+          min: 0,
+          max: 100,
+          labels: {
+            formatter: function (value) {
+              return value.toFixed(0) + "%";
+            },
+          },
+          // title: {
+          //   text: "Percentage (%)",
+          // },
+        },
         xaxis: {
           type: "datetime",
         },

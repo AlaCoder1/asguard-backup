@@ -1,8 +1,8 @@
 <template>
   <v-app id="inspire">
-    <base-layout :title="$t('subtitle.userCertificatemanagement')">
+    <base-layout :title="$t('subtitle.user')">
       <template #content>
-        <v-tabs
+        <!-- <v-tabs
           v-model="selectedTab"
           background-color="#fff"
           color="#FFC300"
@@ -11,21 +11,20 @@
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.value">
             <span style="color: #020202">{{ $t(tab.value) }} </span>
           </v-tab>
-        </v-tabs>
+        </v-tabs> -->
 
-        <v-window v-model="selectedTab">
+        <!-- <v-window v-model="selectedTab">
           <v-window-item
             v-for="(tab, index) in tabs"
             :key="index"
             :value="tab.value"
-          >
-            <v-card>
-              <v-card-text>
-                <component :is="tab.component" />
-              </v-card-text>
-            </v-card>
-          </v-window-item>
-        </v-window>
+          > -->
+
+        <DataManagment />
+        <!-- <component :is="tab.component" /> -->
+
+        <!-- </v-window-item>
+        </v-window> -->
       </template>
     </base-layout>
   </v-app>

@@ -5,7 +5,6 @@ from utils.commands_utils import execute_command_without_arguments
 
 def create_tls_file(tls_auth, path_tls):
     """Create TLS file by importing tls key or generating it"""
-    print("Creating tls file:")
     if tls_auth['generate']:
         command = ['sudo', 'openvpn', '--genkey', 'secret', f'{path_tls}']
         execute_command_without_arguments(command)

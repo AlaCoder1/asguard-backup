@@ -49,7 +49,7 @@
   },
 
   "ldap": {
-    "ActivateLdap": "Activate  LDAP",
+    "ActivateLdap": "Save to LDAP",
     "TLS": "SSL/TLS encryption",
     "Activateecnryption": "Activate encryption"
   },
@@ -89,7 +89,8 @@
   },
   "subtitle": {
     "assistant": "Assistant",
-    "userCertificatemanagement": "Users & Certificate Management",
+    "user": "Users",
+    "cert": "Certificates",
     "networkManagement": "Network Management",
     "systemConfig": "System configuration",
     "settings": "Settings",
@@ -133,7 +134,8 @@
   "english": "English",
   "networkAdmins": "Networks admins",
   "networksGroups": "Networks groups",
-  "networksServers": "Networks Servers",
+  "networksServers": "Authentication Server",
+  "noInterfaces": "There are no interfaces",
 
   "delete": {
     "DeleteConfirmation": "Delete Confirmation",
@@ -535,8 +537,8 @@
   },
 
   "tabs": {
-    "userManagement": "User Management",
-    "certificateManagement": "Certificate Management",
+    "userManagement": "Users",
+    "certificateManagement": "Certificates",
     "configuration": "CONFIGURATION",
     "rules": "RULES",
     "alerts": "ALERTS",
@@ -623,7 +625,8 @@
     "servicesEdgeRelaysPolicies": "Services Edge Relays Policies",
     "addService": "Add Service Edge Relay Policy",
     "edgeRelaysPolicies": "Edge Relays Policies",
-    "servicesPolicies": "Services Policies"
+    "servicesPolicies": "Services Policies",
+    "ZTNAStatus":"ZTNA is not running, please start service"
   },
 
   "titleAgGrid": {
@@ -1076,5 +1079,10 @@
     "download_fail": "Error downloading the file",
     "delete_succes": "File deleted successfully!",
     "delete_fail": "Error deleting the file"
-  }
+  },
+  "roles": "Roles",
+  "roleLabel": "Role label",
+  "priveleges": "Priveleges",
+  "addRole": "Add Role",
+  "editRole": "Edit Role"
 }

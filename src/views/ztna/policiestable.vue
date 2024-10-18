@@ -10,7 +10,7 @@
         :gridOptions="gridOptions" :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
     </div>
     <div class="d-flex justify-end mt-3">
-      <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalRouter">
+      <v-btn class="add-button" :rounded="true" color="indigo-darken-3" :disabled="!tokenStatus" @click="openModalRouter">
         {{ $t("ztna.addRelaysPolicy") }}
       </v-btn>
     </div>
@@ -69,6 +69,8 @@ export default {
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
+    const tokenStatus = ref('')
+
     const state = reactive({
       modalData: {},
       modalMode: "create",
@@ -219,6 +221,17 @@ export default {
     };
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
+      if (!tokenStatus.value){
+        eGui.innerHTML = `
+        <button class="action-button edit" disabled>
+          <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+        <button class="action-button delete" disabled>
+          <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+      `;
+      }
+      else {
       eGui.innerHTML = `
         <button class="action-button edit" data-action="edit">
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -226,7 +239,7 @@ export default {
         <button class="action-button delete" data-action="delete">
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
-      `;
+      `;}
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
@@ -236,24 +249,14 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData) => {
-      let token = document.getElementById("app").getAttribute("token");
 
       switch (action) {
         case "edit":
-if (token && token !== "null") {
+
   state.modalMode = "edit";
           state.isModalOpenRouter = true;
           state.editRow = rowData;
           state.selectedId = rowData.id;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
-
-
           break;
         case "delete":
           OpenDelete(rowData.id);
@@ -263,18 +266,8 @@ else {
       }
     };
     async function OpenDelete(itemId) {
-      let token = document.getElementById("app").getAttribute("token");
-
-if (token && token !== "null") {
   state.selectedId = itemId;
   state.deleteDialog = true;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
      
     }
 
@@ -311,6 +304,8 @@ else {
     };
 
     onMounted(() => {
+      let token = document.getElementById("app").getAttribute("token");
+
       let router_policiesString = document
         .getElementById("app")
         .getAttribute("router_policies");
@@ -320,7 +315,12 @@ else {
       console.log("router_policiesObject", router_policiesObject);
 
       rowDataRouter.value = router_policiesObject ? router_policiesObject : [];
-
+      if (token && token !== "null") {
+        tokenStatus.value = true
+      } 
+      else {
+        tokenStatus.value = false
+    }
       if (gridApiRouter.value) {
         gridApiRouter.value.setRowData(rowDataRouter.value);
       }
@@ -337,20 +337,9 @@ else {
     });
 
     const openModalRouter = () => {
-      let token = document.getElementById("app").getAttribute("token");
-
-if (token && token !== "null") {
   state.modalDataRouter = {};
       state.modalMode = "create";
       state.isModalOpenRouter = true;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
-      
     };
 
     return {
@@ -367,6 +356,8 @@ else {
       paginationLocalization,
       columnsALLRouter,
       rowDataRouter,
+      tokenStatus
+
     };
   },
 };

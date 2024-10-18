@@ -3,13 +3,13 @@ import re
 
 from backend.waf.constant_variables import PATH_LOG_WAF
 from backend.waf.models import AlertWaf
+from utils.commands_utils import read_file_from_system
 
 
 def synchronize_database_waf_alert():
     """Function that synchronize database with system alerts for WAF.
     This method gets the WAF modsecurity logs, extract the fields for each log and update the database"""
-    with open(PATH_LOG_WAF) as log_waf_file:
-        log_waf_content = log_waf_file.read()
+    log_waf_content = read_file_from_system(PATH_LOG_WAF)
     
     len_log = log_waf_content.count("---A--")
 

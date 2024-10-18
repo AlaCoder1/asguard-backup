@@ -27,6 +27,7 @@
         :rounded="true"
         color="indigo-darken-3"
         @click="openModalAdd"
+        :disabled="!tokenStatus"
       >
         {{ $t("ztna.addServices") }}
       </v-btn>
@@ -95,6 +96,8 @@ export default {
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
+    const tokenStatus = ref('')
+
     const services = reactive([]);
     const state = reactive({
       modalData: {},
@@ -221,6 +224,16 @@ export default {
     };
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
+      if (!tokenStatus.value){
+        eGui.innerHTML = `
+<button class="action-button edit" disabled>
+          <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+        <button class="action-button delete" disabled>
+          <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+                `;
+      }else {
       eGui.innerHTML = `
         <button class="action-button edit" data-action="edit">
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -228,7 +241,7 @@ export default {
         <button class="action-button delete" data-action="delete">
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
-      `;
+      `;}
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
@@ -238,7 +251,6 @@ export default {
       return eGui;
     }
     function formatedEncryption(params) {
-      console.log('sharp dressed man',params.node.data.encryption)
       let eGui = document.createElement("div");
       let editingCells = params.api.getEditingCells();
       let isCurrentRowEditing = editingCells.some((cell) => {
@@ -263,23 +275,14 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData) => {
-      let token = document.getElementById("app").getAttribute("token");
 
       switch (action) {
         case "edit":
-
-if (token && token !== "null") {
   state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           state.selectedId = rowData.id;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
 
-}
 
           break;
         case "delete":
@@ -290,19 +293,8 @@ else {
       }
     };
     async function OpenDelete(itemId) {
-      let token = document.getElementById("app").getAttribute("token");
-
-if (token && token !== "null") {
   state.selectedId = itemId;
   state.deleteDialog = true;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
-
     }
 
     const confirmDelete = async (itemId) => {
@@ -338,6 +330,13 @@ else {
         .getElementById("app")
         .getAttribute("services");
       let servicesObject;
+      let token = document.getElementById("app").getAttribute("token");
+      if (token && token !== "null") {
+        tokenStatus.value = true
+      } 
+      else {
+        tokenStatus.value = false
+    }
       try {
         servicesObject = JSON.parse(servicesString);
         console.log('servicesObject',servicesObject)
@@ -373,19 +372,10 @@ else {
     });
 
     const openModalAdd = () => {
-      let token = document.getElementById("app").getAttribute("token");
 
-if (token && token !== "null") {
   state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
     };
 
     const cancelDelete = () => {
@@ -399,7 +389,7 @@ else {
       openModalAdd,
       services,
       gridOptions,
-      // openModalUpdate,
+      tokenStatus,
       rowDataDnat,
       columnServices,
       overlayTemplate,

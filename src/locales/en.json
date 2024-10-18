@@ -623,7 +623,8 @@
     "servicesEdgeRelaysPolicies": "Services Edge Relays Policies",
     "addService": "Add Service Edge Relay Policy",
     "edgeRelaysPolicies": "Edge Relays Policies",
-    "servicesPolicies": "Services Policies"
+    "servicesPolicies": "Services Policies",
+    "ZTNAStatus":"ZTNA is not running, please start service"
   },
 
   "titleAgGrid": {

@@ -621,7 +621,8 @@
     "servicesEdgeRelaysPolicies": "Services Relais de Périphérie Politiques",
     "addService": "Ajouter une Politique de Service de Relai de Périphérie",
     "edgeRelaysPolicies": "Politiques des relais Edge",
-    "servicesPolicies": "Politiques des services"
+    "servicesPolicies": "Politiques des services",
+    "ZTNAStatus":"ZTNA ne fonctionne pas, veuillez démarrer le service"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",

@@ -246,13 +246,11 @@ def delete_user(request, id):
     group = Group.objects.filter(groupname=user.username)
     # # Execute the command on the remote machine
     _, stderr = delete_user_in_system(user.username)
-    _, stderr_dir = delete_directory(user.username)
     # # convert the stderr stream to a string
     if stderr == "":
-        if stderr_dir == "":
-            user.delete()
-            group.delete()
-            return JsonResponse({"msg": f"{user.username} {SUCCESS_MESSAGES_DELETING}"})
+        user.delete()
+        group.delete()
+        return JsonResponse({"msg": f"{user.username} {SUCCESS_MESSAGES_DELETING}"})
     return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_USER}"}, status=400)
 
 

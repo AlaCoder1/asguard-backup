@@ -5,7 +5,11 @@
         <img src="../assets/images/logo.svg" alt="logo" height="50" />
       </v-toolbar-title>
       <v-spacer />
-      <div class="lang d-flex align-center" style="gap: 5px; cursor: pointer" id="language-btn">
+      <div
+        class="lang d-flex align-center"
+        style="gap: 5px; cursor: pointer"
+        id="language-btn"
+      >
         <span v-html="selectedLang[0].icon" style="margin-top: 4px"></span>
 
         <span>{{ $t(selectedLang[0].language) }}</span>
@@ -13,8 +17,13 @@
 
         <v-menu activator="#language-btn">
           <v-list v-model:selected="selectedLang">
-            <v-list-item v-for="lang in langs" :key="lang.lang" :value="lang" @click="updateLang(lang)">
-              <v-list-item-title class="d-flex align-center" style="gap: 10px">
+            <v-list-item
+              v-for="lang in langs"
+              :key="lang.lang"
+              :value="lang"
+              @click="updateLang(lang)"
+            >
+              <v-list-item-title class="d-flex align-center ml-4" style="gap: 10px">
                 <span v-html="lang.icon"></span> {{ $t(lang.language) }}
               </v-list-item-title>
             </v-list-item>
@@ -23,18 +32,26 @@
       </div>
       <v-menu>
         <template v-slot:activator="{ props }">
-          <v-avatar class="ml-3 mr-3" size="40" v-bind="props" style="
+          <v-avatar
+            class="ml-3 mr-3"
+            size="40"
+            v-bind="props"
+            style="
               border: 2px solid #fff;
               cursor: pointer;
               overflow: hidden;
               border-radius: 50%;
-            ">
-            <img :src="state.imageURL" alt="avatar" style="width: 100%; height: 100%; object-fit: cover" />
+            "
+          >
+            <img
+              :src="state.imageURL"
+              alt="avatar"
+              style="width: 100%; height: 100%; object-fit: cover"
+            />
           </v-avatar>
           <!-- <v-avatar class="ml-3 mr-3" size="30" v-bind="props">
             <v-icon size="30" class="white--text" color="white">mdi-account-circle-outline</v-icon>
           </v-avatar> -->
-
         </template>
         <v-list style="cursor: pointer; padding: 15px">
           <a :href="'/profile'" style="text-decoration: none; color: black">
@@ -287,18 +304,17 @@ export default {
     };
   },
 
-
   methods: {
     changeLang(lang) {
-      location.reload()
+      location.reload();
       this.$i18n.locale = lang.toLowerCase();
       this.emitter.emit("reload-tabs");
     },
     updateLang(lang) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      const val = [lang]
-      console.log('val0', val)
+      const val = [lang];
+      console.log("val0", val);
       if (val.length) {
         let lang = JSON.stringify(val);
         localStorage.setItem("lang", lang);
@@ -312,7 +328,7 @@ export default {
 
         axios
           .put(`/users/modifyLanguage/${this.state.currentInfo.id}`, payload)
-          .then((response) => { })
+          .then((response) => {})
           .catch((i) => {
             console.log("resp", i.response);
           });
@@ -321,9 +337,8 @@ export default {
         if (getLang) this.selectedLang = JSON.parse(getLang);
       }
     },
-
   },
-}
+};
 </script>
 
 <style scoped>

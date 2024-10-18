@@ -300,20 +300,20 @@ export default defineComponent({
     const mode = ref("create");
     const last_Subscription = ref([]);
     const columnDefs = ref([
-      {
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
-        editable: false,
-      },
-      {
-        headerCheckboxSelection: false,
-        checkboxSelection: true,
-        editable: false,
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
-      },
+      // {
+      //   width: 50,
+      //   minWidth: 50,
+      //   maxWidth: 50,
+      //   editable: false,
+      // },
+      // {
+      //   headerCheckboxSelection: false,
+      //   checkboxSelection: true,
+      //   editable: false,
+      //   width: 50,
+      //   minWidth: 50,
+      //   maxWidth: 50,
+      // },
       {
         field: "policy",
         headerName: policy,
@@ -376,6 +376,7 @@ export default defineComponent({
       {
         headerName: action,
         field: "action",
+        width: 150, minWidth: 50,
         cellRenderer: actionCellRenderer,
       },
     ]);

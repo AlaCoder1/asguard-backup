@@ -18,25 +18,15 @@ def install_server_openvpn_in_system(server_name, ca_name, tls_auth, dh_length, 
     # Initialization
     initialize_ca(current_dir, ca_name)
     create_tls_file(tls_auth, PATH_SERVER_STATIC.format(server_name))
-    
-    with open(PATH_SERVER_CONF.format(server_name), 'w') as server_file:
-        server_file.write(server_conf)
 
     commands_list_without_arguments = [['sudo', 'mkdir', '-p', PATH_LOG_OPENVPN],
                                        ['sudo', 'touch', PATH_STATUS_LOG],
-                                       ['sudo', 'chown', '777', PATH_STATUS_LOG],
                                        ['sudo', 'cp', PATH_DH_FILES.format(dh_length), PATH_SERVER_DH.format(server_name)]
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
-
-    # Add permissions to use certificates and other files
-    shutil.chown('/etc/openvpn/', user='openvpn', group='network')
-
-    commands_list_without_arguments = [['sudo', 'chown', '-R', 'openvpn:network', PATH_OPENVPN],
-                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', PATH_CERT],
-                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', PATH_KEY],
-                                       ]
-    execute_list_commands_without_arguments(commands_list_without_arguments)
+    
+    with open(PATH_SERVER_CONF.format(server_name), 'w') as server_file:
+        server_file.write(server_conf)
 
 
 def delete_server_openvpn_in_system(server_name):

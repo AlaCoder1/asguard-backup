@@ -5,6 +5,7 @@ from backend.openvpn.constant_variables import PATH_CLIENT_STATIC, PATH_SERVER_S
 
 from backend.openvpn.models import ClientOpenvpn, ServerOpenvpn
 from backend.openvpn.servers_status import synchronize_server_openvpn
+from utils.commands_utils import read_file_from_system
 
 
 def get_list_all_server_openvpn():
@@ -23,8 +24,8 @@ def get_list_all_server_openvpn():
         serv['fields']['id'] = serv_id
         serv['fields']['client_management_password'] = ''
         serv['fields']['cert_status'] = certificate.activation
-        with open(PATH_SERVER_STATIC.format(serv["fields"]["name"])) as tls_file:
-            serv['fields']['tls_key'] = tls_file.read()
+        # Add the TLS content of the server
+        serv['fields']['tls_key'] = read_file_from_system(PATH_SERVER_STATIC.format(serv["fields"]["name"]))
         list_server.append(serv['fields'])
     return list_server
 
@@ -41,8 +42,8 @@ def get_one_server_openvpn(id):
     res[0]['fields']['client_management_password'] = ''
     certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
     res[0]['fields']['cert_status'] = certificate.activation
-    with open(PATH_SERVER_STATIC.format(res[0]["fields"]["name"])) as tls_file:
-        res[0]['fields']['tls_key'] = tls_file.read()
+    # Add the TLS content of the server
+    res[0]['fields']['tls_key'] = read_file_from_system(PATH_SERVER_STATIC.format(res[0]["fields"]["name"]))
     return res[0]['fields']
 
 

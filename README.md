@@ -18,7 +18,8 @@ python manage.py collectstatic //with making DEBUG=False
 
 python manage.py create_wheel_group
 
-python manage.py generate_user -u root -p root
+python manage.py init_roles_db
+python manage.py generate_user -u root -p root -r admin
 
 python manage.py init_ASGUARD
 

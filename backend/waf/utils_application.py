@@ -2,7 +2,7 @@ from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_C
 from backend.waf.constant_variables import PATH_CRS_SETUP, PATH_MAIN_WAF, PATH_MODESC, PATH_NGINX_SITES_AVAILABLE, PATH_NGINX_SITES_ENABLED, PATH_RULES_WAF, PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
 from backend.waf.utils_config import create_waf_config
-from utils.commands_utils import execute_command_without_arguments, execute_list_commands_without_arguments, read_file_from_system
+from utils.commands_utils import append_file_from_system, execute_command_without_arguments, execute_list_commands_without_arguments, read_file_from_system, write_file_from_system
 
 
 def create_application_waf_in_system(app_data):
@@ -81,8 +81,7 @@ server {{
                                                             f"server_name {app_data['application_value']};")
         config_reverse_proxy = config_reverse_proxy.replace("server_name _l;", 
                                                             f"server_name {app_data['application_value']};")
-    with open(app_sites_available_config, 'w') as reverse_proxy_file:
-        reverse_proxy_file.write(config_reverse_proxy)
+    write_file_from_system(app_sites_available_config, config_reverse_proxy)
     
     # Put a symbolic link
     execute_command_without_arguments(["sudo", "rm", "-f", app_sites_enabled_config])
@@ -111,27 +110,22 @@ Include {app_directory}geoip_log_{app_data['name']}.conf
         rule_geoip_block = f"""
 SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{rule_geoip_block_id},chain,deny,status:403,msg:'Access from blocked countries: %{{GEO:COUNTRY_CODE}}',logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'"
 SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
-        with open(f"{app_directory}geoip_{app_data['name']}.conf", 'w') as rule_block_file:
-            rule_block_file.write(rule_geoip_block)
+        write_file_from_system(f"{app_directory}geoip_{app_data['name']}.conf", rule_geoip_block)
     
-    rule_geoip_log = f"""SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{rule_geoip_log_id},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
-    with open(f"{app_directory}geoip_log_{app_data['name']}.conf", 'w') as rule_log_file:
-        rule_log_file.write(rule_geoip_log)
-    with open(PATH_MAIN_WAF, 'a') as main_file:
-        main_file.write(f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
+    rule_geoip_log = f"""SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{rule_geoip_log_id},log,pass,logdata:Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}" """
+    write_file_from_system(f"{app_directory}geoip_log_{app_data['name']}.conf", rule_geoip_log)
+    append_file_from_system(PATH_MAIN_WAF, f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
     
     # Add all rules (selected and GEOIP) to the config of the app
     for rule in list_rule_selected:
         rule_waf = RulesWaf.objects.get(id=rule["rule_waf"])
         if rule_waf.created:
             # Add a new rule conf inside application directory
-            with open(f"{app_directory}{rule_waf.name}.conf", 'w') as rule_block_file:
-                rule_block_file.write(rule_waf.rule_content)
+            write_file_from_system(f"{app_directory}{rule_waf.name}.conf", rule_waf.rule_content)
             app_config_content += f"\nInclude {app_directory}{rule_waf.name}.conf"
         else:
             app_config_content += f"\nInclude {PATH_RULES_WAF.format(rule_waf.name)}"
-    with open(app_config, 'w') as app_config_file:
-        app_config_file.write(app_config_content)
+    write_file_from_system(app_config, app_config_content)
 
     ########## Config of the application ##########
     create_waf_config(app_param_config, app_data["config"])
@@ -154,8 +148,7 @@ def delete_application_waf_in_system(application_name):
     execute_list_commands_without_arguments(list_delete_commands)
     main_content = read_file_from_system(PATH_MAIN_WAF)
     main_content = main_content.replace(f"\nInclude {app_directory}geoip_log_{application_name}.conf", "")
-    with open(PATH_MAIN_WAF, 'w') as main_file:
-        main_file.write(main_content)
+    write_file_from_system(PATH_MAIN_WAF, main_content)
     execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])
 
 

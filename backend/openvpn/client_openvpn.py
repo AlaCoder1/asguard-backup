@@ -4,7 +4,7 @@ from pathlib import Path
 from backend.openvpn.constant_variables import PATH_CLIENT_OVPN, PATH_CLIENT_PAS, PATH_CLIENT_STATIC, PATH_CLIENT_UP
 from backend.openvpn.utils import create_tls_file
 
-from utils.commands_utils import execute_list_commands_without_arguments
+from utils.commands_utils import execute_list_commands_without_arguments, read_file_from_system, write_file_from_system
 
 
 def install_client_openvpn_in_system(client_name, client_conf, tls_auth):
@@ -12,8 +12,7 @@ def install_client_openvpn_in_system(client_name, client_conf, tls_auth):
     
     create_tls_file(tls_auth, PATH_CLIENT_STATIC.format(client_name))
     
-    with open(PATH_CLIENT_OVPN.format(client_name), 'w') as client_file:
-        client_file.write(client_conf)
+    write_file_from_system(PATH_CLIENT_OVPN.format(client_name), client_conf)
 
 
 def delete_client_openvpn_in_system(client_name):
@@ -45,9 +44,8 @@ def export_client_in_system(list_balise_client, config:str):
     for balise in list_balise_client:
         balise_line = config[config.find(f'{balise} '):config.find('\n', config.find(f'{balise} '))]
         balise_path = balise_line.replace(f'{balise} ', '')
-        with open(balise_path) as balise_file:
-            balise_value = balise_file.read()
-            balise_value = balise_value[balise_value.find('-----BEGIN '):balise_value.find('\n', balise_value.find('-----END'))]
+        balise_value = read_file_from_system(balise_path)
+        balise_value = balise_value[balise_value.find('-----BEGIN '):balise_value.find('\n', balise_value.find('-----END'))]
         config = config.replace(balise_line, f'<{balise}>\n{balise_value}\n</{balise}>\n')
         
     return config

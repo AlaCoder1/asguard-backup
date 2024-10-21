@@ -875,8 +875,7 @@ def export_client_openvpn(request, id):
     """Exporting a Client openvpn"""
     try:
         client = ClientOpenvpn.objects.get(id=id)
-        with open(f'/etc/openvpn/client/client_{client.name}.ovpn') as config_file:
-            config_input = config_file.read()
+        config_input = read_file_from_system(f'/etc/openvpn/client/client_{client.name}.ovpn')
         list_balise_client = ['ca', 'cert', 'key', 'crl-verify', 'tls-auth']
         config_input = export_client_in_system(list_balise_client, config_input)
 
@@ -920,7 +919,7 @@ def generate_client_openvpn(request, id):
         data['password'] = ''
         data['renegotiate_time'] = ''
         # Get the same TLS as the server
-        tls_key = read_file_from_system(PATH_SERVER_STATIC.format(name))
+        tls_key = read_file_from_system(PATH_SERVER_STATIC.format(server.name))
         tls_auth = {"generate": False,
                     "tls_key": tls_key}
         data['tls_auth'] = tls_auth

@@ -1,6 +1,6 @@
 from backend.managementCertificates.constant_variables import PATH_CA_CRL_PEM, PATH_CA_CRT, PATH_CLIENT_CERT_CRT, PATH_CLIENT_CERT_KEY, PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
 from backend.openvpn.constant_variables import CONSTANT_COMP_LZO, CONSTANT_COMPRESS_MIGRATE, PATH_CLIENT_PAS, PATH_CLIENT_STATIC, PATH_CLIENT_UP, PATH_LOG_OPENVPN_LOG, PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD, PATH_SERVER_DH, PATH_SERVER_STATIC, PATH_STATUS_LOG
-from utils.commands_utils import execute_command_without_arguments
+from utils.commands_utils import execute_command_without_arguments, write_file_from_system
 
 
 def create_tls_file(tls_auth, path_tls):
@@ -9,8 +9,7 @@ def create_tls_file(tls_auth, path_tls):
         command = ['sudo', 'openvpn', '--genkey', 'secret', f'{path_tls}']
         execute_command_without_arguments(command)
     else:
-        with open(path_tls, 'w') as tls_file:
-            tls_file.write(f'{tls_auth["tls_key"]}\n')
+        write_file_from_system(path_tls, f'{tls_auth["tls_key"]}\n')
 
 
 def prefix_to_masque(prefix:int):
@@ -186,8 +185,8 @@ log-append {PATH_LOG_OPENVPN_LOG}
             config_input = config_input.replace("#push \"dhcp-option NTP server2\"", f"push \"dhcp-option NTP {json_object['ntp_servers']['ntp_server2']}\"")
 
     if json_object["client_management"]["client_management_select"]:
-        with open(PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD.format(json_object["name"]), "w") as client_management_file:
-            client_management_file.write(json_object["client_management"]["password"])
+        write_file_from_system(PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD.format(json_object["name"]),
+                               json_object["client_management"]["password"])
         config_input = config_input.replace("#management localhost port path_password", f"management localhost {json_object['client_management']['port']} {PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD.format(json_object['name'])}")
 
     if json_object["verbosity_level"] != '':
@@ -264,8 +263,7 @@ tls-auth {PATH_CLIENT_STATIC.format(json_object["name"])}
         elif json_object["proxy_authentication"]["option"] == 'basic':
             # Create .pas file contains proxy username and password
             file_content = f'{json_object["proxy_authentication"]["username"]}\n{json_object["proxy_authentication"]["password"]}'
-            with open(f'/etc/openvpn/client/client_{json_object["name"]}.pas', 'w') as proxy_auth_file:
-                proxy_auth_file.write(file_content)
+            write_file_from_system(f'/etc/openvpn/client/client_{json_object["name"]}.pas', file_content)
             config_input = config_input.replace("#proto tcp-client", "proto tcp-client")
             config_input = config_input.replace("#http-proxy", 
                                                 f"http-proxy {json_object['proxy_host']} {json_object['proxy_port']} {PATH_CLIENT_PAS.format(json_object['name'])} basic")
@@ -276,8 +274,7 @@ tls-auth {PATH_CLIENT_STATIC.format(json_object["name"])}
     if json_object["username"] != '' and json_object["password"] != '':
         # Create .up file contains username and password
         file_content = f'{json_object["username"]}\n{json_object["password"]}'
-        with open(f'/etc/openvpn/client/client_{json_object["name"]}.up', 'w') as auth_file:
-            auth_file.write(file_content)
+        write_file_from_system(f'/etc/openvpn/client/client_{json_object["name"]}.up', file_content)
         config_input = config_input.replace("#pull", "pull")
         config_input = config_input.replace("#auth-user-pass", f"auth-user-pass {PATH_CLIENT_UP.format(json_object['name'])}")
         config_input = config_input.replace("client\n", "#client\n", 1)

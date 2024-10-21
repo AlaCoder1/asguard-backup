@@ -16,6 +16,16 @@ class Permission(models.Model):
 
     def __str__(self):
         return self.name
+    
+class Roles(models.Model):
+    name = models.CharField(max_length=200, null=True)
+    fonctionalities = models.CharField(max_length=200, null=True)
+
+    class Meta:
+        db_table = 'roles'
+
+    def __str__(self):
+        return self.name
 
 ##
 # Create your models here
@@ -59,7 +69,11 @@ class User(AbstractBaseUser):
     fullname = models.CharField(max_length=800, null=True)
     organisation = models.ForeignKey(
         Organization, on_delete=models.CASCADE, null=True)
-    role = models.CharField(max_length=800, null=True)
+    # role = models.CharField(max_length=800, null=True)
+    # in case do u want to delete the usr after delete his role
+    # role = models.ForeignKey(Roles, on_delete=models.CASCADE, null=True)
+    #else
+    role = models.ForeignKey(Roles, on_delete=models.SET_NULL, null=True)
     uid = models.IntegerField(null=True, unique=True)
     group = models.ManyToManyField(Group)
     permission = models.ManyToManyField(Permission)

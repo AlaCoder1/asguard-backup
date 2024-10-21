@@ -8,9 +8,9 @@ from django.contrib.auth.hashers import make_password
  
 # Constants
 CONSTANT_LDAP_SERVER = _('Directory Server')
-CONSTANT_LDAP_UNREACHABLE= _('Directory Server unreachable , Please Verify your ip address or port')
-CONSTANT_LDAP_UNVALID_CREDENTIENLS= _('Invalid Credentials')
-CONSTANT_LDAP_SEARCH_BASE = _("Provide correct Search Base")
+CONSTANT_LDAP_UNREACHABLE= _('Directory Server unreachable, verify IP address or port')
+CONSTANT_LDAP_UNVALID_CREDENTIENLS= _('Invalid Server Credentials')
+CONSTANT_LDAP_SEARCH_BASE = _("Please provide a valid Search Base")
  
  
 ################### Function to display list of Servers ###################

@@ -62,8 +62,7 @@ def get_list_all_client_openvpn():
         cli['fields']['proxy_auth_password'] = ''
         cli['fields']['password'] = ''
         cli['fields']['cert_status'] = certificate.activation
-        with open(PATH_CLIENT_STATIC.format(cli["fields"]["name"])) as tls_file:
-            cli['fields']['tls_key'] = tls_file.read()
+        cli['fields']['tls_key'] = read_file_from_system(PATH_CLIENT_STATIC.format(cli["fields"]["name"]))
         list_server_remote = list(cli['fields']['server_remote'].split(','))
         cli['fields']['server_remote'] = []
         for server in list_server_remote:
@@ -86,8 +85,7 @@ def get_one_client_openvpn(id):
     res[0]['fields']['password'] = ''
     certificate = Certificate.objects.get(name=res[0]['fields']['cert_name'])
     res[0]['fields']['cert_status'] = certificate.activation
-    with open(PATH_CLIENT_STATIC.format(res[0]["fields"]["name"])) as tls_file:
-        res[0]['fields']['tls_key'] = tls_file.read()
+    res[0]['fields']['tls_key'] = read_file_from_system(PATH_CLIENT_STATIC.format(res[0]["fields"]["name"]))
     list_server_remote = list(res[0]['fields']['server_remote'].split(','))
     res[0]['fields']['server_remote'] = []
     for server in list_server_remote:

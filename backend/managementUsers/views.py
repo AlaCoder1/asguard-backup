@@ -3,9 +3,9 @@ from django.contrib.auth.hashers import check_password
 from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
-from backend.managementUsers.models import Profile, User
-from backend.managementUsers.serializers import PermissionSerializer, ProfileSerializer, UserSerializerGet, UserSerializerPost, UserSerializerPostWithoutGroupAndPermission
-from backend.managementUsers.functions import add_user_group, add_mail_spool, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password
+from backend.managementUsers.models import Profile, User, Roles
+from backend.managementUsers.serializers import PermissionSerializer, ProfileSerializer, UserSerializerGet, UserSerializerPost, UserSerializerPostWithoutGroupAndPermission,RoleSerializer
+from backend.managementUsers.functions import add_user_group, add_mail_spool, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password,delete_directory
 from backend.managementGroup.serializers import GroupSerializer
 from backend.managementGroup.functions import change_groupname_username, getGroupNameById, getUidGroup
 from backend.managementGroup.models import Group
@@ -24,8 +24,6 @@ from django.conf import settings
 from rest_framework import status
 
 from backend.waf.models import RulesWaf
-
-
 # Constants
 CONSTANT_USER = _("User")
 CONSTANT_USERNAME = _("username")
@@ -38,6 +36,7 @@ CONSTANT_METHOD_ADD_USER_EMAIL_SYSTEM = _("with simple System email")
 CONSTANT_OR = _("or")
 CONSTANT_AND = _("and")
 CONSTANT_LANGUAGE = _('Language')
+CONSTANT_LDAP_UNREACHABLE=_("Directory Server unreachable")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -49,7 +48,6 @@ ERROR_MESSAGES_UPDATING = _("Error in updating")
 ERROR_MESSAGES_RESET = _("Error in reset")
 ERROR_MESSAGES_EXISTANT = _("already exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
-ERROR_MESSAGES_INVALID_CREDENTIALS = _("Invalid credentials")
 ERROR_MESSAGES_INVALID_PASSWORD = _("Invalid password")
 ERROR_MESSAGES_CONNECTION = _("Error connecting to directory server")
 
@@ -74,8 +72,62 @@ def get_all_users(request):
             res[i]['fields'].pop('password')
             res[i]['fields']['id'] = user_id
             list_users.append(res[i]['fields'])
-        return list_users
+            
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def get_all_roles(request):
+    """Get all roles from database"""
+    list_roles = []
+    if (request.method == 'GET'):
+        roles = Roles.objects.all()
+        role_dict = serializers.serialize("json", roles)
+        res = json.loads(role_dict)
+        for i in range(0, len(res)):
+            res[i].pop('model')
+            role_id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = role_id
+            list_roles.append(res[i]['fields'])
+        
+        return JsonResponse({"list_roles":list_roles})
 
+@api_view(['POST'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def create_role(request):
+    if (request.method == 'POST'):
+        data = request.data
+        serializer = RoleSerializer(data=data)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return JsonResponse({'msg': serializer.error_messages}, status=400) 
+        return JsonResponse({'msg': data}, status=200) 
+    
+@api_view(['PUT'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def modify_role(request,id):
+    if (request.method == 'PUT'):
+        role = Roles.objects.get(id=id)
+        data = request.data
+        serializer = RoleSerializer(role,data=data)
+        if serializer.is_valid():
+            serializer.save()
+        else:
+            return JsonResponse({'msg': serializer.error_messages}, status=400) 
+        return JsonResponse({'msg': data}, status=200) 
+    
+@api_view(['DELETE'])
+@authentication_classes([SessionAuthentication])
+@permission_classes([IsAuthenticated])
+def delete_role(request, id):
+    """Delete role"""
+    print('dddd')
+    role = Roles.objects.get(id=id)
+    role.delete()
+    return JsonResponse({"msg": f"{SUCCESS_MESSAGES_DELETING}"})
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET USER BY ID",
@@ -113,6 +165,7 @@ def create_user(request):
     email_founded = False
     if request.method == 'POST':
         data = request.data
+        print({"data":data})
         username = data['username']
         password = data['password']
         organisation = Organization.objects.get(id=1)
@@ -156,10 +209,9 @@ def create_user(request):
                         return JsonResponse({'msg': ERROR_MESSAGES_INVALID_PASSWORD}, status=400)   
                     
                 except ldap.SERVER_DOWN:
-                # LDAP authentication failed
-                    return JsonResponse({'msg': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)
+                    return JsonResponse({'msg': f"{CONSTANT_LDAP_UNREACHABLE}"}, status=400)
                 except ldap.LDAPError:
-                    return JsonResponse({'msg': ERROR_MESSAGES_CONNECTION}, status=400)
+                    return JsonResponse({'msg': f"{ERROR_MESSAGES_CONNECTION}"}, status=400)
             else:
                 return JsonResponse({'msg': f"{CONSTANT_DIRECTORY_SERVER} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
        
@@ -180,6 +232,7 @@ def create_user(request):
                     uid = get_uid_user()
                     data['password'] = make_password(data['password'])
                     data['uid'] = uid
+                    # data['role_id'] = 
                     if 'group' in data:
                         groups = data['group']
                         for i in range(0, len(groups)):
@@ -247,11 +300,13 @@ def delete_user(request, id):
     group = Group.objects.filter(groupname=user.username)
     # # Execute the command on the remote machine
     _, stderr = delete_user_in_system(user.username)
+    _, stderr_dir = delete_directory(user.username)
     # # convert the stderr stream to a string
     if stderr == "":
-        user.delete()
-        group.delete()
-        return JsonResponse({"msg": f"{user.username} {SUCCESS_MESSAGES_DELETING}"})
+        if stderr_dir == "":
+            user.delete()
+            group.delete()
+            return JsonResponse({"msg": f"{user.username} {SUCCESS_MESSAGES_DELETING}"})
     return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_USER}"}, status=400)
 
 
@@ -315,9 +370,9 @@ def modify_user(request, id):
                     return JsonResponse({'msg': ERROR_MESSAGES_INVALID_PASSWORD}, status=400)    
             except ldap.SERVER_DOWN:
                 # LDAP authentication failed
-                return JsonResponse({'msg': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)        
+                return JsonResponse({'msg':f"{CONSTANT_LDAP_UNREACHABLE}"}, status=400)        
             except ldap.LDAPError:
-                return JsonResponse({'msg': ERROR_MESSAGES_CONNECTION}, status=400)  
+                return JsonResponse({'msg':f"{ERROR_MESSAGES_CONNECTION}"}, status=400)  
             
         if User.objects.filter(email=data['email']).exclude(id=id).exists():
             return JsonResponse({"msg": f"Email {ERROR_MESSAGES_EXISTANT}"}, status=400)    

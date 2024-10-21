@@ -20,7 +20,7 @@
                     id="IdentityName"
                     v-model="IdentityName"
                     :placeholder="$t('ztna.identityName')"
-                    :rules="rules"
+                    :rules="rulesName"
                     persistent-placeholder
                   />
                 </v-col>
@@ -30,7 +30,7 @@
                     id="IdentityAttribute"
                     v-model="IdentityAttribute"
                     :placeholder="$t('ztna.identityAttribute')"
-                    :rules="rules"
+                    :rules="rulesName"
                     persistent-placeholder
                   />
                 </v-col>
@@ -91,11 +91,6 @@
                     </div>
                   </div>
                 </v-col>
-                <!-- <v-col cols="12" class="ml-2">
-                  <label for="IsAdmin" class="mr-3">Is Admin</label>
-                  <input type="checkbox" id="IsAdmin" v-model="isAdmin" />
-                </v-col> -->
-
                 <v-col cols="12">
                   <v-text-field
                     id="Description"
@@ -123,20 +118,6 @@
                 {{ $t("buttons.close") }}</span
               ></v-btn
             >
-            <!-- <v-btn
-                  color="red"
-                  :rounded="true"
-                  large
-                  rounded
-                  outlined
-                  label-color="#213E9F"
-                  variant="flat"F
-                  class="mt-3 btn-add"
-                  type="reset"
-                  @click="onReset"
-                >
-                  Reset
-                </v-btn> -->
             <v-btn
               large
               rounded
@@ -210,7 +191,12 @@ export default {
       { title: "linux"},
     ]
     const rules = [(value) => !!value || "You must enter a value."];
-
+    const rulesName = [
+      (value) => {
+        if (!value) return true;
+      return ValidName(value) ? true : "Please enter a valid name.";
+      },
+    ];
     const emitter = inject("emitter");
 
     const { isOpen, editRow, modalMode } = toRefs(props);
@@ -340,6 +326,15 @@ export default {
     const selectOs = (item) => {
       selectedOs.value = item.title;
     };
+    function ValidName(value){
+ const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+
+  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+    return true;
+  }
+  
+  return false;
+}
 
     const cancel = () => {
       onReset();
@@ -361,6 +356,7 @@ export default {
       selectedOs,
       selectOs,
       OS,
+      rulesName,
       items,
       onReset,
     };

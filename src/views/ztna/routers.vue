@@ -528,7 +528,8 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       let token = document.getElementById("app").getAttribute("token");
-
+      state.loading = true;
+          state.isLoadingDialogue = true;
       axios
         .delete(`/ztna/delete_routers/${deletedItemId}`, {
           headers: {
@@ -540,6 +541,8 @@ export default {
           state.snackbar = true;
           state.color = "success";
           state.textAlert = response.data.message;
+          state.loading = false;
+          state.isLoadingDialogue = false;
           setTimeout(() => {
             location.reload();
           }, 1000);
@@ -548,6 +551,8 @@ export default {
           state.snackbar = true;
           state.color = "red";
           state.textAlert = i.response.data.error;
+          state.loading = false;
+          state.isLoadingDialogue = false;
         });
     };
 

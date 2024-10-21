@@ -13,7 +13,7 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="ConfigName" v-model="ConfigName" :placeholder="$t('ztna.configName')" :rules="rules"
+                  <v-text-field id="ConfigName" v-model="ConfigName" :placeholder="$t('ztna.configName')" :rules="rulesName"
                     persistent-placeholder />
                 </v-col>
 
@@ -43,17 +43,17 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="adress" v-model="adress" :placeholder="$t('ztna.address')" :rules="rules"
+                  <v-text-field id="adress" v-model="adress" :placeholder="$t('ztna.address')" :rules="rulesaddress"
                     persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="PORT" v-model.number="portHigh" placeholder="PORT" :rules="rules"
+                  <v-text-field id="PORT" v-model.number="portHigh" placeholder="PORT" :rules="rulesNumber"
                     persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
+                  <v-text-field id="Description" v-model="Description" placeholder="Description" 
                     persistent-placeholder />
                 </v-col>
               </v-row>
@@ -65,19 +65,6 @@
               class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
                 {{ $t("buttons.close") }}</span
               ></v-btn>
-            <!-- <v-btn
-              color="red"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              class="mt-3 btn-add"
-              type="reset"
-            >
-              Reset
-            </v-btn> -->
             <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
               class="mt-3 ml-2 btn-add" type="submit">
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
@@ -132,6 +119,89 @@ export default {
         return "You must enter a value.";
       },
     ];
+    const rulesNumber = [
+      (value) => {
+        if (!value) return true;
+      return isNumber(value) ? true : "Please enter a valid number.";
+      },
+    ];
+
+    const rulesaddress = [
+      (value) => {
+        if (!value) return true;
+      return isValidIpOrHostname(value) ? true : "Please enter a valid adress.";
+      },
+    ];
+    const rulesName = [
+      (value) => {
+        if (!value) return true;
+      return ValidName(value) ? true : "Please enter a valid name.";
+      },
+    ];
+
+    function isNumber(value) {
+  // Check if value is null or undefined
+  if (value == null) return false;
+
+  // Convert to string to handle numeric primitives
+  let stringValue = String(value);
+
+  // Remove leading/trailing whitespace
+  stringValue = stringValue.trim();
+
+  // Check if empty after trimming
+  if (!stringValue.length) return false;
+
+  // Try to parse the string as a float
+  let parsedFloat;
+  try {
+    parsedFloat = parseFloat(stringValue);
+  } catch (error) {
+    return false;
+  }
+
+  // Check if parsedFloat is NaN
+  if (isNaN(parsedFloat)) {
+    return false;
+  }
+
+  // Check if parsedFloat is finite (not Infinity or -Infinity)
+  if (!isFinite(parsedFloat)) {
+    return false;
+  }
+
+  // If all checks pass, it's a valid number
+  return true;
+}
+
+function isValidIpOrHostname(value) {
+  // Regular expression for IPv4
+  const ipv4Pattern = /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+  
+  // Regular expression for IPv6
+  const ipv6Pattern = /([a-fA-F0-9]{1,4}:){7,7}[a-fA-F0-9]{1,4}|([a-fA-F0-9]{1,4}:){1,7}:|([a-fA-F0-9]{1,4}:){1,6}:[a-fA-F0-9]{1,4}|([a-fA-F0-9]{1,4}:){1,5}(:[a-fA-F0-9]{1,4}){1,2}|([a-fA-F0-9]{1,4}:){1,4}(:[a-fA-F0-9]{1,4}){1,3}|([a-fA-F0-9]{1,4}:){1,3}(:[a-fA-F0-9]{1,4}){1,4}|([a-fA-F0-9]{1,4}:){1,2}(:[a-fA-F0-9]{1,4}){1,5}|[a-fA-F0-9]{1,4}:((:[a-fA-F0-9]{1,4}){1,6})$/;
+
+  // Regular expression for valid hostnames (no pure numeric strings)
+  const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+
+  // Check if value is a valid IPv4, IPv6, or a hostname (and not a pure number)
+  if (ipv4Pattern.test(value) || ipv6Pattern.test(value) || (hostnamePattern.test(value) && !/^\d+$/.test(value))) {
+    return true;
+  }
+  
+  return false;
+}
+
+function ValidName(value){
+ const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+
+  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+    return true;
+  }
+  
+  return false;
+}
+
     const emitter = inject("emitter");
 
     const { isOpen, editRow, modalMode } = toRefs(props);
@@ -250,36 +320,6 @@ export default {
             state.color = "red";
             state.textAlert = i.response.data.error;
           });
-        // try {
-        //   let token = document.getElementById("app").getAttribute("token");
-
-        //   const proxyUrl = "https://asguard:3000";
-        //   const apiUrl = "/edge/management/v1/configs";
-        //   const response = await axios.post(
-        //     proxyUrl + apiUrl,
-        //     {
-        //       name: ConfigName.value,
-        //       configTypeId: "NH5p4FpGR",
-        //       data: {
-        //         address: adress.value,
-        //         port: Number(port.value),
-        //         protocol: selectedTitle.value,
-        //       },
-        //     },
-        //     {
-        //       headers: {
-        //         "zt-session": token,
-        //         "Content-Type": "application/json",
-        //       },
-        //     }
-        //   );
-        //   setTimeout(() => {
-        //     location.reload();
-        //   }, 1000);
-        //   emitter.emit("closeHostModal");
-        // } catch (error) {
-        //   console.error("Failed to submit form !!:", error);
-        // }
       }
     };
     const selectItem = (item) => {
@@ -309,6 +349,9 @@ export default {
       items,
       selectItem,
       rules,
+      rulesNumber,
+      rulesaddress,
+      rulesName,
       submitForm,
     };
   },

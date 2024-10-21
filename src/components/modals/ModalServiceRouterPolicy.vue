@@ -13,7 +13,7 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rules"
+                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rulesName"
                     persistent-placeholder />
                 </v-col>
 
@@ -47,7 +47,7 @@
                     :rules="rules" persistent-placeholder /> -->
 
                   <v-select v-model="serviceRA" :label="$t('ztna.serviceRoleAttribute')" density="compact"
-                    item-title="name" item-value="id" return-object :rules="rules" :items="ServList"
+                    item-title="attribute_service" item-value="id" return-object :rules="rules" :items="ServList"
                     background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
@@ -55,7 +55,7 @@
                 <v-col cols="12" class="mb-n6">
                   <!-- <v-text-field id="routerR" v-model="routerR" :placeholder="$t('ztna.edgeRelaysRole')" :rules="rules"
                     persistent-placeholder /> -->
-                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact" item-title="name"
+                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact" item-title="attribute_relay"
                     item-value="id" return-object :rules="rules" :items="routersList" background-color="#fffffff"
                     :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
@@ -126,8 +126,22 @@ export default {
         return "You must enter a value.";
       },
     ];
+    const rulesName = [
+      (value) => {
+        if (!value) return true;
+      return ValidName(value) ? true : "Please enter a valid name.";
+      },
+    ];
     const emitter = inject("emitter");
+    function ValidName(value){
+ const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
 
+  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+    return true;
+  }
+  
+  return false;
+}
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
@@ -282,34 +296,6 @@ export default {
             state.textAlert = i.response.data.error;
           });
       }
-      // try {
-      //   let token = document.getElementById("app").getAttribute("token");
-      //   let routerAttribute = `#${routerR.value}`;
-      //   let serviceAttribute = `#${serviceRA.value}`;
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = "/edge/management/v1/service-edge-router-policies";
-      //   await axios.post(
-      //     proxyUrl + apiUrl,
-      //     {
-      //       name: name.value,
-      //       semantic: selectedsemantic.value,
-      //       edgeRouterRoles: [routerAttribute],
-      //       serviceRoles: [serviceAttribute],
-      //     },
-      //     {
-      //       headers: {
-      //         "zt-session": token,
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   emitter.emit("closeServiceRouterPolicyModal");
-      // } catch (error) {
-      //   console.error("Failed to submit form:", error);
-      // }
     };
     const resetForm = () => {
       name.value = "";
@@ -320,7 +306,6 @@ export default {
     };
 
     const cancel = () => {
-      console.log("tes");
       emitter.emit("closeServiceRouterPolicyModal");
     };
     const selectsemantic = (item) => {
@@ -342,6 +327,7 @@ export default {
       cancel,
       selectedsemantic,
       selectsemantic,
+      rulesName,
     };
   },
 };

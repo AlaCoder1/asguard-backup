@@ -18,14 +18,14 @@
           :overlayNoRowsTemplate="overlayTemplate"
         />
       </div>
-      <div class="d-flex justify-end">
+      <div class="d-flex justify-end mb-15">
         <v-btn
           color="asguard_primary_light"
           :rounded="true"
           class="mt-3 btn-add"
           @click="openModalAdd"
         >
-          <span class="text-white"> Add Role</span>
+          <span class="text-white"> {{ $t("addRole") }}</span>
         </v-btn>
       </div>
 
@@ -106,7 +106,7 @@ export default {
 
     const gridOptions = ref({
       pagination: true,
-      paginationPageSize: 5,
+      paginationPageSize: 3,
       rowSelection: "single",
     });
 
@@ -120,14 +120,16 @@ export default {
     const columnDefs = ref([
       {
         headerName: roleLabel,
-        field: "server_name",
+        field: "name",
         width: 90,
         minWidth: 50,
         flex: 1,
       },
       {
         headerName: priveleges,
-        field: "server_url",
+        field: "fonctionalities",
+        autoHeight: true,
+        cellRenderer: formatedPr,
         width: 90,
         minWidth: 50,
         flex: 1,
@@ -139,6 +141,34 @@ export default {
         cellRenderer: actionCellRenderer,
       },
     ]);
+
+    function formatedPr(data) {
+      if (data.data.fonctionalities) {
+        //       const validJSON = data.data.fonctionalities.replace(/'/g, '"');
+
+        //       let pr = JSON.parse(validJSON);
+        //       const resultWithBr = pr.map((a) => a + "<br>").join("");
+        //       let eGui = document.createElement("div");
+        //       eGui.innerHTML = `${resultWithBr}
+
+        // `;
+        //       // eGui.style.lineHeight = "2";
+        //       // eGui.style.margin = "0";
+        //       return eGui;
+        const validJSON = data.data.fonctionalities.replace(/'/g, '"');
+
+        let pr = JSON.parse(validJSON);
+        const resultWithBr = pr
+          .map((a, index) => {
+            return a + (index === 2 ? "<br>" : "");
+          })
+          .join(" , ");
+
+        let eGui = document.createElement("div");
+        eGui.innerHTML = resultWithBr;
+        return eGui;
+      }
+    }
 
     const rowData = reactive({});
 
@@ -180,20 +210,34 @@ export default {
                 </button>
                 `;
       } else {
-        eGui.innerHTML = `
+        if (
+          params.data.name === "admin" ||
+          params.data.name === "default" ||
+          params.data.name === "viewer"
+        ) {
+          eGui.innerHTML = `    
+          
+          <button
+             >
+                <i class="mdi mdi-pen-lock" style="color: #086EAE; font-size:20px;"></i>
+             </button> 
+                   `;
+        } else {
+          eGui.innerHTML = `
            
-                <button
-                  class="action-button edit"
-                  data-action="edit">
-                     <i class="far fa-edit" style="color: #086EAE;"></i>
-                  </button>
-                  <button
-                  class="action-button delete"
-                  data-action="delete">
-                    <i class="fas fa-times" style="color: #086EAE;"></i>
-                  </button>
-        
-                  `;
+           <button
+             class="action-button edit"
+             data-action="edit">
+                <i class="far fa-edit" style="color: #086EAE;"></i>
+             </button>
+             <button
+             class="action-button delete"
+             data-action="delete">
+               <i class="fas fa-times" style="color: #086EAE;"></i>
+             </button>
+   
+             `;
+        }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
@@ -245,11 +289,12 @@ export default {
         />
        </svg></span>`;
       let allLisRoles =
-        document.getElementById("app").attributes["servers"].value;
+        document.getElementById("app").attributes["roles"].value;
 
       const parsedArray = JSON.parse(allLisRoles);
 
       rowData.value = parsedArray;
+      console.log("roles", rowData.value);
     });
 
     const cancelDelete = () => {

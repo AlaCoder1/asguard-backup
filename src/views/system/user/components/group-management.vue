@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div class="d-flex justify-end">
+    <div class="d-flex justify-end mb-15">
       <v-btn
         color="asguard_primary_light"
         :rounded="true"

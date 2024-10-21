@@ -484,8 +484,12 @@ def user_managment_page(request):
     grp=get_groups(request)
     roles = getRoles(request)
     servers=get_list_ad_servers()
-    context = {'users':usr,"groups":grp,"servers":servers,"roles":roles}
-    return render(request, 'user_certificate_managment.html',context)
+    context = {'users':usr,"groups":grp,"servers":servers}
+    return render(request, 'user_managment.html',context)
+
+@login_required(login_url='/')
+def certificate_managment_page(request):
+    return render(request, 'user_certificate_managment.html')
 
 
 @login_required(login_url='/')

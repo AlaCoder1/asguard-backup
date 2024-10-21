@@ -4,6 +4,13 @@ from backend.managementGroup.models import *
 from django.contrib.auth import get_user_model
 from backend.subscription.models import *
 
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Roles
+        fields = ('name', 'fonctionalities',)
+        
 class UserSerializerGet(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -13,6 +20,7 @@ class UserSerializerGet(serializers.ModelSerializer):
 class UserSerializerPost(serializers.ModelSerializer):
     group = serializers.PrimaryKeyRelatedField(
         many=True, queryset=Group.objects.all())
+    role = serializers.PrimaryKeyRelatedField(queryset=Roles.objects.all())
     # permission=serializers.PrimaryKeyRelatedField(many=True,queryset=Permission.objects.all())
     organisation = serializers.PrimaryKeyRelatedField(queryset=Organization.objects.all())
     class Meta:
@@ -24,6 +32,7 @@ class UserSerializerPost(serializers.ModelSerializer):
 
 
 class UserSerializerPostWithoutGroupAndPermission(serializers.ModelSerializer):
+    role = serializers.PrimaryKeyRelatedField(queryset=Roles.objects.all())
     class Meta:
         model = User
         fields = ('username', 'password', 'fullname', 'email', 'role', 'uid','organisation','is_active','id_server_id','dn_user')

@@ -115,8 +115,14 @@ def changeGroupname(request, id):
         oldgroupname = groupDict['groupname']
         Newgroupname = data['Newgroupname']
         description = data['description']
+        
         if validInput(Newgroupname):
-            if group_exists(Newgroupname):
+            if oldgroupname == Newgroupname:
+                group.description = description
+                group.save()
+                msg = f"{CONSTANT_GROUPE_NAME} {SUCCESS_MESSAGES_UPDATING}"
+                return JsonResponse({"msg": msg})
+            elif group_exists(Newgroupname):
                 msg = f"{Newgroupname} {ERROR_MESSAGES_EXISTANT}"
                 return JsonResponse({"msg": msg})
             else:

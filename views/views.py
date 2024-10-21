@@ -302,7 +302,21 @@ def get_all_interfaces_version2(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
-            if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")):
+            if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")) :
+                list_interface.append(res[i]['fields'])
+        return list_interface    
+def get_all_interfaces_firewall(request):
+    list_interface = []
+    if (request.method == 'GET'):
+        interfaces = Interface.objects.all()
+        interface_dict = serializers.serialize("json",interfaces)
+        res = json.loads(interface_dict)
+        for i in range(len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap","vlan")) and not res[i]['fields']['name_interface'].lower().startswith("vxlan") :
                 list_interface.append(res[i]['fields'])
         return list_interface    
 
@@ -500,7 +514,7 @@ def interface_page(request):
 @login_required(login_url='/')
 def firewall_page(request):
     rules=get_all_rules(request)
-    interfaces=get_all_interfaces(request)
+    interfaces=get_all_interfaces_firewall(request)
     last_subscription=list_features_about_last_subscription(request)
     context = {'rules':json.dumps(rules), 'interfaces':interfaces,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'firewall_page.html',context)
@@ -661,7 +675,7 @@ def suricata(request):
     general_config_suricata=general_suricata_configuration(request, id)
     # rules_suricata=get_rules_from_database(request)
     # alerts_suricata=get_alerts_from_database(request)
-    interfaces=get_all_interfaces_version2(request)
+    interfaces=get_all_interfaces_firewall(request)
     context={"general_config_suricata":general_config_suricata,"all_interfaces":interfaces}
     return render(request, 'ids_ips.html',context)
 

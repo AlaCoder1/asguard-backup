@@ -45,17 +45,16 @@ def delete_rule(request,id):
             if handle is not None:
               #appel la fonction pour supprimer  rule avec handle déjà retrouvé  (système)
               return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
-              if return_delete_rule_remote is True:
-                #appel la fonction pour supprimer  rule de la base de données 
-                rules.delete()
-                msg=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
-                status=200
-              else:
-                msg=f"{ERROR_MESSAGES_DELETING} {CONSTANT_RULE}"
-                status=400 
-            else:
-              msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
-              status=400 
+              
+            rules.delete()
+            msg=f"{CONSTANT_RULE} {SUCCESS_MESSAGES_DELETING}"
+            status=200
+              # else:
+              #   msg=f"{ERROR_MESSAGES_DELETING} {CONSTANT_RULE}"
+              #   status=400 
+            # else:
+            #   msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
+            #   status=400 
         else:
           msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
           status=400

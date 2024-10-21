@@ -293,16 +293,16 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
          ruleupdate=return_rule(policy,saddr_db,daddr_db,sport,dport,protocol,type_rules)
          handle=get_handle_rule(ifname,type_rules,rule)
          if handle is not None: 
-            if not Rule.objects.filter(
-                 ~Q(id=id)& 
-                  Q(rule=ruleupdate) & (
-                  (Q(interface_id=rules_object.interface_id) ) &
-                  (Q(type_rule=type_rules))
-                  # & Q (rule_description=rule_description)
-                  )
-               ).exists():
                return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
-               if return_delete_rule_remote is True:
+         if not Rule.objects.filter(
+               ~Q(id=id)& 
+               Q(rule=ruleupdate) & (
+               (Q(interface_id=rules_object.interface_id) ) &
+               (Q(type_rule=type_rules))
+               # & Q (rule_description=rule_description)
+               )
+            ).exists():
+               # if return_delete_rule_remote is True:
                   return_add_rule=add_rule_remote(ruleupdate,ifname,type_rules)
                   if  return_add_rule is True:
                         data = {
@@ -330,12 +330,12 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
                   else:
                         msg=f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"
                         status=400
-               else:
-                  msg=f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"
-                  status=400
-            else:
-               msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
-               status=400
+               # else:
+               #    msg=f"{ERROR_MESSAGES_UPDATING} {CONSTANT_RULE}"
+               #    status=400
+            # else:
+            #    msg=f"{CONSTANT_RULE} {ERROR_MESSAGES_EXISTANT}"
+            #    status=400
          else:
                msg= f"{CONSTANT_RULE} {ERROR_MESSAGES_INEXISTANT}"
                status=404

@@ -2,9 +2,8 @@
 
 import os
 import time
-from backend.managementCertificates.constant_variables import PATH_CERT, PATH_KEY
 from backend.managementCertificates.utils import initialize_ca
-from backend.openvpn.constant_variables import PATH_DH_FILES, PATH_LOG_OPENVPN, PATH_OPENVPN, PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD, PATH_SERVER_CONF, PATH_SERVER_DH, PATH_SERVER_LOG, PATH_SERVER_STATIC, PATH_STATUS_LOG
+from backend.openvpn.constant_variables import PATH_DH_FILES, PATH_LOG_OPENVPN, PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD, PATH_SERVER_CONF, PATH_SERVER_DH, PATH_SERVER_LOG, PATH_SERVER_STATIC, PATH_STATUS_LOG
 from backend.openvpn.utils import create_tls_file
 from backend.openvpn.servers_status import change_status_server_openvpn
 from utils.commands_utils import execute_list_commands_without_arguments, get_current_directory, write_file_from_system

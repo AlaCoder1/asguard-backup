@@ -14,12 +14,12 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="ServiceName" v-model="name" :placeholder="$t('ztna.serviceName')" :rules="rules"
+                  <v-text-field id="ServiceName" v-model="name" :placeholder="$t('ztna.serviceName')" :rules="rulesName"
                     persistent-placeholder />
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field id="ServiceAttribute" v-model="serviceAtt" :placeholder="$t('ztna.serviceAttribute')"
-                    :rules="rules" persistent-placeholder />
+                    :rules="rulesName" persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n3">
@@ -31,9 +31,6 @@
                 </v-col>
 
                 <v-col cols="6">
-                  <!-- <v-text-field id="intercept" v-model="intercept" placeholder="INTERCEPT" :rules="rules"
-                    persistent-placeholder class="mr-6" outlined dense hide-details="auto" /> -->
-
                     <v-select
                     v-model="intercept"
                     label="INTERCEPT"
@@ -50,8 +47,6 @@
 
                 </v-col>
                 <v-col cols="6" class="mb-n6">
-                  <!-- <v-text-field id="host" v-model="host" :placeholder="$t('ztna.host')" :rules="rules"
-                    persistent-placeholder outlined dense hide-details="auto" /> -->
 
                     <v-select
                     v-model="host"
@@ -69,7 +64,7 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
+                  <v-text-field id="Description" v-model="Description" placeholder="Description" 
                     persistent-placeholder />
                 </v-col>
               </v-row>
@@ -143,6 +138,12 @@ export default {
       (value) => {
         if (value) return true;
         return "You must enter a value.";
+      },
+    ];
+    const rulesName = [
+      (value) => {
+        if (!value) return true;
+      return ValidName(value) ? true : "Please enter a valid name.";
       },
     ];
     const interceptList = ref([]);
@@ -247,6 +248,15 @@ export default {
       hostList.value = configsObject;
       console.log('host,',hostList.value)
     };
+    function ValidName(value){
+ const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+
+  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+    return true;
+  }
+  
+  return false;
+}
 
     const submitForm = async () => {
       const csrfToken = getCookie("csrftoken");
@@ -311,39 +321,6 @@ export default {
             state.textAlert = i.response.data.error;
           });
       }
-      // try {
-      //   fetchConfigs();
-      //   let token = document.getElementById("app").getAttribute("token");
-      //   let hostId = configs.value.find(
-      //     (config) => config.name === host.value
-      //   ).id;
-      //   let interceptId = configs.value.find(
-      //     (config) => config.name === intercept.value
-      //   ).id;
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = "/edge/management/v1/services";
-      //   const response = await axios.post(
-      //     proxyUrl + apiUrl,
-      //     {
-      //       name: name.value,
-      //       roleAttributes: [serviceAtt.value],
-      //       encryptionRequired: encryptionRequired.value,
-      //       configs: [hostId, interceptId],
-      //     },
-      //     {
-      //       headers: {
-      //         "zt-session": token,
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   emitter.emit("closeServicesModal");
-      // } catch (error) {
-      //   console.error("Failed to submit form:", error);
-      // }
     };
     const resetForm = () => {
       name.value = "";
@@ -376,6 +353,7 @@ export default {
       submitForm,
       resetForm,
       cancel,
+      rulesName,
     };
   },
 };

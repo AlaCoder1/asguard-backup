@@ -347,7 +347,6 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData, index) => {
-      let token = document.getElementById("app").getAttribute("token");
       switch (action) {
         case "edit":
           state.modalMode = "edit";

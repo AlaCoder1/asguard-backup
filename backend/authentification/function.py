@@ -2,7 +2,7 @@ from rest_framework import status
 from django.contrib.auth import authenticate, login
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
-from backend.managementUsers.models import User, Profile
+from backend.managementUsers.models import User, Profile,Roles
 from email.message import EmailMessage
 from datetime import datetime, timedelta 
 from .models import VerificationCode
@@ -29,13 +29,16 @@ def normal_connect(request,data):
         user_dict = user_object.__dict__
         profile = Profile.objects.get(user=user_object.pk)
         profile_dict = profile.__dict__
+        role = Roles.objects.get(id=user_dict['role_id'])
         current_user = {
-                "id": user_dict['id'],
-                "username": user_dict['username'],
-                "email": user_dict['email'],
-                "is_enable_2FA": profile_dict['is_enable_2FA'],
-                "role": user_dict['role'],
-                    }
+            "id": user_dict['id'],
+            "username": user_dict['username'],
+            "email": user_dict['email'],
+            "is_enable_2FA": profile_dict['is_enable_2FA'],
+            # "role": user_dict['role'],
+            "role": role.name,
+            "list_fonctionalities":role.fonctionalities
+                }
         settings.CurrentUserId = user_dict['id']
         
         if profile.is_enable_2FA is False:

@@ -14,7 +14,7 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rules"
+                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rulesName"
                     persistent-placeholder />
                 </v-col>
 
@@ -69,7 +69,7 @@
                 <v-col cols="12" class="mb-n6">
                   <!-- <v-text-field id="serviceRA" v-model="serviceRA" :placeholder="$t('ztna.serviceRoleAttribute')"
                     :rules="rules" persistent-placeholder /> -->
-                    <v-select v-model="serviceRA" :label="$t('ztna.serviceRoleAttribute')" density="compact" item-title="name"
+                    <v-select v-model="serviceRA" :label="$t('ztna.serviceRoleAttribute')" density="compact" item-title="attribute_service"
                     item-value="id" return-object :rules="rules" :items="ServList" background-color="#fffffff"
                     :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
@@ -78,12 +78,12 @@
                   <!-- <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
                     :rules="rules" persistent-placeholder /> -->
                     <v-select v-model="identityatt" :label="$t('ztna.identityRoleAttribute')" density="compact"
-                    item-title="name" item-value="id" return-object :rules="rules" :items="identityList"
+                    item-title="attribute_identitie" item-value="id" return-object :rules="rules" :items="identityList"
                     background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
+                  <v-text-field id="Description" v-model="Description" placeholder="Description"
                     persistent-placeholder />
                 </v-col>
               </v-row>
@@ -142,6 +142,12 @@ export default {
     const Description = ref("");
     const selectedTitle = ref("Dial");
     const selectedsemantic = ref("AllOf");
+    const rulesName = [
+      (value) => {
+        if (!value) return true;
+      return ValidName(value) ? true : "Please enter a valid name.";
+      },
+    ];
     const items = ref([
       "Dial",
       "Bind",
@@ -157,7 +163,15 @@ export default {
     const emitter = inject("emitter");
 
     const { isOpen, editRow, modalMode } = toRefs(props);
+    function ValidName(value){
+ const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
 
+  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+    return true;
+  }
+  
+  return false;
+}
     const state = reactive({
       openModal: false,
       snackbar: false,
@@ -202,7 +216,7 @@ export default {
       }
 
       ServList.value = servicesObject
-
+      console.log("hetha services",ServList.value)
       let IdentitiesString = document
         .getElementById("app")
         .getAttribute("Identities");
@@ -313,35 +327,6 @@ export default {
             state.textAlert = i.response.data.error;
           });
       }
-      // try {
-      //   let token = document.getElementById("app").getAttribute("token");
-      //   let identityAttribute = `#${identityatt.value}`;
-      //   let serviceAttribute = `#${serviceRA.value}`;
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = "/edge/management/v1/service-policies";
-      //   await axios.post(
-      //     proxyUrl + apiUrl,
-      //     {
-      //       name: name.value,
-      //       type: selectedTitle.value,
-      //       semantic: selectedsemantic.value,
-      //       identityRoles: [identityAttribute],
-      //       serviceRoles: [serviceAttribute],
-      //     },
-      //     {
-      //       headers: {
-      //         "zt-session": token,
-      //         "Content-Type": "application/json",
-      //       },
-      //     }
-      //   );
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   emitter.emit("closeServicesModal");
-      // } catch (error) {
-      //   console.error("Failed to submit form:", error);
-      // }
     };
     const resetForm = () => {
       name.value = "";
@@ -377,6 +362,7 @@ export default {
       rules,
       submitForm,
       resetForm,
+      rulesName,
       cancel,
       selectItem,
       selectedsemantic,

@@ -52,6 +52,13 @@ def delete_user_in_system(username):
     error = completed_process.stderr
     return output, error
 
+def delete_directory(username):
+    directory = f'/home/{username}'
+    cmd = f"sudo rm -r {directory}"
+    completed_process = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+    output = completed_process.stdout
+    error = completed_process.stderr
+    return output, error
 
 def change_username(newusername, oldusername):
     """functio to change username"""

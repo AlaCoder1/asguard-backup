@@ -7,7 +7,7 @@ import json
 import ast
 from backend.LdapServer.list_Remote_servers import get_list_ad_servers
 from backend.managementGroup.models import Group
-from backend.managementUsers.models import User
+from backend.managementUsers.models import User, Roles
 from backend.managementServers.models import Type, Server
 from backend.managementUsers.views import get_all_users
 from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat
@@ -161,6 +161,20 @@ def getUsers(request):
                 res[i]['fields']['group']=group_dict
             list_users.append(res[i]['fields'])
         return json.dumps(list_users)
+    
+def getRoles(request):
+    list_roless = []
+    if (request.method == 'GET'):
+        roless = Roles.objects.all()
+        roles_dict = serializers.serialize("json", roless)
+        res = json.loads(roles_dict)
+        for i in range(len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_roless.append(res[i]['fields'])
+        return json.dumps(list_roless)
 
 
 def get_groups(request):
@@ -482,13 +496,14 @@ def get_alerts_from_database(request):
 def user_managment_page(request):
     usr=getUsers(request)
     grp=get_groups(request)
+    roles = getRoles(request)
     servers=get_list_ad_servers()
     context = {'users':usr,"groups":grp,"servers":servers}
     return render(request, 'user_managment.html',context)
 
 @login_required(login_url='/')
 def certificate_managment_page(request):
-    return render(request, 'certificate_managment.html')
+    return render(request, 'user_certificate_managment.html')
 
 
 @login_required(login_url='/')

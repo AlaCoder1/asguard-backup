@@ -11,7 +11,7 @@ from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
 from backend.authentification.constant_variables import STRIPE_SECRET_KEY
 from backend.authentification.function import exist_user_email, generate_verification_code, normal_connect, send_email_to_user, send_verification_code, show_url
-from backend.managementUsers.models import User,Profile
+from backend.managementUsers.models import User,Profile,Roles
 from backend.LdapServer.models import ADServer
 from drf_yasg.utils import swagger_auto_schema
 from datetime import datetime, timedelta
@@ -95,16 +95,20 @@ def authentication(request):
                     return JsonResponse({'message': ERROR_MESSAGES_USER_NOTASSIGNED}, status=400)    
                
             if authentication_server:
+                print('22222222222222222')
                 user_object = User.objects.get(email=data['username'])
                 user_dict = user_object.__dict__
                 profile = Profile.objects.get(user=user_object.pk)
                 profile_dict = profile.__dict__
+                role = Roles.objects.get(id=user_dict['role_id'])
                 current_user = {
                     "id": user_dict['id'],
                     "username": user_dict['username'],
                     "email": user_dict['email'],
                     "is_enable_2FA": profile_dict['is_enable_2FA'],
-                    "role": user_dict['role'],
+                    # "role": user_dict['role'],
+                    "role": role.name,
+                    "list_fonctionalities":role.fonctionalities
                       }
                 if not profile.is_enable_2FA:
                     login(request, user_session)

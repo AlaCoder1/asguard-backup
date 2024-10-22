@@ -32,7 +32,7 @@ def update_interface_table(name_interface,data,InterfaceSerializer):
     objectConfig=Interface.objects.get(name_interface=name_interface)
     # Set all attributes to None
     for field in objectConfig._meta.fields:
-        if field.attname not in ["id",'ifname','created_at','updated_at','name_interface','description','private_aux','bogon_aux']: 
+        if field.attname not in ["id",'ifname','created_at','updated_at','name_interface','description','private_aux','bogon_aux','is_main']: 
             setattr(objectConfig, field.attname, None)
     serializerInterface= InterfaceSerializer(objectConfig,data=data)
     if serializerInterface.is_valid():
@@ -70,8 +70,10 @@ def get_uuid_con(ifname):
         return uuid
     
 ## get config by system NetworkManager
-def refresh_conf_system(uuid):
-    cmd_final=[ "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),]
+def refresh_conf_system(uuid,aux_main):
+    cmd_final=[]
+    if not aux_main:
+        cmd_final=[ "sudo nmcli conn down {} && sudo nmcli conn up {}".format(uuid, uuid),]
     return cmd_final
 
 ##get old configuration in service

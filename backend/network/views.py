@@ -372,10 +372,12 @@ EOF""".format('\n'.join(output_service))
                                         if aux_inter is True:  
                                             if aux_gw_dhcp is True:
                                                 if aux_gw6_dhcp is True:
-                                                    if setuptypeIP4.lower()=="static" :
+                                                    if setuptypeIP4.lower()=="static" and not ifname.lower().startswith("vlan") and not name_interface.lower().startswith("vxlan") :
                                                         aux_server=create_dhcpv4_db(id_interface,ip_address4,netmask4)
                                                     elif setuptypeIP4.lower()=="dhcp":
                                                         aux_server=delete_dhcp4_server(id_interface,ifname)
+                                                    else:
+                                                        aux_server=True
                                                     if aux_server is True:
                                                             ###### 
                                                             msg=f"{CONSTANT_INTERFACE_NETWORK} {SUCCESS_MESSAGES_CONFIGURED}"

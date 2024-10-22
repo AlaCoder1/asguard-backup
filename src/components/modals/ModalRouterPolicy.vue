@@ -14,7 +14,7 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rules"
+                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rulesName"
                     persistent-placeholder />
                 </v-col>
 
@@ -44,7 +44,7 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact" item-title="name"
+                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact" item-title="attribute_relay"
                     item-value="id" return-object :rules="rules" :items="routersList" background-color="#fffffff"
                     :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
@@ -53,12 +53,12 @@
                   <!-- <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
                     :rules="rules" persistent-placeholder /> -->
                   <v-select v-model="identityatt" :label="$t('ztna.identityRoleAttribute')" density="compact"
-                    item-title="name" item-value="id" return-object :rules="rules" :items="identityList"
+                    item-title="attribute_identitie" item-value="id" return-object :rules="rules" :items="identityList"
                     background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description" :rules="rules"
+                  <v-text-field id="Description" v-model="Description" placeholder="Description" 
                     persistent-placeholder />
                 </v-col>
               </v-row>
@@ -135,10 +135,24 @@ export default {
         return "You must enter a value.";
       },
     ];
+    const rulesName = [
+      (value) => {
+        if (!value) return true;
+      return ValidName(value) ? true : "Please enter a valid name.";
+      },
+    ];
     const emitter = inject("emitter");
 
     const { isOpen, editRow, modalMode } = toRefs(props);
+    function ValidName(value){
+ const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
 
+  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+    return true;
+  }
+  
+  return false;
+}
     const state = reactive({
       openModal: false,
       snackbar: false,
@@ -182,7 +196,6 @@ export default {
       console.log('routersObject00--------------:', routersObject)
       routersList.value = routersObject ? routersObject : [];
 
-
       let IdentitiesString = document
         .getElementById("app")
         .getAttribute("Identities");
@@ -191,11 +204,9 @@ export default {
 
       IdentitiesObject = JSON.parse(IdentitiesString);
       identityList.value = IdentitiesObject ? IdentitiesObject : [];
-
     })
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("dataHost", data);
         relayId.value = data.id
         name.value = data.name;
 
@@ -288,34 +299,6 @@ export default {
             state.textAlert = i.response.data.error;
           });
       }
-      try {
-        let token = document.getElementById("app").getAttribute("token");
-        let routerAttribute = `#${routerR.value}`;
-        let identityAttribute = `#${identityatt.value}`;
-        const proxyUrl = "https://asguard:3000";
-        const apiUrl = "/edge/management/v1/edge-router-policies";
-        const response = await axios.post(
-          proxyUrl + apiUrl,
-          {
-            name: name.value,
-            semantic: selectedTitle.value,
-            edgeRouterRoles: [routerAttribute],
-            identityRoles: [identityAttribute],
-          },
-          {
-            headers: {
-              "zt-session": token,
-              "Content-Type": "application/json",
-            },
-          }
-        );
-        setTimeout(() => {
-          location.reload();
-        }, 1000);
-        emitter.emit("closeRouteModal");
-      } catch (error) {
-        console.error("Failed to submit form:", error);
-      }
     };
     const resetForm = () => {
       name.value = "";
@@ -327,7 +310,6 @@ export default {
     };
 
     const cancel = () => {
-      console.log("tes");
       emitter.emit("closeRouteModal");
     };
     const selectItem = (item) => {
@@ -349,6 +331,7 @@ export default {
       resetForm,
       selectItem,
       cancel,
+      rulesName,
     };
   },
 };

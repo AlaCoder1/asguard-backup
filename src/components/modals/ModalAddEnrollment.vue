@@ -17,7 +17,7 @@
                     class="ml-1"></v-text-field>
                 </v-col>
 
-                <v-col cols="12">
+                <!-- <v-col cols="12">
                   <div class="d-flex align-center">
                     <label class="ml-1" for="Type">Type</label>
                     <div class="ml-5 mt-1">
@@ -38,7 +38,7 @@
                       </v-menu>
                     </div>
                   </div>
-                </v-col>
+                </v-col> -->
               </v-row>
             </v-container>
           </v-card-text>
@@ -140,7 +140,7 @@ export default {
 
       let payload = {
         expiresAt: dateTime,
-        method: selectedTitle.value,
+        method: "ott",
         identityId: state.itemId
       }
       axios
@@ -164,7 +164,7 @@ export default {
           .catch((i) => {
             state.snackbar = true;
             state.color = "red";
-            state.textAlert = i.response.data.error;
+            state.textAlert = "Check the date and time selected";
           });
     };
 
@@ -173,7 +173,6 @@ export default {
     };
 
     const cancel = () => {
-      console.log("test");
       emitter.emit("closeEnrollmentModal");
     };
 

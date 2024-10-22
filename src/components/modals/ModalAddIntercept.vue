@@ -19,7 +19,7 @@
                     id="ConfigName"
                     v-model="ConfigName"
                     :placeholder="$t('ztna.configName')"
-                    :rules="rules"
+                    :rules="rulesName"
                     persistent-placeholder
                   />
                 </v-col>
@@ -58,7 +58,7 @@
                     id="adress"
                     v-model="adress"
                     :placeholder="$t('ztna.address')"
-                    :rules="rules"
+                    :rules="rulesName"
                     persistent-placeholder
                   />
                 </v-col>
@@ -68,7 +68,7 @@
                     id="portLow"
                     v-model.number="portLow"
                     :placeholder="$t('ztna.lowPorts')"
-                    :rules="rules"
+                    :rules="rulesNumber"
                     persistent-placeholder
                     outlined
                     dense
@@ -80,7 +80,7 @@
                     id="portHigh"
                     v-model.number="portHigh"
                     :placeholder="$t('ztna.highPorts')"
-                    :rules="rules"
+                    :rules="rulesNumber"
                     persistent-placeholder
                     outlined
                     dense
@@ -152,7 +152,8 @@
 <script>
 import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
-import { toRefs, ref, watch, reactive, inject } from "vue";
+import { toRefs, ref, watch, reactive, inject  } from "vue";
+
 
 export default {
   props: {
@@ -186,6 +187,65 @@ export default {
         return "You must enter a value.";
       },
     ];
+    const rulesNumber = [
+      (value) => {
+        if (!value) return true;
+      return isNumber(value) ? true : "Please enter a valid number.";
+      },
+    ];
+    const rulesName = [
+      (value) => {
+        if (!value) return true;
+      return ValidName(value) ? true : "Please enter a valid name.";
+      },
+    ];
+
+    function isNumber(value) {
+  // Check if value is null or undefined
+  if (value == null) return false;
+
+  // Convert to string to handle numeric primitives
+  let stringValue = String(value);
+
+  // Remove leading/trailing whitespace
+  stringValue = stringValue.trim();
+
+  // Check if empty after trimming
+  if (!stringValue.length) return false;
+
+  // Try to parse the string as a float
+  let parsedFloat;
+  try {
+    parsedFloat = parseFloat(stringValue);
+  } catch (error) {
+    return false;
+  }
+
+  // Check if parsedFloat is NaN
+  if (isNaN(parsedFloat)) {
+    return false;
+  }
+
+  // Check if parsedFloat is finite (not Infinity or -Infinity)
+  if (!isFinite(parsedFloat)) {
+    return false;
+  }
+
+  // If all checks pass, it's a valid number
+  return true;
+}
+
+function ValidName(value){
+ const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+
+  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+    return true;
+  }
+  
+  return false;
+}
+
+
     const emitter = inject("emitter");
 
     const { isOpen, editRow, modalMode } = toRefs(props);
@@ -224,7 +284,6 @@ export default {
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log("dataConfigInter", data);
 
         ConfigId.value = data.id;
         ConfigName.value = data.name;
@@ -307,43 +366,6 @@ export default {
       }
     };
 
-    // const submitForm = async () => {
-    //   try {
-    //     let token = document.getElementById("app").getAttribute("token");
-
-    //     const proxyUrl = "https://asguard:3000";
-    //     const apiUrl = "/edge/management/v1/configs";
-    //     const response = await axios.post(
-    //       proxyUrl + apiUrl,
-    //       {
-    //         name: ConfigName.value,
-    //         configTypeId: "g7cIWbcGg",
-    //         data: {
-    //           addresses: [adress.value],
-    //           portRanges: [
-    //             {
-    //               high: Number(portHigh.value),
-    //               low: Number(portLow.value),
-    //             },
-    //           ],
-    //           protocols: [selectedTitle.value],
-    //         },
-    //       },
-    //       {
-    //         headers: {
-    //           "zt-session": token,
-    //           "Content-Type": "application/json",
-    //         },
-    //       }
-    //     );
-    //     setTimeout(() => {
-    //       location.reload();
-    //     }, 1000);
-    //     emitter.emit("closeInterceptModal");
-    //   } catch (error) {
-    //     console.error("Failed to submit form !!:", error);
-    //   }
-    // };
     const selectItem = (item) => {
       selectedTitle.value = item;
     };
@@ -371,6 +393,8 @@ export default {
       items,
       selectItem,
       rules,
+      rulesNumber,
+      rulesName,
       submitForm,
     };
   },

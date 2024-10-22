@@ -35,6 +35,7 @@ SUCCESS_MESSAGES_SENT = _("is sent successfully")
 SUCCESS_MESSAGES_RESENT = _("is re-sent successfully")
 # Error messages
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_INVALID_CREDENTIALS_SERVER_AD = _("Invalid credentials for directory server login")
 ERROR_MESSAGES_INVALID_CREDENTIALS = _("Invalid credentials")
 ERROR_MESSAGES_NO_SERVERS = _("No directory servers registered")
 ERROR_MESSAGES_SERVER_UNREACHABLE = _("Directory server is unreachable")
@@ -66,6 +67,7 @@ def authentication(request):
                     server = ADServer.objects.get(id = user_session.id_server_id)
                     ldap_uri = f"{'ldaps' if server.ssl_tls_activation else 'ldap'}://{server.server_url}:{server.port}"
                     ldap_conn = ldap.initialize(ldap_uri)
+                    ldap_conn.set_option(ldap.OPT_NETWORK_TIMEOUT, 5)
                     if server.server_type=="ad":
                         try :  
                             ldap_conn.simple_bind_s(username, password)
@@ -74,7 +76,7 @@ def authentication(request):
                             if result:
                                 authentication_server=True
                         except ldap.INVALID_CREDENTIALS:
-                            return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)
+                            return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS_SERVER_AD}, status=400)
                         except ldap.SERVER_DOWN:
                             return JsonResponse({'message': ERROR_MESSAGES_SERVER_UNREACHABLE}, status=400)    
                     else: # server_type is openldap
@@ -85,10 +87,13 @@ def authentication(request):
                             if authenticated_dn:
                                 authentication_server=True
                         except ldap.INVALID_CREDENTIALS:
-                            return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)  
+                            return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS_SERVER_AD}, status=400)  
                         except ldap.SERVER_DOWN:
-                            return JsonResponse({'message': ERROR_MESSAGES_SERVER_UNREACHABLE}, status=400)   
-            print({"authentication_server":authentication_server})
+                            return JsonResponse({'message': ERROR_MESSAGES_SERVER_UNREACHABLE}, status=400)  
+                       
+                else:
+                    return JsonResponse({'message': ERROR_MESSAGES_USER_NOTASSIGNED}, status=400)    
+               
             if authentication_server:
                 print('22222222222222222')
                 user_object = User.objects.get(email=data['username'])

@@ -2,14 +2,13 @@
 
 
 from backend.waf.constant_variables import PATH_RULES_WAF
-from utils.commands_utils import execute_command_without_arguments, read_file_from_system
+from utils.commands_utils import append_file_from_system, execute_command_without_arguments, read_file_from_system, write_file_from_system
 
 
 def create_rule_waf_in_system(rule_waf):
     """Function to add a WAF Rule in system"""
     # Add the rule in custom_rules file
-    with open(PATH_RULES_WAF.format("custom_rules"), 'a') as custom_rule_file:
-        custom_rule_file.write(f"\n{rule_waf}")
+    append_file_from_system(PATH_RULES_WAF.format("custom_rules"), f"\n{rule_waf}")
     execute_command_without_arguments(["sudo", "nginx", "-s", "reload"])
 
 
@@ -34,8 +33,7 @@ def update_content_in_rules_file(file_path, previous_content, new_content):
     # Delete rule line
     rule_file_content = rule_file_content.replace(previous_content, new_content)
     # Set the new custom rules file content
-    with open(file_path, 'w') as rule_file:
-        rule_file.write(rule_file_content)
+    write_file_from_system(file_path, rule_file_content)
 
 
 def create_rule_waf_str(rule_data: dict):

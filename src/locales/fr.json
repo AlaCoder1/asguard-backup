@@ -59,6 +59,7 @@
     "invalidPassword": "Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation": "Votre mot de passe ne correspond pas",
     "ChampIncludeOnlyNumbers": "Champ ne peut inclure que des numéros",
+    "ChampNoInclude": "Champ ne peut pas contenir uniquement des numéros ou des espaces",
     "formatMustBeLikeAdresseIP": "Format doit correspondre à l'adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format doit correspondre à l'adresse : X.X.X.X/XX",
     "minimumOneRange": "Minimum Une Plage",
@@ -149,7 +150,7 @@
     "Delete": "Êtes-vous sûr de vouloir supprimer ceci ?"
   },
 
-  "duplicatedServer":"Serveur DNS Dupliqué",
+  "duplicatedServer": "Serveur DNS Dupliqué",
   "agGrid": {
     "name": "Nom",
     "cpuType": "CPU Type",
@@ -625,7 +626,7 @@
     "addService": "Ajouter une Politique de Service de Relai de Périphérie",
     "edgeRelaysPolicies": "Politiques des relais",
     "servicesPolicies": "Politiques des services",
-    "ZTNAStatus":"ZTNA ne fonctionne pas, veuillez démarrer le service"
+    "ZTNAStatus": "ZTNA ne fonctionne pas, veuillez démarrer le service"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",

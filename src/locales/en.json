@@ -59,6 +59,7 @@
     "invalidPassword": "There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
     "passwordConfirmation": "Your password does not match",
     "ChampIncludeOnlyNumbers": "Champs can include only Numbers",
+    "ChampNoInclude": "Field cannot contain only numbers or spaces",
     "formatMustBeLikeAdresseIP": "Format must be like adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format must be like: X.X.X.X/XX",
     "minimumOneRange": "Minimum One Range",

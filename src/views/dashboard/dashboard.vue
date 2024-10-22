@@ -22,6 +22,26 @@
               </v-card>
             </v-dialog>
           </v-overlay>
+          <v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="../../assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
           <div
             class="certificats-management mt-6 ml-5"
             style="display: flex; flex-direction: column"
@@ -145,6 +165,7 @@ import VueApexCharts from "vue3-apexcharts";
 import BaseLayout from "../../layouts/layout.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "HomeComponent",
@@ -161,6 +182,8 @@ export default {
       of: "/",
     });
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       snackbar: false,
       color: "",
       textAlert: "",
@@ -369,6 +392,7 @@ export default {
     }
     function actionCellRendererService(params) {
       let eGui = document.createElement("div");
+
       if (params.data.status_started) {
         eGui.innerHTML = `
          <button class="action-button stop" data-action="stop">
@@ -390,6 +414,7 @@ export default {
 
         `;
       }
+
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
@@ -400,99 +425,116 @@ export default {
       return eGui;
     }
     const handleActionServer = (action, rowData, index) => {
+      const user = user_privilege();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "start":
-          console.log("start", rowData);
-          state.loading = true;
-          state.isLoadingDialogue = true;
-          let payloadStart = {
-            action: "start",
-            service: rowData.service,
-          };
+          if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            state.loading = true;
+            state.isLoadingDialogue = true;
+            let payloadStart = {
+              action: "start",
+              service: rowData.service,
+            };
 
-          axios
-            .put("/monitoring/action", payloadStart)
-            .then((response) => {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              state.loading = false;
-              state.isLoadingDialogue = false;
+            axios
+              .put("/monitoring/action", payloadStart)
+              .then((response) => {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                state.loading = false;
+                state.isLoadingDialogue = false;
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.msg;
-              state.loading = false;
-              state.isLoadingDialogue = false;
-            });
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.msg;
+                state.loading = false;
+                state.isLoadingDialogue = false;
+              });
+          }
+
           break;
         case "restart":
           console.log("restart", rowData);
+          if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
 
-          state.loading = true;
-          state.isLoadingDialogue = true;
-          let payloadRestart = {
-            action: "restart",
-            service: rowData.service,
-          };
-          axios
-            .put("/monitoring/action", payloadRestart)
-            .then((response) => {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.msg;
-              state.loading = false;
-              state.isLoadingDialogue = false;
-            });
-
+          } else {
+            state.loading = true;
+            state.isLoadingDialogue = true;
+            let payloadRestart = {
+              action: "restart",
+              service: rowData.service,
+            };
+            axios
+              .put("/monitoring/action", payloadRestart)
+              .then((response) => {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.msg;
+                state.loading = false;
+                state.isLoadingDialogue = false;
+              });
+          }
           break;
         case "stop":
           console.log("stop", rowData);
+          if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            state.loading = true;
+            state.isLoadingDialogue = true;
 
-          state.loading = true;
-          state.isLoadingDialogue = true;
+            let payloadStop = {
+              action: "stop",
+              service: rowData.service,
+            };
+            axios
+              .put("/monitoring/action", payloadStop)
+              .then((response) => {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                state.loading = false;
+                state.isLoadingDialogue = false;
 
-          let payloadStop = {
-            action: "stop",
-            service: rowData.service,
-          };
-          axios
-            .put("/monitoring/action", payloadStop)
-            .then((response) => {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              state.loading = false;
-              state.isLoadingDialogue = false;
-
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.msg;
-              state.loading = false;
-              state.isLoadingDialogue = false;
-            });
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.msg;
+                state.loading = false;
+                state.isLoadingDialogue = false;
+              });
+          }
           break;
 
         default:
@@ -649,3 +691,31 @@ export default {
   },
 };
 </script>
+<style>
+/* .alert-box {
+  margin-top: 20px;
+  padding: 20px;
+  background-color: #e3f2fd;
+  border-radius: 8px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.alert-box p {
+  margin-bottom: 10px;
+  font-weight: bold;
+} */
+.img-view {
+  border-style: none;
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  overflow: hidden;
+}
+.img-containter {
+  display: flex;
+  width: 100%;
+  /* height: 100%; */
+  padding: 0px !important;
+}
+</style>

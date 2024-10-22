@@ -9,8 +9,8 @@ function user_privilege(service) {
   else if (user_role.role === 'viewer') given_acces = 'viewer'
 
   else {
-    if (user_role.fonctionalities) {
-      const validArray = user_role.fonctionalities.replace(/'/g, '"');
+    if (user_role.list_fonctionalities) {
+      const validArray = user_role.list_fonctionalities.replace(/'/g, '"');
       let list_func = JSON.parse(validArray);
 
       if (list_func.includes(service)) given_acces = true

@@ -385,7 +385,6 @@ export default {
     }
     const handleActionClient = (action, rowData, index) => {
       const user = user_privilege('Ztna');
-      console.log('mohsen',user)
       switch (action) {
         case "edit":
         if (user && user !=='viewer') {

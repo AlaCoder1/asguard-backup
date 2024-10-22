@@ -1,4 +1,36 @@
 <template>
+      <v-overlay v-model="viewModal">
+            <v-dialog v-model="isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="@/assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <div
     class="certificats-management"
     style="display: flex; flex-direction: column; height: 100%"
@@ -56,6 +88,9 @@
 import axios from "axios";
 import { AgGridVue } from "ag-grid-vue3";
 import ModalCertifRevocation from "@/components/modals/ModalCertifRevocation.vue";
+import VButton from "@/components/VButton.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
+
 export default {
   props: {
     authoritesData: {
@@ -66,6 +101,7 @@ export default {
   components: {
     AgGridVue,
     ModalCertifRevocation,
+    VButton,
   },
 
   data() {
@@ -78,6 +114,8 @@ export default {
       textAlert: "",
       listAuthRevoc: null,
       modalMode: "",
+      isviewModal: false,
+      viewModal: false,
       rowEdit: {},
       modalData: {},
       isModalOpen: false,
@@ -170,6 +208,10 @@ export default {
     closeModal() {
       this.isModalOpen = false;
     },
+    close(){
+      this.isviewModal = false;
+      this.viewModal = false;
+    },
     onGridReady(params) {
       this.gridApi = params.api;
       this.gridColumnApi = params.columnApi;
@@ -232,13 +274,21 @@ export default {
       return cookieValue;
     },
     handleAction(action, rowData) {
+      const user = user_privilege();
       switch (action) {
         case "show":
+        if (user !=='viewer') {
           this.rowEdit = rowData;
           this.openModal();
           this.modalMode = "update";
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+
           break;
         case "export":
+        if (user !=='viewer') {
           let id = rowData.id;
           let fileExtention = `${rowData.nom}_crl.crl`;
 
@@ -270,6 +320,10 @@ export default {
               this.color = "red";
               this.textAlert = i.response.data.error;
             });
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
 
           break;
         default:

@@ -1,4 +1,36 @@
 <template>
+    <v-overlay v-model="viewModal">
+            <v-dialog v-model="isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="@/assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <v-overlay v-model="loading">
     <v-dialog
       v-model="isLoadingDialogue"
@@ -153,6 +185,8 @@ import { reactive, computed, defineAsyncComponent } from "vue";
 import { AgGridVue } from "ag-grid-vue3";
 import ModalAddEditCertif from "@/components/modals/ModalAddEditCertif.vue";
 import ModalRevocation from "@/components/modals/ModalRevocation.vue";
+import VButton from "@/components/VButton.vue";
+
 // import FileP12 from `../../../../downloads/${this.rowName}.p12`
 export default {
   props: {
@@ -169,6 +203,7 @@ export default {
     AgGridVue,
     ModalAddEditCertif,
     ModalRevocation,
+    VButton,
   },
   setup() {
     const state = reactive({
@@ -224,6 +259,8 @@ export default {
       allCertifAuth: null,
       modalMode: "",
       rowEdit: {},
+      isviewModal: false,
+      viewModal: false,
       isModalOpenRevoce: false,
       modalData: {},
       isModalOpen: false,
@@ -366,6 +403,10 @@ export default {
 
       return eGui;
     },
+    close(){
+      this.isviewModal = false;
+      this.viewModal = false;
+    },
     getCookie(name) {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {
@@ -417,14 +458,29 @@ export default {
       this.gridColumnApi = params.columnApi;
     },
     openModalAdd() {
-      this.modalData = {};
-      this.modalMode = "create"; // Assuming you want to open the modal in create mode
+      const user = user_privilege();
+
+      if (user !=='viewer') {
+        this.modalData = {};
+      this.modalMode = "create"; 
       this.isModalOpen = true;
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+
     },
     openModalRevoce() {
-      this.modalData = {};
+      const user = user_privilege();
+
+      if (user !=='viewer') {
+        this.modalData = {};
       this.modalMode = "revoce"; // Assuming you want to open the modal in create mode
       this.isModalOpenRevoce = true;
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
     },
     closeModal() {
       this.isModalOpen = false;
@@ -694,17 +750,30 @@ export default {
         });
     },
     handleAction(action, rowData) {
+      const user = user_privilege();
       switch (action) {
         case "exportP12":
+        if (user !=='viewer') {
           this.deleteDialog = true;
           this.rowId = rowData.id;
           this.rowName = rowData.nom;
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+
 
           break;
 
         case "delete":
+        if (user !=='viewer') {
           this.deleteDialogCertif = true;
           this.deletedRow = rowData;
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+
 
           // const index = this.rowData.findIndex(
           //   (item) => item.id === rowData.id
@@ -714,6 +783,7 @@ export default {
           // }
           break;
         case "lock":
+        if (user !=='viewer') {
           const csrfToken = this.getCookie("csrftoken");
           axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -730,6 +800,11 @@ export default {
                 location.reload();
               }, 1000);
             });
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+          
           // .catch((i) => {
           //   this.snackbar = true;
           //   this.color = "red";
@@ -738,23 +813,40 @@ export default {
 
           break;
         case "export":
+        if (user !=='viewer') {
           let id = rowData.id;
           let type = "certificate";
           let fileExtention = `${rowData.nom}.crt`;
           this.download(id, type, fileExtention);
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+
 
           break;
         case "exportKey":
+        if (user !=='viewer') {
           let rowId = rowData.id;
           let typeName = "private_key";
           let fileExt = `${rowData.nom}.key`;
           this.download(rowId, typeName, fileExt);
-
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+          
           break;
         case "revoce":
+        if (user !=='viewer') {
           this.rowEdit = rowData;
           this.openModalRevoce();
           this.modalMode = "revoce";
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+
           break;
         case "cancel":
           break;

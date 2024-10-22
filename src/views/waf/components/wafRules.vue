@@ -1,4 +1,36 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="@/assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <div class="mt-3 ml-3">
     <v-overlay v-model="state.loading">
       <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
@@ -62,6 +94,7 @@ import { reactive, ref, computed, onMounted, inject } from "vue";
 import ModalRuleWaf from "@/components/modals/ModalRuleWaf.vue";
 import ModalShowAppWaf from "@/components/modals/ModalShowAppWaf.vue";
 import ModalShowDescWaf from "@/components/modals/ModalShowDescWaf.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "Rules",
@@ -261,22 +294,37 @@ export default {
     }
 
     const handleAction = (action, rowData, index) => {
+      const user = user_privilege('Waf');
       switch (action) {
         case "delete":
+        if (user && user !=='viewer') {
           state.deleteDialog = true;
           state.deletedRow = rowData;
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
           break;
         case "edit":
+        if (user && user !=='viewer') {
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
           break;
 
         case "show":
+        if (user && user !=='viewer') {
           state.isModalShowAppOpen = true;
           state.editRow = rowData;
           state.modalMode = "show";
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
           break;
 
         default:
@@ -285,17 +333,28 @@ export default {
     };
 
     const handleActionDescription = (action, rowData, index) => {
+      const user = user_privilege('Waf');
       switch (action) {
         case "description":
+        if (user && user !=='viewer') {
           console.log('description')
           state.isModalShowDescOpen = true;
           state.editRow = rowData;
           state.modalMode = "show";
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
           break;
 
         default:
           break;
       }
+    };
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
     };
 
     const onGridReady = (params) => {
@@ -346,9 +405,15 @@ export default {
       axios.post("/waf/restartNginx");
     };
     const openModalAdd = () => {
+      const user = user_privilege('Waf');
+      if (user && user !=='viewer') {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
     };
 
     const cancelDelete = () => {
@@ -385,6 +450,7 @@ export default {
 
     return {
       state,
+      close,
       onGridReady,
       openModalAdd,
       cancelDelete,

@@ -1,4 +1,23 @@
 <template>
+    <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3 ml-3 mr-3">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -111,6 +130,7 @@ import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { onMounted, reactive, ref,computed } from "vue";
 import { inject } from "vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
 import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSS
@@ -129,6 +149,8 @@ export default {
     const overlayTemplate = ref("");
     const { t } = useI18n();
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       nombrePageAlerts: null,
       page: 1,
       loading: false,
@@ -232,7 +254,13 @@ export default {
     };
     const rowDataAlerts = reactive({});
     const handleRemove = (index) => {
+      const user = user_privilege('Suricata');
+      if (user && user !== 'viewer') {
       state.messages[index].snackbar = false;
+    } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
     };
     const gridApi = ref(null); // Optional - for accessing Grid's API
     const gridOptions = ref({
@@ -241,6 +269,11 @@ export default {
     // Obtain API from grid's onGridReady event
     const onGridReady = (params) => {
       gridApi.value = params.api;
+    };
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
     };
 
     // DefaultColDef sets props common to all Columns
@@ -315,6 +348,8 @@ export default {
       return cookieValue;
     }
     const reloadData = async () => {
+      const user = user_privilege('Suricata');
+      if (user && user !== 'viewer') {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       state.loading = true;
@@ -350,7 +385,12 @@ export default {
           text: error,
         });
       }
+    } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
     };
+    
     const getData = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -411,6 +451,7 @@ export default {
       saveAlertSuricata,
       publishClient,
       onFilterTextBoxChanged,
+      close,
       reloadData,
       showMessage,
       handleRemove,

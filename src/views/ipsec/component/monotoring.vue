@@ -1,4 +1,23 @@
 <template>
+   <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-row class="ml-1 mb-0 d-flex justify-start">
       <v-col cols="3">
@@ -141,6 +160,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import Apexchart from "vue3-apexcharts";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "MonotoringOpenvpnComponent",
@@ -148,6 +169,7 @@ export default {
     AgGridVue,
     MonitoringCards,
     Apexchart,
+    VButton,
   },
 
   setup() {
@@ -166,6 +188,8 @@ export default {
       return t("monitoringVPN.PacketSent");
     });
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       server: "",
       lasObj: null,
       date: "",
@@ -284,6 +308,8 @@ export default {
     const v$ = useValidate(rules, state);
 
     const serve = async () => {
+      const user = user_privilege('Ipsec');
+      if (user && user !== 'viewer') {
       const result = await v$.value.$validate();
 
       if (result) {
@@ -291,6 +317,10 @@ export default {
           initializeWebSocket();
         }, 1000);
       }
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     const apexChart = ref(null);
@@ -380,8 +410,13 @@ export default {
         console.log("WebSocket connection closed.");
       };
     };
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
 
     return {
+      close,
       v$,
       state,
       apexChart,

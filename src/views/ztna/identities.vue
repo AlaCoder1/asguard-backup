@@ -1,36 +1,23 @@
 <template>
-<v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
-              <v-card color="#193286" class="alert-box">
-                <v-card-title class="img-containter">
-                  <img
-                    src="../../assets/images/view.png"
-                    alt="logo"
-                    class="img-view"
-                    width="100"
-                    height="100"
-                /></v-card-title>
-                <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
-                </v-card-text>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
 
-                <div class="mr-3 mb-5 d-flex justify-end">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#ffffff"
-                    label-color="#213E9F"
-                    label="Close"
-                    :isLarge="true"
-                    @click="close"
-                  />
-                </div>
-              </v-card>
-            </v-dialog>
-          </v-overlay>
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mr-3">
     <div class="certificats-management mt-6 ml-4" style="display: flex; flex-direction: column">
       <h4>{{ $t("ztna.listofIdentities") }}</h4>
@@ -387,104 +374,104 @@ export default {
       const user = user_privilege('Ztna');
       switch (action) {
         case "edit":
-        if (user && user !=='viewer') {
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
-          state.selectedId = rowData.ref_identitie;
+          if (user && user !== 'viewer') {
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+            state.selectedId = rowData.ref_identitie;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          };
+
           break;
         case "downloadhost":
-        if (user && user !=='viewer' ) {
-          if (rowData.os === "windows") {
-            let text = windows.value[0].content;
+          if (user && user !== 'viewer') {
+            if (rowData.os === "windows") {
+              let text = windows.value[0].content;
 
-            const blob = new Blob([text], {
-              type: "application/x-x509-ca-cert",
-            });
+              const blob = new Blob([text], {
+                type: "application/x-x509-ca-cert",
+              });
 
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.style.display = "none";
-            a.href = url;
-            a.download = `host_appender.bat`;
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.style.display = "none";
+              a.href = url;
+              a.download = `host_appender.bat`;
 
-            document.body.appendChild(a);
-            a.click();
+              document.body.appendChild(a);
+              a.click();
 
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-          }
-          else {
-            let text = linux.value[0].content;
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+            }
+            else {
+              let text = linux.value[0].content;
 
-            const blob = new Blob([text], {
-              type: "application/x-x509-ca-cert",
-            });
+              const blob = new Blob([text], {
+                type: "application/x-x509-ca-cert",
+              });
 
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.style.display = "none";
-            a.href = url;
-            a.download = `host_appender.sh`;
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.style.display = "none";
+              a.href = url;
+              a.download = `host_appender.sh`;
 
-            document.body.appendChild(a);
-            a.click();
+              document.body.appendChild(a);
+              a.click();
 
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-          }
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+            }
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          };
+
           break;
         case "download":
-        if (user && user !=='viewer' ) {
-          let text = rowData.token;
-          const blob = new Blob([text], {
-            type: "application/x-x509-ca-cert",
-          });
+          if (user && user !== 'viewer') {
+            let text = rowData.token;
+            const blob = new Blob([text], {
+              type: "application/x-x509-ca-cert",
+            });
 
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = `${rowData.name}.jwt`;
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = `${rowData.name}.jwt`;
 
-          document.body.appendChild(a);
-          a.click();
+            document.body.appendChild(a);
+            a.click();
 
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
 
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          };
+
           break;
         case "enroll":
-        if (user && user !=='viewer' ) {
-          openModalEnrollement(rowData.ref_identitie);
+          if (user && user !== 'viewer') {
+            openModalEnrollement(rowData.ref_identitie);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          };
 
           break;
         case "delete":
-        if (user && user !=='viewer' ) {
-          OpenDelete(rowData.id);
+          if (user && user !== 'viewer') {
+            OpenDelete(rowData.id);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          };
 
           break;
         default:
@@ -600,21 +587,21 @@ export default {
 
     function checkTokenBeforeAdd() {
       const user = user_privilege('Ztna');
-      if (user && user !=='viewer') {
+      if (user && user !== 'viewer') {
         let token = document.getElementById("app").getAttribute("token");
-      if (token && token !== "null") {
-        openModalAdd();
+        if (token && token !== "null") {
+          openModalAdd();
+        } else {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = "ZTNA is not running";
+        }
       } else {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "ZTNA is not running";
-      }
-          } else {
-            console.log("View Mode");
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
-     
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
+
     }
 
 
@@ -751,6 +738,7 @@ export default {
   object-fit: cover;
   overflow: hidden;
 }
+
 .img-containter {
   display: flex;
   width: 100%;

@@ -1,4 +1,36 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="@/assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <div class="mr-3">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -99,6 +131,8 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalSdwanRule from "@/components/modals/ModalSdwanRule.vue";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { user_privilege } from "@/mixins/user_privilege.js";
+
 export default {
   name: "Sdwan",
   components: {
@@ -116,6 +150,8 @@ export default {
     });
 
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       deleteDialog: false,
       deletedRow: null,
       snackbar: false,
@@ -295,10 +331,11 @@ export default {
     }
 
     const handleActionClient = (action, rowData, index) => {
+      const user = user_privilege('Sdwan');
       switch (action) {
         case "play":
+      if (user && user !=='viewer') {
           console.log("play", rowData);
-
           state.loading = true;
           state.isLoadingDialogue = true;
           axios
@@ -321,9 +358,13 @@ export default {
               state.loading = false;
               state.isLoadingDialogue = false;
             });
-
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
           break;
         case "stop":
+        if (user && user !=='viewer') {
           console.log("stop", rowData);
 
           state.loading = true;
@@ -348,19 +389,31 @@ export default {
               state.loading = false;
               state.isLoadingDialogue = false;
             });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
           break;
         case "edit":
+        if (user && user !=='viewer') {
           console.log("edit", rowData);
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
           break;
         case "delete":
+        if (user && user !=='viewer') {
           console.log("delete", rowData);
           state.deleteDialog = true;
           state.deletedRow = rowData;
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
           break;
         default:
           break;
@@ -368,9 +421,15 @@ export default {
     };
 
     const openModalAdd = () => {
+      const user = user_privilege('Sdwan');
+      if (user && user !=='viewer') {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
     };
 
     onMounted(() => {
@@ -419,7 +478,13 @@ export default {
           state.textAlert = i.response.data.error;
         });
     };
+    
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
     return {
+      close,
       state,
       columnRules,
       overlayTemplate,

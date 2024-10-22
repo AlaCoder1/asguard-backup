@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 from django.db import IntegrityError
 import ruamel.yaml
 
-from backend.ids_ips.function_sys import execute_cmd, read_config, read_from_yaml
+from backend.ids_ips.function_sys import execute_cmd, read_config, read_from_yaml, save_in_yaml
 from backend.ids_ips.models import suricatafile
 from backend.ids_ips.serializers import SuricataFileSerializer
 class Command(BaseCommand):
@@ -12,6 +12,8 @@ class Command(BaseCommand):
             yaml_class = ruamel.yaml.YAML()
             suricata_path="/etc/suricata/suricata.yaml"
             data=read_from_yaml(suricata_path,yaml_class)
+            data['vars']['address-groups']['HOME_NET']="[]"
+            save_in_yaml(suricata_path,data,yaml_class) 
             file = read_config(data)
             id_conf=None
             if file:

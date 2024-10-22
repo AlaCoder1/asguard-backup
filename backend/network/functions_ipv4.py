@@ -17,13 +17,13 @@ def update_conn_None_IPV4(config,ifname):
 ################### Static 
 ###################
 # convert  to static connexion 
-def update_conn_static_IPV4(config,ifname,uuid,ipaddress,netmask,cmdgw):
+def update_conn_static_IPV4(config,ifname,uuid,ipaddress,netmask,cmdgw,aux_main):
     #lancer la fonction de "remove old config"
     config=clean_old_config(config,"IP4Config {}".format(ifname))
     #la liste des commandes pour l'IPV4 static
     commands=[]
     cmd_final=[]
-    if ipaddress is not None and netmask is not None:
+    if ipaddress is not None and netmask is not None and not aux_main:
         cmd_final.append("sudo nmcli connection modify {} ipv4.method manual ipv4.addresses {}/{}".format(uuid,ipaddress,netmask))
     if cmdgw is not  None:
         cmd_final+=[ 
@@ -112,26 +112,31 @@ def return_config_advanced_IPV4(ifname,reject,hostname,alias_add,alias_mask,time
     return configContenu
 
 ####create file
-def create_file_IPV4(ifname,config_contenu):
-    #commandes pour créer un dossier et stocker le contenu dans dhclient.conf
-    commands = ["""bash -c 'sudo mkdir -p /etc/Dhcp4Config/{} && sudo cat <<EOF > /etc/Dhcp4Config/{}/dhclient.conf
+def create_file_IPV4(ifname,config_contenu,aux_main):
+    #commandes pour créer un dossier et stocker le contenu dans dhclient.
+    commands=[]
+    if not aux_main:
+        commands = ["""bash -c 'sudo mkdir -p /etc/Dhcp4Config/{} && sudo cat <<EOF > /etc/Dhcp4Config/{}/dhclient.conf
 {}
 EOF'""".format(ifname, ifname, '\n'.join(config_contenu))]
     return commands
 
 # convert  to dhcp  connexion base and advanced
-def update_conn_dhcp_IPV4(config,ifname,uuid):
+def update_conn_dhcp_IPV4(config,ifname,uuid,aux_main):
     #lancer la fonction de "remove old config"
-    config=clean_old_config(config,"IP4Config {}".format(ifname))
-    #la liste des commandes pour l'IPV4 dhcp
-    commandes=[
-     "#Start IP4Config {}".format(ifname),   
-     "ExecStart=/usr/bin/dhclient -4 -cf  /etc/Dhcp4Config/{}/dhclient.conf  {} ".format(ifname,ifname),
-     "#End IP4Config {}".format(ifname)
-    ]
-    cmd_final=[
-        "sudo nmcli connection modify {} ipv4.method auto ipv4.addresses '' ipv4.gateway '' ipv4.route-metric '' ".format(uuid),
-        "sudo dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf".format(ifname),
+    commandes=[]
+    cmd_final=[]
+    if not aux_main:
+        config=clean_old_config(config,"IP4Config {}".format(ifname))
+        #la liste des commandes pour l'IPV4 dhcp
+        commandes=[
+        "#Start IP4Config {}".format(ifname),   
+        "ExecStart=/usr/bin/dhclient -4 -cf  /etc/Dhcp4Config/{}/dhclient.conf  {} ".format(ifname,ifname),
+        "#End IP4Config {}".format(ifname)
+        ]
+        cmd_final=[
+            "sudo nmcli connection modify {} ipv4.method auto ipv4.addresses '' ipv4.gateway '' ipv4.route-metric '' ".format(uuid),
+            "sudo dhclient -4 -v -cf  /etc/Dhcp4Config/{}/dhclient.conf".format(ifname),
     ]
     
     return commandes,config,cmd_final

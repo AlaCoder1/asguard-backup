@@ -187,7 +187,7 @@ def assign_vlan_interface(request):
                         "ifname":f"vlan{vlan_object.vlan_tag}@{parent_interface}",
                         "private_aux":False,
                         "bogon_aux":False,
-                        "name_interface":data_input['name_interface'],
+                        "name_interface":f"VLAN{vlan_object.vlan_tag}",
                         "description":f"test default config vlan {vlan_tag}"
                     }
             if not Interface.objects.filter(ifname=f"vlan{vlan_object.vlan_tag}@{parent_interface}").exists():
@@ -244,7 +244,7 @@ def update_vlan_interface(request,id_interface):
                         "ifname":f"vlan{vlan_object.vlan_tag}@{parent_interface}",
                         "private_aux":False,
                         "bogon_aux":False,
-                        "name_interface":data_input['name_interface'],
+                        "name_interface":f"VLAN{vlan_object.vlan_tag}",
                         "description":f"default config vlan{vlan_object.vlan_tag}",
                     }
             

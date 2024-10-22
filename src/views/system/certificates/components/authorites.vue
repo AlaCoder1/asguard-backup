@@ -1,4 +1,36 @@
 <template>
+  <v-overlay v-model="viewModal">
+            <v-dialog v-model="isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="@/assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <div
     class="certificats-management"
     style="display: flex; flex-direction: column; height: 100%"
@@ -70,6 +102,8 @@ import { user_privilege } from "@/mixins/user_privilege.js";
 import axios from "axios";
 import ModalAddAuth from "@/components/modals/ModalAddAuth.vue";
 import { AgGridVue } from "ag-grid-vue3";
+import VButton from "@/components/VButton.vue";
+
 export default {
   props: {
     authoritesData: {
@@ -80,6 +114,7 @@ export default {
   components: {
     AgGridVue,
     ModalAddAuth,
+    VButton,
   },
   data() {
     return {
@@ -94,6 +129,8 @@ export default {
       getRowId: null,
       dataAuth: null,
       modalData: {},
+      isviewModal: false,
+      viewModal: false,
       modalMode: "",
       rowEdit: {},
       isModalOpen: false,
@@ -222,9 +259,16 @@ export default {
       this.gridColumnApi = params.columnApi;
     },
     openModalAdd() {
-      this.modalData = {};
+      const user = user_privilege();
+
+      if (user !=='viewer') {
+        this.modalData = {};
       this.modalMode = "create";
       this.isModalOpen = true;
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
     },
     closeModal() {
       this.isModalOpen = false;
@@ -251,10 +295,11 @@ export default {
         </button>
         `;
       } else {
-        const user = user_privilege();
-        if (user === "viewer") {
-          eGui.innerHTML = `View Mode`;
-        } else {
+        // const user = user_privilege();
+        // if (user === "viewer") {
+        //   eGui.innerHTML = `View Mode`;
+        // } else 
+        // {
           if (params.data.is_private_key) {
             eGui.innerHTML = `
         
@@ -289,7 +334,7 @@ export default {
             <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
         </button>
         `;
-          }
+          // }
         }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
@@ -377,31 +422,60 @@ export default {
           this.textAlert = i.response.data.error;
         });
     },
+    close(){
+      this.isviewModal = false;
+      this.viewModal = false;
+    },
     handleAction(action, rowData) {
+      const user = user_privilege();
       switch (action) {
         case "edit":
+        if (user !=='viewer') {
           this.rowEdit = rowData;
           this.openModalAdd();
           this.modalMode = "update";
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+
           break;
         case "export":
+        if (user !=='viewer') {
           let id = rowData.id;
           let type = "certificate";
           let fileExtention = `${rowData.nom}.crt`;
 
           this.download(id, type, fileExtention);
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+          
 
           break;
         case "delete":
+        if (user !=='viewer') {
           this.deleteDialog = true;
           this.deletedRow = rowData;
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+
 
           break;
         case "exportKey":
+        if (user !=='viewer') {
           let rowId = rowData.id;
           let typeName = "private_key";
           let fileExt = `${rowData.nom}.key`;
           this.download(rowId, typeName, fileExt);
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+
 
           break;
         case "cancel":

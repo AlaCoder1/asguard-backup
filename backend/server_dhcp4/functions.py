@@ -33,7 +33,7 @@ def parse_server_info(data):
     dns_servers=[] if data.get('dns_server', []) == "" else data.get('dns_server', [])
     gateway=None if data.get('gateway', None) == "" else data.get('gateway', None)
     domain_name=None if data.get('domain_name', None) == "" else data.get('domain_name', None)
-    dns_server = ' , '.join(filter(None, dns_servers)) if len(dns_servers)!=0 else None
+    dns_server = ' , '.join(filter(None, list(set(dns_servers)))) if len(dns_servers)!=0 else None
     data_server={
         "enable_dhcpv4":enable_dhcpv4,
         "subnet_addr":subnet_addr,

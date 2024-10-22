@@ -24,7 +24,7 @@ from django.conf import settings
 from rest_framework import status
 
 from backend.waf.models import RulesWaf
-from .decorator import has_functionality
+# from .decorator import has_functionality
 # Constants
 CONSTANT_USER = _("User")
 CONSTANT_USERNAME = _("username")
@@ -96,7 +96,7 @@ def get_all_roles(request):
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
-@has_functionality('all')
+# @has_functionality('all')
 def create_role(request):
     if (request.method == 'POST'):
         data = request.data

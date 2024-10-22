@@ -28,12 +28,9 @@
                   <v-select
                     v-model="state.privileges"
                     :label="$t('priveleges')"
-                    item-title="fonctionalities"
-                    item-value="id"
                     :items="state.listPrivileges"
                     multiple
                     clearable
-                    return-object
                   ></v-select>
 
                   <p class="error-feedback mb-5" v-if="v$.privileges.$error">
@@ -125,16 +122,19 @@ export default {
     const state = reactive({
       id: null,
       roles: "",
-      privileges: "",
-      listPrivileges: [],
+      privileges: [],
+      listPrivileges: [
+        "Ipsec",
+        "Openvpn",
+        "Suricata",
+        "Proxy",
+        "Sdwan",
+        "Waf",
+        "Ztna",
+      ],
     });
 
-    onMounted(() => {
-      let allRolesPr =
-        document.getElementById("app").attributes["servers"].value;
-      const parsedArr = JSON.parse(allRolesPr);
-      state.listPrivileges = parsedArr;
-    });
+    onMounted(() => {});
 
     watch(
       () => isOpen.value,
@@ -153,16 +153,31 @@ export default {
       () => {
         if (modalMode.value === "create") {
           state.roles = "";
-          state.privileges = "";
+          state.privileges = [];
         }
       }
     );
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        console.log('daatta',data)
+        console.log("daatta", data);
         state.id = data.id;
-        state.roles = "";
+        state.roles = data.name;
         state.privileges = "";
+
+        const validJSON = data.fonctionalities.replace(/'/g, '"');
+
+        let pr = JSON.parse(validJSON);
+        if (pr) {
+          let filtredFonctionalitiesList = [];
+          pr.forEach((e) => {
+            filtredFonctionalitiesList = [
+              ...filtredFonctionalitiesList,
+              ...state.listPrivileges.filter((i) => i === e),
+            ];
+          });
+
+          state.privileges = filtredFonctionalitiesList;
+        }
       }
     };
 
@@ -171,7 +186,7 @@ export default {
       emitter.emit("closeModalRoles");
       if (modalMode.value === "create") {
         state.roles = "";
-        state.privileges = "";
+        state.privileges = [];
       }
     };
 
@@ -182,7 +197,7 @@ export default {
       if (result) {
         let payload = {
           name: state.roles,
-          fonctionalities: state.privileges,
+          fonctionalities: JSON.stringify(state.privileges).replace(/"/g, "'"),
         };
         console.log("payload", payload);
         if (modalMode.value === "edit") {
@@ -193,9 +208,9 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
-                // setTimeout(() => {
-                //   location.reload();
-                // }, 1000);
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
               }
             })
             .catch((i) => {
@@ -212,9 +227,9 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
-                // setTimeout(() => {
-                //   location.reload();
-                // }, 1000);
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
               }
             })
             .catch((i) => {

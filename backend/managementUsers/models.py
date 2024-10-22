@@ -18,7 +18,7 @@ class Permission(models.Model):
         return self.name
     
 class Roles(models.Model):
-    name = models.CharField(max_length=200, null=True)
+    name = models.CharField(max_length=200, null=True, unique=True)
     fonctionalities = models.CharField(max_length=200, null=True)
 
     class Meta:

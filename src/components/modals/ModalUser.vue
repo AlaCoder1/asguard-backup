@@ -129,9 +129,12 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
-                    :items="['root', 'admin', 'user']"
                     :label="$t('form.roleUser')"
                     v-model="state.formData.role"
+                    item-title="name"
+                    item-value="id"
+                    :items="state.userRoles"
+                    return-object
                   ></v-autocomplete>
                   <span class="error-feedback" v-if="v$.formData.role.$error">{{
                     v$.formData.role.$errors[0].$message
@@ -176,9 +179,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-            <span class="pr-3 pl-3 text-white" style="color: #213e9f"
-                >{{$t('buttons.close')}}</span
-              >
+              <span class="pr-3 pl-3 text-white" style="color: #213e9f">{{
+                $t("buttons.close")
+              }}</span>
             </v-btn>
             <v-btn
               type="submit"
@@ -186,7 +189,11 @@
               :rounded="true"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{ $t("buttons.create") }}</span>
+              <span class="text-white pr-3 pl-3">{{
+                mode === "create"
+                  ? $t("buttons.create")
+                  : $t("buttons.update")
+              }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -260,6 +267,7 @@ export default {
       userRole: null,
       userId: null,
       ModalMode: null,
+      userRoles: [],
     });
 
     const { t } = useI18n();
@@ -275,6 +283,13 @@ export default {
 
     onMounted(() => {
       getAdList();
+
+      let allLisRoles =
+        document.getElementById("app").attributes["roles"].value;
+
+      const parsedArray = JSON.parse(allLisRoles);
+
+      state.userRoles = parsedArray;
     });
     watch(
       () => state.formData.activateStatus,
@@ -478,7 +493,7 @@ export default {
           password: this.state.formData.password,
           fullname: this.state.formData.fullname,
           email: this.state.formData.email,
-          role: this.state.formData.role,
+          role: this.state.formData.role.id,
           group: groupsIds ?? [],
           is_active: this.state.formData.deactivateUser,
           password_ad: this.state.formData.passwordDN,

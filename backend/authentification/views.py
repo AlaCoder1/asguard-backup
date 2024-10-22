@@ -25,8 +25,8 @@ import ldap
  
  
 # Constants
-CONSTANT_LDAP_SERVER = _('in Directory Server')
-CONSTANT_USER = _("User")
+CONSTANT_ASQUARD = _('in Asguard')
+CONSTANT_USER_EMAIL = _("Email")
 CONSTANT_VERIFIFCATION_CODE = _("verification code")
 # Success messages
 SUCCESS_MESSAGES_LOGIN = _("Success Authentication")
@@ -39,7 +39,7 @@ ERROR_MESSAGES_INVALID_CREDENTIALS_SERVER_AD = _("Invalid credentials for direct
 ERROR_MESSAGES_INVALID_CREDENTIALS = _("Invalid credentials")
 ERROR_MESSAGES_NO_SERVERS = _("No directory servers registered")
 ERROR_MESSAGES_SERVER_UNREACHABLE = _("Directory server is unreachable")
-ERROR_MESSAGES_USER_NOTASSIGNED = _("Email exists in AD but isn't assigned in Asguard ")
+ERROR_MESSAGES_USER_NOTASSIGNED = _("Email not assigned in Asguard. Contact your administrator")
 ERROR_MESSAGES_EXPIRED = _("has expired")
  
  
@@ -60,7 +60,7 @@ def authentication(request):
             if not ad_servers.exists():
                 return JsonResponse({'message': ERROR_MESSAGES_NO_SERVERS}, status=400)
             if not user_session:
-                return JsonResponse({'message': f"{CONSTANT_USER} {ERROR_MESSAGES_INEXISTANT}{CONSTANT_LDAP_SERVER}"}, status=401)
+                return JsonResponse({'message': f"{CONSTANT_USER_EMAIL} {ERROR_MESSAGES_INEXISTANT} {CONSTANT_ASQUARD}"}, status=401)
             else:
                 authentication_server = False
                 if user_session.id_server_id:

@@ -18,15 +18,15 @@ from django.core import serializers
 
 # Constants
 CONSTANT_ZTNA = _('ZTNA')
-CONSTANT_IDENTITIE = _('Identitie')
+CONSTANT_IDENTITIE = _('Identity')
 CONSTANT_ENROLLMENT = _('Enrollment')
 CONSTANT_RELAY = _('Relay')
 CONSTANT_CONFIGURATION = _('Configuration')
 CONSTANT_SERVICE = _('Service')
 CONSTANT_TERMINATOR = _('Terminator')
-CONSTANT_EDGE_ROUTER_POLICIE = _('Edge Router Policy')
+CONSTANT_EDGE_ROUTER_POLICIE = _('Relay Policy')
 CONSTANT_SERVICE_POLICIE = _('Service Policy')
-CONSTANT_SERVICE_EDGE_ROUTER_POLICIE = _('Service Edge Router Policy')
+CONSTANT_SERVICE_EDGE_ROUTER_POLICIE = _('Service Relay Policy')
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -268,8 +268,8 @@ def add_enrollments(request):
             if serializer_update_identitie.is_valid():
                 serializer_update_identitie.save()
                 return JsonResponse({"message": f"{CONSTANT_ENROLLMENT} {SUCCESS_MESSAGES_CREATING}"}, status=200)
-            return JsonResponse(serializer_update_identitie.errors, status=400)
-        return JsonResponse({"error":serializer_enrollement.errors}, status=400)
+            return JsonResponse(f"{ERROR_MESSAGES_CREATING} {CONSTANT_ENROLLMENT}", status=400)
+        return JsonResponse({"error":f"{ERROR_MESSAGES_CREATING} {CONSTANT_ENROLLMENT}"}, status=400)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ENROLLMENT}"}, status=400)
 
 
@@ -582,7 +582,7 @@ def update_host_configs(request, id):
         serializer_update_host.save()
         response = requests.put(f"{PATH_ZTNA_CONFIGS}/{host}", headers=headers, json=data_without_description, verify=False)
         return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_CREATING}"}, status=200)
-    return JsonResponse({"error": serializer_update_host.errors}, status=400)
+    return JsonResponse({"error":  f"{ERROR_MESSAGES_UPDATING} {CONSTANT_CONFIGURATION}"}, status=400)
 
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -607,7 +607,7 @@ def update_intercept_configs(request, id):
             serializer_update_intercept.save()
             response = requests.put(f"{PATH_ZTNA_CONFIGS}/{intercept}", headers=headers, json=data_without_description, verify=False)
             return JsonResponse({"message": f"{CONSTANT_CONFIGURATION} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
-        return JsonResponse({"error": serializer_update_intercept.errors}, status=400)     
+        return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_CONFIGURATION}"}, status=400)     
     return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_CONFIGURATION}"}, status=400)
 
 
@@ -665,7 +665,7 @@ def add_services(request):
         if serializer_service.is_valid():
             serializer_service.save()
             return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_CREATING}"}, status=200)
-        return JsonResponse({"error":serializer_service.errors}, status=400)
+        return JsonResponse({"error":f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE}"}, status=400)
     return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_SERVICE}"}, status=400)
 
 
@@ -719,7 +719,7 @@ def update_services(request, id):
         serializer_update_service.save()
         response = requests.put(f"{PATH_ZTNA_SERVICES}/{services}", headers=headers, json=data_without_description, verify=False)
         return JsonResponse({"message": f"{CONSTANT_SERVICE} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
-    return JsonResponse({"error": serializer_update_service.errors}, status=400)
+    return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_SERVICE}"}, status=400)
 
 
 ################################

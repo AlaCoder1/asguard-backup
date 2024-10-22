@@ -18,7 +18,38 @@
     </v-main>
     <TheFooter />
   </v-app> -->
+  <v-overlay v-model="viewModal">
+            <v-dialog v-model="isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="@/assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
 
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <v-layout>
     <TheHeadingVue />
 
@@ -75,11 +106,14 @@ import TheHeadingVue from "./TheHeading.vue";
 import TheFooter from "./TheFooter.vue";
 import axios from "axios";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "BaseLayout",
   components: {
     TheHeadingVue,
+    VButton,
     TheSidebarVue,
     TheFooter,
   },
@@ -111,7 +145,9 @@ export default {
       textAlert: '',
       color: '',
       snackbar: false,
-      status: false
+      status: false,
+      isviewModal:false,
+      viewModal:false
     };
   },
   mounted() {
@@ -125,7 +161,10 @@ export default {
   },
   methods: {
     startStopServer(status) {
-      this.loading = true;
+      const user = user_privilege('Ztna');
+
+      if (user && user !=='viewer') {
+        this.loading = true;
       this.isLoadingDialogue = true;
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -153,7 +192,16 @@ export default {
           this.color = "red";
           this.textAlert = i.response.data.error;
         });
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+            };
+      
 
+    },
+    close (){
+      this.isviewModal = false;
+      this.viewModal = false;
     },
   },
 };

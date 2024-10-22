@@ -1,4 +1,36 @@
 <template>
+<v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="../../assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <v-overlay v-model="state.loading">
     <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
       <v-card color="#193286">
@@ -63,11 +95,14 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "RoutersComponent",
   components: {
     ModalAddRouter,
+    VButton,
     ModalUpdateRouter,
     AgGridVue,
   },
@@ -156,6 +191,8 @@ export default {
     ]);
 
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       loading: false,
       isLoadingDialogue: false,
       deleteDialog: false,
@@ -343,15 +380,23 @@ export default {
     const handleActionClient = (action, rowData, index) => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const user = user_privilege('Ztna');
+
       switch (action) {
         case "edit":
-  state.modalMode = "edit";
+        if (user && user !=='viewer') {
+          state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           state.selectedId = rowData.id;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+
           break;
         case "download":
-          console.log("test", rowData.enrollmentJwt);
+        if (user && user !=='viewer') {
           let text = rowData.enrollmentJwt;
           // copyContent(text);
           const blob = new Blob([text], {
@@ -369,12 +414,23 @@ export default {
 
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+          
           break;
         case "delete":
+        if (user && user !=='viewer') {
           opendelete(rowData.id);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
 
           break;
         case "play":
+        if (user && user !=='viewer') {
           let payloadStart = {
             name: rowData.name,
             token: rowData.enrollmentJwt
@@ -411,11 +467,15 @@ export default {
               state.isLoadingDialogue = false;
             });
 
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+          
           break;
         case "stop":
-
-
-  let payload = {
+        if (user && user !=='viewer') {
+          let payload = {
             name: rowData.name,
             token: rowData.enrollmentJwt
           };
@@ -450,6 +510,12 @@ export default {
               state.loading = false;
               state.isLoadingDialogue = false;
             });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+
+ 
           break;
         default:
           break;
@@ -513,9 +579,15 @@ export default {
     });
 
     const openModalAdd = () => {
-  state.modalData = {};
+      const user = user_privilege('Ztna');
+      if (user && user !=='viewer') {
+        state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
     };
 
     const opendelete = (itemId) => {
@@ -597,7 +669,12 @@ export default {
       eGui.innerHTML = resultMessage ? `${resultMessage}` : "--";
       return eGui;
     }
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
     return {
+      close,
       t,
       emitter,
       state,

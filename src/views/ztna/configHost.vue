@@ -1,4 +1,36 @@
 <template>
+   <v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="../../assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <div class="mt-6" style="display: flex; flex-direction: column">
     <h4>{{ $t("ztna.listofHostConfigs") }}</h4>
     <v-divider></v-divider>
@@ -53,6 +85,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "configsComponent",
@@ -61,6 +95,7 @@ export default {
     ModalAddHost,
     ModalUpdateHost,
     AgGridVue,
+    VButton,
   },
 
   setup() {
@@ -72,6 +107,8 @@ export default {
     const gridApiHost = ref(null);
 
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       deleteDialog: false,
       deletedItemId: null,
       modalData: {},
@@ -238,10 +275,15 @@ else {
     };
 
     const openModalHostAdd = () => {
+      const user = user_privilege('Ztna');
+      if (user && user !=='viewer') {
         state.modalData = {};
       state.modalMode = "create";
       state.isModalHostOpen = true;
-
+              } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
     };
 
 
@@ -303,16 +345,27 @@ else {
       return eGui;
     }
     const handleActionClient = (action, rowData, index) => {
+      const user = user_privilege('Ztna');
       switch (action) {
         case "edit":
-
-  state.modalMode = "edit";
+        if (user && user !=='viewer') {
+          state.modalMode = "edit";
           state.isModalHostOpen = true;
           state.selectedId = rowData.id;
           state.editRow = rowData;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+
           break;
         case "delete":
+        if (user && user !=='viewer') {
           OpenDelete(rowData.id);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
 
           break;
         default:
@@ -348,8 +401,13 @@ else {
       fetchConfigs();
     });
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
     return {
       t,
+      close,
       state,
       columnHost,
       gridOptions,

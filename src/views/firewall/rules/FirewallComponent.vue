@@ -57,7 +57,7 @@
         v-for="(error, index) in state.textAlert"
         :key="index"
         :type="error.status === 400 ? 'error' : 'success'"
-        :color="state.color"
+        :color="error.status === 400 ? 'error' : 'success'"
         style="margin-bottom: 10px"
       >
         {{ error.msg }}
@@ -88,9 +88,7 @@
         <v-card-title>Changes</v-card-title>
         <v-card-text>
           <v-row
-            :class="[
-              oldRow.length !== 0 ? 'mt-5' : 'justify-start mt-5 ml-2',
-            ]"
+            :class="[oldRow.length !== 0 ? 'mt-5' : 'justify-start mt-5 ml-2']"
           >
             <v-col
               :cols="oldRow.length !== 0 ? 6 : 1"
@@ -321,12 +319,17 @@ export default defineComponent({
         cellEditorParams: {
           values: ["accept", "drop"],
         },
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
       {
         field: "rule_description",
         headerName: description,
         sortable: true,
-        filter: true,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
       {
         field: "protocol",
@@ -342,7 +345,9 @@ export default defineComponent({
           ],
         },
         sortable: true,
-        filter: true,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
 
       {
@@ -350,33 +355,42 @@ export default defineComponent({
         headerName: saddr,
         cellRenderer: formatedLineSadd,
         sortable: true,
-        filter: true,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
       {
         field: "sport",
         headerName: sport,
         cellRenderer: formatedLineSport,
         sortable: true,
-        filter: true,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
       {
         headerName: daddr,
         field: "daddr",
         cellRenderer: formatedLineDaddr,
         sortable: true,
-        filter: true,
+        width: 90,
+        minWidth: 170,
+        flex: 1,
       },
       {
         field: "dport",
         headerName: dport,
         cellRenderer: formatedLineDport,
         sortable: true,
-        filter: true,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
       {
         headerName: action,
         field: "action",
-        width: 150, minWidth: 50,
+        width: 150,
+        minWidth: 50,
         cellRenderer: actionCellRenderer,
       },
     ]);
@@ -725,23 +739,24 @@ export default defineComponent({
       axios
         .post(`/rules/saveRules/${props.activeTab}`, payload)
         .then((response) => {
-          if (response.status == "200") {
+          console.log("responseresponse", response);
+
+          if (response.status === 200) {
             state.snackbar = true;
-            state.color = "success";
             state.textAlert = response.data.response;
             setTimeout(() => {
               location.reload();
-            }, 1000);
+            }, 2000);
           }
         })
         .catch((i) => {
+          console.log("errror", i.response);
           state.snackbar = true;
-          state.color = "red";
           state.textAlert = i.response.data.response;
 
           setTimeout(() => {
-            state.snackbar = false;
-          }, 1000);
+            location.reload();
+          }, 2000);
         });
     };
     const cancel = () => {
@@ -778,7 +793,7 @@ export default defineComponent({
       let parsedArray = JSON.parse(rulesAttribute);
 
       rules.value = parsedArray;
-      console.log('rules.value',rules.value)
+      console.log("rules.value", rules.value);
 
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;

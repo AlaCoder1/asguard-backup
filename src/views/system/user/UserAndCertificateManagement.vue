@@ -95,6 +95,7 @@ export default {
     //   parsing users data
     let userData = document.getElementById("app").attributes["users"].value;
     let parsedData = this.setData(userData);
+    console.log('parsedDataUser*',parsedData)
 
     this.users = parsedData;
     //   parsing users data

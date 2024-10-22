@@ -95,7 +95,6 @@ def authentication(request):
                     return JsonResponse({'message': ERROR_MESSAGES_USER_NOTASSIGNED}, status=400)    
                
             if authentication_server:
-                print('22222222222222222')
                 user_object = User.objects.get(email=data['username'])
                 user_dict = user_object.__dict__
                 profile = Profile.objects.get(user=user_object.pk)

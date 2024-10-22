@@ -7,7 +7,7 @@
             <span class="headline" v-if="modalMode === 'create'">
               {{ $t("ztna.addRelaysPolicy") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateRelaysPolicy") }}s</span>
+              {{ $t("ztna.updateRelaysPolicy") }}</span>
           </v-card-title>
 
           <v-card-text>
@@ -22,7 +22,7 @@
                   <div class="d-flex align-center">
                     <label class="ml-1" for="PROTOCOL">{{
                       $t("ztna.semantic")
-                    }}</label>
+                      }}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
@@ -35,7 +35,7 @@
                           <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
                               item
-                            }}</v-list-item-title>
+                              }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -44,9 +44,9 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact" item-title="attribute_relay"
-                    item-value="id" return-object :rules="rules" :items="routersList" background-color="#fffffff"
-                    :no-data-text="$t('certificat.certificatlist')">
+                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact"
+                    item-title="attribute_relay" item-value="id" return-object :rules="rules" :items="routersList"
+                    background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
@@ -58,7 +58,7 @@
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description" 
+                  <v-text-field id="Description" v-model="Description" placeholder="Description"
                     persistent-placeholder />
                 </v-col>
               </v-row>
@@ -120,6 +120,7 @@ export default {
   },
   setup(props) {
     const name = ref("");
+    const RelayPolicies = ref([])
     const relayId = ref("");
     const routerR = ref("");
     const identityatt = ref("");
@@ -138,21 +139,47 @@ export default {
     const rulesName = [
       (value) => {
         if (!value) return true;
-      return ValidName(value) ? true : "Please enter a valid name.";
+        if (existingName(value)) return "The name already exists";
+        return ValidName(value) ? true : "Please enter a valid name.";
       },
     ];
+    function existingName(value) {
+      const existingIdentity = RelayPolicies.value.find(identity => identity.name === value);
+
+      if (existingIdentity) {
+        return true;
+      }
+
+      return false;
+    }
+    const fetchRelayPolicies = async () => {
+      try {
+        const RelayPoliciesString = await document.getElementById("app").getAttribute("router_policies");
+        const RelayPoliciesObject = JSON.parse(RelayPoliciesString);
+
+        const RelayPoliciesArray = Array.isArray(RelayPoliciesObject) ? RelayPoliciesObject : [];
+
+        RelayPolicies.value = RelayPoliciesArray.map(identity => ({ name: identity.name }));
+
+        console.log('RelayPolicies.value', RelayPolicies.value);
+      } catch (error) {
+        console.error("Failed to fetch RelayPolicies:", error);
+        RelayPolicies.value = [];
+      }
+    };
+
     const emitter = inject("emitter");
 
     const { isOpen, editRow, modalMode } = toRefs(props);
-    function ValidName(value){
- const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+    function ValidName(value) {
+      const hostnamePattern = /^[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
 
-  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
-    return true;
-  }
-  
-  return false;
-}
+      if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
+        return true;
+      }
+
+      return false;
+    }
     const state = reactive({
       openModal: false,
       snackbar: false,
@@ -188,6 +215,7 @@ export default {
       }
     );
     onMounted(() => {
+      fetchRelayPolicies();
       let routersString = document
         .getElementById("app")
         .getAttribute("routers");
@@ -217,7 +245,7 @@ export default {
         for (let i = 0; i < routersList.value.length; i++) {
           if (routersList.value[i].id === data.relay) {
             relay = routersList.value[i];
-            break;  
+            break;
           }
         }
 
@@ -227,8 +255,8 @@ export default {
             break;
           }
         }
-        routerR.value=relay;
-        identityatt.value=identity
+        routerR.value = relay;
+        identityatt.value = identity
       }
     };
 
@@ -244,7 +272,7 @@ export default {
         semantic: selectedTitle.value,
         edgeRouterRoles: [routerAttribute],
         identityRoles: [identityAttribute],
-        Description:Description.value
+        Description: Description.value
       };
 
       let token = document.getElementById("app").getAttribute("token");
@@ -271,7 +299,7 @@ export default {
             console.log("response", i.response);
             state.snackbar = true;
             state.color = "red";
-            state.textAlert = i.response.data.response;
+            state.textAlert = i.response.data.error;
           });
       } else {
         axios

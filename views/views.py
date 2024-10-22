@@ -498,7 +498,7 @@ def user_managment_page(request):
     grp=get_groups(request)
     roles = getRoles(request)
     servers=get_list_ad_servers()
-    context = {'users':usr,"groups":grp,"servers":servers}
+    context = {'users':usr,"groups":grp,"servers":servers,"roles":roles}
     return render(request, 'user_managment.html',context)
 
 @login_required(login_url='/')

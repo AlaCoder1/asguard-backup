@@ -13,7 +13,6 @@ def has_functionality(required_functionalities):
             # Get the user's role and functionalities
             # user_roles = request.user.role.all() 
             user_roles = request.user
-            print({"user_roles":user_roles})
             user_functionalities = set()
 
             for role in user_roles:

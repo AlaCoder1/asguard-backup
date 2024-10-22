@@ -7,7 +7,7 @@
             <span class="headline" v-if="modalMode === 'create'">
               {{ $t("ztna.addService") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateService") }} </span>
+              {{ $t("ztna.updateService") }} Relay Policy </span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -112,6 +112,7 @@ export default {
   },
   setup(props) {
     const idServRouter = ref("");
+    const SerRelPolicies = ref([])
     const ServList = ref([]);
     const routersList = ref([]);
     const name = ref("");
@@ -127,14 +128,40 @@ export default {
       },
     ];
     const rulesName = [
-      (value) => {
-        if (!value) return true;
-      return ValidName(value) ? true : "Please enter a valid name.";
-      },
-    ];
+  (value) => {
+    if (!value) return true;
+    if (existingName(value)) return "The name already exists";
+    return ValidName(value) ? true : "Please enter a valid name.";
+  },
+];
+function existingName(value) {
+      const existingIdentity = SerRelPolicies.value.find(identity => identity.name === value);
+
+      if (existingIdentity) {
+        return true;
+      }
+
+      return false;
+    }
+    const fetchSerRelPolicies = async () => {
+      try {
+        const SerRelPoliciesString = await document.getElementById("app").getAttribute("service_edge_router_policies");
+        const SerRelPoliciesObject = JSON.parse(SerRelPoliciesString);
+
+        const SerRelPoliciesArray = Array.isArray(SerRelPoliciesObject) ? SerRelPoliciesObject : [];
+
+        SerRelPolicies.value = SerRelPoliciesArray.map(identity => ({ name: identity.name }));
+
+        console.log('SerRelPolicies.value', SerRelPolicies.value);
+      } catch (error) {
+        console.error("Failed to fetch SerRelPolicies:", error);
+        SerRelPolicies.value = [];
+      }
+    };
+
     const emitter = inject("emitter");
     function ValidName(value){
- const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+      const hostnamePattern = /^[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
 
   if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
     return true;
@@ -151,6 +178,7 @@ export default {
       textAlert: "",
     });
     onMounted(() => {
+      fetchSerRelPolicies()
       let servicesString = document
         .getElementById("app")
         .getAttribute("services");
@@ -268,7 +296,7 @@ export default {
             console.log("response", i.response);
             state.snackbar = true;
             state.color = "red";
-            state.textAlert = i.response.data.response;
+            state.textAlert = i.response.data.error;
           });
       } else {
         axios

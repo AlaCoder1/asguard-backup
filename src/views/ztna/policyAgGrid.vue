@@ -1,4 +1,36 @@
 <template>
+<v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="../../assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <div class="mt-3" style="display: flex; flex-direction: column">
     <h4>{{ $t("ztna.servicesEdgeRelaysPolicies") }}</h4>
     <v-divider></v-divider>
@@ -80,6 +112,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "HomeComponent",
@@ -88,6 +122,7 @@ export default {
     ModalServiceRouterPolicy,
     ModalUpdateServiceRouterP,
     AgGridVue,
+    VButton,
   },
   setup() {
     const { t } = useI18n();
@@ -95,6 +130,8 @@ export default {
     const tokenStatus = ref('')
 
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       modalData: {},
       modalMode: "create",
       deleteDialog: false,
@@ -268,18 +305,30 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData) => {
+      const user = user_privilege('Ztna');
 
       switch (action) {
         case "edit":
-
+        if (user && user !=='viewer') { 
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           state.selectedId = rowData.id;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+
 
           break;
         case "delete":
+        if (user && user !=='viewer') {
           OpenDelete(rowData.id);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+
           break;
         default:
           break;
@@ -366,13 +415,25 @@ export default {
     });
 
     const openModalAdd = () => {
+      const user = user_privilege('Ztna');
+
+      if (user && user !=='viewer') {     
         state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+    };
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
     };
 
     return {
+      close,
       t,
       emitter,
       state,

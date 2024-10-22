@@ -28,11 +28,6 @@
                     <label class="ml-1" for="Type">Type</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
-                        <template v-slot:activator="{ props }">
-                          <v-btn color="#FAFAFA" v-bind="props">
-                            {{ selectedTitle }}
-                          </v-btn>
-                        </template>
 
                         <v-list>
                           <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">

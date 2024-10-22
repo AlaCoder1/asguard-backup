@@ -24,10 +24,6 @@ from django.conf import settings
 from rest_framework import status
 
 from backend.waf.models import RulesWaf
-<<<<<<< HEAD
-# from .decorator import has_functionality
-=======
->>>>>>> 15286b395b1b1e99834cb91805a23d216f243063
 # Constants
 CONSTANT_USER = _("User")
 CONSTANT_USERNAME = _("username")

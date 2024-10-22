@@ -182,8 +182,8 @@ export default {
       of: "/",
     });
     const state = reactive({
-      isviewModal: true,
-      viewModal: true,
+      isviewModal: false,
+      viewModal: false,
       snackbar: false,
       color: "",
       textAlert: "",
@@ -433,6 +433,7 @@ export default {
           if (user === "viewer") {
             console.log("View Mode");
             state.isviewModal = true;
+            state.viewModal = true;
           } else {
             state.loading = true;
             state.isLoadingDialogue = true;
@@ -469,6 +470,8 @@ export default {
           if (user === "viewer") {
             console.log("View Mode");
             state.isviewModal = true;
+            state.viewModal = true;
+
           } else {
             state.loading = true;
             state.isLoadingDialogue = true;
@@ -502,6 +505,7 @@ export default {
           if (user === "viewer") {
             console.log("View Mode");
             state.isviewModal = true;
+            state.viewModal = true;
           } else {
             state.loading = true;
             state.isLoadingDialogue = true;

@@ -482,6 +482,7 @@ export default {
       return cookieValue;
     },
     submitForm() {
+      console.log({ "this.state.formData": this.state.formData });
       this.v$.$validate();
       if (!this.v$.$error) {
         let groupsIds = this.state.formData?.groups?.map((i) => {

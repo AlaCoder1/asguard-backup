@@ -39,6 +39,18 @@
                   Please contact the administrator if you believe this is an
                   error.
                 </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
               </v-card>
             </v-dialog>
           </v-overlay>
@@ -166,6 +178,7 @@ import BaseLayout from "../../layouts/layout.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "HomeComponent",
@@ -173,6 +186,7 @@ export default {
     BaseLayout,
     AgGridVue,
     apexchart: VueApexCharts,
+    VButton,
   },
 
   setup() {
@@ -471,7 +485,6 @@ export default {
             console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
-
           } else {
             state.loading = true;
             state.isLoadingDialogue = true;
@@ -542,6 +555,10 @@ export default {
       }
     };
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
     const onGridReady = (params) => {
       gridApi.value = params.api;
     };
@@ -668,6 +685,7 @@ export default {
       overlayTemplate,
       NoRow,
       state,
+      close,
       columns,
       rowData,
       defaultColDef,

@@ -595,6 +595,14 @@ export default {
         !/^(\d{1,3}\.){3}\d{1,3}$/.test(obj.dns_server) && obj.dns_server != "";
       return invalidHostChars;
     };
+
+    const hasDuplicates = (arr) => {
+      const uniqueAddresses = new Set(
+        arr.map((item) => item.dns_server)
+      );
+      return uniqueAddresses.size !== arr.length;
+    };
+
     const submitForm = async () => {
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
@@ -623,6 +631,14 @@ export default {
           setTimeout(() => {
             state.snackbar = false;
           }, 2000);
+          return;
+        }
+        let dup = hasDuplicates(state.rows);
+        console.log("dup", dup);
+        if (dup) {
+          state.snackbar = true;
+          state.color = "error";
+          state.textAlert = t("duplicatedServer");
           return;
         }
 
@@ -692,6 +708,13 @@ export default {
           setTimeout(() => {
             state.snackbar = false;
           }, 2000);
+          return;
+        }
+        let dup = hasDuplicates(state.rows);
+        if (dup) {
+          state.snackbar = true;
+          state.color = "error";
+          state.textAlert = t("duplicatedServer");
           return;
         }
       }

@@ -1,4 +1,36 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="../../assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <v-container class="axe-media-print-hide" fluid>
     <div class="mt-6" style="display: flex; flex-direction: column">
       <h4>{{ $t("ztna.listofInterceptConfigs") }}</h4>
@@ -54,12 +86,15 @@ import axios from "axios";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "configsComponent",
   components: {
     BaseLayout,
     ModalAddIntercept,
+    VButton,
     ModalUpdateIntercept,
     AgGridVue,
     configHost,
@@ -74,6 +109,8 @@ export default {
     const gridApi = ref(null);
 
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       deleteDialog: false,
       deletedItemId: null,
       modalData: {},
@@ -225,7 +262,10 @@ export default {
     };
 
     const openModalInterceptAdd = () => {
-      let token = document.getElementById("app").getAttribute("token");
+      const user = user_privilege('Ztna');
+
+      if (user && user !=='viewer') {
+        let token = document.getElementById("app").getAttribute("token");
       if (token && token !== "null") {
         state.modalData = {};
       state.modalMode = "create";
@@ -235,6 +275,11 @@ export default {
         state.color = "red";
         state.textAlert = "ZTNA is not running";
       }
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+      
       
     };
 
@@ -304,16 +349,28 @@ export default {
     }
     const handleActionClient = (action, rowData, index) => {
       let token = document.getElementById("app").getAttribute("token");
+      const user = user_privilege('Ztna');
 
       switch (action) {
         case "edit":
-  state.modalMode = "edit";
+        if (user && user !=='viewer') {
+          state.modalMode = "edit";
           state.isModalInterceptOpen = true;
           state.selectedId = rowData.id;
           state.editRow = rowData;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+
        break;
         case "delete":
+        if (user && user !=='viewer') {
           OpenDelete(rowData.id);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
 
           break;
         default:
@@ -349,8 +406,13 @@ export default {
       fetchConfigs();
     });
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
     return {
       t,
+      close,
       state,
       configs,
       columnConfigs,

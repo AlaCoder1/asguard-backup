@@ -1,4 +1,36 @@
 <template>
+<v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="../../assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <div class="mr-3">
     <div class="certificats-management mt-6 ml-4" style="display: flex; flex-direction: column">
       <h4>{{ $t("ztna.listofIdentities") }}</h4>
@@ -52,6 +84,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "IdentitiesComponent",
@@ -61,6 +95,7 @@ export default {
     ModalAddEnrollment,
     ModalUpdateIdentity,
     AgGridVue,
+    VButton,
   },
 
   setup() {
@@ -71,6 +106,8 @@ export default {
     const windows = ref();
     const emitter = inject("emitter");
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       deleteDialog: false,
       modalData: {},
       modalMode: "create",
@@ -347,15 +384,23 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData, index) => {
+      const user = user_privilege('Ztna');
+      console.log('mohsen',user)
       switch (action) {
         case "edit":
+        if (user && user !=='viewer') {
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           state.selectedId = rowData.ref_identitie;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+          
           break;
         case "downloadhost":
-
+        if (user && user !=='viewer' ) {
           if (rowData.os === "windows") {
             let text = windows.value[0].content;
 
@@ -394,8 +439,14 @@ export default {
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
           }
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+          
           break;
         case "download":
+        if (user && user !=='viewer' ) {
           let text = rowData.token;
           const blob = new Blob([text], {
             type: "application/x-x509-ca-cert",
@@ -413,13 +464,28 @@ export default {
           window.URL.revokeObjectURL(url);
           document.body.removeChild(a);
 
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+          
           break;
         case "enroll":
+        if (user && user !=='viewer' ) {
           openModalEnrollement(rowData.ref_identitie);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
 
           break;
         case "delete":
+        if (user && user !=='viewer' ) {
           OpenDelete(rowData.id);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
 
           break;
         default:
@@ -461,7 +527,6 @@ export default {
 
       Identities.value = IdentitiesObject ? IdentitiesObject : [];
 
-console.log('Identities',Identities.values)
       let linuxfileString = document
         .getElementById("app")
         .getAttribute("linux_file");
@@ -535,7 +600,9 @@ console.log('Identities',Identities.values)
     };
 
     function checkTokenBeforeAdd() {
-      let token = document.getElementById("app").getAttribute("token");
+      const user = user_privilege('Ztna');
+      if (user && user !=='viewer') {
+        let token = document.getElementById("app").getAttribute("token");
       if (token && token !== "null") {
         openModalAdd();
       } else {
@@ -543,6 +610,12 @@ console.log('Identities',Identities.values)
         state.color = "red";
         state.textAlert = "ZTNA is not running";
       }
+          } else {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+     
     }
 
 
@@ -605,7 +678,13 @@ console.log('Identities',Identities.values)
       }
     };
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     return {
+      close,
       state,
       openModalAdd,
       t,
@@ -664,5 +743,19 @@ console.log('Identities',Identities.values)
 .action-icon.active-token:hover,
 .action-icon.active-token:focus {
   background-color: #4CAF50;
+}
+
+.img-view {
+  border-style: none;
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  overflow: hidden;
+}
+.img-containter {
+  display: flex;
+  width: 100%;
+  /* height: 100%; */
+  padding: 0px !important;
 }
 </style>

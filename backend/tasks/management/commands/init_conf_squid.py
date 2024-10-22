@@ -18,8 +18,8 @@ class Command(BaseCommand):
         squid_conf_path = '/etc/squid/squid.conf'
         lines_to_add = [
             '',
-            'cache_effective_user squid',
-            'cache_effective_group squid',
+            'cache_effective_user proxy',
+            'cache_effective_group proxy',
             'auth_param basic program /usr/lib/squid/basic_ncsa_auth /etc/squid/squid_passwd',
             'acl authenticated_users proxy_auth REQUIRED',
             '',

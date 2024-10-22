@@ -679,10 +679,10 @@ export default {
               state.snackbar = true;
               state.color = "success";
               state.textAlert = response.data.msg;
-              // setTimeout(() => {
-              //   state.snackbar = false;
-              //   location.reload();
-              // }, 3000);
+              setTimeout(() => {
+                state.snackbar = false;
+                location.reload();
+              }, 3000);
             }
           })
           .catch((i) => {

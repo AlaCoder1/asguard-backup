@@ -58,9 +58,10 @@
               </div>
             </v-list-item>
           </a>
+    
           <v-list-item
+            v-for="subItem in filteredSubItems(item)"
             v-if="item.subMenuVisible"
-            v-for="subItem in item.subItems"
             :key="subItem.title"
             :class="{ 'sub-menu-visible': item.subMenuVisible }"
             class="sub-menu-item"
@@ -110,6 +111,7 @@ export default {
 
   data() {
     return {
+      user: null,
       drawer: true,
       rail: false,
       mini: false,
@@ -123,26 +125,11 @@ export default {
           mouseOverSubMenu: false,
           subMenuVisible: false,
         },
-        // {
-        //   title: "testMoni",
-        //   icon: "mdi mdi-view-dashboard",
-        //   href: "/vpnmonitoring",
-        //   active: "vpnmonitoring",
-        //   subItems: [],
-        //   mouseOverSubMenu: false,
-        //   subMenuVisible: false,
-        // },
         {
           title: "sideBar.system",
           icon: "mdi mdi-laptop",
           active: "system",
           subItems: [
-            // {
-            //   title: "subtitle.assistant",
-            //   icon: "",
-            //   href: "/system/assistante",
-            //   active: "Assistante",
-            // },
             {
               title: "tabs.userManagement",
               icon: "",
@@ -155,18 +142,6 @@ export default {
               href: "/system/certificat-management",
               active: "certificat management",
             },
-            // {
-            //   title: "subtitle.networkManagement",
-            //   icon: "",
-            //   href: "/system/network-management",
-            //   active: "Network management",
-            // },
-            // {
-            //   title: "subtitle.systemConfig",
-            //   icon: "",
-            //   href: "/system/system-configuration",
-            //   active: "System configuration",
-            // },
             {
               title: "subtitle.rsaKeyPairs",
               icon: "",
@@ -219,24 +194,6 @@ export default {
               href: "/services/server-dhcp4",
               active: "DHCP V4",
             },
-            // {
-            //   title: "subtitle.overview",
-            //   icon: "",
-            //   href: "/interfaces/overview",
-            //   active: "Overview",
-            // },
-            // {
-            //   title: "subtitle.assignations",
-            //   icon: "",
-            //   href: "/interfaces/assignations",
-            //   active: "Assignations",
-            // },
-            // {
-            //   title: "subtitle.differentNetworks",
-            //   icon: "",
-            //   href: "/interfaces/different-networks",
-            //   active: "Different Networks",
-            // },
             {
               title: "subtitle.routing",
               icon: "",
@@ -244,20 +201,6 @@ export default {
               href: "/routing",
               active: "routing",
             },
-            // {
-            //   title: "subtitle.diagnostics",
-            //   icon: "",
-            //   href: "/interfaces/diagnostics",
-            //   active: "Diagnostics",
-            // },
-
-            // {
-            //   title: "subtitle.settings",
-            //   icon: "",
-            //   href: "/settings",
-            //   href: "/settings",
-            //   active: "Settings",
-            // },
           ],
           subMenuVisible: false,
         },
@@ -278,12 +221,6 @@ export default {
               href: "/firewall/nat",
               active: "Nat",
             },
-            // {
-            //   title: "subtitle.advancedSettings",
-            //   icon: "",
-            //   href: "/firewall/advanced-settings",
-            //   active: "Advanced settings",
-            // },
           ],
           subMenuVisible: false,
         },
@@ -305,25 +242,6 @@ export default {
               href: "/openvpn",
               active: "OPEN VPN",
             },
-            // {
-            //   title: "subtitle.ipFilterDoubleMasque",
-            //   icon: "",
-            //   href: "/services/ip-filter-double-masque",
-            //   active: "IP Filter double masque",
-            // },
-            // {
-            //   title: "subtitle.clamAV",
-            //   icon: "",
-            //   href: "/clamaV",
-            //   active: "Clam AV",
-            // },
-
-            // {
-            //   title: "subtitle.DHCPV6",
-            //   icon: "",
-            //   href: "/services/dhcp-v6",
-            //   active: "DHCP V",
-            // },
             {
               title: "subtitle.intrusionDetection",
               icon: "",
@@ -357,38 +275,6 @@ export default {
           ],
           subMenuVisible: false,
         },
-        // {
-        //   title: "sideBar.reports",
-        //   icon: "mdi mdi-chart-bar",
-        //   active: "Firewall",
-        //   subItems: [
-        //     {
-        //       title: "subtitle.health",
-        //       icon: "",
-        //       href: "/reports/health",
-        //       active: "Health",
-        //     },
-        //     {
-        //       title: "subtitle.insight",
-        //       icon: "",
-        //       href: "/reports/insight",
-        //       active: "Insight",
-        //     },
-        //     {
-        //       title: "subtitle.traffic",
-        //       icon: "",
-        //       href: "/reports/traffic",
-        //       active: "Traffic",
-        //     },
-        //     {
-        //       title: "subtitle.eventLogs",
-        //       icon: "",
-        //       href: "/reports/event-logs",
-        //       active: "Event logs",
-        //     },
-        //   ],
-        //   subMenuVisible: false,
-        // },
         {
           title: "subtitle.subscription",
           icon: "mdi mdi-cash-sync",
@@ -400,7 +286,24 @@ export default {
       ],
     };
   },
+  mounted: async function () {
+    let retriveInfo = localStorage.getItem("user-info");
+    let userInfo = JSON.parse(retriveInfo);
+    this.user = userInfo;
+  },
+
   methods: {
+    filteredSubItems(item) {
+      return item.subItems.filter((subItem) => {
+        if (!this.isAdmin) {
+          return (
+            subItem.title !== "tabs.userManagement" &&
+            subItem.title !== "subtitle.settings"
+          );
+        }
+        return true;
+      });
+    },
     logout() {
       storeAuth.logout();
     },
@@ -419,16 +322,14 @@ export default {
     },
     closeSidebar() {
       this.rail = !this.rail;
-
-      // this.mini = !this.mini;
-      // this.items.forEach((menuItem) => {
-      //   menuItem.subMenuVisible = false;
-      // });
     },
   },
   computed: {
-    user() {
-      return storeAuth.user;
+    // user() {
+    //   return storeAuth.user;
+    // },
+    isAdmin() {
+      return this.user?.currentUser?.role === "admin";
     },
   },
 };

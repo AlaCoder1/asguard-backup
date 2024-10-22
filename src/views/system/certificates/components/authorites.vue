@@ -66,6 +66,7 @@
 </template>
 
 <script>
+import { user_privilege } from "@/mixins/user_privilege.js";
 import axios from "axios";
 import ModalAddAuth from "@/components/modals/ModalAddAuth.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -250,8 +251,12 @@ export default {
         </button>
         `;
       } else {
-        if (params.data.is_private_key) {
-          eGui.innerHTML = `
+        const user = user_privilege();
+        if (user === "viewer") {
+          eGui.innerHTML = `View Mode`;
+        } else {
+          if (params.data.is_private_key) {
+            eGui.innerHTML = `
         
         <button 
           class="action-button download"
@@ -260,7 +265,7 @@ export default {
           </button>
           <button 
           class="action-button download"
-          data-action="exportKey" title=${this.$t('titleAgGrid.privateKey')}>
+          data-action="exportKey" title=${this.$t("titleAgGrid.privateKey")}>
              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i> 
           </button>
         <button 
@@ -269,8 +274,8 @@ export default {
             <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
         </button>
         `;
-        } else {
-          eGui.innerHTML = `
+          } else {
+            eGui.innerHTML = `
         
         <button 
           class="action-button download"
@@ -284,6 +289,7 @@ export default {
             <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
         </button>
         `;
+          }
         }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {

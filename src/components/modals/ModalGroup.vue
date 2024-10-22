@@ -64,9 +64,9 @@
               variant="text"
               @click="closeModal"
             >
-            <span class="pr-3 pl-3 text-white" style="color: #213e9f"
-                >{{$t('buttons.close')}}</span
-              >
+              <span class="pr-3 pl-3 text-white" style="color: #213e9f">{{
+                $t("buttons.close")
+              }}</span>
             </v-btn>
             <v-btn
               :rounded="true"
@@ -75,7 +75,9 @@
               variant="text"
               type="submit"
             >
-              <span class="text-white pr-3 pl-3">{{ $t("buttons.create") }}</span>
+              <span class="text-white pr-3 pl-3">{{
+                mode === "create" ? $t("buttons.create") : $t("buttons.update")
+              }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>

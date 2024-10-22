@@ -3,7 +3,7 @@ from django.db import IntegrityError
 
 from backend.waf.constant_variables import LIST_RULES_WAF, PATH_MAIN_WAF, PATH_RULES_WAF
 from backend.waf.models import ConfigWaf, RulesWaf
-from utils.commands_utils import execute_command_without_arguments
+from utils.commands_utils import execute_command_without_arguments, read_file_from_system
 from utils.errors_utils import CommandExecutionError
 
 
@@ -19,8 +19,7 @@ class Command(BaseCommand):
                        f"{PATH_RULES_WAF.format('RESPONSE-999-EXCLUSION-RULES-AFTER-CRS')}"]
             execute_command_without_arguments(command)
             # Remove line that include all conf file (using *.conf) and set each line individually
-            with open(PATH_MAIN_WAF) as main_file:
-                main_content = main_file.read()
+            main_content = read_file_from_system(PATH_MAIN_WAF)
             with open(PATH_MAIN_WAF, 'w') as main_file:
                 main_file.write(main_content.replace(f"\nInclude {PATH_RULES_WAF.format('*')}", ""))
             with open(PATH_MAIN_WAF, 'a') as main_file:

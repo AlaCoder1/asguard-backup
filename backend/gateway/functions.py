@@ -116,16 +116,18 @@ def save_gateways_database(gwaddr,name_interface,default_aux,far_aux,multiwan_au
                    "default_aux":default_aux,
                    "far_aux":far_aux,
                    "multiwan_aux":multiwan_aux,
-                   "ipv4_gw":ipv4_gw}
-        aux_exist=Gateway.objects.filter(Q(gwaddress=gwaddr) & Q(staticgw=False)).exists()
+                   "ipv4_gw":ipv4_gw,
+                   "staticgw":True
+                   }
+        aux_exist=Gateway.objects.filter(Q(gwaddress=gwaddr) & Q(staticgw=True)).exists()
         if not aux_exist:
             aux_gw=add_gateway_db(data_gw)
         else:
-            gateway_object=Gateway.objects.get(Q(gwaddress=gwaddr) & Q(staticgw=False) )
+            gateway_object=Gateway.objects.get(Q(gwaddress=gwaddr) & Q(staticgw=True) )
             id_gw=gateway_object.id
             aux_gw=update_gateway_db(data_gw,id_gw)
         if aux_gw:
-            gateway_object=Gateway.objects.get(Q(gwaddress=gwaddr) & Q(staticgw=False) )
+            gateway_object=Gateway.objects.get(Q(gwaddress=gwaddr) & Q(staticgw=True) )
             add_gateway_interface_db(gateway_object,name_interface,metric,ipv4_gw_interface)  
             return True
         else:

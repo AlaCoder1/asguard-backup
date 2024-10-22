@@ -149,6 +149,7 @@
     "Delete": "Êtes-vous sûr de vouloir supprimer ceci ?"
   },
 
+  "duplicatedServer":"Serveur DNS Dupliqué",
   "agGrid": {
     "name": "Nom",
     "cpuType": "CPU Type",

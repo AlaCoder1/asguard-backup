@@ -63,6 +63,9 @@ def change_username(newusername, oldusername):
     """functio to change username"""
     return os.system("sudo usermod -l " + newusername + " "+oldusername)
 
+def change_directory_name(old_username, new_username):
+    home_dir = "/home/"
+    return os.system("sudo mv " + home_dir+old_username + " "+home_dir+new_username)
 
 def add_user_group(groupname, username):
     """function to add user in group"""

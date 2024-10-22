@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from backend.managementUsers.models import Profile, User, Roles
 from backend.managementUsers.serializers import PermissionSerializer, ProfileSerializer, UserSerializerGet, UserSerializerPost, UserSerializerPostWithoutGroupAndPermission,RoleSerializer
-from backend.managementUsers.functions import add_user_group, add_mail_spool, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password,delete_directory
+from backend.managementUsers.functions import add_user_group, add_mail_spool, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password,delete_directory,change_directory_name
 from backend.managementGroup.serializers import GroupSerializer
 from backend.managementGroup.functions import change_groupname_username, getGroupNameById, getUidGroup
 from backend.managementGroup.models import Group
@@ -387,6 +387,7 @@ def modify_user(request, id):
 
             user_object.username = newusername
             change_username(newusername, oldusername)
+            change_directory_name(oldusername, newusername)
             if check_same_groupname_with_username(oldusername):
                 change_groupname_username(oldusername, newusername)
             msg = f"{CONSTANT_USER} {SUCCESS_MESSAGES_UPDATING}"

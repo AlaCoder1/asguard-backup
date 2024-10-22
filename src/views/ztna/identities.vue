@@ -461,7 +461,7 @@ export default {
 
       Identities.value = IdentitiesObject ? IdentitiesObject : [];
 
-
+console.log('Identities',Identities.values)
       let linuxfileString = document
         .getElementById("app")
         .getAttribute("linux_file");

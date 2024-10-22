@@ -130,6 +130,7 @@ export default {
     const name = ref("");
     const servId = ref("");
     const serviceAtt = ref("");
+    const Services = ref([]);
     const encryptionRequired = ref(false);
     const intercept = ref("");
     const host = ref("");
@@ -141,11 +142,37 @@ export default {
       },
     ];
     const rulesName = [
-      (value) => {
-        if (!value) return true;
-      return ValidName(value) ? true : "Please enter a valid name.";
-      },
-    ];
+  (value) => {
+    if (!value) return true;
+    if (existingName(value)) return "The name already exists";
+    return ValidName(value) ? true : "Please enter a valid name.";
+  },
+];
+function existingName(value) {
+      const existingservice = Services.value.find(service => service.name === value);
+
+      if (existingservice) {
+        return true;
+      }
+
+      return false;
+    }
+const fetchServices = async () => {
+      try {
+        const ServicesString = await document.getElementById("app").getAttribute("Services");
+        const ServicesObject = JSON.parse(ServicesString);
+
+        const ServicesArray = Array.isArray(ServicesObject) ? ServicesObject : [];
+
+        Services.value = ServicesArray.map(service => ({ name: service.name }));
+
+        console.log('Services.value', Services.value);
+      } catch (error) {
+        console.error("Failed to fetch Services:", error);
+        Services.value = [];
+      }
+    };
+
     const interceptList = ref([]);
     const hostList = ref([]);
     const emitter = inject("emitter");
@@ -162,6 +189,7 @@ export default {
     onMounted(()=>{
       fetchHostConfigs()
       fetchInterceptConfigs()
+      fetchServices()
     })
 
     watch(
@@ -249,7 +277,7 @@ export default {
       console.log('host,',hostList.value)
     };
     function ValidName(value){
- const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+      const hostnamePattern = /^[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
 
   if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
     return true;

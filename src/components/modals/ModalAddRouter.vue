@@ -74,7 +74,7 @@
 <script>
 import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
-import { toRefs, ref, watch, reactive, inject } from "vue";
+import { toRefs, ref, watch, reactive, inject , onMounted} from "vue";
 export default {
   props: {
     isOpen: {
@@ -96,6 +96,7 @@ export default {
     const RouterName = ref("");
     const RouterAttribute = ref("");
     const Description = ref("");
+    const Relays = ref([])
     const Tunneler = ref(true);
     const Traversal = ref(false);
     const rules = [(value) => !!value || "You must enter a value."];
@@ -103,14 +104,25 @@ export default {
 
     const { isOpen, editRow, modalMode } = toRefs(props);
     const rulesName = [
-      (value) => {
-        if (!value) return true;
-      return ValidName(value) ? true : "Please enter a valid name.";
-      },
-    ];
+  (value) => {
+    if (!value) return true;
+    if (existingName(value)) return "The name already exists";
+    return ValidName(value) ? true : "Please enter a valid name.";
+  },
+];
+
+function existingName(value) {
+      const existingIdentity = Relays.value.find(identity => identity.name === value);
+
+      if (existingIdentity) {
+        return true;
+      }
+
+      return false;
+    }
 
     function ValidName(value){
- const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
+      const hostnamePattern = /^[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
 
   if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
     return true;
@@ -163,6 +175,27 @@ export default {
         Description.value = data.description;
       }
     };
+    const fetchRelays = async () => {
+      try {
+        const RelaysString = await document.getElementById("app").getAttribute("routers");
+        const RelaysObject = JSON.parse(RelaysString);
+
+        const RelaysArray = Array.isArray(RelaysObject) ? RelaysObject : [];
+
+        Relays.value = RelaysArray.map(identity => ({ name: identity.name }));
+
+        console.log('Relays.value', Relays.value);
+      } catch (error) {
+        console.error("Failed to fetch Relays:", error);
+        Relays.value = [];
+      }
+    };
+
+
+
+    onMounted(() => {
+      fetchRelays();
+    });
 
     const submitForm = async () => {
 
@@ -183,8 +216,7 @@ export default {
       };
 
       let token = document.getElementById("app").getAttribute("token");
-      state.loading = true;
-      state.isLoadingDialogue = true;
+      
 
       if (modalMode.value === "edit") {
         axios
@@ -199,8 +231,8 @@ export default {
               state.snackbar = true;
               state.color = "success";
               state.textAlert = response.data.message;
-              state.loading = false;
-              state.isLoadingDialogue = false;
+              state.loading = true;
+              state.isLoadingDialogue = true;
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -226,6 +258,8 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
+              state.loading = true;
+              state.isLoadingDialogue = true;
               state.textAlert = response.data.message;
               state.loading = false;
               state.isLoadingDialogue = false;

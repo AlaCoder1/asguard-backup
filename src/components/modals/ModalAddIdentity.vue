@@ -5,34 +5,22 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.createNewIdentity") }}</span
-            >
+              {{ $t("ztna.createNewIdentity") }}</span>
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateIdentity") }}</span
-            >
+              {{ $t("ztna.updateIdentity") }}</span>
           </v-card-title>
 
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="IdentityName"
-                    v-model="IdentityName"
-                    :placeholder="$t('ztna.identityName')"
-                    :rules="rulesName"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="IdentityName" v-model="IdentityName" :placeholder="$t('ztna.identityName')"
+                    :rules="rulesName" persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field
-                    id="IdentityAttribute"
-                    v-model="IdentityAttribute"
-                    :placeholder="$t('ztna.identityAttribute')"
-                    :rules="rulesName"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="IdentityAttribute" v-model="IdentityAttribute"
+                    :placeholder="$t('ztna.identityAttribute')" :rules="rulesName" persistent-placeholder />
                 </v-col>
 
                 <v-col cols="12">
@@ -47,21 +35,17 @@
                         </template>
 
                         <v-list>
-                          <v-list-item
-                            v-for="(item, index) in items"
-                            :key="index"
-                            @click="selectItem(item)"
-                          >
+                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
                             <v-list-item-title>{{
                               item.title
-                            }}</v-list-item-title>
+                              }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
 
                       <label for="IsAdmin" class="mr-3 ml-5">{{
                         $t("ztna.isAdmin")
-                      }}</label>
+                        }}</label>
                       <input type="checkbox" id="IsAdmin" v-model="isAdmin" />
                     </div>
                   </div>
@@ -70,21 +54,17 @@
                   <div class="d-flex align-center">
                     <label class="ml-1" for="Type">OS Type</label>
                     <div class="ml-5 mt-1">
-                    <v-menu open-on-hover>
+                      <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
                           <v-btn color="#FAFAFA" v-bind="props">
                             {{ selectedOs }}
                           </v-btn>
                         </template>
-                      <v-list>
-                          <v-list-item
-                            v-for="(item, index) in OS"
-                            :key="index"
-                            @click="selectOs(item)"
-                          >
+                        <v-list>
+                          <v-list-item v-for="(item, index) in OS" :key="index" @click="selectOs(item)">
                             <v-list-item-title>{{
                               item.title
-                            }}</v-list-item-title>
+                              }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -92,60 +72,28 @@
                   </div>
                 </v-col>
                 <v-col cols="12">
-                  <v-text-field
-                    id="Description"
-                    v-model="Description"
-                    placeholder="Description"
-                    persistent-placeholder
-                  />
+                  <v-text-field id="Description" v-model="Description" placeholder="Description"
+                    persistent-placeholder />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
-            <v-btn
-              color="indigo-darken-3"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              class="mt-3 btn-add"
-              text
-              @click="cancel"
-              > <span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span
-              ></v-btn
-            >
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 ml-2 btn-add"
-              type="submit"
-            >
+            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
+              class="mt-3 btn-add" text @click="cancel"> <span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span></v-btn>
+            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
+              class="mt-3 ml-2 btn-add" type="submit">
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span
-              >
+                {{ $t("buttons.create") }}</span>
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
-              >
+                {{ $t("buttons.update") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -175,6 +123,7 @@ export default {
     const IdentityName = ref("");
     const identityId = ref(null);
     const IdentityAttribute = ref("");
+    const Identities = ref([])
     const Description = ref("");
     const isAdmin = ref(false);
     const selectedTitle = ref("User");
@@ -186,17 +135,19 @@ export default {
       { title: "Router" },
       { title: "Default" },
     ];
-    const OS =[
-      { title: "windows"},
-      { title: "linux"},
+    const OS = [
+      { title: "windows" },
+      { title: "linux" },
     ]
     const rules = [(value) => !!value || "You must enter a value."];
     const rulesName = [
-      (value) => {
-        if (!value) return true;
-      return ValidName(value) ? true : "Please enter a valid name.";
-      },
-    ];
+  (value) => {
+    if (!value) return true;
+    if (existingName(value)) return "The name already exists";
+    return ValidName(value) ? true : "Please enter a valid name.";
+  },
+];
+
     const emitter = inject("emitter");
 
     const { isOpen, editRow, modalMode } = toRefs(props);
@@ -254,8 +205,8 @@ export default {
         type: selectedTitle.value,
         isAdmin: isAdmin.value,
         roleAttributes: [IdentityAttribute.value],
-        Description:Description.value,
-        os:selectedOs.value
+        Description: Description.value,
+        os: selectedOs.value
       };
 
       let token = document.getElementById("app").getAttribute("token");
@@ -282,7 +233,7 @@ export default {
             console.log("response", i.response);
             state.snackbar = true;
             state.color = "red";
-            state.textAlert = i.response.data.response;
+            state.textAlert = i.response.data.error;
           });
       } else {
         axios
@@ -312,6 +263,28 @@ export default {
       }
     };
 
+    const fetchIdentities = async () => {
+      try {
+        const IdentitiesString = await document.getElementById("app").getAttribute("Identities");
+        const IdentitiesObject = JSON.parse(IdentitiesString);
+
+        const identitiesArray = Array.isArray(IdentitiesObject) ? IdentitiesObject : [];
+
+        Identities.value = identitiesArray.map(identity => ({ name: identity.name }));
+
+        console.log('Identities.value', Identities.value);
+      } catch (error) {
+        console.error("Failed to fetch identities:", error);
+        Identities.value = [];
+      }
+    };
+
+
+
+    onMounted(() => {
+      fetchIdentities();
+    });
+
     const onReset = () => {
       IdentityName.value = "";
       IdentityAttribute.value = "";
@@ -326,16 +299,35 @@ export default {
     const selectOs = (item) => {
       selectedOs.value = item.title;
     };
-    function ValidName(value){
- const hostnamePattern = /^[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/;
 
-  if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
-    return true;
-  }
-  
-  return false;
-}
+    function ValidName(value) {
+      const hostnamePattern = /^[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
 
+      console.log('Identities.value', Identities.value);
+
+      if (!Array.isArray(Identities.value)) {
+        console.error('Identities.value is not an array:', Identities.value);
+        return false;
+      }
+
+      const existingIdentity = Identities.value.find(identity => identity.name === value);
+
+      if (existingIdentity || !hostnamePattern.test(value) || /^\d+$/.test(value)) {
+        return false;
+      }
+
+      return true;
+    }
+
+    function existingName(value) {
+      const existingIdentity = Identities.value.find(identity => identity.name === value);
+
+      if (existingIdentity) {
+        return true;
+      }
+
+      return false;
+    }
     const cancel = () => {
       onReset();
       emitter.emit("closeidentityModal");

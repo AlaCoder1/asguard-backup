@@ -682,13 +682,19 @@ export default {
         ipv4TunnelNetwork: {
           isValidIpv4TunnelNetwork: helpers.withMessage(
             formatMustBeLikeAdresse,
-            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            // helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            helpers.regex(
+              /^((?!0\.0\.0\.0)(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\/([1-9]|[12][0-9]|3[0-2]))$/
+            )
           ),
         },
         ipv4RemoteNetwork: {
           isValidIpv4RemoteNetwork: helpers.withMessage(
             formatMustBeLikeAdresse,
-            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            // helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            helpers.regex(
+              /^((?!0\.0\.0\.0)(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\/([1-9]|[12][0-9]|3[0-2]))$/
+            )
           ),
         },
 

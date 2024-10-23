@@ -11,7 +11,7 @@ class Interface(models.Model):
     service_status = models.CharField(max_length=200, null=True, default=None)
     name_interface = models.CharField(max_length=200, null=True, default=None, unique=True)
     is_main = models.BooleanField(default=False)
-    description = models.CharField(max_length=200, null=True, default=None)
+    description = models.CharField(max_length=200, null=True, default=None,blank=True)
     created_at = models.DateTimeField(default=timezone.now, editable=False)
     updated_at = models.DateTimeField(default=timezone.now, editable=False)
 

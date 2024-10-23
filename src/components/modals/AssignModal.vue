@@ -73,6 +73,7 @@
             </v-btn>
 
             <v-btn
+              v-if="modalMode === 'create'"
               large
               rounded
               outlined
@@ -82,11 +83,8 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+              <span class="text-white pr-3 pl-3">
                 {{ $t("buttons.create") }}</span
-              >
-              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
               >
             </v-btn>
           </v-card-actions>

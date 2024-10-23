@@ -221,15 +221,15 @@ export default {
               `;
       } else {
         eGui.innerHTML = `
-            <button
-                  class="action-button edit"
-                  data-action="edit">
-                     <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
-                  </button>
+                <button 
+                    class="action-button edit "  
+                    data-action="edit">
+                    <i class="mdi mdi-eye" style="color: #086eae;font-size: 24px;"></i>
+                    </button>
                   <button
                   class="action-button delete"
                   data-action="delete">
-                    <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                    <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 24px;"></i>
                   </button>`;
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {

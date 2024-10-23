@@ -31,7 +31,7 @@
       <v-row class="mt-8 mb-6">
         <v-col cols="12" md="6">
           <v-text-field
-            id="filter-text-box"
+            id="filter-text-outbound"
             v-model="filterText"
             :placeholder="$t('firewall.search')"
             density="compact"
@@ -524,7 +524,7 @@ export default defineComponent({
     }
     const onFilterTextBoxChanged = () => {
       gridApi.value.setQuickFilter(
-        document.getElementById("filter-text-box").value
+        document.getElementById("filter-text-outbound").value
       );
     };
     const handleAction = (action, rowData) => {

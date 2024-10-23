@@ -152,6 +152,12 @@
               ></v-icon>
             </v-col>
           </template>
+
+          <div style="margin-left: 35%; margin-top: 1%">
+            <p class="error-feedback mb-5" v-if="state.textDnsServer">
+              {{ state.textDnsServer }}
+            </p>
+          </div>
           <v-col cols="12" class="d-flex justify-end">
             <v-btn
               color="#F6F6F6"
@@ -307,6 +313,7 @@ export default {
     const emitter = inject("emitter");
     const switchValue = ref(false);
     const state = reactive({
+      textDnsServer: "",
       rows: [{ dns_server: "" }],
       //
       modalData: {},
@@ -597,9 +604,7 @@ export default {
     };
 
     const hasDuplicates = (arr) => {
-      const uniqueAddresses = new Set(
-        arr.map((item) => item.dns_server)
-      );
+      const uniqueAddresses = new Set(arr.map((item) => item.dns_server));
       return uniqueAddresses.size !== arr.length;
     };
 
@@ -636,9 +641,12 @@ export default {
         let dup = hasDuplicates(state.rows);
         console.log("dup", dup);
         if (dup) {
-          state.snackbar = true;
-          state.color = "error";
-          state.textAlert = t("duplicatedServer");
+          // state.snackbar = true;
+          // state.color = "error";
+          state.textDnsServer = t("duplicatedServer");
+          setTimeout(() => {
+            state.textDnsServer = "";
+          }, 1000);
           return;
         }
 

@@ -140,6 +140,7 @@ def allGProxyroups(request):
         list_groups.append({"name":i,"status":rslt})
     return list_groups
 def getUsers(request):
+    print("2222222222")
     list_users = []
     if (request.method == 'GET'):
         users = User.objects.all()
@@ -154,12 +155,15 @@ def getUsers(request):
             res[i]['fields'].pop('last_login')
             res[i]['fields'].pop('token_last_expired')
             res[i]['fields']['id'] = id
+            role = Roles.objects.get(id = res[i]['fields']['role'])
+            res[i]['fields']['role'] = role.name
             if len(res[i]['fields']['group'])!=0:
                 for k in res[i]['fields']['group']:
                     group=Group.objects.get(id=k)
                     group_dict.append({"name":group.groupname,"id":group.id})
                 res[i]['fields']['group']=group_dict
             list_users.append(res[i]['fields'])
+            print({"list_users":list_users})
         return json.dumps(list_users)
     
 def getRoles(request):

@@ -1,4 +1,23 @@
 <template>
+    <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -272,6 +291,7 @@ import ModalAddInterface from "@/components/modals/ModalAddInterface.vue";
 import { v4 as uuidv4 } from "uuid";
 import useValidate from "@vuelidate/core";
 import { required, helpers } from "@vuelidate/validators";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "ConfigurationComponent",
@@ -340,6 +360,8 @@ export default {
       //
       modalData: {},
       modalMode: "",
+      isviewModal: false,
+      viewModal: false,
       isModalOpen: false,
       isOpen: null,
       editRow: {},
@@ -495,6 +517,11 @@ export default {
       return cookieValue;
     };
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const getInterface = async () => {
       rowDataInterfaces.value =
         document.getElementById("app").attributes["all_interfaces"].value;
@@ -581,6 +608,7 @@ export default {
     }
 
     const handleAction = (action, rowData) => {
+      const user = user_privilege('suricata');
       switch (action) {
         // case "edit":
         //   // state.modalData = {};
@@ -590,6 +618,7 @@ export default {
 
         //   break;
         case "delete":
+      if (user && user !== 'viewer') {
           const index = rowDataAF.value.findIndex(
             (item) => item.id === rowData.id
           );
@@ -602,6 +631,10 @@ export default {
               console.error("Grid API.");
             }
           }
+        } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
           break;
         default:
           break;
@@ -609,6 +642,9 @@ export default {
     };
 
     const reloadData = async () => {
+      const user = user_privilege('suricata');
+      console.log('user update',user)
+      if (user && user !== 'viewer') {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       state.loading = true;
@@ -649,6 +685,10 @@ export default {
           }, 2000);
       
       }
+    } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
     };
 
     onMounted(async () => {
@@ -808,13 +848,22 @@ export default {
     };
 
     const openModalAdd = () => {
+      const user = user_privilege('Suricata');
+      console.log(user)
+      if (user && user !== 'viewer') {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
       emitter.emit("list-Interface", rowDataAF.value);
+    } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
     };
 
     const submitForm = async () => {
+      const user = user_privilege('Suricata');
+      if (user && user !== 'viewer') {
       const result = await v$.value.$validate();
       if (result) {
         const csrfToken = getCookie("csrftoken");
@@ -915,7 +964,11 @@ export default {
             state.snackbar = false;
           }, 2000);
         }
-      }
+      }    
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
     };
 
     const error = computed(() => {
@@ -939,6 +992,7 @@ export default {
     return {
       switchValue,
       cancel,
+      close,
       getCookie,
       getInterface,
       submitForm,

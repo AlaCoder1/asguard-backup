@@ -24,25 +24,11 @@
                 </v-col>
 
                 <v-col cols="12">
-                  <div class="d-flex align-center">
-                    <label class="ml-1" for="Type">Type</label>
-                    <div class="ml-5 mt-1">
-                      <v-menu open-on-hover>
-
-                        <v-list>
-                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
-                            <v-list-item-title>{{
-                              item.title
-                              }}</v-list-item-title>
-                          </v-list-item>
-                        </v-list>
-                      </v-menu>
-
-                      <label for="IsAdmin" class="mr-3 ml-5">{{
+                  <div class="d-flex align-center">               
+                      <label for="IsAdmin" class="mr-3 ml-1">{{
                         $t("ztna.isAdmin")
                         }}</label>
                       <input type="checkbox" id="IsAdmin" v-model="isAdmin" />
-                    </div>
                   </div>
                 </v-col>
                 <v-col cols="12">
@@ -187,6 +173,7 @@ export default {
         Description.value = data.description;
         IdentityAttribute.value = data.attribute_identitie;
         selectedTitle.value = "User";
+        selectedOs.value = data.os
         isAdmin.value = data.is_admin;
       }
     };

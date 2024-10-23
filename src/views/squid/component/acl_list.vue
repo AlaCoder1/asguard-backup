@@ -1,4 +1,23 @@
 <template>
+    <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div
     class="mt-6 ml-5"
     style="display: flex; flex-direction: column; margin-bottom: 5%"
@@ -73,6 +92,8 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalSquidBlackList from "@/components/modals/ModalSquidBlackList.vue";
 import CertStatusRenderVue from "../agGridCustomRender/CertStatusRenderVue.vue";
 import CertAclStatus from "../agGridCustomRender/CertAclStatus.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
+
 export default {
   components: {
     AgGridVue,
@@ -87,6 +108,8 @@ export default {
     const overlayTemplate = ref("");
     const state = reactive({
       snackbar: false,
+      isviewModal: false,
+      viewModal: false,
       color: "",
       textAlert: "",
       off: false,
@@ -230,18 +253,29 @@ export default {
       return eGui;
     }
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const handleAction = (action, rowData) => {
+      const user = user_privilege('Proxy');
       switch (action) {
         case "edit":
+      if (user && user !== 'viewer') {
           console.log("rowData", rowData);
 
           state.modalData = {};
           state.editRow = rowData;
           state.modalMode = "edit";
           state.isModalOpen = true;
-
+        } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
           break;
         case "enable":
+        if (user && user !== 'viewer') {
           console.log("rowData", rowData);
           const csrfToken = getCookie("csrftoken");
           axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -272,7 +306,10 @@ export default {
               state.color = "red";
               state.textAlert = i.response.data.error;
             });
-
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
           break;
         default:
           break;
@@ -326,6 +363,7 @@ export default {
 
     return {
       state,
+      close,
       emitter,
       columnAclList,
       gridColumnApi,

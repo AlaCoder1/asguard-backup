@@ -32,7 +32,7 @@ def update_interface_table(name_interface,data,InterfaceSerializer):
     objectConfig=Interface.objects.get(name_interface=name_interface)
     # Set all attributes to None
     for field in objectConfig._meta.fields:
-        if field.attname not in ["id",'ifname','created_at','updated_at','name_interface','description','private_aux','bogon_aux','is_main']: 
+        if field.attname not in ["id",'ifname','created_at','updated_at','name_interface','private_aux','bogon_aux','is_main']: 
             setattr(objectConfig, field.attname, None)
     serializerInterface= InterfaceSerializer(objectConfig,data=data)
     if serializerInterface.is_valid():

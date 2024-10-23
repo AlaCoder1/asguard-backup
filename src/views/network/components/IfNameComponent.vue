@@ -666,7 +666,11 @@ export default {
         this.typeDHCP4 = "Base";
       }
       // todo: add network refactoring && optimization needed
-      if (this.setuptypeip4 === "static") {
+      if (
+        this.setuptypeip4 === "static" &&
+        this.value_setup_Ipv4?.ip_address4 &&
+        this.value_setup_Ipv4?.netmask4
+      ) {
         const params = {
           name_interface: this.activeTab,
           device: this.device,
@@ -943,9 +947,9 @@ export default {
     this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 
     this.name_interface = this.IPV4Config.interface.name_interface;
-    this.value_setup_Ipv4.gateway4.value =
-      this.IPV4Config.IPV4Config.addrgw ?? "Auto Detect";
-
+    this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw
+      ? this.IPV4Config.IPV4Config.addrgw
+      : "Auto Detect";
     this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
     this.interface.alias_add = this.IPV4Config.IPV4Config.alias_add;
     this.interface.alias_mask = this.IPV4Config.IPV4Config.alias_mask;

@@ -73,7 +73,8 @@
     "emptyArray": "Le tableau est vide. Veuillez ajouter au moins un élément.",
     "emptyValue": "a une valeur vide",
     "atLeastemptyValue": "Au moins un élément a une valeur vide",
-    "noModif": "Rule Non modifiable"
+    "noModif": "Rule Non modifiable",
+    "invalidChar": "Au moins un élément contient un hôte ou un port vide, ou des caractères invalides."
   },
   "placeholder": {
     "enterPassword": "Saisir le mot de passe",

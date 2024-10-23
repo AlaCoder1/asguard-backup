@@ -1,5 +1,23 @@
-+
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-row>
       <v-col align-self="center" cols="6">
@@ -329,13 +347,17 @@
                     :alwaysShowVarticalScroll="false"
                     :defaultColDef="defaultColDef"
                     :rowData="rowDataCertificats.value"
-                    style="width: 100%; height: 100%"
+                    style="width: 100%"
                     :overlayNoRowsTemplate="overlayTemplate"
                     @grid-ready="onGridReady"
                     :pagination="true"
                     :paginationPageSize="4"
                     :localeText="paginationLocalization"
                   />
+
+                  <p class="error-feedback mb-5 mt-5" v-if="textAlertArray">
+                    {{ textAlertArray }}
+                  </p>
                 </v-col>
               </v-row>
             </v-row>
@@ -395,6 +417,7 @@ import VButton from "@/components/VButton.vue";
 import { reactive, onMounted, ref, computed, watch } from "vue";
 import axios from "axios";
 import protocols from "@/constants/protocols.js";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "ClientsOpenvpnComponent",
@@ -417,6 +440,7 @@ export default {
     const color = ref(null);
     const snackbar = ref(false);
     const textAlert = ref(false);
+    const textAlertArray = ref(false);
     const protocolsList = ref([]);
     const deviceMode = ref([
       {
@@ -459,6 +483,8 @@ export default {
     ]);
 
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       modeState: "create",
       showpassword: false,
       showNewpassword: false,
@@ -682,13 +708,19 @@ export default {
         ipv4TunnelNetwork: {
           isValidIpv4TunnelNetwork: helpers.withMessage(
             formatMustBeLikeAdresse,
-            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            // helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            helpers.regex(
+              /^((?!0\.0\.0\.0)(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\/([1-9]|[12][0-9]|3[0-2]))$/
+            )
           ),
         },
         ipv4RemoteNetwork: {
           isValidIpv4RemoteNetwork: helpers.withMessage(
             formatMustBeLikeAdresse,
-            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            // helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            helpers.regex(
+              /^((?!0\.0\.0\.0)(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\/([1-9]|[12][0-9]|3[0-2]))$/
+            )
           ),
         },
 
@@ -842,7 +874,7 @@ export default {
       () => dataClient.value,
       (newValue) => {
         if (newValue != "tabs.clients") {
-          cancel();
+          // cancel();
         }
       }
     );
@@ -881,6 +913,11 @@ export default {
       cellDataType: false,
     });
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const actionCellRenderer = (params) => {
       let eGui = document.createElement("div");
 
@@ -904,15 +941,22 @@ export default {
       return eGui;
     };
     const handleAction = (action, rowData, index) => {
+      const user = user_privilege('Openvpn');
       switch (action) {
         case "edit":
+        if (user && user !== 'viewer') {
           gridApi.value.setFocusedCell(index);
           gridApi.value.startEditingCell({
             rowIndex: index,
             colKey: "host",
           });
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
           break;
         case "delete":
+        if (user && user !== 'viewer') {
           const index = rowDataCertificats.value.findIndex(
             (item) => item.host === rowData.host
           );
@@ -925,6 +969,10 @@ export default {
               console.error("Grid API.");
             }
           }
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
           break;
         default:
           break;
@@ -965,6 +1013,8 @@ export default {
     const rowDataCertificats = ref([]);
 
     const addNewRow = () => {
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer') {
       const newRow = { host: "", port: "" };
       rowDataCertificats.value.push(newRow);
       if (gridApi.value) {
@@ -972,6 +1022,10 @@ export default {
       } else {
         console.error("Grid API.");
       }
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
     const onGridReady = (params) => {
       gridApi.value = params.api;
@@ -1098,27 +1152,29 @@ export default {
       );
     };
     const save = async () => {
+      const user = user_privilege('Openvpn');
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      if (user && user !== 'viewer') {
 
       const result = await v$.value.$validate();
 
       if (result) {
         var isArrayEmpty = rowDataCertificats.value.length === 0;
         if (isArrayEmpty) {
-          snackbar.value = true;
-          color.value = "red";
-          textAlert.value =
-            "The array is empty. Please add at least one object.";
+          textAlertArray.value = t("errors.emptyArray");
+          setTimeout(() => {
+            textAlertArray.value = "";
+          }, 2000);
           return;
         } else {
           var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
 
           if (hasEmptyElement) {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value =
-              "At least one element has an empty host or port, or contains invalid characters.";
+            textAlertArray.value = t("errors.invalidChar");
+            setTimeout(() => {
+              textAlertArray.value = "";
+            }, 2000);
             return;
           }
         }
@@ -1230,21 +1286,25 @@ export default {
 
         var isArrayEmpty = rowDataCertificats.value.length === 0;
         if (isArrayEmpty) {
-          snackbar.value = true;
-          color.value = "red";
-          textAlert.value =
-            "The array is empty. Please add at least one object.";
+          textAlertArray.value = t("errors.emptyArray");
+          setTimeout(() => {
+            textAlertArray.value = "";
+          }, 2000);
         } else {
           var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
 
           if (hasEmptyElement) {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value =
-              "At least one element has an empty host or port, or contains invalid characters.";
+            textAlertArray.value = t("errors.invalidChar");
+            setTimeout(() => {
+              textAlertArray.value = "";
+            }, 2000);
           }
         }
       }
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     const encryptionAlgorithmList = ref([
@@ -1335,6 +1395,8 @@ export default {
     ]);
 
     const cancel = () => {
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer') {
       state.id = "";
       state.modeState = "create";
       state.isEditState = "";
@@ -1399,10 +1461,15 @@ export default {
         console.error("Grid API.");
       }
       v$.value.$reset();
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     return {
       state,
+      close,
       cancel,
       userAuthSettings,
       cryptoSettings,
@@ -1417,6 +1484,7 @@ export default {
       addNewRow,
       snackbar,
       textAlert,
+      textAlertArray,
       columnCertificats,
       protocols: protocolsList,
       deviceMode,

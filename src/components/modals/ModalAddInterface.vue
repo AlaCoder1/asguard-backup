@@ -29,7 +29,7 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field :label="$t('suricata.thread')" v-model="state.thread"></v-text-field>
+                  <v-text-field :label="$t('suricata.thread')" v-model="state.thread" readonly></v-text-field>
                   <p class="error-feedback mb-5" v-if="v_interface$.thread.$errors.length">
                     {{ v_interface$.thread.$errors?.[0].$message }}
                   </p>

@@ -511,7 +511,7 @@ def add_alerts_to_database(request,id):
 def get_alerts_from_database(request,num):
     if request.method == "GET":
         # Récupérer toutes les règles de la base de données
-        alerts_from_db = Alert.objects.all().order_by('id')
+        alerts_from_db = Alert.objects.all().order_by('-id')
 
         # Paginer les règles
         paginator = Paginator(alerts_from_db, 10)

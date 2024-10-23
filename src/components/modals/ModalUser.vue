@@ -562,7 +562,7 @@ export default {
             password: this.state.formData.password,
             fullname: this.state.formData.fullname,
             email: this.state.formData.email,
-            role: this.state.formData.role,
+            role: this.state.formData.role.id,
             group: groupsIds ?? [],
             is_active: this.state.formData.deactivateUser,
             password_ad: this.state.formData.passwordDN ?? "",

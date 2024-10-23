@@ -190,9 +190,7 @@
               class="mt-3 btn-add"
             >
               <span class="text-white pr-3 pl-3">{{
-                mode === "create"
-                  ? $t("buttons.create")
-                  : $t("buttons.update")
+                mode === "create" ? $t("buttons.create") : $t("buttons.update")
               }}</span>
             </v-btn>
           </v-card-actions>
@@ -322,11 +320,22 @@ export default {
         }
       );
     };
-
+    const champNoInclude = computed(() => {
+      return t("errors.ChampNoInclude");
+    });
     const rules = computed(() => {
       return {
         formData: {
-          username: { required: helpers.withMessage(error, required) },
+          username: {
+            required: helpers.withMessage(error, required),
+            isValidName: helpers.withMessage(
+              champNoInclude,
+
+              helpers.regex(
+                /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/
+              )
+            ),
+          },
           password: {
             requiredIfFuction: helpers.withMessage(
               error,
@@ -420,7 +429,12 @@ export default {
         this.state.formData.username = data.username;
         this.state.formData.fullname = data.fullname;
         this.state.formData.email = data.email;
-        this.state.formData.role = data.role;
+
+        let filtredRole = this.state.userRoles.filter(
+          (i) => i.name === data?.role
+        );
+        this.state.formData.role = filtredRole[0];
+
         let groupsIds = data.group.map((i) => {
           return {
             id: i.id,

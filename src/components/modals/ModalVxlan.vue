@@ -354,6 +354,9 @@ export default {
     const champInclude = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
     });
+    const champNoInclude = computed(() => {
+      return t("errors.ChampNoInclude");
+    });
     const formaaddress = computed(() => {
       return t("errors.formatMustBeLikeAdresseIP");
     });
@@ -377,6 +380,11 @@ export default {
         },
         interfaceName: {
           required: helpers.withMessage(error, required),
+          isValidName: helpers.withMessage(
+            champNoInclude,
+
+            helpers.regex(/^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/)
+          ),
         },
 
         dport: {

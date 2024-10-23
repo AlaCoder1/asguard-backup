@@ -1,4 +1,36 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="@/assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <v-overlay v-model="state.loading">
     <v-dialog
       v-model="state.isLoadingDialogue"
@@ -94,6 +126,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import VButton from "@/components/VButton.vue";
 import { reactive, ref, computed, onMounted, inject } from "vue";
 import ModalApplicationWaf from "@/components/modals/ModalApplicationWaf.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "Rules",
@@ -109,6 +142,8 @@ export default {
       of: "/",
     });
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       loading: false,
       isLoadingDialogue: false,
       snackbar: false,
@@ -230,19 +265,30 @@ export default {
     }
 
     const handleAction = (action, rowData, index) => {
+      const user = user_privilege('Waf');
       switch (action) {
         case "delete":
+        if (user && user !=='viewer') {
           state.deleteDialog = true;
           state.deletedRow = rowData;
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+          
           break;
         case "edit":
+        if (user && user !=='viewer') {
           console.log("edit", rowData);
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
           break;
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
+          
         default:
           break;
       }
@@ -289,9 +335,16 @@ export default {
     });
 
     const openModalAdd = () => {
+      const user = user_privilege('Ztna');
+      if (user && user !=='viewer') {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
+    } else {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
     };
 
     const restartNginx = () => {
@@ -332,7 +385,13 @@ export default {
         });
     };
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     return {
+      close,
       confirmDelete,
       cancelDelete,
       state,

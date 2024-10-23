@@ -1,20 +1,30 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3 ml-3 mr-3">
     <v-overlay v-model="state.loading">
-      <v-dialog
-        v-model="state.isLoadingDialogue"
-        :scrim="false"
-        persistent
-        width="auto"
-      >
+      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
         <v-card color="#193286">
           <v-card-text>
             {{ $t("sdwan.pleaseWait") }}
-            <v-progress-linear
-              indeterminate
-              color="white"
-              class="mb-0"
-            ></v-progress-linear>
+            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -25,27 +35,19 @@
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column" class="mt-3">
           <div v-for="(message, index) in state.messages" :key="index">
-            <v-alert
-              v-model="message.snackbar"
-              :type="message.color"
-              class="d-flex mt-3"
-              :style="{
-                position: 'fixed',
-                marginTop: '10 px',
-                top: `${100 + index * 80}px`,
-                right: '10px',
-                zIndex: 9999,
-              }"
-            >
+            <v-alert v-model="message.snackbar" :type="message.color" class="d-flex mt-3" :style="{
+              position: 'fixed',
+              marginTop: '10 px',
+              top: `${100 + index * 80}px`,
+              right: '10px',
+              zIndex: 9999,
+            }">
               <!-- style="position: fixed; top: 80px; right: 10px;"> -->
               <span class="c-o ml-3">
                 <strong>{{ message.color }} </strong> {{ message.text }}
               </span>
               <span class="ml-16" style="margin-top: 20px !important">
-                <i
-                  class="fas fa-times justify-end cursor"
-                  @click="handleRemove(index)"
-                ></i>
+                <i class="fas fa-times justify-end cursor" @click="handleRemove(index)"></i>
               </span>
             </v-alert>
           </div>
@@ -53,16 +55,16 @@
             <v-card>
               <v-card-title class="headline">{{
                 $t("delete.DeleteConfirmation")
-              }}</v-card-title>
+                }}</v-card-title>
               <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="cancelDelete">{{
                   $t("buttons.cancel")
-                }}</v-btn>
+                  }}</v-btn>
                 <v-btn color="blue darken-1" text @click="confirmDelete">{{
                   $t("buttons.delete")
-                }}</v-btn>
+                  }}</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -70,19 +72,9 @@
             <v-card-title>
               <v-row>
                 <v-col cols="12" md="6">
-                  <v-text-field
-                    id="filter-text-box"
-                    class="mb-3"
-                    v-model="filterText"
-                    :placeholder="$t('squid.search')"
-                    density="compact"
-                    rounded
-                    variant="solo"
-                    hide-details
-                    dense
-                    prepend-inner-icon="mdi-magnify"
-                    @input="onFilterTextBoxChanged"
-                  ></v-text-field>
+                  <v-text-field id="filter-text-box" class="mb-3" v-model="filterText" :placeholder="$t('squid.search')"
+                    density="compact" rounded variant="solo" hide-details dense prepend-inner-icon="mdi-magnify"
+                    @input="onFilterTextBoxChanged"></v-text-field>
                 </v-col>
 
                 <!-- <v-col cols="12" md="6" class="d-flex justify-end">
@@ -94,33 +86,15 @@
               </v-row>
             </v-card-title>
             <v-card-text>
-              <ag-grid-vue
-                id="grid-wrapper"
-                domLayout="autoHeight"
-                class="ag-theme-alpine"
-                :columnDefs="columnRules"
-                :rowData="rowDataRules.value"
-                @grid-ready="onGridReady"
-                :rowDrag="true"
-                :defaultColDef="defaultColDef"
-                :editType="editType"
-                style="width: 100%"
-                :animateRows="true"
-                @cell-value-changed="onCellValueChanged"
-                @column-row-group-changed="onColumnRowGroupChanged"
-                @column-row-drag-end="onColumnRowDragEnd"
-                @firstDataRendered="onFirstDataRendered"
-                @row-drag-end="onRowDragEnd"
-                :rowSelection="'multiple'"
-                :overlayNoRowsTemplate="overlayTemplate"
-              >
+              <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnRules"
+                :rowData="rowDataRules.value" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef"
+                :editType="editType" style="width: 100%" :animateRows="true" @cell-value-changed="onCellValueChanged"
+                @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
+                @firstDataRendered="onFirstDataRendered" @row-drag-end="onRowDragEnd" :rowSelection="'multiple'"
+                :overlayNoRowsTemplate="overlayTemplate">
               </ag-grid-vue>
-              <v-pagination
-                class="mt-5"
-                v-model="state.page"
-                :length="state.nombrePageRules"
-                @update:model-value="getData"
-              ></v-pagination>
+              <v-pagination class="mt-5" v-model="state.page" :length="state.nombrePageRules"
+                @update:model-value="getData"></v-pagination>
             </v-card-text>
           </v-card>
 
@@ -135,16 +109,8 @@
                 :isLarge="true"
                 @click="cancel"
               /> -->
-              <VButton
-                rounded
-                outlined
-                color="#213E9F"
-                label-color="#ffffff"
-                :label="$t('buttons.update')"
-                :isLarge="true"
-                class="ml-2"
-                @click="save"
-              />
+              <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.update')"
+                :isLarge="true" class="ml-2" @click="save" />
             </div>
           </div>
         </div>
@@ -159,6 +125,7 @@ import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { onMounted, reactive, ref, computed } from "vue";
 import { inject } from "vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
 import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSS
@@ -180,6 +147,8 @@ export default {
     const overlayTemplate = ref("");
     const state = reactive({
       nombrePageRules: null,
+      isviewModal: false,
+      viewModal: false,
       page: 1,
       loading: false,
       isLoadingDialogue: false,
@@ -381,14 +350,26 @@ export default {
       flex: 1,
       suppressMovable: true,
     };
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const onFilterTextBoxChanged = () => {
       gridApi.value.setQuickFilter(
         document.getElementById("filter-text-box").value
       );
     };
     const handleAction = (action, rowData) => {
-      rowDataToDelete.value = rowData;
-      deleteDialog.value = true;
+      const user = user_privilege('Suricata');
+      if (user && user !== 'viewer') {
+        rowDataToDelete.value = rowData;
+        deleteDialog.value = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
     };
     const addRow = () => {
       const newRow = {
@@ -506,6 +487,8 @@ export default {
     };
 
     const save = async () => {
+      const user = user_privilege('Suricata');
+      if (user && user !== 'viewer') {
       let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
       const dataToSend = modifiedRows.map((row) => {
         return {
@@ -556,6 +539,11 @@ export default {
           text: t("suricata.failed"),
         });
       }
+    } 
+    else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
     };
 
     const cancel = () => {
@@ -733,6 +721,7 @@ export default {
       columnRules,
       rowDataRules,
       defaultColDef,
+      close,
       rowGroupPanelShow,
       emitter,
       currentIndex,

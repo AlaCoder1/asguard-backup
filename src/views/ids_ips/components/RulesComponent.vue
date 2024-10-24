@@ -363,7 +363,7 @@ export default {
     };
     const handleAction = (action, rowData) => {
       const user = user_privilege('Suricata');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
         rowDataToDelete.value = rowData;
         deleteDialog.value = true;
       } else {
@@ -488,7 +488,7 @@ export default {
 
     const save = async () => {
       const user = user_privilege('Suricata');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
       let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
       const dataToSend = modifiedRows.map((row) => {
         return {

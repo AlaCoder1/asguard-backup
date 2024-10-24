@@ -282,7 +282,7 @@ export default {
       const user = user_privilege('Proxy');
       switch (action) {
         case "edit":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !=='default') {
             state.modalDataRule = {};
             state.modalModeRule = "edit";
             state.isModalOpenRule = true;
@@ -293,7 +293,7 @@ export default {
           };
           break;
         case "delete":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !=='default') {
             state.deleteDialogRule = true;
             state.deletedRow = rowData;
           } else {
@@ -308,7 +308,7 @@ export default {
 
     const openModalRule = () => {
       const user = user_privilege('Waf');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
         state.modalDataRule = {};
         state.modalModeRule = "create";
         state.isModalOpenRule = true;

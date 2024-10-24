@@ -204,7 +204,7 @@ def assign_vxlan_interface(request):
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":f"VXLAN{vxlan_id}",
-                        "description":f"test default config {vxlan_interface_name}"
+                        # "description":f"test default config {vxlan_interface_name}"
                     }
             if not Interface.objects.filter(ifname=vxlan_interface_name).exists():
                 aux_save=add_vxlan_sys(parent_interface,vxlan_id,vxlan_interface_name,vxlan_source_address,vxlan_destination_address,vxlan_destination_port,vxlan_connection_uuid)

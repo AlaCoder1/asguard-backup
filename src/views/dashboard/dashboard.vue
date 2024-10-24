@@ -23,11 +23,11 @@
             </v-dialog>
           </v-overlay>
           <v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+            <v-dialog v-model="state.d" :scrim="false" width="auto">
               <v-card color="#193286" class="alert-box">
                 <v-card-title class="img-containter">
                   <img
-                    src="../../assets/images/view.png"
+                    src="@/assets/images/view.png"
                     alt="logo"
                     class="img-view"
                     width="100"
@@ -196,7 +196,7 @@ export default {
       of: "/",
     });
     const state = reactive({
-      isviewModal: false,
+      d: false,
       viewModal: false,
       snackbar: false,
       color: "",
@@ -455,7 +455,7 @@ export default {
               action: "start",
               service: rowData.service,
             };
-
+          
             axios
               .put("/monitoring/action", payloadStart)
               .then((response) => {
@@ -556,7 +556,7 @@ export default {
     };
 
     const close = () => {
-      state.isviewModal = false;
+      state.d = false;
       state.viewModal = false;
     };
     const onGridReady = (params) => {

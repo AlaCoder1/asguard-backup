@@ -255,7 +255,7 @@ export default {
     const rowDataAlerts = reactive({});
     const handleRemove = (index) => {
       const user = user_privilege('Suricata');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
       state.messages[index].snackbar = false;
     } else {
         state.isviewModal = true;
@@ -349,7 +349,7 @@ export default {
     }
     const reloadData = async () => {
       const user = user_privilege('Suricata');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       state.loading = true;

@@ -529,7 +529,7 @@ export default {
     const cancel = () => {
       //General information Phase 1
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
 
       state.tunnelSettings = "";
       state.connectionMethod = {
@@ -657,17 +657,22 @@ export default {
       state.isviewModal = false;
       state.viewModal = false;
     };
-
+    const champNoInclude = computed(() => {
+      return t("errors.ChampNoInclude");
+    });
     const rules = computed(() => {
       return {
         //General information Phase 1
 
         tunnelSettings: {
           required: helpers.withMessage(error, required),
-          isValidTunnelSettings: helpers.withMessage(
-            champ,
-            helpers.regex(/^[A-Za-z0-9_\-]+$/)
-          ),
+          isValidName: helpers.withMessage(
+              champNoInclude,
+
+              helpers.regex(
+                /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/
+              )
+            ),
         },
         connectionMethod: { required: helpers.withMessage(error, required) },
         keyExchange: { required: helpers.withMessage(error, required) },
@@ -1335,7 +1340,7 @@ export default {
 
     const save = async () => {
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
       const result = await v$.value.$validate();
 
       const csrfToken = getCookie("csrftoken");

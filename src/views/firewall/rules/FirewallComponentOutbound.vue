@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-5 mb-10">
     <div class="container">
       <h4>{{ $t("firewall.outbound") }}</h4>
@@ -7,20 +26,20 @@
         <v-card>
           <v-card-title class="headline">{{
             $t("firewall.delete_confirm")
-          }}</v-card-title>
+            }}</v-card-title>
           <v-card-text>{{ $t("firewall.msg_confirm_delete") }}</v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="blue darken-1" text @click="cancelDelete">{{
               $t("firewall.cancel")
-            }}</v-btn>
+              }}</v-btn>
             <v-btn color="blue darken-1" text @click="confirmDelete">{{
               $t("firewall.delete")
-            }}</v-btn>
+              }}</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <!-- Modal -->
+    
       <ModalFirewallRuleOutbound
         :isOpen="state.isModalOpen"
         :editRow="state.editRow"
@@ -30,53 +49,28 @@
           <v-card-title> -->
       <v-row class="mt-8 mb-6">
         <v-col cols="12" md="6">
-          <v-text-field
-            id="filter-text-outbound"
-            v-model="filterText"
-            :placeholder="$t('firewall.search')"
-            density="compact"
-            rounded
-            variant="solo"
-            hide-details
-            dense
-            prepend-inner-icon="mdi-magnify"
-            @input="onFilterTextBoxChanged"
-          ></v-text-field>
+          <v-text-field id="filter-text-outbound" v-model="filterText" :placeholder="$t('firewall.search')"
+            density="compact" rounded variant="solo" hide-details dense prepend-inner-icon="mdi-magnify"
+            @input="onFilterTextBoxChanged"></v-text-field>
         </v-col>
         <v-col cols="12" md="6" class="d-flex justify-end">
           <v-btn class="ml-3 mt-2" @click="openModalAdd">
             <i class="fas fa-plus" style="color: #086eae"></i>
             <span class="ml-2" style="color: #086eae">{{
               $t("firewall.add")
-            }}</span>
+              }}</span>
           </v-btn>
         </v-col>
       </v-row>
-      <v-alert
-        v-model="state.snackbar"
-        v-for="(error, index) in state.textAlert"
-        :key="index"
-        :type="error.status === 400 ? 'error' : 'success'"
-        :color="error.status === 400 ? 'error' : 'success'"
-        style="margin-bottom: 10px"
-      >
+      <v-alert v-model="state.snackbar" v-for="(error, index) in state.textAlert" :key="index"
+        :type="error.status === 400 ? 'error' : 'success'" :color="error.status === 400 ? 'error' : 'success'"
+        style="margin-bottom: 10px">
         {{ error.msg }}
       </v-alert>
 
-      <ag-grid-vue
-        id="grid-wrapper"
-        domLayout="autoHeight"
-        class="ag-theme-alpine"
-        :columnDefs="columnDefs"
-        :rowData="rowData.value"
-        @grid-ready="onGridReady"
-        :defaultColDef="defaultColDef"
-        :gridOptions="gridOptions"
-        style="width: 100%"
-        :pagination="true"
-        :paginationPageSize="4"
-        :localeText="paginationLocalization"
-      >
+      <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnDefs"
+        :rowData="rowData.value" @grid-ready="onGridReady" :defaultColDef="defaultColDef" :gridOptions="gridOptions"
+        style="width: 100%" :pagination="true" :paginationPageSize="4" :localeText="paginationLocalization">
         <!-- @column-row-group-changed="onColumnRowGroupChanged"
              @firstDataRendered="onFirstDataRendered"
         @column-row-drag-end="onColumnRowDragEnd" -->
@@ -86,112 +80,77 @@
       <v-card v-if="changes" class="mt-3">
         <v-card-title>Changes</v-card-title>
         <v-card-text>
-          <v-row
-            :class="[oldRow.length !== 0 ? 'mt-5' : 'justify-start mt-5 ml-2']"
-          >
-            <v-col
-              :cols="oldRow.length !== 0 ? 6 : 1"
-              v-if="oldRow.length"
-              style=""
-            >
+          <v-row :class="[oldRow.length !== 0 ? 'mt-5' : 'justify-start mt-5 ml-2']">
+            <v-col :cols="oldRow.length !== 0 ? 6 : 1" v-if="oldRow.length" style="">
               <!-- <span v-if="oldRow.length === 0"
                 >-----------------------------</span
               > -->
               <v-row v-for="rule in sortedrray" :key="rule.id">
-                <span
-                  v-if="
-                    (rule.id && rule.status === 'initial') ||
-                    (rule.id && rule.status === 'old')
-                  "
-                  style="
+                <span v-if="
+                  (rule.id && rule.status === 'initial') ||
+                  (rule.id && rule.status === 'old')
+                " style="
                     color: #ef233c;
                     display: flex;
                     left: 1%;
                     position: relative;
                     font-size: 16px;
                     font-weight: bold;
-                  "
-                >
+                  ">
                   <span>--</span>
                   {{
-                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${
-                      rule.saddr
-                    } ${rule.sport === undefined ? "" : rule.sport} ${
-                      rule.daddr
-                    } ${rule.dport === undefined ? "" : rule.dport}   `
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${rule.saddr
+                    } ${rule.sport === undefined ? "" : rule.sport} ${rule.daddr
+                    } ${rule.dport === undefined ? "" : rule.dport} `
                   }}
                 </span>
-                <del
-                  v-if="rule.id && rule.status === 'deleted'"
-                  style="
+                <del v-if="rule.id && rule.status === 'deleted'" style="
                     color: #ef233c;
                     display: flex;
                     left: 1%;
                     position: relative;
                     font-size: 16px;
                     font-weight: bold;
-                  "
-                >
+                  ">
                   <span>--</span>
                   {{
-                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${
-                      rule.saddr
-                    } ${rule.sport === undefined ? "" : rule.sport} ${
-                      rule.daddr
-                    } ${rule.dport === undefined ? "" : rule.dport}   `
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${rule.saddr
+                    } ${rule.sport === undefined ? "" : rule.sport} ${rule.daddr
+                    } ${rule.dport === undefined ? "" : rule.dport} `
                   }}
                 </del>
               </v-row>
             </v-col>
             <v-col cols="6">
               <v-row v-for="rule in rowData.value" :key="rule.uuid">
-                <span
-                  v-if="rule.status === 'new' || rule.status === 'old'"
-                  :style="{
-                    color: rule?.status === 'new' ? ' #4CCD99' : '  #4CCD99',
-                  }"
-                  style="
+                <span v-if="rule.status === 'new' || rule.status === 'old'" :style="{
+                  color: rule?.status === 'new' ? ' #4CCD99' : '  #4CCD99',
+                }" style="
                     display: flex;
                     /* left: 15%; */
                     position: relative;
                     font-size: 16px;
                     font-weight: bold;
-                  "
-                >
+                  ">
                   <span> {{ `${rule?.status === "new" ? "+++" : "+-"}` }}</span>
                   {{
-                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${
-                      rule.saddr
-                    } ${rule.sport === undefined ? "" : rule.sport} ${
-                      rule.daddr
-                    } ${rule.dport === undefined ? "" : rule.dport}   `
-                  }}</span
-                >
+                    ` ${rule.type_rule} ${rule.policy} ${rule.protocol} ${rule.saddr
+                    } ${rule.sport === undefined ? "" : rule.sport} ${rule.daddr
+                    } ${rule.dport === undefined ? "" : rule.dport} `
+                  }}</span>
               </v-row>
             </v-col>
           </v-row>
         </v-card-text>
       </v-card>
       <div class="d-flex justify-end ml-3 mt-3 mb-10">
-        <v-btn
-          rounded
-          outlined
-          color="#213E9F"
-          label-color="#ffffff"
-          :isLarge="false"
-          :disabled="!rowDataLength"
-          @click="saveRules"
-        >
+        <v-btn rounded outlined color="#213E9F" label-color="#ffffff" :isLarge="false" :disabled="!rowDataLength"
+          @click="saveRules">
           <span class="text-white pr-3 pl-3">{{ $t("buttons.save") }}</span>
         </v-btn>
       </div>
 
-      <v-snackbar
-        :timeout="2000"
-        v-model="state.snackbarDelete"
-        location="bottom right"
-        :color="state.color"
-      >
+      <v-snackbar :timeout="2000" v-model="state.snackbarDelete" location="bottom right" :color="state.color">
         {{ state.textAlertDelete }}
       </v-snackbar>
     </div>
@@ -215,6 +174,7 @@ import VButton from "../../../components/VButton.vue";
 import ModalFirewallRuleOutbound from "../../../components/modals/ModalFirewallRuleOutbound.vue";
 import { useI18n } from "vue-i18n";
 import { v4 as uuidv4 } from "uuid";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default defineComponent({
   name: "Outbound",
@@ -240,6 +200,8 @@ export default defineComponent({
       // deletedRow: null,
       snackbar: false,
       color: "",
+      isviewModal: false,
+      viewModal: false,
       textAlert: [],
       textAlertDelete: "",
       snackbarDelete: false,
@@ -263,6 +225,11 @@ export default defineComponent({
     };
 
     const changes = ref(false);
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
 
     const rowDataLength = computed(() => {
       return !rowData.value || rowData.value.length == 0 ? false : true;
@@ -450,15 +417,24 @@ export default defineComponent({
     const rowDataToDelete = ref(null);
 
     const openModalAdd = () => {
-      if (last_Subscription.value.includes("Firewall L4")) {
-        state.modalData = {};
-        state.modalMode = "create";
-        state.isModalOpen = true;
-        emitter.emit("inter-Outbound-uuid", props.uuid);
+      const user = user_privilege();
+
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
       } else {
-        emitter.emit("firewal-subscription");
-        window.scrollTo(0, 0);
-      }
+
+        if (last_Subscription.value.includes("Firewall L4")) {
+          state.modalData = {};
+          state.modalMode = "create";
+          state.isModalOpen = true;
+          emitter.emit("inter-Outbound-uuid", props.uuid);
+        } else {
+          emitter.emit("firewal-subscription");
+          window.scrollTo(0, 0);
+        }
+      };
     };
 
     const onGridReady = (params) => {
@@ -528,18 +504,32 @@ export default defineComponent({
       );
     };
     const handleAction = (action, rowData) => {
+      const user = user_privilege();
+
       switch (action) {
         case "delete":
-          rowDataToDelete.value = rowData;
-          deleteDialog.value = true;
-          state.rowDataId = rowData.uuid;
+          if (user === "viewer") {
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            rowDataToDelete.value = rowData;
+            deleteDialog.value = true;
+            state.rowDataId = rowData.uuid;
+          };
+
           break;
         case "update":
-          mode.value = "update";
-          state.modalData = {};
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
+          if (user === "viewer") {
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            mode.value = "update";
+            state.modalData = {};
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+          };
+
           break;
         default:
           break;
@@ -806,42 +796,50 @@ export default defineComponent({
       showAddModal.value = false;
     };
     const saveRules = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      let payload = rowData.value.map((e) => {
-        return {
-          id: e.id ?? null,
-          policy: e.policy,
-          saddr: e.saddr,
-          daddr: e.daddr,
-          sport: e.sport,
-          dport: e.dport,
-          protocol: e.protocol,
-          type_rule: e.type_rule,
-          rule_description: e.rule_description,
-        };
-      });
+        let payload = rowData.value.map((e) => {
+          return {
+            id: e.id ?? null,
+            policy: e.policy,
+            saddr: e.saddr,
+            daddr: e.daddr,
+            sport: e.sport,
+            dport: e.dport,
+            protocol: e.protocol,
+            type_rule: e.type_rule,
+            rule_description: e.rule_description,
+          };
+        });
 
-      axios
-        .post(`/rules/saveRules/${props.activeTab}`, payload)
-        .then((response) => {
-          if (response.status == "200") {
+        axios
+          .post(`/rules/saveRules/${props.activeTab}`, payload)
+          .then((response) => {
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.textAlert = response.data.response;
+              setTimeout(() => {
+                location.reload();
+              }, 2000);
+            }
+          })
+          .catch((i) => {
             state.snackbar = true;
-            state.textAlert = response.data.response;
+            state.textAlert = i.response.data.response;
+
             setTimeout(() => {
               location.reload();
             }, 2000);
-          }
-        })
-        .catch((i) => {
-          state.snackbar = true;
-          state.textAlert = i.response.data.response;
+          });
+      };
 
-          setTimeout(() => {
-            location.reload();
-          }, 2000);
-        });
     };
     const cancel = () => {
       showAddModal.value = false;
@@ -1083,6 +1081,7 @@ export default defineComponent({
       cancelDelete,
       confirmDelete,
       saveModal,
+      close,
       cancel,
       gridOptions,
     };

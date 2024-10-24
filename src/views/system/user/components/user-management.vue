@@ -137,7 +137,7 @@ export default {
       rowData: [], // Initialize rowData as an empty array
       gridOptions: {
         pagination: true,
-        paginationPageSize: 5,
+        paginationPageSize: 3,
         rowSelection: "single",
         // Rest of the gridOptions
       },

@@ -1,4 +1,36 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="@/assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <div class="mt-5">
     <div class="container">
       <h4>{{ $t("firewall.inbound") }}</h4>
@@ -201,6 +233,7 @@
 <script>
 import { AgGridVue } from "ag-grid-vue3";
 import axios from "axios";
+import { user_privilege } from "@/mixins/user_privilege.js";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import {
@@ -240,6 +273,8 @@ export default defineComponent({
       // deletedRow: null,
       snackbar: false,
       color: "",
+      isviewModal: false,
+      viewModal: false,
       textAlert: [],
       textAlertDelete: "",
       snackbarDelete: false,
@@ -419,6 +454,10 @@ export default defineComponent({
       eGui.style.lineHeight = "-4";
       return eGui;
     }
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
     function formatedLineDport(data) {
       const rslt = data.data.dport ? data.data.dport : "--";
       let eGui = document.createElement("div");
@@ -446,6 +485,9 @@ export default defineComponent({
     const rowDataToDelete = ref(null);
 
     const openModalAdd = () => {
+      const user = user_privilege();
+      if (user !== "viewer") {
+
       if (last_Subscription.value.includes("Firewall L4")) {
       state.modalData = {};
       state.modalMode = "create";
@@ -456,6 +498,10 @@ export default defineComponent({
         emitter.emit("firewal-subscription");
         window.scrollTo(0, 0);
       }
+    } else {
+      state.isviewModal = true;
+      state.viewModal = true;
+    }
     };
 
     const onGridReady = (params) => {
@@ -525,18 +571,32 @@ export default defineComponent({
       );
     };
     const handleAction = (action, rowData) => {
+      const user = user_privilege();
       switch (action) {
         case "delete":
-          rowDataToDelete.value = rowData;
+          if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            rowDataToDelete.value = rowData;
           deleteDialog.value = true;
           state.rowDataId = rowData.uuid;
+            };
           break;
         case "update":
-          mode.value = "update";
+        if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            mode.value = "update";
           state.modalData = {};
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
+            };
+
           break;
         default:
           break;
@@ -719,6 +779,13 @@ export default defineComponent({
       showAddModal.value = false;
     };
     const saveRules = () => {
+      const user = user_privilege();
+      if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
+          else {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -758,6 +825,7 @@ export default defineComponent({
             location.reload();
           }, 2000);
         });
+      }
     };
     const cancel = () => {
       showAddModal.value = false;
@@ -990,6 +1058,7 @@ export default defineComponent({
       cancelDelete,
       confirmDelete,
       saveModal,
+      close,
       cancel,
       gridOptions,
       sortedrray,

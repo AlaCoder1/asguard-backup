@@ -944,7 +944,7 @@ export default {
       const user = user_privilege('Openvpn');
       switch (action) {
         case "edit":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user !== 'default') {
           gridApi.value.setFocusedCell(index);
           gridApi.value.startEditingCell({
             rowIndex: index,
@@ -956,7 +956,7 @@ export default {
           };
           break;
         case "delete":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user !== 'default') {
           const index = rowDataCertificats.value.findIndex(
             (item) => item.host === rowData.host
           );
@@ -1014,7 +1014,7 @@ export default {
 
     const addNewRow = () => {
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !== 'default') {
       const newRow = { host: "", port: "" };
       rowDataCertificats.value.push(newRow);
       if (gridApi.value) {
@@ -1155,7 +1155,7 @@ export default {
       const user = user_privilege('Openvpn');
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !== 'default') {
 
       const result = await v$.value.$validate();
 
@@ -1396,7 +1396,7 @@ export default {
 
     const cancel = () => {
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !== 'default') {
       state.id = "";
       state.modeState = "create";
       state.isEditState = "";

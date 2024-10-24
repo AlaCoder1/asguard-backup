@@ -70,10 +70,10 @@
       <v-card-actions>
         <v-btn color="error" text @click="deleteItem">{{
           $t("buttons.delete")
-          }}</v-btn>
+        }}</v-btn>
         <v-btn text @click="dialogDelete = false">{{
           $t("buttons.cancel")
-          }}</v-btn>
+        }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>

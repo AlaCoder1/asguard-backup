@@ -188,7 +188,7 @@ def assign_vlan_interface(request):
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":f"VLAN{vlan_object.vlan_tag}",
-                        "description":f"test default config vlan {vlan_tag}"
+                        # "description":f"test default config vlan {vlan_tag}"
                     }
             if not Interface.objects.filter(ifname=f"vlan{vlan_object.vlan_tag}@{parent_interface}").exists():
                 aux_save=add_vlan_sys(parent_interface,vlan_tag,vlan_priority)
@@ -245,7 +245,7 @@ def update_vlan_interface(request,id_interface):
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":f"VLAN{vlan_object.vlan_tag}",
-                        "description":f"default config vlan{vlan_object.vlan_tag}",
+                        # "description":f"default config vlan{vlan_object.vlan_tag}",
                     }
             
             vlan_object=Interface.objects.get(id=id_interface)

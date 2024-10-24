@@ -309,7 +309,7 @@ export default {
 
     const serve = async () => {
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
       const result = await v$.value.$validate();
 
       if (result) {

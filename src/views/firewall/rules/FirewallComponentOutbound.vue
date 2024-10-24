@@ -39,8 +39,12 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <!-- Modal -->
-      <ModalFirewallRuleOutbound :isOpen="state.isModalOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
+    
+      <ModalFirewallRuleOutbound
+        :isOpen="state.isModalOpen"
+        :editRow="state.editRow"
+        :modalMode="state.modalMode"
+      />
       <!-- <v-card class="mt-10">
           <v-card-title> -->
       <v-row class="mt-8 mb-6">

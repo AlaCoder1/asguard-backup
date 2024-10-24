@@ -657,17 +657,22 @@ export default {
       state.isviewModal = false;
       state.viewModal = false;
     };
-
+    const champNoInclude = computed(() => {
+      return t("errors.ChampNoInclude");
+    });
     const rules = computed(() => {
       return {
         //General information Phase 1
 
         tunnelSettings: {
           required: helpers.withMessage(error, required),
-          isValidTunnelSettings: helpers.withMessage(
-            champ,
-            helpers.regex(/^[A-Za-z0-9_\-]+$/)
-          ),
+          isValidName: helpers.withMessage(
+              champNoInclude,
+
+              helpers.regex(
+                /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/
+              )
+            ),
         },
         connectionMethod: { required: helpers.withMessage(error, required) },
         keyExchange: { required: helpers.withMessage(error, required) },

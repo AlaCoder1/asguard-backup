@@ -111,7 +111,7 @@ export default {
       rowData: [],
       gridOptions: {
         pagination: true,
-        paginationPageSize: 5,
+        paginationPageSize: 3,
         rowSelection: "single",
       },
       paginationLocalization: {

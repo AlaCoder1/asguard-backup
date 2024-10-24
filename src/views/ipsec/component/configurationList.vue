@@ -1,21 +1,31 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3 ml-3 mr-3">
     <v-row>
       <v-overlay v-model="loading">
-        <v-dialog
-          v-model="isLoadingDialogue"
-          :scrim="false"
-          persistent
-          width="auto"
-        >
+        <v-dialog v-model="isLoadingDialogue" :scrim="false" persistent width="auto">
           <v-card color="#193286">
             <v-card-text>
               {{ $t("requiredfield.attente") }}
-              <v-progress-linear
-                indeterminate
-                color="white"
-                class="mb-0"
-              ></v-progress-linear>
+              <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
             </v-card-text>
           </v-card>
         </v-dialog>
@@ -24,46 +34,21 @@
       <v-col cols="12">
         <h4 class="mb-1">
           IPSEC PEERS
-          <i
-            class="mdi mdi-play-circle mr-1 ml-1"
-            style="color: #4caf50; font-size: 20px; cursor: pointer"
-            @click="startStopServer('start')"
-          ></i>
-          <i
-            v-if="status"
-            class="mdi mdi-stop-circle"
-            style="color: #b00020; font-size: 20px; cursor: pointer"
-            @click="startStopServer('stop')"
-          ></i>
+          <i class="mdi mdi-play-circle mr-1 ml-1" style="color: #4caf50; font-size: 20px; cursor: pointer"
+            @click="startStopServer('start')"></i>
+          <i v-if="status" class="mdi mdi-stop-circle" style="color: #b00020; font-size: 20px; cursor: pointer"
+            @click="startStopServer('stop')"></i>
         </h4>
 
         <v-divider></v-divider>
         <div class="mt-3" style="display: flex; flex-direction: column">
-          <ag-grid-vue
-            id="grid-wrapper"
-            domLayout="autoHeight"
-            class="ag-theme-alpine mt-3 mb-3"
-            :columnDefs="columns"
-            :rowData="rowData.value"
-            :gridOptions="gridOptions"
-            :defaultColDef="defaultColDef"
-            :overlayNoRowsTemplate="overlayTemplate"
-            :rowGroupPanelShow="rowGroupPanelShow"
-            @grid-ready="onGridReady"
-            style="width: 100%; height: 100%"
-            :localeText="paginationLocalization"
-          />
+          <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3 mb-3" :columnDefs="columns"
+            :rowData="rowData.value" :gridOptions="gridOptions" :defaultColDef="defaultColDef"
+            :overlayNoRowsTemplate="overlayTemplate" :rowGroupPanelShow="rowGroupPanelShow" @grid-ready="onGridReady"
+            style="width: 100%; height: 100%" :localeText="paginationLocalization" />
           <div class="justify-end d-flex mr-3 mt-3 mb-3">
-            <VButton
-              rounded
-              outlined
-              color="#213E9F"
-              label-color="#ffffff"
-              :label="$t('PageIpsec.addnewpeer')"
-              :isLarge="true"
-              class="ml-2"
-              @click="addServer"
-            />
+            <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('PageIpsec.addnewpeer')"
+              :isLarge="true" class="ml-2" @click="addServer" />
           </div>
           <br />
           <br />
@@ -71,12 +56,7 @@
         </div>
       </v-col>
     </v-row>
-    <v-snackbar
-      :timeout="2000"
-      v-model="snackbar"
-      location="bottom right"
-      :color="color"
-    >
+    <v-snackbar :timeout="2000" v-model="snackbar" location="bottom right" :color="color">
       {{ textAlert }}
 
       <template v-slot:actions> </template>
@@ -90,10 +70,10 @@
       <v-card-actions>
         <v-btn color="error" text @click="deleteItem">{{
           $t("buttons.delete")
-        }}</v-btn>
+          }}</v-btn>
         <v-btn text @click="dialogDelete = false">{{
           $t("buttons.cancel")
-        }}</v-btn>
+          }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -106,6 +86,7 @@ import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { onMounted, reactive, computed, ref } from "vue";
 import { inject } from "vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
 import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSS
@@ -122,6 +103,10 @@ export default {
       of: "/",
     });
     const emitter = inject("emitter");
+    const state = reactive({
+      isviewModal: false,
+      viewModal: false,
+    })
     const color = ref(null);
     const snackbar = ref(false);
     const textAlert = ref(false);
@@ -473,27 +458,46 @@ export default {
       });
       return eGui;
     }
-    const handleAction = (action, rowData) => {
+    const handleAction = (action, rowData) => {      
+      const user = user_privilege('Ipsec');
+
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "edit":
+        if (user && user !== 'viewer') {
+
           console.log("edit :", rowData);
           emitter.emit("add-serverIpsec");
 
           setTimeout(() => {
             emitter.emit("edit-serverIpsec", rowData);
           }, 1000);
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
           break;
         case "delete":
+        if (user && user !== 'viewer') {
+
           currentRowToDelete.value = rowData;
           dialogDelete.value = true;
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
           break;
         case "up":
+        if (user && user !== 'viewer') {
+
           console.log("up", rowData);
           let id = rowData.id;
           upServer(id);
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
           break;
         default:
           break;
@@ -564,7 +568,13 @@ export default {
       }
     };
     const addServer = () => {
-      emitter.emit("add-serverIpsec");
+      const user = user_privilege('Ipsec');
+      if (user && user !== 'viewer') {
+        emitter.emit("add-serverIpsec");
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
     };
     const deleteItem = () => {
       // Perform delete action when confirmed
@@ -623,33 +633,47 @@ export default {
     });
 
     const startStopServer = (data) => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const user = user_privilege('Ipsec');
+      if (user && user !== 'viewer') {
 
-      let payload = {
-        status: data,
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+        let payload = {
+          status: data,
+        };
+
+        axios
+          .post("/ipsec/statusIPsec", payload)
+          .then((response) => {
+            snackbar.value = true;
+            color.value = "success";
+            textAlert.value = response.data.msg;
+
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          })
+          .catch((i) => {
+            snackbar.value = true;
+            color.value = "red";
+            textAlert.value = i.response.data.error;
+          });
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
       };
 
-      axios
-        .post("/ipsec/statusIPsec", payload)
-        .then((response) => {
-          snackbar.value = true;
-          color.value = "success";
-          textAlert.value = response.data.msg;
-
-          setTimeout(() => {
-            location.reload();
-          }, 1000);
-        })
-        .catch((i) => {
-          snackbar.value = true;
-          color.value = "red";
-          textAlert.value = i.response.data.error;
-        });
+    };
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
     };
 
     return {
+      close,
       loading,
+      state,
       isLoadingDialogue,
       status,
       emitter,

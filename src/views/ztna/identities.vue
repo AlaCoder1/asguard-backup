@@ -3,7 +3,7 @@
     <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="../../assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
         <v-card-text>
           You do not have the required permissions to perform any
           actions.<br />

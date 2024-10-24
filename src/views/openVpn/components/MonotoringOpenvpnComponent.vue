@@ -511,7 +511,7 @@ export default {
     const serve = async () => {
       const result = await v$.value.$validate();
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
 
       if (result) {
         if (state.server) {

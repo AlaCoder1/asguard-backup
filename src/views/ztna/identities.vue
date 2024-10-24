@@ -38,13 +38,13 @@
     <v-card>
       <v-card-title class="headline">{{
         $t("delete.DeleteConfirmation")
-        }}</v-card-title>
+      }}</v-card-title>
       <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="cancelDelete">{{
           $t("buttons.cancel")
-          }}</v-btn>
+        }}</v-btn>
         <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
       </v-card-actions>
     </v-card>
@@ -374,7 +374,7 @@ export default {
       const user = user_privilege('Ztna');
       switch (action) {
         case "edit":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !== 'default') {
             state.modalMode = "edit";
             state.isModalOpen = true;
             state.editRow = rowData;
@@ -386,7 +386,7 @@ export default {
 
           break;
         case "downloadhost":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !== 'default') {
             if (rowData.os === "windows") {
               let text = windows.value[0].content;
 
@@ -432,7 +432,7 @@ export default {
 
           break;
         case "download":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !== 'default') {
             let text = rowData.token;
             const blob = new Blob([text], {
               type: "application/x-x509-ca-cert",
@@ -457,7 +457,7 @@ export default {
 
           break;
         case "enroll":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !== 'default') {
             openModalEnrollement(rowData.ref_identitie);
           } else {
             state.isviewModal = true;
@@ -466,7 +466,7 @@ export default {
 
           break;
         case "delete":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !== 'default') {
             OpenDelete(rowData.id);
           } else {
             state.isviewModal = true;
@@ -587,7 +587,7 @@ export default {
 
     function checkTokenBeforeAdd() {
       const user = user_privilege('Ztna');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !== 'default') {
         let token = document.getElementById("app").getAttribute("token");
         if (token && token !== "null") {
           openModalAdd();

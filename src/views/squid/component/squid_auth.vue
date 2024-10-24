@@ -158,7 +158,7 @@ export default {
 
     const openModalAdd = () => {
       const user = user_privilege('Proxy');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
         state.modalData = {};
         state.modalMode = "create";
         state.isModalOpen = true;
@@ -226,7 +226,7 @@ export default {
 
     const saveSquid = () => {
       const user = user_privilege('Proxy');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -309,7 +309,7 @@ export default {
       const user = user_privilege('Proxy');
       switch (action) {
         case "delete":
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
           console.log("rowData", rowData);
           state.deleteDialogSquid = true;
           state.deletedRow = rowData;

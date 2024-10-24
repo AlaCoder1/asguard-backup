@@ -262,7 +262,7 @@ export default {
       const user = user_privilege('Proxy');
       switch (action) {
         case "edit":
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
           console.log("rowData", rowData);
 
           state.modalData = {};
@@ -275,7 +275,7 @@ export default {
       };
           break;
         case "enable":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user !=='default') {
           console.log("rowData", rowData);
           const csrfToken = getCookie("csrftoken");
           axios.defaults.headers.common["X-CSRFToken"] = csrfToken;

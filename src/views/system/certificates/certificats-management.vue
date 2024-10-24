@@ -94,4 +94,17 @@ export default {
 .btn-add {
   background: #213e9f;
 }
+.img-view {
+  border-style: none;
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  overflow: hidden;
+}
+.img-containter {
+  display: flex;
+  width: 100%;
+  /* height: 100%; */
+  padding: 0px !important;
+}
 </style>

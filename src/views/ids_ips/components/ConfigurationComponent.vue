@@ -618,7 +618,7 @@ export default {
 
         //   break;
         case "delete":
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
           const index = rowDataAF.value.findIndex(
             (item) => item.id === rowData.id
           );
@@ -644,7 +644,7 @@ export default {
     const reloadData = async () => {
       const user = user_privilege('suricata');
       console.log('user update',user)
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       state.loading = true;
@@ -850,7 +850,7 @@ export default {
     const openModalAdd = () => {
       const user = user_privilege('Suricata');
       console.log(user)
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
@@ -863,7 +863,7 @@ export default {
 
     const submitForm = async () => {
       const user = user_privilege('Suricata');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
       const result = await v$.value.$validate();
       if (result) {
         const csrfToken = getCookie("csrftoken");

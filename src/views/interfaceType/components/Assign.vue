@@ -1,68 +1,59 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="ml-5" style="display: flex; flex-direction: column">
     <h4>{{ $t("typeInterface.assingInterface") }}</h4>
     <v-divider></v-divider>
     <v-row class="mb-15">
       <v-col cols="12">
         <div style="overflow: hidden; flex-grow: 1">
-          <ag-grid-vue
-            id="grid-wrapper"
-            domLayout="autoHeight"
-            class="ag-theme-alpine mt-3"
-            style="width: 100%"
-            @grid-ready="onGridReady"
-            :columnDefs="columnAssign"
-            :rowData="rowDataAssign.value"
-            :pagination="true"
-            :paginationPageSize="5"
-            :overlayNoRowsTemplate="overlayTemplate"
-            :localeText="paginationLocalization"
-          />
+          <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
+            @grid-ready="onGridReady" :columnDefs="columnAssign" :rowData="rowDataAssign.value" :pagination="true"
+            :paginationPageSize="5" :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
         </div>
         <div class="d-flex justify-end mt-3">
-          <VButton
-            rounded
-            outlined
-            color="#213E9F"
-            label-color="#ffffff"
-            :label="$t('buttons.AddInterface')"
-            :isLarge="true"
-            type="submit"
-            class="ml-2"
-            @click="openModalAdd"
-          />
+          <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.AddInterface')"
+            :isLarge="true" type="submit" class="ml-2" @click="openModalAdd" />
         </div>
       </v-col>
     </v-row>
-    <AssignModal
-      :isOpen="state.isModalOpen"
-      :editRow="state.editRow"
-      :modalMode="state.modalMode"
-    />
+    <AssignModal :isOpen="state.isModalOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
   </div>
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
       <v-card-title class="headline">{{
         $t("delete.DeleteConfirmation")
-      }}</v-card-title>
+        }}</v-card-title>
       <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="cancelDelete">{{
           $t("buttons.cancel")
-        }}</v-btn>
+          }}</v-btn>
         <v-btn color="blue darken-1" text @click="confirmDelete">{{
           $t("buttons.delete")
-        }}</v-btn>
+          }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
-  <v-snackbar
-    :timeout="2000"
-    v-model="state.snackbar"
-    location="bottom right"
-    :color="state.color"
-  >
+  <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
     {{ state.textAlert }}
   </v-snackbar>
 </template>
@@ -75,6 +66,7 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import VButton from "@/components/VButton.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 import AssignModal from "@/components/modals/AssignModal.vue";
 export default {
@@ -94,6 +86,8 @@ export default {
 
     const state = reactive({
       deleteDialog: false,
+      isviewModal: false,
+      viewModal: false,
       deletedRow: null,
       snackbar: false,
       color: null,
@@ -242,16 +236,31 @@ export default {
     }
 
     const handleActionClient = (action, rowData, index) => {
+      const user = user_privilege();
       switch (action) {
         case "delete":
-          state.deleteDialog = true;
-          state.deletedRow = rowData;
+          if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            state.deleteDialog = true;
+            state.deletedRow = rowData;
+          };
+
 
           break;
         case "edit":
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
+          if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+          };
+
 
           break;
 
@@ -261,12 +270,23 @@ export default {
     };
 
     const openModalAdd = () => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-      emitter.emit("list-assing", rowDataAssign.value);
-    };
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+        emitter.emit("list-assing", rowDataAssign.value);
+      };
 
+    };
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
@@ -301,6 +321,7 @@ export default {
       defaultColDef,
       paginationLocalization,
       emitter,
+      close,
       actionCellRendererKeys,
       openModalAdd,
       onGridReady,

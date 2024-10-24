@@ -465,7 +465,7 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "edit":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           console.log("edit :", rowData);
           emitter.emit("add-serverIpsec");
@@ -479,7 +479,7 @@ export default {
           };
           break;
         case "delete":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           currentRowToDelete.value = rowData;
           dialogDelete.value = true;
@@ -489,7 +489,7 @@ export default {
           };
           break;
         case "up":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           console.log("up", rowData);
           let id = rowData.id;
@@ -569,7 +569,7 @@ export default {
     };
     const addServer = () => {
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
         emitter.emit("add-serverIpsec");
       } else {
         state.isviewModal = true;
@@ -634,7 +634,7 @@ export default {
 
     const startStopServer = (data) => {
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
 
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;

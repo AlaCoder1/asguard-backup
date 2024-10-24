@@ -7,6 +7,7 @@ function user_privilege(service) {
 
   if (user_role.role === 'admin') given_acces = 'see_all'
   else if (user_role.role === 'viewer') given_acces = 'viewer'
+  else if (user_role.role === 'default') given_acces = 'default'
 
   else {
     if (user_role.list_fonctionalities) {

@@ -208,7 +208,7 @@ export default {
       const user = user_privilege('Sdwan');
       switch (action) {
         case "show":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !=='default') {
             console.log("show", rowData);
           }
           else {
@@ -217,7 +217,7 @@ export default {
           };
           break;
         case "edit":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !=='default') {
             console.log("edit", rowData);
             state.modalMode = "edit";
             state.isModalAreaOpen = true;
@@ -228,7 +228,7 @@ export default {
           };
           break;
         case "delete":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !=='default') {
             console.log("delete", rowData);
             state.deleteDialog = true;
             state.deletedRow = rowData;
@@ -244,7 +244,7 @@ export default {
 
     const openModalAdd = () => {
       const user = user_privilege('Sdwan');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
         state.modalData = {};
         state.modalMode = "create";
         state.isModalAreaOpen = true;

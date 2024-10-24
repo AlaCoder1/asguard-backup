@@ -1,20 +1,30 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-overlay v-model="state.loading">
-      <v-dialog
-        v-model="state.isLoadingDialogue"
-        :scrim="false"
-        persistent
-        width="auto"
-      >
+      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
         <v-card color="#193286">
           <v-card-text>
             {{ $t("requiredfield.attente") }}
-            <v-progress-linear
-              indeterminate
-              color="white"
-              class="mb-0"
-            ></v-progress-linear>
+            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -31,15 +41,8 @@
             <label> {{ $t("Waf.Ruleengineinitialization") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <v-select
-              v-model="state.rule_engine"
-              :label="$t('Waf.Ruleengine')"
-              item-title="name"
-              item-value="slug"
-              clearable
-              return-object
-              :items="state.engineList"
-            ></v-select>
+            <v-select v-model="state.rule_engine" :label="$t('Waf.Ruleengine')" item-title="name" item-value="slug"
+              clearable return-object :items="state.engineList"></v-select>
             <p class="error-feedback mb-5" v-if="v$.rule_engine.$error">
               {{ v$.rule_engine.$errors[0].$message }}
             </p>
@@ -49,14 +52,9 @@
             <label> {{ $t("Waf.Accessrequestbodies") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <input
-              type="checkbox"
-              hide-details
-              v-model="state.access_request"
-            />
+            <input type="checkbox" hide-details v-model="state.access_request" />
             <label class="ml-2">
-              {{ $t("Waf.EnableAccessrequestbodies") }}</label
-            >
+              {{ $t("Waf.EnableAccessrequestbodies") }}</label>
           </v-col>
 
           <v-col cols="4">
@@ -66,7 +64,7 @@
             <input type="checkbox" hide-details v-model="state.xml_request" />
             <label class="ml-2">{{
               $t("Waf.EnableXMLrequestbodyparser")
-            }}</label>
+              }}</label>
           </v-col>
 
           <v-col cols="4">
@@ -76,17 +74,14 @@
             <input type="checkbox" hide-details v-model="state.json_request" />
             <label class="ml-2">{{
               $t("Waf.EnableJSONrequestbodyparser")
-            }}</label>
+              }}</label>
           </v-col>
 
           <v-col cols="4" class="mt-5">
             <label>{{ $t("Waf.Maximumrequestbodysize") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <v-text-field
-              :label="$t('Waf.Maximumrequestbodysize')"
-              v-model="state.maximum_request"
-            ></v-text-field>
+            <v-text-field :label="$t('Waf.Maximumrequestbodysize')" v-model="state.maximum_request"></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.maximum_request.$error">
               {{ v$.maximum_request.$errors[0].$message }}
             </p>
@@ -96,10 +91,7 @@
             <label>{{ $t("Waf.Requestbodysizefilesexcluded") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <v-text-field
-              :label="$t('Waf.Requestbodysizefiles')"
-              v-model="state.size_file"
-            ></v-text-field>
+            <v-text-field :label="$t('Waf.Requestbodysizefiles')" v-model="state.size_file"></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.size_file.$error">
               {{ v$.size_file.$errors[0].$message }}
             </p>
@@ -109,15 +101,8 @@
             <label>{{ $t("Waf.RequestBodyLimitAction") }} </label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <v-select
-              v-model="state.limit_action"
-              :label="$t('Waf.RequestBodyLimitAction')"
-              item-title="name"
-              item-value="slug"
-              clearable
-              return-object
-              :items="state.requestBodyList"
-            ></v-select>
+            <v-select v-model="state.limit_action" :label="$t('Waf.RequestBodyLimitAction')" item-title="name"
+              item-value="slug" clearable return-object :items="state.requestBodyList"></v-select>
             <p class="error-feedback mb-5" v-if="v$.limit_action.$error">
               {{ v$.limit_action.$errors[0].$message }}
             </p>
@@ -127,10 +112,7 @@
             <label>{{ $t("Waf.MaximumparsingdepthforJSON") }} </label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <v-text-field
-              :label="$t('Waf.Maximumparsingdepth')"
-              v-model="state.max_parsing"
-            ></v-text-field>
+            <v-text-field :label="$t('Waf.Maximumparsingdepth')" v-model="state.max_parsing"></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.max_parsing.$error">
               {{ v$.max_parsing.$errors[0].$message }}
             </p>
@@ -140,10 +122,7 @@
             <label>{{ $t("Waf.Maximumnumberofargs/request") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <v-text-field
-              :label="$t('Waf.Maximumnumberofargs/request')"
-              v-model="state.max_number"
-            ></v-text-field>
+            <v-text-field :label="$t('Waf.Maximumnumberofargs/request')" v-model="state.max_number"></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.max_number.$error">
               {{ v$.max_number.$errors[0].$message }}
             </p>
@@ -153,10 +132,7 @@
             <label>{{ $t("Waf.PcreMatchLimit") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <v-text-field
-              :label="$t('Waf.PcreMatchLimit')"
-              v-model="state.pcre_match_limit"
-            ></v-text-field>
+            <v-text-field :label="$t('Waf.PcreMatchLimit')" v-model="state.pcre_match_limit"></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.pcre_match_limit.$error">
               {{ v$.pcre_match_limit.$errors[0].$message }}
             </p>
@@ -166,14 +142,9 @@
             <label>{{ $t("Waf.PcreMatchLimitRecursion") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <v-text-field
-              :label="$t('Waf.PcreMatchLimitRecursion')"
-              v-model="state.pcre_limit_recursion"
-            ></v-text-field>
-            <p
-              class="error-feedback mb-5"
-              v-if="v$.pcre_limit_recursion.$error"
-            >
+            <v-text-field :label="$t('Waf.PcreMatchLimitRecursion')"
+              v-model="state.pcre_limit_recursion"></v-text-field>
+            <p class="error-feedback mb-5" v-if="v$.pcre_limit_recursion.$error">
               {{ v$.pcre_limit_recursion.$errors[0].$message }}
             </p>
           </v-col>
@@ -184,23 +155,15 @@
           <v-col cols="8" class="mb-n6">
             <input type="checkbox" hide-details v-model="state.access_bodies" />
             <label class="ml-2">
-              {{ $t("Waf.Enableaccessresponsebodies") }}</label
-            >
+              {{ $t("Waf.Enableaccessresponsebodies") }}</label>
           </v-col>
 
           <v-col cols="4" class="mt-5">
             <label>{{ $t("Waf.ResponseBodyMimeType") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <v-select
-              v-model="state.body_mimetype"
-              :label="$t('Waf.ResponseBodyMimeType')"
-              item-title="name"
-              item-value="slug"
-              clearable
-              return-object
-              :items="state.bodyMimeTypeList"
-            ></v-select>
+            <v-select v-model="state.body_mimetype" :label="$t('Waf.ResponseBodyMimeType')" item-title="name"
+              item-value="slug" clearable return-object :items="state.bodyMimeTypeList"></v-select>
             <p class="error-feedback mb-5" v-if="v$.body_mimetype.$error">
               {{ v$.body_mimetype.$errors[0].$message }}
             </p>
@@ -210,10 +173,7 @@
             <label>{{ $t("Waf.ResponseBodyLimit") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <v-text-field
-              :label="$t('Waf.ResponseBodyLimit')"
-              v-model="state.response_body_limit"
-            ></v-text-field>
+            <v-text-field :label="$t('Waf.ResponseBodyLimit')" v-model="state.response_body_limit"></v-text-field>
             <p class="error-feedback mb-5" v-if="v$.response_body_limit.$error">
               {{ v$.response_body_limit.$errors[0].$message }}
             </p>
@@ -223,19 +183,9 @@
             <label>{{ $t("Waf.ResponseBodyLimitAction") }}</label>
           </v-col>
           <v-col cols="8" class="mb-n6">
-            <v-select
-              v-model="state.response_limit_action"
-              :label="$t('Waf.ResponseBodyLimitAction')"
-              item-title="name"
-              item-value="slug"
-              clearable
-              return-object
-              :items="state.responseBodyList"
-            ></v-select>
-            <p
-              class="error-feedback mb-5"
-              v-if="v$.response_limit_action.$error"
-            >
+            <v-select v-model="state.response_limit_action" :label="$t('Waf.ResponseBodyLimitAction')" item-title="name"
+              item-value="slug" clearable return-object :items="state.responseBodyList"></v-select>
+            <p class="error-feedback mb-5" v-if="v$.response_limit_action.$error">
               {{ v$.response_limit_action.$errors[0].$message }}
             </p>
           </v-col>
@@ -247,36 +197,16 @@
       <v-col cols="4" class="mt-5"> </v-col>
       <v-col>
         <div class="mr-3 flex center">
-          <VButton
-            rounded
-            outlined
-            color="#ffffff"
-            label-color="#213E9F"
-            :label="$t('buttons.cancel')"
-            :isLarge="true"
-            @click="cancel"
-          />
-          <VButton
-            rounded
-            outlined
-            color="#213E9F"
-            label-color="#ffffff"
-            :label="$t('buttons.save')"
-            :isLarge="true"
-            class="ml-2"
-            @click="submitForm"
-          />
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.cancel')" :isLarge="true"
+            @click="cancel" />
+          <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.save')" :isLarge="true"
+            class="ml-2" @click="submitForm" />
         </div>
       </v-col>
     </v-row>
   </div>
 
-  <v-snackbar
-    :timeout="2000"
-    v-model="state.snackbar"
-    location="bottom right"
-    :color="state.color"
-  >
+  <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
     {{ state.textAlert }}
   </v-snackbar>
 </template>
@@ -288,6 +218,7 @@ import VButton from "@/components/VButton.vue";
 import { reactive, onMounted, ref, inject, computed } from "vue";
 import useValidate from "@vuelidate/core";
 import { required, helpers, requiredIf, email } from "@vuelidate/validators";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "ConfigServerDhcp4Component",
@@ -298,6 +229,8 @@ export default {
     const { t } = useI18n();
     const emitter = inject("emitter");
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       loading: false,
       isLoadingDialogue: false,
       id: null,
@@ -370,23 +303,34 @@ export default {
       return cookieValue;
     };
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const cancel = () => {
-      state.id = null;
-      state.rule_engine = null;
-      state.access_request = false;
-      state.xml_request = false;
-      state.json_request = false;
-      state.maximum_request = null;
-      state.size_file = null;
-      state.limit_action = null;
-      state.max_parsing = null;
-      state.max_number = null;
-      state.pcre_match_limit = null;
-      state.pcre_limit_recursion = null;
-      state.access_bodies = false;
-      state.body_mimetype = null;
-      state.response_body_limit = "";
-      state.response_limit_action = null;
+      const user = user_privilege('Waf');
+      if (user && user !== 'viewer') {
+        state.id = null;
+        state.rule_engine = null;
+        state.access_request = false;
+        state.xml_request = false;
+        state.json_request = false;
+        state.maximum_request = null;
+        state.size_file = null;
+        state.limit_action = null;
+        state.max_parsing = null;
+        state.max_number = null;
+        state.pcre_match_limit = null;
+        state.pcre_limit_recursion = null;
+        state.access_bodies = false;
+        state.body_mimetype = null;
+        state.response_body_limit = "";
+        state.response_limit_action = null;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
     };
     const champonlyNumber = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
@@ -519,54 +463,60 @@ export default {
     const v$ = useValidate(rules, state);
 
     const submitForm = async () => {
+      const user = user_privilege('Waf');
+
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-      if (result) {
-        let payload = {
-          rule_engine_initialization: state.rule_engine,
-          access_request_bodies: state.access_request,
-          xml_request_body_parser: state.xml_request,
-          json_request_body_parser: state.json_request,
-          maximum_request_body_size: state.maximum_request,
-          request_body_size_files_excluded: state.size_file,
-          request_body_limit_action: state.limit_action,
-          maximum_parsing_depth_json: state.max_parsing,
-          maximum_number_args_request: state.max_number,
-          pcre_match_limit: state.pcre_match_limit,
-          pcre_match_limit_recursion: state.pcre_limit_recursion,
-          response_body_access: state.access_bodies,
-          response_body_mimetype: state.body_mimetype,
-          response_body_limit: state.response_body_limit,
-          response_body_limit_action: state.response_limit_action,
-        };
-        state.loading = true;
-        state.isLoadingDialogue = true;
-        axios
-          .put(`/waf/updateConfigWaf/${state.id}`, payload)
-          .then((response) => {
-            if (response.status == 200) {
+      if (user && user !== 'viewer') {
+        if (result) {
+          let payload = {
+            rule_engine_initialization: state.rule_engine,
+            access_request_bodies: state.access_request,
+            xml_request_body_parser: state.xml_request,
+            json_request_body_parser: state.json_request,
+            maximum_request_body_size: state.maximum_request,
+            request_body_size_files_excluded: state.size_file,
+            request_body_limit_action: state.limit_action,
+            maximum_parsing_depth_json: state.max_parsing,
+            maximum_number_args_request: state.max_number,
+            pcre_match_limit: state.pcre_match_limit,
+            pcre_match_limit_recursion: state.pcre_limit_recursion,
+            response_body_access: state.access_bodies,
+            response_body_mimetype: state.body_mimetype,
+            response_body_limit: state.response_body_limit,
+            response_body_limit_action: state.response_limit_action,
+          };
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          axios
+            .put(`/waf/updateConfigWaf/${state.id}`, payload)
+            .then((response) => {
+              if (response.status == 200) {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  state.snackbar = false;
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
               state.loading = false;
               state.isLoadingDialogue = false;
               state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              setTimeout(() => {
-                state.snackbar = false;
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            state.snackbar = true;
-            state.color = "error";
-            state.textAlert = i.response.data.error;
-          });
+              state.color = "error";
+              state.textAlert = i.response.data.error;
+            });
+        } else {
+          console.log("error", v$.value);
+        }
       } else {
-        console.log("error", v$.value);
+        state.isviewModal = true;
+        state.viewModal = true;
       }
     };
     return {
@@ -576,6 +526,7 @@ export default {
       cancel,
       state,
       emitter,
+      close,
     };
   },
 };
@@ -594,10 +545,13 @@ export default {
   font-weight: 300;
   line-height: normal;
 }
+
 /* CSS to style the text */
 .text-xs {
-  font-size: 12px; /* Example font size for small text */
+  font-size: 12px;
+  /* Example font size for small text */
 }
+
 .container {
   height: 50px;
 }

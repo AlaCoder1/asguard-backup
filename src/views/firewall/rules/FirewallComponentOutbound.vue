@@ -20,7 +20,7 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <!-- Modal -->
+    
       <ModalFirewallRuleOutbound
         :isOpen="state.isModalOpen"
         :editRow="state.editRow"

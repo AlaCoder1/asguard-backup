@@ -1,20 +1,30 @@
 <template>
+  <v-overlay v-model="viewModal">
+    <v-dialog v-model="isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-card>
     <v-overlay v-model="loading">
-      <v-dialog
-        v-model="isLoadingDialogue"
-        :scrim="false"
-        persistent
-        width="auto"
-      >
+      <v-dialog v-model="isLoadingDialogue" :scrim="false" persistent width="auto">
         <v-card color="#193286">
           <v-card-text>
             {{ $t("sdwan.pleaseWait") }}
-            <v-progress-linear
-              indeterminate
-              color="white"
-              class="mb-0"
-            ></v-progress-linear>
+            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -43,10 +53,8 @@
 
           <div class="px-0 mx-0">
             <v-row class="px-0 mx-0 mt-5">
-              <v-col class="device-style"
-                >{{ $t("interface.device")
-                }}<span style="color: red">*</span></v-col
-              >
+              <v-col class="device-style">{{ $t("interface.device")
+                }}<span style="color: red">*</span></v-col>
             </v-row>
             <v-row class="ml-2 mr-3 mb-n6">
               <v-text-field :model-value="device" readonly></v-text-field>
@@ -113,15 +121,10 @@
                   </div>
                 </td>
                 <td class="new-style">
-                  <v-select
-                    :label="$t('interface.IPV4SetupType')"
-                    background-color="#f6f6f6"
-                    v-model="setuptypeip4"
-                    :items="items.map((item) => item.value)"
-                    class="ml-3"
+                  <v-select :label="$t('interface.IPV4SetupType')" background-color="#f6f6f6" v-model="setuptypeip4"
+                    :items="items.map((item) => item.value)" class="ml-3"
                     :rules="[(v) => !!v || $t('interface.IPV4Required')]"
-                    :no-data-text="$t('certificat.certificatlist')"
-                  ></v-select>
+                    :no-data-text="$t('certificat.certificatlist')"></v-select>
                 </td>
               </tr>
               <tr>
@@ -131,12 +134,8 @@
                   </div>
                 </td>
                 <td>
-                  <v-text-field
-                    :label="$t('interface.MACAddress')"
-                    class="ml-3"
-                    v-model="addmac"
-                    :rules="[macAddressValidation]"
-                  ></v-text-field>
+                  <v-text-field :label="$t('interface.MACAddress')" class="ml-3" v-model="addmac"
+                    :rules="[macAddressValidation]"></v-text-field>
                 </td>
               </tr>
               <tr>
@@ -144,12 +143,8 @@
                   <div class="mt-n4">{{ $t("interface.MTU") }}</div>
                 </td>
                 <td>
-                  <v-text-field
-                    :label="$t('interface.MTU')"
-                    class="ml-3"
-                    v-model="mtuv"
-                    :rules="[validateRange]"
-                  ></v-text-field>
+                  <v-text-field :label="$t('interface.MTU')" class="ml-3" v-model="mtuv"
+                    :rules="[validateRange]"></v-text-field>
                 </td>
               </tr>
               <tr>
@@ -157,11 +152,7 @@
                   <div class="mt-n4">{{ $t("interface.MSS") }}</div>
                 </td>
                 <td>
-                  <v-text-field
-                    :label="$t('interface.MSS')"
-                    class="ml-3"
-                    v-model="mssv"
-                  ></v-text-field>
+                  <v-text-field :label="$t('interface.MSS')" class="ml-3" v-model="mssv"></v-text-field>
                 </td>
               </tr>
               <tr>
@@ -171,13 +162,9 @@
                   </div>
                 </td>
                 <td>
-                  <v-select
-                    :label="$t('interface.speedAndDuplex')"
-                    v-model="speed_duplex"
-                    :items="speedDuplexItems.map((item) => item)"
-                    class="ml-3 speed-duplex-style"
-                    :no-data-text="$t('certificat.certificatlist')"
-                  ></v-select>
+                  <v-select :label="$t('interface.speedAndDuplex')" v-model="speed_duplex"
+                    :items="speedDuplexItems.map((item) => item)" class="ml-3 speed-duplex-style"
+                    :no-data-text="$t('certificat.certificatlist')"></v-select>
                 </td>
               </tr>
             </tbody>
@@ -196,64 +183,35 @@
                   <small style="color: red">*</small>
                 </v-col>
                 <v-col cols="4" class="mb-n6">
-                  <v-text-field
-                    :label="$t('interface.IPV4Address')"
-                    v-model="value_setup_Ipv4.ip_address4"
-                    class="ip-address-style"
-                    :rules="[
+                  <v-text-field :label="$t('interface.IPV4Address')" v-model="value_setup_Ipv4.ip_address4"
+                    class="ip-address-style" :rules="[
                       (v) => !!v || $t('interface.IPV4AddressRequired'),
                       () => ipAddressValidation(value_setup_Ipv4.ip_address4),
-                    ]"
-                  ></v-text-field>
+                    ]"></v-text-field>
                 </v-col>
                 <v-col cols="4" class="mb-n6">
-                  <v-select
-                    :label="$t('sdwan.prefix')"
-                    v-model="value_setup_Ipv4.netmask4"
-                    :items="netmaskItems"
-                    class="ml-3 netmask-select-style"
-                    :rules="[(v) => !!v || $t('interface.netmaskRequired')]"
-                    :no-data-text="$t('certificat.certificatlist')"
-                  ></v-select>
+                  <v-select :label="$t('sdwan.prefix')" v-model="value_setup_Ipv4.netmask4" :items="netmaskItems"
+                    class="ml-3 netmask-select-style" :rules="[(v) => !!v || $t('interface.netmaskRequired')]"
+                    :no-data-text="$t('certificat.certificatlist')"></v-select>
                 </v-col>
                 <v-col align-self="center" cols="3">
                   <label>IPV4 gateway</label>
                   <small style="color: red">*</small>
                 </v-col>
                 <v-col cols="2" class="mb-n6" align-self="center">
-                  <v-btn
-                    color="#F6F6F6"
-                    class="text-none"
-                    variant="flat"
-                    @click="openGatewayDialog"
-                  >
-                    <svg
-                      width="17"
-                      height="17"
-                      viewBox="0 0 17 17"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <mask
-                        id="mask0_50_190"
-                        style="mask-type: luminance"
-                        maskUnits="userSpaceOnUse"
-                        x="0"
-                        y="0"
-                        width="17"
-                        height="17"
-                      >
+                  <v-btn color="#F6F6F6" class="text-none" variant="flat" @click="openGatewayDialog">
+                    <svg width="17" height="17" viewBox="0 0 17 17" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <mask id="mask0_50_190" style="mask-type: luminance" maskUnits="userSpaceOnUse" x="0" y="0"
+                        width="17" height="17">
                         <path d="M17 0H0V17H17V0Z" fill="white" />
                       </mask>
                       <g mask="url(#mask0_50_190)">
                         <path
                           d="M8.70871 0.219971C10.3463 0.219971 11.9472 0.705584 13.3088 1.6154C14.6705 2.52522 15.7317 3.81838 16.3584 5.33135C16.9851 6.84432 17.1491 8.50916 16.8296 10.1153C16.5101 11.7215 15.7215 13.1968 14.5636 14.3548C13.4056 15.5128 11.9302 16.3014 10.3241 16.6209C8.7179 16.9404 7.05306 16.7764 5.54009 16.1497C4.02712 15.523 2.73396 14.4617 1.82414 13.1001C0.914324 11.7385 0.428711 10.1376 0.428711 8.49997C0.428976 6.30406 1.30142 4.19816 2.85416 2.64542C4.4069 1.09268 6.5128 0.220236 8.70871 0.219971Z"
-                          fill="#086EAE"
-                        />
+                          fill="#086EAE" />
                         <path
                           d="M13.6689 8.03597C13.7332 8.09478 13.7842 8.16654 13.8187 8.24652C13.8531 8.32651 13.8703 8.41289 13.8689 8.49997C13.8703 8.58779 13.8542 8.675 13.8216 8.75654C13.789 8.83808 13.7405 8.91233 13.6789 8.97497C13.6167 9.04086 13.5412 9.09277 13.4574 9.12725C13.3736 9.16173 13.2835 9.178 13.1929 9.17497H9.36591V12.981C9.36918 13.0709 9.35391 13.1606 9.32105 13.2443C9.28819 13.3281 9.23845 13.4042 9.17491 13.468C9.11435 13.5295 9.04187 13.578 8.96191 13.6105C8.88195 13.643 8.7962 13.6588 8.70991 13.657C8.62268 13.6583 8.53614 13.6412 8.45599 13.6068C8.37585 13.5723 8.30391 13.5212 8.24491 13.457C8.18336 13.3943 8.13487 13.3201 8.10225 13.2385C8.06963 13.157 8.05354 13.0698 8.05491 12.982V9.17697H4.22791C4.04915 9.17414 3.87848 9.10194 3.75197 8.97562C3.62546 8.84929 3.553 8.67873 3.54991 8.49997C3.54829 8.41285 3.5653 8.32639 3.59979 8.24637C3.63428 8.16635 3.68546 8.09462 3.74991 8.03597C3.81266 7.97421 3.88704 7.92552 3.96876 7.89274C4.05047 7.85995 4.13788 7.84371 4.22591 7.84497H8.05491V4.03797C8.04956 3.85273 8.11789 3.67292 8.24491 3.53797C8.30487 3.47498 8.37701 3.42483 8.45694 3.39056C8.53688 3.35629 8.62294 3.33862 8.70991 3.33862C8.79688 3.33862 8.88294 3.35629 8.96288 3.39056C9.04281 3.42483 9.11495 3.47498 9.17491 3.53797C9.3023 3.67276 9.37099 3.85259 9.36591 4.03797V7.84497H13.1929C13.2809 7.84377 13.3683 7.86003 13.45 7.89281C13.5317 7.9256 13.6061 7.97426 13.6689 8.03597Z"
-                          fill="white"
-                        />
+                          fill="white" />
                       </g>
                     </svg>
                     <span class="ml-2" style="color: #086eae">{{
@@ -262,12 +220,9 @@
                   </v-btn>
                 </v-col>
                 <v-col cols="6" class="mb-n6">
-                  <v-select
-                    v-model="value_setup_Ipv4.gateway4.value"
-                    :items="allStaticGatewaysAddresses"
+                  <v-select v-model="value_setup_Ipv4.gateway4.value" :items="allStaticGatewaysAddresses"
                     :rules="[(v) => !!v || $t('interface.IPV4GatewayRequired')]"
-                    :no-data-text="$t('certificat.certificatlist')"
-                  ></v-select>
+                    :no-data-text="$t('certificat.certificatlist')"></v-select>
                 </v-col>
               </v-row>
             </div>
@@ -277,100 +232,45 @@
               $t("interface.configuringDHCP")
             }}</v-card-title>
             <v-divider class="ml-3"></v-divider>
-            <ConfigDHCPv4
-              :ipAddress="value_setup_Ipv4.ip_address4"
-              v-model:alias_add="interface.alias_add"
-              v-model:alias_mask="interface.alias_mask"
-              v-model:rejectLeases="interface.rejectLeases"
-              v-model:hostname="interface.hostname"
-              v-model:overrideMTU="interface.overrideMTU"
-            />
+            <ConfigDHCPv4 :ipAddress="value_setup_Ipv4.ip_address4" v-model:alias_add="interface.alias_add"
+              v-model:alias_mask="interface.alias_mask" v-model:rejectLeases="interface.rejectLeases"
+              v-model:hostname="interface.hostname" v-model:overrideMTU="interface.overrideMTU" />
             <v-row class="advanced-parameters-style">
               <label class="ml-3">{{
                 $t("interface.advancedParameters")
               }}</label>
-              <input
-                type="checkbox"
-                id="advancedParameters"
-                name="advancedParameters"
-                value="true"
-                v-model="advancedParameters"
-                class="ml-3"
-              />
+              <input type="checkbox" id="advancedParameters" name="advancedParameters" value="true"
+                v-model="advancedParameters" class="ml-3" />
             </v-row>
-            <AdvancedConfigDHCPv4
-              v-if="advancedParameters"
-              v-model:typeDHCP4="typeDHCP4"
-              v-model:timeout="AdvancedConfigDHCPv4.timeout"
-              v-model:retry="AdvancedConfigDHCPv4.retry"
-              v-model:select_timeout="AdvancedConfigDHCPv4.select_timeout"
-              v-model:reboot="AdvancedConfigDHCPv4.reboot"
+            <AdvancedConfigDHCPv4 v-if="advancedParameters" v-model:typeDHCP4="typeDHCP4"
+              v-model:timeout="AdvancedConfigDHCPv4.timeout" v-model:retry="AdvancedConfigDHCPv4.retry"
+              v-model:select_timeout="AdvancedConfigDHCPv4.select_timeout" v-model:reboot="AdvancedConfigDHCPv4.reboot"
               v-model:backoff="AdvancedConfigDHCPv4.backoff"
               v-model:initial_interval="AdvancedConfigDHCPv4.initial_interval"
               v-model:dhcp_client="AdvancedConfigDHCPv4.dhcp_client"
-              v-model:lease_time="AdvancedConfigDHCPv4.lease_time"
-              v-model:request="AdvancedConfigDHCPv4.request"
-              v-model:require="AdvancedConfigDHCPv4.require"
-              v-model:domain_name="AdvancedConfigDHCPv4.domain_name"
-              v-model:domain_server="AdvancedConfigDHCPv4.domain_server"
-            />
+              v-model:lease_time="AdvancedConfigDHCPv4.lease_time" v-model:request="AdvancedConfigDHCPv4.request"
+              v-model:require="AdvancedConfigDHCPv4.require" v-model:domain_name="AdvancedConfigDHCPv4.domain_name"
+              v-model:domain_server="AdvancedConfigDHCPv4.domain_server" />
           </div>
         </v-col>
       </v-row>
       <v-spacer></v-spacer><v-spacer></v-spacer>
       <div class="text-center">
-        <VButton
-          large
-          rounded
-          outlined
-          color="#FFFF"
-          label-color="#213E9F"
-          :label="$t('interface.cancel')"
-          :isLarge="true"
-          @click="cancel"
-        />
-        <VButton
-          large
-          rounded
-          outlined
-          color="#213E9F"
-          label-color="#ffff"
-          :label="$t('interface.save')"
-          :isLarge="true"
-          type="submit"
-          class="ml-2"
-        />
+        <VButton large rounded outlined color="#FFFF" label-color="#213E9F" :label="$t('interface.cancel')"
+          :isLarge="true" @click="cancel" />
+        <VButton large rounded outlined color="#213E9F" label-color="#ffff" :label="$t('interface.save')"
+          :isLarge="true" type="submit" class="ml-2" />
       </div>
       <br /><br /><br />
-      <v-alert
-        type="success"
-        class="d-flex mt-3"
-        style="align-self: flex-end"
-        elevation="2"
-        icon="mdi-check-circle-outline"
-        border="top"
-        v-if="showAlertGateway"
-        :style="alertStyle"
-      >
+      <v-alert type="success" class="d-flex mt-3" style="align-self: flex-end" elevation="2"
+        icon="mdi-check-circle-outline" border="top" v-if="showAlertGateway" :style="alertStyle">
         {{ message }}
       </v-alert>
-      <v-alert
-        type="success"
-        class="d-flex mt-3"
-        style="align-self: flex-end"
-        elevation="2"
-        icon="mdi-check-circle-outline"
-        border="top"
-        v-if="showAlert"
-        :style="alertStyle"
-      >
+      <v-alert type="success" class="d-flex mt-3" style="align-self: flex-end" elevation="2"
+        icon="mdi-check-circle-outline" border="top" v-if="showAlert" :style="alertStyle">
         {{ message }}
       </v-alert>
-      <v-dialog
-        v-model="showGatewayDialog"
-        max-width="600px"
-        class="gateway-dialog"
-      >
+      <v-dialog v-model="showGatewayDialog" max-width="600px" class="gateway-dialog">
         <v-card class="ml-3 mr-3">
           <v-card-title class="title-text">
             <span class="headline font-weight-bold">
@@ -381,36 +281,22 @@
             <v-form>
               <v-container>
                 <v-row>
-                  <v-text-field
-                    :label="$t('interface.gatewayName')"
-                    v-model="gateway.gwname"
-                  ></v-text-field>
+                  <v-text-field :label="$t('interface.gatewayName')" v-model="gateway.gwname"></v-text-field>
                 </v-row>
                 <p class="error-feedback mb-5 px-0 mx-0" v-if="!isNameGateway">
                   {{ messageNameGateway }}
                 </p>
                 <v-row>
-                  <v-text-field
-                    label="Gateway IPV4"
-                    clsas="w-100"
-                    v-model="gateway.gwaddress"
-                  ></v-text-field>
+                  <v-text-field label="Gateway IPV4" clsas="w-100" v-model="gateway.gwaddress"></v-text-field>
                 </v-row>
-                <p
-                  class="error-feedback mb-5 px-0 mx-0"
-                  v-if="!isGatewayAddress"
-                >
+                <p class="error-feedback mb-5 px-0 mx-0" v-if="!isGatewayAddress">
                   {{ messageGatewayAddress }}
                 </p>
                 <p class="error-feedback mb-5 px-0 mx-0" v-if="!isValidAddress">
                   {{ messageValidAddress }}
                 </p>
                 <v-row>
-                  <v-text-field
-                    label="Description"
-                    v-model="gateway.description"
-                  ></v-text-field
-                ></v-row>
+                  <v-text-field label="Description" v-model="gateway.description"></v-text-field></v-row>
                 <v-row>
                   <input type="checkbox" v-model="gateway.default_aux" />
                   <label class="ml-3">{{
@@ -429,39 +315,16 @@
             </v-form>
           </v-card-text>
           <div class="text-center">
-            <VButton
-              large
-              rounded
-              outlined
-              color="#FFFF"
-              label-color="#213E9F"
-              :label="$t('interface.cancel')"
-              :isLarge="true"
-              @click="cancelGateway"
-            />
-            <VButton
-              large
-              rounded
-              outlined
-              color="#213E9F"
-              label-color="#ffff"
-              :label="$t('interface.save')"
-              :isLarge="true"
-              type="submit"
-              class="ml-2"
-              @click="addGateway"
-            />
+            <VButton large rounded outlined color="#FFFF" label-color="#213E9F" :label="$t('interface.cancel')"
+              :isLarge="true" @click="cancelGateway" />
+            <VButton large rounded outlined color="#213E9F" label-color="#ffff" :label="$t('interface.save')"
+              :isLarge="true" type="submit" class="ml-2" @click="addGateway" />
           </div>
           <br />
         </v-card>
       </v-dialog>
     </v-form>
-    <v-snackbar
-      :timeout="2000"
-      v-model="snackbar"
-      location="bottom right"
-      :color="color"
-    >
+    <v-snackbar :timeout="2000" v-model="snackbar" location="bottom right" :color="color">
       {{ textAlert }}
     </v-snackbar>
   </v-card>
@@ -473,6 +336,7 @@ import ConfigDHCPv4 from "./configDHCP/ConfigDHCPv4.vue";
 import AdvancedConfigDHCPv4 from "./configDHCP/AdvancedConfigDHCPv4.vue";
 import VButton from "../../../components/VButton.vue";
 import netmaskItems from "../../../constants/netmask.js";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "IfNameComponent",
@@ -487,6 +351,8 @@ export default {
   },
   data() {
     return {
+      isviewModal: false,
+      viewModal: false,
       loading: false,
       isLoadingDialogue: false,
       textAlert: "",
@@ -597,6 +463,10 @@ export default {
     },
   },
   methods: {
+    close() {
+      this.isviewModal = false;
+      this.viewModal = false;
+    },
     validateRange(value) {
       const num = parseFloat(value); // Parse the value to a number
 
@@ -777,81 +647,102 @@ export default {
       // todo: reset form values to initial values
     },
     openGatewayDialog() {
-      this.showGatewayDialog = true;
-    },
-    addGateway() {
-      if (!this.isNameGateway) {
-        this.messageNameGateway = this.$t("errors.valueRequired");
-        return;
-      }
-      if (!this.isGatewayAddress) {
-        this.messageGatewayAddress = this.$t("errors.valueRequired");
-        return;
-      }
-      if (!this.isValidAddress) {
-        this.messageValidAddress = this.$t("champs.validAddress");
-        return;
-      }
-
-      const params = {
-        gwname: this.gateway.gwname,
-        gwaddress: this.gateway.gwaddress,
-        description: this.gateway.description,
-        default_aux: this.gateway.default_aux,
-        far_aux: this.gateway.far_aux,
-        multiwan_aux: this.gateway.multiwan_aux,
-      };
-      this.allStaticGateways.unshift(params);
-
-      const csrfToken = this.getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-      axios
-        .post("/gateway/addStaticGateway", params)
-        .then((response) => {
-          console.log("response***", response);
-          if (response.status == "200") {
-            this.showGatewayDialog = false;
-            this.message = response.data.msg;
-            this.gateway = {
-              gwname: "",
-              gwaddress: "",
-              description: "",
-              default_aux: false,
-              far_aux: false,
-              multiwan_aux: false,
-            };
-            this.messageGatewayAddress = "";
-            this.messageNameGateway = "";
-            this.messageValidAddress = "";
-            this.showAlertGateway = true;
-            setTimeout(() => {
-              this.showAlertGateway = false;
-            }, 1000);
+      const user = user_privilege();
+      if (user === "viewer") {
+            console.log("View Mode");
+            this.isviewModal = true;
+            this.viewModal = true;
           } else {
             this.showGatewayDialog = true;
-          }
-        })
-        .catch((e) => {
-          console.log("e", e.response);
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = e.response.data.message;
-        });
+            };
+    },
+    addGateway() {
+      const user = user_privilege();
+      if (user === "viewer") {
+        this.isviewModal = true;
+        this.viewModal = true;
+      } else {
+        if (!this.isNameGateway) {
+          this.messageNameGateway = this.$t("errors.valueRequired");
+          return;
+        }
+        if (!this.isGatewayAddress) {
+          this.messageGatewayAddress = this.$t("errors.valueRequired");
+          return;
+        }
+        if (!this.isValidAddress) {
+          this.messageValidAddress = this.$t("champs.validAddress");
+          return;
+        }
+
+        const params = {
+          gwname: this.gateway.gwname,
+          gwaddress: this.gateway.gwaddress,
+          description: this.gateway.description,
+          default_aux: this.gateway.default_aux,
+          far_aux: this.gateway.far_aux,
+          multiwan_aux: this.gateway.multiwan_aux,
+        };
+        this.allStaticGateways.unshift(params);
+
+        const csrfToken = this.getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+        axios
+          .post("/gateway/addStaticGateway", params)
+          .then((response) => {
+            console.log("response***", response);
+            if (response.status == "200") {
+              this.showGatewayDialog = false;
+              this.message = response.data.msg;
+              this.gateway = {
+                gwname: "",
+                gwaddress: "",
+                description: "",
+                default_aux: false,
+                far_aux: false,
+                multiwan_aux: false,
+              };
+              this.messageGatewayAddress = "";
+              this.messageNameGateway = "";
+              this.messageValidAddress = "";
+              this.showAlertGateway = true;
+              setTimeout(() => {
+                this.showAlertGateway = false;
+              }, 1000);
+            } else {
+              this.showGatewayDialog = true;
+            }
+          })
+          .catch((e) => {
+            console.log("e", e.response);
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = e.response.data.message;
+          });
+      };
     },
     cancelGateway() {
-      this.showGatewayDialog = false;
-      this.gateway = {
-        gwname: "",
-        gwaddress: "",
-        description: "",
-        default_aux: false,
-        far_aux: false,
-        multiwan_aux: false,
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        this.isviewModal = true;
+        this.viewModal = true;
+      } else {
+        this.showGatewayDialog = false;
+        this.gateway = {
+          gwname: "",
+          gwaddress: "",
+          description: "",
+          default_aux: false,
+          far_aux: false,
+          multiwan_aux: false,
+        };
+        this.messageGatewayAddress = "";
+        this.messageNameGateway = "";
+        this.messageValidAddress = "";
       };
-      this.messageGatewayAddress = "";
-      this.messageNameGateway = "";
-      this.messageValidAddress = "";
+
     },
     updateGateway() {
       const params = {
@@ -881,7 +772,15 @@ export default {
         });
     },
     onSubmit() {
-      this.addNetwork();
+      const user = user_privilege();
+      if (user === "viewer") {
+            console.log("View Mode");
+            this.isviewModal = true;
+            this.viewModal = true;
+          } else {
+            this.addNetwork();
+            };
+
     },
     handleSubmit() {
       this.onSubmit();
@@ -1033,6 +932,7 @@ export default {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
+
 .gateway-dialog {
   position: fixed;
   overflow-x: unset;

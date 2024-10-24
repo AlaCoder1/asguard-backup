@@ -449,7 +449,7 @@ export default {
 
       switch (action) {
         case "play":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           loading.value = true;
           isLoadingDialogue.value = true;
@@ -482,7 +482,7 @@ export default {
           };
           break;
         case "edit":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           emitter.emit("add-server");
           setTimeout(() => {
@@ -494,7 +494,7 @@ export default {
             state.viewModal = true;
           };
         case "stop":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           loading.value = true;
           isLoadingDialogue.value = true;
@@ -527,7 +527,7 @@ export default {
           };
           break;
         case "restart":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           loading.value = true;
           isLoadingDialogue.value = true;
@@ -560,7 +560,7 @@ export default {
           };
           break;
         case "delete":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           isDeletedType.value = "server";
           deleteRow.value = rowData;
@@ -573,7 +573,7 @@ export default {
           break;
 
         case "account":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           state.isModalOpen = true;
           state.editRow = rowData;
@@ -583,7 +583,7 @@ export default {
           };
           break;
         case "show":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           state.isModalOpenListView = true;
           state.editRow = rowData;
@@ -653,7 +653,7 @@ export default {
 
       switch (action) {
         case "download":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           let id = rowData.id;
           let fileExtention = `${rowData.name}.ovpn`;
@@ -693,7 +693,7 @@ export default {
 
           break;
         case "editClient":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           emitter.emit("add-client");
           setTimeout(() => {
@@ -706,7 +706,7 @@ export default {
           break;
 
         case "delete":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default') {
 
           isDeletedType.value = "client";
           deleteRow.value = rowData;
@@ -768,7 +768,7 @@ export default {
 
     const addServer = () => {
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
         emitter.emit("add-server");
       } else {
         state.isviewModal = true;
@@ -780,7 +780,7 @@ export default {
 
     const addClient = () => {
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
         emitter.emit("add-client");
       } else {
         state.isviewModal = true;

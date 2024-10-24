@@ -1,4 +1,36 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="@/assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  You do not have the required permissions to perform any
+                  actions.<br />
+                  Please contact the administrator if you believe this is an
+                  error.
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    label="Close"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <v-container>
     <v-row>
       <v-card class="mx-auto my-12">
@@ -120,6 +152,7 @@ import { useI18n } from "vue-i18n";
 import VButton from "@/components/VButton.vue";
 import { ref, watch, inject, reactive, onMounted } from "vue";
 import axios from "axios";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "SubscriptionTypeCard",
@@ -169,7 +202,13 @@ export default {
       textAlert: "",
       color: "",
       snackbar: false,
+      isviewModal: false,
+      viewModal: false,
     });
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
     const getCookie = (name) => {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {
@@ -204,7 +243,12 @@ export default {
     );
 
     const submitForm = async () => {
-      const csrfToken = getCookie("csrftoken");
+      const user = user_privilege();
+      if (user !== "see_all") {
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       const features = getPackId();
@@ -230,6 +274,8 @@ export default {
       } catch (error) {
         console.log(error);
       }
+            };
+
     };
 
     // const getPackId = () => {
@@ -351,6 +397,7 @@ export default {
       selectedServices,
       emitter,
       state,
+      close,
       getCookie,
       submitForm,
     };
@@ -380,6 +427,19 @@ export default {
   font-family: Nunito;
   font-size: 30px;
   font-weight: 400;
+}
+.img-view {
+  border-style: none;
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  overflow: hidden;
+}
+.img-containter {
+  display: flex;
+  width: 100%;
+  /* height: 100%; */
+  padding: 0px !important;
 }
 </style>
 <!-- let selectedServicesArray = selectedServices.value;

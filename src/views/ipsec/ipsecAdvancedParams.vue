@@ -529,7 +529,7 @@ export default {
     const cancel = () => {
       //General information Phase 1
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
 
       state.tunnelSettings = "";
       state.connectionMethod = {
@@ -1340,7 +1340,7 @@ export default {
 
     const save = async () => {
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default') {
       const result = await v$.value.$validate();
 
       const csrfToken = getCookie("csrftoken");

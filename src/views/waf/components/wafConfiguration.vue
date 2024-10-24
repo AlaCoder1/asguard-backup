@@ -310,7 +310,7 @@ export default {
 
     const cancel = () => {
       const user = user_privilege('Waf');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default' ) {
         state.id = null;
         state.rule_engine = null;
         state.access_request = false;
@@ -468,7 +468,7 @@ export default {
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default' ) {
         if (result) {
           let payload = {
             rule_engine_initialization: state.rule_engine,

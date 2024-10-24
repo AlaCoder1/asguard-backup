@@ -1086,7 +1086,7 @@ export default {
 
     const submitForm = async () => {
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
       const result = await v$.value.$validate();
 
       if (result) {
@@ -1282,7 +1282,7 @@ export default {
     const cancel = () => {
 
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
       state.id = "";
       state.isEditState = "";
       (state.serverModeState = "create"),

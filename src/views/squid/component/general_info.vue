@@ -141,7 +141,7 @@ export default {
 
     const saveGeneralInfo = async () => {
       const user = user_privilege('Proxy');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
         const result = await v$.value.$validate();
 
         if (result) {
@@ -231,7 +231,7 @@ export default {
 
     const startStopRestartServer = (item) => {
       const user = user_privilege('Proxy');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default') {
         state.dialogServer = true;
         state.statusServer = item;
       } else {

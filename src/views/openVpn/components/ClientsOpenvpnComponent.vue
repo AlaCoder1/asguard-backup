@@ -1,5 +1,23 @@
-+
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-row>
       <v-col align-self="center" cols="6">
@@ -395,6 +413,7 @@ import VButton from "@/components/VButton.vue";
 import { reactive, onMounted, ref, computed, watch } from "vue";
 import axios from "axios";
 import protocols from "@/constants/protocols.js";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "ClientsOpenvpnComponent",
@@ -459,6 +478,8 @@ export default {
     ]);
 
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       modeState: "create",
       showpassword: false,
       showNewpassword: false,
@@ -848,7 +869,7 @@ export default {
       () => dataClient.value,
       (newValue) => {
         if (newValue != "tabs.clients") {
-          cancel();
+          // cancel();
         }
       }
     );
@@ -887,6 +908,11 @@ export default {
       cellDataType: false,
     });
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const actionCellRenderer = (params) => {
       let eGui = document.createElement("div");
 
@@ -910,15 +936,22 @@ export default {
       return eGui;
     };
     const handleAction = (action, rowData, index) => {
+      const user = user_privilege('Openvpn');
       switch (action) {
         case "edit":
+        if (user && user !== 'viewer') {
           gridApi.value.setFocusedCell(index);
           gridApi.value.startEditingCell({
             rowIndex: index,
             colKey: "host",
           });
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
           break;
         case "delete":
+        if (user && user !== 'viewer') {
           const index = rowDataCertificats.value.findIndex(
             (item) => item.host === rowData.host
           );
@@ -931,6 +964,10 @@ export default {
               console.error("Grid API.");
             }
           }
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
           break;
         default:
           break;
@@ -971,6 +1008,8 @@ export default {
     const rowDataCertificats = ref([]);
 
     const addNewRow = () => {
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer') {
       const newRow = { host: "", port: "" };
       rowDataCertificats.value.push(newRow);
       if (gridApi.value) {
@@ -978,6 +1017,10 @@ export default {
       } else {
         console.error("Grid API.");
       }
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
     const onGridReady = (params) => {
       gridApi.value = params.api;
@@ -1104,8 +1147,10 @@ export default {
       );
     };
     const save = async () => {
+      const user = user_privilege('Openvpn');
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      if (user && user !== 'viewer') {
 
       const result = await v$.value.$validate();
 
@@ -1251,6 +1296,10 @@ export default {
           }
         }
       }
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     const encryptionAlgorithmList = ref([
@@ -1341,6 +1390,8 @@ export default {
     ]);
 
     const cancel = () => {
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer') {
       state.id = "";
       state.modeState = "create";
       state.isEditState = "";
@@ -1405,10 +1456,15 @@ export default {
         console.error("Grid API.");
       }
       v$.value.$reset();
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     return {
       state,
+      close,
       cancel,
       userAuthSettings,
       cryptoSettings,

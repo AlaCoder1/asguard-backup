@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -271,6 +290,7 @@ import tunnelSettings from "./serveurComponents/tunnelSettings.vue";
 import clientSettings from "./serveurComponents/clientSettings.vue";
 import cryptoSettings from "./serveurComponents/cryptoSettings.vue";
 import { reactive, onMounted, computed, watch } from "vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "ClientsOpenvpnComponent",
@@ -288,6 +308,8 @@ export default {
     const emitter = inject("emitter");
 
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       id: "",
       loading: false,
       serverModeState: "create",
@@ -384,6 +406,11 @@ export default {
     const specificform = computed(() => {
       return t("errors.formsepcificpassword");
     });
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
 
     const rules = computed(() => {
       return {
@@ -853,7 +880,7 @@ export default {
       (newValue) => {
         console.log("newValueserver000", newValue);
         if (newValue != "tabs.servers") {
-          cancel();
+          // cancel();
         }
       }
     );
@@ -1058,6 +1085,8 @@ export default {
     });
 
     const submitForm = async () => {
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer') {
       const result = await v$.value.$validate();
 
       if (result) {
@@ -1244,9 +1273,16 @@ export default {
       } else {
         console.log("res", v$.value);
       }
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     const cancel = () => {
+
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer') {
       state.id = "";
       state.isEditState = "";
       (state.serverModeState = "create"),
@@ -1309,6 +1345,10 @@ export default {
         slug: "1",
       };
       v$.value.$reset();
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     return {
@@ -1320,6 +1360,7 @@ export default {
       submitForm,
       compressionList,
       getAllCertAuth,
+      close,
       deviceModeList,
       protocolList,
       state,

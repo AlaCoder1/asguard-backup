@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <!-- <v-dialog v-model="state.modal" persistent class="mx-auto" width="450">
       <v-card color="#193286" class="ml-16 mr-16 mx-auto">
@@ -192,6 +211,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import VueApexCharts from "vue3-apexcharts";
 import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -202,6 +223,7 @@ export default {
     AgGridVue,
     monitoringCards,
     apexchart: VueApexCharts,
+    VButton,
   },
   setup() {
     const { t } = useI18n();
@@ -211,6 +233,8 @@ export default {
     });
     const state = reactive({
       show1: false,
+      isviewModal: false,
+      viewModal: false,
       server: "",
       snackbar: false,
       color: "",
@@ -331,6 +355,11 @@ export default {
 
     const v$ = useValidate(rules, state);
     var usedColors = [];
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
 
     const getRandomColor = () => {
       var letters = "0123456789ABCDEF";
@@ -481,6 +510,8 @@ export default {
 
     const serve = async () => {
       const result = await v$.value.$validate();
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer') {
 
       if (result) {
         if (state.server) {
@@ -490,6 +521,10 @@ export default {
           }, 1000);
         }
       }
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     const cancel = () => {
@@ -599,6 +634,7 @@ export default {
 
     return {
       state,
+      close,
       v$,
       overlayTemplate,
       apexChart,

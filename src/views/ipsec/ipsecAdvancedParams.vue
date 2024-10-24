@@ -1,4 +1,23 @@
 <template>
+    <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any
+          actions.<br />
+          Please contact the administrator if you believe this is an
+          error.
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -187,6 +206,7 @@ import advancedOption from "./component/advancedOptions.vue";
 import generalInfoPhaseTwo from "./component/general_info_phase_two.vue";
 import phaseTwoExchange from "./component/phase_two_exchange.vue";
 import { useI18n } from "vue-i18n";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "IpsecComponent",
@@ -206,6 +226,8 @@ export default {
 
     const { dataServer } = toRefs(props);
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       loading: false,
       isLoadingDialogue: false,
       id: null,
@@ -499,13 +521,16 @@ export default {
       (newValue) => {
         if (newValue != "tabs.tunnelConfig") {
           state.isEditState = "";
-          cancel();
+          // cancel();
         }
       }
     );
 
     const cancel = () => {
       //General information Phase 1
+      const user = user_privilege('Ipsec');
+      if (user && user !== 'viewer') {
+
       state.tunnelSettings = "";
       state.connectionMethod = {
         name: "Default",
@@ -602,6 +627,10 @@ export default {
       state.lifetimeExchange = "";
 
       v$.value.$reset();
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
@@ -624,6 +653,11 @@ export default {
     const specificform = computed(() => {
       return t("errors.specificform");
     });
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const rules = computed(() => {
       return {
         //General information Phase 1
@@ -1300,6 +1334,8 @@ export default {
     );
 
     const save = async () => {
+      const user = user_privilege('Ipsec');
+      if (user && user !== 'viewer') {
       const result = await v$.value.$validate();
 
       const csrfToken = getCookie("csrftoken");
@@ -1519,6 +1555,10 @@ export default {
       } else {
         console.log("error", v$.value);
       }
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
     const filteredAlgoListExchangeV1 = computed(() => {
       if (state.keyExchange.slug === "V1") {
@@ -1564,6 +1604,7 @@ export default {
       remoteTypeList,
       save,
       cancel,
+      close,
       state,
       emitter,
       v$,

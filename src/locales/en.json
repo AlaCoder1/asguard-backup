@@ -70,10 +70,11 @@
     "startwithletter": "The name can contain letters, digits, underscores, and hyphens, must begin with a letter, and can be up to 32 characters long",
     "addressdAll": "Champ can include address 'X.X.X.X/X' Or word 'ALL'",
     "numberALL": "Champ can include only Numbers Or word 'ALL'",
-    "emptyArray": "The array is empty. Please add at least one object.",
+    "emptyArray": "The array is empty. Please add at least one element.",
     "emptyValue": "has an empty value",
     "atLeastemptyValue": "At least one element has an empty Value",
-    "noModif": "No Modif For this rule"
+    "noModif": "No Modif For this rule",
+    "invalidChar":"At least one element has an empty host or port, or contains invalid characters"
   },
 
   "placeholder": {

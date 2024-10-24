@@ -329,13 +329,17 @@
                     :alwaysShowVarticalScroll="false"
                     :defaultColDef="defaultColDef"
                     :rowData="rowDataCertificats.value"
-                    style="width: 100%; height: 100%"
+                    style="width: 100%"
                     :overlayNoRowsTemplate="overlayTemplate"
                     @grid-ready="onGridReady"
                     :pagination="true"
                     :paginationPageSize="4"
                     :localeText="paginationLocalization"
                   />
+
+                  <p class="error-feedback mb-5 mt-5" v-if="textAlertArray">
+                    {{ textAlertArray }}
+                  </p>
                 </v-col>
               </v-row>
             </v-row>
@@ -417,6 +421,7 @@ export default {
     const color = ref(null);
     const snackbar = ref(false);
     const textAlert = ref(false);
+    const textAlertArray = ref(false);
     const protocolsList = ref([]);
     const deviceMode = ref([
       {
@@ -1106,19 +1111,19 @@ export default {
       if (result) {
         var isArrayEmpty = rowDataCertificats.value.length === 0;
         if (isArrayEmpty) {
-          snackbar.value = true;
-          color.value = "red";
-          textAlert.value =
-            "The array is empty. Please add at least one object.";
+          textAlertArray.value = t("errors.emptyArray");
+          setTimeout(() => {
+            textAlertArray.value = "";
+          }, 2000);
           return;
         } else {
           var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
 
           if (hasEmptyElement) {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value =
-              "At least one element has an empty host or port, or contains invalid characters.";
+            textAlertArray.value = t("errors.invalidChar");
+            setTimeout(() => {
+              textAlertArray.value = "";
+            }, 2000);
             return;
           }
         }
@@ -1230,18 +1235,18 @@ export default {
 
         var isArrayEmpty = rowDataCertificats.value.length === 0;
         if (isArrayEmpty) {
-          snackbar.value = true;
-          color.value = "red";
-          textAlert.value =
-            "The array is empty. Please add at least one object.";
+          textAlertArray.value = t("errors.emptyArray");
+          setTimeout(() => {
+            textAlertArray.value = "";
+          }, 2000);
         } else {
           var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
 
           if (hasEmptyElement) {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value =
-              "At least one element has an empty host or port, or contains invalid characters.";
+            textAlertArray.value = t("errors.invalidChar");
+            setTimeout(() => {
+              textAlertArray.value = "";
+            }, 2000);
           }
         }
       }
@@ -1417,6 +1422,7 @@ export default {
       addNewRow,
       snackbar,
       textAlert,
+      textAlertArray,
       columnCertificats,
       protocols: protocolsList,
       deviceMode,

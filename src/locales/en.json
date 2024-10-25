@@ -1070,7 +1070,9 @@
     "Update": "Update",
     "pleaseChoose": "Please choose an image file",
     "fileBig": "Your file is too big! Please select an image under 1MB",
-    "GotIt": "Got it!"
+    "GotIt": "Got it!",
+    "NoPermission":"You do not have the required permissions to perform any actions",
+    "ContactAdmin":"Please contact the administrator if you believe this is an error."
   },
   "logrotate": {
     "id": "ID",

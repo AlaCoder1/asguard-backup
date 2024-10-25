@@ -55,6 +55,7 @@
   },
 
   "errors": {
+    "errorServer":"Erreur de serveur interne. Veuillez réessayer plus tard",
     "valueRequired": "Champs est obligatoire",
     "invalidPassword": "Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation": "Votre mot de passe ne correspond pas",

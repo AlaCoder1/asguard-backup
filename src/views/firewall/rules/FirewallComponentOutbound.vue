@@ -20,7 +20,7 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-    
+
       <ModalFirewallRuleOutbound
         :isOpen="state.isModalOpen"
         :editRow="state.editRow"
@@ -713,12 +713,15 @@ export default defineComponent({
               }
             })
             .catch((i) => {
-              state.snackbarDelete = true;
-              state.color = "red";
-              state.textAlertDelete = i.response.data.response;
-              setTimeout(() => {
-                state.snackbar = false;
-              }, 1000);
+              if (i.response.status === 500) {
+                state.snackbarDelete = true;
+                state.color = "red";
+                state.textAlertDelete = t("errors.errorServer");
+              } else {
+                state.snackbarDelete = true;
+                state.color = "red";
+                state.textAlertDelete = i.response.data.response;
+              }
             });
 
           if (rowData.value.length === 0) changes.value = true;
@@ -768,12 +771,15 @@ export default defineComponent({
                 }
               })
               .catch((i) => {
-                state.snackbarDelete = true;
-                state.color = "red";
-                state.textAlertDelete = i.response.data.response;
-                setTimeout(() => {
-                  state.snackbar = false;
-                }, 1000);
+                if (i.response.status === 500) {
+                  state.snackbarDelete = true;
+                  state.color = "red";
+                  state.textAlertDelete = t("errors.errorServer");
+                } else {
+                  state.snackbarDelete = true;
+                  state.color = "red";
+                  state.textAlertDelete = i.response.data.response;
+                }
               });
             gridApi.value.setRowData(rowData.value);
           } else {
@@ -835,12 +841,15 @@ export default defineComponent({
           }
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.textAlert = i.response.data.response;
-
-          setTimeout(() => {
-            location.reload();
-          }, 2000);
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.response;
+          }
         });
     };
     const cancel = () => {

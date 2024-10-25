@@ -181,7 +181,7 @@ export default {
         headerName: "Actions",
         cellRenderer: actionCellRendererKeys,
         field: "action",
-        width:150,
+        width: 150,
         sortable: true,
         filter: true,
       },
@@ -305,9 +305,15 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
     return {

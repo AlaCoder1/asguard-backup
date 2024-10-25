@@ -215,7 +215,7 @@ export default {
       },
       {
         headerName: "Action",
-        width:150,
+        width: 150,
         cellRenderer: actionCellRendererKeys,
         field: "action",
       },
@@ -274,12 +274,12 @@ export default {
           eGui.innerHTML = `
           <button
            class="action-button copy"
-           data-action="copy"  title=${t('titleAgGrid.publicKey')}>
+           data-action="copy"  title=${t("titleAgGrid.publicKey")}>
               <i class="mdi mdi-content-copy" style="color: #086eae;font-size: 20px;"></i>
            </button>
           <button
            class="action-button download"
-           data-action="export"  title=${t('titleAgGrid.pK')}>
+           data-action="export"  title=${t("titleAgGrid.pK")}>
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
@@ -381,9 +381,15 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       } else if (state.deletedRow?.utility === "Public") {
         axios
@@ -398,9 +404,15 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       }
     };

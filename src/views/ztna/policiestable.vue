@@ -1,55 +1,72 @@
 <template>
-<v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
-              <v-card color="#193286" class="alert-box">
-                <v-card-title class="img-containter">
-                  <img
-                    src="../../assets/images/view.png"
-                    alt="logo"
-                    class="img-view"
-                    width="100"
-                    height="100"
-                /></v-card-title>
-                <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
-                </v-card-text>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="../../assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any actions.<br />
+          Please contact the administrator if you believe this is an error.
+        </v-card-text>
 
-                <div class="mr-3 mb-5 d-flex justify-end">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#ffffff"
-                    label-color="#213E9F"
-                    label="Close"
-                    :isLarge="true"
-                    @click="close"
-                  />
-                </div>
-              </v-card>
-            </v-dialog>
-          </v-overlay>
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            label="Close"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-container class="axe-media-print-hide" fluid>
     <div class="mt-6" style="display: flex; flex-direction: column">
       <h4>{{ $t("ztna.edgeRelaysPolicies") }}</h4>
       <v-divider></v-divider>
     </div>
     <div style="overflow: hidden; flex-grow: 1">
-      <ag-grid-vue id="grid-wrapperRouter" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-        @grid-ready="onGridReadyRouter" :columnDefs="columnsALLRouter" :rowData="rowDataRouter.value"
-        :gridOptions="gridOptions" :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
+      <ag-grid-vue
+        id="grid-wrapperRouter"
+        domLayout="autoHeight"
+        class="ag-theme-alpine mt-3"
+        style="width: 100%"
+        @grid-ready="onGridReadyRouter"
+        :columnDefs="columnsALLRouter"
+        :rowData="rowDataRouter.value"
+        :gridOptions="gridOptions"
+        :overlayNoRowsTemplate="overlayTemplate"
+        :localeText="paginationLocalization"
+      />
     </div>
     <div class="d-flex justify-end mt-3">
-      <v-btn class="add-button" :rounded="true" color="indigo-darken-3" :disabled="!tokenStatus" @click="openModalRouter">
+      <v-btn
+        class="add-button"
+        :rounded="true"
+        color="indigo-darken-3"
+        :disabled="!tokenStatus"
+        @click="openModalRouter"
+      >
         {{ $t("ztna.addRelaysPolicy") }}
       </v-btn>
     </div>
     <serviceAgGrid />
     <policyAgGrid />
-    <modal-router-policy :isOpen="state.isModalOpenRouter" :selectedId="state.selectedId" :editRow="state.editRow"
-      :modalMode="state.modalMode" />
+    <modal-router-policy
+      :isOpen="state.isModalOpenRouter"
+      :selectedId="state.selectedId"
+      :editRow="state.editRow"
+      :modalMode="state.modalMode"
+    />
     <!-- <ModalUpdateRouterP
       :isOpen="state.isModalUpdateOpen"
       :selectedId="state.selectedId"
@@ -58,18 +75,28 @@
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-          }}</v-card-title>
+        }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-            }}</v-btn>
-          <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
+          }}</v-btn>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="confirmDelete(state.selectedId)"
+            >{{ $t("buttons.delete") }}</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-container>
@@ -104,7 +131,7 @@ export default {
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
-    const tokenStatus = ref('')
+    const tokenStatus = ref("");
 
     const state = reactive({
       isviewModal: false,
@@ -244,7 +271,6 @@ export default {
       return eGui;
     }
 
-
     function formatedcreatedAt(data) {
       const resultMessage = formatDateTime(data.data.date_creation);
       let eGui = document.createElement("div");
@@ -258,7 +284,7 @@ export default {
     };
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
-      if (!tokenStatus.value){
+      if (!tokenStatus.value) {
         eGui.innerHTML = `
         <button class="action-button edit" disabled>
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -267,16 +293,16 @@ export default {
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
       `;
-      }
-      else {
-      eGui.innerHTML = `
+      } else {
+        eGui.innerHTML = `
         <button class="action-button edit" data-action="edit">
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         <button class="action-button delete" data-action="delete">
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
-      `;}
+      `;
+      }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
@@ -286,37 +312,36 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData) => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
       switch (action) {
         case "edit":
-        if (user && user !=='viewer') {
-          state.modalMode = "edit";
-          state.isModalOpenRouter = true;
-          state.editRow = rowData;
-          state.selectedId = rowData.id;
+          if (user && user !== "viewer") {
+            state.modalMode = "edit";
+            state.isModalOpenRouter = true;
+            state.editRow = rowData;
+            state.selectedId = rowData.id;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
 
           break;
         case "delete":
-        if (user && user !=='viewer') {
-          OpenDelete(rowData.id);
+          if (user && user !== "viewer") {
+            OpenDelete(rowData.id);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
           break;
         default:
           break;
       }
     };
     async function OpenDelete(itemId) {
-  state.selectedId = itemId;
-  state.deleteDialog = true;
-     
+      state.selectedId = itemId;
+      state.deleteDialog = true;
     }
 
     const cancelDelete = () => {
@@ -345,9 +370,15 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
@@ -364,11 +395,10 @@ export default {
 
       rowDataRouter.value = router_policiesObject ? router_policiesObject : [];
       if (token && token !== "null") {
-        tokenStatus.value = true
-      } 
-      else {
-        tokenStatus.value = false
-    }
+        tokenStatus.value = true;
+      } else {
+        tokenStatus.value = false;
+      }
       if (gridApiRouter.value) {
         gridApiRouter.value.setRowData(rowDataRouter.value);
       }
@@ -385,15 +415,15 @@ export default {
     });
 
     const openModalRouter = () => {
-      const user = user_privilege('Ztna');
-      if (user && user !=='viewer') {
+      const user = user_privilege("Ztna");
+      if (user && user !== "viewer") {
         state.modalDataRouter = {};
-      state.modalMode = "create";
-      state.isModalOpenRouter = true;
-          } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+        state.modalMode = "create";
+        state.isModalOpenRouter = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const close = () => {
@@ -416,8 +446,7 @@ export default {
       paginationLocalization,
       columnsALLRouter,
       rowDataRouter,
-      tokenStatus
-
+      tokenStatus,
     };
   },
 };

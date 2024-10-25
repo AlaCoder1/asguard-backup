@@ -1,7 +1,7 @@
 <template>
   <div class="mr-3">
     <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
-      <h4>{{$t('tabs.OneToOne')}}</h4>
+      <h4>{{ $t("tabs.OneToOne") }}</h4>
       <v-divider></v-divider>
       <v-row>
         <v-col cols="12">
@@ -45,14 +45,18 @@
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
-        <v-card-title class="headline">{{$t("firewall.delete_confirm")}}</v-card-title>
-        <v-card-text>{{$t("nat.msg_confirm_delete")}}</v-card-text>
+        <v-card-title class="headline">{{
+          $t("firewall.delete_confirm")
+        }}</v-card-title>
+        <v-card-text>{{ $t("nat.msg_confirm_delete") }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="cancelDelete">{{$t("firewall.cancel")}}</v-btn>
-          <v-btn color="blue darken-1" text @click="confirmDelete"
-            >{{$t("firewall.delete")}}</v-btn
-          >
+          <v-btn color="blue darken-1" text @click="cancelDelete">{{
+            $t("firewall.cancel")
+          }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete">{{
+            $t("firewall.delete")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -69,7 +73,7 @@
 
 <script>
 import axios from "axios";
-import { reactive, ref, onMounted, inject ,computed} from "vue";
+import { reactive, ref, onMounted, inject, computed } from "vue";
 import VButton from "@/components/VButton.vue";
 import BaseLayout from "@/layouts/layout.vue";
 import { AgGridVue } from "ag-grid-vue3";
@@ -124,7 +128,7 @@ export default {
     const daddr = computed(() => {
       return t("nat.daddr");
     });
-   
+
     const description = computed(() => {
       return t("nat.description");
     });
@@ -135,7 +139,7 @@ export default {
       return t("nat.action");
     });
 
-    const columnOneTowOne =ref( [
+    const columnOneTowOne = ref([
       {
         headerName: interface_row,
         field: "interface_name",
@@ -226,9 +230,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else {
           axios
@@ -244,9 +254,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         }
       });
@@ -274,9 +290,15 @@ export default {
           }
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.msg;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.msg;
+          }
         });
     };
     const rowDataOneTowOne = reactive({});
@@ -431,9 +453,15 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
     return {
@@ -450,7 +478,7 @@ export default {
       confirmDelete,
       onRowDragEnd,
       overlayTemplate,
-      paginationLocalization
+      paginationLocalization,
     };
   },
 };

@@ -3,58 +3,104 @@
     <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
         <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
+          You do not have the required permissions to perform any actions.<br />
+          Please contact the administrator if you believe this is an error.
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            label="Close"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
   </v-overlay>
   <div class="mr-3">
-    <div class="certificats-management mt-6 ml-4" style="display: flex; flex-direction: column">
+    <div
+      class="certificats-management mt-6 ml-4"
+      style="display: flex; flex-direction: column"
+    >
       <h4>{{ $t("ztna.listofIdentities") }}</h4>
       <v-divider></v-divider>
       <div style="overflow: hidden; flex-grow: 1">
-        <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-          @grid-ready="onGridReady" :columnDefs="columnIdentities" :rowData="Identities" :gridOptions="gridOptions"
-          :overlayNoRowsTemplate="overlayTemplate" :rowDragManaged="true" :rowDragEntireRow="true"
-          :localeText="paginationLocalization" />
+        <ag-grid-vue
+          id="grid-wrapper"
+          domLayout="autoHeight"
+          class="ag-theme-alpine mt-3"
+          style="width: 100%"
+          @grid-ready="onGridReady"
+          :columnDefs="columnIdentities"
+          :rowData="Identities"
+          :gridOptions="gridOptions"
+          :overlayNoRowsTemplate="overlayTemplate"
+          :rowDragManaged="true"
+          :rowDragEntireRow="true"
+          :localeText="paginationLocalization"
+        />
       </div>
     </div>
   </div>
   <br />
-  <ModalAddIdentity :isOpen="state.isModalOpen" :selectedId="state.selectedId" :editRow="state.editRow"
-    :modalMode="state.modalMode" />
-  <ModalAddEnrollment :isOpen="state.isModalEnrollmentOpen" :selectedId="state.selectedId" />
+  <ModalAddIdentity
+    :isOpen="state.isModalOpen"
+    :selectedId="state.selectedId"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+  />
+  <ModalAddEnrollment
+    :isOpen="state.isModalEnrollmentOpen"
+    :selectedId="state.selectedId"
+  />
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
       <v-card-title class="headline">{{
         $t("delete.DeleteConfirmation")
-        }}</v-card-title>
+      }}</v-card-title>
       <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="cancelDelete">{{
           $t("buttons.cancel")
-          }}</v-btn>
-        <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
+        }}</v-btn>
+        <v-btn
+          color="blue darken-1"
+          text
+          @click="confirmDelete(state.selectedId)"
+          >{{ $t("buttons.delete") }}</v-btn
+        >
       </v-card-actions>
     </v-card>
   </v-dialog>
-  <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+  <v-snackbar
+    :timeout="2000"
+    v-model="state.snackbar"
+    location="bottom right"
+    :color="state.color"
+  >
     {{ state.textAlert }}
   </v-snackbar>
   <div class="d-flex justify-end mt-5 mr-2">
-    <v-btn class="add-button" :rounded="true" color="indigo-darken-3" :disabled="!tokenStatus"
-      @click="checkTokenBeforeAdd">
+    <v-btn
+      class="add-button"
+      :rounded="true"
+      color="indigo-darken-3"
+      :disabled="!tokenStatus"
+      @click="checkTokenBeforeAdd"
+    >
       {{ $t("ztna.addIdentity") }}
     </v-btn>
   </div>
@@ -88,7 +134,7 @@ export default {
   setup() {
     const { t } = useI18n();
     const Identities = ref();
-    const tokenStatus = ref('')
+    const tokenStatus = ref("");
     const linux = ref();
     const windows = ref();
     const emitter = inject("emitter");
@@ -224,7 +270,7 @@ export default {
         field: "actions",
         width: 150,
         cellRenderer: actionCellRenderer,
-      }
+      },
     ]);
     function tokenCellRendrer(params) {
       let eGui = document.createElement("div");
@@ -240,9 +286,8 @@ export default {
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
     `;
-      } else
-        if (params.node.data.token) {
-          eGui.innerHTML = `
+      } else if (params.node.data.token) {
+        eGui.innerHTML = `
           <button
            class="action-button download"
            data-action="download">
@@ -250,15 +295,15 @@ export default {
            </button>
     `;
 
-          eGui.querySelectorAll(".action-button").forEach((button) => {
-            button.addEventListener("click", () => {
-              const action = button.getAttribute("data-action");
-              handleActionClient(action, params.node.data);
-            });
+        eGui.querySelectorAll(".action-button").forEach((button) => {
+          button.addEventListener("click", () => {
+            const action = button.getAttribute("data-action");
+            handleActionClient(action, params.node.data);
           });
-        } else {
-          eGui.innerHTML = `--`;
-        }
+        });
+      } else {
+        eGui.innerHTML = `--`;
+      }
 
       return eGui;
     }
@@ -274,20 +319,17 @@ export default {
 
       if (params.node.data.token) {
         eGui.innerHTML = `<i class="mdi mdi-check-circle" style="color: green; font-size: 20px;"></i>`;
-      }
-      else if (params.node.data.hostname && currentDate <= expirationDate) {
+      } else if (params.node.data.hostname && currentDate <= expirationDate) {
         eGui.innerHTML = ` <span class="action-icon active-token">
   <i class="mdi mdi-router-network-wireless"></i>
 </span>
-`
-      }
-      else if (!tokenStatus.value) {
+`;
+      } else if (!tokenStatus.value) {
         eGui.innerHTML = ` <button class="action-button enroll" disabled >
         <i class="mdi mdi-alert-circle" style="color: red; font-size: 20px;"></i>
       </button>
-`
-      }
-      else {
+`;
+      } else {
         eGui.innerHTML = `    
       <button class="action-button enroll" data-action="enroll"   >
         <i class="mdi mdi-alert-circle" style="color: red; font-size: 20px;"></i>
@@ -341,8 +383,7 @@ export default {
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
                 `;
-      }
-      else {
+      } else {
         eGui.innerHTML = `
               <button
                 class="action-button edit"
@@ -371,10 +412,10 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData, index) => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
       switch (action) {
         case "edit":
-          if (user && user !== 'viewer') {
+          if (user && user !== "viewer") {
             state.modalMode = "edit";
             state.isModalOpen = true;
             state.editRow = rowData;
@@ -382,11 +423,11 @@ export default {
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
 
           break;
         case "downloadhost":
-          if (user && user !== 'viewer') {
+          if (user && user !== "viewer") {
             if (rowData.os === "windows") {
               let text = windows.value[0].content;
 
@@ -405,8 +446,7 @@ export default {
 
               window.URL.revokeObjectURL(url);
               document.body.removeChild(a);
-            }
-            else {
+            } else {
               let text = linux.value[0].content;
 
               const blob = new Blob([text], {
@@ -428,11 +468,11 @@ export default {
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
 
           break;
         case "download":
-          if (user && user !== 'viewer') {
+          if (user && user !== "viewer") {
             let text = rowData.token;
             const blob = new Blob([text], {
               type: "application/x-x509-ca-cert",
@@ -449,29 +489,28 @@ export default {
 
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
 
           break;
         case "enroll":
-          if (user && user !== 'viewer') {
+          if (user && user !== "viewer") {
             openModalEnrollement(rowData.ref_identitie);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
 
           break;
         case "delete":
-          if (user && user !== 'viewer') {
+          if (user && user !== "viewer") {
             OpenDelete(rowData.id);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
 
           break;
         default:
@@ -494,10 +533,9 @@ export default {
     const fetchIdentities = () => {
       let token = document.getElementById("app").getAttribute("token");
       if (token && token !== "null") {
-        tokenStatus.value = true
-      }
-      else {
-        tokenStatus.value = false
+        tokenStatus.value = true;
+      } else {
+        tokenStatus.value = false;
       }
       let IdentitiesString = document
         .getElementById("app")
@@ -510,7 +548,6 @@ export default {
         console.error("Failed to parse Identities string:", error);
       }
 
-
       Identities.value = IdentitiesObject ? IdentitiesObject : [];
 
       let linuxfileString = document
@@ -519,8 +556,7 @@ export default {
       let linuxObject;
       try {
         linuxObject = JSON.parse(linuxfileString);
-      } catch (error) {
-      }
+      } catch (error) {}
       linux.value = linuxObject ? linuxObject : [];
 
       let windowsfileString = document
@@ -529,10 +565,8 @@ export default {
       let windowsObject;
       try {
         windowsObject = JSON.parse(windowsfileString);
-      } catch (error) {
-      }
+      } catch (error) {}
       windows.value = windowsObject ? windowsObject : [];
-
     };
     async function OpenDelete(itemId) {
       state.selectedId = itemId;
@@ -578,7 +612,6 @@ export default {
       state.modalMode = "create";
       state.isModalEnrollmentOpen = true;
       state.selectedId = id;
-
     };
 
     const cancelDelete = () => {
@@ -586,8 +619,8 @@ export default {
     };
 
     function checkTokenBeforeAdd() {
-      const user = user_privilege('Ztna');
-      if (user && user !== 'viewer') {
+      const user = user_privilege("Ztna");
+      if (user && user !== "viewer") {
         let token = document.getElementById("app").getAttribute("token");
         if (token && token !== "null") {
           openModalAdd();
@@ -600,10 +633,8 @@ export default {
         console.log("View Mode");
         state.isviewModal = true;
         state.viewModal = true;
-      };
-
+      }
     }
-
 
     function formatedcreatedAt(data) {
       const resultMessage = formatDateTime(data.data.date_creation);
@@ -613,9 +644,7 @@ export default {
     }
     function formatedexpiresAt(data) {
       if (data.data.token) {
-        const resultMessage = formatDateTime(
-          data.data.date_expiration
-        );
+        const resultMessage = formatDateTime(data.data.date_expiration);
         let eGui = document.createElement("div");
         eGui.innerHTML = resultMessage ? `${resultMessage}` : "--";
         return eGui;
@@ -628,7 +657,6 @@ export default {
     };
 
     const confirmDelete = async (deletedItemId) => {
-
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -650,9 +678,15 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
@@ -713,7 +747,7 @@ export default {
 
 .action-icon.active-token {
   position: relative;
-  background-color: #45B450;
+  background-color: #45b450;
   color: white;
   border-radius: 50%;
   width: 20px;
@@ -728,7 +762,7 @@ export default {
 
 .action-icon.active-token:hover,
 .action-icon.active-token:focus {
-  background-color: #4CAF50;
+  background-color: #4caf50;
 }
 
 .img-view {

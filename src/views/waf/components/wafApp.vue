@@ -1,36 +1,34 @@
 <template>
   <v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
-              <v-card color="#193286" class="alert-box">
-                <v-card-title class="img-containter">
-                  <img
-                    src="@/assets/images/view.png"
-                    alt="logo"
-                    class="img-view"
-                    width="100"
-                    height="100"
-                /></v-card-title>
-                <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
-                </v-card-text>
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any actions.<br />
+          Please contact the administrator if you believe this is an error.
+        </v-card-text>
 
-                <div class="mr-3 mb-5 d-flex justify-end">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#ffffff"
-                    label-color="#213E9F"
-                    label="Close"
-                    :isLarge="true"
-                    @click="close"
-                  />
-                </div>
-              </v-card>
-            </v-dialog>
-          </v-overlay>
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            label="Close"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-overlay v-model="state.loading">
     <v-dialog
       v-model="state.isLoadingDialogue"
@@ -265,30 +263,30 @@ export default {
     }
 
     const handleAction = (action, rowData, index) => {
-      const user = user_privilege('Waf');
+      const user = user_privilege("Waf");
       switch (action) {
         case "delete":
-        if (user && user !=='viewer') {
-          state.deleteDialog = true;
-          state.deletedRow = rowData;
-        } else {
+          if (user && user !== "viewer") {
+            state.deleteDialog = true;
+            state.deletedRow = rowData;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          }
+
           break;
         case "edit":
-        if (user && user !=='viewer') {
-          console.log("edit", rowData);
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
-          break;
-        } else {
+          if (user && user !== "viewer") {
+            console.log("edit", rowData);
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+            break;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          }
+
         default:
           break;
       }
@@ -335,16 +333,16 @@ export default {
     });
 
     const openModalAdd = () => {
-      const user = user_privilege('Ztna');
-      if (user && user !=='viewer') {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-    } else {
-            console.log("View Mode");
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+      const user = user_privilege("Ztna");
+      if (user && user !== "viewer") {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const restartNginx = () => {
@@ -379,9 +377,15 @@ export default {
           }, 4000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 

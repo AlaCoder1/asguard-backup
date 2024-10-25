@@ -447,12 +447,11 @@ export default defineComponent({
 
     const openModalAdd = () => {
       if (last_Subscription.value.includes("Firewall L4")) {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-      emitter.emit("interface-uuid", props.uuid);
-      }
-       else {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+        emitter.emit("interface-uuid", props.uuid);
+      } else {
         emitter.emit("firewal-subscription");
         window.scrollTo(0, 0);
       }
@@ -626,12 +625,15 @@ export default defineComponent({
               }
             })
             .catch((i) => {
-              state.snackbarDelete = true;
-              state.color = "red";
-              state.textAlertDelete = i.response.data.response;
-              setTimeout(() => {
-                state.snackbar = false;
-              }, 1000);
+              if (i.response.status === 500) {
+                state.snackbarDelete = true;
+                state.color = "red";
+                state.textAlertDelete = t("errors.errorServer");
+              } else {
+                state.snackbarDelete = true;
+                state.color = "red";
+                state.textAlertDelete = i.response.data.response;
+              }
             });
 
           if (rowData.value.length === 0) changes.value = true;
@@ -681,12 +683,15 @@ export default defineComponent({
                 }
               })
               .catch((i) => {
-                state.snackbarDelete = true;
-                state.color = "red";
-                state.textAlertDelete = i.response.data.response;
-                setTimeout(() => {
-                  state.snackbar = false;
-                }, 1000);
+                if (i.response.status === 500) {
+                  state.snackbarDelete = true;
+                  state.color = "red";
+                  state.textAlertDelete = t("errors.errorServer");
+                } else {
+                  state.snackbarDelete = true;
+                  state.color = "red";
+                  state.textAlertDelete = i.response.data.response;
+                }
               });
             gridApi.value.setRowData(rowData.value);
           } else {
@@ -750,13 +755,15 @@ export default defineComponent({
           }
         })
         .catch((i) => {
-          console.log("errror", i.response);
-          state.snackbar = true;
-          state.textAlert = i.response.data.response;
-
-          setTimeout(() => {
-            location.reload();
-          }, 2000);
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.response;
+          }
         });
     };
     const cancel = () => {

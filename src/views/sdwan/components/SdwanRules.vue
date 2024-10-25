@@ -1,36 +1,34 @@
 <template>
   <v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
-              <v-card color="#193286" class="alert-box">
-                <v-card-title class="img-containter">
-                  <img
-                    src="@/assets/images/view.png"
-                    alt="logo"
-                    class="img-view"
-                    width="100"
-                    height="100"
-                /></v-card-title>
-                <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
-                </v-card-text>
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any actions.<br />
+          Please contact the administrator if you believe this is an error.
+        </v-card-text>
 
-                <div class="mr-3 mb-5 d-flex justify-end">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#ffffff"
-                    label-color="#213E9F"
-                    label="Close"
-                    :isLarge="true"
-                    @click="close"
-                  />
-                </div>
-              </v-card>
-            </v-dialog>
-          </v-overlay>
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            label="Close"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mr-3">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -230,7 +228,7 @@ export default {
         headerName: "Actions",
         cellRenderer: actionCellRendererArea,
         field: "action",
-        width:150,
+        width: 150,
         sortable: true,
         filter: true,
       },
@@ -331,89 +329,101 @@ export default {
     }
 
     const handleActionClient = (action, rowData, index) => {
-      const user = user_privilege('Sdwan');
+      const user = user_privilege("Sdwan");
       switch (action) {
         case "play":
-      if (user && user !=='viewer') {
-          console.log("play", rowData);
-          state.loading = true;
-          state.isLoadingDialogue = true;
-          axios
-            .put(`/sdwan/startSdwanRule/${rowData.id}`)
-            .then((response) => {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              state.loading = false;
-              state.isLoadingDialogue = false;
+          if (user && user !== "viewer") {
+            console.log("play", rowData);
+            state.loading = true;
+            state.isLoadingDialogue = true;
+            axios
+              .put(`/sdwan/startSdwanRule/${rowData.id}`)
+              .then((response) => {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                state.loading = false;
+                state.isLoadingDialogue = false;
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-              state.loading = false;
-              state.isLoadingDialogue = false;
-            });
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
           break;
         case "stop":
-        if (user && user !=='viewer') {
-          console.log("stop", rowData);
+          if (user && user !== "viewer") {
+            console.log("stop", rowData);
 
-          state.loading = true;
-          state.isLoadingDialogue = true;
-          axios
-            .put(`/sdwan/stopSdwanRule/${rowData.id}`)
-            .then((response) => {
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              state.loading = false;
-              state.isLoadingDialogue = false;
+            state.loading = true;
+            state.isLoadingDialogue = true;
+            axios
+              .put(`/sdwan/stopSdwanRule/${rowData.id}`)
+              .then((response) => {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                state.loading = false;
+                state.isLoadingDialogue = false;
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-              state.loading = false;
-              state.isLoadingDialogue = false;
-            });
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         case "edit":
-        if (user && user !=='viewer') {
-          console.log("edit", rowData);
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
-        } else {
+          if (user && user !== "viewer") {
+            console.log("edit", rowData);
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
           break;
         case "delete":
-        if (user && user !=='viewer') {
-          console.log("delete", rowData);
-          state.deleteDialog = true;
-          state.deletedRow = rowData;
-        } else {
+          if (user && user !== "viewer") {
+            console.log("delete", rowData);
+            state.deleteDialog = true;
+            state.deletedRow = rowData;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
           break;
         default:
           break;
@@ -421,15 +431,15 @@ export default {
     };
 
     const openModalAdd = () => {
-      const user = user_privilege('Sdwan');
-      if (user && user !=='viewer') {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-    } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+      const user = user_privilege("Sdwan");
+      if (user && user !== "viewer") {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     onMounted(() => {
@@ -473,12 +483,18 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
-    
+
     const close = () => {
       state.isviewModal = false;
       state.viewModal = false;

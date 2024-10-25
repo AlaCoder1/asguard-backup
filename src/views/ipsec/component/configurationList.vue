@@ -304,9 +304,15 @@ export default {
             }
           })
           .catch((i) => {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       });
       return input;
@@ -598,6 +604,15 @@ export default {
         // textAlert.value = i.response.data.error;
         // loading.value = false;
         // isLoadingDialogue.value = false;
+
+        if (error.response.status === 500) {
+          loading.value = false;
+          isLoadingDialogue.value = false;
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = t("errors.errorServer");
+        }
+
         if (error.message === "Request is taking longer than expected.") {
           // snackbar.value = true;
           // color.value = "warning";
@@ -638,10 +653,16 @@ export default {
               location.reload();
             }, 1000);
           })
-          .catch((error) => {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = error.response.data.error;
+          .catch((i) => {
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           })
           .finally(() => {
             // Reset the current row data and close the dialog
@@ -700,9 +721,15 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       } else {
         state.isviewModal = true;

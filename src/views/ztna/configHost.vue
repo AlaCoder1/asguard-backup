@@ -1,54 +1,73 @@
 <template>
-   <v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
-              <v-card color="#193286" class="alert-box">
-                <v-card-title class="img-containter">
-                  <img
-                    src="../../assets/images/view.png"
-                    alt="logo"
-                    class="img-view"
-                    width="100"
-                    height="100"
-                /></v-card-title>
-                <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
-                </v-card-text>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="../../assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any actions.<br />
+          Please contact the administrator if you believe this is an error.
+        </v-card-text>
 
-                <div class="mr-3 mb-5 d-flex justify-end">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#ffffff"
-                    label-color="#213E9F"
-                    label="Close"
-                    :isLarge="true"
-                    @click="close"
-                  />
-                </div>
-              </v-card>
-            </v-dialog>
-          </v-overlay>
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            label="Close"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-6" style="display: flex; flex-direction: column">
     <h4>{{ $t("ztna.listofHostConfigs") }}</h4>
     <v-divider></v-divider>
   </div>
   <div style="overflow: hidden; flex-grow: 1">
-    <ag-grid-vue id="grid-wrapperHost" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-      @grid-ready="onGridReadyHost" :columnDefs="columnHost" :rowData="configsHost" :gridOptions="gridOptions"
-      :overlayNoRowsTemplate="overlayTemplate" :rowDragManaged="true" :rowDragEntireRow="true"
-      @row-drag-end="onRowDragEnd" :localeText="paginationLocalization" />
+    <ag-grid-vue
+      id="grid-wrapperHost"
+      domLayout="autoHeight"
+      class="ag-theme-alpine mt-3"
+      style="width: 100%"
+      @grid-ready="onGridReadyHost"
+      :columnDefs="columnHost"
+      :rowData="configsHost"
+      :gridOptions="gridOptions"
+      :overlayNoRowsTemplate="overlayTemplate"
+      :rowDragManaged="true"
+      :rowDragEntireRow="true"
+      @row-drag-end="onRowDragEnd"
+      :localeText="paginationLocalization"
+    />
   </div>
   <div class="d-flex justify-end mt-3 mb-15">
-    <v-btn class="add-button" :rounded="true" color="indigo-darken-3"  :disabled="!tokenStatus"  @click="openModalHostAdd">
-      {{ $t("ztna.addHostConfig")}}
+    <v-btn
+      class="add-button"
+      :rounded="true"
+      color="indigo-darken-3"
+      :disabled="!tokenStatus"
+      @click="openModalHostAdd"
+    >
+      {{ $t("ztna.addHostConfig") }}
     </v-btn>
   </div>
 
-  <ModalAddHost :isOpen="state.isModalHostOpen" :editRow="state.editRow" :selectedId="state.selectedId"
-    :modalMode="state.modalMode" />
+  <ModalAddHost
+    :isOpen="state.isModalHostOpen"
+    :editRow="state.editRow"
+    :selectedId="state.selectedId"
+    :modalMode="state.modalMode"
+  />
   <!-- <ModalUpdateHost
     :isOpen="state.isModalUpdateHostOpen"
     :selectedId="state.selectedId"
@@ -65,11 +84,21 @@
         <v-btn color="blue darken-1" text @click="cancelDelete">{{
           $t("buttons.cancel")
         }}</v-btn>
-        <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
+        <v-btn
+          color="blue darken-1"
+          text
+          @click="confirmDelete(state.selectedId)"
+          >{{ $t("buttons.delete") }}</v-btn
+        >
       </v-card-actions>
     </v-card>
   </v-dialog>
-  <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+  <v-snackbar
+    :timeout="2000"
+    v-model="state.snackbar"
+    location="bottom right"
+    :color="state.color"
+  >
     {{ state.textAlert }}
   </v-snackbar>
 </template>
@@ -102,7 +131,7 @@ export default {
     const { t } = useI18n();
     const configsHost = ref([]);
     const emitter = inject("emitter");
-    const tokenStatus = ref('')
+    const tokenStatus = ref("");
 
     const gridApiHost = ref(null);
 
@@ -193,24 +222,20 @@ export default {
         .getAttribute("hostconfigs");
       let configsObject;
       if (token && token !== "null") {
-        tokenStatus.value = true
-      } 
-      else {
-        tokenStatus.value = false
-    }
+        tokenStatus.value = true;
+      } else {
+        tokenStatus.value = false;
+      }
       try {
         configsObject = JSON.parse(configsString);
-        console.log('configsObjecthost', configsObject)
-        
+        console.log("configsObjecthost", configsObject);
       } catch (error) {
         console.error("Failed to parse configs string:", error);
         configsObject = { data: [] }; // Default to an empty array if parsing fails
       }
       // let filterHost = configsObject.filter((i) => i.addressId === "NH5p4FpGR")
-      configsHost.value = configsObject
-      console.log('host conf',configsHost.value)
-
-
+      configsHost.value = configsObject;
+      console.log("host conf", configsHost.value);
     };
 
     const onGridReadyHost = (params) => {
@@ -222,21 +247,17 @@ export default {
     async function OpenDelete(itemId) {
       let token = document.getElementById("app").getAttribute("token");
 
-if (token && token !== "null") {
-  state.selectedId = itemId;
-  state.deleteDialog = true;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
- 
+      if (token && token !== "null") {
+        state.selectedId = itemId;
+        state.deleteDialog = true;
+      } else {
+        state.snackbar = true;
+        state.color = "red";
+        state.textAlert = "ZTNA is not running";
+      }
     }
 
     const confirmDelete = async (deletedItemId) => {
-
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       let token = document.getElementById("app").getAttribute("token");
@@ -249,7 +270,6 @@ else {
           },
         })
         .then((response) => {
-
           state.snackbar = true;
           state.color = "success";
           state.textAlert = response.data.message;
@@ -258,9 +278,15 @@ else {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
@@ -275,17 +301,16 @@ else {
     };
 
     const openModalHostAdd = () => {
-      const user = user_privilege('Ztna');
-      if (user && user !=='viewer') {
+      const user = user_privilege("Ztna");
+      if (user && user !== "viewer") {
         state.modalData = {};
-      state.modalMode = "create";
-      state.isModalHostOpen = true;
-              } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+        state.modalMode = "create";
+        state.isModalHostOpen = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
-
 
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
@@ -306,7 +331,7 @@ else {
                        cancel
                 </button>
                 `;
-      } else if(!tokenStatus.value) {
+      } else if (!tokenStatus.value) {
         eGui.innerHTML = `
                 <button
                   class="action-button edit"
@@ -320,8 +345,7 @@ else {
                   </button>
         
                   `;
-      }
-      else {
+      } else {
         eGui.innerHTML = `
                 <button
                   class="action-button edit"
@@ -345,27 +369,27 @@ else {
       return eGui;
     }
     const handleActionClient = (action, rowData, index) => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
       switch (action) {
         case "edit":
-        if (user && user !=='viewer') {
-          state.modalMode = "edit";
-          state.isModalHostOpen = true;
-          state.selectedId = rowData.id;
-          state.editRow = rowData;
+          if (user && user !== "viewer") {
+            state.modalMode = "edit";
+            state.isModalHostOpen = true;
+            state.selectedId = rowData.id;
+            state.editRow = rowData;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
 
           break;
         case "delete":
-        if (user && user !=='viewer') {
-          OpenDelete(rowData.id);
+          if (user && user !== "viewer") {
+            OpenDelete(rowData.id);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
 
           break;
         default:

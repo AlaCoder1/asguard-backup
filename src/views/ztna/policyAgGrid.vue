@@ -1,36 +1,34 @@
 <template>
-<v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
-              <v-card color="#193286" class="alert-box">
-                <v-card-title class="img-containter">
-                  <img
-                    src="../../assets/images/view.png"
-                    alt="logo"
-                    class="img-view"
-                    width="100"
-                    height="100"
-                /></v-card-title>
-                <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
-                </v-card-text>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="../../assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text>
+          You do not have the required permissions to perform any actions.<br />
+          Please contact the administrator if you believe this is an error.
+        </v-card-text>
 
-                <div class="mr-3 mb-5 d-flex justify-end">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#ffffff"
-                    label-color="#213E9F"
-                    label="Close"
-                    :isLarge="true"
-                    @click="close"
-                  />
-                </div>
-              </v-card>
-            </v-dialog>
-          </v-overlay>
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            label="Close"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3" style="display: flex; flex-direction: column">
     <h4>{{ $t("ztna.servicesEdgeRelaysPolicies") }}</h4>
     <v-divider></v-divider>
@@ -127,7 +125,7 @@ export default {
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
-    const tokenStatus = ref('')
+    const tokenStatus = ref("");
 
     const state = reactive({
       isviewModal: false,
@@ -276,7 +274,7 @@ export default {
 
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
-      if(!tokenStatus.value){
+      if (!tokenStatus.value) {
         eGui.innerHTML = `
         <button class="action-button edit" disabled>
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -285,7 +283,7 @@ export default {
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
       `;
-      }else{
+      } else {
         eGui.innerHTML = `
         <button class="action-button edit" data-action="edit">
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -305,29 +303,28 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData) => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
       switch (action) {
         case "edit":
-        if (user && user !=='viewer') { 
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
-          state.selectedId = rowData.id;
+          if (user && user !== "viewer") {
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+            state.selectedId = rowData.id;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-
+          }
 
           break;
         case "delete":
-        if (user && user !=='viewer') {
-          OpenDelete(rowData.id);
+          if (user && user !== "viewer") {
+            OpenDelete(rowData.id);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
 
           break;
         default:
@@ -336,8 +333,8 @@ export default {
     };
     async function OpenDelete(itemId) {
       let token = document.getElementById("app").getAttribute("token");
-        state.selectedId = itemId;
-        state.deleteDialog = true;    
+      state.selectedId = itemId;
+      state.deleteDialog = true;
     }
 
     const cancelDelete = () => {
@@ -345,7 +342,6 @@ export default {
     };
 
     const confirmDelete = async (itemId) => {
-
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -367,32 +363,35 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
     onMounted(() => {
       let token = document.getElementById("app").getAttribute("token");
       if (token && token !== "null") {
-        tokenStatus.value = true
-      } 
-      else {
-        tokenStatus.value = false
-    }
+        tokenStatus.value = true;
+      } else {
+        tokenStatus.value = false;
+      }
       let service_edge_router_policiesString = document
         .getElementById("app")
         .getAttribute("service_edge_router_policies");
       let service_edge_router_policiesObject = JSON.parse(
         service_edge_router_policiesString
       );
-     
 
       rowDataPolicy.value = service_edge_router_policiesObject
         ? service_edge_router_policiesObject
         : [];
-    
 
       if (gridPolicy.value) {
         gridPolicy.value.setRowData(rowDataPolicy.value);
@@ -415,16 +414,16 @@ export default {
     });
 
     const openModalAdd = () => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
-      if (user && user !=='viewer') {     
+      if (user && user !== "viewer") {
         state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-          } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const close = () => {
@@ -446,8 +445,7 @@ export default {
       paginationLocalization,
       columnPolicy,
       rowDataPolicy,
-       tokenStatus
-
+      tokenStatus,
     };
   },
 };

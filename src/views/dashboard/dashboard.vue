@@ -470,11 +470,18 @@ export default {
                 }, 1000);
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
                 state.loading = false;
                 state.isLoadingDialogue = false;
+
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           }
 
@@ -505,11 +512,18 @@ export default {
                 }, 1000);
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
                 state.loading = false;
                 state.isLoadingDialogue = false;
+
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           }
           break;
@@ -541,11 +555,18 @@ export default {
                 }, 1000);
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
                 state.loading = false;
                 state.isLoadingDialogue = false;
+
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           }
           break;

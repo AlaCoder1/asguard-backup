@@ -3,28 +3,48 @@
     <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
         <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
+          You do not have the required permissions to perform any actions.<br />
+          Please contact the administrator if you believe this is an error.
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            label="Close"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
   </v-overlay>
   <div class="mt-3 ml-3 mr-3">
     <v-overlay v-model="loading">
-      <v-dialog v-model="isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-dialog
+        v-model="isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
         <v-card color="#193286">
           <v-card-text>
             {{ $t("requiredfield.attente") }}
-            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -34,13 +54,33 @@
         <h4>{{ $t("Clientsopenvpn.ListServers") }}</h4>
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column">
-          <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-            :columnDefs="columnServers" :rowData="rowDataServers.value" :defaultColDef="defaultColDef"
-            :rowGroupPanelShow="rowGroupPanelShow" :overlayNoRowsTemplate="overlayTemplate" @grid-ready="onGridReady"
-            :pagination="true" :paginationPageSize="4" :localeText="paginationLocalization" />
+          <ag-grid-vue
+            id="grid-wrapper"
+            domLayout="autoHeight"
+            class="ag-theme-alpine mt-3"
+            style="width: 100%"
+            :columnDefs="columnServers"
+            :rowData="rowDataServers.value"
+            :defaultColDef="defaultColDef"
+            :rowGroupPanelShow="rowGroupPanelShow"
+            :overlayNoRowsTemplate="overlayTemplate"
+            @grid-ready="onGridReady"
+            :pagination="true"
+            :paginationPageSize="4"
+            :localeText="paginationLocalization"
+          />
           <div class="d-flex justify-end mt-3">
-            <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('button.addServer')"
-              :isLarge="true" type="submit" class="ml-2" @click="addServer" />
+            <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              :label="$t('button.addServer')"
+              :isLarge="true"
+              type="submit"
+              class="ml-2"
+              @click="addServer"
+            />
           </div>
         </div>
       </v-col>
@@ -50,13 +90,32 @@
         <h4>{{ $t("Clientsopenvpn.ListClients") }}</h4>
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column">
-          <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-            :columnDefs="columnClients" :rowData="rowDataClients.value" :defaultColDef="defaultColDef"
-            :rowGroupPanelShow="rowGroupPanelShow" :overlayNoRowsTemplate="overlayTemplate" :pagination="true"
-            :paginationPageSize="4" :localeText="paginationLocalization" />
+          <ag-grid-vue
+            id="grid-wrapper"
+            domLayout="autoHeight"
+            class="ag-theme-alpine mt-3"
+            style="width: 100%"
+            :columnDefs="columnClients"
+            :rowData="rowDataClients.value"
+            :defaultColDef="defaultColDef"
+            :rowGroupPanelShow="rowGroupPanelShow"
+            :overlayNoRowsTemplate="overlayTemplate"
+            :pagination="true"
+            :paginationPageSize="4"
+            :localeText="paginationLocalization"
+          />
           <div class="d-flex justify-end mt-3 mb-10">
-            <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('button.addClient')"
-              :isLarge="true" type="submit" class="ml-2" @click="addClient" />
+            <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              :label="$t('button.addClient')"
+              :isLarge="true"
+              type="submit"
+              class="ml-2"
+              @click="addClient"
+            />
           </div>
           <br />
         </div>
@@ -66,29 +125,39 @@
         <v-card>
           <v-card-title class="headline">{{
             $t("delete.DeleteConfirmation")
-            }}</v-card-title>
-          <v-card-text>{{ $t("delete.Delete") }}
+          }}</v-card-title>
+          <v-card-text
+            >{{ $t("delete.Delete") }}
             {{ isDeletedType === "server" ? $t("agGrid.server") : "Client" }}
-            ?</v-card-text>
+            ?</v-card-text
+          >
           <v-card-actions>
             <v-spacer></v-spacer>
             <v-btn color="blue darken-1" text @click="dialogDelete = false">{{
               $t("buttons.cancel")
-              }}</v-btn>
+            }}</v-btn>
             <v-btn color="blue darken-1" text @click="confirmDelete">{{
               $t("buttons.delete")
-              }}</v-btn>
+            }}</v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
 
-      <v-snackbar :timeout="2000" v-model="snackbar" location="bottom right" :color="color">
+      <v-snackbar
+        :timeout="2000"
+        v-model="snackbar"
+        location="bottom right"
+        :color="color"
+      >
         {{ textAlert }}
       </v-snackbar>
     </v-row>
 
     <ModalCreateClient :isOpen="state.isModalOpen" :editRow="state.editRow" />
-    <ModalListClient :isOpenListView="state.isModalOpenListView" :editRow="state.editRow" />
+    <ModalListClient
+      :isOpenListView="state.isModalOpenListView"
+      :editRow="state.editRow"
+    />
   </div>
 </template>
 
@@ -445,152 +514,157 @@ export default {
     const handleActionServer = (action, rowData, index) => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      const user = user_privilege('Openvpn');
+      const user = user_privilege("Openvpn");
 
       switch (action) {
         case "play":
-        if (user && user !== 'viewer') {
+          if (user && user !== "viewer") {
+            loading.value = true;
+            isLoadingDialogue.value = true;
+            axios
+              .post(`/openvpn/startServerOpenvpn/${rowData.id}`)
+              .then((response) => {
+                snackbar.value = true;
+                color.value = "success";
+                textAlert.value = response.data.msg;
+                loading.value = false;
+                isLoadingDialogue.value = false;
 
-          loading.value = true;
-          isLoadingDialogue.value = true;
-          axios
-            .post(`/openvpn/startServerOpenvpn/${rowData.id}`)
-            .then((response) => {
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
-              loading.value = false;
-              isLoadingDialogue.value = false;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                loading.value = false;
+                isLoadingDialogue.value = false;
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-              loading.value = false;
-              isLoadingDialogue.value = false;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            });
+                if (i.response.status === 500) {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = t("errors.errorServer");
+                } else {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = i.response.data.error;
+                }
+              });
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         case "edit":
-        if (user && user !== 'viewer') {
-
-          emitter.emit("add-server");
-          setTimeout(() => {
-            emitter.emit("edit-server", rowData);
-          }, 1000);
-          break;
-        } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-          };
-        case "stop":
-        if (user && user !== 'viewer') {
-
-          loading.value = true;
-          isLoadingDialogue.value = true;
-          axios
-            .delete(`/openvpn/stopServerOpenvpn/${rowData.id}`)
-            .then((response) => {
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
-              loading.value = false;
-              isLoadingDialogue.value = false;
-
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-              loading.value = false;
-              isLoadingDialogue.value = false;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            });
+          if (user && user !== "viewer") {
+            emitter.emit("add-server");
+            setTimeout(() => {
+              emitter.emit("edit-server", rowData);
+            }, 1000);
+            break;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
+        case "stop":
+          if (user && user !== "viewer") {
+            loading.value = true;
+            isLoadingDialogue.value = true;
+            axios
+              .delete(`/openvpn/stopServerOpenvpn/${rowData.id}`)
+              .then((response) => {
+                snackbar.value = true;
+                color.value = "success";
+                textAlert.value = response.data.msg;
+                loading.value = false;
+                isLoadingDialogue.value = false;
+
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                loading.value = false;
+                isLoadingDialogue.value = false;
+
+                if (i.response.status === 500) {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = t("errors.errorServer");
+                } else {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = i.response.data.error;
+                }
+              });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "restart":
-        if (user && user !== 'viewer') {
+          if (user && user !== "viewer") {
+            loading.value = true;
+            isLoadingDialogue.value = true;
+            axios
+              .put(`/openvpn/restartServerOpenvpn/${rowData.id}`)
+              .then((response) => {
+                snackbar.value = true;
+                color.value = "success";
+                textAlert.value = response.data.msg;
+                loading.value = false;
+                isLoadingDialogue.value = false;
 
-          loading.value = true;
-          isLoadingDialogue.value = true;
-          axios
-            .put(`/openvpn/restartServerOpenvpn/${rowData.id}`)
-            .then((response) => {
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
-              loading.value = false;
-              isLoadingDialogue.value = false;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                loading.value = false;
+                isLoadingDialogue.value = false;
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-              loading.value = false;
-              isLoadingDialogue.value = false;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            });
+                if (i.response.status === 500) {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = t("errors.errorServer");
+                } else {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = i.response.data.error;
+                }
+              });
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         case "delete":
-        if (user && user !== 'viewer') {
-
-          isDeletedType.value = "server";
-          deleteRow.value = rowData;
-          dialogDelete.value = true;
-          rowID.value = rowData.id;
-        } else {
+          if (user && user !== "viewer") {
+            isDeletedType.value = "server";
+            deleteRow.value = rowData;
+            dialogDelete.value = true;
+            rowID.value = rowData.id;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
 
         case "account":
-        if (user && user !== 'viewer') {
-
-          state.isModalOpen = true;
-          state.editRow = rowData;
-        } else {
+          if (user && user !== "viewer") {
+            state.isModalOpen = true;
+            state.editRow = rowData;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         case "show":
-        if (user && user !== 'viewer') {
-
-          state.isModalOpenListView = true;
-          state.editRow = rowData;
-        } else {
+          if (user && user !== "viewer") {
+            state.isModalOpenListView = true;
+            state.editRow = rowData;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
 
         default:
@@ -649,73 +723,79 @@ export default {
     const handleActionClient = (action, rowData, index) => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      const user = user_privilege('Openvpn');
+      const user = user_privilege("Openvpn");
 
       switch (action) {
         case "download":
-        if (user && user !== 'viewer') {
+          if (user && user !== "viewer") {
+            let id = rowData.id;
+            let fileExtention = `${rowData.name}.ovpn`;
 
-          let id = rowData.id;
-          let fileExtention = `${rowData.name}.ovpn`;
+            const csrfToken = getCookie("csrftoken");
+            axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-          const csrfToken = getCookie("csrftoken");
-          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+            axios
+              .post(`/openvpn/exportClientOpenvpn/${id}`)
+              .then((response) => {
+                const text = response.data.client;
+                const blob = new Blob([text], {
+                  type: "application/x-x509-ca-cert",
+                });
 
-          axios
-            .post(`/openvpn/exportClientOpenvpn/${id}`)
-            .then((response) => {
-              const text = response.data.client;
-              const blob = new Blob([text], {
-                type: "application/x-x509-ca-cert",
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = fileExtention;
+
+                document.body.appendChild(a);
+                a.click();
+
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+              })
+              .catch((i) => {
+                loading.value = false;
+                isLoadingDialogue.value = false;
+
+                if (i.response.status === 500) {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = t("errors.errorServer");
+                } else {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = i.response.data.error;
+                }
               });
-
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.style.display = "none";
-              a.href = url;
-              a.download = fileExtention;
-
-              document.body.appendChild(a);
-              a.click();
-
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-            });
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
 
           break;
         case "editClient":
-        if (user && user !== 'viewer') {
-
-          emitter.emit("add-client");
-          setTimeout(() => {
-            emitter.emit("edit-client", rowData);
-          }, 1000);
-        } else {
+          if (user && user !== "viewer") {
+            emitter.emit("add-client");
+            setTimeout(() => {
+              emitter.emit("edit-client", rowData);
+            }, 1000);
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
 
         case "delete":
-        if (user && user !== 'viewer') {
-
-          isDeletedType.value = "client";
-          deleteRow.value = rowData;
-          dialogDelete.value = true;
-          rowID.value = rowData.id;
-        } else {
+          if (user && user !== "viewer") {
+            isDeletedType.value = "client";
+            deleteRow.value = rowData;
+            dialogDelete.value = true;
+            rowID.value = rowData.id;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         default:
           break;
@@ -764,28 +844,28 @@ export default {
       return eGui;
     }
 
-    const publishServer = () => { };
+    const publishServer = () => {};
 
     const addServer = () => {
-      const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
+      const user = user_privilege("Openvpn");
+      if (user && user !== "viewer") {
         emitter.emit("add-server");
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
 
-    const publishClient = () => { };
+    const publishClient = () => {};
 
     const addClient = () => {
-      const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
+      const user = user_privilege("Openvpn");
+      if (user && user !== "viewer") {
         emitter.emit("add-client");
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
 
     onMounted(async () => {
@@ -858,9 +938,15 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = i.response.data.error;
+            if (i.response.status === 500) {
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = t("errors.errorServer");
+            } else {
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            }
           });
       } else if (isDeletedType.value === "client") {
         axios
@@ -875,9 +961,15 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = i.response.data.error;
+            if (i.response.status === 500) {
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = t("errors.errorServer");
+            } else {
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            }
           });
       }
     };

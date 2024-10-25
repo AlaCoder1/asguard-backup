@@ -3,17 +3,28 @@
     <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
         <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
+          You do not have the required permissions to perform any actions.<br />
+          Please contact the administrator if you believe this is an error.
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            label="Close"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -25,17 +36,37 @@
         <v-divider class="mt-2"></v-divider>
         <v-row class="mt-5">
           <v-col cols="12" md="6">
-            <v-text-field id="filter-text-box" density="compact" class="w-75" variant="solo" rounded
-              :label="$t('squid.search')" append-inner-icon="mdi-magnify" single-line hide-details
-              @input="onFilterTextBoxChanged"></v-text-field>
+            <v-text-field
+              id="filter-text-box"
+              density="compact"
+              class="w-75"
+              variant="solo"
+              rounded
+              :label="$t('squid.search')"
+              append-inner-icon="mdi-magnify"
+              single-line
+              hide-details
+              @input="onFilterTextBoxChanged"
+            ></v-text-field>
           </v-col>
         </v-row>
         <v-row>
           <div style="overflow: hidden; flex-grow: 1">
-            <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnRules"
-              :rowData="rowDataRules.value" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef"
-              style="width: 100%" :localeText="paginationLocalization" :overlayNoRowsTemplate="overlayTemplate"
-              :pagination="true" :paginationPageSize="4">
+            <ag-grid-vue
+              id="grid-wrapper"
+              domLayout="autoHeight"
+              class="ag-theme-alpine"
+              :columnDefs="columnRules"
+              :rowData="rowDataRules.value"
+              @grid-ready="onGridReady"
+              :rowDrag="true"
+              :defaultColDef="defaultColDef"
+              style="width: 100%"
+              :localeText="paginationLocalization"
+              :overlayNoRowsTemplate="overlayTemplate"
+              :pagination="true"
+              :paginationPageSize="4"
+            >
             </ag-grid-vue>
           </div>
         </v-row>
@@ -44,31 +75,47 @@
     </v-row>
     <v-row class="d-flex justify-end mt-5">
       <div>
-        <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.Add')" :isLarge="true"
-          class="ml-2" @click="openModalRule" />
+        <VButton
+          rounded
+          outlined
+          color="#213E9F"
+          label-color="#ffffff"
+          :label="$t('buttons.Add')"
+          :isLarge="true"
+          class="ml-2"
+          @click="openModalRule"
+        />
       </div>
     </v-row>
     <v-dialog v-model="state.deleteDialogRule" max-width="500px">
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-          }}</v-card-title>
+        }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-            }}</v-btn>
+          }}</v-btn>
           <v-btn color="blue darken-1" text @click="confirmDelete">{{
             $t("buttons.delete")
-            }}</v-btn>
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <ModalAddRule :isOpenModal="state.isModalOpenRule" :editRowRule="state.editRowRule"
-      :modalModeRule="state.modalModeRule" />
+    <ModalAddRule
+      :isOpenModal="state.isModalOpenRule"
+      :editRowRule="state.editRowRule"
+      :modalModeRule="state.modalModeRule"
+    />
 
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </div>
@@ -279,10 +326,10 @@ export default {
     };
 
     const handleAction = (action, rowData) => {
-      const user = user_privilege('Proxy');
+      const user = user_privilege("Proxy");
       switch (action) {
         case "edit":
-          if (user && user !== 'viewer') {
+          if (user && user !== "viewer") {
             state.modalDataRule = {};
             state.modalModeRule = "edit";
             state.isModalOpenRule = true;
@@ -290,16 +337,16 @@ export default {
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         case "delete":
-          if (user && user !== 'viewer') {
+          if (user && user !== "viewer") {
             state.deleteDialogRule = true;
             state.deletedRow = rowData;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         default:
           break;
@@ -307,15 +354,15 @@ export default {
     };
 
     const openModalRule = () => {
-      const user = user_privilege('Waf');
-      if (user && user !== 'viewer') {
+      const user = user_privilege("Waf");
+      if (user && user !== "viewer") {
         state.modalDataRule = {};
         state.modalModeRule = "create";
         state.isModalOpenRule = true;
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
 
     onMounted(() => {
@@ -331,8 +378,7 @@ export default {
         state.isModalOpenRule = false;
         state.modalDataRule = {};
         state.modalModeRule = "";
-        state.editRowRule = {}
-
+        state.editRowRule = {};
       });
 
       const proxyRuleAttribute =
@@ -393,9 +439,15 @@ export default {
           }
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
     return {

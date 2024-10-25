@@ -707,12 +707,19 @@ export default {
               location.reload();
             }, 1000);
           })
-          .catch((e) => {
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = e.response.data.message;
+          .catch((i) => {
             this.loading = false;
             this.isLoadingDialogue = false;
+
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.message;
+            }
           });
       }
       if (this.setuptypeip4 === "dhcp") {
@@ -764,12 +771,19 @@ export default {
               location.reload();
             }, 1000);
           })
-          .catch((e) => {
+          .catch((i) => {
             this.loading = false;
             this.isLoadingDialogue = false;
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = e.response.data.message;
+
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.message;
+            }
           });
       }
     },
@@ -832,11 +846,16 @@ export default {
             this.showGatewayDialog = true;
           }
         })
-        .catch((e) => {
-          console.log("e", e.response);
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = e.response.data.message;
+        .catch((i) => {
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.message;
+          }
         });
     },
     cancelGateway() {
@@ -874,10 +893,16 @@ export default {
             this.showAlert = false;
           }, 3000);
         })
-        .catch((e) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = e.response.data.message;
+        .catch((i) => {
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.message;
+          }
         });
     },
     onSubmit() {

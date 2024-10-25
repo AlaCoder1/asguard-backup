@@ -4,11 +4,8 @@
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
@@ -82,6 +79,8 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
     const paginationLocalization = reactive({
@@ -107,7 +106,15 @@ export default {
       paginationPageSize: 5,
       rowSelection: "single",
     });
-
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Sdwan') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("SDWAN")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const areaName = computed(() => {
       return t("sdwan.areaName");
     });
@@ -207,7 +214,7 @@ export default {
       const user = user_privilege('Sdwan');
       switch (action) {
         case "show":
-          if (user && user !== 'viewer' && user !=='default') {
+          if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
             console.log("show", rowData);
           }
           else {
@@ -216,7 +223,7 @@ export default {
           };
           break;
         case "edit":
-          if (user && user !== 'viewer' && user !=='default') {
+          if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
             console.log("edit", rowData);
             state.modalMode = "edit";
             state.isModalAreaOpen = true;
@@ -227,7 +234,7 @@ export default {
           };
           break;
         case "delete":
-          if (user && user !== 'viewer' && user !=='default') {
+          if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
             console.log("delete", rowData);
             state.deleteDialog = true;
             state.deletedRow = rowData;
@@ -243,7 +250,7 @@ export default {
 
     const openModalAdd = () => {
       const user = user_privilege('Sdwan');
-      if (user && user !== 'viewer' && user !=='default') {
+      if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
         state.modalData = {};
         state.modalMode = "create";
         state.isModalAreaOpen = true;
@@ -267,6 +274,12 @@ export default {
         state.modalMode = "";
         state.editRow = {};
       });
+
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
 
       let allArea = document.getElementById("app").attributes["allArea"].value;
       let parsedArray = JSON.parse(allArea);
@@ -322,6 +335,7 @@ export default {
       overlayTemplate,
       paginationLocalization,
       columnArea,
+      overlayMessage,
       emitter,
       rowDataArea,
       defaultColDef,
@@ -335,4 +349,8 @@ export default {
 };
 </script>
 
-<style></style>
+<style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}</style>

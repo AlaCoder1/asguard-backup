@@ -4,11 +4,8 @@
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
@@ -120,6 +117,8 @@ export default {
       of: "/",
     });
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const overlayTemplate = ref("");
     const dialogDelete = ref(false);
     const isDeletedType = ref("");
@@ -141,6 +140,15 @@ export default {
     const ServerNam = computed(() => {
       return t("PageGeneral.ServerName");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Openvpn') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("VPN SSL")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const Protocol = computed(() => {
       return t("Clientsopenvpn.Protocol/Port");
     });
@@ -448,7 +456,7 @@ export default {
 
       switch (action) {
         case "play":
-        if (user && user !== 'viewer' && user!=='default') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
           loading.value = true;
           isLoadingDialogue.value = true;
@@ -481,7 +489,7 @@ export default {
           };
           break;
         case "edit":
-        if (user && user !== 'viewer' && user!=='default') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
           emitter.emit("add-server");
           setTimeout(() => {
@@ -493,7 +501,7 @@ export default {
             state.viewModal = true;
           };
         case "stop":
-        if (user && user !== 'viewer' && user!=='default') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
           loading.value = true;
           isLoadingDialogue.value = true;
@@ -526,7 +534,7 @@ export default {
           };
           break;
         case "restart":
-        if (user && user !== 'viewer' && user!=='default') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
           loading.value = true;
           isLoadingDialogue.value = true;
@@ -559,7 +567,7 @@ export default {
           };
           break;
         case "delete":
-        if (user && user !== 'viewer' && user!=='default') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
           isDeletedType.value = "server";
           deleteRow.value = rowData;
@@ -572,7 +580,7 @@ export default {
           break;
 
         case "account":
-        if (user && user !== 'viewer' && user!=='default') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
           state.isModalOpen = true;
           state.editRow = rowData;
@@ -582,7 +590,7 @@ export default {
           };
           break;
         case "show":
-        if (user && user !== 'viewer' && user!=='default') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
           state.isModalOpenListView = true;
           state.editRow = rowData;
@@ -652,7 +660,7 @@ export default {
 
       switch (action) {
         case "download":
-        if (user && user !== 'viewer' && user!=='default') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
           let id = rowData.id;
           let fileExtention = `${rowData.name}.ovpn`;
@@ -692,7 +700,7 @@ export default {
 
           break;
         case "editClient":
-        if (user && user !== 'viewer' && user!=='default') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
           emitter.emit("add-client");
           setTimeout(() => {
@@ -705,7 +713,7 @@ export default {
           break;
 
         case "delete":
-        if (user && user !== 'viewer' && user!=='default') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
           isDeletedType.value = "client";
           deleteRow.value = rowData;
@@ -767,7 +775,7 @@ export default {
 
     const addServer = () => {
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer' && user!=='default') {
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
         emitter.emit("add-server");
       } else {
         state.isviewModal = true;
@@ -779,7 +787,7 @@ export default {
 
     const addClient = () => {
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer' && user!=='default') {
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
         emitter.emit("add-client");
       } else {
         state.isviewModal = true;
@@ -788,6 +796,11 @@ export default {
     };
 
     onMounted(async () => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       emitter.on("closeModalClient", () => {
         state.isModalOpenListView = false;
       });
@@ -916,10 +929,16 @@ export default {
       addServer,
       publishClient,
       addClient,
+      overlayMessage,
       getCookie,
     };
   },
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+</style>

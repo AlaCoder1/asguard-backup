@@ -278,7 +278,7 @@ export default {
     const rowDataSnat = reactive({});
 
     const gridApi = ref(null);
-
+    
     function checkboxRender(params) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -402,7 +402,6 @@ export default {
     }
 
     const handleActionClient = (action, rowData, index) => {
-      const user = user_privilege();
       switch (action) {
         case "show":
           if (user !== "viewer") {
@@ -497,7 +496,6 @@ export default {
 
         let allListNat =
           document.getElementById("app").attributes["listNat"].value;
-
         const validJsonString = allListNat
           .replace(/'/g, '"')
           .replace(/True/g, "true")
@@ -574,4 +572,3 @@ export default {
 };
 </script>
 
-<style></style>

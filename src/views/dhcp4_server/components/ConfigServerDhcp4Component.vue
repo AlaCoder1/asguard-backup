@@ -336,7 +336,6 @@ export default {
       } else {
         state.rows.splice(index, 1);
       };
-
     };
     const handleRemove = () => {
       state.snackbar = false;

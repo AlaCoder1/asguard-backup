@@ -4,11 +4,8 @@
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
@@ -221,6 +218,8 @@ export default {
   props: ["dataServer"],
   setup(props) {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const emitter = inject("emitter");
 
     const { dataServer } = toRefs(props);
@@ -528,7 +527,7 @@ export default {
     const cancel = () => {
       //General information Phase 1
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer' && user !=='default') {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("VPN IPSEC")) {
 
       state.tunnelSettings = "";
       state.connectionMethod = {
@@ -640,6 +639,15 @@ export default {
     const champ = computed(() => {
       return t("champs.indication");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Ipsec') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("VPN IPSEC")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -1022,6 +1030,11 @@ export default {
     };
 
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       getInterface();
       getPublickKey();
       getAllCertif();
@@ -1339,7 +1352,7 @@ export default {
 
     const save = async () => {
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer' && user !=='default') {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("VPN IPSEC")) {
       const result = await v$.value.$validate();
 
       const csrfToken = getCookie("csrftoken");
@@ -1610,6 +1623,7 @@ export default {
       cancel,
       close,
       state,
+      overlayMessage,
       emitter,
       v$,
     };
@@ -1621,5 +1635,9 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
+}
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 </style>

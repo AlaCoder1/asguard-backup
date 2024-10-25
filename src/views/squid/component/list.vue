@@ -4,11 +4,8 @@
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
@@ -97,6 +94,8 @@ export default {
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const overlayTemplate = ref("");
     const state = reactive({
       deleteDialogRule: false,
@@ -127,6 +126,15 @@ export default {
     const ruleName = computed(() => {
       return t("sdwan.ruleName");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege() 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("Proxy")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const routageType = computed(() => {
       return t("squid.routageType");
     });
@@ -281,7 +289,7 @@ export default {
       const user = user_privilege('Proxy');
       switch (action) {
         case "edit":
-          if (user && user !== 'viewer' && user !=='default') {
+          if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
             state.modalDataRule = {};
             state.modalModeRule = "edit";
             state.isModalOpenRule = true;
@@ -292,7 +300,7 @@ export default {
           };
           break;
         case "delete":
-          if (user && user !== 'viewer' && user !=='default') {
+          if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
             state.deleteDialogRule = true;
             state.deletedRow = rowData;
           } else {
@@ -306,8 +314,8 @@ export default {
     };
 
     const openModalRule = () => {
-      const user = user_privilege('Waf');
-      if (user && user !== 'viewer' && user !=='default') {
+      const user = user_privilege('Proxy');
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
         state.modalDataRule = {};
         state.modalModeRule = "create";
         state.isModalOpenRule = true;
@@ -325,7 +333,11 @@ export default {
         data-name="Unbox"
       />
     </svg></span>`;
-
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       emitter.on("closeAddRuleModal", () => {
         state.isModalOpenRule = false;
         state.modalDataRule = {};
@@ -403,6 +415,7 @@ export default {
       cancelDelete,
       confirmDelete,
       textAlert,
+      overlayMessage,
       columnRules,
       gridColumnApi,
       rowDataRules,
@@ -423,4 +436,9 @@ export default {
   color: red;
   font-size: 0.85em;
 }
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+
 </style>

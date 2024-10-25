@@ -10,10 +10,7 @@
                     width="100"
                     height="100"
                 /></v-card-title>
-                <v-card-text>
-                  {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }}                
+                <v-card-text v-html="overlayMessage">
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -107,6 +104,8 @@ export default {
   setup() {
     const emitter = inject("emitter");
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const paginationLocalization = reactive({
       of: "/",
     });
@@ -129,6 +128,15 @@ export default {
     const RequestAction = computed(() => {
       return t("Waf.RequestAction");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Waf') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("WAF")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const Rule = computed(() => {
       return t("Waf.Rule");
     });
@@ -296,7 +304,7 @@ export default {
       const user = user_privilege('Waf');
       switch (action) {
         case "delete":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
           state.deleteDialog = true;
           state.deletedRow = rowData;
         } else {
@@ -305,7 +313,7 @@ export default {
             };
           break;
         case "edit":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
@@ -316,7 +324,7 @@ export default {
           break;
 
         case "show":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
           state.isModalShowAppOpen = true;
           state.editRow = rowData;
           state.modalMode = "show";
@@ -335,7 +343,7 @@ export default {
       const user = user_privilege('Waf');
       switch (action) {
         case "description":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
           console.log('description')
           state.isModalShowDescOpen = true;
           state.editRow = rowData;
@@ -379,6 +387,12 @@ export default {
       rowDataRules.value = list_rules;
     });
 
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
+
     emitter.on("closeWafRuleModal", () => {
       state.isModalOpen = false;
       state.isOpen = false;
@@ -405,7 +419,7 @@ export default {
     };
     const openModalAdd = () => {
       const user = user_privilege('Waf');
-      if (user && user !=='viewer') {
+      if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
@@ -450,6 +464,7 @@ export default {
     return {
       state,
       close,
+      overlayMessage,
       onGridReady,
       openModalAdd,
       cancelDelete,
@@ -463,3 +478,9 @@ export default {
   },
 };
 </script>
+<style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+</style>

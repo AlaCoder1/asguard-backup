@@ -4,11 +4,8 @@
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
@@ -142,6 +139,8 @@ export default {
   },
   setup(props) {
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const { t } = useI18n();
     const overlayTemplate = ref("");
     const state = reactive({
@@ -166,6 +165,15 @@ export default {
     const status = computed(() => {
       return t("squid.status");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Suricata') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("IDS/IPS")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
 
     const columnRules = ref([
       // {
@@ -362,7 +370,7 @@ export default {
     };
     const handleAction = (action, rowData) => {
       const user = user_privilege('Suricata');
-      if (user && user !== 'viewer' && user !=='default') {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("IDS/IPS")) {
         rowDataToDelete.value = rowData;
         deleteDialog.value = true;
       } else {
@@ -487,7 +495,7 @@ export default {
 
     const save = async () => {
       const user = user_privilege('Suricata');
-      if (user && user !== 'viewer' && user !=='default') {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("IDS/IPS")) {
       let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
       const dataToSend = modifiedRows.map((row) => {
         return {
@@ -688,6 +696,11 @@ export default {
         });
     };
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       getData();
 
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
@@ -746,6 +759,7 @@ export default {
       cancelDelete,
       confirmDelete,
       showMessage,
+      overlayMessage,
       updateIndex,
       reloadData,
       getData,
@@ -754,4 +768,9 @@ export default {
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+</style>

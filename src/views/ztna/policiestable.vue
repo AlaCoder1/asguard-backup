@@ -10,10 +10,7 @@
                     width="100"
                     height="100"
                 /></v-card-title>
-                <v-card-text>
-                  {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
+                <v-card-text v-html="overlayMessage">
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -103,6 +100,8 @@ export default {
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const tokenStatus = ref('')
 
     const state = reactive({
@@ -145,6 +144,15 @@ export default {
     const name = computed(() => {
       return t("ztna.name");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Ztna') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("ZTNA")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const semantic = computed(() => {
       return t("ztna.semantic");
     });
@@ -289,7 +297,7 @@ export default {
 
       switch (action) {
         case "edit":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
           state.modalMode = "edit";
           state.isModalOpenRouter = true;
           state.editRow = rowData;
@@ -301,7 +309,7 @@ export default {
 
           break;
         case "delete":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
           OpenDelete(rowData.id);
           } else {
             state.isviewModal = true;
@@ -351,6 +359,12 @@ export default {
     };
 
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
+
       let token = document.getElementById("app").getAttribute("token");
 
       let router_policiesString = document
@@ -385,7 +399,7 @@ export default {
 
     const openModalRouter = () => {
       const user = user_privilege('Ztna');
-      if (user && user !=='viewer') {
+      if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
         state.modalDataRouter = {};
       state.modalMode = "create";
       state.isModalOpenRouter = true;
@@ -410,6 +424,7 @@ export default {
       onGridReadyRouter,
       // openModalUpdate,
       confirmDelete,
+      overlayMessage,
       cancelDelete,
       overlayTemplate,
       paginationLocalization,
@@ -423,6 +438,11 @@ export default {
 </script>
 
 <style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;

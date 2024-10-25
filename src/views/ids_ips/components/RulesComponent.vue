@@ -554,56 +554,22 @@ export default {
     };
 
     const save = async () => {
-      const user = user_privilege('Suricata');
-      if (user && user !== 'viewer' && user !=='default') {
-      let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
-      const dataToSend = modifiedRows.map((row) => {
-        return {
-          action: row.action,
-          protocol: row.protocol,
-          source_ip: row.source_ip,
-          direction: row.direction,
-          destination_ip: row.destination_ip,
-          msg: row.msg,
-          rev: row.rev,
-          sid: row.sid,
-          activate_rule: row.activate_rule,
-          id: row.id,
-        };
-      });
-
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      try {
-        const response = await axios.post(
-          "/ids-ips/saveRulesSuricata/" + props.configInfo,
-          dataToSend
-        );
-        if (
-          response.status === 200 &&
-          modifiedRows.length > 0 &&
-          response.data.message.length > 0
-        ) {
-          // state.messages=response.data.message
-          modifiedRows.forEach((row) => (row.isModified = false));
-          response.data.message.forEach(async (rule) => {
-            if (rule.status === 200) {
-              showMessage({
-                color: "success",
-                text: t("suricata.rulesavedSuccessfully"),
-              });
-            } else {
-              showMessage({
-                color: "error",
-                text: t("suricata.failed"),
-              });
-            }
-          });
-        }
-      } catch (error) {
-        showMessage({
-          color: "error",
-          text: t("suricata.failed"),
+      const user = user_privilege("Suricata");
+      if (user && user !== "viewer" && user !=='default') {
+        let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
+        const dataToSend = modifiedRows.map((row) => {
+          return {
+            action: row.action,
+            protocol: row.protocol,
+            source_ip: row.source_ip,
+            direction: row.direction,
+            destination_ip: row.destination_ip,
+            msg: row.msg,
+            rev: row.rev,
+            sid: row.sid,
+            activate_rule: row.activate_rule,
+            id: row.id,
+          };
         });
 
         const csrfToken = getCookie("csrftoken");

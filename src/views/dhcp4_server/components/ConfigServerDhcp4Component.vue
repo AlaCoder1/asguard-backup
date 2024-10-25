@@ -1,18 +1,17 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
         <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
+          {{  $t("profil.NoPermission") }}
+                  <br />
+          {{  $t("profil.ContactAdmin") }}  
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
             @click="close" />
         </div>
       </v-card>
@@ -316,12 +315,28 @@ export default {
     };
 
     const addRow = () => {
-      state.rows.push({
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        state.rows.push({
         dns_server: "",
       });
+      };
+
     };
     const removeRow = (index) => {
-      state.rows.splice(index, 1);
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        state.rows.splice(index, 1);
+      };
+
     };
     const handleRemove = () => {
       state.snackbar = false;
@@ -548,9 +563,16 @@ export default {
     };
 
     const submitForm = async () => {
+      const user = user_privilege();
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
 
       if (!rowDataRanges.value) {
         rowDataRanges.value = [];
@@ -665,6 +687,8 @@ export default {
           return;
         }
       }
+      };
+
     };
 
     return {

@@ -23,7 +23,7 @@
             </v-dialog>
           </v-overlay>
           <v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.d" :scrim="false" width="auto">
+            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
               <v-card color="#193286" class="alert-box">
                 <v-card-title class="img-containter">
                   <img
@@ -34,10 +34,9 @@
                     height="100"
                 /></v-card-title>
                 <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
+                  {{  $t("profil.NoPermission") }}
+                  <br />
+                  {{  $t("profil.ContactAdmin") }} 
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -46,7 +45,7 @@
                     outlined
                     color="#ffffff"
                     label-color="#213E9F"
-                    label="Close"
+                    :label="$t('buttons.close')"
                     :isLarge="true"
                     @click="close"
                   />
@@ -196,7 +195,7 @@ export default {
       of: "/",
     });
     const state = reactive({
-      d: false,
+      isviewModal: false,
       viewModal: false,
       snackbar: false,
       color: "",
@@ -556,7 +555,7 @@ export default {
     };
 
     const close = () => {
-      state.d = false;
+      state.isviewModal = false;
       state.viewModal = false;
     };
     const onGridReady = (params) => {

@@ -1,6 +1,6 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img
@@ -11,20 +11,14 @@
             height="100"
         /></v-card-title>
         <v-card-text>
-          You do not have the required permissions to perform any actions.<br />
-          Please contact the administrator if you believe this is an error.
+          {{  $t("profil.NoPermission") }}
+                  <br />
+                  {{  $t("profil.ContactAdmin") }} 
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton
-            rounded
-            outlined
-            color="#ffffff"
-            label-color="#213E9F"
-            label="Close"
-            :isLarge="true"
-            @click="close"
-          />
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
         </div>
       </v-card>
     </v-dialog>
@@ -1096,9 +1090,9 @@ export default {
     });
 
     const submitForm = async () => {
-      const user = user_privilege("Openvpn");
-      if (user && user !== "viewer") {
-        const result = await v$.value.$validate();
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer' && user!=='default') {
+      const result = await v$.value.$validate();
 
         if (result) {
           let tls_auth = null;
@@ -1305,74 +1299,75 @@ export default {
     };
 
     const cancel = () => {
-      const user = user_privilege("Openvpn");
-      if (user && user !== "viewer") {
-        state.id = "";
-        state.isEditState = "";
-        (state.serverModeState = "create"),
-          //General information
-          (state.clientName = "");
-        state.description = "";
-        state.serverMode = "";
-        state.protocol = "";
-        state.deviceMode = "";
-        state.interface = "";
-        state.localPort = "";
-        //Cryptographic Settings
-        state.isEnableAuth = true;
-        state.tlsGenerate = "";
-        state.peerCertif = "";
-        state.serverCertif = "";
-        state.dhParameters = "";
-        state.encryptAlgo = "";
-        state.authDigest = "";
-        // state.hardwareCrypto = {
-        //   name: "No Hardware Crypto acceleration",
-        //   slug: "No Hardware Crypto acceleration",
-        // };
-        //tunnelSettings
-        state.ip4Tunnel = "";
-        state.ip6Tunnel = "";
-        state.isGateway = false;
-        state.isBridge = false;
-        state.interfaceBridge = "";
-        state.startDHCPBridge = "";
-        state.endDHCPBridge = "";
-        state.iPv4Local = "";
-        state.iPv6Local = "";
-        state.iPv4Remote = "";
-        state.iPv6Remote = "";
-        state.concurrentConnections = "";
-        state.compression = { name: "No preference", slug: "no_preference" };
-        state.typefService = false;
-        state.Connections = true;
-        state.IPv6 = false;
-        state.interClients = false;
-        //clientSettings
-        state.dynamicIP = false;
-        state.adressPool = false;
-        state.topology = false;
-        state.dnsDefaultDomain = false;
-        state.dnsServers = false;
-        state.forceDNS = false;
-        state.ntpServers = false;
-        state.clientPort = false;
-        state.startAddressPool = "";
-        state.endAddressPool = "";
-        state.activeDnsDefault = "";
-        state.activeDnsServer1 = "";
-        state.activeDnsServer2 = "";
-        state.activeNtpServer1 = "";
-        state.activeNtpServer2 = "";
-        state.verbLevel = {
-          name: "1 (default)",
-          slug: "1",
-        };
-        v$.value.$reset();
-      } else {
-        state.isviewModal = true;
-        state.viewModal = true;
-      }
+
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer' && user!=='default') {
+      state.id = "";
+      state.isEditState = "";
+      (state.serverModeState = "create"),
+        //General information
+        (state.clientName = "");
+      state.description = "";
+      state.serverMode = "";
+      state.protocol = "";
+      state.deviceMode = "";
+      state.interface = "";
+      state.localPort = "";
+      //Cryptographic Settings
+      state.isEnableAuth = true;
+      state.tlsGenerate = "";
+      state.peerCertif = "";
+      state.serverCertif = "";
+      state.dhParameters = "";
+      state.encryptAlgo = "";
+      state.authDigest = "";
+      // state.hardwareCrypto = {
+      //   name: "No Hardware Crypto acceleration",
+      //   slug: "No Hardware Crypto acceleration",
+      // };
+      //tunnelSettings
+      state.ip4Tunnel = "";
+      state.ip6Tunnel = "";
+      state.isGateway = false;
+      state.isBridge = false;
+      state.interfaceBridge = "";
+      state.startDHCPBridge = "";
+      state.endDHCPBridge = "";
+      state.iPv4Local = "";
+      state.iPv6Local = "";
+      state.iPv4Remote = "";
+      state.iPv6Remote = "";
+      state.concurrentConnections = "";
+      state.compression = { name: "No preference", slug: "no_preference" };
+      state.typefService = false;
+      state.Connections = true;
+      state.IPv6 = false;
+      state.interClients = false;
+      //clientSettings
+      state.dynamicIP = false;
+      state.adressPool = false;
+      state.topology = false;
+      state.dnsDefaultDomain = false;
+      state.dnsServers = false;
+      state.forceDNS = false;
+      state.ntpServers = false;
+      state.clientPort = false;
+      state.startAddressPool = "";
+      state.endAddressPool = "";
+      state.activeDnsDefault = "";
+      state.activeDnsServer1 = "";
+      state.activeDnsServer2 = "";
+      state.activeNtpServer1 = "";
+      state.activeNtpServer2 = "";
+      state.verbLevel = {
+        name: "1 (default)",
+        slug: "1",
+      };
+      v$.value.$reset();
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     return {

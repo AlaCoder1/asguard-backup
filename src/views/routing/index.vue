@@ -1,75 +1,63 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          {{  $t("profil.NoPermission") }}
+                  <br />
+                  {{  $t("profil.ContactAdmin") }} 
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-app id="inspire">
     <base-layout :title="$t('subtitle.routing')" active-menu="Key_Pair">
       <template #content>
         <div class="mr-3">
-          <div
-            class="certificats-management mt-6 ml-5"
-            style="display: flex; flex-direction: column"
-          >
+          <div class="certificats-management mt-6 ml-5" style="display: flex; flex-direction: column">
             <h4>{{ $t("routing.staticRouting") }}</h4>
             <v-divider></v-divider>
             <v-row>
               <v-col cols="12">
                 <div style="overflow: hidden; flex-grow: 1">
-                  <ag-grid-vue
-                    id="grid-wrapper"
-                    domLayout="autoHeight"
-                    class="ag-theme-alpine mt-3"
-                    style="width: 100%"
-                    @grid-ready="onGridReady"
-                    :columnDefs="columnRoute"
-                    :rowData="rowDataRoute.value"
-                    :pagination="true"
-                    :paginationPageSize="5"
-                    :localeText="paginationLocalization"
-                    :overlayNoRowsTemplate="overlayTemplate"
-                  />
+                  <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
+                    @grid-ready="onGridReady" :columnDefs="columnRoute" :rowData="rowDataRoute.value" :pagination="true"
+                    :paginationPageSize="5" :localeText="paginationLocalization"
+                    :overlayNoRowsTemplate="overlayTemplate" />
                 </div>
                 <div class="d-flex justify-end mt-3">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#213E9F"
-                    label-color="#ffffff"
-                    :label="$t('buttons.Add')"
-                    :isLarge="true"
-                    type="submit"
-                    class="ml-2"
-                    @click="openModalAdd"
-                  />
+                  <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.Add')"
+                    :isLarge="true" type="submit" class="ml-2" @click="openModalAdd" />
                 </div>
               </v-col>
             </v-row>
-            <RoutingModal
-              :isOpen="state.isModalOpen"
-              :editRow="state.editRow"
-              :modalMode="state.modalMode"
-            />
+            <RoutingModal :isOpen="state.isModalOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
           </div>
           <v-dialog v-model="state.deleteDialog" max-width="500px">
             <v-card>
               <v-card-title class="headline">{{
                 $t("delete.DeleteConfirmation")
-              }}</v-card-title>
+                }}</v-card-title>
               <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="cancelDelete">{{
                   $t("buttons.cancel")
-                }}</v-btn>
+                  }}</v-btn>
                 <v-btn color="blue darken-1" text @click="confirmDelete">{{
                   $t("buttons.delete")
-                }}</v-btn>
+                  }}</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
-          <v-snackbar
-            :timeout="2000"
-            v-model="state.snackbar"
-            location="bottom right"
-            :color="state.color"
-          >
+          <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
             {{ state.textAlert }}
           </v-snackbar>
         </div>
@@ -88,6 +76,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import RoutingModal from "@/components/modals/RoutingModal.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
+
 export default {
   name: "Routing",
   components: {
@@ -102,6 +92,8 @@ export default {
     const state = reactive({
       deleteDialog: false,
       deletedRow: null,
+      isviewModal: false,
+      viewModal: false,
       snackbar: false,
       color: null,
       textAlert: "",
@@ -147,6 +139,11 @@ export default {
     const network = computed(() => {
       return t("routing.network");
     });
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const columnRoute = ref([
       {
         headerName: network,
@@ -262,17 +259,30 @@ export default {
     }
 
     const handleActionClient = (action, rowData, index) => {
+      const user = user_privilege();
       switch (action) {
         case "delete":
-          state.deleteDialog = true;
-          state.deletedRow = rowData;
+        if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        state.deleteDialog = true;
+        state.deletedRow = rowData;
+      };
 
           break;
         case "edit":
-          console.log("rowData", rowData);
+        if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        console.log("rowData", rowData);
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
+      };
           break;
 
         default:
@@ -281,9 +291,17 @@ export default {
     };
 
     const openModalAdd = () => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      };
+
     };
 
     const cancelDelete = () => {
@@ -329,6 +347,7 @@ export default {
       onGridReady,
       getCookie,
       cancelDelete,
+      close,
       confirmDelete,
     };
   },
@@ -338,5 +357,20 @@ export default {
 <style>
 .ag-paging-row-summary-panel {
   display: none;
+}
+
+.img-view {
+  border-style: none;
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  overflow: hidden;
+}
+
+.img-containter {
+  display: flex;
+  width: 100%;
+  /* height: 100%; */
+  padding: 0px !important;
 }
 </style>

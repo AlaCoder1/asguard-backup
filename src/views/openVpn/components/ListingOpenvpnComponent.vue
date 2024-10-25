@@ -1,6 +1,6 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img
@@ -11,20 +11,14 @@
             height="100"
         /></v-card-title>
         <v-card-text>
-          You do not have the required permissions to perform any actions.<br />
-          Please contact the administrator if you believe this is an error.
+          {{  $t("profil.NoPermission") }}
+                  <br />
+                  {{  $t("profil.ContactAdmin") }} 
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton
-            rounded
-            outlined
-            color="#ffffff"
-            label-color="#213E9F"
-            label="Close"
-            :isLarge="true"
-            @click="close"
-          />
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
         </div>
       </v-card>
     </v-dialog>
@@ -518,7 +512,7 @@ export default {
 
       switch (action) {
         case "play":
-          if (user && user !== "viewer") {
+          if (user && user !== "viewer" && user!=='default') {
             loading.value = true;
             isLoadingDialogue.value = true;
             axios
@@ -554,12 +548,45 @@ export default {
           }
           break;
         case "edit":
-          if (user && user !== "viewer") {
-            emitter.emit("add-server");
-            setTimeout(() => {
-              emitter.emit("edit-server", rowData);
-            }, 1000);
-            break;
+        if (user && user !== 'viewer' && user!=='default') {
+
+          emitter.emit("add-server");
+          setTimeout(() => {
+            emitter.emit("edit-server", rowData);
+          }, 1000);
+          break;
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
+        case "stop":
+        if (user && user !== 'viewer' && user!=='default') {
+
+          loading.value = true;
+          isLoadingDialogue.value = true;
+          axios
+            .delete(`/openvpn/stopServerOpenvpn/${rowData.id}`)
+            .then((response) => {
+              snackbar.value = true;
+              color.value = "success";
+              textAlert.value = response.data.msg;
+              loading.value = false;
+              isLoadingDialogue.value = false;
+
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            })
+            .catch((i) => {
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+              loading.value = false;
+              isLoadingDialogue.value = false;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            });
           } else {
             state.isviewModal = true;
             state.viewModal = true;
@@ -601,7 +628,7 @@ export default {
           }
           break;
         case "restart":
-          if (user && user !== "viewer") {
+          if (user && user !== "viewer" && user!=='default') {
             loading.value = true;
             isLoadingDialogue.value = true;
             axios
@@ -637,31 +664,34 @@ export default {
           }
           break;
         case "delete":
-          if (user && user !== "viewer") {
-            isDeletedType.value = "server";
-            deleteRow.value = rowData;
-            dialogDelete.value = true;
-            rowID.value = rowData.id;
-          } else {
+        if (user && user !== 'viewer' && user!=='default') {
+
+          isDeletedType.value = "server";
+          deleteRow.value = rowData;
+          dialogDelete.value = true;
+          rowID.value = rowData.id;
+        } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
           break;
 
         case "account":
-          if (user && user !== "viewer") {
-            state.isModalOpen = true;
-            state.editRow = rowData;
-          } else {
+        if (user && user !== 'viewer' && user!=='default') {
+
+          state.isModalOpen = true;
+          state.editRow = rowData;
+        } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
           break;
         case "show":
-          if (user && user !== "viewer") {
-            state.isModalOpenListView = true;
-            state.editRow = rowData;
-          } else {
+        if (user && user !== 'viewer' && user!=='default') {
+
+          state.isModalOpenListView = true;
+          state.editRow = rowData;
+        } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
@@ -727,7 +757,7 @@ export default {
 
       switch (action) {
         case "download":
-          if (user && user !== "viewer") {
+          if (user && user !== "viewer" && user!=='default') {
             let id = rowData.id;
             let fileExtention = `${rowData.name}.ovpn`;
 
@@ -775,24 +805,26 @@ export default {
 
           break;
         case "editClient":
-          if (user && user !== "viewer") {
-            emitter.emit("add-client");
-            setTimeout(() => {
-              emitter.emit("edit-client", rowData);
-            }, 1000);
-          } else {
+        if (user && user !== 'viewer' && user!=='default') {
+
+          emitter.emit("add-client");
+          setTimeout(() => {
+            emitter.emit("edit-client", rowData);
+          }, 1000);
+        } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
           break;
 
         case "delete":
-          if (user && user !== "viewer") {
-            isDeletedType.value = "client";
-            deleteRow.value = rowData;
-            dialogDelete.value = true;
-            rowID.value = rowData.id;
-          } else {
+        if (user && user !== 'viewer' && user!=='default') {
+
+          isDeletedType.value = "client";
+          deleteRow.value = rowData;
+          dialogDelete.value = true;
+          rowID.value = rowData.id;
+        } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
@@ -847,8 +879,8 @@ export default {
     const publishServer = () => {};
 
     const addServer = () => {
-      const user = user_privilege("Openvpn");
-      if (user && user !== "viewer") {
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer' && user!=='default') {
         emitter.emit("add-server");
       } else {
         state.isviewModal = true;
@@ -859,8 +891,8 @@ export default {
     const publishClient = () => {};
 
     const addClient = () => {
-      const user = user_privilege("Openvpn");
-      if (user && user !== "viewer") {
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer' && user!=='default') {
         emitter.emit("add-client");
       } else {
         state.isviewModal = true;

@@ -1,6 +1,11 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img
@@ -11,8 +16,9 @@
             height="100"
         /></v-card-title>
         <v-card-text>
-          You do not have the required permissions to perform any actions.<br />
-          Please contact the administrator if you believe this is an error.
+          {{ $t("profil.NoPermission") }}
+          <br />
+          {{ $t("profil.ContactAdmin") }}
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
@@ -21,7 +27,7 @@
             outlined
             color="#ffffff"
             label-color="#213E9F"
-            label="Close"
+            :label="$t('buttons.close')"
             :isLarge="true"
             @click="close"
           />
@@ -599,8 +605,8 @@ export default {
       //    <i class="far fa-edit" style="color: #086eae;"></i>
       // </button>
       eGui.innerHTML = `
-   
-  
+
+
       <button
         class="action-button delete"
         data-action="delete">
@@ -629,10 +635,10 @@ export default {
 
         //   break;
         case "delete":
-          if (user && user !== "viewer") {
-            const index = rowDataAF.value.findIndex(
-              (item) => item.id === rowData.id
-            );
+      if (user && user !== 'viewer' && user!=='default') {
+          const index = rowDataAF.value.findIndex(
+            (item) => item.id === rowData.id
+          );
 
             if (index !== -1) {
               rowDataAF.value.splice(index, 1);
@@ -655,7 +661,7 @@ export default {
     const reloadData = async () => {
       const user = user_privilege("suricata");
       console.log("user update", user);
-      if (user && user !== "viewer") {
+      if (user && user !== "viewer" && user != 'default') {
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
         state.loading = true;
@@ -863,26 +869,26 @@ export default {
     };
 
     const openModalAdd = () => {
-      const user = user_privilege("Suricata");
-      console.log(user);
-      if (user && user !== "viewer") {
-        state.modalData = {};
-        state.modalMode = "create";
-        state.isModalOpen = true;
-        emitter.emit("list-Interface", rowDataAF.value);
-      } else {
+      const user = user_privilege('Suricata');
+      console.log(user)
+      if (user && user !== 'viewer' && user!=='default') {
+      state.modalData = {};
+      state.modalMode = "create";
+      state.isModalOpen = true;
+      emitter.emit("list-Interface", rowDataAF.value);
+    } else {
         state.isviewModal = true;
         state.viewModal = true;
       }
     };
 
     const submitForm = async () => {
-      const user = user_privilege("Suricata");
-      if (user && user !== "viewer") {
-        const result = await v$.value.$validate();
-        if (result) {
-          const csrfToken = getCookie("csrftoken");
-          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const user = user_privilege('Suricata');
+      if (user && user !== 'viewer' && user!=='default') {
+      const result = await v$.value.$validate();
+      if (result) {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
           if (!rowDataAF.value) {
             rowDataAF.value = [];
@@ -939,7 +945,7 @@ export default {
                     state.snackbar = false;
                     location.reload();
                   }, 1000);
-                } 
+                }
                 // else {
                 //   state.loading = false;
                 //   state.isLoadingDialogue = false;

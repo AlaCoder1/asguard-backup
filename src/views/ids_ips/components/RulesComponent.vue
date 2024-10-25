@@ -1,6 +1,6 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img
@@ -11,20 +11,14 @@
             height="100"
         /></v-card-title>
         <v-card-text>
-          You do not have the required permissions to perform any actions.<br />
-          Please contact the administrator if you believe this is an error.
+          {{  $t("profil.NoPermission") }}
+                  <br />
+                  {{  $t("profil.ContactAdmin") }} 
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton
-            rounded
-            outlined
-            color="#ffffff"
-            label-color="#213E9F"
-            label="Close"
-            :isLarge="true"
-            @click="close"
-          />
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
         </div>
       </v-card>
     </v-dialog>
@@ -426,8 +420,8 @@ export default {
       );
     };
     const handleAction = (action, rowData) => {
-      const user = user_privilege("Suricata");
-      if (user && user !== "viewer") {
+      const user = user_privilege('Suricata');
+      if (user && user !== 'viewer' && user !=='default') {
         rowDataToDelete.value = rowData;
         deleteDialog.value = true;
       } else {
@@ -560,22 +554,56 @@ export default {
     };
 
     const save = async () => {
-      const user = user_privilege("Suricata");
-      if (user && user !== "viewer") {
-        let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
-        const dataToSend = modifiedRows.map((row) => {
-          return {
-            action: row.action,
-            protocol: row.protocol,
-            source_ip: row.source_ip,
-            direction: row.direction,
-            destination_ip: row.destination_ip,
-            msg: row.msg,
-            rev: row.rev,
-            sid: row.sid,
-            activate_rule: row.activate_rule,
-            id: row.id,
-          };
+      const user = user_privilege('Suricata');
+      if (user && user !== 'viewer' && user !=='default') {
+      let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
+      const dataToSend = modifiedRows.map((row) => {
+        return {
+          action: row.action,
+          protocol: row.protocol,
+          source_ip: row.source_ip,
+          direction: row.direction,
+          destination_ip: row.destination_ip,
+          msg: row.msg,
+          rev: row.rev,
+          sid: row.sid,
+          activate_rule: row.activate_rule,
+          id: row.id,
+        };
+      });
+
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      try {
+        const response = await axios.post(
+          "/ids-ips/saveRulesSuricata/" + props.configInfo,
+          dataToSend
+        );
+        if (
+          response.status === 200 &&
+          modifiedRows.length > 0 &&
+          response.data.message.length > 0
+        ) {
+          // state.messages=response.data.message
+          modifiedRows.forEach((row) => (row.isModified = false));
+          response.data.message.forEach(async (rule) => {
+            if (rule.status === 200) {
+              showMessage({
+                color: "success",
+                text: t("suricata.rulesavedSuccessfully"),
+              });
+            } else {
+              showMessage({
+                color: "error",
+                text: t("suricata.failed"),
+              });
+            }
+          });
+        }
+      } catch (error) {
+        showMessage({
+          color: "error",
+          text: t("suricata.failed"),
         });
 
         const csrfToken = getCookie("csrftoken");

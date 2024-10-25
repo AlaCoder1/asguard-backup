@@ -1,6 +1,6 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img
@@ -11,20 +11,14 @@
             height="100"
         /></v-card-title>
         <v-card-text>
-          You do not have the required permissions to perform any actions.<br />
-          Please contact the administrator if you believe this is an error.
+          {{  $t("profil.NoPermission") }}
+                  <br />
+          {{  $t("profil.ContactAdmin") }}  
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton
-            rounded
-            outlined
-            color="#ffffff"
-            label-color="#213E9F"
-            label="Close"
-            :isLarge="true"
-            @click="close"
-          />
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
         </div>
       </v-card>
     </v-dialog>
@@ -406,8 +400,8 @@ export default {
     };
 
     const cancel = () => {
-      const user = user_privilege("Waf");
-      if (user && user !== "viewer") {
+      const user = user_privilege('Waf');
+      if (user && user !== 'viewer' && user !=='default' ) {
         state.id = null;
         state.rule_engine = null;
         state.access_request = false;
@@ -565,7 +559,7 @@ export default {
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (user && user !== "viewer") {
+      if (user && user !== 'viewer' && user !=='default' ) {
         if (result) {
           let payload = {
             rule_engine_initialization: state.rule_engine,

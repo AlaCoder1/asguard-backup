@@ -1,6 +1,11 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img
@@ -11,8 +16,9 @@
             height="100"
         /></v-card-title>
         <v-card-text>
-          You do not have the required permissions to perform any actions.<br />
-          Please contact the administrator if you believe this is an error.
+          {{ $t("profil.NoPermission") }}
+          <br />
+          {{ $t("profil.ContactAdmin") }}
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
@@ -21,7 +27,7 @@
             outlined
             color="#ffffff"
             label-color="#213E9F"
-            label="Close"
+            :label="$t('buttons.close')"
             :isLarge="true"
             @click="close"
           />
@@ -265,10 +271,10 @@ export default {
     };
     const rowDataAlerts = reactive({});
     const handleRemove = (index) => {
-      const user = user_privilege("Suricata");
-      if (user && user !== "viewer") {
-        state.messages[index].snackbar = false;
-      } else {
+      const user = user_privilege('Suricata');
+      if (user && user !== 'viewer' && user!=='default') {
+      state.messages[index].snackbar = false;
+    } else {
         state.isviewModal = true;
         state.viewModal = true;
       }
@@ -360,7 +366,7 @@ export default {
     }
     const reloadData = async () => {
       const user = user_privilege("Suricata");
-      if (user && user !== "viewer") {
+      if (user && user !== "viewer" && user != 'default') {
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
         state.loading = true;
@@ -378,15 +384,16 @@ export default {
               color: "success",
               text: t("suricata.allAlertsuccessfully"),
             });
-          } else {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            state.snackbar = true;
-            showMessage({
-              color: "error",
-              text: t("suricata.failed"),
-            });
-          }
+          } 
+          // else {
+          //   state.loading = false;
+          //   state.isLoadingDialogue = false;
+          //   state.snackbar = true;
+          //   showMessage({
+          //     color: "error",
+          //     text: t("suricata.failed"),
+          //   });
+          // }
         } catch (i) {
           state.loading = false;
           state.isLoadingDialogue = false;
@@ -401,7 +408,7 @@ export default {
             state.snackbar = true;
             showMessage({
               color: "error",
-              text: i.response,
+              text: t("suricata.failed"),
             });
           }
         }

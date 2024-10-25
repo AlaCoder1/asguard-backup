@@ -1,4 +1,7 @@
+from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
+from backend.waf.constant_variables import PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
+from utils.commands_utils import execute_command_without_arguments, write_file_from_system
 
 
 def convert_waf_rule_payload(rule_data: dict):
@@ -121,3 +124,76 @@ def convert_actions_str_to_list(actions: str):
                 list_actions.append({"type": action_list[0], "value": ""})
         return list_actions
     return []
+
+
+def create_reverse_proxy_config(app_config_path, app_sites_available_config_path, app_modsecurity_config_path, 
+                                application_type, application_protocol, application_value, 
+                                application_port, certificate_name=""):
+    """Create configuration for the reverse proxy of the WAF application"""
+    execute_command_without_arguments(["sudo", "cp", PATH_WAF_CONFIG, app_modsecurity_config_path])
+    
+    # Add reverse proxy config for the app 
+    modsecurity = f"""
+        modsecurity on;
+        modsecurity_rules_file {app_config_path};"""
+    
+    # Config for HTTP
+    if application_protocol == "http": 
+        config_reverse_proxy = f"""
+server {{
+        listen {application_port};
+
+        {modsecurity}
+
+        location / {{
+            proxy_pass {application_protocol}://{application_value};
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+        }}
+
+}}"""
+    # Config for HTTPS
+    else:
+        # Add SSL settings for the proxy
+        config_reverse_proxy = f"""
+server {{
+    listen 80;
+    server_name _l;
+ 
+    # Redirect HTTP to HTTPS
+    location / {{
+        return 301 https://\$host:{application_port}\$request_uri;
+    }}
+}}
+
+server {{
+        listen {application_port} ssl;
+        server_name _;
+
+        ssl_certificate {PATH_SERVER_CERT_CRT.format(certificate_name)};
+        ssl_certificate_key {PATH_SERVER_CERT_KEY.format(certificate_name)};
+
+        {modsecurity}
+
+        location / {{
+            proxy_pass {application_protocol}://{application_value};
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
+
+            # SSL settings for the proxy
+            proxy_ssl_protocols TLSv1.2 TLSv1.3;
+            proxy_ssl_verify off;
+        }}
+
+}}"""
+    # changes of config when using domain name
+    if application_type != 'ip':
+        config_reverse_proxy = config_reverse_proxy.replace("server_name _;", 
+                                                            f"server_name {application_value};")
+        config_reverse_proxy = config_reverse_proxy.replace("server_name _l;", 
+                                                            f"server_name {application_value};")
+    write_file_from_system(app_sites_available_config_path, config_reverse_proxy)

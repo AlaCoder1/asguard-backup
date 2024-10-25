@@ -1,71 +1,54 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          {{  $t("profil.NoPermission") }}
+                  <br />
+                  {{  $t("profil.ContactAdmin") }} 
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mr-3">
     <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
-      <h4>{{ $t("tabs.OneToOne") }}</h4>
+      <h4>{{ $t('tabs.OneToOne') }}</h4>
       <v-divider></v-divider>
       <v-row>
         <v-col cols="12">
           <div style="overflow: hidden; flex-grow: 1">
-            <ag-grid-vue
-              id="grid-wrapper"
-              domLayout="autoHeight"
-              class="ag-theme-alpine mt-3"
-              style="width: 100%"
-              @grid-ready="onGridReady"
-              :columnDefs="columnOneTowOne"
-              :rowData="rowDataOneTowOne.value"
-              :overlayNoRowsTemplate="overlayTemplate"
-              :gridOptions="gridOptions"
-              :rowDragManaged="true"
-              :rowDragEntireRow="true"
-              @row-drag-end="onRowDragEnd"
-              :localeText="paginationLocalization"
-            />
+            <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
+              @grid-ready="onGridReady" :columnDefs="columnOneTowOne" :rowData="rowDataOneTowOne.value"
+              :overlayNoRowsTemplate="overlayTemplate" :gridOptions="gridOptions" :rowDragManaged="true"
+              :rowDragEntireRow="true" @row-drag-end="onRowDragEnd" :localeText="paginationLocalization" />
           </div>
           <div class="d-flex justify-end mt-3">
-            <VButton
-              rounded
-              outlined
-              color="#213E9F"
-              label-color="#ffffff"
-              :label="$t('firewall.add')"
-              :isLarge="true"
-              type="submit"
-              class="ml-2"
-              @click="openModalAdd"
-            />
+            <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('firewall.add')" :isLarge="true"
+              type="submit" class="ml-2" @click="openModalAdd" />
           </div>
         </v-col>
       </v-row>
-      <OneToOneModal
-        :isOpen="state.isModalAreaOpen"
-        :editRow="state.editRow"
-        :modalMode="state.modalMode"
-      />
+      <OneToOneModal :isOpen="state.isModalAreaOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
-        <v-card-title class="headline">{{
-          $t("firewall.delete_confirm")
-        }}</v-card-title>
+        <v-card-title class="headline">{{ $t("firewall.delete_confirm") }}</v-card-title>
         <v-card-text>{{ $t("nat.msg_confirm_delete") }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="cancelDelete">{{
-            $t("firewall.cancel")
-          }}</v-btn>
-          <v-btn color="blue darken-1" text @click="confirmDelete">{{
-            $t("firewall.delete")
-          }}</v-btn>
+          <v-btn color="blue darken-1" text @click="cancelDelete">{{ $t("firewall.cancel") }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete">{{ $t("firewall.delete") }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar
-      :timeout="2000"
-      v-model="state.snackbar"
-      location="bottom right"
-      :color="state.color"
-    >
+    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
       {{ state.textAlert }}
     </v-snackbar>
   </div>
@@ -82,6 +65,8 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import OneToOneModal from "@/components/modals/OneToOneModal.vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { useI18n } from "vue-i18n";
+import { user_privilege } from "@/mixins/user_privilege.js";
+
 export default {
   name: "Sdwan",
   components: {
@@ -99,6 +84,8 @@ export default {
     });
     const state = reactive({
       deleteDialog: false,
+      isviewModal: false,
+      viewModal: false,
       deletedRow: null,
       snackbar: false,
       color: null,
@@ -321,6 +308,11 @@ export default {
       }
     };
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const defaultColDef = {
       sortable: true,
       filter: true,
@@ -376,21 +368,42 @@ export default {
     }
 
     const handleActionClient = (action, rowData, index) => {
+      const user = user_privilege();
+
       switch (action) {
         case "show":
-          console.log("show", rowData);
 
+          if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            console.log("show", rowData);
+          }
           break;
         case "edit":
-          console.log("edit", rowData);
-          state.modalMode = "edit";
-          state.isModalAreaOpen = true;
-          state.editRow = rowData;
+          if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            console.log("edit", rowData);
+            state.modalMode = "edit";
+            state.isModalAreaOpen = true;
+            state.editRow = rowData;
+          }
+
           break;
         case "delete":
-          console.log("delete", rowData);
-          state.deleteDialog = true;
-          state.deletedRow = rowData;
+          if (user === "viewer") {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            console.log("delete", rowData);
+            state.deleteDialog = true;
+            state.deletedRow = rowData;
+          }
 
           break;
         default:
@@ -399,9 +412,17 @@ export default {
     };
 
     const openModalAdd = () => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalAreaOpen = true;
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalAreaOpen = true;
+      }
+
     };
 
     onMounted(() => {
@@ -478,7 +499,8 @@ export default {
       confirmDelete,
       onRowDragEnd,
       overlayTemplate,
-      paginationLocalization,
+      close,
+      paginationLocalization
     };
   },
 };

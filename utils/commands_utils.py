@@ -73,9 +73,15 @@ def write_file_from_system(path_file, content_file):
     """A function to create a file if it doesn't exist and write on it using command lines"""
     execute_command_without_arguments(["sudo", "rm", "-f", path_file])
     execute_command_without_arguments(["sudo", "touch", path_file])
-    execute_command_str(f"""echo '{content_file}' | cat > {path_file}""")
+    # execute_command_str(f"""echo '{content_file}' | cat > {path_file}""")
+    execute_command_str("""sudo cat <<EOF > {}
+{}
+EOF""".format(path_file, content_file))
 
 
 def append_file_from_system(path_file, content_file):
     """A function to create a file if it doesn't exist and write on it using command lines"""
-    execute_command_str(f"""echo '{content_file}' | cat >> {path_file}""")
+    # execute_command_str(f"""echo '{content_file}' | cat >> {path_file}""")
+    execute_command_str("""sudo cat <<EOF >> {}
+{}
+EOF""".format(path_file, content_file))

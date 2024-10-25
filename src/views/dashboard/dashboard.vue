@@ -27,17 +27,16 @@
               <v-card color="#193286" class="alert-box">
                 <v-card-title class="img-containter">
                   <img
-                    src="../../assets/images/view.png"
+                    src="@/assets/images/view.png"
                     alt="logo"
                     class="img-view"
                     width="100"
                     height="100"
                 /></v-card-title>
                 <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
+                  {{  $t("profil.NoPermission") }}
+                  <br />
+                  {{  $t("profil.ContactAdmin") }} 
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -46,7 +45,7 @@
                     outlined
                     color="#ffffff"
                     label-color="#213E9F"
-                    label="Close"
+                    :label="$t('buttons.close')"
                     :isLarge="true"
                     @click="close"
                   />
@@ -455,7 +454,7 @@ export default {
               action: "start",
               service: rowData.service,
             };
-
+          
             axios
               .put("/monitoring/action", payloadStart)
               .then((response) => {

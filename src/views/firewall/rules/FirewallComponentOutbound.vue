@@ -501,7 +501,6 @@ export default defineComponent({
         state.isviewModal = true;
         state.viewModal = true;
       } else {
-
         if (last_Subscription.value.includes("Firewall L4")) {
           state.modalData = {};
           state.modalMode = "create";
@@ -511,7 +510,7 @@ export default defineComponent({
           emitter.emit("firewal-subscription");
           window.scrollTo(0, 0);
         }
-      };
+      }
     };
 
     const onGridReady = (params) => {
@@ -592,7 +591,7 @@ export default defineComponent({
             rowDataToDelete.value = rowData;
             deleteDialog.value = true;
             state.rowDataId = rowData.uuid;
-          };
+          }
 
           break;
         case "update":
@@ -605,7 +604,7 @@ export default defineComponent({
             state.modalMode = "edit";
             state.isModalOpen = true;
             state.editRow = rowData;
-          };
+          }
 
           break;
         default:
@@ -913,17 +912,18 @@ export default defineComponent({
               }, 2000);
             }
           })
-        .catch((i) => {
-          if (i.response.status === 500) {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = t("errors.errorServer");
-          } else {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.response;
-          }
-        });
+          .catch((i) => {
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.response;
+            }
+          });
+      }
     };
     const cancel = () => {
       showAddModal.value = false;

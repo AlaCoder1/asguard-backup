@@ -949,22 +949,22 @@ export default {
       const user = user_privilege("Openvpn");
       switch (action) {
         case "edit":
-        if (user && user !== 'viewer' && user !== 'default') {
-          gridApi.value.setFocusedCell(index);
-          gridApi.value.startEditingCell({
-            rowIndex: index,
-            colKey: "host",
-          });
-        } else {
+          if (user && user !== "viewer" && user !== 'default') {
+            gridApi.value.setFocusedCell(index);
+            gridApi.value.startEditingCell({
+              rowIndex: index,
+              colKey: "host",
+            });
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
           break;
         case "delete":
-        if (user && user !== 'viewer' && user !== 'default') {
-          const index = rowDataCertificats.value.findIndex(
-            (item) => item.host === rowData.host
-          );
+          if (user && user !== "viewer" && user !== 'default') {
+            const index = rowDataCertificats.value.findIndex(
+              (item) => item.host === rowData.host
+            );
 
             if (index !== -1) {
               rowDataCertificats.value.splice(index, 1);
@@ -1018,12 +1018,15 @@ export default {
     const rowDataCertificats = ref([]);
 
     const addNewRow = () => {
-      const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer' && user !== 'default') {
-      const newRow = { host: "", port: "" };
-      rowDataCertificats.value.push(newRow);
-      if (gridApi.value) {
-        gridApi.value.setRowData(rowDataCertificats.value);
+      const user = user_privilege("Openvpn");
+      if (user && user !== "viewer" && user !== 'default') {
+        const newRow = { host: "", port: "" };
+        rowDataCertificats.value.push(newRow);
+        if (gridApi.value) {
+          gridApi.value.setRowData(rowDataCertificats.value);
+        } else {
+          console.error("Grid API.");
+        }
       } else {
         state.isviewModal = true;
         state.viewModal = true;
@@ -1157,7 +1160,8 @@ export default {
       const user = user_privilege("Openvpn");
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (user && user !== 'viewer' && user !== 'default') {
+      if (user && user !== "viewer" && user !== 'default') {
+        const result = await v$.value.$validate();
 
         if (result) {
           var isArrayEmpty = rowDataCertificats.value.length === 0;
@@ -1409,27 +1413,27 @@ export default {
     ]);
 
     const cancel = () => {
-      const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer' && user !== 'default') {
-      state.id = "";
-      state.modeState = "create";
-      state.isEditState = "";
-      //general information
-      state.clientName = "";
-      state.description = "";
-      state.server_mode = "";
-      state.protocol = "";
-      state.device_mode = "";
-      state.interface = "";
-      state.resolv_retry = false;
-      state.proxy_host = "";
-      state.proxy_port = "";
-      state.proxyAuthenticationExtraOptions = {
-        name: "None",
-        slug: "none",
-      };
-      state.usernameUser = "";
-      state.passwordUser = "";
+      const user = user_privilege("Openvpn");
+      if (user && user !== "viewer" && user !== 'default') {
+        state.id = "";
+        state.modeState = "create";
+        state.isEditState = "";
+        //general information
+        state.clientName = "";
+        state.description = "";
+        state.server_mode = "";
+        state.protocol = "";
+        state.device_mode = "";
+        state.interface = "";
+        state.resolv_retry = false;
+        state.proxy_host = "";
+        state.proxy_port = "";
+        state.proxyAuthenticationExtraOptions = {
+          name: "None",
+          slug: "none",
+        };
+        state.usernameUser = "";
+        state.passwordUser = "";
 
         state.username = "";
         state.password = "";

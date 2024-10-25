@@ -939,17 +939,18 @@ export default {
                     state.snackbar = false;
                     location.reload();
                   }, 1000);
-                } else {
-                  state.loading = false;
-                  state.isLoadingDialogue = false;
-                  state.snackbar = true;
-                  state.color = "error";
-                  state.textAlert = t("suricata.failedToSaveConfiguration");
-                  // Automatically close the snackbar after 3000 milliseconds (3 seconds)
-                  setTimeout(() => {
-                    state.snackbar = false;
-                  }, 2000);
-                }
+                } 
+                // else {
+                //   state.loading = false;
+                //   state.isLoadingDialogue = false;
+                //   state.snackbar = true;
+                //   state.color = "error";
+                //   state.textAlert = t("suricata.failedToSaveConfiguration");
+                //   // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+                //   setTimeout(() => {
+                //     state.snackbar = false;
+                //   }, 2000);
+                // }
               })
               .catch((i) => {
                 state.loading = false;
@@ -962,7 +963,7 @@ export default {
                 } else {
                   state.snackbar = true;
                   state.color = "red";
-                  state.textAlert = i.response.data.error;
+                  state.textAlert = t("suricata.failedToSaveConfiguration");
                 }
               });
           } else {
@@ -971,7 +972,7 @@ export default {
             state.textAlert = t("suricata.MinimumOneInter");
             setTimeout(() => {
               state.snackbar = false;
-            }, 2000);
+            }, 3000);
           }
         } else {
           console.log("v$", v$.value);
@@ -981,7 +982,7 @@ export default {
             state.textAlert = t("suricata.MinimumOneInter");
             setTimeout(() => {
               state.snackbar = false;
-            }, 2000);
+            }, 3000);
           }
         }
       } else {

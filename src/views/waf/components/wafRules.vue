@@ -29,11 +29,20 @@
           </v-overlay>
   <div class="mt-3 ml-3">
     <v-overlay v-model="state.loading">
-      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
         <v-card color="#193286">
           <v-card-text>
             {{ $t("sdwan.pleaseWait") }}
-            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -42,23 +51,58 @@
     <v-divider class="mb-2"></v-divider>
 
     <div style="overflow: hidden; flex-grow: 1">
-      <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-        @grid-ready="onGridReady" :columnDefs="columnRules" :rowData="rowDataRules.value" :gridOptions="gridOptions"
-        :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
+      <ag-grid-vue
+        id="grid-wrapper"
+        domLayout="autoHeight"
+        class="ag-theme-alpine mt-3"
+        style="width: 100%"
+        @grid-ready="onGridReady"
+        :columnDefs="columnRules"
+        :rowData="rowDataRules.value"
+        :gridOptions="gridOptions"
+        :overlayNoRowsTemplate="overlayTemplate"
+        :localeText="paginationLocalization"
+      />
     </div>
     <div class="d-flex justify-end mt-3 mb-15">
-      <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.Add')" :isLarge="true"
-        type="submit" class="ml-2" @click="openModalAdd" />
+      <VButton
+        rounded
+        outlined
+        color="#213E9F"
+        label-color="#ffffff"
+        :label="$t('buttons.Add')"
+        :isLarge="true"
+        type="submit"
+        class="ml-2"
+        @click="openModalAdd"
+      />
     </div>
   </div>
 
-  <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+  <v-snackbar
+    :timeout="2000"
+    v-model="state.snackbar"
+    location="bottom right"
+    :color="state.color"
+  >
     {{ state.textAlert }}
   </v-snackbar>
 
-  <ModalRuleWaf :isOpen="state.isModalOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
-  <ModalShowAppWaf :isOpen="state.isModalShowAppOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
-  <ModalShowDescWaf :isOpen="state.isModalShowDescOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
+  <ModalRuleWaf
+    :isOpen="state.isModalOpen"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+  />
+  <ModalShowAppWaf
+    :isOpen="state.isModalShowAppOpen"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+  />
+  <ModalShowDescWaf
+    :isOpen="state.isModalShowDescOpen"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+  />
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
       <v-card-title class="headline">{{
@@ -99,7 +143,7 @@ export default {
     AgGridVue,
     ModalRuleWaf,
     ModalShowAppWaf,
-    ModalShowDescWaf
+    ModalShowDescWaf,
   },
   setup() {
     const emitter = inject("emitter");
@@ -193,7 +237,6 @@ console.log('current_user',current_user.value)
     //   return eGui;
     // }
 
-
     const rowDataRules = reactive({});
     const gridApi = ref(null);
     const overlayTemplate = ref("");
@@ -223,7 +266,6 @@ console.log('current_user',current_user.value)
         </button>
         `;
       } else {
-
         eGui.innerHTML = `
              <button
                 class="action-button description"
@@ -240,8 +282,6 @@ console.log('current_user',current_user.value)
         });
       });
       return eGui;
-
-
     }
 
     function actionCellRenderer(params) {
@@ -301,7 +341,7 @@ console.log('current_user',current_user.value)
     }
 
     const handleAction = (action, rowData, index) => {
-      const user = user_privilege('Waf');
+      const user = user_privilege("Waf");
       switch (action) {
         case "delete":
         if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
@@ -310,7 +350,7 @@ console.log('current_user',current_user.value)
         } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
           break;
         case "edit":
         if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
@@ -320,7 +360,7 @@ console.log('current_user',current_user.value)
         } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
           break;
 
         case "show":
@@ -331,7 +371,7 @@ console.log('current_user',current_user.value)
         } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
           break;
 
         default:
@@ -340,7 +380,7 @@ console.log('current_user',current_user.value)
     };
 
     const handleActionDescription = (action, rowData, index) => {
-      const user = user_privilege('Waf');
+      const user = user_privilege("Waf");
       switch (action) {
         case "description":
         if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
@@ -351,7 +391,7 @@ console.log('current_user',current_user.value)
         } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
           break;
 
         default:
@@ -455,9 +495,15 @@ console.log('current_user',current_user.value)
           }, 4000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 

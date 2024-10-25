@@ -260,14 +260,14 @@ export default {
     openModalAdd() {
       const user = user_privilege();
 
-      if (user !=='viewer') {
+      if (user !== "viewer") {
         this.modalData = {};
-      this.modalMode = "create";
-      this.isModalOpen = true;
-          } else {
-            this.isviewModal = true;
-            this.viewModal = true;
-            };
+        this.modalMode = "create";
+        this.isModalOpen = true;
+      } else {
+        this.isviewModal = true;
+        this.viewModal = true;
+      }
     },
     closeModal() {
       this.isModalOpen = false;
@@ -297,10 +297,10 @@ export default {
         // const user = user_privilege();
         // if (user === "viewer") {
         //   eGui.innerHTML = `View Mode`;
-        // } else 
+        // } else
         // {
-          if (params.data.is_private_key) {
-            eGui.innerHTML = `
+        if (params.data.is_private_key) {
+          eGui.innerHTML = `
         
         <button 
           class="action-button download"
@@ -318,8 +318,8 @@ export default {
             <i class="fas fa-times" style="color: #086eae; font-size: 20px;"></i>
         </button>
         `;
-          } else {
-            eGui.innerHTML = `
+        } else {
+          eGui.innerHTML = `
         
         <button 
           class="action-button download"
@@ -388,9 +388,15 @@ export default {
           document.body.removeChild(a);
         })
         .catch((i) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          }
         });
     },
     cancelDelete() {
@@ -416,12 +422,18 @@ export default {
           }
         })
         .catch((i) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          }
         });
     },
-    close(){
+    close() {
       this.isviewModal = false;
       this.viewModal = false;
     },
@@ -429,52 +441,49 @@ export default {
       const user = user_privilege();
       switch (action) {
         case "edit":
-        if (user !=='viewer') {
-          this.rowEdit = rowData;
-          this.openModalAdd();
-          this.modalMode = "update";
+          if (user !== "viewer") {
+            this.rowEdit = rowData;
+            this.openModalAdd();
+            this.modalMode = "update";
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
+          }
 
           break;
         case "export":
-        if (user !=='viewer') {
-          let id = rowData.id;
-          let type = "certificate";
-          let fileExtention = `${rowData.nom}.crt`;
+          if (user !== "viewer") {
+            let id = rowData.id;
+            let type = "certificate";
+            let fileExtention = `${rowData.nom}.crt`;
 
-          this.download(id, type, fileExtention);
+            this.download(id, type, fileExtention);
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
-          
+          }
 
           break;
         case "delete":
-        if (user !=='viewer') {
-          this.deleteDialog = true;
-          this.deletedRow = rowData;
+          if (user !== "viewer") {
+            this.deleteDialog = true;
+            this.deletedRow = rowData;
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
-
+          }
 
           break;
         case "exportKey":
-        if (user !=='viewer') {
-          let rowId = rowData.id;
-          let typeName = "private_key";
-          let fileExt = `${rowData.nom}.key`;
-          this.download(rowId, typeName, fileExt);
+          if (user !== "viewer") {
+            let rowId = rowData.id;
+            let typeName = "private_key";
+            let fileExt = `${rowData.nom}.key`;
+            this.download(rowId, typeName, fileExt);
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
-
+          }
 
           break;
         case "cancel":

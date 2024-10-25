@@ -64,6 +64,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import VButton from "@/components/VButton.vue";
+import { useI18n } from "vue-i18n";
+
 import { user_privilege } from "@/mixins/user_privilege.js";
 
 import ModalVlan from "@/components/modals/ModalVlan.vue";
@@ -75,6 +77,7 @@ export default {
     AgGridVue,
   },
   setup() {
+    const { t } = useI18n();
     const emitter = inject("emitter");
     const state = reactive({
       deleteDialog: false,
@@ -310,9 +313,15 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
     return {

@@ -21,36 +21,63 @@
       <v-row>
         <v-col cols="12">
           <div style="overflow: hidden; flex-grow: 1">
-            <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-              @grid-ready="onGridReady" :columnDefs="columnArea" :rowData="rowDataArea.value" :gridOptions="gridOptions"
-              :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
+            <ag-grid-vue
+              id="grid-wrapper"
+              domLayout="autoHeight"
+              class="ag-theme-alpine mt-3"
+              style="width: 100%"
+              @grid-ready="onGridReady"
+              :columnDefs="columnArea"
+              :rowData="rowDataArea.value"
+              :gridOptions="gridOptions"
+              :overlayNoRowsTemplate="overlayTemplate"
+              :localeText="paginationLocalization"
+            />
           </div>
           <div class="d-flex justify-end mt-3">
-            <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('sdwan.addKey')" :isLarge="true"
-              type="submit" class="ml-2" @click="openModalAdd" />
+            <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              :label="$t('sdwan.addKey')"
+              :isLarge="true"
+              type="submit"
+              class="ml-2"
+              @click="openModalAdd"
+            />
           </div>
         </v-col>
       </v-row>
-      <AreaSdwanModal :isOpen="state.isModalAreaOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
+      <AreaSdwanModal
+        :isOpen="state.isModalAreaOpen"
+        :editRow="state.editRow"
+        :modalMode="state.modalMode"
+      />
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-          }}</v-card-title>
+        }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-            }}</v-btn>
+          }}</v-btn>
           <v-btn color="blue darken-1" text @click="confirmDelete">{{
             $t("buttons.delete")
-            }}</v-btn>
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </div>
@@ -211,16 +238,15 @@ console.log('current_user',current_user.value)
     }
 
     const handleActionClient = (action, rowData, index) => {
-      const user = user_privilege('Sdwan');
+      const user = user_privilege("Sdwan");
       switch (action) {
         case "show":
           if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
             console.log("show", rowData);
-          }
-          else {
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         case "edit":
           if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
@@ -231,7 +257,7 @@ console.log('current_user',current_user.value)
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         case "delete":
           if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
@@ -241,7 +267,7 @@ console.log('current_user',current_user.value)
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         default:
           break;
@@ -257,7 +283,7 @@ console.log('current_user',current_user.value)
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
 
     onMounted(() => {
@@ -318,12 +344,18 @@ console.log('current_user',current_user.value)
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
-    
+
     const close = () => {
       state.isviewModal = false;
       state.viewModal = false;

@@ -125,7 +125,7 @@ export default {
     const current_user = ref();
     const last_Subscription = ref([]);
     const emitter = inject("emitter");
-    const tokenStatus = ref('')
+    const tokenStatus = ref("");
 
     const state = reactive({
       modalData: {},
@@ -289,7 +289,7 @@ console.log('current_user',current_user.value)
 
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
-      if(!tokenStatus.value){
+      if (!tokenStatus.value) {
         eGui.innerHTML = `
         <button class="action-button edit" disabled>
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -298,15 +298,16 @@ console.log('current_user',current_user.value)
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
       `;
-      }else{
-      eGui.innerHTML = `
+      } else {
+        eGui.innerHTML = `
         <button class="action-button edit" data-action="edit">
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         <button class="action-button delete" data-action="delete">
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
-      `;}
+      `;
+      }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
@@ -316,7 +317,7 @@ console.log('current_user',current_user.value)
       return eGui;
     }
     const handleActionClient = (action, rowData) => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
       switch (action) {
         case "edit":
@@ -329,8 +330,8 @@ console.log('current_user',current_user.value)
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-  
+          }
+
           break;
         case "delete":
         if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
@@ -339,17 +340,17 @@ console.log('current_user',current_user.value)
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
           break;
         default:
           break;
       }
     };
     async function OpenDelete(itemId) {
-        state.selectedId = itemId;
-        state.deleteDialog = true;
+      state.selectedId = itemId;
+      state.deleteDialog = true;
     }
-    
+
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
@@ -376,9 +377,15 @@ console.log('current_user',current_user.value)
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
@@ -390,11 +397,10 @@ console.log('current_user',current_user.value)
       console.log("last_Subscription",last_Subscription.value)
       let token = document.getElementById("app").getAttribute("token");
       if (token && token !== "null") {
-        tokenStatus.value = true
-      } 
-      else {
-        tokenStatus.value = false
-    }
+        tokenStatus.value = true;
+      } else {
+        tokenStatus.value = false;
+      }
       let service_policiesString = document
         .getElementById("app")
         .getAttribute("service_policies");
@@ -408,7 +414,6 @@ console.log('current_user',current_user.value)
         gridService.value.setRowData(rowDataService.value);
       }
 
-
       emitter.on("closeServicesModal", () => {
         state.isModalOpen = false;
         state.isOpen = false;
@@ -421,16 +426,16 @@ console.log('current_user',current_user.value)
     });
 
     const openModalAdd = () => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
       if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
         state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-          } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
     const close = () => {
       state.isviewModal = false;
@@ -452,8 +457,7 @@ console.log('current_user',current_user.value)
       paginationLocalization,
       columnService,
       rowDataService,
-      tokenStatus
-
+      tokenStatus,
     };
   },
 };

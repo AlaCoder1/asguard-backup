@@ -5,24 +5,31 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{ $t("ztna.addRelaysPolicy") }}</span>
+              {{ $t("ztna.addRelaysPolicy") }}</span
+            >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("ztna.updateRelaysPolicy") }}</span>
+              {{ $t("ztna.updateRelaysPolicy") }}</span
+            >
           </v-card-title>
 
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="PolicyName" v-model="name" :placeholder="$t('ztna.policyName')" :rules="rulesName"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="PolicyName"
+                    v-model="name"
+                    :placeholder="$t('ztna.policyName')"
+                    :rules="rulesName"
+                    persistent-placeholder
+                  />
                 </v-col>
 
                 <v-col cols="12">
                   <div class="d-flex align-center">
                     <label class="ml-1" for="PROTOCOL">{{
                       $t("ztna.semantic")
-                      }}</label>
+                    }}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
@@ -32,10 +39,12 @@
                         </template>
 
                         <v-list>
-                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
-                            <v-list-item-title>{{
-                              item
-                              }}</v-list-item-title>
+                          <v-list-item
+                            v-for="(item, index) in items"
+                            :key="index"
+                            @click="selectItem(item)"
+                          >
+                            <v-list-item-title>{{ item }}</v-list-item-title>
                           </v-list-item>
                         </v-list>
                       </v-menu>
@@ -44,31 +53,64 @@
                 </v-col>
 
                 <v-col cols="12" class="mb-n6">
-                  <v-select v-model="routerR" :label="$t('ztna.edgeRelaysRole')" density="compact"
-                    item-title="attribute_relay" item-value="id" return-object :rules="rules" :items="routersList"
-                    background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
+                  <v-select
+                    v-model="routerR"
+                    :label="$t('ztna.edgeRelaysRole')"
+                    density="compact"
+                    item-title="attribute_relay"
+                    item-value="id"
+                    return-object
+                    :rules="rules"
+                    :items="routersList"
+                    background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')"
+                  >
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <!-- <v-text-field id="identityatt" v-model="identityatt" :placeholder="$t('ztna.identityRoleAttribute')"
                     :rules="rules" persistent-placeholder /> -->
-                  <v-select v-model="identityatt" :label="$t('ztna.identityRoleAttribute')" density="compact"
-                    item-title="attribute_identitie" item-value="id" return-object :rules="rules" :items="identityList"
-                    background-color="#fffffff" :no-data-text="$t('certificat.certificatlist')">
+                  <v-select
+                    v-model="identityatt"
+                    :label="$t('ztna.identityRoleAttribute')"
+                    density="compact"
+                    item-title="attribute_identitie"
+                    item-value="id"
+                    return-object
+                    :rules="rules"
+                    :items="identityList"
+                    background-color="#fffffff"
+                    :no-data-text="$t('certificat.certificatlist')"
+                  >
                   </v-select>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field id="Description" v-model="Description" placeholder="Description"
-                    persistent-placeholder />
+                  <v-text-field
+                    id="Description"
+                    v-model="Description"
+                    placeholder="Description"
+                    persistent-placeholder
+                  />
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="indigo-darken-3" :rounded="true" large outlined label-color="#213E9F" variant="flat"
-              class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
-                {{ $t("buttons.close") }}</span></v-btn>
+            <v-btn
+              color="indigo-darken-3"
+              :rounded="true"
+              large
+              outlined
+              label-color="#213E9F"
+              variant="flat"
+              class="mt-3 btn-add"
+              text
+              @click="cancel"
+              ><span class="text-white pr-3 pl-3">
+                {{ $t("buttons.close") }}</span
+              ></v-btn
+            >
             <!-- <VBtn
               color="red"
               :rounded="true"
@@ -82,18 +124,33 @@
             >
               Reset
             </VBtn> -->
-            <v-btn large rounded outlined label-color="#213E9F" color="indigo-darken-3" variant="flat"
-              class="mt-3 ml-2 btn-add" type="submit">
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              color="indigo-darken-3"
+              variant="flat"
+              class="mt-3 ml-2 btn-add"
+              type="submit"
+            >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
-                {{ $t("buttons.create") }}</span>
+                {{ $t("buttons.create") }}</span
+              >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span>
+                {{ $t("buttons.update") }}</span
+              >
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -102,6 +159,7 @@
 import axios from "axios";
 import { toRefs, ref, watch, reactive, inject, onMounted } from "vue";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { useI18n } from "vue-i18n";
 
 export default {
   props: {
@@ -119,8 +177,9 @@ export default {
     },
   },
   setup(props) {
+    const { t } = useI18n();
     const name = ref("");
-    const RelayPolicies = ref([])
+    const RelayPolicies = ref([]);
     const relayId = ref("");
     const routerR = ref("");
     const identityatt = ref("");
@@ -144,7 +203,9 @@ export default {
       },
     ];
     function existingName(value) {
-      const existingIdentity = RelayPolicies.value.find(identity => identity.name === value);
+      const existingIdentity = RelayPolicies.value.find(
+        (identity) => identity.name === value
+      );
 
       if (existingIdentity) {
         return true;
@@ -154,14 +215,20 @@ export default {
     }
     const fetchRelayPolicies = async () => {
       try {
-        const RelayPoliciesString = await document.getElementById("app").getAttribute("router_policies");
+        const RelayPoliciesString = await document
+          .getElementById("app")
+          .getAttribute("router_policies");
         const RelayPoliciesObject = JSON.parse(RelayPoliciesString);
 
-        const RelayPoliciesArray = Array.isArray(RelayPoliciesObject) ? RelayPoliciesObject : [];
+        const RelayPoliciesArray = Array.isArray(RelayPoliciesObject)
+          ? RelayPoliciesObject
+          : [];
 
-        RelayPolicies.value = RelayPoliciesArray.map(identity => ({ name: identity.name }));
+        RelayPolicies.value = RelayPoliciesArray.map((identity) => ({
+          name: identity.name,
+        }));
 
-        console.log('RelayPolicies.value', RelayPolicies.value);
+        console.log("RelayPolicies.value", RelayPolicies.value);
       } catch (error) {
         console.error("Failed to fetch RelayPolicies:", error);
         RelayPolicies.value = [];
@@ -209,8 +276,6 @@ export default {
           identityatt.value = "";
           Description.value = "";
           selectedTitle.value = "AllOf";
-
-
         }
       }
     );
@@ -221,7 +286,7 @@ export default {
         .getAttribute("routers");
       let routersObject;
       routersObject = JSON.parse(routersString);
-      console.log('routersObject00--------------:', routersObject)
+      console.log("routersObject00--------------:", routersObject);
       routersList.value = routersObject ? routersObject : [];
 
       let IdentitiesString = document
@@ -232,10 +297,10 @@ export default {
 
       IdentitiesObject = JSON.parse(IdentitiesString);
       identityList.value = IdentitiesObject ? IdentitiesObject : [];
-    })
+    });
     const populate = (data) => {
       if (modalMode.value === "edit") {
-        relayId.value = data.id
+        relayId.value = data.id;
         name.value = data.name;
 
         selectedTitle.value = data.semantique;
@@ -256,12 +321,11 @@ export default {
           }
         }
         routerR.value = relay;
-        identityatt.value = identity
+        identityatt.value = identity;
       }
     };
 
     const submitForm = async () => {
-
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -272,7 +336,7 @@ export default {
         semantic: selectedTitle.value,
         edgeRouterRoles: [routerAttribute],
         identityRoles: [identityAttribute],
-        Description: Description.value
+        Description: Description.value,
       };
 
       let token = document.getElementById("app").getAttribute("token");
@@ -296,10 +360,15 @@ export default {
             }
           })
           .catch((i) => {
-            console.log("response", i.response);
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       } else {
         axios
@@ -321,10 +390,15 @@ export default {
             }
           })
           .catch((i) => {
-            console.log("response", i.response);
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       }
     };

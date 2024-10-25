@@ -272,7 +272,7 @@ console.log('current_user',current_user.value)
     }
 
     const handleAction = (action, rowData, index) => {
-      const user = user_privilege('Waf');
+      const user = user_privilege("Waf");
       switch (action) {
         case "delete":
         if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
@@ -281,8 +281,8 @@ console.log('current_user',current_user.value)
         } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          }
+
           break;
         case "edit":
         if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
@@ -294,8 +294,8 @@ console.log('current_user',current_user.value)
         } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          }
+
         default:
           break;
       }
@@ -391,9 +391,15 @@ console.log('current_user',current_user.value)
           }, 4000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 

@@ -1,6 +1,11 @@
 <template>
-    <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+  <v-overlay v-model="state.viewModal">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
@@ -8,8 +13,15 @@
           </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -594,8 +606,8 @@ console.log('current_user',current_user.value)
       //    <i class="far fa-edit" style="color: #086eae;"></i>
       // </button>
       eGui.innerHTML = `
-   
-  
+
+
       <button
         class="action-button delete"
         data-action="delete">
@@ -614,7 +626,7 @@ console.log('current_user',current_user.value)
     }
 
     const handleAction = (action, rowData) => {
-      const user = user_privilege('suricata');
+      const user = user_privilege("suricata");
       switch (action) {
         // case "edit":
         //   // state.modalData = {};
@@ -629,18 +641,18 @@ console.log('current_user',current_user.value)
             (item) => item.id === rowData.id
           );
 
-          if (index !== -1) {
-            rowDataAF.value.splice(index, 1);
-            if (gridApi.value) {
-              gridApi.value.setRowData(rowDataAF.value);
-            } else {
-              console.error("Grid API.");
+            if (index !== -1) {
+              rowDataAF.value.splice(index, 1);
+              if (gridApi.value) {
+                gridApi.value.setRowData(rowDataAF.value);
+              } else {
+                console.error("Grid API.");
+              }
             }
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
           }
-        } else {
-        state.isviewModal = true;
-        state.viewModal = true;
-      };
           break;
         default:
           break;
@@ -694,7 +706,7 @@ console.log('current_user',current_user.value)
     } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
 
     onMounted(async () => {
@@ -870,7 +882,7 @@ console.log('current_user',current_user.value)
     } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
 
     const submitForm = async () => {
@@ -881,106 +893,111 @@ console.log('current_user',current_user.value)
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-        if (!rowDataAF.value) {
-          rowDataAF.value = [];
-        }
+          if (!rowDataAF.value) {
+            rowDataAF.value = [];
+          }
 
-        if (rowDataAF.value.length) {
-          var mapedRow = rowDataAF.value.map((e) => {
-            let filtredCopy = state.mapedInterface
-              .filter((i) => i.name === e.copy_iface)
-              .map((i) => {
-                return {
-                  id: i.id,
-                  name: i.ifname,
-                };
-              });
+          if (rowDataAF.value.length) {
+            var mapedRow = rowDataAF.value.map((e) => {
+              let filtredCopy = state.mapedInterface
+                .filter((i) => i.name === e.copy_iface)
+                .map((i) => {
+                  return {
+                    id: i.id,
+                    name: i.ifname,
+                  };
+                });
 
-            return {
-              id: e.id ?? e.id_interface,
-              interface: e.ifname,
-              threads: e.threads,
-              cluster_id: e.cluster_id,
-              cluster_type: e.cluster_type,
-              defrag: e.defrag,
-              use_mmap: e.use_mmap,
-              ring_size: e.ring_size,
-              copy_iface: filtredCopy[0] ?? null,
-              copy_mode: e.copy_mode === "--" ? null : e.copy_mode,
-            };
-          });
-
-          let payload = {
-            status_enabled: state.status_enabled,
-            promisc: state.promisc,
-            eve_log: state.eve_log,
-            syslog: state.syslog,
-            mpm_algo: state.mpm_algo.slug,
-            profile: state.profile.slug,
-            mode_inline: state.mode_inline,
-            list_interfaces: mapedRow,
-          };
-          state.loading = true;
-          state.isLoadingDialogue = true;
-          axios
-            .put("/ids-ips/UpdateGeneralConfig/" + state.interId, payload)
-            .then((response) => {
-              if (response.status == 200) {
-                state.loading = false;
-                state.isLoadingDialogue = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = t("suricata.configurationSuccess");
-                // Automatically close the snackbar after 3000 milliseconds (3 seconds)
-                setTimeout(() => {
-                  state.snackbar = false;
-                  location.reload();
-                }, 1000);
-              } else {
-                state.loading = false;
-                state.isLoadingDialogue = false;
-                state.snackbar = true;
-                state.color = "error";
-                state.textAlert = t("suricata.failedToSaveConfiguration");
-                // Automatically close the snackbar after 3000 milliseconds (3 seconds)
-                setTimeout(() => {
-                  state.snackbar = false;
-                }, 2000);
-              }
-            })
-            .catch((i) => {
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "error";
-              state.textAlert = error;
-              setTimeout(() => {
-                state.snackbar = false;
-              }, 2000);
+              return {
+                id: e.id ?? e.id_interface,
+                interface: e.ifname,
+                threads: e.threads,
+                cluster_id: e.cluster_id,
+                cluster_type: e.cluster_type,
+                defrag: e.defrag,
+                use_mmap: e.use_mmap,
+                ring_size: e.ring_size,
+                copy_iface: filtredCopy[0] ?? null,
+                copy_mode: e.copy_mode === "--" ? null : e.copy_mode,
+              };
             });
+
+            let payload = {
+              status_enabled: state.status_enabled,
+              promisc: state.promisc,
+              eve_log: state.eve_log,
+              syslog: state.syslog,
+              mpm_algo: state.mpm_algo.slug,
+              profile: state.profile.slug,
+              mode_inline: state.mode_inline,
+              list_interfaces: mapedRow,
+            };
+            state.loading = true;
+            state.isLoadingDialogue = true;
+            axios
+              .put("/ids-ips/UpdateGeneralConfig/" + state.interId, payload)
+              .then((response) => {
+                if (response.status == 200) {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = t("suricata.configurationSuccess");
+                  // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+                  setTimeout(() => {
+                    state.snackbar = false;
+                    location.reload();
+                  }, 1000);
+                }
+                // else {
+                //   state.loading = false;
+                //   state.isLoadingDialogue = false;
+                //   state.snackbar = true;
+                //   state.color = "error";
+                //   state.textAlert = t("suricata.failedToSaveConfiguration");
+                //   // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+                //   setTimeout(() => {
+                //     state.snackbar = false;
+                //   }, 2000);
+                // }
+              })
+              .catch((i) => {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("suricata.failedToSaveConfiguration");
+                }
+              });
+          } else {
+            state.snackbar = true;
+            state.color = "error";
+            state.textAlert = t("suricata.MinimumOneInter");
+            setTimeout(() => {
+              state.snackbar = false;
+            }, 3000);
+          }
         } else {
-          state.snackbar = true;
-          state.color = "error";
-          state.textAlert = t("suricata.MinimumOneInter");
-          setTimeout(() => {
-            state.snackbar = false;
-          }, 2000);
+          console.log("v$", v$.value);
+          if (rowDataAF.value.length === 0) {
+            state.snackbar = true;
+            state.color = "error";
+            state.textAlert = t("suricata.MinimumOneInter");
+            setTimeout(() => {
+              state.snackbar = false;
+            }, 3000);
+          }
         }
-      } else {
-        console.log("v$", v$.value);
-        if (rowDataAF.value.length === 0) {
-          state.snackbar = true;
-          state.color = "error";
-          state.textAlert = t("suricata.MinimumOneInter");
-          setTimeout(() => {
-            state.snackbar = false;
-          }, 2000);
-        }
-      }    
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
 
     const error = computed(() => {

@@ -283,7 +283,7 @@ console.log('current_user',current_user.value)
 
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
-      if(!tokenStatus.value){
+      if (!tokenStatus.value) {
         eGui.innerHTML = `
         <button class="action-button edit" disabled>
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -292,7 +292,7 @@ console.log('current_user',current_user.value)
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
       `;
-      }else{
+      } else {
         eGui.innerHTML = `
         <button class="action-button edit" data-action="edit">
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -312,7 +312,7 @@ console.log('current_user',current_user.value)
       return eGui;
     }
     const handleActionClient = (action, rowData) => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
       switch (action) {
         case "edit":
@@ -324,8 +324,7 @@ console.log('current_user',current_user.value)
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-
+          }
 
           break;
         case "delete":
@@ -334,7 +333,7 @@ console.log('current_user',current_user.value)
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
 
           break;
         default:
@@ -343,8 +342,8 @@ console.log('current_user',current_user.value)
     };
     async function OpenDelete(itemId) {
       let token = document.getElementById("app").getAttribute("token");
-        state.selectedId = itemId;
-        state.deleteDialog = true;    
+      state.selectedId = itemId;
+      state.deleteDialog = true;
     }
 
     const cancelDelete = () => {
@@ -352,7 +351,6 @@ console.log('current_user',current_user.value)
     };
 
     const confirmDelete = async (itemId) => {
-
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -374,9 +372,15 @@ console.log('current_user',current_user.value)
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
@@ -388,23 +392,20 @@ console.log('current_user',current_user.value)
       console.log("last_Subscription",last_Subscription.value)
       let token = document.getElementById("app").getAttribute("token");
       if (token && token !== "null") {
-        tokenStatus.value = true
-      } 
-      else {
-        tokenStatus.value = false
-    }
+        tokenStatus.value = true;
+      } else {
+        tokenStatus.value = false;
+      }
       let service_edge_router_policiesString = document
         .getElementById("app")
         .getAttribute("service_edge_router_policies");
       let service_edge_router_policiesObject = JSON.parse(
         service_edge_router_policiesString
       );
-     
 
       rowDataPolicy.value = service_edge_router_policiesObject
         ? service_edge_router_policiesObject
         : [];
-    
 
       if (gridPolicy.value) {
         gridPolicy.value.setRowData(rowDataPolicy.value);
@@ -427,16 +428,16 @@ console.log('current_user',current_user.value)
     });
 
     const openModalAdd = () => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
       if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {     
         state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-          } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const close = () => {
@@ -459,8 +460,7 @@ console.log('current_user',current_user.value)
       paginationLocalization,
       columnPolicy,
       rowDataPolicy,
-       tokenStatus
-
+      tokenStatus,
     };
   },
 };

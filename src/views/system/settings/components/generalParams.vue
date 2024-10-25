@@ -9,7 +9,7 @@
       >
         <v-card color="#193286">
           <v-card-text>
-            {{$t('requiredfield.attente')}}
+            {{ $t("requiredfield.attente") }}
             <v-progress-linear
               indeterminate
               color="white"
@@ -20,13 +20,13 @@
       </v-dialog>
     </v-overlay>
     <div class="ml-3 mr-3">
-      <h4>{{$t("settings.GENERALPARAMETERS")}}</h4>
+      <h4>{{ $t("settings.GENERALPARAMETERS") }}</h4>
       <v-divider class="mb-2"></v-divider>
     </div>
     <v-row>
       <v-col cols="10">
         <v-col cols="8" class="mb-n6">
-          <h4>{{$t("settings.System")}}</h4>
+          <h4>{{ $t("settings.System") }}</h4>
 
           <v-divider class="mb-2"></v-divider>
 
@@ -45,7 +45,7 @@
             {{ v$.domain.$errors?.[0].$message }}
           </p>
           <v-select
-            :label="$t('settings.Timezone')" 
+            :label="$t('settings.Timezone')"
             density="compact"
             v-model="state.timeZone"
             item-title="name"
@@ -56,7 +56,7 @@
         </v-col>
 
         <v-col cols="8" class="mb-n6">
-          <h4>{{$t("settings.Network")}}</h4>
+          <h4>{{ $t("settings.Network") }}</h4>
 
           <v-divider class="mb-2"></v-divider>
           <div class="d-flex justify-end mt-3">
@@ -66,7 +66,7 @@
               color="#213E9F"
               density="comfortable"
               rounded
-              >{{$t("buttons.Add")}}</v-btn
+              >{{ $t("buttons.Add") }}</v-btn
             >
           </div>
           <div style="overflow: hidden; flex-grow: 1">
@@ -174,8 +174,7 @@ export default {
       return t("settings.Usethegateway");
     });
 
-
-    const columnGateway =ref([
+    const columnGateway = ref([
       {
         headerName: DNSServer,
         field: "dns_server",
@@ -387,9 +386,15 @@ export default {
             state.loading = false;
             state.isLoadingDialogue = false;
 
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.msg;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+            }
           });
       } else {
         console.log("v$", v$.value);

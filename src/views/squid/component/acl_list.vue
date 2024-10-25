@@ -265,20 +265,20 @@ console.log('current_user',current_user.value)
     };
 
     const handleAction = (action, rowData) => {
-      const user = user_privilege('Proxy');
+      const user = user_privilege("Proxy");
       switch (action) {
         case "edit":
       if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
           console.log("rowData", rowData);
 
-          state.modalData = {};
-          state.editRow = rowData;
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-        } else {
-        state.isviewModal = true;
-        state.viewModal = true;
-      };
+            state.modalData = {};
+            state.editRow = rowData;
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "enable":
         if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
@@ -286,36 +286,43 @@ console.log('current_user',current_user.value)
           const csrfToken = getCookie("csrftoken");
           axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-          let payload = {
-            group: rowData.name,
-            status: rowData.status === "Blocked" ? true : false,
-          };
+            let payload = {
+              group: rowData.name,
+              status: rowData.status === "Blocked" ? true : false,
+            };
 
-          axios
-            .post("/proxy/changeStausGroup", payload)
-            .then((response) => {
-              if (response.status == "200") {
-                state.snackbar = true;
+            axios
+              .post("/proxy/changeStausGroup", payload)
+              .then((response) => {
+                if (response.status == "200") {
+                  state.snackbar = true;
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  setTimeout(() => {
+                    location.reload();
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
                 state.loading = false;
                 state.isLoadingDialogue = false;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            });
-      } else {
-        state.isviewModal = true;
-        state.viewModal = true;
-      };
+
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         default:
           break;

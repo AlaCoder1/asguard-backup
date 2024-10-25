@@ -55,11 +55,20 @@
       <v-toolbar dark fixed app class="asguard_toolbar">
         <v-toolbar-title>
           <v-overlay v-model="loading" v-if="ztnaTab">
-            <v-dialog v-model="isLoadingDialogue" :scrim="false" persistent width="auto">
+            <v-dialog
+              v-model="isLoadingDialogue"
+              :scrim="false"
+              persistent
+              width="auto"
+            >
               <v-card color="#193286">
                 <v-card-text>
                   {{ $t("requiredfield.attente") }}
-                  <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+                  <v-progress-linear
+                    indeterminate
+                    color="white"
+                    class="mb-0"
+                  ></v-progress-linear>
                 </v-card-text>
               </v-card>
             </v-dialog>
@@ -68,10 +77,18 @@
           <div class="d-flex">
             <label>{{ title }}</label>
             <div v-if="ztnaTab">
-              <i v-if="!status" class="mdi mdi-play-circle mr-1 ml-1"
-                style="color: #4caf50; font-size: 20px; cursor: pointer" @click="startStopServer('start')"></i>
-              <i v-if="status" class="mdi mdi-stop-circle" style="color: #b00020; font-size: 20px; cursor: pointer"
-                @click="startStopServer('stop')"></i>
+              <i
+                v-if="!status"
+                class="mdi mdi-play-circle mr-1 ml-1"
+                style="color: #4caf50; font-size: 20px; cursor: pointer"
+                @click="startStopServer('start')"
+              ></i>
+              <i
+                v-if="status"
+                class="mdi mdi-stop-circle"
+                style="color: #b00020; font-size: 20px; cursor: pointer"
+                @click="startStopServer('stop')"
+              ></i>
             </div>
           </div>
         </v-toolbar-title>
@@ -82,12 +99,16 @@
           </v-btn>
         </div>
 
-        <v-snackbar :timeout="2000" v-model="snackbar" location="bottom right" :color="color">
+        <v-snackbar
+          :timeout="2000"
+          v-model="snackbar"
+          location="bottom right"
+          :color="color"
+        >
           {{ textAlert }}
 
           <template v-slot:actions> </template>
         </v-snackbar>
-
       </v-toolbar>
       <slot name="content"></slot>
     </v-main>
@@ -149,8 +170,8 @@ this.current_user= user_privilege('Ztna')
     return {
       isLoadingDialogue: false,
       loading: false,
-      textAlert: '',
-      color: '',
+      textAlert: "",
+      color: "",
       snackbar: false,
       status: false,
       isviewModal:false,
@@ -169,51 +190,55 @@ this.current_user= user_privilege('Ztna')
     axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
     axios.get("/ztna/status_ztna").then((response) => {
-      console.log('re', response.data)
-      this.status=response.data.data
-    })
+      console.log("re", response.data);
+      this.status = response.data.data;
+    });
   },
   methods: {
     startStopServer(status) {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
       if (user && user !=='viewer' && user !=='default' && this.last_Subscription.includes("ZTNA")) {
         this.loading = true;
-      this.isLoadingDialogue = true;
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        this.isLoadingDialogue = true;
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      let endpoint = status === 'start' ? 'start_ztna' : 'stop_ztna'
-      axios
-        .post(`/ztna/${endpoint}`)
-        .then((response) => {
-          console.log('response', response)
-          this.snackbar = true;
-          this.color = "success";
-          this.textAlert = response.data.message;
-          this.loading = false;
-          this.isLoadingDialogue = false;
+        let endpoint = status === "start" ? "start_ztna" : "stop_ztna";
+        axios
+          .post(`/ztna/${endpoint}`)
+          .then((response) => {
+            console.log("response", response);
+            this.snackbar = true;
+            this.color = "success";
+            this.textAlert = response.data.message;
+            this.loading = false;
+            this.isLoadingDialogue = false;
 
-          setTimeout(() => {
-            location.reload();
-          }, 1000);
-        })
-        .catch((i) => {
-          this.loading = false;
-          this.isLoadingDialogue = false;
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          })
+          .catch((i) => {
+            this.loading = false;
+            this.isLoadingDialogue = false;
 
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.error;
-        });
-          } else {
-            this.isviewModal = true;
-            this.viewModal = true;
-            };
-      
-
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = "Internal Server Error. Please try again later";
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+            }
+          });
+      } else {
+        this.isviewModal = true;
+        this.viewModal = true;
+      }
     },
-    close (){
+    close() {
       this.isviewModal = false;
       this.viewModal = false;
     },

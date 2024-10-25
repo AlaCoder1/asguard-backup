@@ -101,7 +101,3 @@ def update_application_waf_in_system(application:ApplicationWaf, app_data):
     """Function to update a WAF Application in system"""
     delete_application_waf_in_system(application.name)
     create_application_waf_in_system(app_data)
-
-
-def restart_nginx_in_system():
-    execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])

@@ -197,3 +197,7 @@ server {{
         config_reverse_proxy = config_reverse_proxy.replace("server_name _l;", 
                                                             f"server_name {application_value};")
     write_file_from_system(app_sites_available_config_path, config_reverse_proxy)
+
+
+def restart_nginx_in_system():
+    execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])

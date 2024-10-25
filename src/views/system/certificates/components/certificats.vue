@@ -444,9 +444,15 @@ export default {
           }, 2000);
         })
         .catch((i) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          }
         });
     },
     cancelDeleteCertif() {
@@ -701,9 +707,15 @@ export default {
           document.body.removeChild(a);
         })
         .catch((i) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          };
         });
     },
     getCookie(name) {
@@ -743,9 +755,15 @@ export default {
           }
         })
         .catch((i) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          }
         });
     },
     handleAction(action, rowData) {

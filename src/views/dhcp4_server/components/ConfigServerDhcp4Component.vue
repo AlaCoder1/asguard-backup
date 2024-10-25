@@ -657,13 +657,16 @@ export default {
           .catch((i) => {
             state.loading = false;
             state.isLoadingDialogue = false;
-            state.snackbar = true;
-            state.color = "error";
-            state.textAlert = i.response.data.msg;
-            setTimeout(() => {
-              state.snackbar = false;
-              location.reload();
-            }, 1000);
+
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+            }
           });
       } else {
         console.log("error", v$.value);

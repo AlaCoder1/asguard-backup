@@ -1,18 +1,36 @@
 <template>
-    <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+  <v-overlay v-model="state.viewModal">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
         <v-card-text>
-          {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
+          {{ $t("profil.NoPermission") }}
+          <br />
+          {{ $t("profil.ContactAdmin") }}
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -127,7 +145,7 @@
 import { useI18n } from "vue-i18n";
 import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
-import { onMounted, reactive, ref,computed } from "vue";
+import { onMounted, reactive, ref, computed } from "vue";
 import { inject } from "vue";
 import { user_privilege } from "@/mixins/user_privilege.js";
 
@@ -259,7 +277,7 @@ export default {
     } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
     const gridApi = ref(null); // Optional - for accessing Grid's API
     const gridOptions = ref({
@@ -347,49 +365,59 @@ export default {
       return cookieValue;
     }
     const reloadData = async () => {
-      const user = user_privilege('Suricata');
-      if (user && user !== 'viewer' && user!=='default') {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      state.loading = true;
-      state.isLoadingDialogue = true;
-      try {
-        const response = await axios.post(
-          "/ids-ips/addalertsToDatabase/" + props.configInfo
-        );
-        if (response.status === 200) {
+      const user = user_privilege("Suricata");
+      if (user && user !== "viewer" && user != 'default') {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        state.loading = true;
+        state.isLoadingDialogue = true;
+        try {
+          const response = await axios.post(
+            "/ids-ips/addalertsToDatabase/" + props.configInfo
+          );
+          if (response.status === 200) {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            // state.messages=response.data.message
+            showMessage({
+              color: "success",
+              text: t("suricata.allAlertsuccessfully"),
+            });
+          } 
+          // else {
+          //   state.loading = false;
+          //   state.isLoadingDialogue = false;
+          //   state.snackbar = true;
+          //   showMessage({
+          //     color: "error",
+          //     text: t("suricata.failed"),
+          //   });
+          // }
+        } catch (i) {
           state.loading = false;
           state.isLoadingDialogue = false;
-          state.snackbar = true;
-          // state.messages=response.data.message
-          showMessage({
-            color: "success",
-            text: t("suricata.allAlertsuccessfully"),
-          });
-        } else {
-          state.loading = false;
-          state.isLoadingDialogue = false;
-          state.snackbar = true;
-          showMessage({
-            color: "error",
-            text: t("suricata.failed"),
-          });
+
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            showMessage({
+              color: "error",
+              text: t("errors.errorServer"),
+            });
+          } else {
+            state.snackbar = true;
+            showMessage({
+              color: "error",
+              text: t("suricata.failed"),
+            });
+          }
         }
-      } catch (error) {
-        state.loading = false;
-        state.isLoadingDialogue = false;
-        state.snackbar = true;
-        showMessage({
-          color: "error",
-          text: error,
-        });
-      }
-    } else {
+      } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
-    
+
     const getData = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;

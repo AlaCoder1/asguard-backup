@@ -3,7 +3,13 @@
     <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
         <v-card-text>
           {{  $t("profil.NoPermission") }}
                   <br />
@@ -19,11 +25,20 @@
   </v-overlay>
   <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
     <v-overlay v-model="state.loading">
-      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
         <v-card color="#193286">
           <v-card-text>
             {{ $t("sdwan.pleaseWait") }}
-            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -32,13 +47,27 @@
       <v-col cols="6">
         <h4>
           {{ $t("dhcpV4.generalInformation") }}
-          <i v-if="!state.enableState" class="mdi mdi-play-circle"
-            style="color: #4caf50; font-size: 20px; cursor: pointer" :title="$t('sdwan.startServer')"
-            @click="startStopRestartServer('Start')"></i>
-          <i v-if="state.enableState" class="mdi mdi-stop-circle" :title="$t('sdwan.stop')"
-            style="color: #b00020; font-size: 20px; cursor: pointer" @click="startStopRestartServer('Stop')"></i>
-          <i v-if="state.enableState" class="mdi mdi-reload" :title="$t('interface.restart')"
-            style="color: #4caf50; font-size: 20px; cursor: pointer" @click="startStopRestartServer('Restart')"></i>
+          <i
+            v-if="!state.enableState"
+            class="mdi mdi-play-circle"
+            style="color: #4caf50; font-size: 20px; cursor: pointer"
+            :title="$t('sdwan.startServer')"
+            @click="startStopRestartServer('Start')"
+          ></i>
+          <i
+            v-if="state.enableState"
+            class="mdi mdi-stop-circle"
+            :title="$t('sdwan.stop')"
+            style="color: #b00020; font-size: 20px; cursor: pointer"
+            @click="startStopRestartServer('Stop')"
+          ></i>
+          <i
+            v-if="state.enableState"
+            class="mdi mdi-reload"
+            :title="$t('interface.restart')"
+            style="color: #4caf50; font-size: 20px; cursor: pointer"
+            @click="startStopRestartServer('Restart')"
+          ></i>
         </h4>
         <v-divider class="mt-2"></v-divider>
         <v-card class="mt-3">
@@ -47,7 +76,10 @@
               <label>{{ $t("squid.proxyPort") }}</label>
             </v-col>
             <v-col cols="5" class="mt-3">
-              <v-text-field :label="$t('squid.proxyPort')" v-model="state.proxyPort"></v-text-field>
+              <v-text-field
+                :label="$t('squid.proxyPort')"
+                v-model="state.proxyPort"
+              ></v-text-field>
               <p class="error-feedback mb-5" v-if="v$.proxyPort.$error">
                 {{ v$.proxyPort.$errors[0].$message }}
               </p>
@@ -55,8 +87,16 @@
           </v-row>
           <v-row class="d-flex justify-end mt-1 mb-2">
             <div>
-              <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.save')"
-                :isLarge="true" class="mr-4" @click="saveGeneralInfo" />
+              <VButton
+                rounded
+                outlined
+                color="#213E9F"
+                label-color="#ffffff"
+                :label="$t('buttons.save')"
+                :isLarge="true"
+                class="mr-4"
+                @click="saveGeneralInfo"
+              />
             </div>
           </v-row>
         </v-card>
@@ -65,18 +105,33 @@
       <squid_auth />
       <v-dialog v-model="state.dialogServer" max-width="500px">
         <v-card>
-          <v-card-title class="headline">{{ $t(state.statusServer) }}</v-card-title>
-          <v-card-text>{{ $t("squid.etesVouSur") }} {{ $t(state.statusServer) }}
-            {{ $t("squid.thisRule") }}</v-card-text>
+          <v-card-title class="headline">{{
+            $t(state.statusServer)
+          }}</v-card-title>
+          <v-card-text
+            >{{ $t("squid.etesVouSur") }} {{ $t(state.statusServer) }}
+            {{ $t("squid.thisRule") }}</v-card-text
+          >
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="state.dialogServer = false">{{ $t("buttons.cancel") }}</v-btn>
-            <v-btn color="blue darken-1" text @click="confirmationServerState">{{ $t(state.statusServer) }}
+            <v-btn
+              color="blue darken-1"
+              text
+              @click="state.dialogServer = false"
+              >{{ $t("buttons.cancel") }}</v-btn
+            >
+            <v-btn color="blue darken-1" text @click="confirmationServerState"
+              >{{ $t(state.statusServer) }}
             </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+      <v-snackbar
+        :timeout="2000"
+        v-model="state.snackbar"
+        location="bottom right"
+        :color="state.color"
+      >
         {{ state.textAlert }}
 
         <template v-slot:actions> </template>
@@ -168,11 +223,18 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
               state.loading = false;
               state.isLoadingDialogue = false;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else {
           console.log("error", v$.value);
@@ -180,7 +242,7 @@ export default {
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
     const getCookie = (name) => {
       let cookieValue = null;
@@ -219,12 +281,18 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          console.log("i.response.data.msg", i.response);
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.msg;
           state.loading = false;
           state.isLoadingDialogue = false;
+
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.msg;
+          }
         });
     };
 
@@ -236,7 +304,7 @@ export default {
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
     const populate = () => {
       const generalInfoAttribute =

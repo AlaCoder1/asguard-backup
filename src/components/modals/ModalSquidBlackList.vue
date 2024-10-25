@@ -121,6 +121,8 @@ import useValidate from "@vuelidate/core";
 import { required } from "@vuelidate/validators";
 import { reactive, computed, toRefs, watch, inject } from "vue";
 import VButton from "@/components/VButton.vue";
+import { useI18n } from "vue-i18n";
+
 export default {
   name: "Modal_User_Squid",
   components: {
@@ -138,6 +140,7 @@ export default {
     },
   },
   setup(props) {
+    const { t } = useI18n();
     const { isOpen, editRow } = toRefs(props);
     const emitter = inject("emitter");
     const state = reactive({
@@ -254,9 +257,15 @@ export default {
             }
           })
           .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       } else {
         console.log("error", v$.value);

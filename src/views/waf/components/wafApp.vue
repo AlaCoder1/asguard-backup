@@ -264,30 +264,30 @@ export default {
     }
 
     const handleAction = (action, rowData, index) => {
-      const user = user_privilege('Waf');
+      const user = user_privilege("Waf");
       switch (action) {
         case "delete":
-        if (user && user !=='viewer') {
-          state.deleteDialog = true;
-          state.deletedRow = rowData;
-        } else {
+          if (user && user !== "viewer") {
+            state.deleteDialog = true;
+            state.deletedRow = rowData;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          }
+
           break;
         case "edit":
-        if (user && user !=='viewer') {
-          console.log("edit", rowData);
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
-          break;
-        } else {
+          if (user && user !== "viewer") {
+            console.log("edit", rowData);
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+            break;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          }
+
         default:
           break;
       }
@@ -334,16 +334,16 @@ export default {
     });
 
     const openModalAdd = () => {
-      const user = user_privilege('Ztna');
-      if (user && user !=='viewer') {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-    } else {
-            console.log("View Mode");
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+      const user = user_privilege("Ztna");
+      if (user && user !== "viewer") {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const restartNginx = () => {
@@ -378,9 +378,15 @@ export default {
           }, 4000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 

@@ -126,7 +126,7 @@ export default {
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
-    const tokenStatus = ref('')
+    const tokenStatus = ref("");
 
     const state = reactive({
       modalData: {},
@@ -282,7 +282,7 @@ export default {
 
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
-      if(!tokenStatus.value){
+      if (!tokenStatus.value) {
         eGui.innerHTML = `
         <button class="action-button edit" disabled>
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -291,15 +291,16 @@ export default {
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
       `;
-      }else{
-      eGui.innerHTML = `
+      } else {
+        eGui.innerHTML = `
         <button class="action-button edit" data-action="edit">
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         <button class="action-button delete" data-action="delete">
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
-      `;}
+      `;
+      }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
@@ -309,40 +310,38 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData) => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
       switch (action) {
         case "edit":
-        if (user && user !=='viewer') {
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
-          state.selectedId = rowData.id;
-
+          if (user && user !== "viewer") {
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+            state.selectedId = rowData.id;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-  
+          }
+
           break;
         case "delete":
-        if (user && user !=='viewer') {
-          OpenDelete(rowData.id);
-
+          if (user && user !== "viewer") {
+            OpenDelete(rowData.id);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
           break;
         default:
           break;
       }
     };
     async function OpenDelete(itemId) {
-        state.selectedId = itemId;
-        state.deleteDialog = true;
+      state.selectedId = itemId;
+      state.deleteDialog = true;
     }
-    
+
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
@@ -369,20 +368,25 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
     onMounted(() => {
       let token = document.getElementById("app").getAttribute("token");
       if (token && token !== "null") {
-        tokenStatus.value = true
-      } 
-      else {
-        tokenStatus.value = false
-    }
+        tokenStatus.value = true;
+      } else {
+        tokenStatus.value = false;
+      }
       let service_policiesString = document
         .getElementById("app")
         .getAttribute("service_policies");
@@ -396,7 +400,6 @@ export default {
         gridService.value.setRowData(rowDataService.value);
       }
 
-
       emitter.on("closeServicesModal", () => {
         state.isModalOpen = false;
         state.isOpen = false;
@@ -409,16 +412,16 @@ export default {
     });
 
     const openModalAdd = () => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
-      if (user && user !=='viewer') {
+      if (user && user !== "viewer") {
         state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-          } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
     const close = () => {
       state.isviewModal = false;
@@ -439,8 +442,7 @@ export default {
       paginationLocalization,
       columnService,
       rowDataService,
-      tokenStatus
-
+      tokenStatus,
     };
   },
 };

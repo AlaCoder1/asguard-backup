@@ -3,7 +3,13 @@
     <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
         <v-card-text>
           {{  $t("profil.NoPermission") }}
                   <br />
@@ -32,51 +38,85 @@
       </v-row>
       <v-row class="d-flex justify-end mt-5 mb-2">
         <div>
-          <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.save')" :isLarge="true"
-            class="mr-4" @click="saveSquid" />
-        </div>
-      </v-row></v-card>
+          <VButton
+            rounded
+            outlined
+            color="#213E9F"
+            label-color="#ffffff"
+            :label="$t('buttons.save')"
+            :isLarge="true"
+            class="mr-4"
+            @click="saveSquid"
+          />
+        </div> </v-row
+    ></v-card>
 
     <v-row class="mt-1">
       <v-col cols="12">
         <div style="overflow: hidden; flex-grow: 1">
-          <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-            @grid-ready="onGridReady" :gridOptions="gridOptions" :columnDefs="columnUser" :rowData="rowDataUser.value"
-            :localeText="paginationLocalization" :overlayNoRowsTemplate="overlayTemplate" :pagination="true"
-            :paginationPageSize="4" />
+          <ag-grid-vue
+            id="grid-wrapper"
+            domLayout="autoHeight"
+            class="ag-theme-alpine mt-3"
+            style="width: 100%"
+            @grid-ready="onGridReady"
+            :gridOptions="gridOptions"
+            :columnDefs="columnUser"
+            :rowData="rowDataUser.value"
+            :localeText="paginationLocalization"
+            :overlayNoRowsTemplate="overlayTemplate"
+            :pagination="true"
+            :paginationPageSize="4"
+          />
         </div>
       </v-col>
     </v-row>
 
     <v-row class="d-flex justify-end mt-5 mr-0">
       <div>
-        <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('squid.addUser')" :isLarge="true"
-          @click="openModalAdd" />
+        <VButton
+          rounded
+          outlined
+          color="#213E9F"
+          label-color="#ffffff"
+          :label="$t('squid.addUser')"
+          :isLarge="true"
+          @click="openModalAdd"
+        />
       </div>
     </v-row>
     <v-dialog v-model="state.deleteDialogSquid" max-width="500px">
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-          }}</v-card-title>
+        }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-            }}</v-btn>
+          }}</v-btn>
           <v-btn color="blue darken-1" text @click="confirmDelete">{{
             $t("buttons.delete")
-            }}</v-btn>
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
 
       <template v-slot:actions> </template>
     </v-snackbar>
-    <ModalSquidUser :isOpen="state.isModalOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
+    <ModalSquidUser
+      :isOpen="state.isModalOpen"
+      :editRow="state.editRow"
+      :modalMode="state.modalMode"
+    />
   </v-col>
 </template>
 <script>
@@ -164,7 +204,7 @@ export default {
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
     const getCookie = (name) => {
       let cookieValue = null;
@@ -229,31 +269,37 @@ export default {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      let payload = {
-        status: state.enable,
-      };
+        let payload = {
+          status: state.enable,
+        };
 
-      axios
-        .post("/proxy/change_auth_status", payload)
-        .then((response) => {
-          if (response.status == "200") {
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          }
-        })
-        .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
-        });
+        axios
+          .post("/proxy/change_auth_status", payload)
+          .then((response) => {
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
+          });
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
 
     function actionCellRenderer(params) {
@@ -305,7 +351,7 @@ export default {
     };
 
     const handleAction = (action, rowData) => {
-      const user = user_privilege('Proxy');
+      const user = user_privilege("Proxy");
       switch (action) {
         case "delete":
       if (user && user !== 'viewer' && user !=='default') {
@@ -343,9 +389,15 @@ export default {
           }
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 

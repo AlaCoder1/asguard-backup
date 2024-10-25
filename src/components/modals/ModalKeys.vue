@@ -4,7 +4,7 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5">{{$t('KeyPair.createnewkey')}}</span>
+            <span class="text-h5">{{ $t("KeyPair.createnewkey") }}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -92,7 +92,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{$t('buttons.close')}}</span>
+              <span class="text-white pr-3 pl-3">{{
+                $t("buttons.close")
+              }}</span>
             </v-btn>
 
             <v-btn
@@ -106,7 +108,9 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{$t('buttons.create')}}</span>
+              <span class="text-white pr-3 pl-3">{{
+                $t("buttons.create")
+              }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -128,7 +132,7 @@
 import { useI18n } from "vue-i18n";
 import axios from "axios";
 import useValidate from "@vuelidate/core";
-import { toRefs, ref, watch, onMounted, reactive, computed,inject } from "vue";
+import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
 import { required, helpers, requiredIf } from "@vuelidate/validators";
 export default {
   props: {
@@ -249,7 +253,6 @@ export default {
       axios
         .post("/key_pairs/createPublicKey", payload)
         .then((response) => {
-          console.log("response", response);
           if (response.status == "201") {
             state.openModal = false;
             state.snackbar = true;
@@ -262,9 +265,15 @@ export default {
           }
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
@@ -285,7 +294,6 @@ export default {
           axios
             .post("/key_pairs/createPrivateKey", payload)
             .then((response) => {
-              console.log("response", response);
               if (response.status == "201") {
                 state.openModal = false;
                 state.snackbar = true;
@@ -298,9 +306,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else if (state.type.slug === "create") {
           payload = {
@@ -340,7 +354,7 @@ export default {
 
     const rules = computed(() => {
       return {
-        type: { required: helpers.withMessage(error, required)},
+        type: { required: helpers.withMessage(error, required) },
 
         keyName: {
           required: helpers.withMessage(error, required),

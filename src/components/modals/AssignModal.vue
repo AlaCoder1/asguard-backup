@@ -315,9 +315,15 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           } else if (state.typeV === "VXLAN") {
             let payload = {
@@ -336,9 +342,15 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           }
         } else if (modalMode.value === "create") {
@@ -364,9 +376,15 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           } else if (state.typeV === "VXLAN") {
             let payload = {
@@ -393,9 +411,15 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           }
         }

@@ -55,6 +55,7 @@
   },
 
   "errors": {
+    "errorServer":"Internal Server Error. Please try again later",
     "valueRequired": "Value is required",
     "invalidPassword": "There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
     "passwordConfirmation": "Your password does not match",

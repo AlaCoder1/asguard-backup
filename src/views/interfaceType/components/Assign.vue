@@ -295,6 +295,7 @@ export default {
 
       // let network_port = state.deletedRow.network_port.split(" ");
       // if (network_port[0] === "VLAN") {
+      console.log("state.deletedRow", state.deletedRow);
       axios
         .delete(`/vlan/deleteVlanInterface/${state.deletedRow.id}`)
         .then((response) => {
@@ -307,9 +308,15 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
     return {

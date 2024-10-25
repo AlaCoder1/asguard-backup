@@ -207,7 +207,7 @@ export default {
     closeModal() {
       this.isModalOpen = false;
     },
-    close(){
+    close() {
       this.isviewModal = false;
       this.viewModal = false;
     },
@@ -276,53 +276,59 @@ export default {
       const user = user_privilege();
       switch (action) {
         case "show":
-        if (user !=='viewer') {
-          this.rowEdit = rowData;
-          this.openModal();
-          this.modalMode = "update";
+          if (user !== "viewer") {
+            this.rowEdit = rowData;
+            this.openModal();
+            this.modalMode = "update";
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
+          }
 
           break;
         case "export":
-        if (user !=='viewer') {
-          let id = rowData.id;
-          let fileExtention = `${rowData.nom}_crl.crl`;
+          if (user !== "viewer") {
+            let id = rowData.id;
+            let fileExtention = `${rowData.nom}_crl.crl`;
 
-          const csrfToken = this.getCookie("csrftoken");
-          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+            const csrfToken = this.getCookie("csrftoken");
+            axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-          axios
-            .post(`/certificates/exportCertAuthListRev/${id}`)
-            .then((response) => {
-              const text = response.data.list_revocation;
-              const blob = new Blob([text], {
-                type: "application/x-x509-ca-cert",
+            axios
+              .post(`/certificates/exportCertAuthListRev/${id}`)
+              .then((response) => {
+                const text = response.data.list_revocation;
+                const blob = new Blob([text], {
+                  type: "application/x-x509-ca-cert",
+                });
+
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = fileExtention;
+
+                document.body.appendChild(a);
+                a.click();
+
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+              })
+              .catch((i) => {
+                if (i.response.status === 500) {
+                  this.snackbar = true;
+                  this.color = "red";
+                  this.textAlert = this.$t("errors.errorServer");
+                } else {
+                  this.snackbar = true;
+                  this.color = "red";
+                  this.textAlert = i.response.data.error;
+                }
               });
-
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.style.display = "none";
-              a.href = url;
-              a.download = fileExtention;
-
-              document.body.appendChild(a);
-              a.click();
-
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
-            })
-            .catch((i) => {
-              this.snackbar = true;
-              this.color = "red";
-              this.textAlert = i.response.data.error;
-            });
           } else {
             this.isviewModal = true;
             this.viewModal = true;
-            };
+          }
 
           break;
         default:

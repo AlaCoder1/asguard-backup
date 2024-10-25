@@ -1,5 +1,5 @@
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
-from backend.waf.constant_variables import PATH_MODESC, PATH_WAF_CONFIG
+from backend.waf.constant_variables import PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
 from utils.commands_utils import execute_command_without_arguments, write_file_from_system
 
@@ -147,10 +147,10 @@ server {{
 
         location / {{
             proxy_pass {application_protocol}://{application_value};
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
+            proxy_set_header Host \$host;
+            proxy_set_header X-Real-IP \$remote_addr;
+            proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto \$scheme;
         }}
 
 }}"""
@@ -164,7 +164,7 @@ server {{
  
     # Redirect HTTP to HTTPS
     location / {{
-        return 301 https://$host:{application_port}$request_uri;
+        return 301 https://\$host:{application_port}\$request_uri;
     }}
 }}
 

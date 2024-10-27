@@ -1,4 +1,19 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3 ml-3 mr-3">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -125,8 +140,8 @@
           </v-card>
 
           <div class="d-flex justify-end mt-5 mb-10">
-            <!-- <div class="mr-3 flex center">
-              <VButton
+            <div class="mr-3 flex center">
+              <!-- <VButton
                 rounded
                 outlined
                 color="#ffffff"
@@ -134,18 +149,18 @@
                 :label="$t('buttons.cancel')"
                 :isLarge="true"
                 @click="cancel"
-              />
+              /> -->
               <VButton
                 rounded
                 outlined
                 color="#213E9F"
                 label-color="#ffffff"
-                :label="$t('buttons.save')"
+                :label="$t('buttons.update')"
                 :isLarge="true"
                 class="ml-2"
                 @click="save"
               />
-            </div> -->
+            </div>
           </div>
         </div>
       </v-col>
@@ -159,6 +174,7 @@ import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
 import { onMounted, reactive, ref, computed } from "vue";
 import { inject } from "vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 import "ag-grid-community/styles/ag-grid.css"; // Core grid CSS, always needed
 import "ag-grid-community/styles/ag-theme-alpine.css"; // Optional theme CSS
@@ -176,10 +192,14 @@ export default {
   },
   setup(props) {
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const { t } = useI18n();
     const overlayTemplate = ref("");
     const state = reactive({
       nombrePageRules: null,
+      isviewModal: false,
+      viewModal: false,
       page: 1,
       loading: false,
       isLoadingDialogue: false,
@@ -198,24 +218,33 @@ export default {
     const status = computed(() => {
       return t("squid.status");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Suricata') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("IDS/IPS")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
 
     const columnRules = ref([
-      {
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
-        rowDrag: true,
-        editable: false,
-      },
-      {
-        headerCheckboxSelection: false,
-        checkboxSelection: true,
-        editable: false,
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
-        sortable: false,
-      },
+      // {
+      //   width: 50,
+      //   minWidth: 50,
+      //   maxWidth: 50,
+      //   rowDrag: true,
+      //   editable: false,
+      // },
+      // {
+      //   headerCheckboxSelection: false,
+      //   checkboxSelection: true,
+      //   editable: false,
+      //   width: 50,
+      //   minWidth: 50,
+      //   maxWidth: 50,
+      //   sortable: false,
+      // },
       {
         headerName: "id",
         field: "id",
@@ -381,14 +410,26 @@ export default {
       flex: 1,
       suppressMovable: true,
     };
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const onFilterTextBoxChanged = () => {
       gridApi.value.setQuickFilter(
         document.getElementById("filter-text-box").value
       );
     };
     const handleAction = (action, rowData) => {
-      rowDataToDelete.value = rowData;
-      deleteDialog.value = true;
+      const user = user_privilege('Suricata');
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("IDS/IPS")) {
+        rowDataToDelete.value = rowData;
+        deleteDialog.value = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
     const addRow = () => {
       const newRow = {
@@ -494,18 +535,29 @@ export default {
             text: t("suricata.failedToUpdate"),
           });
         }
-      } catch (error) {
+      } catch (i) {
         state.loading = false;
         state.isLoadingDialogue = false;
-        state.snackbar = true;
-        showMessage({
-          color: "error",
-          text: error,
-        });
+
+        if (i.response.status === 500) {
+          state.snackbar = true;
+          showMessage({
+            color: "error",
+            text: t("errors.errorServer"),
+          });
+        } else {
+          state.snackbar = true;
+          showMessage({
+            color: "error",
+            text: i,
+          });
+        }
       }
     };
 
     const save = async () => {
+      const user = user_privilege('Suricata');
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("IDS/IPS")) {
       let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
       const dataToSend = modifiedRows.map((row) => {
         return {
@@ -522,39 +574,52 @@ export default {
         };
       });
 
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      try {
-        const response = await axios.post(
-          "/ids-ips/saveRulesSuricata/" + props.configInfo,
-          dataToSend
-        );
-        if (
-          response.status === 200 &&
-          modifiedRows.length > 0 &&
-          response.data.message.length > 0
-        ) {
-          // state.messages=response.data.message
-          modifiedRows.forEach((row) => (row.isModified = false));
-          response.data.message.forEach(async (rule) => {
-            if (rule.status === 200) {
-              showMessage({
-                color: "success",
-                text: t("suricata.rulesavedSuccessfully"),
-              });
-            } else {
-              showMessage({
-                color: "error",
-                text: t("suricata.failed"),
-              });
-            }
-          });
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        try {
+          const response = await axios.post(
+            "/ids-ips/saveRulesSuricata/" + props.configInfo,
+            dataToSend
+          );
+          if (
+            response.status === 200 &&
+            modifiedRows.length > 0 &&
+            response.data.message.length > 0
+          ) {
+            // state.messages=response.data.message
+            modifiedRows.forEach((row) => (row.isModified = false));
+            response.data.message.forEach(async (rule) => {
+              if (rule.status === 200) {
+                showMessage({
+                  color: "success",
+                  text: t("suricata.rulesavedSuccessfully"),
+                });
+              } else {
+                showMessage({
+                  color: "error",
+                  text: t("suricata.failed"),
+                });
+              }
+            });
+          }
+        } catch (i) {
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            showMessage({
+              color: "error",
+              text: t("errors.errorServer"),
+            });
+          } else {
+            state.snackbar = true;
+            showMessage({
+              color: "error",
+              text: t("suricata.failed"),
+            });
+          }
         }
-      } catch (error) {
-        showMessage({
-          color: "error",
-          text: t("suricata.failed"),
-        });
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
       }
     };
 
@@ -639,11 +704,20 @@ export default {
                 });
               }
             })
-            .catch((error) => {
-              showMessage({
-                color: "error",
-                text: t("suricata.failedToDeleteRule"),
-              });
+            .catch((i) => {
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                showMessage({
+                  color: "error",
+                  text: t("errors.errorServer"),
+                });
+              } else {
+                state.snackbar = true;
+                showMessage({
+                  color: "error",
+                  text: t("suricata.failedToDeleteRule"),
+                });
+              }
             });
         } else {
           const index = rowDataRules.value.indexOf(rowData);
@@ -701,6 +775,11 @@ export default {
         });
     };
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       getData();
 
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
@@ -733,6 +812,7 @@ export default {
       columnRules,
       rowDataRules,
       defaultColDef,
+      close,
       rowGroupPanelShow,
       emitter,
       currentIndex,
@@ -758,6 +838,7 @@ export default {
       cancelDelete,
       confirmDelete,
       showMessage,
+      overlayMessage,
       updateIndex,
       reloadData,
       getData,
@@ -766,4 +847,9 @@ export default {
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+</style>

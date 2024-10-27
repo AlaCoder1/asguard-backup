@@ -1,4 +1,19 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -288,6 +303,7 @@ import VButton from "@/components/VButton.vue";
 import { reactive, onMounted, ref, inject, computed } from "vue";
 import useValidate from "@vuelidate/core";
 import { required, helpers, requiredIf, email } from "@vuelidate/validators";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "ConfigServerDhcp4Component",
@@ -296,18 +312,20 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const emitter = inject("emitter");
+
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       loading: false,
       isLoadingDialogue: false,
       id: null,
       //
       engineList: ["On", "Off", "Detection only"],
       requestBodyList: ["ProcessPartial", "Reject"],
-      responseBodyList: [
-        "ProcessPartial",
-        "Reject",
-      ],
+      responseBodyList: ["ProcessPartial", "Reject"],
       bodyMimeTypeList: ["text/*", "text/html", "text/xml", "text/plain"],
       //
 
@@ -370,27 +388,52 @@ export default {
       return cookieValue;
     };
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
     const cancel = () => {
-      state.id = null;
-      state.rule_engine = null;
-      state.access_request = false;
-      state.xml_request = false;
-      state.json_request = false;
-      state.maximum_request = null;
-      state.size_file = null;
-      state.limit_action = null;
-      state.max_parsing = null;
-      state.max_number = null;
-      state.pcre_match_limit = null;
-      state.pcre_limit_recursion = null;
-      state.access_bodies = false;
-      state.body_mimetype = null;
-      state.response_body_limit = "";
-      state.response_limit_action = null;
+      const user = user_privilege('Waf');
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Nat") ) {
+        state.id = null;
+        state.rule_engine = null;
+        state.access_request = false;
+        state.xml_request = false;
+        state.json_request = false;
+        state.maximum_request = null;
+        state.size_file = null;
+        state.limit_action = null;
+        state.max_parsing = null;
+        state.max_number = null;
+        state.pcre_match_limit = null;
+        state.pcre_limit_recursion = null;
+        state.access_bodies = false;
+        state.body_mimetype = null;
+        state.response_body_limit = "";
+        state.response_limit_action = null;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
     const champonlyNumber = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
     });
+    const overlayMessage = computed(() => {
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return `${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("WAF")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } else {
+    return t("profil.NoPermission");
+  }
+});
     const champ = computed(() => {
       return t("errors.valueRequired");
     });
@@ -517,56 +560,76 @@ export default {
     });
 
     const v$ = useValidate(rules, state);
-
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/waf/restartNginx");
+    };
     const submitForm = async () => {
+      const user = user_privilege('Waf');
+      current_user.value=user
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-      if (result) {
-        let payload = {
-          rule_engine_initialization: state.rule_engine,
-          access_request_bodies: state.access_request,
-          xml_request_body_parser: state.xml_request,
-          json_request_body_parser: state.json_request,
-          maximum_request_body_size: state.maximum_request,
-          request_body_size_files_excluded: state.size_file,
-          request_body_limit_action: state.limit_action,
-          maximum_parsing_depth_json: state.max_parsing,
-          maximum_number_args_request: state.max_number,
-          pcre_match_limit: state.pcre_match_limit,
-          pcre_match_limit_recursion: state.pcre_limit_recursion,
-          response_body_access: state.access_bodies,
-          response_body_mimetype: state.body_mimetype,
-          response_body_limit: state.response_body_limit,
-          response_body_limit_action: state.response_limit_action,
-        };
-        state.loading = true;
-        state.isLoadingDialogue = true;
-        axios
-          .put(`/waf/updateConfigWaf/${state.id}`, payload)
-          .then((response) => {
-            if (response.status == 200) {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("WAF") ) {
+        if (result) {
+          let payload = {
+            rule_engine_initialization: state.rule_engine,
+            access_request_bodies: state.access_request,
+            xml_request_body_parser: state.xml_request,
+            json_request_body_parser: state.json_request,
+            maximum_request_body_size: state.maximum_request,
+            request_body_size_files_excluded: state.size_file,
+            request_body_limit_action: state.limit_action,
+            maximum_parsing_depth_json: state.max_parsing,
+            maximum_number_args_request: state.max_number,
+            pcre_match_limit: state.pcre_match_limit,
+            pcre_match_limit_recursion: state.pcre_limit_recursion,
+            response_body_access: state.access_bodies,
+            response_body_mimetype: state.body_mimetype,
+            response_body_limit: state.response_body_limit,
+            response_body_limit_action: state.response_limit_action,
+          };
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          axios
+            .put(`/waf/updateConfigWaf/${state.id}`, payload)
+            .then((response) => {
+              if (response.status == 200) {
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
+                setTimeout(() => {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                }, 4000);
+                setTimeout(() => {
+                  location.reload();
+                }, 4000);
+              }
+            })
+            .catch((i) => {
               state.loading = false;
               state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              setTimeout(() => {
-                state.snackbar = false;
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            state.snackbar = true;
-            state.color = "error";
-            state.textAlert = i.response.data.error;
-          });
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
+            });
+        } else {
+          console.log("error", v$.value);
+        }
       } else {
-        console.log("error", v$.value);
+        state.isviewModal = true;
+        state.viewModal = true;
       }
     };
     return {
@@ -576,6 +639,8 @@ export default {
       cancel,
       state,
       emitter,
+      overlayMessage,
+      close,
     };
   },
 };
@@ -594,11 +659,18 @@ export default {
   font-weight: 300;
   line-height: normal;
 }
+
 /* CSS to style the text */
 .text-xs {
-  font-size: 12px; /* Example font size for small text */
+  font-size: 12px;
+  /* Example font size for small text */
 }
+
 .container {
   height: 50px;
+}
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 </style>

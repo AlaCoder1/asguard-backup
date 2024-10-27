@@ -18,6 +18,7 @@ from utils.errors_utils import CommandExecutionError
 
 # Constants
 CONSTANT_ROUTE = _("Route")
+CONSTANT_INTERFACE = _("Interface")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
@@ -27,6 +28,7 @@ ERROR_MESSAGES_CREATING = _("Error in creating")
 ERROR_MESSAGES_DELETING = _("Error in deleting")
 ERROR_MESSAGES_UPDATING = _("Error in updating")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
+ERROR_MESSAGES_USED_ITEM = _("Unable to use this ")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -93,7 +95,8 @@ def create_routing(request):
     """Creating a new Route and adding it to the database"""
     try:
         data = request.data
-        gateway = data.get("gateway")
+        gateway = data.get("gateway", "")
+        gateway_data = data.get("gateway", "")
 
         # Create a new Gateway and GatewayInterface
         if data.get("gateway_create"):
@@ -101,24 +104,30 @@ def create_routing(request):
             if result_gateway["gateway"]:
                 gateway = result_gateway["gateway"]
                 data["gateway"] = gateway
+            elif result_gateway["error"] == "":
+                return JsonResponse({"error": f"{ERROR_MESSAGES_USED_ITEM} {CONSTANT_INTERFACE}"}, status=400)
             else:
                 return JsonResponse({"error": result_gateway["error"]}, status=400)
         
-        gateway_instance = Gateway.objects.get(id=gateway)
-        gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance)
-        gateway_address = gateway_instance.gwaddress
-        interface_ifname = gateway_interface_instance.interface.ifname
-        routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
-                          gateway_interface_instance.metric)
-        
         serializer_routing = RoutingSerializer(data=data)
         if serializer_routing.is_valid():
+            gateway_instance = Gateway.objects.get(id=gateway)
+            gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance)
+            gateway_address = gateway_instance.gwaddress
+            interface_ifname = gateway_interface_instance.interface.ifname
+            routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
+                              gateway_interface_instance.metric)
             serializer_routing.save()
             return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_routing.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
+        if data.get("gateway_create"):
+            gwname = f'static_gw_{gateway_data["gateway_address"]}'
+            if len(Gateway.objects.filter(gwname=gwname, gwaddress=gateway_data["gateway_address"])) == 1:
+                gateway = Gateway.objects.get(gwname=gwname, gwaddress=gateway_data["gateway_address"])
+                gateway.delete()
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ROUTE}"}, status=400)
 
 

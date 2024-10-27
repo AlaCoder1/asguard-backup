@@ -1,4 +1,19 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
     <v-row>
       <v-col cols="12">
@@ -102,6 +117,7 @@ import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalAddRule from "@/components/modals/ModalAddRule.vue";
 import CertStatusRenderVue from "../agGridCustomRender/CertStatusRenderVue.vue";
 import CertAllowStatus from "../agGridCustomRender/CertAllowStatus.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   components: {
@@ -114,9 +130,13 @@ export default {
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const overlayTemplate = ref("");
     const state = reactive({
       deleteDialogRule: false,
+      isviewModal: false,
+      viewModal: false,
       deletedRow: null,
       modalDataRule: {},
       isOpenModal: null,
@@ -142,6 +162,15 @@ export default {
     const ruleName = computed(() => {
       return t("sdwan.ruleName");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege() 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("Proxy")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const routageType = computed(() => {
       return t("squid.routageType");
     });
@@ -287,18 +316,33 @@ export default {
       return eGui;
     }
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const handleAction = (action, rowData) => {
+      const user = user_privilege("Proxy");
       switch (action) {
         case "edit":
-          state.modalDataRule = {};
-          state.modalModeRule = "edit";
-          state.isModalOpenRule = true;
-          state.editRowRule = rowData;
-
+          if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
+            state.modalDataRule = {};
+            state.modalModeRule = "edit";
+            state.isModalOpenRule = true;
+            state.editRowRule = rowData;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "delete":
-          state.deleteDialogRule = true;
-          state.deletedRow = rowData;
+          if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
+            state.deleteDialogRule = true;
+            state.deletedRow = rowData;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         default:
           break;
@@ -306,9 +350,15 @@ export default {
     };
 
     const openModalRule = () => {
-      state.modalDataRule = {};
-      state.modalModeRule = "create";
-      state.isModalOpenRule = true;
+      const user = user_privilege('Proxy');
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
+        state.modalDataRule = {};
+        state.modalModeRule = "create";
+        state.isModalOpenRule = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     onMounted(() => {
@@ -319,13 +369,16 @@ export default {
         data-name="Unbox"
       />
     </svg></span>`;
-
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       emitter.on("closeAddRuleModal", () => {
         state.isModalOpenRule = false;
         state.modalDataRule = {};
         state.modalModeRule = "";
-        state.editRowRule = {}
-        
+        state.editRowRule = {};
       });
 
       const proxyRuleAttribute =
@@ -386,16 +439,24 @@ export default {
           }
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
     return {
       state,
+      close,
       cancelDelete,
       confirmDelete,
       textAlert,
+      overlayMessage,
       columnRules,
       gridColumnApi,
       rowDataRules,
@@ -416,4 +477,9 @@ export default {
   color: red;
   font-size: 0.85em;
 }
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+
 </style>

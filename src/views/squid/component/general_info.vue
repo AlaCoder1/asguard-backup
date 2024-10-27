@@ -1,4 +1,19 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F"  :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -81,9 +96,9 @@
       <squid_auth />
       <v-dialog v-model="state.dialogServer" max-width="500px">
         <v-card>
-          <v-card-title class="headline"
-            >{{ $t(state.statusServer) }}</v-card-title
-          >
+          <v-card-title class="headline">{{
+            $t(state.statusServer)
+          }}</v-card-title>
           <v-card-text
             >{{ $t("squid.etesVouSur") }} {{ $t(state.statusServer) }}
             {{ $t("squid.thisRule") }}</v-card-text
@@ -118,7 +133,7 @@
 
 <script>
 import { useI18n } from "vue-i18n";
-import { reactive, computed, onMounted } from "vue";
+import { reactive, computed, onMounted ,ref} from "vue";
 import axios from "axios";
 import squid_auth from "./squid_auth.vue";
 import useValidate from "@vuelidate/core";
@@ -127,6 +142,7 @@ import { AgGridVue } from "ag-grid-vue3";
 import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   components: {
@@ -136,8 +152,12 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const state = reactive({
       dialogServer: false,
+      isviewModal: false,
+      viewModal: false,
       statusServer: null,
       snackbar: false,
       color: "",
@@ -157,7 +177,15 @@ export default {
     const error = computed(() => {
       return t("errors.valueRequired");
     });
-
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege() 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("Proxy")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const rules = computed(() => {
       return {
         proxyPort: { required: helpers.withMessage(error, required) },
@@ -167,41 +195,54 @@ export default {
     const v$ = useValidate(rules, state);
 
     const saveGeneralInfo = async () => {
-      const result = await v$.value.$validate();
+      const user = user_privilege('Proxy');
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("Proxy")) {
+        const result = await v$.value.$validate();
 
-      if (result) {
-        const csrfToken = getCookie("csrftoken");
-        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-        state.loading = true;
-        state.isLoadingDialogue = true;
+        if (result) {
+          const csrfToken = getCookie("csrftoken");
+          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+          state.loading = true;
+          state.isLoadingDialogue = true;
 
-        let payload = {
-          port: state.proxyPort,
-        };
+          let payload = {
+            port: state.proxyPort,
+          };
 
-        axios
-          .put("/proxy/update_generale_info", payload)
-          .then((response) => {
-            if (response.status == "200") {
-              state.snackbar = true;
+          axios
+            .put("/proxy/update_generale_info", payload)
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
               state.loading = false;
               state.isLoadingDialogue = false;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            }
-          })
-          .catch((i) => {
-            state.snackbar = true;
-            state.loading = false;
-            state.isLoadingDialogue = false;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
-          });
+
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
+            });
+        } else {
+          console.log("error", v$.value);
+        }
       } else {
-        console.log("error", v$.value);
+        state.isviewModal = true;
+        state.viewModal = true;
       }
     };
     const getCookie = (name) => {
@@ -241,18 +282,30 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          console.log("i.response.data.msg", i.response);
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.msg;
           state.loading = false;
           state.isLoadingDialogue = false;
+
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.msg;
+          }
         });
     };
 
     const startStopRestartServer = (item) => {
-      state.dialogServer = true;
-      state.statusServer = item;
+      const user = user_privilege('Proxy');
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("Proxy")) {
+        state.dialogServer = true;
+        state.statusServer = item;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
     const populate = () => {
       const generalInfoAttribute =
@@ -264,10 +317,22 @@ export default {
     };
     onMounted(() => {
       populate();
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
     });
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
 
     return {
       v$,
+      close,
+      overlayMessage,
       state,
       saveGeneralInfo,
       startStopRestartServer,
@@ -277,6 +342,10 @@ export default {
 };
 </script>
 <style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
 .actionBtn {
   justify-content: end;
 }

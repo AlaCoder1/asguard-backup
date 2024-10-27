@@ -1,5 +1,74 @@
 <template>
+  <v-dialog v-model="deleteDialog" max-width="500px">
+    <v-card>
+      <v-card-title class="headline">{{
+        $t("delete.DeleteConfirmation")
+      }}</v-card-title>
+      <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="cancelDelete">{{
+          $t("buttons.cancel")
+        }}</v-btn>
+        <v-btn color="blue darken-1" text @click="confirmDelete">{{
+          $t("buttons.delete")
+        }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
+  <v-overlay v-model="viewModal">
+    <v-dialog v-model="isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text>
+          {{ $t("profil.NoPermission") }}
+          <br />
+          {{ $t("profil.ContactAdmin") }}
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-card>
+    <v-overlay v-model="loading">
+      <v-dialog
+        v-model="isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
+        <v-card color="#193286">
+          <v-card-text>
+            {{ $t("sdwan.pleaseWait") }}
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
+          </v-card-text>
+        </v-card>
+      </v-dialog>
+    </v-overlay>
+
     <v-form @submit.prevent="handleSubmit(onSubmit)">
       <v-row class="fill-height ml-3">
         <v-col cols="12" sm="6">
@@ -247,7 +316,32 @@
                     :items="allStaticGatewaysAddresses"
                     :rules="[(v) => !!v || $t('interface.IPV4GatewayRequired')]"
                     :no-data-text="$t('certificat.certificatlist')"
-                  ></v-select>
+                    label="Select Item"
+                  >
+                    <template v-slot:item="{ props, index, item }">
+                      <v-list-item v-bind="props">
+                        <template v-slot:prepend>
+                          <v-text-item :v-html="item"> </v-text-item>
+                        </template>
+                        <template v-slot:append>
+                          <v-btn
+                            v-if="item.title != 'Auto Detect'"
+                            icon
+                            color="red"
+                            class="mr-3 d-flex align-center text-center"
+                            style="width: 26px; height: 26px"
+                            @click.stop="deleteGateway(item, index)"
+                          >
+                            <v-icon
+                              style="width: 16px; height: 16px; font-size: 16px"
+                              small
+                              >mdi-delete</v-icon
+                            >
+                          </v-btn>
+                        </template>
+                      </v-list-item>
+                    </template>
+                  </v-select>
                 </v-col>
               </v-row>
             </div>
@@ -385,6 +479,12 @@
                 <p class="error-feedback mb-5 px-0 mx-0" v-if="!isValidAddress">
                   {{ messageValidAddress }}
                 </p>
+                <p
+                  class="error-feedback mb-5 px-0 mx-0"
+                  v-if="messageExistGateway"
+                >
+                  {{ messageExistGateway }}
+                </p>
                 <v-row>
                   <v-text-field
                     label="Description"
@@ -453,6 +553,7 @@ import ConfigDHCPv4 from "./configDHCP/ConfigDHCPv4.vue";
 import AdvancedConfigDHCPv4 from "./configDHCP/AdvancedConfigDHCPv4.vue";
 import VButton from "../../../components/VButton.vue";
 import netmaskItems from "../../../constants/netmask.js";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "IfNameComponent",
@@ -467,6 +568,13 @@ export default {
   },
   data() {
     return {
+      messageExistGateway: "",
+      itemData: [],
+      deleteDialog: false,
+      isviewModal: false,
+      viewModal: false,
+      loading: false,
+      isLoadingDialogue: false,
       textAlert: "",
       color: "",
       snackbar: false,
@@ -565,7 +673,7 @@ export default {
     },
     isValidAddress() {
       const ipRegex =
-        /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
       // Validate the input value against the regex
       if (!ipRegex.test(this.gateway.gwaddress)) {
@@ -575,6 +683,46 @@ export default {
     },
   },
   methods: {
+    cancelDelete() {
+      this.deleteDialog = false;
+    },
+    deleteGateway(item, index) {
+      this.itemData = [index, item.value];
+      this.deleteDialog = true;
+    },
+    confirmDelete(item, index) {
+      console.log("itemData", this.itemData);
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      // axios
+      //   .delete(`/gateway/deleteGateway/${item}`)
+      //   .then((response) => {
+      //     state.snackbar = true;
+      //     state.color = "success";
+      //     state.textAlert = response.data.msg;
+
+      //     setTimeout(() => {
+      //       location.reload();
+      //     }, 1000);
+      //   })
+      //   .catch((i) => {
+      //     if (i.response.status === 500) {
+      //       state.snackbar = true;
+      //       state.color = "red";
+      //       state.textAlert = t("errors.errorServer");
+      //     } else {
+      //       state.snackbar = true;
+      //       state.color = "red";
+      //       state.textAlert = i.response.data.error;
+      //     }
+      //   });
+    },
+
+    close() {
+      this.isviewModal = false;
+      this.viewModal = false;
+    },
     validateRange(value) {
       const num = parseFloat(value); // Parse the value to a number
 
@@ -644,7 +792,11 @@ export default {
         this.typeDHCP4 = "Base";
       }
       // todo: add network refactoring && optimization needed
-      if (this.setuptypeip4 === "static") {
+      if (
+        this.setuptypeip4 === "static" &&
+        this.value_setup_Ipv4?.ip_address4 &&
+        this.value_setup_Ipv4?.netmask4
+      ) {
         const params = {
           name_interface: this.activeTab,
           device: this.device,
@@ -666,25 +818,34 @@ export default {
         };
         console.log("params", params);
 
+        this.loading = true;
+        this.isLoadingDialogue = true;
+
         axios
           .put("/network/conf/" + this.activeTab, params)
-          .then(
-            (response) => {
-              this.message = response.data.message;
-              this.showAlert = true;
-              setTimeout(() => {
-                this.showAlert = false;
-                location.reload();
-              }, 1000);
-            },
-            (error) => {
-              console.log(error);
+          .then((response) => {
+            this.loading = false;
+            this.isLoadingDialogue = false;
+            this.message = response.data.message;
+            this.showAlert = true;
+            setTimeout(() => {
+              this.showAlert = false;
+              location.reload();
+            }, 1000);
+          })
+          .catch((i) => {
+            this.loading = false;
+            this.isLoadingDialogue = false;
+
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.message;
             }
-          )
-          .catch((e) => {
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = e.response.data.message;
           });
       }
       if (this.setuptypeip4 === "dhcp") {
@@ -722,25 +883,33 @@ export default {
           },
         };
 
+        this.loading = true;
+        this.isLoadingDialogue = true;
         axios
           .put("/network/conf/" + this.activeTab, params)
-          .then(
-            (response) => {
-              this.message = response.data.message;
-              this.showAlert = true;
-              setTimeout(() => {
-                this.showAlert = false;
-                location.reload();
-              }, 1000);
-            },
-            (error) => {
-              console.log(error);
+          .then((response) => {
+            this.loading = false;
+            this.isLoadingDialogue = false;
+            this.message = response.data.message;
+            this.showAlert = true;
+            setTimeout(() => {
+              this.showAlert = false;
+              location.reload();
+            }, 1000);
+          })
+          .catch((i) => {
+            this.loading = false;
+            this.isLoadingDialogue = false;
+
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.message;
             }
-          )
-          .catch((e) => {
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = e.response.data.message;
           });
       }
     },
@@ -748,39 +917,64 @@ export default {
       // todo: reset form values to initial values
     },
     openGatewayDialog() {
-      this.showGatewayDialog = true;
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        this.isviewModal = true;
+        this.viewModal = true;
+      } else {
+        this.showGatewayDialog = true;
+      }
     },
     addGateway() {
-      if (!this.isNameGateway) {
-        this.messageNameGateway = this.$t("errors.valueRequired");
-        return;
-      }
-      if (!this.isGatewayAddress) {
-        this.messageGatewayAddress = this.$t("errors.valueRequired");
-        return;
-      }
-      if (!this.isValidAddress) {
-        this.messageValidAddress = this.$t("champs.validAddress");
-        return;
-      }
+      console.log("this.allStaticGateways", this.allStaticGateways);
+      console.log("gateway.gwaddress", this.gateway.gwaddress);
 
-      const params = {
-        gwname: this.gateway.gwname,
-        gwaddress: this.gateway.gwaddress,
-        description: this.gateway.description,
-        default_aux: this.gateway.default_aux,
-        far_aux: this.gateway.far_aux,
-        multiwan_aux: this.gateway.multiwan_aux,
-      };
-      this.allStaticGateways.unshift(params);
+      const user = user_privilege();
+      if (user === "viewer") {
+        this.isviewModal = true;
+        this.viewModal = true;
+      } else {
+        if (!this.isNameGateway) {
+          this.messageNameGateway = this.$t("errors.valueRequired");
+          return;
+        }
+        if (!this.isGatewayAddress) {
+          this.messageGatewayAddress = this.$t("errors.valueRequired");
+          return;
+        }
+        if (!this.isValidAddress) {
+          this.messageValidAddress = this.$t("champs.validAddress");
+          return;
+        }
+        let mappedGateways = this.allStaticGateways.map(
+          (gateway) => gateway.gwaddress
+        );
 
-      const csrfToken = this.getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        if (mappedGateways.includes(this.gateway.gwaddress)) {
+          this.messageExistGateway = this.$t("champs.existGateway");
+          setTimeout(() => {
+            this.messageExistGateway = "";
+          }, 1000);
+          return;
+        }
 
-      axios
-        .post("/gateway/addStaticGateway", params)
-        .then(
-          (response) => {
+        const params = {
+          gwname: this.gateway.gwname,
+          gwaddress: this.gateway.gwaddress,
+          description: this.gateway.description,
+          default_aux: this.gateway.default_aux,
+          far_aux: this.gateway.far_aux,
+          multiwan_aux: this.gateway.multiwan_aux,
+        };
+        this.allStaticGateways.unshift(params);
+
+        const csrfToken = this.getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+        axios
+          .post("/gateway/addStaticGateway", params)
+          .then((response) => {
             console.log("response***", response);
             if (response.status == "200") {
               this.showGatewayDialog = false;
@@ -803,30 +997,40 @@ export default {
             } else {
               this.showGatewayDialog = true;
             }
-          },
-          (error) => {
-            console.log(error);
-          }
-        )
-        .catch((e) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = e.response.data.msg;
-        });
+          })
+          .catch((i) => {
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.message;
+            }
+          });
+      }
     },
     cancelGateway() {
-      this.showGatewayDialog = false;
-      this.gateway = {
-        gwname: "",
-        gwaddress: "",
-        description: "",
-        default_aux: false,
-        far_aux: false,
-        multiwan_aux: false,
-      };
-      this.messageGatewayAddress = "";
-      this.messageNameGateway = "";
-      this.messageValidAddress = "";
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        this.isviewModal = true;
+        this.viewModal = true;
+      } else {
+        this.showGatewayDialog = false;
+        this.gateway = {
+          gwname: "",
+          gwaddress: "",
+          description: "",
+          default_aux: false,
+          far_aux: false,
+          multiwan_aux: false,
+        };
+        this.messageGatewayAddress = "";
+        this.messageNameGateway = "";
+        this.messageValidAddress = "";
+      }
     },
     updateGateway() {
       const params = {
@@ -842,26 +1046,34 @@ export default {
 
       axios
         .put("/gateway/updateStaticGateway", params)
-        .then(
-          (response) => {
-            this.showAlert = true;
-            console.log(response);
-            setTimeout(() => {
-              this.showAlert = false;
-            }, 3000);
-          },
-          (error) => {
-            console.log(error);
+        .then((response) => {
+          this.showAlert = true;
+          console.log(response);
+          setTimeout(() => {
+            this.showAlert = false;
+          }, 3000);
+        })
+        .catch((i) => {
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.message;
           }
-        )
-        .catch((e) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = e.response.data.msg;
         });
     },
     onSubmit() {
-      this.addNetwork();
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        this.isviewModal = true;
+        this.viewModal = true;
+      } else {
+        this.addNetwork();
+      }
     },
     handleSubmit() {
       this.onSubmit();
@@ -920,14 +1132,16 @@ export default {
     this.mssv = this.IPV4Config.genericConfig.mssv;
     this.speed_duplex = this.IPV4Config.genericConfig.speed_duplex;
 
-    this.setuptypeip4 = this.IPV4Config.IPV4Config.typeip4.toLowerCase();
+    this.setuptypeip4 = this.IPV4Config
+      ? this.IPV4Config?.IPV4Config?.typeip4?.toLowerCase()
+      : "";
     this.value_setup_Ipv4.ip_address4 = this.IPV4Config.IPV4Config.ip_address;
     this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 
     this.name_interface = this.IPV4Config.interface.name_interface;
-    this.value_setup_Ipv4.gateway4.value =
-      this.IPV4Config.IPV4Config.addrgw ?? "Auto Detect";
-
+    this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw
+      ? this.IPV4Config.IPV4Config.addrgw
+      : "Auto Detect";
     this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
     this.interface.alias_add = this.IPV4Config.IPV4Config.alias_add;
     this.interface.alias_mask = this.IPV4Config.IPV4Config.alias_mask;
@@ -1011,6 +1225,7 @@ export default {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
+
 .gateway-dialog {
   position: fixed;
   overflow-x: unset;

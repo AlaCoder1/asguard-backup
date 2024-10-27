@@ -1,23 +1,70 @@
 <template>
+<v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="../../assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text v-html="overlayMessage">
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    :label="$t('buttons.close')"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <v-container class="axe-media-print-hide" fluid>
     <div class="mt-6" style="display: flex; flex-direction: column">
       <h4>{{ $t("ztna.edgeRelaysPolicies") }}</h4>
       <v-divider></v-divider>
     </div>
     <div style="overflow: hidden; flex-grow: 1">
-      <ag-grid-vue id="grid-wrapperRouter" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-        @grid-ready="onGridReadyRouter" :columnDefs="columnsALLRouter" :rowData="rowDataRouter.value"
-        :gridOptions="gridOptions" :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
+      <ag-grid-vue
+        id="grid-wrapperRouter"
+        domLayout="autoHeight"
+        class="ag-theme-alpine mt-3"
+        style="width: 100%"
+        @grid-ready="onGridReadyRouter"
+        :columnDefs="columnsALLRouter"
+        :rowData="rowDataRouter.value"
+        :gridOptions="gridOptions"
+        :overlayNoRowsTemplate="overlayTemplate"
+        :localeText="paginationLocalization"
+      />
     </div>
     <div class="d-flex justify-end mt-3">
-      <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="openModalRouter">
+      <v-btn
+        class="add-button"
+        :rounded="true"
+        color="indigo-darken-3"
+        :disabled="!tokenStatus"
+        @click="openModalRouter"
+      >
         {{ $t("ztna.addRelaysPolicy") }}
       </v-btn>
     </div>
     <serviceAgGrid />
     <policyAgGrid />
-    <modal-router-policy :isOpen="state.isModalOpenRouter" :selectedId="state.selectedId" :editRow="state.editRow"
-      :modalMode="state.modalMode" />
+    <modal-router-policy
+      :isOpen="state.isModalOpenRouter"
+      :selectedId="state.selectedId"
+      :editRow="state.editRow"
+      :modalMode="state.modalMode"
+    />
     <!-- <ModalUpdateRouterP
       :isOpen="state.isModalUpdateOpen"
       :selectedId="state.selectedId"
@@ -26,18 +73,28 @@
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-          }}</v-card-title>
+        }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-            }}</v-btn>
-          <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
+          }}</v-btn>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="confirmDelete(state.selectedId)"
+            >{{ $t("buttons.delete") }}</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-container>
@@ -55,6 +112,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "HomeComponent",
@@ -65,11 +124,18 @@ export default {
     policyAgGrid,
     ModalRouterPolicy,
     AgGridVue,
+    VButton,
   },
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
+    const tokenStatus = ref('')
+
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       modalData: {},
       modalMode: "create",
       isModalOpen: false,
@@ -107,6 +173,15 @@ export default {
     const name = computed(() => {
       return t("ztna.name");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Ztna') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("ZTNA")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const semantic = computed(() => {
       return t("ztna.semantic");
     });
@@ -205,7 +280,6 @@ export default {
       return eGui;
     }
 
-
     function formatedcreatedAt(data) {
       const resultMessage = formatDateTime(data.data.date_creation);
       let eGui = document.createElement("div");
@@ -219,7 +293,17 @@ export default {
     };
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
-      eGui.innerHTML = `
+      if (!tokenStatus.value) {
+        eGui.innerHTML = `
+        <button class="action-button edit" disabled>
+          <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+        <button class="action-button delete" disabled>
+          <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+        </button>
+      `;
+      } else {
+        eGui.innerHTML = `
         <button class="action-button edit" data-action="edit">
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
@@ -227,6 +311,7 @@ export default {
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
       `;
+      }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
@@ -236,46 +321,36 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData) => {
-      let token = document.getElementById("app").getAttribute("token");
+      const user = user_privilege("Ztna");
 
       switch (action) {
         case "edit":
-if (token && token !== "null") {
-  state.modalMode = "edit";
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
+          state.modalMode = "edit";
           state.isModalOpenRouter = true;
           state.editRow = rowData;
           state.selectedId = rowData.id;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
-
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
 
           break;
         case "delete":
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
           OpenDelete(rowData.id);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         default:
           break;
       }
     };
     async function OpenDelete(itemId) {
-      let token = document.getElementById("app").getAttribute("token");
-
-if (token && token !== "null") {
-  state.selectedId = itemId;
-  state.deleteDialog = true;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
-     
+      state.selectedId = itemId;
+      state.deleteDialog = true;
     }
 
     const cancelDelete = () => {
@@ -304,13 +379,27 @@ else {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
+
+      let token = document.getElementById("app").getAttribute("token");
+
       let router_policiesString = document
         .getElementById("app")
         .getAttribute("router_policies");
@@ -320,7 +409,11 @@ else {
       console.log("router_policiesObject", router_policiesObject);
 
       rowDataRouter.value = router_policiesObject ? router_policiesObject : [];
-
+      if (token && token !== "null") {
+        tokenStatus.value = true;
+      } else {
+        tokenStatus.value = false;
+      }
       if (gridApiRouter.value) {
         gridApiRouter.value.setRowData(rowDataRouter.value);
       }
@@ -337,23 +430,24 @@ else {
     });
 
     const openModalRouter = () => {
-      let token = document.getElementById("app").getAttribute("token");
+      const user = user_privilege('Ztna');
+      if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
+        state.modalDataRouter = {};
+        state.modalMode = "create";
+        state.isModalOpenRouter = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
+    };
 
-if (token && token !== "null") {
-  state.modalDataRouter = {};
-      state.modalMode = "create";
-      state.isModalOpenRouter = true;
-} 
-else {
-  state.snackbar = true;
-  state.color = "red";
-  state.textAlert = "ZTNA is not running";
-
-}
-      
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
     };
 
     return {
+      close,
       t,
       emitter,
       state,
@@ -362,17 +456,24 @@ else {
       onGridReadyRouter,
       // openModalUpdate,
       confirmDelete,
+      overlayMessage,
       cancelDelete,
       overlayTemplate,
       paginationLocalization,
       columnsALLRouter,
       rowDataRouter,
+      tokenStatus,
     };
   },
 };
 </script>
 
 <style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;

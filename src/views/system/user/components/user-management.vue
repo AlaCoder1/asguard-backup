@@ -132,12 +132,17 @@ export default {
           minWidth: 50,
           flex: 1,
         },
-        { headerName: "Actions", cellRenderer: this.actionCellRenderer },
+        {
+          headerName: "Actions",
+          width: 150,
+          minWidth: 50,
+          cellRenderer: this.actionCellRenderer,
+        },
       ],
       rowData: [], // Initialize rowData as an empty array
       gridOptions: {
         pagination: true,
-        paginationPageSize: 5,
+        paginationPageSize: 3,
         rowSelection: "single",
         // Rest of the gridOptions
       },
@@ -211,9 +216,15 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          }
         });
     },
     actionCellRenderer(params) {
@@ -286,7 +297,7 @@ export default {
         }
         case "change":
           this.isModalPasswordOpen = true;
-          this.modalMode = "Reset Password";
+          this.modalMode = 'update';
           this.rowEdit = rowData;
           break;
         case "delete":
@@ -447,9 +458,16 @@ export default {
           // Handle the successful response
           console.log("Resource deleted:", response.data);
         })
-        .catch((error) => {
-          // Handle any errors that occur during the request
-          console.error("Error deleting resource:", error);
+        .catch((i) => {
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = `Error deleting resource : ${i} `;
+          }
         });
     },
     async update(data, callback) {
@@ -473,9 +491,16 @@ export default {
           // Handle the successful response
           console.log("Resource updated:", response.data);
         })
-        .catch((error) => {
-          // Handle any errors that occur during the request
-          console.error("Error updating resource:", error);
+        .catch((i) => {
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = `Error updating resource : ${i} `;
+          }
         });
     },
     async getuser(id, callback) {

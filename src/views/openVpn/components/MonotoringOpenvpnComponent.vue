@@ -1,4 +1,19 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <!-- <v-dialog v-model="state.modal" persistent class="mx-auto" width="450">
       <v-card color="#193286" class="ml-16 mr-16 mx-auto">
@@ -192,6 +207,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import VueApexCharts from "vue3-apexcharts";
 import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
@@ -202,15 +219,20 @@ export default {
     AgGridVue,
     monitoringCards,
     apexchart: VueApexCharts,
+    VButton,
   },
   setup() {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const overlayTemplate = ref("");
     const paginationLocalization = reactive({
       of: "/",
     });
     const state = reactive({
       show1: false,
+      isviewModal: false,
+      viewModal: false,
       server: "",
       snackbar: false,
       color: "",
@@ -310,6 +332,15 @@ export default {
     const specificform = computed(() => {
       return t("errors.formsepcificpassword");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Openvpn') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("VPN SSL")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -331,6 +362,11 @@ export default {
 
     const v$ = useValidate(rules, state);
     var usedColors = [];
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
 
     const getRandomColor = () => {
       var letters = "0123456789ABCDEF";
@@ -459,6 +495,11 @@ export default {
     };
 
     onMounted(async () => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       getAllListServer();
     });
     overlayTemplate.value = `
@@ -481,6 +522,8 @@ export default {
 
     const serve = async () => {
       const result = await v$.value.$validate();
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
       if (result) {
         if (state.server) {
@@ -490,6 +533,10 @@ export default {
           }, 1000);
         }
       }
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     const cancel = () => {
@@ -599,12 +646,14 @@ export default {
 
     return {
       state,
+      close,
       v$,
       overlayTemplate,
       apexChart,
       apexChartNetwork,
       chartTraffic,
       rowData,
+      overlayMessage,
       columns,
       gridApi,
       paginationLocalization,
@@ -619,6 +668,11 @@ export default {
 <style lang="scss" scoped>
 #grid-wrapper {
   width: 100%;
+}
+
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 
 .ag-header-cell-text {

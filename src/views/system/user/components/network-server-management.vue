@@ -1,36 +1,34 @@
 <template>
-  <div class="mr-3">
-    <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
+  <div>
+    <div style="display: flex; flex-direction: column">
       <h4>{{ $t("networksServers") }}</h4>
       <!-- <v-divider></v-divider> -->
-      <v-row>
-        <v-col cols="12">
-          <div style="overflow: hidden; flex-grow: 1">
-            <ag-grid-vue
-              id="grid-wrapper"
-              domLayout="autoHeight"
-              class="ag-theme-alpine mt-3"
-              style="width: 100%"
-              @grid-ready="onGridReady"
-              :columnDefs="columnDefs"
-              :rowData="rowData.value"
-              :gridOptions="gridOptions"
-              :localeText="paginationLocalization"
-              :overlayNoRowsTemplate="overlayTemplate"
-            />
-          </div>
-          <div class="d-flex justify-end">
-            <v-btn
-              color="asguard_primary_light"
-              :rounded="true"
-              class="mt-3 btn-add"
-              @click="openModalAdd"
-            >
-              <span class="text-white"> {{ $t("button.addServer") }}</span>
-            </v-btn>
-          </div>
-        </v-col>
-      </v-row>
+
+      <div style="overflow: hidden; flex-grow: 1">
+        <ag-grid-vue
+          id="grid-wrapper"
+          domLayout="autoHeight"
+          class="ag-theme-alpine mt-3"
+          style="width: 100%"
+          @grid-ready="onGridReady"
+          :columnDefs="columnDefs"
+          :rowData="rowData.value"
+          :gridOptions="gridOptions"
+          :localeText="paginationLocalization"
+          :overlayNoRowsTemplate="overlayTemplate"
+        />
+      </div>
+      <div class="d-flex justify-end">
+        <v-btn
+          color="asguard_primary_light"
+          :rounded="true"
+          class="mt-3 btn-add"
+          @click="openModalAdd"
+        >
+          <span class="text-white"> {{ $t("button.addServer") }}</span>
+        </v-btn>
+      </div>
+
       <Modal
         :modalMode="state.modalMode"
         :isOpen="state.isModalOpen"
@@ -108,14 +106,14 @@ export default {
 
     const gridOptions = ref({
       pagination: true,
-      paginationPageSize: 5,
+      paginationPageSize: 3,
       rowSelection: "single",
     });
 
     const servername = computed(() => {
       return t("PageGeneral.ServerName");
     });
-    
+
     const columnDefs = ref([
       {
         headerName: servername,
@@ -131,7 +129,12 @@ export default {
         minWidth: 50,
         flex: 1,
       },
-      { headerName: "Actions", cellRenderer: actionCellRenderer },
+      {
+        headerName: "Actions",
+        width: 150,
+        minWidth: 50,
+        cellRenderer: actionCellRenderer,
+      },
     ]);
 
     const rowData = reactive({});
@@ -267,9 +270,15 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
     return {

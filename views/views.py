@@ -7,7 +7,7 @@ import json
 import ast
 from backend.LdapServer.list_Remote_servers import get_list_ad_servers
 from backend.managementGroup.models import Group
-from backend.managementUsers.models import User
+from backend.managementUsers.models import User, Roles
 from backend.managementServers.models import Type, Server
 from backend.managementUsers.views import get_all_users
 from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat
@@ -140,6 +140,7 @@ def allGProxyroups(request):
         list_groups.append({"name":i,"status":rslt})
     return list_groups
 def getUsers(request):
+    print("2222222222")
     list_users = []
     if (request.method == 'GET'):
         users = User.objects.all()
@@ -154,13 +155,30 @@ def getUsers(request):
             res[i]['fields'].pop('last_login')
             res[i]['fields'].pop('token_last_expired')
             res[i]['fields']['id'] = id
+            role = Roles.objects.get(id = res[i]['fields']['role'])
+            res[i]['fields']['role'] = role.name
             if len(res[i]['fields']['group'])!=0:
                 for k in res[i]['fields']['group']:
                     group=Group.objects.get(id=k)
                     group_dict.append({"name":group.groupname,"id":group.id})
                 res[i]['fields']['group']=group_dict
             list_users.append(res[i]['fields'])
+            print({"list_users":list_users})
         return json.dumps(list_users)
+    
+def getRoles(request):
+    list_roless = []
+    if (request.method == 'GET'):
+        roless = Roles.objects.all()
+        roles_dict = serializers.serialize("json", roless)
+        res = json.loads(roles_dict)
+        for i in range(len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            list_roless.append(res[i]['fields'])
+        return json.dumps(list_roless)
 
 
 def get_groups(request):
@@ -302,7 +320,21 @@ def get_all_interfaces_version2(request):
             id = res[i]['pk']
             res[i].pop('pk')
             res[i]['fields']['id'] = id
-            if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")):
+            if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap")) :
+                list_interface.append(res[i]['fields'])
+        return list_interface    
+def get_all_interfaces_firewall(request):
+    list_interface = []
+    if (request.method == 'GET'):
+        interfaces = Interface.objects.all()
+        interface_dict = serializers.serialize("json",interfaces)
+        res = json.loads(interface_dict)
+        for i in range(len(res)):
+            res[i].pop('model')
+            id = res[i]['pk']
+            res[i].pop('pk')
+            res[i]['fields']['id'] = id
+            if not res[i]['fields']['ifname'].lower().startswith(("tun", "tap","vlan")) and not res[i]['fields']['name_interface'].lower().startswith("vxlan") :
                 list_interface.append(res[i]['fields'])
         return list_interface    
 
@@ -465,12 +497,19 @@ def get_alerts_from_database(request):
 
 
 @login_required(login_url='/')
-def user_certificate_managment_page(request):
+def user_managment_page(request):
     usr=getUsers(request)
     grp=get_groups(request)
+    roles = getRoles(request)
     servers=get_list_ad_servers()
-    context = {'users':usr,"groups":grp,"servers":servers}
-    return render(request, 'user_certificate_managment.html',context)
+    last_subscription=list_features_about_last_subscription(request)
+
+    context = {'users':usr,"groups":grp,"servers":servers,"roles":roles,'last_subscription':json.dumps(last_subscription)}
+    return render(request, 'user_managment.html',context)
+
+@login_required(login_url='/')
+def certificate_managment_page(request):
+    return render(request, 'certificate_managment.html')
 
 
 @login_required(login_url='/')
@@ -496,7 +535,7 @@ def interface_page(request):
 @login_required(login_url='/')
 def firewall_page(request):
     rules=get_all_rules(request)
-    interfaces=get_all_interfaces(request)
+    interfaces=get_all_interfaces_firewall(request)
     last_subscription=list_features_about_last_subscription(request)
     context = {'rules':json.dumps(rules), 'interfaces':interfaces,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'firewall_page.html',context)
@@ -505,7 +544,8 @@ def firewall_page(request):
 def openvpn_page(request):
     servers=get_list_all_server_openvpn()
     clients=get_list_all_client_openvpn()
-    context = {'servers':servers,'clients':clients}
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'servers':servers,'clients':clients,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'openvpn_page.html', context)
 
 
@@ -514,7 +554,8 @@ def ipsec_page(request):
     servers=get_list_all_server_ipsec()
     public_key =get_list_all_public_key()
     status = get_status_ipsec()
-    context = {'servers': servers, 'publicKey': public_key, 'status': status}
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'servers': servers, 'publicKey': public_key, 'status': status, 'last_subscription':json.dumps(last_subscription)}
     return render(request, 'ipsec_page.html', context)
 
 
@@ -533,15 +574,18 @@ def squid_proxy(request):
     statusEnable = statusEnableAuth(request)
     proxyRule = get_all_proxy_rules(request)
     proxyGroups = allGProxyroups(request)
+    last_subscription=list_features_about_last_subscription(request)
+
     statusServer = get_squid_status_from_bd()
-    context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule),'proxyGroups' : json.dumps(proxyGroups),'statusServer' : json.dumps(statusServer)}
+    context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'last_subscription':json.dumps(last_subscription),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule),'proxyGroups' : json.dumps(proxyGroups),'statusServer' : json.dumps(statusServer)}
     return render(request, 'squid_proxy.html',context)
 
 @login_required(login_url='/')
 def sdwan_page(request):
     allArea = get_list_all_area()
     allRule = get_list_all_sdwan_rule()
-    context = {'allArea': json.dumps(allArea),'allRule': json.dumps(allRule)}
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'allArea': json.dumps(allArea),'allRule': json.dumps(allRule),'last_subscription':json.dumps(last_subscription)}
     return render(request, 'sdwan_page.html',context)
 
 @login_required(login_url='/')
@@ -550,7 +594,8 @@ def waf_page(request):
     list_rules = get_list_all_waf_rule()
     list_waf_app = get_list_all_waf_application()
     waf_alert = get_alerts()
-    context = {'waf_conf': json.dumps(waf_conf),'list_rules': json.dumps(list_rules),'list_waf_app': json.dumps(list_waf_app),'waf_alert': json.dumps(waf_alert)}
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'waf_conf': json.dumps(waf_conf),'list_rules': json.dumps(list_rules),'last_subscription':json.dumps(last_subscription),'list_waf_app': json.dumps(list_waf_app),'waf_alert': json.dumps(waf_alert)}
     return render(request, 'waf_page.html',context)
 
 
@@ -565,10 +610,12 @@ def ztna_page(request):
     service_policies = get_service_policies()
     service_edge_router_policies = get_service_edge_router_policies()
     token = get_Zt_Token()
+    last_subscription=list_features_about_last_subscription(request)
     windows_file = get_local_domain_windows()
     linux_file = get_local_domain_linux()
     context = {'identities': json.dumps(identities),
                'routers':json.dumps(routers) ,
+               'last_subscription':json.dumps(last_subscription),
                'hostconfigs':json.dumps(hostconfigs),
                'interceptconfigs':json.dumps(interceptconfigs),
                'token':json.dumps(token),
@@ -612,10 +659,12 @@ def subscription_page(request):
  
 #comment to test git command
 def login(request):
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'last_subscription':json.dumps(last_subscription)}
     if request.user.is_authenticated:
         return redirect('/dashboard/')
     else:
-        return render(request, 'login.html')
+        return render(request, 'login.html',context)
 
 
 @login_required(login_url='/')
@@ -655,10 +704,12 @@ def suricata(request):
     res = json.loads(suricata)
     id=res[0]['pk']
     general_config_suricata=general_suricata_configuration(request, id)
+    last_subscription=list_features_about_last_subscription(request)
+
     # rules_suricata=get_rules_from_database(request)
     # alerts_suricata=get_alerts_from_database(request)
-    interfaces=get_all_interfaces_version2(request)
-    context={"general_config_suricata":general_config_suricata,"all_interfaces":interfaces}
+    interfaces=get_all_interfaces_firewall(request)
+    context={"general_config_suricata":general_config_suricata,"all_interfaces":interfaces, 'last_subscription':json.dumps(last_subscription)}
     return render(request, 'ids_ips.html',context)
 
 
@@ -718,7 +769,9 @@ def nat_page(request):
     listNat= get_list_all_snat()
     listDNat= get_list_all_dnat()
     listOneToOne= get_list_all_one_to_one_nat()
-    context = {'listNat':listNat,'listDNat':listDNat,'listOneToOne':listOneToOne}
+    last_subscription=list_features_about_last_subscription(request)
+
+    context = {'listNat':listNat,'listDNat':listDNat,'listOneToOne':listOneToOne,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'nat.html',context)
 
 @login_required(login_url='/')
@@ -761,9 +814,12 @@ def server_dhcp4_page(request):
 
 @login_required(login_url='/')
 def logrotate_page(request):
-    list_logrotate=get_logrotate_data(request)
-    list_logrotate=json.dumps(list_logrotate)
-    context = {'logrotate':list_logrotate}
+    list_service={"WAF":[],"OpenVPN":[],"IDS/IPS":[],"Squid":[]}
+    for service in list_service.keys():
+        list_logrotate=get_logrotate_data(request,service)
+        list_service[service]=list_logrotate
+    list_service=json.dumps(list_service)
+    context = {'logrotate':list_service}
     return render(request, 'logrotate.html',context)
 
 ################## generale information ##################

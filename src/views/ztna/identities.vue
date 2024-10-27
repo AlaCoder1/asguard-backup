@@ -1,25 +1,55 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mr-3">
-    <div class="certificats-management mt-6 ml-4" style="display: flex; flex-direction: column">
+    <div
+      class="certificats-management mt-6 ml-4"
+      style="display: flex; flex-direction: column"
+    >
       <h4>{{ $t("ztna.listofIdentities") }}</h4>
       <v-divider></v-divider>
       <div style="overflow: hidden; flex-grow: 1">
-        <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-          @grid-ready="onGridReady" :columnDefs="columnIdentities" :rowData="Identities" :gridOptions="gridOptions"
-          :overlayNoRowsTemplate="overlayTemplate" :rowDragManaged="true" :rowDragEntireRow="true"
-          :localeText="paginationLocalization" />
+        <ag-grid-vue
+          id="grid-wrapper"
+          domLayout="autoHeight"
+          class="ag-theme-alpine mt-3"
+          style="width: 100%"
+          @grid-ready="onGridReady"
+          :columnDefs="columnIdentities"
+          :rowData="Identities"
+          :gridOptions="gridOptions"
+          :overlayNoRowsTemplate="overlayTemplate"
+          :rowDragManaged="true"
+          :rowDragEntireRow="true"
+          :localeText="paginationLocalization"
+        />
       </div>
     </div>
   </div>
   <br />
-  <ModalAddIdentity :isOpen="state.isModalOpen" :selectedId="state.selectedId" :editRow="state.editRow"
-    :modalMode="state.modalMode" />
-  <ModalAddEnrollment :isOpen="state.isModalEnrollmentOpen" :selectedId="state.selectedId" />
-  <!-- <ModalUpdateIdentity
-    :isOpen="state.isModalUpdateOpen"
+  <ModalAddIdentity
+    :isOpen="state.isModalOpen"
     :selectedId="state.selectedId"
     :editRow="state.editRow"
-  /> -->
+    :modalMode="state.modalMode"
+  />
+  <ModalAddEnrollment
+    :isOpen="state.isModalEnrollmentOpen"
+    :selectedId="state.selectedId"
+  />
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
       <v-card-title class="headline">{{
@@ -35,11 +65,22 @@
       </v-card-actions>
     </v-card>
   </v-dialog>
-  <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+  <v-snackbar
+    :timeout="2000"
+    v-model="state.snackbar"
+    location="bottom right"
+    :color="state.color"
+  >
     {{ state.textAlert }}
   </v-snackbar>
   <div class="d-flex justify-end mt-5 mr-2">
-    <v-btn class="add-button" :rounded="true" color="indigo-darken-3" @click="checkTokenBeforeAdd">
+    <v-btn
+      class="add-button"
+      :rounded="true"
+      color="indigo-darken-3"
+      :disabled="!tokenStatus"
+      @click="checkTokenBeforeAdd"
+    >
       {{ $t("ztna.addIdentity") }}
     </v-btn>
   </div>
@@ -56,6 +97,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import axios from "axios";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "IdentitiesComponent",
@@ -65,15 +108,21 @@ export default {
     ModalAddEnrollment,
     ModalUpdateIdentity,
     AgGridVue,
+    VButton,
   },
 
   setup() {
     const { t } = useI18n();
     const Identities = ref();
-    const linux=ref();
-    const windows=ref();
+    const current_user = ref();
+    const last_Subscription = ref([]);
+    const tokenStatus = ref('')
+    const linux = ref();
+    const windows = ref();
     const emitter = inject("emitter");
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       deleteDialog: false,
       modalData: {},
       modalMode: "create",
@@ -109,7 +158,15 @@ export default {
       paginationPageSize: 5,
       rowSelection: "single",
     });
-
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Ztna') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("ZTNA")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const name = computed(() => {
       return t("ztna.name");
     });
@@ -203,7 +260,7 @@ export default {
         field: "actions",
         width: 150,
         cellRenderer: actionCellRenderer,
-      }
+      },
     ]);
     function tokenCellRendrer(params) {
       let eGui = document.createElement("div");
@@ -211,8 +268,15 @@ export default {
       let isCurrentRowEditing = editingCells.some((cell) => {
         return cell.rowIndex === params.node.rowIndex;
       });
-
-      if (params.node.data.token) {
+      if (params.node.data.token && !tokenStatus.value) {
+        eGui.innerHTML = `
+          <button
+           class="action-button download"
+           disabled>
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+           </button>
+    `;
+      } else if (params.node.data.token) {
         eGui.innerHTML = `
           <button
            class="action-button download"
@@ -245,17 +309,19 @@ export default {
 
       if (params.node.data.token) {
         eGui.innerHTML = `<i class="mdi mdi-check-circle" style="color: green; font-size: 20px;"></i>`;
-      }
-      else if(params.node.data.hostname && currentDate <= expirationDate){
+      } else if (params.node.data.hostname && currentDate <= expirationDate) {
         eGui.innerHTML = ` <span class="action-icon active-token">
   <i class="mdi mdi-router-network-wireless"></i>
 </span>
-`
-      } 
-      else {
-        eGui.innerHTML = `
-    
-      <button class="action-button enroll" data-action="enroll">
+`;
+      } else if (!tokenStatus.value) {
+        eGui.innerHTML = ` <button class="action-button enroll" disabled >
+        <i class="mdi mdi-alert-circle" style="color: red; font-size: 20px;"></i>
+      </button>
+`;
+      } else {
+        eGui.innerHTML = `    
+      <button class="action-button enroll" data-action="enroll"   >
         <i class="mdi mdi-alert-circle" style="color: red; font-size: 20px;"></i>
       </button>
     `;
@@ -281,30 +347,47 @@ export default {
         eGui.innerHTML = `
               <button
                 class="action-button edit"
-                data-action="edit">
+                data-action="edit"  >
                      edit
               </button>
               <button
                 class="action-button cancel"
-                data-action="cancel">
+                data-action="cancel"  >
                      cancel
               </button>
               `;
-      } else {
+      } else if (!tokenStatus.value) {
         eGui.innerHTML = `
               <button
                 class="action-button edit"
-                data-action="edit" title="Edit Server">
+                  disabled >
                    <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
                 <button
                 class="action-button delete"
-                data-action="delete" title="Delete ">
+                 disabled >
+                  <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+                    <button
+           class="action-button download" disabled>
+              <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
+           </button>
+                `;
+      } else {
+        eGui.innerHTML = `
+              <button
+                class="action-button edit"
+                data-action="edit" title="Edit Server"   >
+                   <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+                </button>
+                <button
+                class="action-button delete"
+                data-action="delete" title="Delete "  >
                   <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
                     <button
            class="action-button download"
-           data-action="downloadhost">
+           data-action="downloadhost"   >
               <i class="mdi mdi-download-circle" style="color: #086eae; font-size: 20px;"></i>
            </button>
       
@@ -319,97 +402,105 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData, index) => {
-      let token = document.getElementById("app").getAttribute("token");
+      const user = user_privilege("Ztna");
       switch (action) {
         case "edit":
-        if (token && token !== "null") {
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
-          state.selectedId = rowData.ref_identitie;
-
-      } else {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "ZTNA is not running";
-      } 
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+            state.selectedId = rowData.ref_identitie;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
 
           break;
         case "downloadhost":
-        if (token && token !== "null") {
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
+            if (rowData.os === "windows") {
+              let text = windows.value[0].content;
 
-          if(rowData.os==="windows"){
-            let text = windows.value[0].content;
+              const blob = new Blob([text], {
+                type: "application/x-x509-ca-cert",
+              });
 
-const blob = new Blob([text], {
-  type: "application/x-x509-ca-cert",
-});
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.style.display = "none";
+              a.href = url;
+              a.download = `host_appender.bat`;
 
-const url = window.URL.createObjectURL(blob);
-const a = document.createElement("a");
-a.style.display = "none";
-a.href = url;
-a.download = `host_appender.bat`;
+              document.body.appendChild(a);
+              a.click();
 
-document.body.appendChild(a);
-a.click();
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+            } else {
+              let text = linux.value[0].content;
 
-window.URL.revokeObjectURL(url);
-document.body.removeChild(a);
+              const blob = new Blob([text], {
+                type: "application/x-x509-ca-cert",
+              });
+
+              const url = window.URL.createObjectURL(blob);
+              const a = document.createElement("a");
+              a.style.display = "none";
+              a.href = url;
+              a.download = `host_appender.sh`;
+
+              document.body.appendChild(a);
+              a.click();
+
+              window.URL.revokeObjectURL(url);
+              document.body.removeChild(a);
+            }
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
           }
-          else{
-            let text = linux.value[0].content;
-
-          const blob = new Blob([text], {
-            type: "application/x-x509-ca-cert",
-          });
-
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = `host_appender.sh`;
-
-          document.body.appendChild(a);
-          a.click();
-
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-          }
-        }else {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "ZTNA is not running";
-      } 
 
           break;
         case "download":
-          let text = rowData.token;
-          // copyContent(text);
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
+            let text = rowData.token;
+            const blob = new Blob([text], {
+              type: "application/x-x509-ca-cert",
+            });
 
-          const blob = new Blob([text], {
-            type: "application/x-x509-ca-cert",
-          });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = `${rowData.name}.jwt`;
 
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = `${rowData.name}.jwt`;
+            document.body.appendChild(a);
+            a.click();
 
-          document.body.appendChild(a);
-          a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
 
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
-          
           break;
         case "enroll":
-          openModalEnrollement(rowData.ref_identitie);
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
+            openModalEnrollement(rowData.ref_identitie);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
 
           break;
         case "delete":
-          OpenDelete(rowData.id);
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
+            OpenDelete(rowData.id);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
 
           break;
         default:
@@ -431,7 +522,11 @@ document.body.removeChild(a);
     };
     const fetchIdentities = () => {
       let token = document.getElementById("app").getAttribute("token");
-      console.log("token", token);
+      if (token && token !== "null") {
+        tokenStatus.value = true;
+      } else {
+        tokenStatus.value = false;
+      }
       let IdentitiesString = document
         .getElementById("app")
         .getAttribute("Identities");
@@ -439,56 +534,34 @@ document.body.removeChild(a);
       let IdentitiesObject;
       try {
         IdentitiesObject = JSON.parse(IdentitiesString);
-        console.log('IdentitiesObject', IdentitiesObject)
       } catch (error) {
         console.error("Failed to parse Identities string:", error);
       }
 
-
       Identities.value = IdentitiesObject ? IdentitiesObject : [];
-      console.log(' Identities.value', Identities.value)
-
 
       let linuxfileString = document
         .getElementById("app")
         .getAttribute("linux_file");
-        let linuxObject;
+      let linuxObject;
       try {
         linuxObject = JSON.parse(linuxfileString);
-        console.log('linuxObject', linuxObject)
-      } catch (error) {
-        console.error("Failed to parse linux string:", error);
-      }
+      } catch (error) {}
       linux.value = linuxObject ? linuxObject : [];
-      console.log(' linux.value', linux.value)
 
       let windowsfileString = document
         .getElementById("app")
         .getAttribute("windows_file");
-        let windowsObject;
+      let windowsObject;
       try {
         windowsObject = JSON.parse(windowsfileString);
-        console.log('windowsObject', windowsObject)
-      } catch (error) {
-        console.error("Failed to parse windows string:", error);
-      }
+      } catch (error) {}
       windows.value = windowsObject ? windowsObject : [];
-      console.log(' windows.value', windows.value[0].content)
-
     };
     async function OpenDelete(itemId) {
-      let token = document.getElementById("app").getAttribute("token");
-
-      if (token && token !== "null") {
       state.selectedId = itemId;
       state.deleteDialog = true;
-      } 
-      else {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "ZTNA is not running";
-
-    }}
+    }
     onMounted(() => {
       emitter.on("closeidentityModal", () => {
         state.isModalOpen = false;
@@ -503,6 +576,11 @@ document.body.removeChild(a);
         state.isModalUpdateOpen = false;
       });
       fetchIdentities();
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
     });
     const getCookie = (name) => {
       let cookieValue = null;
@@ -525,43 +603,33 @@ document.body.removeChild(a);
     };
 
     const openModalEnrollement = (id) => {
-      let token = document.getElementById("app").getAttribute("token");
-
-      if (token && token !== "null") {
-        state.modalData = {};
+      state.modalData = {};
       state.modalMode = "create";
       state.isModalEnrollmentOpen = true;
-      state.selectedId = id; 
-      } else {
-        state.snackbar = true;
-        state.color = "red";
-        state.textAlert = "ZTNA is not running";
-      }
-
+      state.selectedId = id;
     };
-
-    // const openModalUpdate = (row) => {
-    //   state.modalMode = "edit";
-    //   state.isModalUpdateOpen = true;
-    //   state.editRow = row;
-    //   state.selectedId = row.id;
-    // };
 
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
 
     function checkTokenBeforeAdd() {
-  let token = document.getElementById("app").getAttribute("token");  
-  if (token && token !== "null") {
-    openModalAdd();
-  } else {
-    state.snackbar = true;
-    state.color = "red";
-    state.textAlert = "ZTNA is not running";
-  }
-}
-
+      const user = user_privilege('Ztna');
+      if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
+        let token = document.getElementById("app").getAttribute("token");
+        if (token && token !== "null") {
+          openModalAdd();
+        } else {
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = "ZTNA is not running";
+        }
+      } else {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
+    }
 
     function formatedcreatedAt(data) {
       const resultMessage = formatDateTime(data.data.date_creation);
@@ -571,9 +639,7 @@ document.body.removeChild(a);
     }
     function formatedexpiresAt(data) {
       if (data.data.token) {
-        const resultMessage = formatDateTime(
-          data.data.date_expiration
-        );
+        const resultMessage = formatDateTime(data.data.date_expiration);
         let eGui = document.createElement("div");
         eGui.innerHTML = resultMessage ? `${resultMessage}` : "--";
         return eGui;
@@ -586,7 +652,6 @@ document.body.removeChild(a);
     };
 
     const confirmDelete = async (deletedItemId) => {
-
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -608,41 +673,16 @@ document.body.removeChild(a);
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
-
-      // console.log("deletedItemId", deletedItemId);
-      // try {
-      //   let token = document.getElementById("app").getAttribute("token");
-      //   const proxyUrl = "https://asguard:3000";
-      //   const apiUrl = `/edge/management/v1/identities/${deletedItemId}`; // This part remains the same
-
-      //   const response = await axios.delete(proxyUrl + apiUrl, {
-      //     headers: {
-      //       "zt-session": token,
-      //       "Content-Type": "application/json",
-      //     },
-      //   });
-      //   console.log("response", response);
-
-      //   state.snackbar = true;
-      //   state.color = "success";
-      //   state.textAlert = "Identity deleted successfully";
-      //   setTimeout(() => {
-      //     location.reload();
-      //   }, 1000);
-      //   state.deleteDialog = false;
-      // } catch (error) {
-      //   state.snackbar = true;
-      //   state.color = "red";
-      //   state.textAlert = "Delete failure";
-      //   console.error(
-      //     "Failed to delete item:",
-      //     error.response ? error.response.data : error.message
-      //   );
-      // }
     };
 
     const onGridReady = (params) => {
@@ -653,13 +693,20 @@ document.body.removeChild(a);
       }
     };
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     return {
+      close,
       state,
       openModalAdd,
       t,
       Identities,
       getCookie,
       emitter,
+      overlayMessage,
       fetchIdentities,
       OpenDelete,
       openModalEnrollement,
@@ -671,6 +718,7 @@ document.body.removeChild(a);
       columnIdentities,
       overlayTemplate,
       paginationLocalization,
+      tokenStatus,
       onGridReady,
     };
   },
@@ -678,6 +726,10 @@ document.body.removeChild(a);
 </script>
 
 <style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -692,15 +744,16 @@ document.body.removeChild(a);
 .table tbody tr:last-child {
   border-bottom: 0.5px solid #000;
 }
+
 .action-icon.active-token {
   position: relative;
-  background-color: #45B450; 
+  background-color: #45b450;
   color: white;
-  border-radius: 50%; 
-  width: 20px; 
-  height: 20px; 
-  font-size: 12px; 
-  line-height: 40px; 
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  line-height: 40px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -709,7 +762,21 @@ document.body.removeChild(a);
 
 .action-icon.active-token:hover,
 .action-icon.active-token:focus {
-  background-color: #4CAF50; 
+  background-color: #4caf50;
 }
 
+.img-view {
+  border-style: none;
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  overflow: hidden;
+}
+
+.img-containter {
+  display: flex;
+  width: 100%;
+  /* height: 100%; */
+  padding: 0px !important;
+}
 </style>

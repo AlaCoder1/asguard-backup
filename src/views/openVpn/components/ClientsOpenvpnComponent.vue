@@ -1,5 +1,36 @@
-+
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-row>
       <v-col align-self="center" cols="6">
@@ -329,13 +360,17 @@
                     :alwaysShowVarticalScroll="false"
                     :defaultColDef="defaultColDef"
                     :rowData="rowDataCertificats.value"
-                    style="width: 100%; height: 100%"
+                    style="width: 100%"
                     :overlayNoRowsTemplate="overlayTemplate"
                     @grid-ready="onGridReady"
                     :pagination="true"
                     :paginationPageSize="4"
                     :localeText="paginationLocalization"
                   />
+
+                  <p class="error-feedback mb-5 mt-5" v-if="textAlertArray">
+                    {{ textAlertArray }}
+                  </p>
                 </v-col>
               </v-row>
             </v-row>
@@ -395,6 +430,7 @@ import VButton from "@/components/VButton.vue";
 import { reactive, onMounted, ref, computed, watch } from "vue";
 import axios from "axios";
 import protocols from "@/constants/protocols.js";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "ClientsOpenvpnComponent",
@@ -408,6 +444,8 @@ export default {
   props: ["dataClient"],
   setup(props) {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const paginationLocalization = reactive({
       of: "/",
     });
@@ -417,6 +455,7 @@ export default {
     const color = ref(null);
     const snackbar = ref(false);
     const textAlert = ref(false);
+    const textAlertArray = ref(false);
     const protocolsList = ref([]);
     const deviceMode = ref([
       {
@@ -459,6 +498,8 @@ export default {
     ]);
 
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       modeState: "create",
       showpassword: false,
       showNewpassword: false,
@@ -529,6 +570,11 @@ export default {
     });
 
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription", last_Subscription.value);
       // getInterface();
       getAllCertAuth();
       getAllClientCertif();
@@ -653,6 +699,21 @@ export default {
     const champ = computed(() => {
       return t("champs.indication");
     });
+    const overlayMessage = computed(() => {
+      current_user.value = user_privilege("Openvpn");
+      console.log("current_user", current_user.value);
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!last_Subscription.value.includes("VPN SSL")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      }
+    });
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -682,13 +743,19 @@ export default {
         ipv4TunnelNetwork: {
           isValidIpv4TunnelNetwork: helpers.withMessage(
             formatMustBeLikeAdresse,
-            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            // helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            helpers.regex(
+              /^((?!0\.0\.0\.0)(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\/([1-9]|[12][0-9]|3[0-2]))$/
+            )
           ),
         },
         ipv4RemoteNetwork: {
           isValidIpv4RemoteNetwork: helpers.withMessage(
             formatMustBeLikeAdresse,
-            helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            // helpers.regex(/^(\b\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}\b\/\d{1,2})$/)
+            helpers.regex(
+              /^((?!0\.0\.0\.0)(\b(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\.){3}(25[0-5]|2[0-4][0-9]|1[0-9]{2}|[1-9]?[0-9])\/([1-9]|[12][0-9]|3[0-2]))$/
+            )
           ),
         },
 
@@ -699,7 +766,9 @@ export default {
         proxy_host: {
           isValidProxy_host: helpers.withMessage(
             formatMustBeLikeAdresseIP,
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         proxy_port: {
@@ -842,7 +911,7 @@ export default {
       () => dataClient.value,
       (newValue) => {
         if (newValue != "tabs.clients") {
-          cancel();
+          // cancel();
         }
       }
     );
@@ -881,6 +950,11 @@ export default {
       cellDataType: false,
     });
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const actionCellRenderer = (params) => {
       let eGui = document.createElement("div");
 
@@ -904,26 +978,47 @@ export default {
       return eGui;
     };
     const handleAction = (action, rowData, index) => {
+      const user = user_privilege("Openvpn");
       switch (action) {
         case "edit":
-          gridApi.value.setFocusedCell(index);
-          gridApi.value.startEditingCell({
-            rowIndex: index,
-            colKey: "host",
-          });
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            gridApi.value.setFocusedCell(index);
+            gridApi.value.startEditingCell({
+              rowIndex: index,
+              colKey: "host",
+            });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "delete":
-          const index = rowDataCertificats.value.findIndex(
-            (item) => item.host === rowData.host
-          );
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            const index = rowDataCertificats.value.findIndex(
+              (item) => item.host === rowData.host
+            );
 
-          if (index !== -1) {
-            rowDataCertificats.value.splice(index, 1);
-            if (gridApi.value) {
-              gridApi.value.setRowData(rowDataCertificats.value);
-            } else {
-              console.error("Grid API.");
+            if (index !== -1) {
+              rowDataCertificats.value.splice(index, 1);
+              if (gridApi.value) {
+                gridApi.value.setRowData(rowDataCertificats.value);
+              } else {
+                console.error("Grid API.");
+              }
             }
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
           }
           break;
         default:
@@ -965,12 +1060,23 @@ export default {
     const rowDataCertificats = ref([]);
 
     const addNewRow = () => {
-      const newRow = { host: "", port: "" };
-      rowDataCertificats.value.push(newRow);
-      if (gridApi.value) {
-        gridApi.value.setRowData(rowDataCertificats.value);
+      const user = user_privilege("Openvpn");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN SSL")
+      ) {
+        const newRow = { host: "", port: "" };
+        rowDataCertificats.value.push(newRow);
+        if (gridApi.value) {
+          gridApi.value.setRowData(rowDataCertificats.value);
+        } else {
+          console.error("Grid API.");
+        }
       } else {
-        console.error("Grid API.");
+        state.isviewModal = true;
+        state.viewModal = true;
       }
     };
     const onGridReady = (params) => {
@@ -1035,7 +1141,10 @@ export default {
     ]);
     const hasEmptyProperty = (obj) => {
       // var invalidHostChars = /[^0-9.]/.test(obj.host);
-      var invalidHostChars = !/^(\d{1,3}\.){3}\d{1,3}$/.test(obj.host);
+      var invalidHostChars =
+        !/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
+          obj.host
+        );
       var invalidPortChars = /[^0-9]/.test(obj.port);
 
       return (
@@ -1098,152 +1207,176 @@ export default {
       );
     };
     const save = async () => {
+      const user = user_privilege("Openvpn");
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN SSL")
+      ) {
+        const result = await v$.value.$validate();
 
-      const result = await v$.value.$validate();
-
-      if (result) {
-        var isArrayEmpty = rowDataCertificats.value.length === 0;
-        if (isArrayEmpty) {
-          snackbar.value = true;
-          color.value = "red";
-          textAlert.value =
-            "The array is empty. Please add at least one object.";
-          return;
-        } else {
-          var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
-
-          if (hasEmptyElement) {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value =
-              "At least one element has an empty host or port, or contains invalid characters.";
+        if (result) {
+          var isArrayEmpty = rowDataCertificats.value.length === 0;
+          if (isArrayEmpty) {
+            textAlertArray.value = t("errors.emptyArray");
+            setTimeout(() => {
+              textAlertArray.value = "";
+            }, 2000);
             return;
+          } else {
+            var hasEmptyElement =
+              rowDataCertificats.value.some(hasEmptyProperty);
+
+            if (hasEmptyElement) {
+              textAlertArray.value = t("errors.invalidChar");
+              setTimeout(() => {
+                textAlertArray.value = "";
+              }, 2000);
+              return;
+            }
           }
-        }
 
-        let proxy_authentication = null;
-        if (state.proxyAuthenticationExtraOptions.slug === "none") {
-          proxy_authentication = {
-            option: "none",
+          let proxy_authentication = null;
+          if (state.proxyAuthenticationExtraOptions.slug === "none") {
+            proxy_authentication = {
+              option: "none",
+            };
+          } else {
+            proxy_authentication = {
+              option: state.proxyAuthenticationExtraOptions.slug,
+              username: state.username,
+              password: state.password,
+              new_password: state.NewProxyPassword,
+            };
+          }
+          let tls_auth = null;
+          if (state.tlsGenerate) {
+            tls_auth = {
+              generate: state.tlsGenerate,
+            };
+          } else {
+            tls_auth = {
+              generate: state.tlsGenerate,
+              tls_key: state.sharedKey,
+            };
+          }
+          let payload = {
+            name: state.clientName,
+            description: state.description,
+            server_mode: {
+              mode: state.server_mode.slug,
+            },
+            protocol: state.protocol.slug ?? state.protocol,
+            device_mode: state.device_mode.slug,
+            interface: state.interface?.id ?? "",
+            resolv_retry: state.resolv_retry,
+            proxy_host: state.proxy_host ?? "",
+            proxy_port: state.proxy_port ?? "",
+            proxy_authentication: proxy_authentication,
+            local_port: state.local_port,
+            username: state.usernameUser,
+            password: state.passwordUser,
+            new_password: state.NewUserPassword,
+            renegotiate_time: state.renegotiate_time,
+            tls_auth: tls_auth,
+            auth_digest_algorithm: state.authDigestAlgorithm.slug,
+            ca_name: state.peerCertificateAuthority.name,
+            client_cert: state.clientCertificate.name,
+            encryption_algorithm: state.encryptionAlgorithm.slug,
+            // hardware_crypto: state.hardwareCrypto.slug,
+            ipv4_tunnel_network: state.ipv4TunnelNetwork,
+            ipv4_remote_network: state.ipv4RemoteNetwork,
+            limit_outgoing_bandwidth: state.limitOutgoingBandwidth,
+            compression: state.compression.slug,
+            type_of_service: state.typeOfService,
+            ipv6: state.ipv6,
+            pull_routes: state.pullRoutes,
+            add_remove_routes: state.addRemoveRoutes,
+            verbosity_level: state.verbosityLevel.slug ?? "",
+            server_remote: rowDataCertificats.value,
           };
+
+          if (state.isEditState === "edit") {
+            axios
+              .put(`/openvpn/updateClientOpenvpn/${state.id}`, payload)
+              .then((response) => {
+                if (response.status == "201") {
+                  snackbar.value = true;
+                  color.value = "success";
+                  textAlert.value = response.data.msg;
+                  state.isEditState = "";
+
+                  setTimeout(() => {
+                    location.reload();
+                    emitter.emit("open-listing");
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
+                if (i.response.status === 500) {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = t("errors.errorServer");
+                } else {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = i.response.data.error;
+                }
+              });
+          } else {
+            axios
+              .post("/openvpn/createClientOpenvpn", payload)
+              .then((response) => {
+                if (response.status == "201") {
+                  snackbar.value = true;
+                  color.value = "success";
+                  textAlert.value = response.data.msg;
+
+                  setTimeout(() => {
+                    location.reload();
+                    emitter.emit("open-listing");
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
+                if (i.response.status === 500) {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = t("errors.errorServer");
+                } else {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = i.response.data.error;
+                }
+              });
+          }
         } else {
-          proxy_authentication = {
-            option: state.proxyAuthenticationExtraOptions.slug,
-            username: state.username,
-            password: state.password,
-            new_password: state.NewProxyPassword,
-          };
-        }
-        let tls_auth = null;
-        if (state.tlsGenerate) {
-          tls_auth = {
-            generate: state.tlsGenerate,
-          };
-        } else {
-          tls_auth = {
-            generate: state.tlsGenerate,
-            tls_key: state.sharedKey,
-          };
-        }
-        let payload = {
-          name: state.clientName,
-          description: state.description,
-          server_mode: {
-            mode: state.server_mode.slug,
-          },
-          protocol: state.protocol.slug ?? state.protocol,
-          device_mode: state.device_mode.slug,
-          interface: state.interface?.id ?? "",
-          resolv_retry: state.resolv_retry,
-          proxy_host: state.proxy_host ?? "",
-          proxy_port: state.proxy_port ?? "",
-          proxy_authentication: proxy_authentication,
-          local_port: state.local_port,
-          username: state.usernameUser,
-          password: state.passwordUser,
-          new_password: state.NewUserPassword,
-          renegotiate_time: state.renegotiate_time,
-          tls_auth: tls_auth,
-          auth_digest_algorithm: state.authDigestAlgorithm.slug,
-          ca_name: state.peerCertificateAuthority.name,
-          client_cert: state.clientCertificate.name,
-          encryption_algorithm: state.encryptionAlgorithm.slug,
-          // hardware_crypto: state.hardwareCrypto.slug,
-          ipv4_tunnel_network: state.ipv4TunnelNetwork,
-          ipv4_remote_network: state.ipv4RemoteNetwork,
-          limit_outgoing_bandwidth: state.limitOutgoingBandwidth,
-          compression: state.compression.slug,
-          type_of_service: state.typeOfService,
-          ipv6: state.ipv6,
-          pull_routes: state.pullRoutes,
-          add_remove_routes: state.addRemoveRoutes,
-          verbosity_level: state.verbosityLevel.slug ?? "",
-          server_remote: rowDataCertificats.value,
-        };
+          console.log("v$.value", v$.value);
 
-        if (state.isEditState === "edit") {
-          axios
-            .put(`/openvpn/updateClientOpenvpn/${state.id}`, payload)
-            .then((response) => {
-              if (response.status == "201") {
-                snackbar.value = true;
-                color.value = "success";
-                textAlert.value = response.data.msg;
-                state.isEditState = "";
+          var isArrayEmpty = rowDataCertificats.value.length === 0;
+          if (isArrayEmpty) {
+            textAlertArray.value = t("errors.emptyArray");
+            setTimeout(() => {
+              textAlertArray.value = "";
+            }, 2000);
+          } else {
+            var hasEmptyElement =
+              rowDataCertificats.value.some(hasEmptyProperty);
 
-                setTimeout(() => {
-                  location.reload();
-                  emitter.emit("open-listing");
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-            });
-        } else {
-          axios
-            .post("/openvpn/createClientOpenvpn", payload)
-            .then((response) => {
-              if (response.status == "201") {
-                snackbar.value = true;
-                color.value = "success";
-                textAlert.value = response.data.msg;
-
-                setTimeout(() => {
-                  location.reload();
-                  emitter.emit("open-listing");
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-            });
+            if (hasEmptyElement) {
+              textAlertArray.value = t("errors.invalidChar");
+              setTimeout(() => {
+                textAlertArray.value = "";
+              }, 2000);
+            }
+          }
         }
       } else {
-        console.log("v$.value", v$.value);
-
-        var isArrayEmpty = rowDataCertificats.value.length === 0;
-        if (isArrayEmpty) {
-          snackbar.value = true;
-          color.value = "red";
-          textAlert.value =
-            "The array is empty. Please add at least one object.";
-        } else {
-          var hasEmptyElement = rowDataCertificats.value.some(hasEmptyProperty);
-
-          if (hasEmptyElement) {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value =
-              "At least one element has an empty host or port, or contains invalid characters.";
-          }
-        }
+        state.isviewModal = true;
+        state.viewModal = true;
       }
     };
 
@@ -1335,74 +1468,86 @@ export default {
     ]);
 
     const cancel = () => {
-      state.id = "";
-      state.modeState = "create";
-      state.isEditState = "";
-      //general information
-      state.clientName = "";
-      state.description = "";
-      state.server_mode = "";
-      state.protocol = "";
-      state.device_mode = "";
-      state.interface = "";
-      state.resolv_retry = false;
-      state.proxy_host = "";
-      state.proxy_port = "";
-      state.proxyAuthenticationExtraOptions = {
-        name: "None",
-        slug: "none",
-      };
-      state.usernameUser = "";
-      state.passwordUser = "";
+      const user = user_privilege("Openvpn");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN SSL")
+      ) {
+        state.id = "";
+        state.modeState = "create";
+        state.isEditState = "";
+        //general information
+        state.clientName = "";
+        state.description = "";
+        state.server_mode = "";
+        state.protocol = "";
+        state.device_mode = "";
+        state.interface = "";
+        state.resolv_retry = false;
+        state.proxy_host = "";
+        state.proxy_port = "";
+        state.proxyAuthenticationExtraOptions = {
+          name: "None",
+          slug: "none",
+        };
+        state.usernameUser = "";
+        state.passwordUser = "";
 
-      state.username = "";
-      state.password = "";
-      state.local_port = "";
-      //User Auth
-      state.username = "";
-      state.password = "";
-      state.renegotiate_time = "";
-      //cryp
-      state.tlsGenerate = true;
-      state.sharedKey = "";
-      state.peerCertificateAuthority = "";
-      state.clientCertificate = "";
-      state.encryptionAlgorithm = "";
-      state.authDigestAlgorithm = "";
-      // state.hardwareCrypto = {
-      //   name: "No Hardware Crypto acceleration",
-      //   slug: "No Hardware Crypto acceleration",
-      // };
-      //tunnelSettings
-      state.ipv4TunnelNetwork = "";
-      state.ipv6TunnelNetwork = "";
-      state.ipv4RemoteNetwork = "";
-      state.ipv6RemoteNetwork = "";
-      state.limitOutgoingBandwidth = "";
-      state.compression = { name: "No preference", slug: "no_preference" };
-      state.typeOfService = false;
-      state.ipv6 = false;
-      state.pullRoutes = false;
-      state.addRemoveRoutes = false;
-      //advancedConfig
-      state.verbosityLevel = {
-        name: "1 (default)",
-        slug: "1",
-      };
-      state.remoteServer = "";
-      state.hostAddress = "";
-      state.port = "";
-      rowDataCertificats.value = [];
-      if (gridApi.value) {
-        gridApi.value.setRowData(rowDataCertificats.value);
+        state.username = "";
+        state.password = "";
+        state.local_port = "";
+        //User Auth
+        state.username = "";
+        state.password = "";
+        state.renegotiate_time = "";
+        //cryp
+        state.tlsGenerate = true;
+        state.sharedKey = "";
+        state.peerCertificateAuthority = "";
+        state.clientCertificate = "";
+        state.encryptionAlgorithm = "";
+        state.authDigestAlgorithm = "";
+        // state.hardwareCrypto = {
+        //   name: "No Hardware Crypto acceleration",
+        //   slug: "No Hardware Crypto acceleration",
+        // };
+        //tunnelSettings
+        state.ipv4TunnelNetwork = "";
+        state.ipv6TunnelNetwork = "";
+        state.ipv4RemoteNetwork = "";
+        state.ipv6RemoteNetwork = "";
+        state.limitOutgoingBandwidth = "";
+        state.compression = { name: "No preference", slug: "no_preference" };
+        state.typeOfService = false;
+        state.ipv6 = false;
+        state.pullRoutes = false;
+        state.addRemoveRoutes = false;
+        //advancedConfig
+        state.verbosityLevel = {
+          name: "1 (default)",
+          slug: "1",
+        };
+        state.remoteServer = "";
+        state.hostAddress = "";
+        state.port = "";
+        rowDataCertificats.value = [];
+        if (gridApi.value) {
+          gridApi.value.setRowData(rowDataCertificats.value);
+        } else {
+          console.error("Grid API.");
+        }
+        v$.value.$reset();
       } else {
-        console.error("Grid API.");
+        state.isviewModal = true;
+        state.viewModal = true;
       }
-      v$.value.$reset();
     };
 
     return {
       state,
+      close,
       cancel,
       userAuthSettings,
       cryptoSettings,
@@ -1417,6 +1562,7 @@ export default {
       addNewRow,
       snackbar,
       textAlert,
+      textAlertArray,
       columnCertificats,
       protocols: protocolsList,
       deviceMode,
@@ -1433,6 +1579,7 @@ export default {
       hardwareCryptoList,
       v$,
       save,
+      overlayMessage,
       emitter,
       paginationLocalization,
     };
@@ -1444,6 +1591,10 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
+}
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 .btn-add {
   background: #213e9f;

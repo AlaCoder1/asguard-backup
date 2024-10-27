@@ -1,5 +1,5 @@
 from backend.routing.constant_variables import PATH_ROUTING
-from utils.commands_utils import execute_command_without_arguments, get_current_directory
+from utils.commands_utils import append_file_from_system, execute_command_without_arguments, get_current_directory, read_file_from_system, write_file_from_system
 
 
 def routing_in_system(routing_method, destination_address, gateway_address, ifname, metric):
@@ -11,12 +11,9 @@ def routing_in_system(routing_method, destination_address, gateway_address, ifna
     execute_command_without_arguments(list(command_route.split(" ")))
 
     if routing_method == "add":
-        with open(PATH_ROUTING.format(current_dir), 'a') as routing_file:
-            routing_file.write(f'\n{command_route}')
+        append_file_from_system(PATH_ROUTING.format(current_dir), f'\n{command_route}')
     else:
         command_route = command_route.replace("del", "add")
-        with open(PATH_ROUTING.format(current_dir)) as routing_file:
-            routing_content = routing_file.read()
+        routing_content = read_file_from_system(PATH_ROUTING.format(current_dir))
         routing_content = routing_content.replace(command_route, "")
-        with open(PATH_ROUTING.format(current_dir), 'w') as routing_file:
-            routing_file.write(routing_content)
+        write_file_from_system(PATH_ROUTING.format(current_dir), routing_content)

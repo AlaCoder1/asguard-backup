@@ -1,4 +1,19 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mr-3">
     <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
       <h4>{{ $t("sdwan.listOfAreas") }}</h4>
@@ -79,6 +94,8 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import AreaSdwanModal from "@/components/modals/AreaSdwanModal.vue";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { user_privilege } from "@/mixins/user_privilege.js";
+
 export default {
   name: "Sdwan",
   components: {
@@ -89,12 +106,16 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
     const paginationLocalization = reactive({
       of: "/",
     });
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       deleteDialog: false,
       deletedRow: null,
       snackbar: false,
@@ -112,7 +133,15 @@ export default {
       paginationPageSize: 5,
       rowSelection: "single",
     });
-
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Sdwan') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("SDWAN")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const areaName = computed(() => {
       return t("sdwan.areaName");
     });
@@ -141,7 +170,7 @@ export default {
         headerName: "Actions",
         cellRenderer: actionCellRendererArea,
         field: "action",
-        width:150
+        width: 150,
       },
     ]);
 
@@ -186,11 +215,6 @@ export default {
           `;
       } else {
         eGui.innerHTML = `
-          <button 
-            class="action-button show "  
-            data-action="show">
-            <i class="mdi mdi-eye" style="color: #086eae;font-size: 20px;"></i>
-            </button>
           <button
             class="action-button edit"
             data-action="edit">
@@ -214,22 +238,36 @@ export default {
     }
 
     const handleActionClient = (action, rowData, index) => {
+      const user = user_privilege("Sdwan");
       switch (action) {
         case "show":
-          console.log("show", rowData);
-
+          if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
+            console.log("show", rowData);
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "edit":
-          console.log("edit", rowData);
-          state.modalMode = "edit";
-          state.isModalAreaOpen = true;
-          state.editRow = rowData;
+          if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
+            console.log("edit", rowData);
+            state.modalMode = "edit";
+            state.isModalAreaOpen = true;
+            state.editRow = rowData;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "delete":
-          console.log("delete", rowData);
-          state.deleteDialog = true;
-          state.deletedRow = rowData;
-
+          if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
+            console.log("delete", rowData);
+            state.deleteDialog = true;
+            state.deletedRow = rowData;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         default:
           break;
@@ -237,9 +275,15 @@ export default {
     };
 
     const openModalAdd = () => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalAreaOpen = true;
+      const user = user_privilege('Sdwan');
+      if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalAreaOpen = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     onMounted(() => {
@@ -256,6 +300,12 @@ export default {
         state.modalMode = "";
         state.editRow = {};
       });
+
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
 
       let allArea = document.getElementById("app").attributes["allArea"].value;
       let parsedArray = JSON.parse(allArea);
@@ -294,17 +344,30 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
     return {
+      close,
       state,
       gridOptions,
       overlayTemplate,
       paginationLocalization,
       columnArea,
+      overlayMessage,
       emitter,
       rowDataArea,
       defaultColDef,
@@ -318,4 +381,8 @@ export default {
 };
 </script>
 
-<style></style>
+<style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}</style>

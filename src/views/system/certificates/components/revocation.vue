@@ -1,4 +1,35 @@
 <template>
+      <v-overlay v-model="viewModal">
+            <v-dialog v-model="isviewModal" :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="@/assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text>
+                  {{  $t("profil.NoPermission") }}
+                  <br />
+                  {{  $t("profil.ContactAdmin") }} 
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                   :label="$t('buttons.close')"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <div
     class="certificats-management"
     style="display: flex; flex-direction: column; height: 100%"
@@ -26,7 +57,7 @@
     </div>
 
     <div style="display: flex; justify-content: flex-end; margin-top: 20px">
-      <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn-user">
+      <v-btn color="dms_blue_dark" :rounded="true" class="mt-3 add-btn">
         <span class="text-white" style="text-transform: lowercase"
           >Ajouter révocation</span
         >
@@ -56,6 +87,9 @@
 import axios from "axios";
 import { AgGridVue } from "ag-grid-vue3";
 import ModalCertifRevocation from "@/components/modals/ModalCertifRevocation.vue";
+import VButton from "@/components/VButton.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
+
 export default {
   props: {
     authoritesData: {
@@ -66,6 +100,7 @@ export default {
   components: {
     AgGridVue,
     ModalCertifRevocation,
+    VButton,
   },
 
   data() {
@@ -78,6 +113,8 @@ export default {
       textAlert: "",
       listAuthRevoc: null,
       modalMode: "",
+      isviewModal: false,
+      viewModal: false,
       rowEdit: {},
       modalData: {},
       isModalOpen: false,
@@ -170,6 +207,10 @@ export default {
     closeModal() {
       this.isModalOpen = false;
     },
+    close() {
+      this.isviewModal = false;
+      this.viewModal = false;
+    },
     onGridReady(params) {
       this.gridApi = params.api;
       this.gridColumnApi = params.columnApi;
@@ -232,44 +273,62 @@ export default {
       return cookieValue;
     },
     handleAction(action, rowData) {
+      const user = user_privilege();
       switch (action) {
         case "show":
-          this.rowEdit = rowData;
-          this.openModal();
-          this.modalMode = "update";
+          if (user !== "viewer") {
+            this.rowEdit = rowData;
+            this.openModal();
+            this.modalMode = "update";
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+          }
+
           break;
         case "export":
-          let id = rowData.id;
-          let fileExtention = `${rowData.nom}_crl.crl`;
+          if (user !== "viewer") {
+            let id = rowData.id;
+            let fileExtention = `${rowData.nom}_crl.crl`;
 
-          const csrfToken = this.getCookie("csrftoken");
-          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+            const csrfToken = this.getCookie("csrftoken");
+            axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-          axios
-            .post(`/certificates/exportCertAuthListRev/${id}`)
-            .then((response) => {
-              const text = response.data.list_revocation;
-              const blob = new Blob([text], {
-                type: "application/x-x509-ca-cert",
+            axios
+              .post(`/certificates/exportCertAuthListRev/${id}`)
+              .then((response) => {
+                const text = response.data.list_revocation;
+                const blob = new Blob([text], {
+                  type: "application/x-x509-ca-cert",
+                });
+
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = fileExtention;
+
+                document.body.appendChild(a);
+                a.click();
+
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+              })
+              .catch((i) => {
+                if (i.response.status === 500) {
+                  this.snackbar = true;
+                  this.color = "red";
+                  this.textAlert = this.$t("errors.errorServer");
+                } else {
+                  this.snackbar = true;
+                  this.color = "red";
+                  this.textAlert = i.response.data.error;
+                }
               });
-
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.style.display = "none";
-              a.href = url;
-              a.download = fileExtention;
-
-              document.body.appendChild(a);
-              a.click();
-
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
-            })
-            .catch((i) => {
-              this.snackbar = true;
-              this.color = "red";
-              this.textAlert = i.response.data.error;
-            });
+          } else {
+            this.isviewModal = true;
+            this.viewModal = true;
+          }
 
           break;
         default:

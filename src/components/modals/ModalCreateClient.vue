@@ -10,22 +10,43 @@
             <v-container>
               <v-row>
                 <v-col cols="12" class="mb-n6">
-                  <v-text-field label="Client Name" v-model="state.formData.userName"></v-text-field>
-                  <p class="error-feedback mb-5" v-if="v$.formData.userName.$error">
+                  <v-text-field
+                    label="Client Name"
+                    v-model="state.formData.userName"
+                  ></v-text-field>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.userName.$error"
+                  >
                     {{ v$.formData.userName.$errors[0].$message }}
                   </p>
                 </v-col>
                 <v-col cols="12" class="mb-n6">
-                  <v-select label="Client Certificate" v-model="state.formData.clientCertificate" item-title="name"
-                    item-value="id" :items="clientCertificateList" return-object></v-select>
-                  <p class="error-feedback mb-5" v-if="v$.formData.clientCertificate.$errors.length">
+                  <v-select
+                    label="Client Certificate"
+                    v-model="state.formData.clientCertificate"
+                    item-title="name"
+                    item-value="id"
+                    :items="clientCertificateList"
+                    return-object
+                  ></v-select>
+                  <p
+                    class="error-feedback mb-5"
+                    v-if="v$.formData.clientCertificate.$errors.length"
+                  >
                     {{ v$.formData.clientCertificate.$errors?.[0].$message }}
                   </p>
                 </v-col>
                 <template v-if="addressAny">
                   <v-col cols="12" class="mb-n6">
-                    <v-text-field label="Address" v-model="state.formData.address"></v-text-field>
-                    <p class="error-feedback mb-5" v-if="v$.formData.address.$error">
+                    <v-text-field
+                      label="Address"
+                      v-model="state.formData.address"
+                    ></v-text-field>
+                    <p
+                      class="error-feedback mb-5"
+                      v-if="v$.formData.address.$error"
+                    >
                       {{ v$.formData.address.$errors[0].$message }}
                     </p>
                   </v-col>
@@ -34,20 +55,43 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
-            <v-btn color="indigo-darken-3" :rounded="true" large rounded outlined label-color="#213E9F" variant="flat"
-              @click="closeModal" class="mt-3 btn-add">
+            <v-btn
+              color="indigo-darken-3"
+              :rounded="true"
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              variant="flat"
+              @click="closeModal"
+              class="mt-3 btn-add"
+            >
               <span class="text-white pr-3 pl-3">Close</span>
             </v-btn>
 
-            <v-btn large rounded outlined label-color="#213E9F" type="submit" color="indigo-darken-3" :rounded="true"
-              variant="flat" class="mt-3 btn-add">
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              type="submit"
+              color="indigo-darken-3"
+              :rounded="true"
+              variant="flat"
+              class="mt-3 btn-add"
+            >
               <span class="text-white pr-3 pl-3">Create</span>
             </v-btn>
           </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-row>
@@ -59,6 +103,8 @@ import useValidate from "@vuelidate/core";
 import { required, helpers, requiredIf } from "@vuelidate/validators";
 import { reactive, computed, toRefs, watch, ref, onMounted, inject } from "vue";
 import VButton from "@/components/VButton.vue";
+import { useI18n } from "vue-i18n";
+
 export default {
   name: "Modal_Client",
   components: {
@@ -75,6 +121,7 @@ export default {
     },
   },
   setup(props) {
+    const { t } = useI18n();
     const emitter = inject("emitter");
     onMounted(() => {
       getAllClientCertif();
@@ -102,17 +149,15 @@ export default {
           address: {
             requiredIfFuction: helpers.withMessage(
               "Value is required",
-              requiredIf(
-                () =>
-                  state.rowEditFilter.interface === "Any"
-              )
+              requiredIf(() => state.rowEditFilter.interface === "Any")
             ),
             isValidlAddress: helpers.withMessage(
               `Format must be like adresse IP : X.X.X.X`,
-              helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+              helpers.regex(
+                /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+              )
             ),
           },
-
         },
       };
     });
@@ -221,9 +266,15 @@ export default {
             }
           })
           .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       } else {
         console.log("error", v$.value);

@@ -5,12 +5,11 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{$t("modal.create")}} {{$t("agGrid.server")}}</span
+              {{ $t("modal.create") }} {{ $t("agGrid.server") }}</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{$t("modal.update")}} {{$t("agGrid.server")}}</span
+              {{ $t("modal.update") }} {{ $t("agGrid.server") }}</span
             >
-            
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -37,7 +36,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                   :label="$t('PageGeneral.SearchBase')"
+                    :label="$t('PageGeneral.SearchBase')"
                     v-model="state.searchBase"
                   ></v-text-field>
 
@@ -94,30 +93,19 @@
                 </v-col>
 
                 <v-col cols="7" align-self="center">
-                  <label>{{$t('ldap.TLS')}}</label>
+                  <label>{{ $t("ldap.TLS") }}</label>
                 </v-col>
                 <v-col cols="5" class="mb-n6">
                   <input type="checkbox" v-model="state.activateStatus" />
-                  <label class="ml-2">{{$t('ldap.Activateecnryption')}}</label>
+                  <label class="ml-2">{{
+                    $t("ldap.Activateecnryption")
+                  }}</label>
                 </v-col>
               </v-row>
             </v-container>
           </v-card-text>
 
           <v-card-actions class="mt-3 actionBtnServer">
-            <v-btn
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              type="submit"
-              color="indigo-darken-3"
-              :rounded="true"
-              variant="flat"
-              class="mt-3 btn-add"
-            >
-              <span class="text-white pr-3 pl-3">{{ modalMode === 'create' ? $t("buttons.create") : $t("buttons.update") }}</span>
-            </v-btn>
             <v-btn
               color="indigo-darken-3"
               :rounded="true"
@@ -129,9 +117,26 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3 text-white" style="color: #213e9f"
-                >{{$t('buttons.close')}}</span
-              >
+              <span class="pr-3 pl-3 text-white" style="color: #213e9f">{{
+                $t("buttons.close")
+              }}</span>
+            </v-btn>
+            <v-btn
+              large
+              rounded
+              outlined
+              label-color="#213E9F"
+              type="submit"
+              color="indigo-darken-3"
+              :rounded="true"
+              variant="flat"
+              class="mt-3 btn-add"
+            >
+              <span class="text-white pr-3 pl-3">{{
+                modalMode === "create"
+                  ? $t("buttons.create")
+                  : $t("buttons.update")
+              }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -213,7 +218,7 @@ export default {
     watch(
       () => modalMode.value,
       () => {
-        if (modalMode.value === "create"){
+        if (modalMode.value === "create") {
           state.name = "";
           state.hostIp = "";
           state.port = "";
@@ -285,9 +290,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.msg;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.msg;
+              }
             });
         } else {
           axios
@@ -304,9 +315,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.msg;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.msg;
+              }
             });
         }
       } else {
@@ -322,19 +339,33 @@ export default {
     const onlynumbers = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
     });
+    const champNoInclude = computed(() => {
+      return t("errors.ChampNoInclude");
+    });
 
     const rules = computed(() => {
       return {
-        name: { required: helpers.withMessage(error, required) },
+        name: {
+          required: helpers.withMessage(error, required),
+          isValidName: helpers.withMessage(
+            champNoInclude,
+
+            helpers.regex(
+              /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/
+            )
+          ),
+        },
         serverType: { required: helpers.withMessage(error, required) },
         hostIp: {
           isValidHostIp: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
-        searchBase: { required: helpers.withMessage(error, required)},
+        searchBase: { required: helpers.withMessage(error, required) },
 
         port: {
           isValidlPort: helpers.withMessage(

@@ -1,11 +1,48 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+            <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+              <v-card color="#193286" class="alert-box">
+                <v-card-title class="img-containter">
+                  <img
+                    src="@/assets/images/view.png"
+                    alt="logo"
+                    class="img-view"
+                    width="100"
+                    height="100"
+                /></v-card-title>
+                <v-card-text v-html="overlayMessage">
+                </v-card-text>
+
+                <div class="mr-3 mb-5 d-flex justify-end">
+                  <VButton
+                    rounded
+                    outlined
+                    color="#ffffff"
+                    label-color="#213E9F"
+                    :label="$t('buttons.close')"
+                    :isLarge="true"
+                    @click="close"
+                  />
+                </div>
+              </v-card>
+            </v-dialog>
+          </v-overlay>
   <div class="mt-3 ml-3">
     <v-overlay v-model="state.loading">
-      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
         <v-card color="#193286">
           <v-card-text>
             {{ $t("sdwan.pleaseWait") }}
-            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -14,23 +51,58 @@
     <v-divider class="mb-2"></v-divider>
 
     <div style="overflow: hidden; flex-grow: 1">
-      <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-        @grid-ready="onGridReady" :columnDefs="columnRules" :rowData="rowDataRules.value" :gridOptions="gridOptions"
-        :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
+      <ag-grid-vue
+        id="grid-wrapper"
+        domLayout="autoHeight"
+        class="ag-theme-alpine mt-3"
+        style="width: 100%"
+        @grid-ready="onGridReady"
+        :columnDefs="columnRules"
+        :rowData="rowDataRules.value"
+        :gridOptions="gridOptions"
+        :overlayNoRowsTemplate="overlayTemplate"
+        :localeText="paginationLocalization"
+      />
     </div>
     <div class="d-flex justify-end mt-3 mb-15">
-      <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.Add')" :isLarge="true"
-        type="submit" class="ml-2" @click="openModalAdd" />
+      <VButton
+        rounded
+        outlined
+        color="#213E9F"
+        label-color="#ffffff"
+        :label="$t('buttons.Add')"
+        :isLarge="true"
+        type="submit"
+        class="ml-2"
+        @click="openModalAdd"
+      />
     </div>
   </div>
 
-  <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+  <v-snackbar
+    :timeout="2000"
+    v-model="state.snackbar"
+    location="bottom right"
+    :color="state.color"
+  >
     {{ state.textAlert }}
   </v-snackbar>
 
-  <ModalRuleWaf :isOpen="state.isModalOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
-  <ModalShowAppWaf :isOpen="state.isModalShowAppOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
-  <ModalShowDescWaf :isOpen="state.isModalShowDescOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
+  <ModalRuleWaf
+    :isOpen="state.isModalOpen"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+  />
+  <ModalShowAppWaf
+    :isOpen="state.isModalShowAppOpen"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+  />
+  <ModalShowDescWaf
+    :isOpen="state.isModalShowDescOpen"
+    :editRow="state.editRow"
+    :modalMode="state.modalMode"
+  />
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
       <v-card-title class="headline">{{
@@ -62,6 +134,7 @@ import { reactive, ref, computed, onMounted, inject } from "vue";
 import ModalRuleWaf from "@/components/modals/ModalRuleWaf.vue";
 import ModalShowAppWaf from "@/components/modals/ModalShowAppWaf.vue";
 import ModalShowDescWaf from "@/components/modals/ModalShowDescWaf.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "Rules",
@@ -70,11 +143,13 @@ export default {
     AgGridVue,
     ModalRuleWaf,
     ModalShowAppWaf,
-    ModalShowDescWaf
+    ModalShowDescWaf,
   },
   setup() {
     const emitter = inject("emitter");
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const paginationLocalization = reactive({
       of: "/",
     });
@@ -97,6 +172,15 @@ export default {
     const RequestAction = computed(() => {
       return t("Waf.RequestAction");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Waf') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("WAF")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const Rule = computed(() => {
       return t("Waf.Rule");
     });
@@ -153,7 +237,6 @@ export default {
     //   return eGui;
     // }
 
-
     const rowDataRules = reactive({});
     const gridApi = ref(null);
     const overlayTemplate = ref("");
@@ -183,7 +266,6 @@ export default {
         </button>
         `;
       } else {
-
         eGui.innerHTML = `
              <button
                 class="action-button description"
@@ -200,8 +282,6 @@ export default {
         });
       });
       return eGui;
-
-
     }
 
     function actionCellRenderer(params) {
@@ -261,22 +341,37 @@ export default {
     }
 
     const handleAction = (action, rowData, index) => {
+      const user = user_privilege("Waf");
       switch (action) {
         case "delete":
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
           state.deleteDialog = true;
           state.deletedRow = rowData;
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "edit":
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
 
         case "show":
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
           state.isModalShowAppOpen = true;
           state.editRow = rowData;
           state.modalMode = "show";
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
 
         default:
@@ -285,17 +380,28 @@ export default {
     };
 
     const handleActionDescription = (action, rowData, index) => {
+      const user = user_privilege("Waf");
       switch (action) {
         case "description":
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
           console.log('description')
           state.isModalShowDescOpen = true;
           state.editRow = rowData;
           state.modalMode = "show";
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
 
         default:
           break;
       }
+    };
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
     };
 
     const onGridReady = (params) => {
@@ -320,6 +426,12 @@ export default {
       let list_rules = JSON.parse(wafList);
       rowDataRules.value = list_rules;
     });
+
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
 
     emitter.on("closeWafRuleModal", () => {
       state.isModalOpen = false;
@@ -346,9 +458,15 @@ export default {
       axios.post("/waf/restartNginx");
     };
     const openModalAdd = () => {
+      const user = user_privilege('Waf');
+      if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
     };
 
     const cancelDelete = () => {
@@ -377,14 +495,22 @@ export default {
           }, 4000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
     return {
       state,
+      close,
+      overlayMessage,
       onGridReady,
       openModalAdd,
       cancelDelete,
@@ -398,3 +524,9 @@ export default {
   },
 };
 </script>
+<style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+</style>

@@ -11,7 +11,8 @@
     "goupname": "Nom de groupe",
     "description": "Description",
     "server": "Serveur d'annuaire",
-    "LoginTime": "Temps de connexion"
+    "LoginTime": "Temps de connexion",
+    "resetPassword":"Réinitialisation du mot de passe"
   },
   "login": {
     "verifyYourAccount": "Vérifier Votre Compte",
@@ -49,16 +50,18 @@
   },
 
   "ldap": {
-    "ActivateLdap": "Activer LDAP",
+    "ActivateLdap": "Enregistrer sur LDAP",
     "TLS": "Cryptage TLS/SSL (chiffrement)",
     "Activateecnryption": "Activer cryptage"
   },
 
   "errors": {
+    "errorServer":"Erreur de serveur interne. Veuillez réessayer plus tard",
     "valueRequired": "Champs est obligatoire",
     "invalidPassword": "Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation": "Votre mot de passe ne correspond pas",
     "ChampIncludeOnlyNumbers": "Champ ne peut inclure que des numéros",
+    "ChampNoInclude": "Champ ne peut pas contenir uniquement des numéros ou des espaces",
     "formatMustBeLikeAdresseIP": "Format doit correspondre à l'adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format doit correspondre à l'adresse : X.X.X.X/XX",
     "minimumOneRange": "Minimum Une Plage",
@@ -72,7 +75,8 @@
     "emptyArray": "Le tableau est vide. Veuillez ajouter au moins un élément.",
     "emptyValue": "a une valeur vide",
     "atLeastemptyValue": "Au moins un élément a une valeur vide",
-    "noModif": "Rule Non modifiable"
+    "noModif": "Rule Non modifiable",
+    "invalidChar": "Au moins un élément contient un hôte ou un port vide, ou des caractères invalides."
   },
   "placeholder": {
     "enterPassword": "Saisir le mot de passe",
@@ -89,7 +93,8 @@
   },
   "subtitle": {
     "assistant": "Assistante",
-    "userCertificatemanagement": "Utilisateurs & Certificats",
+    "user": "Utilisateurs",
+    "cert": "Certificats",
     "networkManagement": "Gestion du Réseau",
     "systemConfig": "Configuration du système",
     "settings": "Paramètres",
@@ -133,7 +138,8 @@
   "english": "Anglais",
   "networkAdmins": "Administrateurs de réseaux",
   "networksGroups": "Groupes de réseaux",
-  "networksServers": "Serveurs de réseaux",
+  "networksServers": "Serveur d'authentification",
+  "noInterfaces": "Il n'y a pas d'interfaces",
 
   "delete": {
     "DeleteConfirmation": "Confirmation de Suppression",
@@ -147,6 +153,7 @@
     "Delete": "Êtes-vous sûr de vouloir supprimer ceci ?"
   },
 
+  "duplicatedServer": "Serveur DNS Dupliqué",
   "agGrid": {
     "name": "Nom",
     "cpuType": "CPU Type",
@@ -433,6 +440,7 @@
   },
 
   "squid": {
+    "errorTime":"L'heure de début et l'heure de fin sont identiques",
     "restart": "Veuillez redémarrer le service pour que les modifications soient prises en compte.",
     "proxyPort": "Port du proxy",
     "etesVouSur": "Êtes-vous sûr de vouloir",
@@ -464,7 +472,7 @@
     "editBlackList": "Modifier la liste Noire",
     "aclName": "Nom d'Acl",
     "pleaseType": "Veuillez taper...",
-    "selectItem": "Sélectionner un élément"
+    "selectItem": "Sélectionner un ou plusieur éléments"
   },
   "suricata": {
     "suricata": "Suricata",
@@ -525,6 +533,7 @@
   "Sunday": "Dimanche",
 
   "champs": {
+    "existGateway":"Adresse de la passerelle existe deja",
     "indication": "champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",
     "champNumber": "champs lifeTime ne peuvent inclure que des nombres.",
     "champletter": "champs d'etat ne peut inclure que des lettres.",
@@ -533,8 +542,8 @@
   },
 
   "tabs": {
-    "userManagement": "Gestion des utilisateurs",
-    "certificateManagement": "Gestion des certificats",
+    "userManagement": "Utilisateurs",
+    "certificateManagement": "Certificats",
     "configuration": "CONFIGURATION",
     "rules": "REGLES",
     "alerts": "ALERTS",
@@ -578,7 +587,7 @@
     "addInterceptConfig": "Ajouter Config d'interception",
     "configName": "Nom de Configuration",
     "protocol": "Protocole",
-    "address": "Addresse",
+    "address": "Adresse",
     "lowPorts": "PORTS BAS",
     "highPorts": "PORTS HAUTS",
     "updateConfig": "Modifier la Config d'interception",
@@ -607,21 +616,22 @@
     "router": "Routeur",
     "updateTerminator": "Modifier le terminateur",
     "binding": "Reliure",
-    "addRelaysPolicy": "Ajouter une Politique de Relais",
+    "addRelaysPolicy": "Ajouter une Politique de Relai",
     "policyName": "Nom de la Politique",
     "semantic": "Sémantique",
-    "edgeRelaysRole": "Rôle des Relais Edge",
-    "identityRoleAttribute": "Rôle identitaire",
-    "updateRelaysPolicy": "Modifier la politique des relais",
-    "identityRole": "Rôle d'identité",
+    "edgeRelaysRole": "Attribut relais",
+    "identityRoleAttribute": "Attribut d'identité",
+    "updateRelaysPolicy": "Modifier la politique de relai",
+    "identityRole": "Identity Attribute",
     "addServicesPolicy": "Ajouter une Politique de Service",
-    "serviceRole": "Rôle de service",
-    "serviceRoleAttribute": "Attribut du Rôle de Service",
+    "serviceRole": "Attribut de service",
+    "serviceRoleAttribute": "Attribut de Service",
     "updateServicePolicy": "Modifier la politique de service",
     "servicesEdgeRelaysPolicies": "Services Relais de Périphérie Politiques",
     "addService": "Ajouter une Politique de Service de Relai de Périphérie",
-    "edgeRelaysPolicies": "Politiques des relais Edge",
-    "servicesPolicies": "Politiques des services"
+    "edgeRelaysPolicies": "Politiques des relais",
+    "servicesPolicies": "Politiques des services",
+    "ZTNAStatus": "ZTNA ne fonctionne pas, veuillez démarrer le service"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",
@@ -1061,7 +1071,9 @@
     "Update": "Mettre à jour",
     "pleaseChoose": "Veuillez choisir un fichier image",
     "fileBig": "Votre fichier est trop volumineux ! Veuillez sélectionner une image de moins de 1MB",
-    "GotIt": "Je l'ai!"
+    "GotIt": "Je l'ai!",
+    "NoPermission":"Vous ne disposez pas des autorisations requises pour effectuer des actions",
+    "ContactAdmin":"Veuillez contacter l'administrateur si vous pensez qu'il s'agit d'une erreur."
   },
   "logrotate": {
     "id": "ID",
@@ -1073,5 +1085,10 @@
     "download_fail": "Erreur lors du téléchargement du fichier",
     "delete_succes": "Fichier supprimé avec succès!",
     "delete_fail": "Erreur lors de la suppression du fichier"
-  }
+  },
+  "roles": "Rôles",
+  "roleLabel": "Label de rôle",
+  "priveleges": "Privilèges",
+  "addRole": "Ajouter un rôle",
+  "editRole": "Modifier le rôle"
 }

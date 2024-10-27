@@ -1,4 +1,19 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3 ml-3 mr-3">
     <v-overlay v-model="loading">
       <v-dialog
@@ -143,6 +158,7 @@ import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalCreateClient from "@/components/modals/ModalCreateClient.vue";
 import ModalListClient from "@/components/modals/ModalListClient.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "ListingOpenvpnComponent",
@@ -159,6 +175,8 @@ export default {
       of: "/",
     });
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const overlayTemplate = ref("");
     const dialogDelete = ref(false);
     const isDeletedType = ref("");
@@ -171,6 +189,8 @@ export default {
     const isLoadingDialogue = ref(false);
 
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       isModalOpen: false,
       isModalOpenListView: false,
       editRow: {},
@@ -178,6 +198,15 @@ export default {
     const ServerNam = computed(() => {
       return t("PageGeneral.ServerName");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Openvpn') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("VPN SSL")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const Protocol = computed(() => {
       return t("Clientsopenvpn.Protocol/Port");
     });
@@ -355,7 +384,10 @@ export default {
     };
 
     const rowGroupPanelShow = ref("always");
-
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
     const getCookie = (name) => {
       let cookieValue = null;
       if (document.cookie && document.cookie !== "") {
@@ -478,8 +510,12 @@ export default {
     const handleActionServer = (action, rowData, index) => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const user = user_privilege("Openvpn");
+
       switch (action) {
         case "play":
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+
           loading.value = true;
           isLoadingDialogue.value = true;
           axios
@@ -491,28 +527,44 @@ export default {
               loading.value = false;
               isLoadingDialogue.value = false;
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-              loading.value = false;
-              isLoadingDialogue.value = false;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            });
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                loading.value = false;
+                isLoadingDialogue.value = false;
+
+                if (i.response.status === 500) {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = t("errors.errorServer");
+                } else {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = i.response.data.error;
+                }
+              });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "edit":
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+
           emitter.emit("add-server");
           setTimeout(() => {
             emitter.emit("edit-server", rowData);
           }, 1000);
           break;
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
         case "stop":
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+
           loading.value = true;
           isLoadingDialogue.value = true;
           axios
@@ -538,8 +590,14 @@ export default {
                 location.reload();
               }, 1000);
             });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
           break;
         case "restart":
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+
           loading.value = true;
           isLoadingDialogue.value = true;
           axios
@@ -551,39 +609,97 @@ export default {
               loading.value = false;
               isLoadingDialogue.value = false;
 
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-              loading.value = false;
-              isLoadingDialogue.value = false;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            });
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                loading.value = false;
+                isLoadingDialogue.value = false;
 
+                if (i.response.status === 500) {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = t("errors.errorServer");
+                } else {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = i.response.data.error;
+                }
+              });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
+          break;
+        case "restart":
+          if (user && user !== "viewer" && user!=='default') {
+            loading.value = true;
+            isLoadingDialogue.value = true;
+            axios
+              .put(`/openvpn/restartServerOpenvpn/${rowData.id}`)
+              .then((response) => {
+                snackbar.value = true;
+                color.value = "success";
+                textAlert.value = response.data.msg;
+                loading.value = false;
+                isLoadingDialogue.value = false;
+
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                loading.value = false;
+                isLoadingDialogue.value = false;
+
+                if (i.response.status === 500) {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = t("errors.errorServer");
+                } else {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = i.response.data.error;
+                }
+              });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "delete":
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+
           isDeletedType.value = "server";
           deleteRow.value = rowData;
           dialogDelete.value = true;
           rowID.value = rowData.id;
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
 
         case "account":
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+
           state.isModalOpen = true;
           state.editRow = rowData;
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "show":
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+
           state.isModalOpenListView = true;
           state.editRow = rowData;
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
 
         default:
@@ -642,54 +758,82 @@ export default {
     const handleActionClient = (action, rowData, index) => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const user = user_privilege("Openvpn");
+
       switch (action) {
         case "download":
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+
           let id = rowData.id;
           let fileExtention = `${rowData.name}.ovpn`;
 
-          const csrfToken = getCookie("csrftoken");
-          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+            const csrfToken = getCookie("csrftoken");
+            axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-          axios
-            .post(`/openvpn/exportClientOpenvpn/${id}`)
-            .then((response) => {
-              const text = response.data.client;
-              const blob = new Blob([text], {
-                type: "application/x-x509-ca-cert",
+            axios
+              .post(`/openvpn/exportClientOpenvpn/${id}`)
+              .then((response) => {
+                const text = response.data.client;
+                const blob = new Blob([text], {
+                  type: "application/x-x509-ca-cert",
+                });
+
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.style.display = "none";
+                a.href = url;
+                a.download = fileExtention;
+
+                document.body.appendChild(a);
+                a.click();
+
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+              })
+              .catch((i) => {
+                loading.value = false;
+                isLoadingDialogue.value = false;
+
+                if (i.response.status === 500) {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = t("errors.errorServer");
+                } else {
+                  snackbar.value = true;
+                  color.value = "red";
+                  textAlert.value = i.response.data.error;
+                }
               });
-
-              const url = window.URL.createObjectURL(blob);
-              const a = document.createElement("a");
-              a.style.display = "none";
-              a.href = url;
-              a.download = fileExtention;
-
-              document.body.appendChild(a);
-              a.click();
-
-              window.URL.revokeObjectURL(url);
-              document.body.removeChild(a);
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-            });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
 
           break;
         case "editClient":
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+
           emitter.emit("add-client");
           setTimeout(() => {
             emitter.emit("edit-client", rowData);
           }, 1000);
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
 
         case "delete":
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+
           isDeletedType.value = "client";
           deleteRow.value = rowData;
           dialogDelete.value = true;
           rowID.value = rowData.id;
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         default:
           break;
@@ -741,16 +885,33 @@ export default {
     const publishServer = () => {};
 
     const addServer = () => {
-      emitter.emit("add-server");
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+        emitter.emit("add-server");
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const publishClient = () => {};
 
     const addClient = () => {
-      emitter.emit("add-client");
+      const user = user_privilege('Openvpn');
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+        emitter.emit("add-client");
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     onMounted(async () => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       emitter.on("closeModalClient", () => {
         state.isModalOpenListView = false;
       });
@@ -820,9 +981,15 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = i.response.data.error;
+            if (i.response.status === 500) {
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = t("errors.errorServer");
+            } else {
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            }
           });
       } else if (isDeletedType.value === "client") {
         axios
@@ -837,9 +1004,15 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = i.response.data.error;
+            if (i.response.status === 500) {
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = t("errors.errorServer");
+            } else {
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
+            }
           });
       }
     };
@@ -874,14 +1047,21 @@ export default {
       formatedProtocClient,
       actionCellRenderer,
       onGridReady,
+      close,
       publishServer,
       addServer,
       publishClient,
       addClient,
+      overlayMessage,
       getCookie,
     };
   },
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+</style>

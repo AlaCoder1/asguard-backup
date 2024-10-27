@@ -1,14 +1,12 @@
 """This file is for working on Server OpenVPN in system"""
 
 import os
-import shutil
 import time
-from backend.managementCertificates.constant_variables import PATH_CERT, PATH_KEY
 from backend.managementCertificates.utils import initialize_ca
-from backend.openvpn.constant_variables import PATH_DH_FILES, PATH_LOG_OPENVPN, PATH_OPENVPN, PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD, PATH_SERVER_CONF, PATH_SERVER_DH, PATH_SERVER_LOG, PATH_SERVER_STATIC, PATH_STATUS_LOG
+from backend.openvpn.constant_variables import PATH_DH_FILES, PATH_LOG_OPENVPN, PATH_SERVER_CLIENT_MANAGEMENT_PASSWORD, PATH_SERVER_CONF, PATH_SERVER_DH, PATH_SERVER_LOG, PATH_SERVER_STATIC, PATH_STATUS_LOG
 from backend.openvpn.utils import create_tls_file
 from backend.openvpn.servers_status import change_status_server_openvpn
-from utils.commands_utils import execute_list_commands_without_arguments, get_current_directory
+from utils.commands_utils import execute_list_commands_without_arguments, get_current_directory, write_file_from_system
 
 
 def install_server_openvpn_in_system(server_name, ca_name, tls_auth, dh_length, server_conf:str):
@@ -18,25 +16,15 @@ def install_server_openvpn_in_system(server_name, ca_name, tls_auth, dh_length, 
     # Initialization
     initialize_ca(current_dir, ca_name)
     create_tls_file(tls_auth, PATH_SERVER_STATIC.format(server_name))
-    
-    with open(PATH_SERVER_CONF.format(server_name), 'w') as server_file:
-        server_file.write(server_conf)
 
     commands_list_without_arguments = [['sudo', 'mkdir', '-p', PATH_LOG_OPENVPN],
                                        ['sudo', 'touch', PATH_STATUS_LOG],
-                                       ['sudo', 'chown', '777', PATH_STATUS_LOG],
                                        ['sudo', 'cp', PATH_DH_FILES.format(dh_length), PATH_SERVER_DH.format(server_name)]
                                        ]
     execute_list_commands_without_arguments(commands_list_without_arguments)
-
-    # Add permissions to use certificates and other files
-    shutil.chown('/etc/openvpn/', user='openvpn', group='network')
-
-    commands_list_without_arguments = [['sudo', 'chown', '-R', 'openvpn:network', PATH_OPENVPN],
-                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', PATH_CERT],
-                                       ['sudo', 'chown', '-R', 'openvpn:openvpn', PATH_KEY],
-                                       ]
-    execute_list_commands_without_arguments(commands_list_without_arguments)
+    
+    path_server = PATH_SERVER_CONF.format(server_name)
+    write_file_from_system(path_server, server_conf)
 
 
 def delete_server_openvpn_in_system(server_name):
@@ -70,8 +58,7 @@ def update_server_openvpn_in_system(previous_server_name, server_name, tls_auth,
     
     create_tls_file(tls_auth, PATH_SERVER_STATIC.format(server_name))
     
-    with open(PATH_SERVER_CONF.format(server_name), 'w') as server_file:
-        server_file.write(server_conf)
+    write_file_from_system(PATH_SERVER_CONF.format(server_name), server_conf)
     
     #Restart server in system if the system was started before the changes7
     if server_status:

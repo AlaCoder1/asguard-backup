@@ -57,6 +57,7 @@ def conf(request,name_interface):
         #get interface name to execute command systeme
         ifname=deviceInfo.ifname
         id_interface = deviceInfo.id
+        aux_main=deviceInfo.is_main
         ###### get object Config service
         genericConfigObject=None
         if GenericConfig.objects.filter(interface_id=id_interface).exists():
@@ -99,6 +100,7 @@ def conf(request,name_interface):
                     output_service=add_requirement(ifname,output_service)
                     GatewayObject=None
                     ##IPV4 configuration cases 
+                    jsonIPV4={}
                     match setuptypeIP4.lower():
                         case "none":
                             #call function to convert address to None
@@ -126,13 +128,16 @@ def conf(request,name_interface):
                                 cmdgw4=return_gateway_system(uuid,addrgw4,far_aux,multiWan_aux,metric)
                                 ipv4_gw_interface=True
                                 add_gateway_interface_db(GatewayObject,name_interface,metric,ipv4_gw_interface)
+                            elif GatewayInterface.objects.filter(interface_id=id_interface).exists():
+                                interface = GatewayInterface.objects.get(interface_id=id_interface)
+                                interface.delete()
                             #call function to convert address to static
-                            commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,uuid,ip_address4,netmask4,cmdgw4)
+                            commandes,output_service,cmd_final_ipv4=update_conn_static_IPV4(output_service,ifname,uuid,ip_address4,netmask4,cmdgw4,aux_main)
                             jsonIPV4={
                         "name_interface":name_interface,"ifname":ifname,
                         "ip_address":ip_address4,"netmask":netmask4,
                         "typeip4":setuptypeIP4}
-                        case "dhcp":
+                        case "dhcp" if not aux_main:
                             typeDHCP4 = data.get('value_setup_Ipv4')['typeDHCP4']
                             alias_add =  None if data['value_setup_Ipv4'].get('alias_add', None) == "" else  data['value_setup_Ipv4'].get('alias_add', None)
                             alias_mask =  None if data['value_setup_Ipv4'].get('alias_mask', None) == "" else  data['value_setup_Ipv4'].get('alias_mask', None)
@@ -198,15 +203,15 @@ def conf(request,name_interface):
                         "domain_server":domain_server
                         }
                             #add commands of create file dhclient to list of commandes to execute    
-                            commandes_final+=create_file_IPV4(ifname,configContenu)
+                            commandes_final+=create_file_IPV4(ifname,configContenu,aux_main)
                             #call function to convert address to dhcp advanced /Base  in service
-                            commandes,output_service,cmd_final_ipv4=update_conn_dhcp_IPV4(output_service,ifname,uuid)
+                            commandes,output_service,cmd_final_ipv4=update_conn_dhcp_IPV4(output_service,ifname,uuid,aux_main)
                     jsonIPV6=data
                     if  setuptypeIP6 is not None:
                         match setuptypeIP6.lower():
                             case "none":
                                 pass
-                            case "static":
+                            case "static"  :
                                 typeDHCP6=''
                                 ip_address6 =  None if data['value_setup_Ipv6'].get('ip_address6', None) == "" else  data['value_setup_Ipv6'].get('ip_address6', None)
                                 netmask6 =  None if data['value_setup_Ipv6'].get('netmask6', None) == "" else  data['value_setup_Ipv6'].get('netmask6', None)
@@ -234,7 +239,7 @@ def conf(request,name_interface):
                                 "name_interface":name_interface,"ifname":ifname,
                                 "ip_address6":ip_address6,"netmask6":netmask6,
                                 "typeip6":setuptypeIP6}
-                            case "dhcp":
+                            case "dhcp" :
                                 typeDHCP6 = data.get('value_setup_Ipv6')['typeDHCP6']
                                 #Base and Advanced
                                 ipv4_connectivity =  None if data['value_setup_Ipv6'].get('ipv4_connectivity', None) == "" else  data['value_setup_Ipv6'].get('ipv4_connectivity', None)
@@ -323,7 +328,7 @@ def conf(request,name_interface):
                     ###call function to add all commandes to the service
                     output_service = add_cmd(output_service,commandes)
                     ###cmd to refresh conf in system Network Manager
-                    cmd_final_conf=refresh_conf_system(uuid)
+                    cmd_final_conf=refresh_conf_system(uuid,aux_main)
                     #ajouter au liste des commandes finales à executer  
                     commandes_final+=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_conf+cmd_final_Gen+cmd_final_Block
                     cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
@@ -334,9 +339,9 @@ EOF""".format('\n'.join(output_service))
                         _, error=run_command(cmd_asguard)
                         if  (error==""):
                             ## for dhcp 4
-                            if setuptypeIP4 is None or setuptypeIP4.lower()=="static" :
+                            if setuptypeIP4 is None or setuptypeIP4.lower()=="static" or aux_main  :
                                 aux_gw_dhcp=True
-                            if setuptypeIP4.lower()=="dhcp":
+                            if setuptypeIP4.lower()=="dhcp" and not aux_main:
                                 #function to get dhcp address and mask
                                 ip_address4,netmask4=get_address_dhcp(ifname,"4")
                                 jsonIPV4["ip_address"]=ip_address4
@@ -359,9 +364,9 @@ EOF""".format('\n'.join(output_service))
                                 gwaddr6,metric6,default_aux6,far_aux6,multiwan_aux6=get_gateway_dhcp(ifname,"6")
                                 aux_gw6_dhcp=save_gateways_database(gwaddr6,name_interface,default_aux6,far_aux6,multiwan_aux6,metric6,False,False)
                             #update changes in DB ip4
-                            aux_ipv4=update_DB(id_interface,jsonIPV4,IP4Config,IP4ConfigSerializer)
+                            aux_ipv4=update_DB(id_interface,jsonIPV4,IP4Config,IP4ConfigSerializer) if not aux_main else True
                             #update changes in DB ip6
-                            aux_ipv6=update_DB(id_interface,jsonIPV6,IP6Config,IP6ConfigSerializer)
+                            aux_ipv6=update_DB(id_interface,jsonIPV6,IP6Config,IP6ConfigSerializer) if not aux_main else True
                             #update changes in DB generic config
                             aux_gen=update_DB(id_interface,data,GenericConfig,GenericConfigSerializer)
                             #update changes in DB interface config
@@ -372,10 +377,12 @@ EOF""".format('\n'.join(output_service))
                                         if aux_inter is True:  
                                             if aux_gw_dhcp is True:
                                                 if aux_gw6_dhcp is True:
-                                                    if setuptypeIP4.lower()=="static" :
+                                                    if setuptypeIP4.lower()=="static" and not ifname.lower().startswith("vlan") and not name_interface.lower().startswith("vxlan") :
                                                         aux_server=create_dhcpv4_db(id_interface,ip_address4,netmask4)
                                                     elif setuptypeIP4.lower()=="dhcp":
                                                         aux_server=delete_dhcp4_server(id_interface,ifname)
+                                                    else:
+                                                        aux_server=True
                                                     if aux_server is True:
                                                             ###### 
                                                             msg=f"{CONSTANT_INTERFACE_NETWORK} {SUCCESS_MESSAGES_CONFIGURED}"

@@ -1,4 +1,19 @@
 <template>
+   <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-row class="ml-1 mb-0 d-flex justify-start">
       <v-col cols="3">
@@ -141,6 +156,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import Apexchart from "vue3-apexcharts";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
+import { user_privilege } from "@/mixins/user_privilege.js";
+import VButton from "@/components/VButton.vue";
 
 export default {
   name: "MonotoringOpenvpnComponent",
@@ -148,6 +165,7 @@ export default {
     AgGridVue,
     MonitoringCards,
     Apexchart,
+    VButton,
   },
 
   setup() {
@@ -156,6 +174,14 @@ export default {
     const availability = computed(() => {
       return t("monitoringVPN.Availablity");
     });
+    const overlayMessage = computed(() => {
+this.current_user= user_privilege('Ipsec') 
+  if (this.current_user === "viewer" || this.current_user === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!this.last_Subscription.includes("VPN IPSEC")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const OutTraffic = computed(() => {
       return t("monitoringVPN.OutTraffic");
     });
@@ -166,6 +192,10 @@ export default {
       return t("monitoringVPN.PacketSent");
     });
     const state = reactive({
+      current_user :"",
+      last_Subscription :[],
+      isviewModal: false,
+      viewModal: false,
       server: "",
       lasObj: null,
       date: "",
@@ -268,6 +298,11 @@ export default {
     };
 
     onMounted(async () => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       getAllListServer();
     });
     const error = computed(() => {
@@ -284,6 +319,8 @@ export default {
     const v$ = useValidate(rules, state);
 
     const serve = async () => {
+      const user = user_privilege('Ipsec');
+      if (user && user !== 'viewer' && user !=='default' && this.last_Subscription.includes("VPN IPSEC")) {
       const result = await v$.value.$validate();
 
       if (result) {
@@ -291,6 +328,10 @@ export default {
           initializeWebSocket();
         }, 1000);
       }
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
     };
 
     const apexChart = ref(null);
@@ -380,9 +421,15 @@ export default {
         console.log("WebSocket connection closed.");
       };
     };
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
 
     return {
+      close,
       v$,
+      overlayMessage,
       state,
       apexChart,
       chartOptionsAvailability,
@@ -421,6 +468,11 @@ export default {
   font-weight: 400;
   line-height: normal;
   justify-content: center;
+}
+
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 
 .title-card {

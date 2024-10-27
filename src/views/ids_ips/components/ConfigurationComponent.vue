@@ -1,4 +1,36 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -272,6 +304,7 @@ import ModalAddInterface from "@/components/modals/ModalAddInterface.vue";
 import { v4 as uuidv4 } from "uuid";
 import useValidate from "@vuelidate/core";
 import { required, helpers } from "@vuelidate/validators";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "ConfigurationComponent",
@@ -286,6 +319,8 @@ export default {
     const { t } = useI18n();
     const emitter = inject("emitter");
     const rowDataInterfaces = reactive({});
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const overlayTemplate = ref("");
     const switchValue = ref(false);
     const paginationLocalization = reactive({
@@ -340,6 +375,8 @@ export default {
       //
       modalData: {},
       modalMode: "",
+      isviewModal: false,
+      viewModal: false,
       isModalOpen: false,
       isOpen: null,
       editRow: {},
@@ -363,7 +400,20 @@ export default {
       interface: "",
     });
     const gridApi = ref(null);
-
+    const overlayMessage = computed(() => {
+      current_user.value = user_privilege("Suricata");
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!last_Subscription.value.includes("IDS/IPS")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      }
+    });
     const thread = computed(() => {
       return t("suricata.thread");
     });
@@ -495,6 +545,11 @@ export default {
       return cookieValue;
     };
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const getInterface = async () => {
       rowDataInterfaces.value =
         document.getElementById("app").attributes["all_interfaces"].value;
@@ -561,8 +616,8 @@ export default {
       //    <i class="far fa-edit" style="color: #086eae;"></i>
       // </button>
       eGui.innerHTML = `
-   
-  
+
+
       <button
         class="action-button delete"
         data-action="delete">
@@ -581,6 +636,7 @@ export default {
     }
 
     const handleAction = (action, rowData) => {
+      const user = user_privilege("suricata");
       switch (action) {
         // case "edit":
         //   // state.modalData = {};
@@ -590,17 +646,27 @@ export default {
 
         //   break;
         case "delete":
-          const index = rowDataAF.value.findIndex(
-            (item) => item.id === rowData.id
-          );
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("IDS/IPS")
+          ) {
+            const index = rowDataAF.value.findIndex(
+              (item) => item.id === rowData.id
+            );
 
-          if (index !== -1) {
-            rowDataAF.value.splice(index, 1);
-            if (gridApi.value) {
-              gridApi.value.setRowData(rowDataAF.value);
-            } else {
-              console.error("Grid API.");
+            if (index !== -1) {
+              rowDataAF.value.splice(index, 1);
+              if (gridApi.value) {
+                gridApi.value.setRowData(rowDataAF.value);
+              } else {
+                console.error("Grid API.");
+              }
             }
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
           }
           break;
         default:
@@ -609,44 +675,65 @@ export default {
     };
 
     const reloadData = async () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      state.loading = true;
-      state.isLoadingDialogue = true;
-      try {
-        const response = await axios.post(
-          "activerSuricataUpdate/" + state.interId
-        );
-        if (response.status === 200) {
-          // state.messages=response.data.message
-          state.loading = false;
-          state.isLoadingDialogue = false;
-          state.snackbar = true;
-          state.color = "success";
-          state.textAlert = t("suricata.rulesSavedSuccessfully");
-          // Automatically close the snackbar after 3000 milliseconds (3 seconds)
-          setTimeout(() => {
-            state.snackbar = false;
-          }, 1000);
-        } else {
+      const user = user_privilege("Suricata");
+      console.log("user update", user);
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("IDS/IPS")
+      ) {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        state.loading = true;
+        state.isLoadingDialogue = true;
+        try {
+          const response = await axios.post(
+            "activerSuricataUpdate/" + state.interId
+          );
+          if (response.status === 200) {
+            // state.messages=response.data.message
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = t("suricata.rulesSavedSuccessfully");
+            // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+            setTimeout(() => {
+              state.snackbar = false;
+            }, 1000);
+          } else {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "error";
+            state.textAlert = t("suricata.failed");
+            setTimeout(() => {
+              state.snackbar = false;
+            }, 2000);
+          }
+        } catch (error) {
           state.loading = false;
           state.isLoadingDialogue = false;
           state.snackbar = true;
           state.color = "error";
-          state.textAlert = t("suricata.failed");
-        
+          state.textAlert = error;
+          setTimeout(() => {
+            state.snackbar = false;
+          }, 2000);
         }
-      } catch (error) {
-        state.loading = false;
-        state.isLoadingDialogue = false;
-        state.snackbar = true;
-        state.color = "error";
-        state.textAlert = error;
-      
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
       }
     };
 
     onMounted(async () => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription", last_Subscription.value);
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
         d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
@@ -803,115 +890,141 @@ export default {
     };
 
     const openModalAdd = () => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-      emitter.emit("list-Interface", rowDataAF.value);
+      const user = user_privilege("Suricata");
+      console.log(user);
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("IDS/IPS")
+      ) {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+        emitter.emit("list-Interface", rowDataAF.value);
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const submitForm = async () => {
-      const result = await v$.value.$validate();
-      if (result) {
-        const csrfToken = getCookie("csrftoken");
-        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const user = user_privilege("Suricata");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("IDS/IPS")
+      ) {
+        const result = await v$.value.$validate();
+        if (result) {
+          const csrfToken = getCookie("csrftoken");
+          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-        if (!rowDataAF.value) {
-          rowDataAF.value = [];
-        }
+          if (!rowDataAF.value) {
+            rowDataAF.value = [];
+          }
 
-        if (rowDataAF.value.length) {
-          var mapedRow = rowDataAF.value.map((e) => {
-            let filtredCopy = state.mapedInterface
-              .filter((i) => i.name === e.copy_iface)
-              .map((i) => {
-                return {
-                  id: i.id,
-                  name: i.ifname,
-                };
-              });
+          if (rowDataAF.value.length) {
+            var mapedRow = rowDataAF.value.map((e) => {
+              let filtredCopy = state.mapedInterface
+                .filter((i) => i.name === e.copy_iface)
+                .map((i) => {
+                  return {
+                    id: i.id,
+                    name: i.ifname,
+                  };
+                });
 
-            return {
-              id: e.id ?? e.id_interface,
-              interface: e.ifname,
-              threads: e.threads,
-              cluster_id: e.cluster_id,
-              cluster_type: e.cluster_type,
-              defrag: e.defrag,
-              use_mmap: e.use_mmap,
-              ring_size: e.ring_size,
-              copy_iface: filtredCopy[0] ?? null,
-              copy_mode: e.copy_mode === "--" ? null : e.copy_mode,
-            };
-          });
-
-          let payload = {
-            status_enabled: state.status_enabled,
-            promisc: state.promisc,
-            eve_log: state.eve_log,
-            syslog: state.syslog,
-            mpm_algo: state.mpm_algo.slug,
-            profile: state.profile.slug,
-            mode_inline: state.mode_inline,
-            list_interfaces: mapedRow,
-          };
-          state.loading = true;
-          state.isLoadingDialogue = true;
-          axios
-            .put("/ids-ips/UpdateGeneralConfig/" + state.interId, payload)
-            .then((response) => {
-              if (response.status == 200) {
-                state.loading = false;
-                state.isLoadingDialogue = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = t("suricata.configurationSuccess");
-                // Automatically close the snackbar after 3000 milliseconds (3 seconds)
-                setTimeout(() => {
-                  state.snackbar = false;
-                  location.reload();
-                }, 1000);
-              } else {
-                state.loading = false;
-                state.isLoadingDialogue = false;
-                state.snackbar = true;
-                state.color = "error";
-                state.textAlert = t("suricata.failedToSaveConfiguration");
-                // Automatically close the snackbar after 3000 milliseconds (3 seconds)
-                setTimeout(() => {
-                  state.snackbar = false;
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "error";
-              state.textAlert = error;
-              setTimeout(() => {
-                state.snackbar = false;
-                location.reload();
-              }, 1000);
+              return {
+                id: e.id ?? e.id_interface,
+                interface: e.ifname,
+                threads: e.threads,
+                cluster_id: e.cluster_id,
+                cluster_type: e.cluster_type,
+                defrag: e.defrag,
+                use_mmap: e.use_mmap,
+                ring_size: e.ring_size,
+                copy_iface: filtredCopy[0] ?? null,
+                copy_mode: e.copy_mode === "--" ? null : e.copy_mode,
+              };
             });
+
+            let payload = {
+              status_enabled: state.status_enabled,
+              promisc: state.promisc,
+              eve_log: state.eve_log,
+              syslog: state.syslog,
+              mpm_algo: state.mpm_algo.slug,
+              profile: state.profile.slug,
+              mode_inline: state.mode_inline,
+              list_interfaces: mapedRow,
+            };
+            state.loading = true;
+            state.isLoadingDialogue = true;
+            axios
+              .put("/ids-ips/UpdateGeneralConfig/" + state.interId, payload)
+              .then((response) => {
+                if (response.status == 200) {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = t("suricata.configurationSuccess");
+                  // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+                  setTimeout(() => {
+                    state.snackbar = false;
+                    location.reload();
+                  }, 1000);
+                }
+                // else {
+                //   state.loading = false;
+                //   state.isLoadingDialogue = false;
+                //   state.snackbar = true;
+                //   state.color = "error";
+                //   state.textAlert = t("suricata.failedToSaveConfiguration");
+                //   // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+                //   setTimeout(() => {
+                //     state.snackbar = false;
+                //   }, 2000);
+                // }
+              })
+              .catch((i) => {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("suricata.failedToSaveConfiguration");
+                }
+              });
+          } else {
+            state.snackbar = true;
+            state.color = "error";
+            state.textAlert = t("suricata.MinimumOneInter");
+            setTimeout(() => {
+              state.snackbar = false;
+            }, 3000);
+          }
         } else {
-          state.snackbar = true;
-          state.color = "error";
-          state.textAlert = t("suricata.MinimumOneInter");
-          setTimeout(() => {
-            state.snackbar = false;
-          }, 2000);
+          console.log("v$", v$.value);
+          if (rowDataAF.value.length === 0) {
+            state.snackbar = true;
+            state.color = "error";
+            state.textAlert = t("suricata.MinimumOneInter");
+            setTimeout(() => {
+              state.snackbar = false;
+            }, 3000);
+          }
         }
       } else {
-        console.log("v$", v$.value);
-        if (rowDataAF.value.length === 0) {
-          state.snackbar = true;
-          state.color = "error";
-          state.textAlert = t("suricata.MinimumOneInter");
-          setTimeout(() => {
-            state.snackbar = false;
-          }, 2000);
-        }
+        state.isviewModal = true;
+        state.viewModal = true;
       }
     };
 
@@ -936,6 +1049,8 @@ export default {
     return {
       switchValue,
       cancel,
+      close,
+      overlayMessage,
       getCookie,
       getInterface,
       submitForm,
@@ -959,6 +1074,10 @@ export default {
 .error-feedback {
   color: orange;
   font-size: 0.85em;
+}
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 
 .label-style {

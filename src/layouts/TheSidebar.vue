@@ -1,15 +1,30 @@
 <template>
-  <v-navigation-drawer v-model="drawer" :rail="rail" hover permanent foating :rail-width="67" class="global-drawer"
-    :class="{ 'w-auto': rail, 'w-20': !rail }">
+  <v-navigation-drawer
+    v-model="drawer"
+    :rail="rail"
+    hover
+    permanent
+    foating
+    :rail-width="67"
+    class="global-drawer"
+    :class="{ 'w-auto': rail, 'w-20': !rail }"
+  >
     <div v-if="!rail">
-      <div dense flat class="row-pointer asguard_primary_dark" @click.stop="closeSidebar">
+      <div
+        dense
+        flat
+        class="row-pointer asguard_primary_dark"
+        @click.stop="closeSidebar"
+      >
         <div class="d-flex">
           <v-toolbar-title class="ml-5 mt-5">
             <span>Asguard</span>
           </v-toolbar-title>
 
           <div class="ml-5 mt-5 mr-5">
-            <v-icon v-if="!rail"><i class="mdi mdi-close icon-custom"></i></v-icon>
+            <v-icon v-if="!rail"
+              ><i class="mdi mdi-close icon-custom"></i
+            ></v-icon>
           </div>
         </div>
       </div>
@@ -20,27 +35,42 @@
             <v-list-item @click="showSubMenu(item)">
               <div v-if="!rail">
                 <v-list-item class="float-left">
-                  <span class="ml-5 icon-custom"><i :class="item.icon"></i></span>
+                  <span class="ml-5 icon-custom"
+                    ><i :class="item.icon"></i
+                  ></span>
                   <span class="ml-7 sidebarTitle">{{
                     $t(item.title)
-                    }}</span></v-list-item>
+                  }}</span></v-list-item
+                >
 
-                <v-list-item-title class="float-right justify-end mr-5" style="margin-top: 15px"
-                  v-if="item.subItems.length > 0">
-                  <v-icon v-if="item.subMenuVisible"><i class="mdi mdi-chevron-up" aria-hidden="true"></i>
+                <v-list-item-title
+                  class="float-right justify-end mr-5"
+                  style="margin-top: 15px"
+                  v-if="item.subItems.length > 0"
+                >
+                  <v-icon v-if="item.subMenuVisible"
+                    ><i class="mdi mdi-chevron-up" aria-hidden="true"></i>
                   </v-icon>
-                  <v-icon v-else><i class="mdi mdi-chevron-down" aria-hidden="true"></i></v-icon>
+                  <v-icon v-else
+                    ><i class="mdi mdi-chevron-down" aria-hidden="true"></i
+                  ></v-icon>
                 </v-list-item-title>
               </div>
             </v-list-item>
           </a>
-          <v-list-item v-if="item.subMenuVisible" v-for="subItem in item.subItems" :key="subItem.title"
-            :class="{ 'sub-menu-visible': item.subMenuVisible }" class="sub-menu-item">
+    
+          <v-list-item
+            v-for="subItem in filteredSubItems(item)"
+            v-if="item.subMenuVisible"
+            :key="subItem.title"
+            :class="{ 'sub-menu-visible': item.subMenuVisible }"
+            class="sub-menu-item"
+          >
             <a :href="subItem.href" class="custom-sub-a">
               <v-list-item>
                 <v-list-item-title class="text-white-space">{{
                   $t(subItem.title)
-                  }}</v-list-item-title>
+                }}</v-list-item-title>
               </v-list-item>
             </a>
           </v-list-item>
@@ -48,7 +78,10 @@
       </v-list>
     </div>
     <div v-else>
-      <div class="ml-5 mt-5 mr-5 row-pointer asguard_primary_dark" @click="closeSidebar">
+      <div
+        class="ml-5 mt-5 mr-5 row-pointer asguard_primary_dark"
+        @click="closeSidebar"
+      >
         <v-icon v-if="rail"><i class="mdi mdi-menu icon-custom"></i></v-icon>
       </div>
 
@@ -57,7 +90,9 @@
           <a :href="item.href" style="text-decoration: none; color: black">
             <v-list-item @click="showSubMenu(item)">
               <div>
-                <span class="ml-5"><i :class="item.icon" class="icon-custom"></i></span>
+                <span class="ml-5"
+                  ><i :class="item.icon" class="icon-custom"></i
+                ></span>
               </div>
             </v-list-item>
           </a>
@@ -76,6 +111,7 @@ export default {
 
   data() {
     return {
+      user: null,
       drawer: true,
       rail: false,
       mini: false,
@@ -89,44 +125,23 @@ export default {
           mouseOverSubMenu: false,
           subMenuVisible: false,
         },
-        // {
-        //   title: "testMoni",
-        //   icon: "mdi mdi-view-dashboard",
-        //   href: "/vpnmonitoring",
-        //   active: "vpnmonitoring",
-        //   subItems: [],
-        //   mouseOverSubMenu: false,
-        //   subMenuVisible: false,
-        // },
         {
           title: "sideBar.system",
           icon: "mdi mdi-laptop",
           active: "system",
           subItems: [
-            // {
-            //   title: "subtitle.assistant",
-            //   icon: "",
-            //   href: "/system/assistante",
-            //   active: "Assistante",
-            // },
             {
-              title: "subtitle.userCertificatemanagement",
+              title: "tabs.userManagement",
               icon: "",
-              href: "/system/user-certificat-management",
-              active: "User & certificat management",
+              href: "/system/user-management",
+              active: "User management",
             },
-            // {
-            //   title: "subtitle.networkManagement",
-            //   icon: "",
-            //   href: "/system/network-management",
-            //   active: "Network management",
-            // },
-            // {
-            //   title: "subtitle.systemConfig",
-            //   icon: "",
-            //   href: "/system/system-configuration",
-            //   active: "System configuration",
-            // },
+            {
+              title: "tabs.certificateManagement",
+              icon: "",
+              href: "/system/certificat-management",
+              active: "certificat management",
+            },
             {
               title: "subtitle.rsaKeyPairs",
               icon: "",
@@ -173,24 +188,12 @@ export default {
               href: "/interfaces/type-of-interface",
               active: "Type of interface",
             },
-            // {
-            //   title: "subtitle.overview",
-            //   icon: "",
-            //   href: "/interfaces/overview",
-            //   active: "Overview",
-            // },
-            // {
-            //   title: "subtitle.assignations",
-            //   icon: "",
-            //   href: "/interfaces/assignations",
-            //   active: "Assignations",
-            // },
-            // {
-            //   title: "subtitle.differentNetworks",
-            //   icon: "",
-            //   href: "/interfaces/different-networks",
-            //   active: "Different Networks",
-            // },
+            {
+              title: "subtitle.DHCPV4",
+              icon: "",
+              href: "/services/server-dhcp4",
+              active: "DHCP V4",
+            },
             {
               title: "subtitle.routing",
               icon: "",
@@ -198,20 +201,6 @@ export default {
               href: "/routing",
               active: "routing",
             },
-            // {
-            //   title: "subtitle.diagnostics",
-            //   icon: "",
-            //   href: "/interfaces/diagnostics",
-            //   active: "Diagnostics",
-            // },
-
-            // {
-            //   title: "subtitle.settings",
-            //   icon: "",
-            //   href: "/settings",
-            //   href: "/settings",
-            //   active: "Settings",
-            // },
           ],
           subMenuVisible: false,
         },
@@ -232,12 +221,6 @@ export default {
               href: "/firewall/nat",
               active: "Nat",
             },
-            // {
-            //   title: "subtitle.advancedSettings",
-            //   icon: "",
-            //   href: "/firewall/advanced-settings",
-            //   active: "Advanced settings",
-            // },
           ],
           subMenuVisible: false,
         },
@@ -259,30 +242,6 @@ export default {
               href: "/openvpn",
               active: "OPEN VPN",
             },
-            // {
-            //   title: "subtitle.ipFilterDoubleMasque",
-            //   icon: "",
-            //   href: "/services/ip-filter-double-masque",
-            //   active: "IP Filter double masque",
-            // },
-            // {
-            //   title: "subtitle.clamAV",
-            //   icon: "",
-            //   href: "/clamaV",
-            //   active: "Clam AV",
-            // },
-            {
-              title: "subtitle.DHCPV4",
-              icon: "",
-              href: "/services/server-dhcp4",
-              active: "DHCP V4",
-            },
-            // {
-            //   title: "subtitle.DHCPV6",
-            //   icon: "",
-            //   href: "/services/dhcp-v6",
-            //   active: "DHCP V",
-            // },
             {
               title: "subtitle.intrusionDetection",
               icon: "",
@@ -316,38 +275,6 @@ export default {
           ],
           subMenuVisible: false,
         },
-        // {
-        //   title: "sideBar.reports",
-        //   icon: "mdi mdi-chart-bar",
-        //   active: "Firewall",
-        //   subItems: [
-        //     {
-        //       title: "subtitle.health",
-        //       icon: "",
-        //       href: "/reports/health",
-        //       active: "Health",
-        //     },
-        //     {
-        //       title: "subtitle.insight",
-        //       icon: "",
-        //       href: "/reports/insight",
-        //       active: "Insight",
-        //     },
-        //     {
-        //       title: "subtitle.traffic",
-        //       icon: "",
-        //       href: "/reports/traffic",
-        //       active: "Traffic",
-        //     },
-        //     {
-        //       title: "subtitle.eventLogs",
-        //       icon: "",
-        //       href: "/reports/event-logs",
-        //       active: "Event logs",
-        //     },
-        //   ],
-        //   subMenuVisible: false,
-        // },
         {
           title: "subtitle.subscription",
           icon: "mdi mdi-cash-sync",
@@ -359,7 +286,24 @@ export default {
       ],
     };
   },
+  mounted: async function () {
+    let retriveInfo = localStorage.getItem("user-info");
+    let userInfo = JSON.parse(retriveInfo);
+    this.user = userInfo;
+  },
+
   methods: {
+    filteredSubItems(item) {
+      return item.subItems.filter((subItem) => {
+        if (!this.isAdmin) {
+          return (
+            subItem.title !== "tabs.userManagement" &&
+            subItem.title !== "subtitle.settings"
+          );
+        }
+        return true;
+      });
+    },
     logout() {
       storeAuth.logout();
     },
@@ -378,16 +322,14 @@ export default {
     },
     closeSidebar() {
       this.rail = !this.rail;
-
-      // this.mini = !this.mini;
-      // this.items.forEach((menuItem) => {
-      //   menuItem.subMenuVisible = false;
-      // });
     },
   },
   computed: {
-    user() {
-      return storeAuth.user;
+    // user() {
+    //   return storeAuth.user;
+    // },
+    isAdmin() {
+      return this.user?.currentUser?.role === "admin";
     },
   },
 };

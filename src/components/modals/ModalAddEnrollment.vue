@@ -10,34 +10,13 @@
             <v-container>
               <v-row>
                 <v-col cols="12">
-                  <v-text-field v-model="date" label="Date" prepend-icon="mdi-calendar" type="date"></v-text-field>
+                  <v-text-field v-model="date" label="Date" prepend-icon="mdi-calendar" type="date" :rules="dateRules"
+
+                  ></v-text-field>
                 </v-col>
                 <v-col cols="12">
-                  <v-text-field v-model="time" label="Time" prepend-icon="mdi-clock" type="time"
+                  <v-text-field v-model="time" label="Time" prepend-icon="mdi-clock" type="time"  :rules="timeRules"
                     class="ml-1"></v-text-field>
-                </v-col>
-
-                <v-col cols="12">
-                  <div class="d-flex align-center">
-                    <label class="ml-1" for="Type">Type</label>
-                    <div class="ml-5 mt-1">
-                      <v-menu open-on-hover>
-                        <template v-slot:activator="{ props }">
-                          <v-btn color="#FAFAFA" v-bind="props">
-                            {{ selectedTitle }}
-                          </v-btn>
-                        </template>
-
-                        <v-list>
-                          <v-list-item v-for="(item, index) in items" :key="index" @click="selectItem(item)">
-                            <v-list-item-title>{{
-                              item.title
-                            }}</v-list-item-title>
-                          </v-list-item>
-                        </v-list>
-                      </v-menu>
-                    </div>
-                  </div>
                 </v-col>
               </v-row>
             </v-container>
@@ -48,19 +27,6 @@
               class="mt-3 btn-add" text @click="cancel"><span class="text-white pr-3 pl-3">
                 {{ $t("buttons.close") }}</span
               ></v-btn>
-            <!-- <VBtn
-              color="red"
-              :rounded="true"
-              large
-              rounded
-              outlined
-              label-color="#213E9F"
-              variant="flat"
-              class="mt-3 btn-add"
-              type="reset"
-            >
-              Reset
-            </VBtn> -->
             <VBtn large rounded outlined label-color="#213E9F" color="indigo-darken-3" :rounded="true" variant="flat"
               class="mt-3 ml-2 btn-add" type="submit">
               {{ $t("buttons.create") }}
@@ -79,6 +45,8 @@
 import axios from "axios";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { toRefs, ref, watch, reactive, inject } from "vue";
+import { useI18n } from "vue-i18n";
+
 
 export default {
   props: {
@@ -93,6 +61,7 @@ export default {
   },
 
   setup(props) {
+    const { t } = useI18n();
     const date = ref(null);
     const time = ref(null);
     const selectedTitle = ref("ott");
@@ -129,6 +98,57 @@ export default {
       }
     );
 
+    const timeRules = [
+      (value) => !!value || "Please enter a time",
+      (value) => {
+        if (!value) return true;
+        const currentDate = new Date();
+        const enteredDate = new Date(date.value);
+    
+        const currentTime = new Date().getHours();
+        const enteredHour = parseInt(value.split(':')[0]);
+
+        currentDate.setUTCHours(0, 0, 0, 0);
+        enteredDate.setUTCHours(0, 0, 0, 0);
+        
+        if (enteredDate > currentDate) {
+          return true;
+        }
+        if (isNaN(enteredHour)) {
+          return "Invalid time format";
+        }
+        if (enteredHour < currentTime) {
+          return "Time should be after the current time";
+        }
+        return true;
+      }
+    ];
+
+    const dateRules = [
+  (value) => !!value || "Please enter a date",
+  (value) => {
+    if (!value) return true;
+    
+    const currentDate = new Date();
+    const enteredDate = new Date(value);
+    
+    currentDate.setUTCHours(0, 0, 0, 0);
+    enteredDate.setUTCHours(0, 0, 0, 0);
+    
+    if (isNaN(enteredDate.getTime())) {
+      return "Invalid date format";
+    }
+    
+    if (enteredDate < currentDate) {
+      return "Date should be after today";
+    }
+    
+    return true;
+  }
+];
+
+
+
     const submitForm = async () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -140,7 +160,7 @@ export default {
 
       let payload = {
         expiresAt: dateTime,
-        method: selectedTitle.value,
+        method: "ott",
         identityId: state.itemId
       }
       axios
@@ -162,9 +182,15 @@ export default {
             }
           })
           .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
     };
 
@@ -173,7 +199,6 @@ export default {
     };
 
     const cancel = () => {
-      console.log("test");
       emitter.emit("closeEnrollmentModal");
     };
 
@@ -190,6 +215,8 @@ export default {
       time,
       jwtToken,
       showJwtToken,
+      timeRules,
+      dateRules,
       EnrollementId,
     };
   },

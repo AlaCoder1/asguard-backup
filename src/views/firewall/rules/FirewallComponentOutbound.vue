@@ -1,4 +1,37 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage">
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-5 mb-10">
     <div class="container">
       <h4>{{ $t("firewall.outbound") }}</h4>
@@ -20,7 +53,7 @@
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <!-- Modal -->
+
       <ModalFirewallRuleOutbound
         :isOpen="state.isModalOpen"
         :editRow="state.editRow"
@@ -31,7 +64,7 @@
       <v-row class="mt-8 mb-6">
         <v-col cols="12" md="6">
           <v-text-field
-            id="filter-text-box"
+            id="filter-text-outbound"
             v-model="filterText"
             :placeholder="$t('firewall.search')"
             density="compact"
@@ -57,13 +90,12 @@
         v-for="(error, index) in state.textAlert"
         :key="index"
         :type="error.status === 400 ? 'error' : 'success'"
-        :color="state.color"
+        :color="error.status === 400 ? 'error' : 'success'"
         style="margin-bottom: 10px"
       >
         {{ error.msg }}
       </v-alert>
-      <!-- </v-card-title> -->
-      <!-- <v-card-text> -->
+
       <ag-grid-vue
         id="grid-wrapper"
         domLayout="autoHeight"
@@ -88,11 +120,7 @@
         <v-card-title>Changes</v-card-title>
         <v-card-text>
           <v-row
-            :class="[
-              oldRow.length !== 0
-                ? 'mt-5'
-                : 'justify-start mt-5 ml-2',
-            ]"
+            :class="[oldRow.length !== 0 ? 'mt-5' : 'justify-start mt-5 ml-2']"
           >
             <v-col
               :cols="oldRow.length !== 0 ? 6 : 1"
@@ -123,7 +151,7 @@
                       rule.saddr
                     } ${rule.sport === undefined ? "" : rule.sport} ${
                       rule.daddr
-                    } ${rule.dport === undefined ? "" : rule.dport}   `
+                    } ${rule.dport === undefined ? "" : rule.dport} `
                   }}
                 </span>
                 <del
@@ -143,7 +171,7 @@
                       rule.saddr
                     } ${rule.sport === undefined ? "" : rule.sport} ${
                       rule.daddr
-                    } ${rule.dport === undefined ? "" : rule.dport}   `
+                    } ${rule.dport === undefined ? "" : rule.dport} `
                   }}
                 </del>
               </v-row>
@@ -169,7 +197,7 @@
                       rule.saddr
                     } ${rule.sport === undefined ? "" : rule.sport} ${
                       rule.daddr
-                    } ${rule.dport === undefined ? "" : rule.dport}   `
+                    } ${rule.dport === undefined ? "" : rule.dport} `
                   }}</span
                 >
               </v-row>
@@ -220,6 +248,7 @@ import VButton from "../../../components/VButton.vue";
 import ModalFirewallRuleOutbound from "../../../components/modals/ModalFirewallRuleOutbound.vue";
 import { useI18n } from "vue-i18n";
 import { v4 as uuidv4 } from "uuid";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default defineComponent({
   name: "Outbound",
@@ -235,6 +264,7 @@ export default defineComponent({
   },
   setup(props) {
     const { t } = useI18n();
+    const last_Subscription=ref([])
     const paginationLocalization = reactive({
       of: "/",
     });
@@ -245,6 +275,8 @@ export default defineComponent({
       // deletedRow: null,
       snackbar: false,
       color: "",
+      isviewModal: false,
+      viewModal: false,
       textAlert: [],
       textAlertDelete: "",
       snackbarDelete: false,
@@ -269,10 +301,22 @@ export default defineComponent({
 
     const changes = ref(false);
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const rowDataLength = computed(() => {
       return !rowData.value || rowData.value.length == 0 ? false : true;
     });
-
+    const overlayMessage = computed(() => {
+      let current_user = user_privilege()
+      if (current_user === "viewer" || current_user === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")} <br /> `;
+      } else if (!last_Subscription.value.includes("Firewall L4")) {
+        return `<br />  ${t("firewall.msg_subscription")} <br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+      }
+    });
     const policy = computed(() => {
       return t("firewall.policy");
     });
@@ -304,23 +348,22 @@ export default defineComponent({
 
     const alert = ref(false);
     const mode = ref("create");
-    const last_Subscription = ref([]);
     const columnDefs = ref([
-      {
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
-        rowDrag: true,
-        editable: false,
-      },
-      {
-        headerCheckboxSelection: false,
-        checkboxSelection: true,
-        editable: false,
-        width: 50,
-        minWidth: 50,
-        maxWidth: 50,
-      },
+      // {
+      //   width: 50,
+      //   minWidth: 50,
+      //   maxWidth: 50,
+      //   rowDrag: true,
+      //   editable: false,
+      // },
+      // {
+      //   headerCheckboxSelection: false,
+      //   checkboxSelection: true,
+      //   editable: false,
+      //   width: 50,
+      //   minWidth: 50,
+      //   maxWidth: 50,
+      // },
       {
         field: "policy",
         headerName: policy,
@@ -328,12 +371,17 @@ export default defineComponent({
         cellEditorParams: {
           values: ["accept", "drop"],
         },
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
       {
         field: "rule_description",
         headerName: description,
         sortable: true,
-        filter: true,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
       {
         field: "protocol",
@@ -349,7 +397,9 @@ export default defineComponent({
           ],
         },
         sortable: true,
-        filter: true,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
 
       {
@@ -357,28 +407,42 @@ export default defineComponent({
         autoHeight: true,
         headerName: saddr,
         cellRenderer: formatedLineSadd,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
       {
         field: "sport",
         headerName: sport,
         cellRenderer: formatedLineSport,
         autoHeight: true,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
       {
         headerName: daddr,
         field: "daddr",
         cellRenderer: formatedLineDaddr,
         autoHeight: true,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
       {
         field: "dport",
         headerName: dport,
         cellRenderer: formatedLineDport,
         autoHeight: true,
+        width: 90,
+        minWidth: 150,
+        flex: 1,
       },
       {
         headerName: action,
         field: "action",
+        width: 150,
+        minWidth: 50,
         cellRenderer: actionCellRenderer,
       },
     ]);
@@ -434,15 +498,22 @@ export default defineComponent({
     const rowDataToDelete = ref(null);
 
     const openModalAdd = () => {
-      if (last_Subscription.value.includes("Firewall L4")) {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-      emitter.emit("inter-Outbound-uuid", props.uuid);
-      }
-       else {
-        emitter.emit("firewal-subscription");
-        window.scrollTo(0, 0);
+      const user = user_privilege();
+
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        if (last_Subscription.value.includes("Firewall L4")) {
+          state.modalData = {};
+          state.modalMode = "create";
+          state.isModalOpen = true;
+          emitter.emit("inter-Outbound-uuid", props.uuid);
+        } else {
+          state.isviewModal = true;
+          state.viewModal = true;
+        }
       }
     };
 
@@ -509,22 +580,36 @@ export default defineComponent({
     }
     const onFilterTextBoxChanged = () => {
       gridApi.value.setQuickFilter(
-        document.getElementById("filter-text-box").value
+        document.getElementById("filter-text-outbound").value
       );
     };
     const handleAction = (action, rowData) => {
+      const user = user_privilege();
+
       switch (action) {
         case "delete":
-          rowDataToDelete.value = rowData;
-          deleteDialog.value = true;
-          state.rowDataId = rowData.uuid;
+          if (user === "viewer") {
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            rowDataToDelete.value = rowData;
+            deleteDialog.value = true;
+            state.rowDataId = rowData.uuid;
+          }
+
           break;
         case "update":
-          mode.value = "update";
-          state.modalData = {};
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
+          if (user === "viewer") {
+            state.isviewModal = true;
+            state.viewModal = true;
+          } else {
+            mode.value = "update";
+            state.modalData = {};
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+          }
+
           break;
         default:
           break;
@@ -698,12 +783,15 @@ export default defineComponent({
               }
             })
             .catch((i) => {
-              state.snackbarDelete = true;
-              state.color = "red";
-              state.textAlertDelete = i.response.data.response;
-              setTimeout(() => {
-                state.snackbar = false;
-              }, 1000);
+              if (i.response.status === 500) {
+                state.snackbarDelete = true;
+                state.color = "red";
+                state.textAlertDelete = t("errors.errorServer");
+              } else {
+                state.snackbarDelete = true;
+                state.color = "red";
+                state.textAlertDelete = i.response.data.response;
+              }
             });
 
           if (rowData.value.length === 0) changes.value = true;
@@ -753,12 +841,15 @@ export default defineComponent({
                 }
               })
               .catch((i) => {
-                state.snackbarDelete = true;
-                state.color = "red";
-                state.textAlertDelete = i.response.data.response;
-                setTimeout(() => {
-                  state.snackbar = false;
-                }, 1000);
+                if (i.response.status === 500) {
+                  state.snackbarDelete = true;
+                  state.color = "red";
+                  state.textAlertDelete = t("errors.errorServer");
+                } else {
+                  state.snackbarDelete = true;
+                  state.color = "red";
+                  state.textAlertDelete = i.response.data.response;
+                }
               });
             gridApi.value.setRowData(rowData.value);
           } else {
@@ -791,44 +882,52 @@ export default defineComponent({
       showAddModal.value = false;
     };
     const saveRules = () => {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      let payload = rowData.value.map((e) => {
-        return {
-          id: e.id ?? null,
-          policy: e.policy,
-          saddr: e.saddr,
-          daddr: e.daddr,
-          sport: e.sport,
-          dport: e.dport,
-          protocol: e.protocol,
-          type_rule: e.type_rule,
-          rule_description: e.rule_description,
-        };
-      });
-
-      axios
-        .post(`/rules/saveRules/${props.activeTab}`, payload)
-        .then((response) => {
-          if (response.status == "200") {
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.response;
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          }
-        })
-        .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.response;
-
-          setTimeout(() => {
-            state.snackbar = false;
-          }, 1000);
+        let payload = rowData.value.map((e) => {
+          return {
+            id: e.id ?? null,
+            policy: e.policy,
+            saddr: e.saddr,
+            daddr: e.daddr,
+            sport: e.sport,
+            dport: e.dport,
+            protocol: e.protocol,
+            type_rule: e.type_rule,
+            rule_description: e.rule_description,
+          };
         });
+
+        axios
+          .post(`/rules/saveRules/${props.activeTab}`, payload)
+          .then((response) => {
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.textAlert = response.data.response;
+              setTimeout(() => {
+                location.reload();
+              }, 2000);
+            }
+          })
+          .catch((i) => {
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.response;
+            }
+          });
+      }
     };
     const cancel = () => {
       showAddModal.value = false;
@@ -855,6 +954,10 @@ export default defineComponent({
       //   />
       //  </svg></span>`;
       // console.log(overlayTemplate.valye)
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
       emitter.on("closeOutboundRule", () => {
         state.isModalOpen = false;
         state.isOpen = false;
@@ -873,12 +976,6 @@ export default defineComponent({
       let parsedArray = JSON.parse(rulesAttribute);
 
       rules.value = parsedArray;
-
-      const lastSubscription =
-        document.getElementById("app").attributes["last_subscription"].value;
-      let parsedArraySubscription = JSON.parse(lastSubscription);
-      last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription.value", last_Subscription.value);
 
       emitter.on("addFirewallRuleOutbound", (data) => {
         if (data.interUuid === props.uuid) {
@@ -1070,6 +1167,8 @@ export default defineComponent({
       cancelDelete,
       confirmDelete,
       saveModal,
+      close,
+      overlayMessage,
       cancel,
       gridOptions,
     };
@@ -1122,3 +1221,4 @@ export default defineComponent({
   }
 }
 </style>
+

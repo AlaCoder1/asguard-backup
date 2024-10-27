@@ -5,6 +5,8 @@ from backend.network.models import Interface
 
 def create_gateway(gateway):
     """Create a new Gateway and GatewayInterface in database"""
+    if len(GatewayInterface.objects.filter(interface_id=gateway['interface'])) > 0:
+        return {"gateway": None, "error": ""}
     gwname = f'static_gw_{gateway["gateway_address"]}'
     data_gateway = {"gwname": gwname,
                     "gwaddress": gateway["gateway_address"],

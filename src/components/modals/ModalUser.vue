@@ -129,9 +129,12 @@
 
                 <v-col cols="12" class="mb-n5">
                   <v-autocomplete
-                    :items="['root', 'admin', 'user']"
                     :label="$t('form.roleUser')"
                     v-model="state.formData.role"
+                    item-title="name"
+                    item-value="id"
+                    :items="state.userRoles"
+                    return-object
                   ></v-autocomplete>
                   <span class="error-feedback" v-if="v$.formData.role.$error">{{
                     v$.formData.role.$errors[0].$message
@@ -169,14 +172,6 @@
           <v-card-actions>
             <span></span>
             <v-spacer></v-spacer>
-            <v-btn
-              type="submit"
-              color="asguard_primary_light"
-              :rounded="true"
-              class="mt-3 btn-add"
-            >
-              <span class="text-white">{{ $t("buttons.save") }}</span>
-            </v-btn>
 
             <v-btn
               color="asguard_primary_light"
@@ -184,7 +179,19 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="text-white">{{ $t("buttons.close") }}</span>
+              <span class="pr-3 pl-3 text-white" style="color: #213e9f">{{
+                $t("buttons.close")
+              }}</span>
+            </v-btn>
+            <v-btn
+              type="submit"
+              color="asguard_primary_light"
+              :rounded="true"
+              class="mt-3 btn-add"
+            >
+              <span class="text-white pr-3 pl-3">{{
+                mode === "create" ? $t("buttons.create") : $t("buttons.update")
+              }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -258,6 +265,7 @@ export default {
       userRole: null,
       userId: null,
       ModalMode: null,
+      userRoles: [],
     });
 
     const { t } = useI18n();
@@ -273,6 +281,13 @@ export default {
 
     onMounted(() => {
       getAdList();
+
+      let allLisRoles =
+        document.getElementById("app").attributes["roles"].value;
+
+      const parsedArray = JSON.parse(allLisRoles);
+
+      state.userRoles = parsedArray;
     });
     watch(
       () => state.formData.activateStatus,
@@ -305,11 +320,22 @@ export default {
         }
       );
     };
-
+    const champNoInclude = computed(() => {
+      return t("errors.ChampNoInclude");
+    });
     const rules = computed(() => {
       return {
         formData: {
-          username: { required: helpers.withMessage(error, required) },
+          username: {
+            required: helpers.withMessage(error, required),
+            isValidName: helpers.withMessage(
+              champNoInclude,
+
+              helpers.regex(
+                /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/
+              )
+            ),
+          },
           password: {
             requiredIfFuction: helpers.withMessage(
               error,
@@ -403,7 +429,12 @@ export default {
         this.state.formData.username = data.username;
         this.state.formData.fullname = data.fullname;
         this.state.formData.email = data.email;
-        this.state.formData.role = data.role;
+
+        let filtredRole = this.state.userRoles.filter(
+          (i) => i.name === data?.role
+        );
+        this.state.formData.role = filtredRole[0];
+
         let groupsIds = data.group.map((i) => {
           return {
             id: i.id,
@@ -465,6 +496,7 @@ export default {
       return cookieValue;
     },
     submitForm() {
+      console.log({ "this.state.formData": this.state.formData });
       this.v$.$validate();
       if (!this.v$.$error) {
         let groupsIds = this.state.formData?.groups?.map((i) => {
@@ -476,7 +508,7 @@ export default {
           password: this.state.formData.password,
           fullname: this.state.formData.fullname,
           email: this.state.formData.email,
-          role: this.state.formData.role,
+          role: this.state.formData.role.id,
           group: groupsIds ?? [],
           is_active: this.state.formData.deactivateUser,
           password_ad: this.state.formData.passwordDN,
@@ -516,10 +548,15 @@ export default {
               }
             })
             .catch((i) => {
-              console.log("i.response.data", i.response);
-              this.snackbar = true;
-              this.color = "red";
-              this.textAlert = i.response.data.msg;
+              if (i.response.status === 500) {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = this.$t("errors.errorServer");
+              } else {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = i.response.data.msg;
+              }
             });
         } else {
           let groupsIds = this.state.formData?.groups?.map((i) => {
@@ -530,7 +567,7 @@ export default {
             password: this.state.formData.password,
             fullname: this.state.formData.fullname,
             email: this.state.formData.email,
-            role: this.state.formData.role,
+            role: this.state.formData.role.id,
             group: groupsIds ?? [],
             is_active: this.state.formData.deactivateUser,
             password_ad: this.state.formData.passwordDN ?? "",
@@ -559,10 +596,15 @@ export default {
               }
             })
             .catch((i) => {
-              console.log("re", i.respone);
-              this.snackbar = true;
-              this.color = "red";
-              this.textAlert = i.response.data.msg;
+              if (i.response.status === 500) {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = this.$t("errors.errorServer");
+              } else {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = i.response.data.msg;
+              }
             });
         }
       }

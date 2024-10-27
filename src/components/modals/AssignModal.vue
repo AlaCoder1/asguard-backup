@@ -41,7 +41,7 @@
                     {{ v$.interface.$errors[0].$message }}
                   </p>
                 </v-col>
-                <v-col cols="12" class="mb-n6">
+                <!-- <v-col cols="12" class="mb-n6">
                   <v-text-field
                     :label="$t('typeInterface.nameInterface')"
                     v-model="state.name_interface"
@@ -52,7 +52,7 @@
                   >
                     {{ v$.name_interface.$errors[0].$message }}
                   </p>
-                </v-col>
+                </v-col> -->
               </v-row>
             </v-container>
           </v-card-text>
@@ -73,6 +73,7 @@
             </v-btn>
 
             <v-btn
+              v-if="modalMode === 'create'"
               large
               rounded
               outlined
@@ -82,11 +83,8 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+              <span class="text-white pr-3 pl-3">
                 {{ $t("buttons.create") }}</span
-              >
-              <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                {{ $t("buttons.update") }}</span
               >
             </v-btn>
           </v-card-actions>
@@ -269,7 +267,7 @@ export default {
           (i) => i.id === data?.id_vlan
         );
         state.interface = filtredInterfaceVxlan[0] ?? filtredInterfaceVlan[0];
-        state.name_interface = data.name_interface;
+        // state.name_interface = data.name_interface;
 
         let type = data.network_port.split(" ");
         if (type[0] === "VXLAN") state.typeV = "VXLAN";
@@ -302,7 +300,7 @@ export default {
           if (state.typeV === "VLAN") {
             let payload = {
               id: state.interface.id,
-              name_interface: state.name_interface,
+              // name_interface: state.name_interface,
             };
             axios
               .put(`/vlan/updateVlanInterface/${state.id}`, payload)
@@ -317,13 +315,19 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           } else if (state.typeV === "VXLAN") {
             let payload = {
-              name_interface: state.name_interface,
+              // name_interface: state.name_interface,
             };
             axios
               .put(`/vxlan/updateVxlanInterface/${state.id}`, payload)
@@ -338,18 +342,24 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           }
         } else if (modalMode.value === "create") {
           if (state.typeV === "VLAN") {
             let payload = {
               id: state.interface.id,
-              name_interface: state.name_interface,
             };
-            localStorage.setItem("network-tab", state.name_interface);
+            const transformedString = state.interface?.vlan.replace(" : ", "");
+            localStorage.setItem("network-tab", transformedString);
 
             axios
               .post("/vlan/assignVlanInterface", payload)
@@ -366,19 +376,25 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           } else if (state.typeV === "VXLAN") {
             let payload = {
               ifname: state.interface.vxlan_interface_name,
-              name_interface: state.name_interface,
+              // name_interface: state.name_interface,
             };
-            localStorage.setItem(
-              "network-tab",
-              `${"VXLAN " + state.name_interface}`
-            );
+
+            const transformedString = state.interface?.vlan.replace(" : ", "");
+
+            localStorage.setItem("network-tab", transformedString);
 
             axios
               .post("/vxlan/assignVxlanInterface", payload)
@@ -395,9 +411,15 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           }
         }
@@ -423,9 +445,9 @@ export default {
         interface: {
           required: helpers.withMessage(error, required),
         },
-        name_interface: {
-          required: helpers.withMessage(error, required),
-        },
+        // name_interface: {
+        //   required: helpers.withMessage(error, required),
+        // },
         typeV: {
           required: helpers.withMessage(error, required),
         },

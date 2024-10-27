@@ -11,7 +11,8 @@
     "goupname": "Group name",
     "description": "Description",
     "server": "Directory Server",
-    "LoginTime": "Login Time"
+    "LoginTime": "Login Time",
+    "resetPassword": "Reset Password"
   },
   "login": {
     "verifyYourAccount": "Verify Your Account",
@@ -49,16 +50,18 @@
   },
 
   "ldap": {
-    "ActivateLdap": "Activate  LDAP",
+    "ActivateLdap": "Save to LDAP",
     "TLS": "SSL/TLS encryption",
     "Activateecnryption": "Activate encryption"
   },
 
   "errors": {
+    "errorServer": "Internal Server Error. Please try again later",
     "valueRequired": "Value is required",
     "invalidPassword": "There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
     "passwordConfirmation": "Your password does not match",
     "ChampIncludeOnlyNumbers": "Champs can include only Numbers",
+    "ChampNoInclude": "Field cannot contain only numbers or spaces",
     "formatMustBeLikeAdresseIP": "Format must be like adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format must be like: X.X.X.X/XX",
     "minimumOneRange": "Minimum One Range",
@@ -69,10 +72,11 @@
     "startwithletter": "The name can contain letters, digits, underscores, and hyphens, must begin with a letter, and can be up to 32 characters long",
     "addressdAll": "Champ can include address 'X.X.X.X/X' Or word 'ALL'",
     "numberALL": "Champ can include only Numbers Or word 'ALL'",
-    "emptyArray": "The array is empty. Please add at least one object.",
+    "emptyArray": "The array is empty. Please add at least one element.",
     "emptyValue": "has an empty value",
     "atLeastemptyValue": "At least one element has an empty Value",
-    "noModif": "No Modif For this rule"
+    "noModif": "No Modif For this rule",
+    "invalidChar": "At least one element has an empty host or port, or contains invalid characters"
   },
 
   "placeholder": {
@@ -89,7 +93,8 @@
   },
   "subtitle": {
     "assistant": "Assistant",
-    "userCertificatemanagement": "Users & Certificate Management",
+    "user": "Users",
+    "cert": "Certificates",
     "networkManagement": "Network Management",
     "systemConfig": "System configuration",
     "settings": "Settings",
@@ -133,7 +138,8 @@
   "english": "English",
   "networkAdmins": "Networks admins",
   "networksGroups": "Networks groups",
-  "networksServers": "Networks Servers",
+  "networksServers": "Authentication Server",
+  "noInterfaces": "There are no interfaces",
 
   "delete": {
     "DeleteConfirmation": "Delete Confirmation",
@@ -147,6 +153,7 @@
     "Delete": "Are you sure you want to delete this"
   },
 
+  "duplicatedServer": "Duplicated DNS server",
   "agGrid": {
     "name": "Name",
     "cpuType": "Type CPU",
@@ -416,6 +423,7 @@
     "editRange": "Edit Range"
   },
   "squid": {
+    "errorTime": "Start time and End time are identical",
     "restart": "Please restart the service for the modifications to take effect.",
     "proxyPort": "Proxy port",
     "etesVouSur": "Are you sure you want to",
@@ -447,7 +455,7 @@
     "editBlackList": "Edit Black List",
     "aclName": "Acl Name",
     "pleaseType": "Please type...",
-    "selectItem": "Select Item"
+    "selectItem": "Select Items"
   },
   "suricata": {
     "suricata": "Suricata",
@@ -527,6 +535,7 @@
   },
 
   "champs": {
+    "existGateway":"Gateway address already exists",
     "indication": "champs can include only letters & Numbers & underscores & hyphens without space.",
     "champNumber": "champs lifeTime can include only Numbers.",
     "champletter": "champs state can include only letters.",
@@ -535,8 +544,8 @@
   },
 
   "tabs": {
-    "userManagement": "User Management",
-    "certificateManagement": "Certificate Management",
+    "userManagement": "Users",
+    "certificateManagement": "Certificates",
     "configuration": "CONFIGURATION",
     "rules": "RULES",
     "alerts": "ALERTS",
@@ -609,21 +618,22 @@
     "router": "Router",
     "updateTerminator": "Update Terminator",
     "binding": "Binding",
-    "addRelaysPolicy": "Add Relays Policy",
+    "addRelaysPolicy": "Add Relay Policy",
     "policyName": "Policy Name",
     "semantic": "Semantic",
-    "edgeRelaysRole": "Edge Relays Role",
-    "identityRoleAttribute": "Identity Role",
-    "updateRelaysPolicy": "Update Relays Policy",
-    "identityRole": "Identity Role",
+    "edgeRelaysRole": "Relay Attribute",
+    "identityRoleAttribute": "Identity Attribute",
+    "updateRelaysPolicy": "Update Relay Policy",
+    "identityRole": "Identity Attribute",
     "addServicesPolicy": "Add Service Policy",
-    "serviceRole": "Service Role",
-    "serviceRoleAttribute": "Service Role Attribute",
+    "serviceRole": "Service Attribute",
+    "serviceRoleAttribute": "Service Attribute",
     "updateServicePolicy": "Update Service Policy",
-    "servicesEdgeRelaysPolicies": "Services Edge Relays Policies",
-    "addService": "Add Service Edge Relay Policy",
-    "edgeRelaysPolicies": "Edge Relays Policies",
-    "servicesPolicies": "Services Policies"
+    "servicesEdgeRelaysPolicies": "Services Relays Policies",
+    "addService": "Add Service Relay Policy",
+    "edgeRelaysPolicies": "Relays Policies",
+    "servicesPolicies": "Services Policies",
+    "ZTNAStatus": "ZTNA is not running, please start service"
   },
 
   "titleAgGrid": {
@@ -1064,7 +1074,9 @@
     "Update": "Update",
     "pleaseChoose": "Please choose an image file",
     "fileBig": "Your file is too big! Please select an image under 1MB",
-    "GotIt": "Got it!"
+    "GotIt": "Got it!",
+    "NoPermission": "You do not have the required permissions to perform any actions",
+    "ContactAdmin": "Please contact the administrator if you believe this is an error."
   },
   "logrotate": {
     "id": "ID",
@@ -1076,5 +1088,10 @@
     "download_fail": "Error downloading the file",
     "delete_succes": "File deleted successfully!",
     "delete_fail": "Error deleting the file"
-  }
+  },
+  "roles": "Roles",
+  "roleLabel": "Role label",
+  "priveleges": "Priveleges",
+  "addRole": "Add Role",
+  "editRole": "Edit Role"
 }

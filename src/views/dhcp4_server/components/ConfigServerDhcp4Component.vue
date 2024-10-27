@@ -1,4 +1,40 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text>
+          {{ $t("profil.NoPermission") }}
+          <br />
+          {{ $t("profil.ContactAdmin") }}
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-3">
     <v-overlay v-model="state.loading">
       <v-dialog
@@ -152,6 +188,12 @@
               ></v-icon>
             </v-col>
           </template>
+
+          <div style="margin-left: 35%; margin-top: 1%">
+            <p class="error-feedback mb-5" v-if="state.textDnsServer">
+              {{ state.textDnsServer }}
+            </p>
+          </div>
           <v-col cols="12" class="d-flex justify-end">
             <v-btn
               color="#F6F6F6"
@@ -286,6 +328,7 @@ import ModalAddRanges from "@/components/modals/ModalAddRanges.vue";
 import { v4 as uuidv4 } from "uuid";
 import useValidate from "@vuelidate/core";
 import { required, helpers, requiredIf, email } from "@vuelidate/validators";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "ConfigServerDhcp4Component",
@@ -307,6 +350,9 @@ export default {
     const emitter = inject("emitter");
     const switchValue = ref(false);
     const state = reactive({
+      textDnsServer: "",
+      isviewModal: false,
+      viewModal: false,
       rows: [{ dns_server: "" }],
       //
       modalData: {},
@@ -334,6 +380,11 @@ export default {
     });
 
     const gridApi = ref(null);
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
 
     const rangeFrom = computed(() => {
       return t("dhcpV4.rangeFrom");
@@ -393,12 +444,26 @@ export default {
     };
 
     const addRow = () => {
-      state.rows.push({
-        dns_server: "",
-      });
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        state.rows.push({
+          dns_server: "",
+        });
+      }
     };
     const removeRow = (index) => {
-      state.rows.splice(index, 1);
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        state.rows.splice(index, 1);
+      }
     };
     const handleRemove = () => {
       state.snackbar = false;
@@ -515,7 +580,9 @@ export default {
           isValidlRemoteGateway: helpers.withMessage(
             formatBeLike,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
       };
@@ -524,10 +591,17 @@ export default {
     const v$ = useValidate(rules, state);
 
     const openModalAdd = () => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-      emitter.emit("id-range", props.configInfo.id);
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+        emitter.emit("id-range", props.configInfo.id);
+      }
     };
 
     const onGridReady = (params) => {
@@ -561,27 +635,41 @@ export default {
       });
 
       const handleAction = (action, rowData) => {
+        const user = user_privilege();
         switch (action) {
           case "edit":
-            state.modalData = {};
-            state.modalMode = "edit";
-            state.isModalOpen = true;
-            state.editRow = rowData;
+            if (user === "viewer") {
+              console.log("View Mode");
+              state.isviewModal = true;
+              state.viewModal = true;
+            } else {
+              state.modalData = {};
+              state.modalMode = "edit";
+              state.isModalOpen = true;
+              state.editRow = rowData;
+            }
 
             break;
           case "delete":
-            const index = rowDataRanges.value.findIndex(
-              (item) => item.id === rowData.id
-            );
+            if (user === "viewer") {
+              console.log("View Mode");
+              state.isviewModal = true;
+              state.viewModal = true;
+            } else {
+              const index = rowDataRanges.value.findIndex(
+                (item) => item.id === rowData.id
+              );
 
-            if (index !== -1) {
-              rowDataRanges.value.splice(index, 1);
-              if (gridApi.value) {
-                gridApi.value.setRowData(rowDataRanges.value);
-              } else {
-                console.error("Grid API.");
+              if (index !== -1) {
+                rowDataRanges.value.splice(index, 1);
+                if (gridApi.value) {
+                  gridApi.value.setRowData(rowDataRanges.value);
+                } else {
+                  console.error("Grid API.");
+                }
               }
             }
+
             break;
           default:
             break;
@@ -592,107 +680,143 @@ export default {
     }
     const hasEmptyProperty = (obj) => {
       var invalidHostChars =
-        !/^(\d{1,3}\.){3}\d{1,3}$/.test(obj.dns_server) && obj.dns_server != "";
+        !/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
+          obj.dns_server
+        ) && obj.dns_server != "";
       return invalidHostChars;
     };
+
+    const hasDuplicates = (arr) => {
+      const uniqueAddresses = new Set(arr.map((item) => item.dns_server));
+      return uniqueAddresses.size !== arr.length;
+    };
+
     const submitForm = async () => {
+      const user = user_privilege();
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      if (!rowDataRanges.value) {
-        rowDataRanges.value = [];
-      }
-      if (rowDataRanges.value.length === 0) {
-        state.snackbar = true;
-        state.color = "error";
-        state.textAlert = t("errors.minimumOneRange");
-        setTimeout(() => {
-          state.snackbar = false;
-        }, 2000);
-        return;
-      }
-
-      if (result) {
-        var hasEmptyElement = state.rows.some(hasEmptyProperty);
-
-        if (hasEmptyElement) {
+      if (user === "viewer") {
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        if (!rowDataRanges.value) {
+          rowDataRanges.value = [];
+        }
+        if (rowDataRanges.value.length === 0) {
           state.snackbar = true;
           state.color = "error";
-          state.textAlert = t("errors.formatMustBeLikeAdresseIP");
+          state.textAlert = t("errors.minimumOneRange");
           setTimeout(() => {
             state.snackbar = false;
           }, 2000);
           return;
         }
 
-        let mapredRow = rowDataRanges.value.map((e) => {
-          return {
-            range_from: e.range_from,
-            range_to: e.range_to,
-          };
-        });
+        if (result) {
+          var hasEmptyElement = state.rows.some(hasEmptyProperty);
 
-        let mapredServer = state.rows
-          .filter((i) => i.dns_server != "")
-          .map((e) => e.dns_server);
-
-        let payload = {
-          enable_dhcpv4: state.enable_dhcpv4,
-          subnet_addr: state.subnet_addr,
-          subnet_mask: state.subnet_mask,
-          available_range: state.available_range,
-          dns_server: mapredServer,
-          gateway: state.gateway,
-          domain_name: state.domain_name,
-          ranges_address: mapredRow,
-        };
-
-        state.loading = true;
-        state.isLoadingDialogue = true;
-
-        axios
-          .put(
-            `/server_dhcp4/updateDhcp4Server/${props.configInfo.id}`,
-            payload
-          )
-          .then((response) => {
-            if (response.status == 200) {
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "success";
-              state.textAlert = response.data.msg;
-              setTimeout(() => {
-                state.snackbar = false;
-                location.reload();
-              }, 3000);
-            }
-          })
-          .catch((i) => {
-            state.loading = false;
-            state.isLoadingDialogue = false;
+          if (hasEmptyElement) {
             state.snackbar = true;
             state.color = "error";
-            state.textAlert = i.response.data.msg;
+            state.textAlert = t("errors.formatMustBeLikeAdresseIP");
             setTimeout(() => {
               state.snackbar = false;
-              location.reload();
+            }, 2000);
+            return;
+          }
+          let dup = hasDuplicates(state.rows);
+          console.log("dup", dup);
+          if (dup) {
+            // state.snackbar = true;
+            // state.color = "error";
+            state.textDnsServer = t("duplicatedServer");
+            setTimeout(() => {
+              state.textDnsServer = "";
             }, 1000);
+            return;
+          }
+
+          let mapredRow = rowDataRanges.value.map((e) => {
+            return {
+              range_from: e.range_from,
+              range_to: e.range_to,
+            };
           });
-      } else {
-        console.log("error", v$.value);
 
-        var hasEmptyElement = state.rows.some(hasEmptyProperty);
+          let mapredServer = state.rows
+            .filter((i) => i.dns_server != "")
+            .map((e) => e.dns_server);
 
-        if (hasEmptyElement) {
-          state.snackbar = true;
-          state.color = "error";
-          state.textAlert = t("errors.formatMustBeLikeAdresseIP");
-          setTimeout(() => {
-            state.snackbar = false;
-          }, 2000);
-          return;
+          let payload = {
+            enable_dhcpv4: state.enable_dhcpv4,
+            subnet_addr: state.subnet_addr,
+            subnet_mask: state.subnet_mask,
+            available_range: state.available_range,
+            dns_server: mapredServer,
+            gateway: state.gateway,
+            domain_name: state.domain_name,
+            ranges_address: mapredRow,
+          };
+
+          state.loading = true;
+          state.isLoadingDialogue = true;
+
+          axios
+            .put(
+              `/server_dhcp4/updateDhcp4Server/${props.configInfo.id}`,
+              payload
+            )
+            .then((response) => {
+              if (response.status == 200) {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  state.snackbar = false;
+                  location.reload();
+                }, 3000);
+              }
+            })
+            .catch((i) => {
+              state.loading = false;
+              state.isLoadingDialogue = false;
+
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.msg;
+              }
+            });
+        } else {
+          console.log("error", v$.value);
+
+          var hasEmptyElement = state.rows.some(hasEmptyProperty);
+
+          if (hasEmptyElement) {
+            state.snackbar = true;
+            state.color = "error";
+            state.textAlert = t("errors.formatMustBeLikeAdresseIP");
+            setTimeout(() => {
+              state.snackbar = false;
+            }, 2000);
+            return;
+          }
+          let dup = hasDuplicates(state.rows);
+          if (dup) {
+            state.snackbar = true;
+            state.color = "error";
+            state.textAlert = t("duplicatedServer");
+            return;
+          }
         }
       }
     };
@@ -701,6 +825,7 @@ export default {
       switchValue,
       overlayTemplate,
       v$,
+      close,
       getCookie,
       submitForm,
       openModalAdd,
@@ -731,10 +856,13 @@ export default {
   font-weight: 300;
   line-height: normal;
 }
+
 /* CSS to style the text */
 .text-xs {
-  font-size: 12px; /* Example font size for small text */
+  font-size: 12px;
+  /* Example font size for small text */
 }
+
 .container {
   height: 50px;
 }

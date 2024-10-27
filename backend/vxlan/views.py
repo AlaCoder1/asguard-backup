@@ -203,8 +203,8 @@ def assign_vxlan_interface(request):
                         "ifname":vxlan_interface_name,
                         "private_aux":False,
                         "bogon_aux":False,
-                        "name_interface":f"VXLAN {data_input['name_interface']}",
-                        "description":f"test default config {vxlan_interface_name}"
+                        "name_interface":f"VXLAN{vxlan_id}",
+                        # "description":f"test default config {vxlan_interface_name}"
                     }
             if not Interface.objects.filter(ifname=vxlan_interface_name).exists():
                 aux_save=add_vxlan_sys(parent_interface,vxlan_id,vxlan_interface_name,vxlan_source_address,vxlan_destination_address,vxlan_destination_port,vxlan_connection_uuid)
@@ -251,7 +251,7 @@ def update_vxlan_interface(request,id_interface):
                         "ifname":f"{vlan_object.ifname}",
                         "private_aux":False,
                         "bogon_aux":False,
-                        "name_interface":f"VXLAN {data_input['name_interface']}",
+                        "name_interface":f"VXLAN{vlan_object.vxlan_id}",
                     }
             interface_serializer=InterfaceSerializer(vlan_object,data=data_save)
             aux_save=True

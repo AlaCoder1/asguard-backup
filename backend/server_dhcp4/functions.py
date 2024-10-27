@@ -33,7 +33,7 @@ def parse_server_info(data):
     dns_servers=[] if data.get('dns_server', []) == "" else data.get('dns_server', [])
     gateway=None if data.get('gateway', None) == "" else data.get('gateway', None)
     domain_name=None if data.get('domain_name', None) == "" else data.get('domain_name', None)
-    dns_server = ' , '.join(filter(None, dns_servers)) if len(dns_servers)!=0 else None
+    dns_server = ' , '.join(filter(None, list(set(dns_servers)))) if len(dns_servers)!=0 else None
     data_server={
         "enable_dhcpv4":enable_dhcpv4,
         "subnet_addr":subnet_addr,
@@ -87,7 +87,7 @@ def prepare_conf_server(id_interface,ip_address4,netmask4):
 def create_dhcpv4_db(id_interface,ip_address4,netmask4):
     """"save server in database after config ipv4 static on interface if exist update it if not create new one"""
     data_save,subnet_addr,subnet_addr=prepare_conf_server(id_interface,ip_address4,netmask4)
-    if not ServerDhcp4.objects.filter(Q(subnet_addr=subnet_addr)|Q(available_range=subnet_addr)).exists() :
+    if not ServerDhcp4.objects.filter(Q(subnet_addr=subnet_addr)|Q(available_range=subnet_addr)).exists() and netmask4!=32:
         if ServerDhcp4.objects.filter(Q(interface_id=id_interface)).exists():
             server_object=ServerDhcp4.objects.get(interface_id=id_interface)
             # data_save['interface']=server_object.interface_id
@@ -107,7 +107,7 @@ def delete_dhcp4_server(id_interface,ifname):
     if ServerDhcp4.objects.filter(interface_id=id_interface).exists():
         server_object=ServerDhcp4.objects.get(interface_id=id_interface)
         commandes=[
-            '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
+            '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && sudo echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
             "systemctl restart --quiet dhcpd4.service"
         ]
         
@@ -177,7 +177,7 @@ EOF""".format(ifname,'\n'.join(list_config)),
     """cat <<EOF > /etc/default/isc-dhcp-server
 {} 
 EOF""".format('\n'.join(config_server_interface)),
-    "systemctl enable --quiet dhcpd4.service && systemctl restart  --quiet dhcpd4.service"
+    "systemctl enable --quiet dhcpd4.service && sudo systemctl restart  --quiet dhcpd4.service"
     ]
     for cmd in commandes:
         _, error = execute_cmd(cmd)

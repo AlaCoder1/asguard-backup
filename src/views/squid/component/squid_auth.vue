@@ -1,4 +1,19 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-col cols="6">
     <h4>{{ $t("squid.squidAuthentification") }}</h4>
     <v-divider style="margin-top: 14px"></v-divider>
@@ -104,6 +119,8 @@ import VButton from "@/components/VButton.vue";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalSquidUser from "@/components/modals/ModalSquidUser.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
+
 export default {
   components: {
     AgGridVue,
@@ -113,8 +130,12 @@ export default {
   setup() {
     const { t } = useI18n();
     const overlayTemplate = ref("");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const emitter = inject("emitter");
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       deleteDialogSquid: false,
       deletedRow: null,
       snackbar: false,
@@ -140,7 +161,15 @@ export default {
     const username = computed(() => {
       return t("form.username");
     });
-
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege() 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("Proxy")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const columnUser = ref([
       {
         headerName: username,
@@ -168,9 +197,15 @@ export default {
     };
 
     const openModalAdd = () => {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
+      const user = user_privilege('Proxy');
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
     const getCookie = (name) => {
       let cookieValue = null;
@@ -215,6 +250,11 @@ export default {
     }
 
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
         d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
@@ -228,32 +268,45 @@ export default {
         state.isModalOpen = false;
       });
     });
+    
 
     const saveSquid = () => {
+      const user = user_privilege('Proxy');
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      let payload = {
-        status: state.enable,
-      };
+        let payload = {
+          status: state.enable,
+        };
 
-      axios
-        .post("/proxy/change_auth_status", payload)
-        .then((response) => {
-          if (response.status == "200") {
-            state.snackbar = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          }
-        })
-        .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
-        });
+        axios
+          .post("/proxy/change_auth_status", payload)
+          .then((response) => {
+            if (response.status == "200") {
+              state.snackbar = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
+          });
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     function actionCellRenderer(params) {
@@ -299,12 +352,23 @@ export default {
       return eGui;
     }
 
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
+    };
+
     const handleAction = (action, rowData) => {
+      const user = user_privilege("Proxy");
       switch (action) {
         case "delete":
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
           console.log("rowData", rowData);
           state.deleteDialogSquid = true;
           state.deletedRow = rowData;
+        } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      };
           break;
         default:
           break;
@@ -332,13 +396,20 @@ export default {
           }
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
     return {
+      close,
       state,
       paginationLocalization,
       emitter,
@@ -348,6 +419,7 @@ export default {
       gridOptions,
       onGridReady,
       formatedUsername,
+      overlayMessage,
       confirmDelete,
       cancelDelete,
       openModalAdd,
@@ -356,3 +428,9 @@ export default {
   },
 };
 </script>
+<style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+</style>

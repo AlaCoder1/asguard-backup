@@ -2,41 +2,42 @@
   <v-app id="inspire">
     <!-- <base-layout title="User & certificat management" >
             <template #content> -->
-    <v-container class="axe-media-print-hide" fluid>
-      <v-row>
-        <v-col cols="12">
-          <div>
-            <v-row
-              align="center"
-              class="pr-4 axe-media-print-hide axe-sticky-three"
-            >
-              <v-col cols="6" style="height: 100%">
-                <user-management :DataList="{ groups: groups, users: users }" />
-              </v-col>
+    <!-- <v-container class="axe-media-print-hide" fluid> -->
+    <div class="ml-5 mr-2 mt-5">
+      <div>
+        <v-row
+          align="center"
+          class="pr-4 axe-media-print-hide axe-sticky-three"
+        >
+          <v-col cols="6" style="height: 100%">
+            <user-management :DataList="{ groups: groups, users: users }" />
+          </v-col>
 
-              <v-col cols="6" style="height: 100%">
-                <network-server-management :DataList="servers" />
-              </v-col>
+          <v-col cols="6" style="height: 100%">
+            <network-server-management :DataList="servers" />
+          </v-col>
 
-              <v-col cols="6" style="height: 100%">
-                <group-management :DataList="groups" />
-              </v-col>
-            </v-row>
+          <v-col cols="6" style="height: 100%">
+            <group-management :DataList="groups" />
+          </v-col>
+          <v-col cols="6" style="height: 100%">
+            <roles />
+          </v-col>
+        </v-row>
 
-            <v-row
-              align="center"
-              style="overflow: hidden"
-              class="pr-4 axe-media-print-hide axe-sticky-three mt-10"
-            >
-              <!-- <v-col cols="6" style="height: 100%;">
+        <v-row
+          align="center"
+          style="overflow: hidden"
+          class="pr-4 axe-media-print-hide axe-sticky-three mt-10"
+        >
+          <!-- <v-col cols="6" style="height: 100%;">
                                             <group-management  :DataList="groups" />
                                         </v-col> -->
-              <v-col cols="6" style="height: 100%"> </v-col>
-            </v-row>
-          </div>
-        </v-col>
-      </v-row>
-    </v-container>
+          <v-col cols="6" style="height: 100%"> </v-col>
+        </v-row>
+      </div>
+    </div>
+    <!-- </v-container> -->
     <!-- </template>
         </base-layout> -->
   </v-app>
@@ -47,6 +48,7 @@ import BaseLayout from "../../../layouts/layout.vue";
 import UserManagement from "../user/components/user-management.vue";
 import GroupManagement from "../user/components/group-management.vue";
 import NetworkServerManagement from "../user/components/network-server-management.vue";
+import roles from "../user/components/roles.vue";
 
 export default {
   name: "DataManagment",
@@ -55,6 +57,7 @@ export default {
     UserManagement,
     NetworkServerManagement,
     GroupManagement,
+    roles
   },
 
   data() {

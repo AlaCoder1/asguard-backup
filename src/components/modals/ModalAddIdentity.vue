@@ -20,7 +20,7 @@
                     id="IdentityName"
                     v-model="IdentityName"
                     :placeholder="$t('ztna.identityName')"
-                    :rules="rules"
+                    :rules="rulesName"
                     persistent-placeholder
                   />
                 </v-col>
@@ -30,53 +30,30 @@
                     id="IdentityAttribute"
                     v-model="IdentityAttribute"
                     :placeholder="$t('ztna.identityAttribute')"
-                    :rules="rules"
+                    :rules="rulesName"
                     persistent-placeholder
                   />
                 </v-col>
 
                 <v-col cols="12">
                   <div class="d-flex align-center">
-                    <label class="ml-1" for="Type">Type</label>
-                    <div class="ml-5 mt-1">
-                      <v-menu open-on-hover>
-                        <template v-slot:activator="{ props }">
-                          <v-btn color="#FAFAFA" v-bind="props">
-                            {{ selectedTitle }}
-                          </v-btn>
-                        </template>
-
-                        <v-list>
-                          <v-list-item
-                            v-for="(item, index) in items"
-                            :key="index"
-                            @click="selectItem(item)"
-                          >
-                            <v-list-item-title>{{
-                              item.title
-                            }}</v-list-item-title>
-                          </v-list-item>
-                        </v-list>
-                      </v-menu>
-
-                      <label for="IsAdmin" class="mr-3 ml-5">{{
-                        $t("ztna.isAdmin")
-                      }}</label>
-                      <input type="checkbox" id="IsAdmin" v-model="isAdmin" />
-                    </div>
+                    <label for="IsAdmin" class="mr-3 ml-1">{{
+                      $t("ztna.isAdmin")
+                    }}</label>
+                    <input type="checkbox" id="IsAdmin" v-model="isAdmin" />
                   </div>
                 </v-col>
                 <v-col cols="12">
                   <div class="d-flex align-center">
                     <label class="ml-1" for="Type">OS Type</label>
                     <div class="ml-5 mt-1">
-                    <v-menu open-on-hover>
+                      <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">
                           <v-btn color="#FAFAFA" v-bind="props">
                             {{ selectedOs }}
                           </v-btn>
                         </template>
-                      <v-list>
+                        <v-list>
                           <v-list-item
                             v-for="(item, index) in OS"
                             :key="index"
@@ -91,11 +68,6 @@
                     </div>
                   </div>
                 </v-col>
-                <!-- <v-col cols="12" class="ml-2">
-                  <label for="IsAdmin" class="mr-3">Is Admin</label>
-                  <input type="checkbox" id="IsAdmin" v-model="isAdmin" />
-                </v-col> -->
-
                 <v-col cols="12">
                   <v-text-field
                     id="Description"
@@ -119,24 +91,11 @@
               class="mt-3 btn-add"
               text
               @click="cancel"
-              > <span class="text-white pr-3 pl-3">
+            >
+              <span class="text-white pr-3 pl-3">
                 {{ $t("buttons.close") }}</span
               ></v-btn
             >
-            <!-- <v-btn
-                  color="red"
-                  :rounded="true"
-                  large
-                  rounded
-                  outlined
-                  label-color="#213E9F"
-                  variant="flat"F
-                  class="mt-3 btn-add"
-                  type="reset"
-                  @click="onReset"
-                >
-                  Reset
-                </v-btn> -->
             <v-btn
               large
               rounded
@@ -174,6 +133,8 @@
 import axios from "axios";
 import { toRefs, ref, watch, onMounted, reactive, computed, inject } from "vue";
 import { getCookie } from "@/mixins/csrftoken.js";
+import { useI18n } from "vue-i18n";
+
 export default {
   props: {
     isOpen: {
@@ -191,13 +152,15 @@ export default {
   },
 
   setup(props) {
+    const { t } = useI18n();
     const IdentityName = ref("");
     const identityId = ref(null);
     const IdentityAttribute = ref("");
+    const Identities = ref([]);
     const Description = ref("");
     const isAdmin = ref(false);
     const selectedTitle = ref("User");
-    const selectedOs = ref("windows")
+    const selectedOs = ref("windows");
     const items = [
       { title: "User" },
       { title: "Device" },
@@ -205,11 +168,15 @@ export default {
       { title: "Router" },
       { title: "Default" },
     ];
-    const OS =[
-      { title: "windows"},
-      { title: "linux"},
-    ]
+    const OS = [{ title: "windows" }, { title: "linux" }];
     const rules = [(value) => !!value || "You must enter a value."];
+    const rulesName = [
+      (value) => {
+        if (!value) return true;
+        if (existingName(value)) return "The name already exists";
+        return ValidName(value) ? true : "Please enter a valid name.";
+      },
+    ];
 
     const emitter = inject("emitter");
 
@@ -255,6 +222,7 @@ export default {
         Description.value = data.description;
         IdentityAttribute.value = data.attribute_identitie;
         selectedTitle.value = "User";
+        selectedOs.value = data.os;
         isAdmin.value = data.is_admin;
       }
     };
@@ -268,8 +236,8 @@ export default {
         type: selectedTitle.value,
         isAdmin: isAdmin.value,
         roleAttributes: [IdentityAttribute.value],
-        Description:Description.value,
-        os:selectedOs.value
+        Description: Description.value,
+        os: selectedOs.value,
       };
 
       let token = document.getElementById("app").getAttribute("token");
@@ -293,10 +261,15 @@ export default {
             }
           })
           .catch((i) => {
-            console.log("response", i.response);
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.response;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       } else {
         axios
@@ -318,13 +291,44 @@ export default {
             }
           })
           .catch((i) => {
-            console.log("response", i.response);
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       }
     };
+
+    const fetchIdentities = async () => {
+      try {
+        const IdentitiesString = await document
+          .getElementById("app")
+          .getAttribute("Identities");
+        const IdentitiesObject = JSON.parse(IdentitiesString);
+
+        const identitiesArray = Array.isArray(IdentitiesObject)
+          ? IdentitiesObject
+          : [];
+
+        Identities.value = identitiesArray.map((identity) => ({
+          name: identity.name,
+        }));
+
+        console.log("Identities.value", Identities.value);
+      } catch (error) {
+        console.error("Failed to fetch identities:", error);
+        Identities.value = [];
+      }
+    };
+
+    onMounted(() => {
+      fetchIdentities();
+    });
 
     const onReset = () => {
       IdentityName.value = "";
@@ -341,6 +345,42 @@ export default {
       selectedOs.value = item.title;
     };
 
+    function ValidName(value) {
+      const hostnamePattern = /^[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
+
+      console.log("Identities.value", Identities.value);
+
+      if (!Array.isArray(Identities.value)) {
+        console.error("Identities.value is not an array:", Identities.value);
+        return false;
+      }
+
+      const existingIdentity = Identities.value.find(
+        (identity) => identity.name === value
+      );
+
+      if (
+        existingIdentity ||
+        !hostnamePattern.test(value) ||
+        /^\d+$/.test(value)
+      ) {
+        return false;
+      }
+
+      return true;
+    }
+
+    function existingName(value) {
+      const existingIdentity = Identities.value.find(
+        (identity) => identity.name === value
+      );
+
+      if (existingIdentity) {
+        return true;
+      }
+
+      return false;
+    }
     const cancel = () => {
       onReset();
       emitter.emit("closeidentityModal");
@@ -361,6 +401,7 @@ export default {
       selectedOs,
       selectOs,
       OS,
+      rulesName,
       items,
       onReset,
     };

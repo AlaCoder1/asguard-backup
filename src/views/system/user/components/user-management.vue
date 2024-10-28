@@ -297,7 +297,7 @@ export default {
         }
         case "change":
           this.isModalPasswordOpen = true;
-          this.modalMode = "Reset Password";
+          this.modalMode = 'update';
           this.rowEdit = rowData;
           break;
         case "delete":

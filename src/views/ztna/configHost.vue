@@ -10,10 +10,7 @@
                     width="100"
                     height="100"
                 /></v-card-title>
-                <v-card-text>
-                  {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
+                <v-card-text v-html="overlayMessage">
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -131,6 +128,8 @@ export default {
   setup() {
     const { t } = useI18n();
     const configsHost = ref([]);
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const emitter = inject("emitter");
     const tokenStatus = ref("");
 
@@ -178,6 +177,15 @@ export default {
     const name = computed(() => {
       return t("ztna.name");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Ztna') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("ZTNA")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const address = computed(() => {
       return t("ztna.address");
     });
@@ -302,8 +310,8 @@ export default {
     };
 
     const openModalHostAdd = () => {
-      const user = user_privilege("Ztna");
-      if (user && user !== "viewer") {
+      const user = user_privilege('Ztna');
+      if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
         state.modalData = {};
         state.modalMode = "create";
         state.isModalHostOpen = true;
@@ -373,11 +381,11 @@ export default {
       const user = user_privilege("Ztna");
       switch (action) {
         case "edit":
-          if (user && user !== "viewer") {
-            state.modalMode = "edit";
-            state.isModalHostOpen = true;
-            state.selectedId = rowData.id;
-            state.editRow = rowData;
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
+          state.modalMode = "edit";
+          state.isModalHostOpen = true;
+          state.selectedId = rowData.id;
+          state.editRow = rowData;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
@@ -385,8 +393,8 @@ export default {
 
           break;
         case "delete":
-          if (user && user !== "viewer") {
-            OpenDelete(rowData.id);
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
+          OpenDelete(rowData.id);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
@@ -399,6 +407,11 @@ export default {
     };
 
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       emitter.on("closeInterceptModal", () => {
         state.isModalInterceptOpen = false;
         state.isOpen = false;
@@ -442,6 +455,7 @@ export default {
       OpenDelete,
       confirmDelete,
       cancelDelete,
+      overlayMessage,
       formatDateTime,
       onGridReadyHost,
       tokenStatus,
@@ -464,5 +478,10 @@ export default {
 
 .table tbody tr:last-child {
   border-bottom: 0.5px solid #000;
+}
+
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 </style>

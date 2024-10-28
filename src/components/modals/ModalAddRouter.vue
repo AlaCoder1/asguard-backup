@@ -273,7 +273,9 @@ export default {
       };
 
       let token = document.getElementById("app").getAttribute("token");
-
+      
+      state.loading = true;
+      state.isLoadingDialogue = true;
       if (modalMode.value === "edit") {
         axios
           .put(`/ztna/update_routers/${RouterId.value}`, payload, {

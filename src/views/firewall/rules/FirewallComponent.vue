@@ -266,7 +266,7 @@ export default defineComponent({
     const paginationLocalization = reactive({
       of: "/",
     });
-    const emitter = inject("emitter");
+    const dter = inject("dter");
     const state = reactive({
       // deleteDialogSquid: false,
       // deletedRow: null,
@@ -849,7 +849,7 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      emitter.on("closFirewallInboundModal", () => {
+      dter.on("closFirewallInboundModal", () => {
         state.isModalOpen = false;
         state.isOpen = false;
         state.modalMode = "";
@@ -873,8 +873,9 @@ export default defineComponent({
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
 
-      emitter.on("add-firewallRule", (data) => {
+      dter.on("add-firewallRule", (data) => {
         if (data.interUuid === props.uuid) {
           if (!rowData.value) {
             rowData.value = [];
@@ -903,7 +904,7 @@ export default defineComponent({
         }
       });
 
-      emitter.on("old-row", (oldObject) => {
+      dter.on("old-row", (oldObject) => {
         const array1AsArray = [oldObject];
         function testObjectEquality() {
           for (const obj1 of array1AsArray) {
@@ -937,7 +938,7 @@ export default defineComponent({
         testObjectEquality();
       });
 
-      emitter.on("edit-firewallRule", (data) => {
+      dter.on("edit-firewallRule", (data) => {
         let ruleInbound = {
           uuid: data.uuid,
           daddr: data.daddr,
@@ -1031,7 +1032,7 @@ export default defineComponent({
       openModalAdd,
       saveRules,
       oldRow,
-      emitter,
+      dter,
       rowDataLength,
       columnDefs,
       state,

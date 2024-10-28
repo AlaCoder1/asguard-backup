@@ -29,10 +29,7 @@
                     width="100"
                     height="100"
                 /></v-card-title>
-                <v-card-text>
-                  {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
+                <v-card-text v-html="overlayMessage">
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -125,6 +122,7 @@ import TheSidebarVue from "./TheSidebar.vue";
 import TheHeadingVue from "./TheHeading.vue";
 import TheFooter from "./TheFooter.vue";
 import axios from "axios";
+import {computed } from "vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { user_privilege } from "@/mixins/user_privilege.js";
 import VButton from "@/components/VButton.vue";
@@ -136,6 +134,16 @@ export default {
     VButton,
     TheSidebarVue,
     TheFooter,
+  },
+  setup(){
+    const overlayMessage = computed(() => {
+this.current_user= user_privilege('Ztna') 
+  if (this.current_user === "viewer" || this.current_user === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!this.last_Subscription.includes("ZTNA")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
   },
   props: {
     title: {
@@ -166,11 +174,18 @@ export default {
       color: "",
       snackbar: false,
       status: false,
-      isviewModal: false,
-      viewModal: false,
+      isviewModal:false,
+       current_user:'',
+       last_Subscription:[],
+      viewModal:false
     };
   },
   mounted() {
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
     const csrfToken = getCookie("csrftoken");
     axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -183,7 +198,7 @@ export default {
     startStopServer(status) {
       const user = user_privilege("Ztna");
 
-      if (user && user !== "viewer") {
+      if (user && user !=='viewer' && user !=='default' && this.last_Subscription.includes("ZTNA")) {
         this.loading = true;
         this.isLoadingDialogue = true;
         const csrfToken = getCookie("csrftoken");
@@ -250,6 +265,10 @@ export default {
   left: 0;
   right: 0;
   display: flex;
+}
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 
 .ag-paging-row-summary-panel {

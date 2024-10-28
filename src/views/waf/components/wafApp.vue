@@ -10,10 +10,7 @@
                     width="100"
                     height="100"
                 /></v-card-title>
-                <v-card-text>
-                  {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
+                <v-card-text v-html="overlayMessage">
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -136,6 +133,8 @@ export default {
   },
   setup() {
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const { t } = useI18n();
     const paginationLocalization = reactive({
       of: "/",
@@ -158,6 +157,15 @@ export default {
     const appName = computed(() => {
       return t("Waf.applicationName");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Waf') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("WAF")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const value = computed(() => {
       return t("squid.value");
     });
@@ -267,23 +275,23 @@ export default {
       const user = user_privilege("Waf");
       switch (action) {
         case "delete":
-          if (user && user !== "viewer") {
-            state.deleteDialog = true;
-            state.deletedRow = rowData;
-          } else {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
+          state.deleteDialog = true;
+          state.deletedRow = rowData;
+        } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
 
           break;
         case "edit":
-          if (user && user !== "viewer") {
-            console.log("edit", rowData);
-            state.modalMode = "edit";
-            state.isModalOpen = true;
-            state.editRow = rowData;
-            break;
-          } else {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
+          console.log("edit", rowData);
+          state.modalMode = "edit";
+          state.isModalOpen = true;
+          state.editRow = rowData;
+          break;
+        } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
@@ -325,6 +333,11 @@ export default {
 
       rowDataApplication.value = list_rules;
     });
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
 
     emitter.on("closeWafApplicationModal", () => {
       state.isModalOpen = false;
@@ -334,16 +347,16 @@ export default {
     });
 
     const openModalAdd = () => {
-      const user = user_privilege("Ztna");
-      if (user && user !== "viewer") {
-        state.modalData = {};
-        state.modalMode = "create";
-        state.isModalOpen = true;
-      } else {
-        console.log("View Mode");
-        state.isviewModal = true;
-        state.viewModal = true;
-      }
+      const user = user_privilege('Ztna');
+      if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
+      state.modalData = {};
+      state.modalMode = "create";
+      state.isModalOpen = true;
+    } else {
+            console.log("View Mode");
+            state.isviewModal = true;
+            state.viewModal = true;
+            };
     };
 
     const restartNginx = () => {
@@ -400,6 +413,7 @@ export default {
       confirmDelete,
       cancelDelete,
       state,
+      overlayMessage,
       onGridReady,
       openModalAdd,
       columnApplication,
@@ -411,3 +425,9 @@ export default {
   },
 };
 </script>
+<style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+</style>

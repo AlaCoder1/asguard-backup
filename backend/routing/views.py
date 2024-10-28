@@ -95,7 +95,8 @@ def create_routing(request):
     """Creating a new Route and adding it to the database"""
     try:
         data = request.data
-        gateway = data.get("gateway")
+        gateway = data.get("gateway", "")
+        gateway_data = gateway.copy()
 
         # Create a new Gateway and GatewayInterface
         if data.get("gateway_create"):
@@ -123,6 +124,10 @@ def create_routing(request):
         return JsonResponse({"error": list(serializer_routing.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
+        gwname = f'static_gw_{gateway_data["gateway_address"]}'
+        if data.get("gateway_create") and len(Gateway.objects.filter(gwname=gwname, gwaddress=gateway_data["gateway_address"])) == 1:
+            gateway = Gateway.objects.get(gwname=gwname, gwaddress=gateway_data["gateway_address"])
+            gateway.delete()
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ROUTE}"}, status=400)
 
 

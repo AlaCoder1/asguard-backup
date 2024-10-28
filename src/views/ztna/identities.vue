@@ -3,18 +3,9 @@
     <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img
-            src="@/assets/images/view.png"
-            alt="logo"
-            class="img-view"
-            width="100"
-            height="100"
-        /></v-card-title>
-        <v-card-text>
-          {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
-        </v-card-text>
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
@@ -123,7 +114,9 @@ export default {
   setup() {
     const { t } = useI18n();
     const Identities = ref();
-    const tokenStatus = ref("");
+    const current_user = ref();
+    const last_Subscription = ref([]);
+    const tokenStatus = ref('')
     const linux = ref();
     const windows = ref();
     const emitter = inject("emitter");
@@ -165,7 +158,15 @@ export default {
       paginationPageSize: 5,
       rowSelection: "single",
     });
-
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Ztna') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("ZTNA")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const name = computed(() => {
       return t("ztna.name");
     });
@@ -404,7 +405,7 @@ export default {
       const user = user_privilege("Ztna");
       switch (action) {
         case "edit":
-          if (user && user !== 'viewer' && user !== 'default') {
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
             state.modalMode = "edit";
             state.isModalOpen = true;
             state.editRow = rowData;
@@ -416,7 +417,7 @@ export default {
 
           break;
         case "downloadhost":
-          if (user && user !== 'viewer' && user !== 'default') {
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
             if (rowData.os === "windows") {
               let text = windows.value[0].content;
 
@@ -461,7 +462,7 @@ export default {
 
           break;
         case "download":
-          if (user && user !== 'viewer' && user !== 'default') {
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
             let text = rowData.token;
             const blob = new Blob([text], {
               type: "application/x-x509-ca-cert",
@@ -485,7 +486,7 @@ export default {
 
           break;
         case "enroll":
-          if (user && user !== 'viewer' && user !== 'default') {
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
             openModalEnrollement(rowData.ref_identitie);
           } else {
             state.isviewModal = true;
@@ -494,7 +495,7 @@ export default {
 
           break;
         case "delete":
-          if (user && user !== 'viewer' && user !== 'default') {
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
             OpenDelete(rowData.id);
           } else {
             state.isviewModal = true;
@@ -575,6 +576,11 @@ export default {
         state.isModalUpdateOpen = false;
       });
       fetchIdentities();
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
     });
     const getCookie = (name) => {
       let cookieValue = null;
@@ -609,7 +615,7 @@ export default {
 
     function checkTokenBeforeAdd() {
       const user = user_privilege('Ztna');
-      if (user && user !== 'viewer' && user !== 'default') {
+      if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("ZTNA")) {
         let token = document.getElementById("app").getAttribute("token");
         if (token && token !== "null") {
           openModalAdd();
@@ -700,6 +706,7 @@ export default {
       Identities,
       getCookie,
       emitter,
+      overlayMessage,
       fetchIdentities,
       OpenDelete,
       openModalEnrollement,
@@ -719,6 +726,10 @@ export default {
 </script>
 
 <style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
 .table {
   width: 100%;
   border-collapse: collapse;

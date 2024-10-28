@@ -3,18 +3,9 @@
     <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img
-            src="@/assets/images/view.png"
-            alt="logo"
-            class="img-view"
-            width="100"
-            height="100"
-        /></v-card-title>
-        <v-card-text>
-          {{  $t("profil.NoPermission") }}
-                  <br />
-          {{  $t("profil.ContactAdmin") }}  
-        </v-card-text>
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
@@ -321,7 +312,10 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const emitter = inject("emitter");
+
     const state = reactive({
       isviewModal: false,
       viewModal: false,
@@ -399,9 +393,14 @@ export default {
       state.viewModal = false;
     };
 
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
     const cancel = () => {
       const user = user_privilege('Waf');
-      if (user && user !== 'viewer' && user !=='default' ) {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Nat") ) {
         state.id = null;
         state.rule_engine = null;
         state.access_request = false;
@@ -426,6 +425,15 @@ export default {
     const champonlyNumber = computed(() => {
       return t("errors.ChampIncludeOnlyNumbers");
     });
+    const overlayMessage = computed(() => {
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return `${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("WAF")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } else {
+    return t("profil.NoPermission");
+  }
+});
     const champ = computed(() => {
       return t("errors.valueRequired");
     });
@@ -554,12 +562,12 @@ export default {
     const v$ = useValidate(rules, state);
 
     const submitForm = async () => {
-      const user = user_privilege("Waf");
-
+      const user = user_privilege('Waf');
+      current_user.value=user
       const result = await v$.value.$validate();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (user && user !== 'viewer' && user !=='default' ) {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("WAF") ) {
         if (result) {
           let payload = {
             rule_engine_initialization: state.rule_engine,
@@ -623,6 +631,7 @@ export default {
       cancel,
       state,
       emitter,
+      overlayMessage,
       close,
     };
   },
@@ -651,5 +660,9 @@ export default {
 
 .container {
   height: 50px;
+}
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 </style>

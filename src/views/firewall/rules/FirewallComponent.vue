@@ -262,11 +262,11 @@ export default defineComponent({
     activeTab: String,
   },
   setup(props) {
+    const emitter = inject("emitter");
     const { t } = useI18n();
     const paginationLocalization = reactive({
       of: "/",
     });
-    const emitter = inject("emitter");
     const state = reactive({
       // deleteDialogSquid: false,
       // deletedRow: null,
@@ -873,6 +873,7 @@ export default defineComponent({
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
 
       emitter.on("add-firewallRule", (data) => {
         if (data.interUuid === props.uuid) {

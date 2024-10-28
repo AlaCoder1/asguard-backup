@@ -3,18 +3,9 @@
     <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img
-            src="@/assets/images/view.png"
-            alt="logo"
-            class="img-view"
-            width="100"
-            height="100"
-        /></v-card-title>
-        <v-card-text>
-          {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
-        </v-card-text>
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
@@ -309,6 +300,8 @@ export default {
   props: ["dataServer"],
   setup(props) {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const { dataServer } = toRefs(props);
     const emitter = inject("emitter");
 
@@ -393,6 +386,15 @@ export default {
     const champ = computed(() => {
       return t("champs.indication");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Openvpn') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("VPN SSL")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -976,6 +978,12 @@ export default {
     );
 
     onMounted(() => {
+      
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       getInterface();
       getAllCertAuth();
       getCertif();
@@ -1091,7 +1099,7 @@ export default {
 
     const submitForm = async () => {
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer' && user!=='default') {
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
       const result = await v$.value.$validate();
 
         if (result) {
@@ -1301,7 +1309,7 @@ export default {
     const cancel = () => {
 
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer' && user!=='default') {
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
       state.id = "";
       state.isEditState = "";
       (state.serverModeState = "create"),
@@ -1382,6 +1390,7 @@ export default {
       close,
       deviceModeList,
       protocolList,
+      overlayMessage,
       state,
       v$,
       emitter,
@@ -1394,5 +1403,9 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
+}
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 </style>

@@ -8,18 +8,9 @@
     >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img
-            src="@/assets/images/view.png"
-            alt="logo"
-            class="img-view"
-            width="100"
-            height="100"
-        /></v-card-title>
-        <v-card-text>
-          {{ $t("profil.NoPermission") }}
-          <br />
-          {{ $t("profil.ContactAdmin") }}
-        </v-card-text>
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton
@@ -243,6 +234,8 @@ export default {
   props: ["dataServer"],
   setup(props) {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const emitter = inject("emitter");
 
     const { dataServer } = toRefs(props);
@@ -548,102 +541,103 @@ export default {
 
     const cancel = () => {
       //General information Phase 1
-      const user = user_privilege("Ipsec");
-      if (user && user !== "viewer" && user !== "default") {
-        state.tunnelSettings = "";
-        state.connectionMethod = {
-          name: "Default",
-          slug: "default",
-        };
-        state.keyExchange = {
-          name: "V2",
-          slug: "V2",
-        };
-        state.internetProtocol = {
-          name: "IPv4",
-          slug: "IPv4",
-        };
-        state.remoteGateway = "";
-        state.generalinterface = "";
-        state.remoteConnect = false;
-        state.description = "";
-        //phase auth
-        state.authMethod = {
-          name: "Mutual RSA",
-          slug: "Mutual RSA",
-        };
-        state.negotiationMode = {
-          name: "Main",
-          slug: "Main",
-        };
-        state.sharedKey = "";
-        state.certificate = "";
-        state.keyPair = "";
-        state.localKey = "";
-        state.peerIdentifier = "";
-        //phase algo
-        state.encryptAlgo = {
-          name: "256 bit AES-GCM with 128 bit ICV",
-          slug: "256",
-        };
-        state.hashAlgo = {
-          name: "SHA256",
-          slug: "sha256",
-        };
-        state.dhKey = {
-          name: "20 (NIST EC 384 bits)",
-          slug: "20:384",
-        };
-        state.lifetime = "28800";
-        //advancedOptions
-        state.policy = true;
-        state.rekey = false;
-        state.reauth = false;
-        state.natTraversal = { name: "Unforce", slug: "Disable" };
-        state.deadPeer = false;
-        state.retries = "";
-        state.mobike = false;
-        state.selectDear = "";
-        state.interactivityTimout = "";
-        state.interactivityTimout2 = "";
-        state.seconds = "";
-        state.rekeyFuzz = "";
-        state.marginTime = "";
-        //general info 2
-        state.mode = {
-          name: "Tunnel IPv4",
-          slug: "Tunnel IPv4",
-        };
-        state.remoteTunnelAddress = "";
-        state.type = {
-          name: "Address",
-          slug: "Address",
-        };
-        state.remoteNetworkAddress = "";
-        state.selectAddressNetwork = "";
-        state.descriptionPh2 = "";
-        state.localAddress = "";
-        state.localNetworkAddress = "";
-        state.selectRemoteAddressNetwork = "";
-        state.typeRemoteNetwork = { name: "Network", slug: "Network" };
-        //exchange
-        state.protocol = {
-          name: "ESP",
-          slug: "ESP",
-        };
-        state.encryptAlgoExchange = {
-          name: "aes256gcm16",
-          slug: "256",
-        };
-        state.hashAlgoExchange = {
-          name: "SHA256",
-          slug: "sha256",
-        };
-        state.pfsKey = {
-          name: "off",
-          slug: "off",
-        };
-        state.lifetimeExchange = "";
+      const user = user_privilege('Ipsec');
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("VPN IPSEC")) {
+
+      state.tunnelSettings = "";
+      state.connectionMethod = {
+        name: "Default",
+        slug: "default",
+      };
+      state.keyExchange = {
+        name: "V2",
+        slug: "V2",
+      };
+      state.internetProtocol = {
+        name: "IPv4",
+        slug: "IPv4",
+      };
+      state.remoteGateway = "";
+      state.generalinterface = "";
+      state.remoteConnect = false;
+      state.description = "";
+      //phase auth
+      state.authMethod = {
+        name: "Mutual RSA",
+        slug: "Mutual RSA",
+      };
+      state.negotiationMode = {
+        name: "Main",
+        slug: "Main",
+      };
+      state.sharedKey = "";
+      state.certificate = "";
+      state.keyPair = "";
+      state.localKey = "";
+      state.peerIdentifier = "";
+      //phase algo
+      state.encryptAlgo = {
+        name: "256 bit AES-GCM with 128 bit ICV",
+        slug: "256",
+      };
+      state.hashAlgo = {
+        name: "SHA256",
+        slug: "sha256",
+      };
+      state.dhKey = {
+        name: "20 (NIST EC 384 bits)",
+        slug: "20:384",
+      };
+      state.lifetime = "28800";
+      //advancedOptions
+      state.policy = true;
+      state.rekey = false;
+      state.reauth = false;
+      state.natTraversal = { name: "Unforce", slug: "Disable" };
+      state.deadPeer = false;
+      state.retries = "";
+      state.mobike = false;
+      state.selectDear = "";
+      state.interactivityTimout = "";
+      state.interactivityTimout2 = "";
+      state.seconds = "";
+      state.rekeyFuzz = "";
+      state.marginTime = "";
+      //general info 2
+      state.mode = {
+        name: "Tunnel IPv4",
+        slug: "Tunnel IPv4",
+      };
+      state.remoteTunnelAddress = "";
+      state.type = {
+        name: "Address",
+        slug: "Address",
+      };
+      state.remoteNetworkAddress = "";
+      state.selectAddressNetwork = "";
+      state.descriptionPh2 = "";
+      state.localAddress = "";
+      state.localNetworkAddress = "";
+      state.selectRemoteAddressNetwork = "";
+      state.typeRemoteNetwork = { name: "Network", slug: "Network" };
+      //exchange
+      state.protocol = {
+        name: "ESP",
+        slug: "ESP",
+      };
+      state.encryptAlgoExchange = {
+        name: "aes256gcm16",
+        slug: "256",
+      };
+      state.hashAlgoExchange = {
+        name: "SHA256",
+        slug: "sha256",
+      };
+      state.pfsKey = {
+        name: "off",
+        slug: "off",
+      };
+      state.lifetimeExchange = "";
 
         v$.value.$reset();
       } else {
@@ -660,6 +654,15 @@ export default {
     const champ = computed(() => {
       return t("champs.indication");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Ipsec') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("VPN IPSEC")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -1042,6 +1045,11 @@ export default {
     };
 
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       getInterface();
       getPublickKey();
       getAllCertif();
@@ -1358,9 +1366,9 @@ export default {
     );
 
     const save = async () => {
-      const user = user_privilege("Ipsec");
-      if (user && user !== "viewer" && user !== "default") {
-        const result = await v$.value.$validate();
+      const user = user_privilege('Ipsec');
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("VPN IPSEC")) {
+      const result = await v$.value.$validate();
 
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -1643,6 +1651,7 @@ export default {
       cancel,
       close,
       state,
+      overlayMessage,
       emitter,
       v$,
     };
@@ -1654,5 +1663,9 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
+}
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 </style>

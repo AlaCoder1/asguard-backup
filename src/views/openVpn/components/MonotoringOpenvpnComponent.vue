@@ -1,18 +1,14 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
             @click="close" />
         </div>
       </v-card>
@@ -227,6 +223,8 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const overlayTemplate = ref("");
     const paginationLocalization = reactive({
       of: "/",
@@ -334,6 +332,15 @@ export default {
     const specificform = computed(() => {
       return t("errors.formsepcificpassword");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Openvpn') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("VPN SSL")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -488,6 +495,11 @@ export default {
     };
 
     onMounted(async () => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       getAllListServer();
     });
     overlayTemplate.value = `
@@ -511,7 +523,7 @@ export default {
     const serve = async () => {
       const result = await v$.value.$validate();
       const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
 
       if (result) {
         if (state.server) {
@@ -641,6 +653,7 @@ export default {
       apexChartNetwork,
       chartTraffic,
       rowData,
+      overlayMessage,
       columns,
       gridApi,
       paginationLocalization,
@@ -655,6 +668,11 @@ export default {
 <style lang="scss" scoped>
 #grid-wrapper {
   width: 100%;
+}
+
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 
 .ag-header-cell-text {

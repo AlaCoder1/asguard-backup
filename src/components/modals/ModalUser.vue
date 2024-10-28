@@ -548,10 +548,15 @@ export default {
               }
             })
             .catch((i) => {
-              console.log("i.response.data", i.response);
-              this.snackbar = true;
-              this.color = "red";
-              this.textAlert = i.response.data.msg;
+              if (i.response.status === 500) {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = this.$t("errors.errorServer");
+              } else {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = i.response.data.msg;
+              }
             });
         } else {
           let groupsIds = this.state.formData?.groups?.map((i) => {
@@ -591,10 +596,15 @@ export default {
               }
             })
             .catch((i) => {
-              console.log("re", i.respone);
-              this.snackbar = true;
-              this.color = "red";
-              this.textAlert = i.response.data.msg;
+              if (i.response.status === 500) {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = this.$t("errors.errorServer");
+              } else {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = i.response.data.msg;
+              }
             });
         }
       }

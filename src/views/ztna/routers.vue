@@ -1,6 +1,6 @@
 <template>
 <v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+            <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
               <v-card color="#193286" class="alert-box">
                 <v-card-title class="img-containter">
                   <img
@@ -10,11 +10,7 @@
                     width="100"
                     height="100"
                 /></v-card-title>
-                <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
+                <v-card-text v-html="overlayMessage">
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -23,7 +19,7 @@
                     outlined
                     color="#ffffff"
                     label-color="#213E9F"
-                    label="Close"
+                    :label="$t('buttons.close')"
                     :isLarge="true"
                     @click="close"
                   />
@@ -32,11 +28,20 @@
             </v-dialog>
           </v-overlay>
   <v-overlay v-model="state.loading">
-    <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
       <v-card color="#193286">
         <v-card-text>
           {{ $t("sdwan.pleaseWait") }}
-          <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
         </v-card-text>
       </v-card>
     </v-dialog>
@@ -47,18 +52,39 @@
       <v-divider></v-divider>
     </div>
     <div style="overflow: hidden; flex-grow: 1">
-      <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-        @grid-ready="onGridReady" :columnDefs="columnRouters" :rowData="routers" :gridOptions="gridOptions"
-        :overlayNoRowsTemplate="overlayTemplate" :rowDragManaged="true" :rowDragEntireRow="true"
-        @row-drag-end="onRowDragEnd" :localeText="paginationLocalization" />
+      <ag-grid-vue
+        id="grid-wrapper"
+        domLayout="autoHeight"
+        class="ag-theme-alpine mt-3"
+        style="width: 100%"
+        @grid-ready="onGridReady"
+        :columnDefs="columnRouters"
+        :rowData="routers"
+        :gridOptions="gridOptions"
+        :overlayNoRowsTemplate="overlayTemplate"
+        :rowDragManaged="true"
+        :rowDragEntireRow="true"
+        @row-drag-end="onRowDragEnd"
+        :localeText="paginationLocalization"
+      />
     </div>
     <div class="d-flex justify-end mt-3">
-      <v-btn class="add-button" :rounded="true" color="indigo-darken-3"   :disabled="!tokenStatus"  @click="openModalAdd">
+      <v-btn
+        class="add-button"
+        :rounded="true"
+        color="indigo-darken-3"
+        :disabled="!tokenStatus"
+        @click="openModalAdd"
+      >
         {{ $t("ztna.addRelay") }}
       </v-btn>
     </div>
-    <ModalAddRouter :isOpen="state.isModalOpen" :selectedId="state.selectedId" :editRow="state.editRow"
-      :modalMode="state.modalMode" />
+    <ModalAddRouter
+      :isOpen="state.isModalOpen"
+      :selectedId="state.selectedId"
+      :editRow="state.editRow"
+      :modalMode="state.modalMode"
+    />
     <!-- <ModalUpdateRouter
       :isOpen="state.isModalUpdateOpen"
       :selectedId="state.selectedId"
@@ -75,11 +101,21 @@
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
           }}</v-btn>
-          <v-btn color="blue darken-1" text @click="confirmDelete(state.selectedId)">{{ $t("buttons.delete") }}</v-btn>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="confirmDelete(state.selectedId)"
+            >{{ $t("buttons.delete") }}</v-btn
+          >
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </v-container>
@@ -110,8 +146,18 @@ export default {
     const { t } = useI18n();
     const emitter = inject("emitter");
     const routers = ref([]);
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const tokenStatus = ref('')
-
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Ztna') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("ZTNA")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const overlayTemplate = ref(
       `
         <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
@@ -284,8 +330,8 @@ export default {
               `;
       } else {
         if (!params.data.online) {
-          if(!tokenStatus.value) {
-          eGui.innerHTML = `
+          if (!tokenStatus.value) {
+            eGui.innerHTML = `
          <button
           id="play"
           class="action-button play"
@@ -302,9 +348,9 @@ export default {
                 disabled title="Delete ">
                   <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button> 
-                `;}
-              else{
-                 eGui.innerHTML = `
+                `;
+          } else {
+            eGui.innerHTML = `
                 <button
           id="play"
           class="action-button play"
@@ -322,10 +368,9 @@ export default {
                   <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
                 `;
-              }
-        }
-        else {
-          if(!tokenStatus.value) {
+          }
+        } else {
+          if (!tokenStatus.value) {
             eGui.innerHTML = `
              <button
           id="stop"
@@ -344,9 +389,9 @@ export default {
                   <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
                 </button>
       
-                `;}
-                else {
-                  eGui.innerHTML = `
+                `;
+          } else {
+            eGui.innerHTML = `
              <button
           id="stop"
           class="action-button stop"
@@ -365,8 +410,7 @@ export default {
                 </button>
       
                 `;
-                }
-          
+          }
         }
       }
       eGui.querySelectorAll(".action-button").forEach((button) => {
@@ -380,11 +424,11 @@ export default {
     const handleActionClient = (action, rowData, index) => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
       switch (action) {
         case "edit":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
@@ -392,130 +436,142 @@ export default {
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
 
           break;
         case "download":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
           let text = rowData.enrollmentJwt;
           // copyContent(text);
           const blob = new Blob([text], {
             type: "application/x-x509-ca-cert",
           });
 
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.style.display = "none";
-          a.href = url;
-          a.download = `${rowData.name}.txt`;
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = `${rowData.name}.txt`;
 
-          document.body.appendChild(a);
-          a.click();
+            document.body.appendChild(a);
+            a.click();
 
-          window.URL.revokeObjectURL(url);
-          document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          }
+
           break;
         case "delete":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
           opendelete(rowData.id);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
 
           break;
         case "play":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
           let payloadStart = {
             name: rowData.name,
             token: rowData.enrollmentJwt
           };
 
-          let tokenStart = document.getElementById("app").getAttribute("token");
-          state.loading = true;
-          state.isLoadingDialogue = true;
+            let tokenStart = document
+              .getElementById("app")
+              .getAttribute("token");
+            state.loading = true;
+            state.isLoadingDialogue = true;
 
-          axios
-            .post(`/ztna/start_routers/${rowData.id}`, payloadStart, {
-              headers: {
-                "zt-session": tokenStart,
-                "Content-Type": "application/json",
-              },
-            })
-            .then((response) => {
-              if (response.status == "200") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.message;
+            axios
+              .post(`/ztna/start_routers/${rowData.id}`, payloadStart, {
+                headers: {
+                  "zt-session": tokenStart,
+                  "Content-Type": "application/json",
+                },
+              })
+              .then((response) => {
+                if (response.status == "200") {
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.message;
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  setTimeout(() => {
+                    location.reload();
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
                 state.loading = false;
                 state.isLoadingDialogue = false;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-              state.loading = false;
-              state.isLoadingDialogue = false;
-            });
-
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          }
+
           break;
         case "stop":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
           let payload = {
             name: rowData.name,
             token: rowData.enrollmentJwt
           };
 
-          let token = document.getElementById("app").getAttribute("token");
-          state.loading = true;
-          state.isLoadingDialogue = true;
+            let token = document.getElementById("app").getAttribute("token");
+            state.loading = true;
+            state.isLoadingDialogue = true;
 
-          axios
-            .post(`/ztna/stop_routers/${rowData.id}`, payload, {
-              headers: {
-                "zt-session": token,
-                "Content-Type": "application/json",
-              },
-            })
-            .then((response) => {
-              if (response.status == "200") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.message;
+            axios
+              .post(`/ztna/stop_routers/${rowData.id}`, payload, {
+                headers: {
+                  "zt-session": token,
+                  "Content-Type": "application/json",
+                },
+              })
+              .then((response) => {
+                if (response.status == "200") {
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.message;
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  setTimeout(() => {
+                    location.reload();
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
                 state.loading = false;
                 state.isLoadingDialogue = false;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-              state.loading = false;
-              state.isLoadingDialogue = false;
-            });
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
 
- 
           break;
         default:
           break;
@@ -542,11 +598,10 @@ export default {
         .getAttribute("routers");
       let routersObject;
       if (token && token !== "null") {
-        tokenStatus.value = true
-      } 
-      else {
-        tokenStatus.value = false
-    }
+        tokenStatus.value = true;
+      } else {
+        tokenStatus.value = false;
+      }
       try {
         routersObject = JSON.parse(routersString);
         console.log("routersObject", routersObject);
@@ -566,6 +621,11 @@ export default {
     };
 
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       emitter.on("closeRouterModal", () => {
         state.isModalOpen = false;
         state.isOpen = false;
@@ -580,20 +640,19 @@ export default {
 
     const openModalAdd = () => {
       const user = user_privilege('Ztna');
-      if (user && user !=='viewer') {
+      if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
         state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-          } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const opendelete = (itemId) => {
-  state.selectedId = itemId;
-  state.deleteDialog = true;
- 
+      state.selectedId = itemId;
+      state.deleteDialog = true;
     };
 
     const confirmDelete = async (deletedItemId) => {
@@ -601,7 +660,7 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       let token = document.getElementById("app").getAttribute("token");
       state.loading = true;
-          state.isLoadingDialogue = true;
+      state.isLoadingDialogue = true;
       axios
         .delete(`/ztna/delete_routers/${deletedItemId}`, {
           headers: {
@@ -620,11 +679,18 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
           state.loading = false;
           state.isLoadingDialogue = false;
+
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
@@ -680,6 +746,7 @@ export default {
       state,
       openModalAdd,
       routers,
+      overlayMessage,
       gridOptions,
       columnRouters,
       overlayTemplate,
@@ -696,6 +763,10 @@ export default {
 </script>
 
 <style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
 .table {
   width: 100%;
   border-collapse: collapse;

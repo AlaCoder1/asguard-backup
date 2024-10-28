@@ -565,14 +565,10 @@ export default {
   },
   computed: {
     isImportCetif() {
-      return (
-        this.state.formData.method?.slug === 'import'
-      );
+      return this.state.formData.method?.slug === "import";
     },
     isCreateCetif() {
-      return (
-        this.state.formData.method?.slug === 'create'
-      );
+      return this.state.formData.method?.slug === "create";
     },
   },
   mounted() {
@@ -655,9 +651,7 @@ export default {
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         let payload = {};
-        if (
-          this.state.formData.method?.slug === 'create'
-        ) {
+        if (this.state.formData.method?.slug === "create") {
           payload = {
             name: this.state.formData?.certifName,
             activation: "True",
@@ -707,9 +701,15 @@ export default {
             }
           })
           .catch((i) => {
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+            }
           });
       } else {
         console.log("rr", this.v$);

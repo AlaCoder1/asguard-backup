@@ -15,7 +15,6 @@ def change_waf_config_file(data_config, path_config=PATH_WAF_CONFIG):
     waf_config_content = read_file_from_system(path_config)
     config = change_content_config(waf_config_content, data_config)
     write_file_from_system(path_config, config)
-    execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])
 
 
 def change_content_config(config: str, data_config: dict):

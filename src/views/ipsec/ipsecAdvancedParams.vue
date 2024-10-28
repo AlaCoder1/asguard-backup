@@ -1,19 +1,27 @@
 <template>
-    <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+  <v-overlay v-model="state.viewModal">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -169,7 +177,11 @@
             outlined
             color="#213E9F"
             label-color="#ffffff"
-            :label="state.isEditState === 'edit' ? $t('PageGeneral.form.Edit') : $t('buttons.create')"
+            :label="
+              state.isEditState === 'edit'
+                ? $t('PageGeneral.form.Edit')
+                : $t('buttons.create')
+            "
             :isLarge="true"
             class="ml-2"
             @click="save"
@@ -198,7 +210,7 @@ import { inject, ref, toRefs } from "vue";
 import useValidate from "@vuelidate/core";
 import VButton from "@/components/VButton.vue";
 import { required, requiredIf, helpers } from "@vuelidate/validators";
-import { reactive, onMounted, computed, watch} from "vue";
+import { reactive, onMounted, computed, watch } from "vue";
 import generalInfoPhaseOne from "./component/general_info_phase_one.vue";
 import phaseAuth from "./component/phase_authentification.vue";
 import phaseAlgo from "./component/phase_algorithms.vue";
@@ -222,6 +234,8 @@ export default {
   props: ["dataServer"],
   setup(props) {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const emitter = inject("emitter");
 
     const { dataServer } = toRefs(props);
@@ -346,7 +360,6 @@ export default {
       pingHost: "",
       spdEntries: "",
     });
-    
 
     const connectionMethodList = ref([
       {
@@ -529,7 +542,7 @@ export default {
     const cancel = () => {
       //General information Phase 1
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("VPN IPSEC")) {
 
       state.tunnelSettings = "";
       state.connectionMethod = {
@@ -626,11 +639,11 @@ export default {
       };
       state.lifetimeExchange = "";
 
-      v$.value.$reset();
-    } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-          };
+        v$.value.$reset();
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const numberList = ref(Array.from({ length: 32 }, (_, i) => i + 1));
@@ -641,6 +654,15 @@ export default {
     const champ = computed(() => {
       return t("champs.indication");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Ipsec') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("VPN IPSEC")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -667,12 +689,12 @@ export default {
         tunnelSettings: {
           required: helpers.withMessage(error, required),
           isValidName: helpers.withMessage(
-              champNoInclude,
+            champNoInclude,
 
-              helpers.regex(
-                /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/
-              )
-            ),
+            helpers.regex(
+              /^(?=.*[a-zA-Z])[a-zA-Z0-9-]{1,63}(\.[a-zA-Z0-9-]{1,63})*$/
+            )
+          ),
         },
         connectionMethod: { required: helpers.withMessage(error, required) },
         keyExchange: { required: helpers.withMessage(error, required) },
@@ -725,17 +747,17 @@ export default {
 
         generalinterface: { required: helpers.withMessage(error, required) },
         // phase Auth
-        authMethod: {required: helpers.withMessage(error, required)},
+        authMethod: { required: helpers.withMessage(error, required) },
         negotiationMode: {
           requiredIfFuction: helpers.withMessage(
-            error ,
+            error,
             requiredIf(() => state.keyExchange.slug === "V1")
           ),
         },
 
         sharedKey: {
           requiredIfFuction: helpers.withMessage(
-            error ,
+            error,
             requiredIf(() => state.authMethod.slug === "Mutual PSK")
           ),
           isValidKey: helpers.withMessage(
@@ -796,10 +818,10 @@ export default {
           ),
         },
 
-        hashAlgo: { required:helpers.withMessage(error, required) },
-        dhKey: { required:helpers.withMessage(error, required) },
+        hashAlgo: { required: helpers.withMessage(error, required) },
+        dhKey: { required: helpers.withMessage(error, required) },
         // general info phase 2
-        mode: { required:helpers.withMessage(error, required) },
+        mode: { required: helpers.withMessage(error, required) },
         // remoteTunnelAddress: {
         //   required,
         //   isValidRemoteTunnelAddress: helpers.withMessage(
@@ -862,7 +884,7 @@ export default {
 
         selectRemoteAddressNetwork: {
           requiredIfFuction: helpers.withMessage(
-            error ,
+            error,
             requiredIf(
               () =>
                 state.typeRemoteNetwork.slug === "Network" &&
@@ -887,7 +909,7 @@ export default {
           ),
         },
 
-        hashAlgoExchange: {required: helpers.withMessage(error, required) },
+        hashAlgoExchange: { required: helpers.withMessage(error, required) },
         pfsKey: { required: helpers.withMessage(error, required) },
         // pingHost: { required },
         // spdEntries: { required },
@@ -1011,7 +1033,7 @@ export default {
               slug: "Address",
             },
             { name: "Network", slug: "Network" },
-          ]
+          ];
 
           var combinedArray = [...listInter, ...interfaces];
           mapedInterfaceType.value = combinedArray;
@@ -1023,6 +1045,11 @@ export default {
     };
 
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       getInterface();
       getPublickKey();
       getAllCertif();
@@ -1340,230 +1367,243 @@ export default {
 
     const save = async () => {
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("VPN IPSEC")) {
       const result = await v$.value.$validate();
 
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      if (result) {
-        let KeyExchange = null;
+        if (result) {
+          let KeyExchange = null;
 
-        if (state.keyExchange.slug === "V1") {
-          KeyExchange = {
-            key_exchange_version: state.keyExchange?.name,
-            negotiation_mode: state.negotiationMode.name,
-          };
-        } else {
-          KeyExchange = {
-            key_exchange_version: state.keyExchange?.name,
-          };
-        }
-        let authen = null;
-        if (state.authMethod?.slug === "Mutual Public key") {
-          authen = {
-            authentication_method: state.authMethod?.slug,
-            local_key_pair: state.localKey?.name,
-            peer_key_pair: state.keyPair?.name,
-          };
-        } else if (state.authMethod?.slug === "Mutual PSK") {
-          authen = {
-            authentication_method: state.authMethod?.slug,
-            pre_shared_key: state.sharedKey,
-          };
-        } else if (state.authMethod?.slug === "Mutual RSA") {
-          authen = {
-            authentication_method: state.authMethod?.slug,
-            cert: state.certificate.name,
-            remote_cert: state.peerIdentifier.name,
-          };
-        }
+          if (state.keyExchange.slug === "V1") {
+            KeyExchange = {
+              key_exchange_version: state.keyExchange?.name,
+              negotiation_mode: state.negotiationMode.name,
+            };
+          } else {
+            KeyExchange = {
+              key_exchange_version: state.keyExchange?.name,
+            };
+          }
+          let authen = null;
+          if (state.authMethod?.slug === "Mutual Public key") {
+            authen = {
+              authentication_method: state.authMethod?.slug,
+              local_key_pair: state.localKey?.name,
+              peer_key_pair: state.keyPair?.name,
+            };
+          } else if (state.authMethod?.slug === "Mutual PSK") {
+            authen = {
+              authentication_method: state.authMethod?.slug,
+              pre_shared_key: state.sharedKey,
+            };
+          } else if (state.authMethod?.slug === "Mutual RSA") {
+            authen = {
+              authentication_method: state.authMethod?.slug,
+              cert: state.certificate.name,
+              remote_cert: state.peerIdentifier.name,
+            };
+          }
 
-        let isdeadPeer = null;
+          let isdeadPeer = null;
 
-        if (state.deadPeer) {
-          isdeadPeer = {
-            disable: state.deadPeer,
-            deed_peer_delay: state.seconds,
-            deed_peer_timeout: state.retries,
-            deed_peer_action: state.selectDear.slug,
-          };
-        } else {
-          isdeadPeer = {
-            disable: state.deadPeer,
-          };
-        }
-        if (Array.isArray(state.dhKey)) {
-          var mappedDhKey = state.dhKey.map((e) => e.slug);
-        } else {
-          var mappedDhKey = [state.dhKey.slug];
-        }
-        if (Array.isArray(state.hashAlgo)) {
-          var mappedhashAlgo = state.hashAlgo.map((e) => e.slug);
-        } else {
-          var mappedhashAlgo = [state.hashAlgo.slug];
-        }
+          if (state.deadPeer) {
+            isdeadPeer = {
+              disable: state.deadPeer,
+              deed_peer_delay: state.seconds,
+              deed_peer_timeout: state.retries,
+              deed_peer_action: state.selectDear.slug,
+            };
+          } else {
+            isdeadPeer = {
+              disable: state.deadPeer,
+            };
+          }
+          if (Array.isArray(state.dhKey)) {
+            var mappedDhKey = state.dhKey.map((e) => e.slug);
+          } else {
+            var mappedDhKey = [state.dhKey.slug];
+          }
+          if (Array.isArray(state.hashAlgo)) {
+            var mappedhashAlgo = state.hashAlgo.map((e) => e.slug);
+          } else {
+            var mappedhashAlgo = [state.hashAlgo.slug];
+          }
 
-        if (Array.isArray(state.encryptAlgoExchange)) {
-          var mappedencryptAlgoExchange = state.encryptAlgoExchange.map(
-            (e) => e.slug
-          );
-        } else {
-          var mappedencryptAlgoExchange = [state.encryptAlgoExchange.slug];
-        }
-        if (Array.isArray(state.encryptAlgoExch2)) {
-          var mappedencryptAlgoExch2 = state.encryptAlgoExch2.map(
-            (e) => e.slug
-          );
-        } else {
-          var mappedencryptAlgoExch2 = [state.encryptAlgoExch2.slug];
-        }
+          if (Array.isArray(state.encryptAlgoExchange)) {
+            var mappedencryptAlgoExchange = state.encryptAlgoExchange.map(
+              (e) => e.slug
+            );
+          } else {
+            var mappedencryptAlgoExchange = [state.encryptAlgoExchange.slug];
+          }
+          if (Array.isArray(state.encryptAlgoExch2)) {
+            var mappedencryptAlgoExch2 = state.encryptAlgoExch2.map(
+              (e) => e.slug
+            );
+          } else {
+            var mappedencryptAlgoExch2 = [state.encryptAlgoExch2.slug];
+          }
 
-        if (Array.isArray(state.hashAlgoExchange)) {
-          var mappedhashAlgoExchange = state.hashAlgoExchange.map(
-            (e) => e.slug
-          );
-        } else {
-          var mappedhashAlgoExchange = [state.hashAlgoExchange.slug];
-        }
+          if (Array.isArray(state.hashAlgoExchange)) {
+            var mappedhashAlgoExchange = state.hashAlgoExchange.map(
+              (e) => e.slug
+            );
+          } else {
+            var mappedhashAlgoExchange = [state.hashAlgoExchange.slug];
+          }
 
-        let isKeyExchange = null;
+          let isKeyExchange = null;
 
-        if (state.protocol.slug === "ESP") {
-          isKeyExchange = {
-            protocol: state.protocol.slug,
-            encryption_algorithm_ph2:
+          if (state.protocol.slug === "ESP") {
+            isKeyExchange = {
+              protocol: state.protocol.slug,
+              encryption_algorithm_ph2:
+                state.keyExchange.slug === "V1"
+                  ? mappedencryptAlgoExch2
+                  : mappedencryptAlgoExchange,
+              hash_algorithm_ph2: mappedhashAlgoExchange,
+              pfs_key_group: state.pfsKey.slug,
+            };
+          } else if (state.protocol.slug === "AH") {
+            isKeyExchange = {
+              protocol: state.protocol.slug,
+              hash_algorithm_ph2: mappedhashAlgoExchange,
+              pfs_key_group: state.pfsKey.slug,
+            };
+          }
+
+          let isMode_ph2 = null;
+
+          if (state.mode.slug === "Tunnel IPv4") {
+            isMode_ph2 = {
+              mode: state.mode?.slug,
+              local_network: {
+                type_local_network: state.type?.slug,
+                address_local_network: state.localNetworkAddress,
+                mask:
+                  state.type?.slug === "Address"
+                    ? "32"
+                    : state.selectAddressNetwork.toString(),
+              },
+              remote_network: {
+                type_remote_network: state.typeRemoteNetwork.slug,
+                address_remote_network: state.remoteNetworkAddress,
+                mask:
+                  state.typeRemoteNetwork.slug === "Address"
+                    ? "32"
+                    : state.selectRemoteAddressNetwork.toString(),
+              },
+            };
+          } else if (state.mode.slug === "Transport") {
+            isMode_ph2 = {
+              mode: state.mode?.slug,
+            };
+          }
+
+          let payload = {
+            conn_name: state.tunnelSettings,
+            connection_method: state.connectionMethod?.slug,
+            key_exchange: KeyExchange,
+            internet_protocol: state.internetProtocol.slug,
+            interface_name: state.generalinterface?.name,
+            remote_gateway: state.remoteGateway,
+            dynamic_gateway: state.remoteConnect,
+            description_ph1: state.description,
+            authentication: authen,
+            encryption_algorithm_ph1:
               state.keyExchange.slug === "V1"
-                ? mappedencryptAlgoExch2
-                : mappedencryptAlgoExchange,
-            hash_algorithm_ph2: mappedhashAlgoExchange,
-            pfs_key_group: state.pfsKey.slug,
+                ? state.encryptAlgoV1.slug
+                : state.encryptAlgo?.slug,
+            hash_algorithm_ph1: mappedhashAlgo,
+            dh_key_group: mappedDhKey,
+            lifetime_ph1: state.lifetime,
+            policy: state.policy,
+            rekey: state.rekey,
+            reauth: state.reauth,
+            mobike: state.mobike,
+            nat_traversal: state.natTraversal.slug,
+            inactivity_timeout: state.interactivityTimout,
+            margin_time: state.marginTime,
+            rekey_fuzz: state.rekeyFuzz,
+            deed_peer: isdeadPeer,
+            description_ph2: state.descriptionPh2,
+            lifetime_ph2: state.lifetimeExchange,
+            sa_key_exchange: isKeyExchange,
+            mode_ph2: isMode_ph2,
           };
-        } else if (state.protocol.slug === "AH") {
-          isKeyExchange = {
-            protocol: state.protocol.slug,
-            hash_algorithm_ph2: mappedhashAlgoExchange,
-            pfs_key_group: state.pfsKey.slug,
-          };
-        }
-
-        let isMode_ph2 = null;
-
-        if (state.mode.slug === "Tunnel IPv4") {
-          isMode_ph2 = {
-            mode: state.mode?.slug,
-            local_network: {
-              type_local_network: state.type?.slug,
-              address_local_network: state.localNetworkAddress,
-              mask:
-                state.type?.slug === "Address"
-                  ? "32"
-                  : state.selectAddressNetwork.toString(),
-            },
-            remote_network: {
-              type_remote_network: state.typeRemoteNetwork.slug,
-              address_remote_network: state.remoteNetworkAddress,
-              mask:
-                state.typeRemoteNetwork.slug === "Address"
-                  ? "32"
-                  : state.selectRemoteAddressNetwork.toString(),
-            },
-          };
-        } else if (state.mode.slug === "Transport") {
-          isMode_ph2 = {
-            mode: state.mode?.slug,
-          };
-        }
-
-        let payload = {
-          conn_name: state.tunnelSettings,
-          connection_method: state.connectionMethod?.slug,
-          key_exchange: KeyExchange,
-          internet_protocol: state.internetProtocol.slug,
-          interface_name: state.generalinterface?.name,
-          remote_gateway: state.remoteGateway,
-          dynamic_gateway: state.remoteConnect,
-          description_ph1: state.description,
-          authentication: authen,
-          encryption_algorithm_ph1:
-            state.keyExchange.slug === "V1"
-              ? state.encryptAlgoV1.slug
-              : state.encryptAlgo?.slug,
-          hash_algorithm_ph1: mappedhashAlgo,
-          dh_key_group: mappedDhKey,
-          lifetime_ph1: state.lifetime,
-          policy: state.policy,
-          rekey: state.rekey,
-          reauth: state.reauth,
-          mobike: state.mobike,
-          nat_traversal: state.natTraversal.slug,
-          inactivity_timeout: state.interactivityTimout,
-          margin_time: state.marginTime,
-          rekey_fuzz: state.rekeyFuzz,
-          deed_peer: isdeadPeer,
-          description_ph2: state.descriptionPh2,
-          lifetime_ph2: state.lifetimeExchange,
-          sa_key_exchange: isKeyExchange,
-          mode_ph2: isMode_ph2,
-        };
-        state.loading = true;
-        state.isLoadingDialogue = true;
-        if (state.isEditState === "edit") {
-          console.log("payload", payload);
-          axios
-            .put(`/ipsec/updateServerIPsec/${state.id}`, payload)
-            .then((response) => {
-              if (response.status == "201") {
+          state.loading = true;
+          state.isLoadingDialogue = true;
+          if (state.isEditState === "edit") {
+            console.log("payload", payload);
+            axios
+              .put(`/ipsec/updateServerIPsec/${state.id}`, payload)
+              .then((response) => {
+                if (response.status == "201") {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  state.isEditState = "";
+                  setTimeout(() => {
+                    location.reload();
+                    emitter.emit("open-listingIpsec");
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
                 state.loading = false;
                 state.isLoadingDialogue = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-                state.isEditState = "";
-                setTimeout(() => {
-                  location.reload();
-                  emitter.emit("open-listingIpsec");
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            });
+
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
+          } else {
+            axios
+              .post("/ipsec/createServerIPsec", payload)
+              .then((response) => {
+                if (response.status == "201") {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  setTimeout(() => {
+                    location.reload();
+                    emitter.emit("open-listingIpsec");
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
+                state.loading = false;
+                state.isLoadingDialogue = false;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
+          }
         } else {
-          axios
-            .post("/ipsec/createServerIPsec", payload)
-            .then((response) => {
-              if (response.status == "201") {
-                state.loading = false;
-                state.isLoadingDialogue = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-                setTimeout(() => {
-                  location.reload();
-                  emitter.emit("open-listingIpsec");
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            });
+          console.log("error", v$.value);
         }
       } else {
-        console.log("error", v$.value);
+        state.isviewModal = true;
+        state.viewModal = true;
       }
-    } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-          };
     };
     const filteredAlgoListExchangeV1 = computed(() => {
       if (state.keyExchange.slug === "V1") {
@@ -1611,6 +1651,7 @@ export default {
       cancel,
       close,
       state,
+      overlayMessage,
       emitter,
       v$,
     };
@@ -1622,5 +1663,9 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
+}
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 </style>

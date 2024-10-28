@@ -1,18 +1,14 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
             @click="close" />
         </div>
       </v-card>
@@ -25,36 +21,63 @@
       <v-row>
         <v-col cols="12">
           <div style="overflow: hidden; flex-grow: 1">
-            <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-              @grid-ready="onGridReady" :columnDefs="columnArea" :rowData="rowDataArea.value" :gridOptions="gridOptions"
-              :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
+            <ag-grid-vue
+              id="grid-wrapper"
+              domLayout="autoHeight"
+              class="ag-theme-alpine mt-3"
+              style="width: 100%"
+              @grid-ready="onGridReady"
+              :columnDefs="columnArea"
+              :rowData="rowDataArea.value"
+              :gridOptions="gridOptions"
+              :overlayNoRowsTemplate="overlayTemplate"
+              :localeText="paginationLocalization"
+            />
           </div>
           <div class="d-flex justify-end mt-3">
-            <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('sdwan.addKey')" :isLarge="true"
-              type="submit" class="ml-2" @click="openModalAdd" />
+            <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              :label="$t('sdwan.addKey')"
+              :isLarge="true"
+              type="submit"
+              class="ml-2"
+              @click="openModalAdd"
+            />
           </div>
         </v-col>
       </v-row>
-      <AreaSdwanModal :isOpen="state.isModalAreaOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
+      <AreaSdwanModal
+        :isOpen="state.isModalAreaOpen"
+        :editRow="state.editRow"
+        :modalMode="state.modalMode"
+      />
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
-          }}</v-card-title>
+        }}</v-card-title>
         <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("buttons.cancel")
-            }}</v-btn>
+          }}</v-btn>
           <v-btn color="blue darken-1" text @click="confirmDelete">{{
             $t("buttons.delete")
-            }}</v-btn>
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </div>
@@ -83,6 +106,8 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
     const paginationLocalization = reactive({
@@ -108,7 +133,15 @@ export default {
       paginationPageSize: 5,
       rowSelection: "single",
     });
-
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Sdwan') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("SDWAN")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const areaName = computed(() => {
       return t("sdwan.areaName");
     });
@@ -205,19 +238,18 @@ export default {
     }
 
     const handleActionClient = (action, rowData, index) => {
-      const user = user_privilege('Sdwan');
+      const user = user_privilege("Sdwan");
       switch (action) {
         case "show":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
             console.log("show", rowData);
-          }
-          else {
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         case "edit":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
             console.log("edit", rowData);
             state.modalMode = "edit";
             state.isModalAreaOpen = true;
@@ -225,17 +257,17 @@ export default {
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         case "delete":
-          if (user && user !== 'viewer') {
+          if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
             console.log("delete", rowData);
             state.deleteDialog = true;
             state.deletedRow = rowData;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
           break;
         default:
           break;
@@ -244,14 +276,14 @@ export default {
 
     const openModalAdd = () => {
       const user = user_privilege('Sdwan');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default'  && last_Subscription.value.includes("SDWAN")) {
         state.modalData = {};
         state.modalMode = "create";
         state.isModalAreaOpen = true;
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
 
     onMounted(() => {
@@ -268,6 +300,12 @@ export default {
         state.modalMode = "";
         state.editRow = {};
       });
+
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
 
       let allArea = document.getElementById("app").attributes["allArea"].value;
       let parsedArray = JSON.parse(allArea);
@@ -306,12 +344,18 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
-    
+
     const close = () => {
       state.isviewModal = false;
       state.viewModal = false;
@@ -323,6 +367,7 @@ export default {
       overlayTemplate,
       paginationLocalization,
       columnArea,
+      overlayMessage,
       emitter,
       rowDataArea,
       defaultColDef,
@@ -336,4 +381,8 @@ export default {
 };
 </script>
 
-<style></style>
+<style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}</style>

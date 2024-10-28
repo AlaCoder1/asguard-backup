@@ -405,9 +405,15 @@ export default {
               }
             })
             .catch((i) => {
+              if (i.response.status === 500) {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.response;
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
             });
         } else {
           axios
@@ -425,9 +431,15 @@ export default {
               }
             })
             .catch((i) => {
+              if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;
+            }
             });
         }
       } else {

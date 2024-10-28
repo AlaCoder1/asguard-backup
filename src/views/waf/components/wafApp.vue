@@ -1,6 +1,6 @@
 <template>
   <v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+            <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
               <v-card color="#193286" class="alert-box">
                 <v-card-title class="img-containter">
                   <img
@@ -10,11 +10,7 @@
                     width="100"
                     height="100"
                 /></v-card-title>
-                <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
+                <v-card-text v-html="overlayMessage">
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -23,7 +19,7 @@
                     outlined
                     color="#ffffff"
                     label-color="#213E9F"
-                    label="Close"
+                    :label="$t('buttons.close')"
                     :isLarge="true"
                     @click="close"
                   />
@@ -137,6 +133,8 @@ export default {
   },
   setup() {
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const { t } = useI18n();
     const paginationLocalization = reactive({
       of: "/",
@@ -159,6 +157,15 @@ export default {
     const appName = computed(() => {
       return t("Waf.applicationName");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Waf') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("WAF")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const value = computed(() => {
       return t("squid.value");
     });
@@ -265,20 +272,20 @@ export default {
     }
 
     const handleAction = (action, rowData, index) => {
-      const user = user_privilege('Waf');
+      const user = user_privilege("Waf");
       switch (action) {
         case "delete":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
           state.deleteDialog = true;
           state.deletedRow = rowData;
         } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          }
+
           break;
         case "edit":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
           console.log("edit", rowData);
           state.modalMode = "edit";
           state.isModalOpen = true;
@@ -287,8 +294,8 @@ export default {
         } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-          
+          }
+
         default:
           break;
       }
@@ -326,6 +333,11 @@ export default {
 
       rowDataApplication.value = list_rules;
     });
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
 
     emitter.on("closeWafApplicationModal", () => {
       state.isModalOpen = false;
@@ -336,7 +348,7 @@ export default {
 
     const openModalAdd = () => {
       const user = user_privilege('Ztna');
-      if (user && user !=='viewer') {
+      if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
@@ -379,9 +391,15 @@ export default {
           }, 4000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
@@ -395,6 +413,7 @@ export default {
       confirmDelete,
       cancelDelete,
       state,
+      overlayMessage,
       onGridReady,
       openModalAdd,
       columnApplication,
@@ -406,3 +425,9 @@ export default {
   },
 };
 </script>
+<style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+</style>

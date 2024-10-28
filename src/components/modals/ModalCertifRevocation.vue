@@ -57,6 +57,7 @@
 <script>
 import axios from "axios";
 import { AgGridVue } from "ag-grid-vue3";
+
 export default {
   props: {
     isOpen: {
@@ -228,9 +229,15 @@ export default {
               }, 1000);
             })
             .catch((i) => {
-              this.snackbar = true;
-              this.color = "red";
-              this.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                 this.snackbar = true;
+                 this.color = "red";
+                 this.textAlert = this.$t("errors.errorServer");
+              } else {
+                 this.snackbar = true;
+                 this.color = "red";
+                 this.textAlert = i.response.data.error;
+              }
             });
 
           break;

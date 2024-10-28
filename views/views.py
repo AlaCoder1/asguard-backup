@@ -659,10 +659,12 @@ def subscription_page(request):
  
 #comment to test git command
 def login(request):
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'last_subscription':json.dumps(last_subscription)}
     if request.user.is_authenticated:
         return redirect('/dashboard/')
     else:
-        return render(request, 'login.html')
+        return render(request, 'login.html',context)
 
 
 @login_required(login_url='/')

@@ -367,48 +367,57 @@ console.log('current_user',current_user.value)
       return cookieValue;
     }
     const reloadData = async () => {
-      const user = user_privilege('Suricata');
-      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("IDS/IPS")) {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      state.loading = true;
-      state.isLoadingDialogue = true;
-      try {
-        const response = await axios.post(
-          "/ids-ips/addalertsToDatabase/" + props.configInfo
-        );
-        if (response.status === 200) {
-          state.loading = false;
-          state.isLoadingDialogue = false;
-          state.snackbar = true;
-          // state.messages=response.data.message
-          showMessage({
-            color: "success",
-            text: t("suricata.allAlertsuccessfully"),
-          });
-        } else {
-          state.loading = false;
-          state.isLoadingDialogue = false;
-
-          if (i.response.status === 500) {
-            state.snackbar = true;
-            showMessage({
-              color: "error",
-              text: t("errors.errorServer"),
-            });
-          } else {
-            state.snackbar = true;
-            showMessage({
-              color: "error",
-              text: t("suricata.failed"),
-            });
-          }
-        }
+  const user = user_privilege('Suricata');
+  if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("IDS/IPS")) {
+    const csrfToken = getCookie("csrftoken");
+    axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    state.loading = true;
+    state.isLoadingDialogue = true;
+    try {
+      const response = await axios.post(
+        "/ids-ips/addalertsToDatabase/" + props.configInfo
+      );
+      if (response.status === 200) {
+        state.loading = false;
+        state.isLoadingDialogue = false;
+        state.snackbar = true;
+        showMessage({
+          color: "success",
+          text: t("suricata.allAlertsuccessfully"),
+        });
       } else {
-        state.isviewModal = true;
-        state.viewModal = true;
+        state.loading = false;
+        state.isLoadingDialogue = false;
+        state.snackbar = true;
+        showMessage({
+          color: "error",
+          text: t("suricata.failed"),
+        });
       }
-    };
+    } catch (error) {
+      state.loading = false;
+      state.isLoadingDialogue = false;
+
+      if (error.response && error.response.status === 500) {
+        state.snackbar = true;
+        showMessage({
+          color: "error",
+          text: t("errors.errorServer"),
+        });
+      } else {
+        state.snackbar = true;
+        showMessage({
+          color: "error",
+          text: t("suricata.failed"),
+        });
+      }
+    }
+  } else {
+    state.isviewModal = true;
+    state.viewModal = true;
+  }
+};
+
 
     const getData = () => {
       const csrfToken = getCookie("csrftoken");

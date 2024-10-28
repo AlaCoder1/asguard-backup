@@ -147,10 +147,7 @@ export default {
     }
   },
   mounted() {
-    const lastSubscription =
-      document.getElementById("app").attributes["last_subscription"].value;
-    let parsedArraySubscription = JSON.parse(lastSubscription);
-    this.last_Subscription = parsedArraySubscription;
+    this.last_Subscription=localStorage.getItem("lastSubscription"); 
     const csrfToken = getCookie("csrftoken");
     axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 

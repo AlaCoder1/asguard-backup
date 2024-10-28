@@ -422,6 +422,7 @@
     "editRange": "Edit Range"
   },
   "squid": {
+    "errorTime":"Start time and End time are identical",
     "restart": "Please restart the service for the modifications to take effect.",
     "proxyPort": "Proxy port",
     "etesVouSur": "Are you sure you want to",

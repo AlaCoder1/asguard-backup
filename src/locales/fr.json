@@ -11,7 +11,8 @@
     "goupname": "Nom de groupe",
     "description": "Description",
     "server": "Serveur d'annuaire",
-    "LoginTime": "Temps de connexion"
+    "LoginTime": "Temps de connexion",
+    "resetPassword":"Réinitialisation du mot de passe"
   },
   "login": {
     "verifyYourAccount": "Vérifier Votre Compte",

@@ -175,8 +175,8 @@ this.current_user= user_privilege('Ztna')
       snackbar: false,
       status: false,
       isviewModal:false,
-       current_user:'',
-       last_Subscription:[],
+      current_user:'',
+      last_Subscription:[],
       viewModal:false
     };
   },
@@ -184,8 +184,7 @@ this.current_user= user_privilege('Ztna')
     const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
-      last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
+      this.last_Subscription = parsedArraySubscription;
     const csrfToken = getCookie("csrftoken");
     axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 

@@ -949,7 +949,10 @@ export default {
     const and = computed(() => {
       return t("Waf.and");
     });
-
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
+    const isValidRemoteGateway = helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/);
     const rules = computed(() => {
       return {
         applicationName: {
@@ -959,10 +962,24 @@ export default {
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },
-
         value: {
           required: helpers.withMessage(error, required),
+          isValidAddress: helpers.withMessage(formaaddress, (value) => {
+            if (state.type === "ip") {
+              return isValidRemoteGateway(value);
+            }
+            return true;
+          }),
         },
+
+        // value: {
+        //   required: helpers.withMessage(error, required),
+
+        //   // isValidlRemoteGateway: helpers.withMessage(
+        //   //   formaaddress,
+        //   //   helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+        //   // ),
+        // },
         protocol: {
           required: helpers.withMessage(error, required),
         },

@@ -96,7 +96,7 @@ def create_routing(request):
     try:
         data = request.data
         gateway = data.get("gateway", "")
-        gateway_data = gateway.copy()
+        gateway_data = data.get("gateway", "")
 
         # Create a new Gateway and GatewayInterface
         if data.get("gateway_create"):

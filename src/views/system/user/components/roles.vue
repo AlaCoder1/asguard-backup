@@ -165,7 +165,7 @@ export default {
           .join(" , ");
 
         let eGui = document.createElement("div");
-        eGui.innerHTML = resultWithBr;
+        eGui.innerHTML = `[ default + ] : ${resultWithBr}`;
         return eGui;
       }
     }
@@ -215,12 +215,12 @@ export default {
           params.data.name === "default" ||
           params.data.name === "viewer"
         ) {
+          // <button
+          //    >
+          //       <i class="mdi mdi-pen-lock" style="color: #086EAE; font-size:20px;"></i>
+          //    </button>
           eGui.innerHTML = `    
-          
-          <button
-             >
-                <i class="mdi mdi-pen-lock" style="color: #086EAE; font-size:20px;"></i>
-             </button> 
+                       --
                    `;
         } else {
           eGui.innerHTML = `

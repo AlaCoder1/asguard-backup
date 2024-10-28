@@ -1,18 +1,36 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
         <v-card-text>
-          {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
+          {{ $t("profil.NoPermission") }}
+          <br />
+          {{ $t("profil.ContactAdmin") }}
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -23,36 +41,64 @@
     <v-row class="mb-15">
       <v-col cols="12">
         <div style="overflow: hidden; flex-grow: 1">
-          <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-            @grid-ready="onGridReady" :columnDefs="columnAssign" :rowData="rowDataAssign.value" :pagination="true"
-            :paginationPageSize="5" :overlayNoRowsTemplate="overlayTemplate" :localeText="paginationLocalization" />
+          <ag-grid-vue
+            id="grid-wrapper"
+            domLayout="autoHeight"
+            class="ag-theme-alpine mt-3"
+            style="width: 100%"
+            @grid-ready="onGridReady"
+            :columnDefs="columnAssign"
+            :rowData="rowDataAssign.value"
+            :pagination="true"
+            :paginationPageSize="5"
+            :overlayNoRowsTemplate="overlayTemplate"
+            :localeText="paginationLocalization"
+          />
         </div>
         <div class="d-flex justify-end mt-3">
-          <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.AddInterface')"
-            :isLarge="true" type="submit" class="ml-2" @click="openModalAdd" />
+          <VButton
+            rounded
+            outlined
+            color="#213E9F"
+            label-color="#ffffff"
+            :label="$t('buttons.AddInterface')"
+            :isLarge="true"
+            type="submit"
+            class="ml-2"
+            @click="openModalAdd"
+          />
         </div>
       </v-col>
     </v-row>
-    <AssignModal :isOpen="state.isModalOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
+    <AssignModal
+      :isOpen="state.isModalOpen"
+      :editRow="state.editRow"
+      :modalMode="state.modalMode"
+    />
   </div>
   <v-dialog v-model="state.deleteDialog" max-width="500px">
     <v-card>
       <v-card-title class="headline">{{
         $t("delete.DeleteConfirmation")
-        }}</v-card-title>
+      }}</v-card-title>
       <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
       <v-card-actions>
         <v-spacer></v-spacer>
         <v-btn color="blue darken-1" text @click="cancelDelete">{{
           $t("buttons.cancel")
-          }}</v-btn>
+        }}</v-btn>
         <v-btn color="blue darken-1" text @click="confirmDelete">{{
           $t("buttons.delete")
-          }}</v-btn>
+        }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
-  <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+  <v-snackbar
+    :timeout="2000"
+    v-model="state.snackbar"
+    location="bottom right"
+    :color="state.color"
+  >
     {{ state.textAlert }}
   </v-snackbar>
 </template>
@@ -245,8 +291,7 @@ export default {
           } else {
             state.deleteDialog = true;
             state.deletedRow = rowData;
-          };
-
+          }
 
           break;
         case "edit":
@@ -258,8 +303,7 @@ export default {
             state.modalMode = "edit";
             state.isModalOpen = true;
             state.editRow = rowData;
-          };
-
+          }
 
           break;
 
@@ -279,8 +323,7 @@ export default {
         state.modalMode = "create";
         state.isModalOpen = true;
         emitter.emit("list-assing", rowDataAssign.value);
-      };
-
+      }
     };
     const close = () => {
       state.isviewModal = false;
@@ -289,15 +332,15 @@ export default {
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
-    const confirmDelete = () => {
+
+    const deleteInterface = (name) => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      // let network_port = state.deletedRow.network_port.split(" ");
-      // if (network_port[0] === "VLAN") {
-      console.log("state.deletedRow", state.deletedRow);
       axios
-        .delete(`/vlan/deleteVlanInterface/${state.deletedRow.id}`)
+        .delete(
+          `/${name.toLowerCase()}/delete${name}Interface/${state.deletedRow.id}`
+        )
         .then((response) => {
           state.snackbar = true;
           state.color = "success";
@@ -318,6 +361,14 @@ export default {
             state.textAlert = i.response.data.error;
           }
         });
+    };
+    const confirmDelete = () => {
+      if (state.deletedRow?.name_interface.startsWith("VLAN")) {
+        deleteInterface("Vlan");
+      }
+      if (state.deletedRow?.name_interface.startsWith("VXLAN")) {
+        deleteInterface("Vxlan");
+      }
     };
     return {
       state,

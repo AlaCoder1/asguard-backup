@@ -207,6 +207,13 @@
                 :placeholder="$t('squid.to')"
               />
             </v-col>
+
+            <p
+              class="error-feedback mb-5 ml-4"
+              v-if="state.formData.from && state.formData.from && isValidTime"
+            >
+              {{ $t("squid.errorTime") }}
+            </p>
           </template>
         </v-row>
       </form>
@@ -230,6 +237,7 @@
             large
             rounded
             outlined
+            :disabled="isValidTime"
             label-color="#213E9F"
             @click="submitForm"
             color="indigo-darken-3"
@@ -479,6 +487,14 @@ export default {
       return state.formData.routageTypeDomain.slug === "domain";
     });
 
+    const isValidTime = computed(() => {
+      if (state.formData.time) {
+        let from = dayjs(state.formData.from).format("HH:mm");
+        let to = dayjs(state.formData.to).format("HH:mm");
+        return from === to;
+      }
+    });
+
     watch(
       state,
       () => {
@@ -665,29 +681,29 @@ export default {
             };
           }
           console.log("pay", payload);
-          axios
-            .post("/proxy/addRuleSquid", payload)
-            .then((response) => {
-              if (response.status == "200") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              if (i.response.status === 500) {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = t("errors.errorServer");
-              } else {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.error;
-              }
-            });
+          // axios
+          //   .post("/proxy/addRuleSquid", payload)
+          //   .then((response) => {
+          //     if (response.status == "200") {
+          //       state.snackbar = true;
+          //       state.color = "success";
+          //       state.textAlert = response.data.msg;
+          //       setTimeout(() => {
+          //         location.reload();
+          //       }, 1000);
+          //     }
+          //   })
+          //   .catch((i) => {
+          //     if (i.response.status === 500) {
+          //       state.snackbar = true;
+          //       state.color = "red";
+          //       state.textAlert = t("errors.errorServer");
+          //     } else {
+          //       state.snackbar = true;
+          //       state.color = "red";
+          //       state.textAlert = i.response.data.error;
+          //     }
+          //   });
         }
       } else {
         console.log("error", v$.value);
@@ -704,6 +720,7 @@ export default {
       routagType,
       routagTypeDomain,
       emitter,
+      isValidTime,
       daysArray,
       closeModal,
       submitForm,

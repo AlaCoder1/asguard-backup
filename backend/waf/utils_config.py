@@ -1,5 +1,11 @@
 from backend.waf.constant_variables import CONSTANT_JSON_REQUEST, CONSTANT_JSON_REQUEST_COMMENTED, CONSTANT_XML_REQUEST, CONSTANT_XML_REQUEST_COMMENTED, PATH_WAF_CONFIG
+from backend.waf.utils import restart_nginx_in_system
 from utils.commands_utils import execute_command_without_arguments, read_file_from_system, write_file_from_system
+
+
+def update_waf_configuration_in_system(data_config):
+    """Update the configuration of the WAF service"""
+    change_waf_config_file(data_config)
 
 
 def create_waf_config(config_path, config_data):

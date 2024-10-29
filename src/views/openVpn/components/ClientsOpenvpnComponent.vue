@@ -1,15 +1,32 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-          <v-card-text v-html="overlayMessage">
-          </v-card-text>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -557,7 +574,7 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
+      console.log("last_Subscription", last_Subscription.value);
       // getInterface();
       getAllCertAuth();
       getAllClientCertif();
@@ -683,14 +700,20 @@ export default {
       return t("champs.indication");
     });
     const overlayMessage = computed(() => {
-current_user.value= user_privilege('Openvpn') 
-console.log('current_user',current_user.value)
-  if (current_user.value === "viewer" || current_user.value === "default") {
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  } else if (!last_Subscription.value.includes("VPN SSL")) {
-    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } 
-});
+      current_user.value = user_privilege("Openvpn");
+      console.log("current_user", current_user.value);
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!last_Subscription.value.includes("VPN SSL")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      }
+    });
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -743,7 +766,9 @@ console.log('current_user',current_user.value)
         proxy_host: {
           isValidProxy_host: helpers.withMessage(
             formatMustBeLikeAdresseIP,
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         proxy_port: {
@@ -956,22 +981,32 @@ console.log('current_user',current_user.value)
       const user = user_privilege("Openvpn");
       switch (action) {
         case "edit":
-        if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN SSL")) {
-          gridApi.value.setFocusedCell(index);
-          gridApi.value.startEditingCell({
-            rowIndex: index,
-            colKey: "host",
-          });
-        } else {
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            gridApi.value.setFocusedCell(index);
+            gridApi.value.startEditingCell({
+              rowIndex: index,
+              colKey: "host",
+            });
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
           break;
         case "delete":
-        if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN SSL")) {
-          const index = rowDataCertificats.value.findIndex(
-            (item) => item.host === rowData.host
-          );
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            const index = rowDataCertificats.value.findIndex(
+              (item) => item.host === rowData.host
+            );
 
             if (index !== -1) {
               rowDataCertificats.value.splice(index, 1);
@@ -1025,19 +1060,24 @@ console.log('current_user',current_user.value)
     const rowDataCertificats = ref([]);
 
     const addNewRow = () => {
-      const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN SSL")) {
-      const newRow = { host: "", port: "" };
-      rowDataCertificats.value.push(newRow);
-      if (gridApi.value) {
-        gridApi.value.setRowData(rowDataCertificats.value);
+      const user = user_privilege("Openvpn");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN SSL")
+      ) {
+        const newRow = { host: "", port: "" };
+        rowDataCertificats.value.push(newRow);
+        if (gridApi.value) {
+          gridApi.value.setRowData(rowDataCertificats.value);
+        } else {
+          console.error("Grid API.");
+        }
       } else {
-        console.error("Grid API.");
+        state.isviewModal = true;
+        state.viewModal = true;
       }
-    } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-          };
     };
     const onGridReady = (params) => {
       gridApi.value = params.api;
@@ -1101,7 +1141,10 @@ console.log('current_user',current_user.value)
     ]);
     const hasEmptyProperty = (obj) => {
       // var invalidHostChars = /[^0-9.]/.test(obj.host);
-      var invalidHostChars = !/^(\d{1,3}\.){3}\d{1,3}$/.test(obj.host);
+      var invalidHostChars =
+        !/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/.test(
+          obj.host
+        );
       var invalidPortChars = /[^0-9]/.test(obj.port);
 
       return (
@@ -1167,9 +1210,13 @@ console.log('current_user',current_user.value)
       const user = user_privilege("Openvpn");
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN SSL")) {
-
-      const result = await v$.value.$validate();
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN SSL")
+      ) {
+        const result = await v$.value.$validate();
 
         if (result) {
           var isArrayEmpty = rowDataCertificats.value.length === 0;
@@ -1421,27 +1468,32 @@ console.log('current_user',current_user.value)
     ]);
 
     const cancel = () => {
-      const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN SSL")) {
-      state.id = "";
-      state.modeState = "create";
-      state.isEditState = "";
-      //general information
-      state.clientName = "";
-      state.description = "";
-      state.server_mode = "";
-      state.protocol = "";
-      state.device_mode = "";
-      state.interface = "";
-      state.resolv_retry = false;
-      state.proxy_host = "";
-      state.proxy_port = "";
-      state.proxyAuthenticationExtraOptions = {
-        name: "None",
-        slug: "none",
-      };
-      state.usernameUser = "";
-      state.passwordUser = "";
+      const user = user_privilege("Openvpn");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN SSL")
+      ) {
+        state.id = "";
+        state.modeState = "create";
+        state.isEditState = "";
+        //general information
+        state.clientName = "";
+        state.description = "";
+        state.server_mode = "";
+        state.protocol = "";
+        state.device_mode = "";
+        state.interface = "";
+        state.resolv_retry = false;
+        state.proxy_host = "";
+        state.proxy_port = "";
+        state.proxyAuthenticationExtraOptions = {
+          name: "None",
+          slug: "none",
+        };
+        state.usernameUser = "";
+        state.passwordUser = "";
 
         state.username = "";
         state.password = "";

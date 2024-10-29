@@ -35,9 +35,9 @@ class Command(BaseCommand):
                 source_address = None
             if destination_address.lower() == 'all':
                 destination_address = None
-            if source_port.lower() == 'all':
+            if source_port.lower() == 'all' or protocol=="icmp":
                 source_port = None
-            if destination_port.lower() == 'all':
+            if destination_port.lower() == 'all' or protocol=="icmp":
                 destination_port = None
             interface_id = Interface.objects.get(ifname=interface)
             return_init_file_nftables = init_file_nftables(interface)

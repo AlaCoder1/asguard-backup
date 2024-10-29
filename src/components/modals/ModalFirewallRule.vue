@@ -124,6 +124,13 @@
                   label-color="#ffffff"
                   :isLarge="true"
                   class="ml-2"
+                  :disabled="
+                    equal ||
+                    dportCheck ||
+                    sportCheck ||
+                    daddrCheck ||
+                    saddrCheck
+                  "
                   @click="handleCreateClick"
                 >
                   <span
@@ -148,8 +155,7 @@
                 class="custom-alert"
               >
                 <span style="font-size: 19px">
-                  Are you sure you want to create this rule with 'reject' or
-                  'drop'?
+                  {{ $t("firewall.DropRejectRule") }}
                 </span>
                 <div class="mt-3 d-flex justify-center">
                   <v-btn
@@ -170,8 +176,17 @@
                     @click="submitForm"
                     class="ml-2"
                   >
-                    <span class="text-white pr-3 pl-3">
+                    <span
+                      class="text-white pr-3 pl-3"
+                      v-if="modalMode === 'create'"
+                    >
                       {{ $t("buttons.create") }}
+                    </span>
+                    <span
+                      class="text-white pr-3 pl-3"
+                      v-if="modalMode === 'edit'"
+                    >
+                      {{ $t("buttons.update") }}
                     </span>
                   </v-btn>
                 </div>
@@ -517,14 +532,7 @@ export default {
       return cookieValue;
     };
     const handleCreateClick = () => {
-      if (
-        dropReject.value ||
-        equal.value ||
-        dportCheck.value ||
-        sportCheck.value ||
-        daddrCheck.value ||
-        saddrCheck
-      ) {
+      if (dropReject.value) {
         state.showConfirmation = true;
       } else {
         submitForm();

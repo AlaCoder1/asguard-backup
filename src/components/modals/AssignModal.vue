@@ -7,9 +7,6 @@
             <span class="headline" v-if="modalMode === 'create'">
               {{ $t("typeInterface.createNewInterface") }} Interface</span
             >
-            <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("buttons.update") }} Interface</span
-            >
           </v-card-title>
           <v-card-text>
             <v-container>

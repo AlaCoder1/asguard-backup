@@ -15,10 +15,7 @@
             width="100"
             height="100"
         /></v-card-title>
-        <v-card-text>
-          {{ $t("profil.NoPermission") }}
-          <br />
-          {{ $t("profil.ContactAdmin") }}
+        <v-card-text v-html="overlayMessage">
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
@@ -267,6 +264,7 @@ export default defineComponent({
   },
   setup(props) {
     const { t } = useI18n();
+    const last_Subscription=ref([])
     const paginationLocalization = reactive({
       of: "/",
     });
@@ -311,7 +309,14 @@ export default defineComponent({
     const rowDataLength = computed(() => {
       return !rowData.value || rowData.value.length == 0 ? false : true;
     });
-
+    const overlayMessage = computed(() => {
+      let current_user = user_privilege()
+      if (current_user === "viewer" || current_user === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")} <br /> `;
+      } else if (!last_Subscription.value.includes("Firewall L4")) {
+        return `<br />  ${t("firewall.msg_subscription")} <br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+      }
+    });
     const policy = computed(() => {
       return t("firewall.policy");
     });
@@ -343,7 +348,6 @@ export default defineComponent({
 
     const alert = ref(false);
     const mode = ref("create");
-    const last_Subscription = ref([]);
     const columnDefs = ref([
       // {
       //   width: 50,
@@ -507,8 +511,8 @@ export default defineComponent({
           state.isModalOpen = true;
           emitter.emit("inter-Outbound-uuid", props.uuid);
         } else {
-          emitter.emit("firewal-subscription");
-          window.scrollTo(0, 0);
+          state.isviewModal = true;
+          state.viewModal = true;
         }
       }
     };
@@ -950,6 +954,10 @@ export default defineComponent({
       //   />
       //  </svg></span>`;
       // console.log(overlayTemplate.valye)
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
       emitter.on("closeOutboundRule", () => {
         state.isModalOpen = false;
         state.isOpen = false;
@@ -968,12 +976,6 @@ export default defineComponent({
       let parsedArray = JSON.parse(rulesAttribute);
 
       rules.value = parsedArray;
-
-      const lastSubscription =
-        document.getElementById("app").attributes["last_subscription"].value;
-      let parsedArraySubscription = JSON.parse(lastSubscription);
-      last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription.value", last_Subscription.value);
 
       emitter.on("addFirewallRuleOutbound", (data) => {
         if (data.interUuid === props.uuid) {
@@ -1166,6 +1168,7 @@ export default defineComponent({
       confirmDelete,
       saveModal,
       close,
+      overlayMessage,
       cancel,
       gridOptions,
     };
@@ -1218,3 +1221,4 @@ export default defineComponent({
   }
 }
 </style>
+

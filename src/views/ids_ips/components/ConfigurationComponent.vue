@@ -8,9 +8,14 @@
     >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-          <v-card-text v-html="overlayMessage">
-          </v-card-text>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton
@@ -396,14 +401,19 @@ export default {
     });
     const gridApi = ref(null);
     const overlayMessage = computed(() => {
-current_user.value= user_privilege('Suricata') 
-console.log('current_user',current_user.value)
-  if (current_user.value === "viewer" || current_user.value === "default") {
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  } else if (!last_Subscription.value.includes("IDS/IPS")) {
-    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } 
-});
+      current_user.value = user_privilege("Suricata");
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!last_Subscription.value.includes("IDS/IPS")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      }
+    });
     const thread = computed(() => {
       return t("suricata.thread");
     });
@@ -636,10 +646,15 @@ console.log('current_user',current_user.value)
 
         //   break;
         case "delete":
-      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("IDS/IPS")) {
-          const index = rowDataAF.value.findIndex(
-            (item) => item.id === rowData.id
-          );
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("IDS/IPS")
+          ) {
+            const index = rowDataAF.value.findIndex(
+              (item) => item.id === rowData.id
+            );
 
             if (index !== -1) {
               rowDataAF.value.splice(index, 1);
@@ -660,62 +675,65 @@ console.log('current_user',current_user.value)
     };
 
     const reloadData = async () => {
-      const user = user_privilege('suricata');
-      console.log('user update',user)
-      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("IDS/IPS")) {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      state.loading = true;
-      state.isLoadingDialogue = true;
-      try {
-        const response = await axios.post(
-          "activerSuricataUpdate/" + state.interId
-        );
-        if (response.status === 200) {
-          // state.messages=response.data.message
-          state.loading = false;
-          state.isLoadingDialogue = false;
-          state.snackbar = true;
-          state.color = "success";
-          state.textAlert = t("suricata.rulesSavedSuccessfully");
-          // Automatically close the snackbar after 3000 milliseconds (3 seconds)
-          setTimeout(() => {
-            state.snackbar = false;
-          }, 1000);
-        } else {
+      const user = user_privilege("Suricata");
+      console.log("user update", user);
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("IDS/IPS")
+      ) {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        state.loading = true;
+        state.isLoadingDialogue = true;
+        try {
+          const response = await axios.post(
+            "activerSuricataUpdate/" + state.interId
+          );
+          if (response.status === 200) {
+            // state.messages=response.data.message
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "success";
+            state.textAlert = t("suricata.rulesSavedSuccessfully");
+            // Automatically close the snackbar after 3000 milliseconds (3 seconds)
+            setTimeout(() => {
+              state.snackbar = false;
+            }, 1000);
+          } else {
+            state.loading = false;
+            state.isLoadingDialogue = false;
+            state.snackbar = true;
+            state.color = "error";
+            state.textAlert = t("suricata.failed");
+            setTimeout(() => {
+              state.snackbar = false;
+            }, 2000);
+          }
+        } catch (error) {
           state.loading = false;
           state.isLoadingDialogue = false;
           state.snackbar = true;
           state.color = "error";
-          state.textAlert = t("suricata.failed");
+          state.textAlert = error;
           setTimeout(() => {
             state.snackbar = false;
           }, 2000);
         }
-      } catch (error) {
-        state.loading = false;
-        state.isLoadingDialogue = false;
-        state.snackbar = true;
-        state.color = "error";
-        state.textAlert = error;
-        setTimeout(() => {
-            state.snackbar = false;
-          }, 2000);
-      
-      }
-    } else {
+      } else {
         state.isviewModal = true;
         state.viewModal = true;
       }
     };
 
     onMounted(async () => {
-      
-    const lastSubscription =
+      const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
+      console.log("last_Subscription", last_Subscription.value);
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
         d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
@@ -872,26 +890,36 @@ console.log('current_user',current_user.value)
     };
 
     const openModalAdd = () => {
-      const user = user_privilege('Suricata');
-      console.log(user)
-      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("IDS/IPS")) {
-      state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-      emitter.emit("list-Interface", rowDataAF.value);
-    } else {
+      const user = user_privilege("Suricata");
+      console.log(user);
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("IDS/IPS")
+      ) {
+        state.modalData = {};
+        state.modalMode = "create";
+        state.isModalOpen = true;
+        emitter.emit("list-Interface", rowDataAF.value);
+      } else {
         state.isviewModal = true;
         state.viewModal = true;
       }
     };
 
     const submitForm = async () => {
-      const user = user_privilege('Suricata');
-      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("IDS/IPS")) {
-      const result = await v$.value.$validate();
-      if (result) {
-        const csrfToken = getCookie("csrftoken");
-        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      const user = user_privilege("Suricata");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("IDS/IPS")
+      ) {
+        const result = await v$.value.$validate();
+        if (result) {
+          const csrfToken = getCookie("csrftoken");
+          axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
           if (!rowDataAF.value) {
             rowDataAF.value = [];

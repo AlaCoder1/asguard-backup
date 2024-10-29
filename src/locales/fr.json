@@ -533,6 +533,7 @@
   "Sunday": "Dimanche",
 
   "champs": {
+    "existGateway":"Adresse de la passerelle existe deja",
     "indication": "champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",
     "champNumber": "champs lifeTime ne peuvent inclure que des nombres.",
     "champletter": "champs d'etat ne peut inclure que des lettres.",

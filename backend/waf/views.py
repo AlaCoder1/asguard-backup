@@ -11,7 +11,7 @@ from backend.waf.models import ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.serializers import ApplicationWafSerializer, ConfigWafSerializer, RulesWafSerializer
 from backend.waf.utils import convert_waf_rule_payload, find_possible_id, restart_nginx_in_system
 from backend.waf.utils_application import create_application_waf_in_system, delete_application_waf_in_system, update_application_waf_in_system
-from backend.waf.utils_config import change_waf_config_file
+from backend.waf.utils_config import update_waf_configuration_in_system
 from backend.waf.utils_rules import create_rule_waf_in_system, create_rule_waf_str, delete_rule_waf_in_system, update_rule_waf_in_system
 from utils.errors_utils import CommandExecutionError
 
@@ -82,8 +82,7 @@ def update_config_waf(request, id):
         config_waf = ConfigWaf.objects.get(id=id)
         config_waf_serializer = ConfigWafSerializer(config_waf, data=data)
         if config_waf_serializer.is_valid():
-            change_waf_config_file(data)
-            restart_nginx_in_system()
+            update_waf_configuration_in_system(data)
             config_waf_serializer.save()
             return JsonResponse({"msg": f"{CONSTANT_WAF_CONFIG} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
         return JsonResponse({"error": list(config_waf_serializer.errors.values())[0][0]}, status=400)

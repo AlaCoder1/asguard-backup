@@ -11,7 +11,8 @@
     "goupname": "Nom de groupe",
     "description": "Description",
     "server": "Serveur d'annuaire",
-    "LoginTime": "Temps de connexion"
+    "LoginTime": "Temps de connexion",
+    "resetPassword":"Réinitialisation du mot de passe"
   },
   "login": {
     "verifyYourAccount": "Vérifier Votre Compte",
@@ -55,6 +56,7 @@
   },
 
   "errors": {
+    "errorServer":"Erreur de serveur interne. Veuillez réessayer plus tard",
     "valueRequired": "Champs est obligatoire",
     "invalidPassword": "Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation": "Votre mot de passe ne correspond pas",
@@ -438,6 +440,7 @@
   },
 
   "squid": {
+    "errorTime":"L'heure de début et l'heure de fin sont identiques",
     "restart": "Veuillez redémarrer le service pour que les modifications soient prises en compte.",
     "proxyPort": "Port du proxy",
     "etesVouSur": "Êtes-vous sûr de vouloir",
@@ -469,7 +472,7 @@
     "editBlackList": "Modifier la liste Noire",
     "aclName": "Nom d'Acl",
     "pleaseType": "Veuillez taper...",
-    "selectItem": "Sélectionner un élément"
+    "selectItem": "Sélectionner un ou plusieur éléments"
   },
   "suricata": {
     "suricata": "Suricata",
@@ -1067,7 +1070,9 @@
     "Update": "Mettre à jour",
     "pleaseChoose": "Veuillez choisir un fichier image",
     "fileBig": "Votre fichier est trop volumineux ! Veuillez sélectionner une image de moins de 1MB",
-    "GotIt": "Je l'ai!"
+    "GotIt": "Je l'ai!",
+    "NoPermission":"Vous ne disposez pas des autorisations requises pour effectuer des actions",
+    "ContactAdmin":"Veuillez contacter l'administrateur si vous pensez qu'il s'agit d'une erreur."
   },
   "logrotate": {
     "id": "ID",

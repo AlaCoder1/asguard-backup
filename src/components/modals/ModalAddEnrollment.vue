@@ -45,6 +45,8 @@
 import axios from "axios";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { toRefs, ref, watch, reactive, inject } from "vue";
+import { useI18n } from "vue-i18n";
+
 
 export default {
   props: {
@@ -59,6 +61,7 @@ export default {
   },
 
   setup(props) {
+    const { t } = useI18n();
     const date = ref(null);
     const time = ref(null);
     const selectedTitle = ref("ott");
@@ -179,9 +182,15 @@ export default {
             }
           })
           .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
     };
 

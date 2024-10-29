@@ -145,12 +145,15 @@ export default defineComponent({
         headerName: t("logrotate.id"),
         field: "id",
         autoHeight: true,
+
+        flex: 1,
         width: 150,
         minWidth: 150,
       },
       {
         headerName: t("logrotate.filename"),
         field: "filename",
+        flex: 1,
         width: 350,
         minWidth: 50,
       },
@@ -158,6 +161,7 @@ export default defineComponent({
         headerName: t("logrotate.original_path"),
         field: "original_path",
         autoHeight: true,
+        flex: 1,
         width: 350,
         minWidth: 50,
       },
@@ -165,6 +169,7 @@ export default defineComponent({
         headerName: t("logrotate.backup_path"),
         field: "backup_path",
         autoHeight: true,
+        flex: 1,
         width: 350,
         minWidth: 50,
       },
@@ -172,12 +177,15 @@ export default defineComponent({
         headerName: t("logrotate.date"),
         field: "date",
         autoHeight: true,
-        width: 250,
+        flex: 1,
+        width: 150,
         minWidth: 50,
       },
       {
         headerName: t("firewall.action"),
         field: "action",
+        width: 150,
+        minWidth: 50,
         cellRenderer: actionCellRenderer,
       },
     ]);
@@ -316,11 +324,16 @@ export default defineComponent({
           state.snackbar = true;
           state.color = "green";
         })
-        .catch((error) => {
-          console.error("Error downloading file:", error);
-          state.textAlert = t("logrotate.download_fail");
-          state.snackbar = true;
-          state.color = "red";
+        .catch((i) => {
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("logrotate.download_fail");
+          }
         });
     };
 
@@ -336,11 +349,16 @@ export default defineComponent({
           state.color = "green";
           setTimeout(() => location.reload(), 1000);
         })
-        .catch((error) => {
-          state.textAlert = t("logrotate.delete_fail");
-          state.snackbar = true;
-          state.color = "red";
-          setTimeout(() => location.reload(), 1000);
+        .catch((i) => {
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("logrotate.delete_fail");
+          }
         });
 
       state.deleteDialog = false;

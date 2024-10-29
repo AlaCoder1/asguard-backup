@@ -1,18 +1,14 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
             @click="close" />
         </div>
       </v-card>
@@ -20,11 +16,20 @@
   </v-overlay>
   <div class="mt-3 ml-3 mr-3">
     <v-overlay v-model="state.loading">
-      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
         <v-card color="#193286">
           <v-card-text>
             {{ $t("sdwan.pleaseWait") }}
-            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -35,19 +40,27 @@
         <v-divider></v-divider>
         <div style="display: flex; flex-direction: column" class="mt-3">
           <div v-for="(message, index) in state.messages" :key="index">
-            <v-alert v-model="message.snackbar" :type="message.color" class="d-flex mt-3" :style="{
-              position: 'fixed',
-              marginTop: '10 px',
-              top: `${100 + index * 80}px`,
-              right: '10px',
-              zIndex: 9999,
-            }">
+            <v-alert
+              v-model="message.snackbar"
+              :type="message.color"
+              class="d-flex mt-3"
+              :style="{
+                position: 'fixed',
+                marginTop: '10 px',
+                top: `${100 + index * 80}px`,
+                right: '10px',
+                zIndex: 9999,
+              }"
+            >
               <!-- style="position: fixed; top: 80px; right: 10px;"> -->
               <span class="c-o ml-3">
                 <strong>{{ message.color }} </strong> {{ message.text }}
               </span>
               <span class="ml-16" style="margin-top: 20px !important">
-                <i class="fas fa-times justify-end cursor" @click="handleRemove(index)"></i>
+                <i
+                  class="fas fa-times justify-end cursor"
+                  @click="handleRemove(index)"
+                ></i>
               </span>
             </v-alert>
           </div>
@@ -55,16 +68,16 @@
             <v-card>
               <v-card-title class="headline">{{
                 $t("delete.DeleteConfirmation")
-                }}</v-card-title>
+              }}</v-card-title>
               <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
               <v-card-actions>
                 <v-spacer></v-spacer>
                 <v-btn color="blue darken-1" text @click="cancelDelete">{{
                   $t("buttons.cancel")
-                  }}</v-btn>
+                }}</v-btn>
                 <v-btn color="blue darken-1" text @click="confirmDelete">{{
                   $t("buttons.delete")
-                  }}</v-btn>
+                }}</v-btn>
               </v-card-actions>
             </v-card>
           </v-dialog>
@@ -72,9 +85,19 @@
             <v-card-title>
               <v-row>
                 <v-col cols="12" md="6">
-                  <v-text-field id="filter-text-box" class="mb-3" v-model="filterText" :placeholder="$t('squid.search')"
-                    density="compact" rounded variant="solo" hide-details dense prepend-inner-icon="mdi-magnify"
-                    @input="onFilterTextBoxChanged"></v-text-field>
+                  <v-text-field
+                    id="filter-text-box"
+                    class="mb-3"
+                    v-model="filterText"
+                    :placeholder="$t('squid.search')"
+                    density="compact"
+                    rounded
+                    variant="solo"
+                    hide-details
+                    dense
+                    prepend-inner-icon="mdi-magnify"
+                    @input="onFilterTextBoxChanged"
+                  ></v-text-field>
                 </v-col>
 
                 <!-- <v-col cols="12" md="6" class="d-flex justify-end">
@@ -86,15 +109,33 @@
               </v-row>
             </v-card-title>
             <v-card-text>
-              <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine" :columnDefs="columnRules"
-                :rowData="rowDataRules.value" @grid-ready="onGridReady" :rowDrag="true" :defaultColDef="defaultColDef"
-                :editType="editType" style="width: 100%" :animateRows="true" @cell-value-changed="onCellValueChanged"
-                @column-row-group-changed="onColumnRowGroupChanged" @column-row-drag-end="onColumnRowDragEnd"
-                @firstDataRendered="onFirstDataRendered" @row-drag-end="onRowDragEnd" :rowSelection="'multiple'"
-                :overlayNoRowsTemplate="overlayTemplate">
+              <ag-grid-vue
+                id="grid-wrapper"
+                domLayout="autoHeight"
+                class="ag-theme-alpine"
+                :columnDefs="columnRules"
+                :rowData="rowDataRules.value"
+                @grid-ready="onGridReady"
+                :rowDrag="true"
+                :defaultColDef="defaultColDef"
+                :editType="editType"
+                style="width: 100%"
+                :animateRows="true"
+                @cell-value-changed="onCellValueChanged"
+                @column-row-group-changed="onColumnRowGroupChanged"
+                @column-row-drag-end="onColumnRowDragEnd"
+                @firstDataRendered="onFirstDataRendered"
+                @row-drag-end="onRowDragEnd"
+                :rowSelection="'multiple'"
+                :overlayNoRowsTemplate="overlayTemplate"
+              >
               </ag-grid-vue>
-              <v-pagination class="mt-5" v-model="state.page" :length="state.nombrePageRules"
-                @update:model-value="getData"></v-pagination>
+              <v-pagination
+                class="mt-5"
+                v-model="state.page"
+                :length="state.nombrePageRules"
+                @update:model-value="getData"
+              ></v-pagination>
             </v-card-text>
           </v-card>
 
@@ -109,8 +150,16 @@
                 :isLarge="true"
                 @click="cancel"
               /> -->
-              <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.update')"
-                :isLarge="true" class="ml-2" @click="save" />
+              <VButton
+                rounded
+                outlined
+                color="#213E9F"
+                label-color="#ffffff"
+                :label="$t('buttons.update')"
+                :isLarge="true"
+                class="ml-2"
+                @click="save"
+              />
             </div>
           </div>
         </div>
@@ -143,6 +192,8 @@ export default {
   },
   setup(props) {
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const { t } = useI18n();
     const overlayTemplate = ref("");
     const state = reactive({
@@ -167,6 +218,15 @@ export default {
     const status = computed(() => {
       return t("squid.status");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Suricata') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("IDS/IPS")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
 
     const columnRules = ref([
       // {
@@ -363,13 +423,13 @@ export default {
     };
     const handleAction = (action, rowData) => {
       const user = user_privilege('Suricata');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("IDS/IPS")) {
         rowDataToDelete.value = rowData;
         deleteDialog.value = true;
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
     const addRow = () => {
       const newRow = {
@@ -475,20 +535,29 @@ export default {
             text: t("suricata.failedToUpdate"),
           });
         }
-      } catch (error) {
+      } catch (i) {
         state.loading = false;
         state.isLoadingDialogue = false;
-        state.snackbar = true;
-        showMessage({
-          color: "error",
-          text: error,
-        });
+
+        if (i.response.status === 500) {
+          state.snackbar = true;
+          showMessage({
+            color: "error",
+            text: t("errors.errorServer"),
+          });
+        } else {
+          state.snackbar = true;
+          showMessage({
+            color: "error",
+            text: i,
+          });
+        }
       }
     };
 
     const save = async () => {
       const user = user_privilege('Suricata');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("IDS/IPS")) {
       let modifiedRows = rowDataRules.value.filter((row) => row.isModified);
       const dataToSend = modifiedRows.map((row) => {
         return {
@@ -505,45 +574,53 @@ export default {
         };
       });
 
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      try {
-        const response = await axios.post(
-          "/ids-ips/saveRulesSuricata/" + props.configInfo,
-          dataToSend
-        );
-        if (
-          response.status === 200 &&
-          modifiedRows.length > 0 &&
-          response.data.message.length > 0
-        ) {
-          // state.messages=response.data.message
-          modifiedRows.forEach((row) => (row.isModified = false));
-          response.data.message.forEach(async (rule) => {
-            if (rule.status === 200) {
-              showMessage({
-                color: "success",
-                text: t("suricata.rulesavedSuccessfully"),
-              });
-            } else {
-              showMessage({
-                color: "error",
-                text: t("suricata.failed"),
-              });
-            }
-          });
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        try {
+          const response = await axios.post(
+            "/ids-ips/saveRulesSuricata/" + props.configInfo,
+            dataToSend
+          );
+          if (
+            response.status === 200 &&
+            modifiedRows.length > 0 &&
+            response.data.message.length > 0
+          ) {
+            // state.messages=response.data.message
+            modifiedRows.forEach((row) => (row.isModified = false));
+            response.data.message.forEach(async (rule) => {
+              if (rule.status === 200) {
+                showMessage({
+                  color: "success",
+                  text: t("suricata.rulesavedSuccessfully"),
+                });
+              } else {
+                showMessage({
+                  color: "error",
+                  text: t("suricata.failed"),
+                });
+              }
+            });
+          }
+        } catch (i) {
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            showMessage({
+              color: "error",
+              text: t("errors.errorServer"),
+            });
+          } else {
+            state.snackbar = true;
+            showMessage({
+              color: "error",
+              text: t("suricata.failed"),
+            });
+          }
         }
-      } catch (error) {
-        showMessage({
-          color: "error",
-          text: t("suricata.failed"),
-        });
-      }
-    } 
-    else {
+      } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
 
     const cancel = () => {
@@ -627,11 +704,20 @@ export default {
                 });
               }
             })
-            .catch((error) => {
-              showMessage({
-                color: "error",
-                text: t("suricata.failedToDeleteRule"),
-              });
+            .catch((i) => {
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                showMessage({
+                  color: "error",
+                  text: t("errors.errorServer"),
+                });
+              } else {
+                state.snackbar = true;
+                showMessage({
+                  color: "error",
+                  text: t("suricata.failedToDeleteRule"),
+                });
+              }
             });
         } else {
           const index = rowDataRules.value.indexOf(rowData);
@@ -689,6 +775,11 @@ export default {
         });
     };
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       getData();
 
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
@@ -747,6 +838,7 @@ export default {
       cancelDelete,
       confirmDelete,
       showMessage,
+      overlayMessage,
       updateIndex,
       reloadData,
       getData,
@@ -755,4 +847,9 @@ export default {
 };
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+</style>

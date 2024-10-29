@@ -11,10 +11,9 @@
                     height="100"
                 /></v-card-title>
                 <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
+                  {{  $t("profil.NoPermission") }}
+                  <br />
+                  {{  $t("profil.ContactAdmin") }} 
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -23,7 +22,7 @@
                     outlined
                     color="#ffffff"
                     label-color="#213E9F"
-                    label="Close"
+                    :label="$t('buttons.close')"
                     :isLarge="true"
                     @click="close"
                   />
@@ -445,9 +444,15 @@ export default {
           }, 2000);
         })
         .catch((i) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          }
         });
     },
     cancelDeleteCertif() {
@@ -702,9 +707,15 @@ export default {
           document.body.removeChild(a);
         })
         .catch((i) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          };
         });
     },
     getCookie(name) {
@@ -744,9 +755,15 @@ export default {
           }
         })
         .catch((i) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          }
         });
     },
     handleAction(action, rowData) {

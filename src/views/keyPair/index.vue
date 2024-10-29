@@ -1,4 +1,22 @@
 <template>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+        <v-card-text>
+          {{  $t("profil.NoPermission") }}
+                  <br />
+                  {{  $t("profil.ContactAdmin") }} 
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
+            @click="close" />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-app id="inspire">
     <base-layout title="Key Pair" active-menu="Key_Pair">
       <template #content>
@@ -84,6 +102,8 @@ import { AgGridVue } from "ag-grid-vue3";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import ModalKeys from "@/components/modals/ModalKeys.vue";
+import { user_privilege } from "@/mixins/user_privilege.js";
+
 export default {
   name: "KeyPair",
   components: {
@@ -100,6 +120,8 @@ export default {
     const emitter = inject("emitter");
     const overlayTemplate = ref("");
     const state = reactive({
+      isviewModal: false,
+      viewModal: false,
       deleteDialog: false,
       deletedRow: null,
       snackbar: false,
@@ -215,7 +237,7 @@ export default {
       },
       {
         headerName: "Action",
-        width:150,
+        width: 150,
         cellRenderer: actionCellRendererKeys,
         field: "action",
       },
@@ -274,12 +296,12 @@ export default {
           eGui.innerHTML = `
           <button
            class="action-button copy"
-           data-action="copy"  title=${t('titleAgGrid.publicKey')}>
+           data-action="copy"  title=${t("titleAgGrid.publicKey")}>
               <i class="mdi mdi-content-copy" style="color: #086eae;font-size: 20px;"></i>
            </button>
           <button
            class="action-button download"
-           data-action="export"  title=${t('titleAgGrid.pK')}>
+           data-action="export"  title=${t("titleAgGrid.pK")}>
               <i class="mdi mdi-download-circle" style="color: #086eae;font-size: 20px;"></i>
            </button>
            <button
@@ -320,17 +342,29 @@ export default {
       }
     };
     const handleActionClient = (action, rowData, index) => {
+      const user = user_privilege();
       switch (action) {
         case "delete":
+        if (user !== 'viewer') {
           state.deleteDialog = true;
           state.deletedRow = rowData;
-
+        } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
           break;
         case "copy":
+        if (user !== 'viewer') {
           let text = rowData.public_key_value;
           copyContent(text);
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
+
           break;
         case "export":
+        if (user !== 'viewer') {
           if (rowData.public_key_value) {
             const text = rowData.public_key_value;
             const blob = new Blob([text], {
@@ -350,6 +384,11 @@ export default {
             document.body.removeChild(a);
           }
 
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
+          
           break;
         default:
           break;
@@ -357,9 +396,20 @@ export default {
     };
 
     const openModalAdd = () => {
+      const user = user_privilege();
+      if (user !== 'viewer') {
       state.modalData = {};
       state.modalMode = "create";
       state.isModalOpen = true;
+    } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          };
+    };
+
+    const close = () => {
+      state.isviewModal = false;
+      state.viewModal = false;
     };
 
     const cancelDelete = () => {
@@ -381,9 +431,15 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       } else if (state.deletedRow?.utility === "Public") {
         axios
@@ -398,13 +454,20 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       }
     };
     return {
+      close,
       state,
       columnKeys,
       rowDataKeys,
@@ -422,3 +485,18 @@ export default {
   },
 };
 </script>
+<style lang="scss">
+.img-view {
+  border-style: none;
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  overflow: hidden;
+}
+.img-containter {
+  display: flex;
+  width: 100%;
+  /* height: 100%; */
+  padding: 0px !important;
+}
+</style>

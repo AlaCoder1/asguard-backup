@@ -1,6 +1,6 @@
 <template>
   <div>
-    <h4>{{ $t('networksGroups') }}</h4>
+    <h4>{{ $t("networksGroups") }}</h4>
 
     <div style="height: 100%">
       <div style="display: flex; flex-direction: row; height: 100%">
@@ -39,14 +39,18 @@
     />
     <v-dialog v-model="deleteDialog" max-width="500px">
       <v-card>
-        <v-card-title class="headline">{{ $t("delete.DeleteConfirmation") }}</v-card-title>
+        <v-card-title class="headline">{{
+          $t("delete.DeleteConfirmation")
+        }}</v-card-title>
         <v-card-text>{{ $t("delete.questiongroup") }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
-          <v-btn color="blue darken-1" text @click="cancelDelete">{{ $t("PageGeneral.form.Cancel") }}</v-btn>
-          <v-btn color="blue darken-1" text @click="confirmDelete"
-            >{{ $t("PageGeneral.form.Delete") }}</v-btn
-          >
+          <v-btn color="blue darken-1" text @click="cancelDelete">{{
+            $t("PageGeneral.form.Cancel")
+          }}</v-btn>
+          <v-btn color="blue darken-1" text @click="confirmDelete">{{
+            $t("PageGeneral.form.Delete")
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -106,12 +110,17 @@ export default {
           minWidth: 50,
           flex: 1,
         },
-        { headerName: "Actions",width: 150, minWidth: 50, cellRenderer: this.actionCellRenderer },
+        {
+          headerName: "Actions",
+          width: 150,
+          minWidth: 50,
+          cellRenderer: this.actionCellRenderer,
+        },
       ],
       rowData: [],
       gridOptions: {
         pagination: true,
-        paginationPageSize: 5,
+        paginationPageSize: 3,
         rowSelection: "single",
       },
       paginationLocalization: {
@@ -188,9 +197,15 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.error;
+          }
         });
     },
     openModal() {
@@ -417,8 +432,15 @@ export default {
           console.log("Resource deleted:", response.data);
         })
         .catch((error) => {
-          // Handle any errors that occur during the request
-          console.error("Error deleting resource:", error);
+          if (error.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = `Error deleting resource : ${error} `;
+          }
         });
     },
     async update(data, callback) {
@@ -438,8 +460,15 @@ export default {
           console.log("Resource updated:", response.data);
         })
         .catch((error) => {
-          // Handle any errors that occur during the request
-          console.error("Error updating resource:", error);
+          if (error.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = `Error updating resource : ${error} `;
+          }
         });
     },
     async getgroup(id, callback) {
@@ -453,6 +482,8 @@ export default {
         .catch((error) => {
           // Handle any errors that occur during the request
           console.error("Error fetching data:", error);
+
+          
         });
     },
     // Fetch APIs

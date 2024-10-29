@@ -834,9 +834,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else {
           axios
@@ -860,9 +866,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         }
       } else {
@@ -937,7 +949,12 @@ export default {
     const and = computed(() => {
       return t("Waf.and");
     });
-
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
+    const isValidRemoteGateway = helpers.regex(
+      /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+    );
     const rules = computed(() => {
       return {
         applicationName: {
@@ -947,10 +964,24 @@ export default {
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },
-
         value: {
           required: helpers.withMessage(error, required),
+          isValidAddress: helpers.withMessage(formaaddress, (value) => {
+            if (state.type === "ip") {
+              return isValidRemoteGateway(value);
+            }
+            return true;
+          }),
         },
+
+        // value: {
+        //   required: helpers.withMessage(error, required),
+
+        //   // isValidlRemoteGateway: helpers.withMessage(
+        //   //   formaaddress,
+        //   //   helpers.regex(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/)
+        //   // ),
+        // },
         protocol: {
           required: helpers.withMessage(error, required),
         },

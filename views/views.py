@@ -502,7 +502,9 @@ def user_managment_page(request):
     grp=get_groups(request)
     roles = getRoles(request)
     servers=get_list_ad_servers()
-    context = {'users':usr,"groups":grp,"servers":servers,"roles":roles}
+    last_subscription=list_features_about_last_subscription(request)
+
+    context = {'users':usr,"groups":grp,"servers":servers,"roles":roles,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'user_managment.html',context)
 
 @login_required(login_url='/')
@@ -542,7 +544,8 @@ def firewall_page(request):
 def openvpn_page(request):
     servers=get_list_all_server_openvpn()
     clients=get_list_all_client_openvpn()
-    context = {'servers':servers,'clients':clients}
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'servers':servers,'clients':clients,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'openvpn_page.html', context)
 
 
@@ -551,7 +554,8 @@ def ipsec_page(request):
     servers=get_list_all_server_ipsec()
     public_key =get_list_all_public_key()
     status = get_status_ipsec()
-    context = {'servers': servers, 'publicKey': public_key, 'status': status}
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'servers': servers, 'publicKey': public_key, 'status': status, 'last_subscription':json.dumps(last_subscription)}
     return render(request, 'ipsec_page.html', context)
 
 
@@ -570,15 +574,18 @@ def squid_proxy(request):
     statusEnable = statusEnableAuth(request)
     proxyRule = get_all_proxy_rules(request)
     proxyGroups = allGProxyroups(request)
+    last_subscription=list_features_about_last_subscription(request)
+
     statusServer = get_squid_status_from_bd()
-    context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule),'proxyGroups' : json.dumps(proxyGroups),'statusServer' : json.dumps(statusServer)}
+    context = {'proxyUser': json.dumps(proxyUser),'generalInfo' : json.dumps(generalInfo),'last_subscription':json.dumps(last_subscription),'statusEnable' : json.dumps(statusEnable),'proxyRule' : json.dumps(proxyRule),'proxyGroups' : json.dumps(proxyGroups),'statusServer' : json.dumps(statusServer)}
     return render(request, 'squid_proxy.html',context)
 
 @login_required(login_url='/')
 def sdwan_page(request):
     allArea = get_list_all_area()
     allRule = get_list_all_sdwan_rule()
-    context = {'allArea': json.dumps(allArea),'allRule': json.dumps(allRule)}
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'allArea': json.dumps(allArea),'allRule': json.dumps(allRule),'last_subscription':json.dumps(last_subscription)}
     return render(request, 'sdwan_page.html',context)
 
 @login_required(login_url='/')
@@ -587,7 +594,8 @@ def waf_page(request):
     list_rules = get_list_all_waf_rule()
     list_waf_app = get_list_all_waf_application()
     waf_alert = get_alerts()
-    context = {'waf_conf': json.dumps(waf_conf),'list_rules': json.dumps(list_rules),'list_waf_app': json.dumps(list_waf_app),'waf_alert': json.dumps(waf_alert)}
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'waf_conf': json.dumps(waf_conf),'list_rules': json.dumps(list_rules),'last_subscription':json.dumps(last_subscription),'list_waf_app': json.dumps(list_waf_app),'waf_alert': json.dumps(waf_alert)}
     return render(request, 'waf_page.html',context)
 
 
@@ -602,10 +610,12 @@ def ztna_page(request):
     service_policies = get_service_policies()
     service_edge_router_policies = get_service_edge_router_policies()
     token = get_Zt_Token()
+    last_subscription=list_features_about_last_subscription(request)
     windows_file = get_local_domain_windows()
     linux_file = get_local_domain_linux()
     context = {'identities': json.dumps(identities),
                'routers':json.dumps(routers) ,
+               'last_subscription':json.dumps(last_subscription),
                'hostconfigs':json.dumps(hostconfigs),
                'interceptconfigs':json.dumps(interceptconfigs),
                'token':json.dumps(token),
@@ -649,10 +659,12 @@ def subscription_page(request):
  
 #comment to test git command
 def login(request):
+    last_subscription=list_features_about_last_subscription(request)
+    context = {'last_subscription':json.dumps(last_subscription)}
     if request.user.is_authenticated:
         return redirect('/dashboard/')
     else:
-        return render(request, 'login.html')
+        return render(request, 'login.html',context)
 
 
 @login_required(login_url='/')
@@ -692,10 +704,12 @@ def suricata(request):
     res = json.loads(suricata)
     id=res[0]['pk']
     general_config_suricata=general_suricata_configuration(request, id)
+    last_subscription=list_features_about_last_subscription(request)
+
     # rules_suricata=get_rules_from_database(request)
     # alerts_suricata=get_alerts_from_database(request)
     interfaces=get_all_interfaces_firewall(request)
-    context={"general_config_suricata":general_config_suricata,"all_interfaces":interfaces}
+    context={"general_config_suricata":general_config_suricata,"all_interfaces":interfaces, 'last_subscription':json.dumps(last_subscription)}
     return render(request, 'ids_ips.html',context)
 
 
@@ -755,7 +769,9 @@ def nat_page(request):
     listNat= get_list_all_snat()
     listDNat= get_list_all_dnat()
     listOneToOne= get_list_all_one_to_one_nat()
-    context = {'listNat':listNat,'listDNat':listDNat,'listOneToOne':listOneToOne}
+    last_subscription=list_features_about_last_subscription(request)
+
+    context = {'listNat':listNat,'listDNat':listDNat,'listOneToOne':listOneToOne,'last_subscription':json.dumps(last_subscription)}
     return render(request, 'nat.html',context)
 
 @login_required(login_url='/')

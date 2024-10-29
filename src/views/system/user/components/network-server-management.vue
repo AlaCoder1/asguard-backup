@@ -106,7 +106,7 @@ export default {
 
     const gridOptions = ref({
       pagination: true,
-      paginationPageSize: 5,
+      paginationPageSize: 3,
       rowSelection: "single",
     });
 
@@ -129,7 +129,12 @@ export default {
         minWidth: 50,
         flex: 1,
       },
-      { headerName: "Actions",width: 150, minWidth: 50, cellRenderer: actionCellRenderer },
+      {
+        headerName: "Actions",
+        width: 150,
+        minWidth: 50,
+        cellRenderer: actionCellRenderer,
+      },
     ]);
 
     const rowData = reactive({});
@@ -265,9 +270,15 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
     return {

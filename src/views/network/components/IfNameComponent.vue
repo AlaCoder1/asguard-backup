@@ -1,4 +1,35 @@
 <template>
+  <v-overlay v-model="viewModal">
+    <v-dialog v-model="isviewModal" :scrim="false" width="auto">
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text>
+          {{ $t("profil.NoPermission") }}
+          <br />
+          {{ $t("profil.ContactAdmin") }}
+        </v-card-text>
+
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-card>
     <v-overlay v-model="loading">
       <v-dialog
@@ -473,6 +504,7 @@ import ConfigDHCPv4 from "./configDHCP/ConfigDHCPv4.vue";
 import AdvancedConfigDHCPv4 from "./configDHCP/AdvancedConfigDHCPv4.vue";
 import VButton from "../../../components/VButton.vue";
 import netmaskItems from "../../../constants/netmask.js";
+import { user_privilege } from "@/mixins/user_privilege.js";
 
 export default {
   name: "IfNameComponent",
@@ -487,6 +519,8 @@ export default {
   },
   data() {
     return {
+      isviewModal: false,
+      viewModal: false,
       loading: false,
       isLoadingDialogue: false,
       textAlert: "",
@@ -597,6 +631,10 @@ export default {
     },
   },
   methods: {
+    close() {
+      this.isviewModal = false;
+      this.viewModal = false;
+    },
     validateRange(value) {
       const num = parseFloat(value); // Parse the value to a number
 
@@ -707,12 +745,19 @@ export default {
               location.reload();
             }, 1000);
           })
-          .catch((e) => {
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = e.response.data.message;
+          .catch((i) => {
             this.loading = false;
             this.isLoadingDialogue = false;
+
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.message;
+            }
           });
       }
       if (this.setuptypeip4 === "dhcp") {
@@ -764,12 +809,19 @@ export default {
               location.reload();
             }, 1000);
           })
-          .catch((e) => {
+          .catch((i) => {
             this.loading = false;
             this.isLoadingDialogue = false;
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = e.response.data.message;
+
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.message;
+            }
           });
       }
     },
@@ -777,81 +829,106 @@ export default {
       // todo: reset form values to initial values
     },
     openGatewayDialog() {
-      this.showGatewayDialog = true;
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        this.isviewModal = true;
+        this.viewModal = true;
+      } else {
+        this.showGatewayDialog = true;
+      }
     },
     addGateway() {
-      if (!this.isNameGateway) {
-        this.messageNameGateway = this.$t("errors.valueRequired");
-        return;
-      }
-      if (!this.isGatewayAddress) {
-        this.messageGatewayAddress = this.$t("errors.valueRequired");
-        return;
-      }
-      if (!this.isValidAddress) {
-        this.messageValidAddress = this.$t("champs.validAddress");
-        return;
-      }
+      const user = user_privilege();
+      if (user === "viewer") {
+        this.isviewModal = true;
+        this.viewModal = true;
+      } else {
+        if (!this.isNameGateway) {
+          this.messageNameGateway = this.$t("errors.valueRequired");
+          return;
+        }
+        if (!this.isGatewayAddress) {
+          this.messageGatewayAddress = this.$t("errors.valueRequired");
+          return;
+        }
+        if (!this.isValidAddress) {
+          this.messageValidAddress = this.$t("champs.validAddress");
+          return;
+        }
 
-      const params = {
-        gwname: this.gateway.gwname,
-        gwaddress: this.gateway.gwaddress,
-        description: this.gateway.description,
-        default_aux: this.gateway.default_aux,
-        far_aux: this.gateway.far_aux,
-        multiwan_aux: this.gateway.multiwan_aux,
-      };
-      this.allStaticGateways.unshift(params);
+        const params = {
+          gwname: this.gateway.gwname,
+          gwaddress: this.gateway.gwaddress,
+          description: this.gateway.description,
+          default_aux: this.gateway.default_aux,
+          far_aux: this.gateway.far_aux,
+          multiwan_aux: this.gateway.multiwan_aux,
+        };
+        this.allStaticGateways.unshift(params);
 
-      const csrfToken = this.getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        const csrfToken = this.getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      axios
-        .post("/gateway/addStaticGateway", params)
-        .then((response) => {
-          console.log("response***", response);
-          if (response.status == "200") {
-            this.showGatewayDialog = false;
-            this.message = response.data.msg;
-            this.gateway = {
-              gwname: "",
-              gwaddress: "",
-              description: "",
-              default_aux: false,
-              far_aux: false,
-              multiwan_aux: false,
-            };
-            this.messageGatewayAddress = "";
-            this.messageNameGateway = "";
-            this.messageValidAddress = "";
-            this.showAlertGateway = true;
-            setTimeout(() => {
-              this.showAlertGateway = false;
-            }, 1000);
-          } else {
-            this.showGatewayDialog = true;
-          }
-        })
-        .catch((e) => {
-          console.log("e", e.response);
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = e.response.data.message;
-        });
+        axios
+          .post("/gateway/addStaticGateway", params)
+          .then((response) => {
+            console.log("response***", response);
+            if (response.status == "200") {
+              this.showGatewayDialog = false;
+              this.message = response.data.msg;
+              this.gateway = {
+                gwname: "",
+                gwaddress: "",
+                description: "",
+                default_aux: false,
+                far_aux: false,
+                multiwan_aux: false,
+              };
+              this.messageGatewayAddress = "";
+              this.messageNameGateway = "";
+              this.messageValidAddress = "";
+              this.showAlertGateway = true;
+              setTimeout(() => {
+                this.showAlertGateway = false;
+              }, 1000);
+            } else {
+              this.showGatewayDialog = true;
+            }
+          })
+          .catch((i) => {
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.message;
+            }
+          });
+      }
     },
     cancelGateway() {
-      this.showGatewayDialog = false;
-      this.gateway = {
-        gwname: "",
-        gwaddress: "",
-        description: "",
-        default_aux: false,
-        far_aux: false,
-        multiwan_aux: false,
-      };
-      this.messageGatewayAddress = "";
-      this.messageNameGateway = "";
-      this.messageValidAddress = "";
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        this.isviewModal = true;
+        this.viewModal = true;
+      } else {
+        this.showGatewayDialog = false;
+        this.gateway = {
+          gwname: "",
+          gwaddress: "",
+          description: "",
+          default_aux: false,
+          far_aux: false,
+          multiwan_aux: false,
+        };
+        this.messageGatewayAddress = "";
+        this.messageNameGateway = "";
+        this.messageValidAddress = "";
+      }
     },
     updateGateway() {
       const params = {
@@ -874,14 +951,27 @@ export default {
             this.showAlert = false;
           }, 3000);
         })
-        .catch((e) => {
-          this.snackbar = true;
-          this.color = "red";
-          this.textAlert = e.response.data.message;
+        .catch((i) => {
+          if (i.response.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response.data.message;
+          }
         });
     },
     onSubmit() {
-      this.addNetwork();
+      const user = user_privilege();
+      if (user === "viewer") {
+        console.log("View Mode");
+        this.isviewModal = true;
+        this.viewModal = true;
+      } else {
+        this.addNetwork();
+      }
     },
     handleSubmit() {
       this.onSubmit();
@@ -1033,6 +1123,7 @@ export default {
   margin-left: 0.5rem;
   margin-right: 0.5rem;
 }
+
 .gateway-dialog {
   position: fixed;
   overflow-x: unset;

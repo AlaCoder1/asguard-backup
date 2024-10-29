@@ -1,18 +1,14 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
             @click="close" />
         </div>
       </v-card>
@@ -70,10 +66,10 @@
       <v-card-actions>
         <v-btn color="error" text @click="deleteItem">{{
           $t("buttons.delete")
-          }}</v-btn>
+        }}</v-btn>
         <v-btn text @click="dialogDelete = false">{{
           $t("buttons.cancel")
-          }}</v-btn>
+        }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -99,6 +95,8 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const paginationLocalization = reactive({
       of: "/",
     });
@@ -119,6 +117,14 @@ export default {
     const remoteGateway = computed(() => {
       return t("PageIpsec.remotegateway");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Ipscec') 
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("VPN IPSEC")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } 
+});
     const Phase1Proposal = computed(() => {
       return t("PageIpsec.Phase1Proposal");
     });
@@ -254,9 +260,15 @@ export default {
             }
           })
           .catch((i) => {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       });
       return input;
@@ -465,7 +477,7 @@ export default {
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "edit":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN IPSEC")) {
 
           console.log("edit :", rowData);
           emitter.emit("add-serverIpsec");
@@ -479,7 +491,7 @@ export default {
           };
           break;
         case "delete":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN IPSEC")) {
 
           currentRowToDelete.value = rowData;
           dialogDelete.value = true;
@@ -489,7 +501,7 @@ export default {
           };
           break;
         case "up":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN IPSEC")) {
 
           console.log("up", rowData);
           let id = rowData.id;
@@ -551,6 +563,15 @@ export default {
         // textAlert.value = i.response.data.error;
         // loading.value = false;
         // isLoadingDialogue.value = false;
+
+        if (error.response.status === 500) {
+          loading.value = false;
+          isLoadingDialogue.value = false;
+          state.snackbar = true;
+          state.color = "red";
+          state.textAlert = t("errors.errorServer");
+        }
+
         if (error.message === "Request is taking longer than expected.") {
           // snackbar.value = true;
           // color.value = "warning";
@@ -569,7 +590,7 @@ export default {
     };
     const addServer = () => {
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN IPSEC")) {
         emitter.emit("add-serverIpsec");
       } else {
         state.isviewModal = true;
@@ -592,10 +613,16 @@ export default {
               location.reload();
             }, 1000);
           })
-          .catch((error) => {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = error.response.data.error;
+          .catch((i) => {
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           })
           .finally(() => {
             // Reset the current row data and close the dialog
@@ -605,6 +632,12 @@ export default {
       }
     };
     onMounted(async () => {
+      
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       overlayTemplate.value = `
       <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
@@ -634,7 +667,7 @@ export default {
 
     const startStopServer = (data) => {
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN IPSEC")) {
 
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -655,9 +688,15 @@ export default {
             }, 1000);
           })
           .catch((i) => {
-            snackbar.value = true;
-            color.value = "red";
-            textAlert.value = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       } else {
         state.isviewModal = true;
@@ -693,6 +732,7 @@ export default {
       TypePeers,
       checkboxRender,
       RemoteGateway,
+      overlayMessage,
       extractDHKey,
       extractPFSKey,
       uppercaseData,
@@ -711,5 +751,8 @@ export default {
 </script>
 
 <style scoped>
-/* Add your custom styles here */
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
 </style>

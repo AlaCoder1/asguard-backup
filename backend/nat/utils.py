@@ -1,5 +1,3 @@
-from django.db.models import Q
-
 from backend.nat.models import DNat, OneToOneNat, SNat
 from backend.nat.utils_system import find_nat_in_ruleset
 from utils.commands_utils import execute_command_without_arguments
@@ -106,7 +104,7 @@ def input_create_snat(snat:SNat):
               "port": snat.source_port}
     destination = {"address": snat.destination_address,
                    "port": snat.destination_port}
-    masking = ["masquerade"]
+    masking = ["accept"]
     if snat.snat_type == "Static":
         masking = snat.translation_address_from
         if snat.translation_address_to != "":

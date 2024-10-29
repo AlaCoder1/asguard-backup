@@ -165,7 +165,11 @@ export default {
           .join(" , ");
 
         let eGui = document.createElement("div");
-        eGui.innerHTML = `[ default + ] : ${resultWithBr}`;
+        eGui.innerHTML = `${
+          resultWithBr === "all"
+            ? resultWithBr
+            : "[ default + ] :  " + resultWithBr
+        }`;
         return eGui;
       }
     }

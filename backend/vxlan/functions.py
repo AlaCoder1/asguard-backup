@@ -72,7 +72,7 @@ def delete_vxlan_sys(vxlan_connection,ifname_vxlan):
     commandes= [
         f"nmcli connection delete {vxlan_connection}",
         "sed -i '/{}/d' /etc/systemd/system/Asguard-Networking.service".format(ifname_vxlan),
-         '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname_vxlan,ifname_vxlan),
+         '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && sudo echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname_vxlan,ifname_vxlan),
         "systemctl restart dhcpd4.service"
         ]
     for cmd in commandes:

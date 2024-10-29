@@ -20,7 +20,7 @@ if [ "\$LOG_FILE" == "/var/log/modsec_audit.log" ] || [ "\$LOG_FILE" == "/var/lo
     > "\$LOG_FILE"
 else
     # Truncate the log file to the last 10,000 lines
-    tail -n 10000 "\$LOG_FILE" > "\${LOG_FILE}.tmp" && mv "\${LOG_FILE}.tmp" "\$LOG_FILE"
+    tail -n 1000 "\$LOG_FILE" > "\${LOG_FILE}.tmp" && mv "\${LOG_FILE}.tmp" "\$LOG_FILE"
 fi
 
 # Create backup directory 

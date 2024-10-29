@@ -109,25 +109,25 @@ def create_routing(request):
             else:
                 return JsonResponse({"error": result_gateway["error"]}, status=400)
         
-        gateway_instance = Gateway.objects.get(id=gateway)
-        gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance)
-        gateway_address = gateway_instance.gwaddress
-        interface_ifname = gateway_interface_instance.interface.ifname
-        routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
-                          gateway_interface_instance.metric)
-        
         serializer_routing = RoutingSerializer(data=data)
         if serializer_routing.is_valid():
+            gateway_instance = Gateway.objects.get(id=gateway)
+            gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance)
+            gateway_address = gateway_instance.gwaddress
+            interface_ifname = gateway_interface_instance.interface.ifname
+            routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
+                              gateway_interface_instance.metric)
             serializer_routing.save()
             return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_routing.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
-        gwname = f'static_gw_{gateway_data["gateway_address"]}'
-        if data.get("gateway_create") and len(Gateway.objects.filter(gwname=gwname, gwaddress=gateway_data["gateway_address"])) == 1:
-            gateway = Gateway.objects.get(gwname=gwname, gwaddress=gateway_data["gateway_address"])
-            gateway.delete()
+        if data.get("gateway_create"):
+            gwname = f'static_gw_{gateway_data["gateway_address"]}'
+            if len(Gateway.objects.filter(gwname=gwname, gwaddress=gateway_data["gateway_address"])) == 1:
+                gateway = Gateway.objects.get(gwname=gwname, gwaddress=gateway_data["gateway_address"])
+                gateway.delete()
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ROUTE}"}, status=400)
 
 

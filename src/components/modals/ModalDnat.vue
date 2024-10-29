@@ -169,7 +169,7 @@
                     </v-row>
                   </v-radio-group>
                 </v-col>
-                <template v-if="state.checkInterface === 'Port Frowardin'">
+                <template v-if="state.checkInterface === 'Port Forwarding'">
                   <v-col cols="6" class="mb-n6 mt-3">
                     <span>{{ $t("nat.dport_range") }}</span>
                   </v-col>
@@ -367,7 +367,7 @@ export default {
     const state = reactive({
       id: null,
       //list
-      isCombo: ["Frowarding", "Port Frowardin"],
+      isCombo: ["Forwarding", "Port Forwarding"],
       versionList: [
         { name: "IPv4", slug: "ipv4" },
         { name: "IPv6", slug: "ipv6" },
@@ -406,7 +406,7 @@ export default {
       sourceAddress: "",
       sourcePrefix: "",
       destination: "",
-      checkInterface: "Frowarding",
+      checkInterface: "Forwarding",
 
       //
       sourceRangeFrom: "",
@@ -455,7 +455,7 @@ export default {
           state.sourceAddress = "";
           state.sourcePrefix = "";
           state.destination = "";
-          state.checkInterface = "Frowarding";
+          state.checkInterface = "Forwarding";
 
           //
           state.sourceRangeFrom = "";
@@ -503,7 +503,7 @@ export default {
     watch(
       () => state.checkInterface,
       (val) => {
-        if (val === "Frowarding") {
+        if (val === "Forwarding") {
           state.port = "";
           state.destinationRangeTo = "";
           state.destinationRangeFrom = "";
@@ -570,8 +570,8 @@ export default {
         state.internalAddress = data.internal_address;
 
         state.checkInterface = data.destination_port
-          ? "Port Frowardin"
-          : "Frowarding";
+          ? "Port Forwarding"
+          : "Forwarding";
 
         let filtredPort = state.listPort.filter(
           (i) => i.slug === data?.destination_port
@@ -650,7 +650,7 @@ export default {
         state.sourceAddress = "";
         state.sourcePrefix = "";
         state.destination = "";
-        state.checkInterface = "Frowarding";
+        state.checkInterface = "Forwarding";
 
         //
         state.sourceRangeFrom = "";
@@ -732,10 +732,10 @@ export default {
               : "",
           external_address: state.externalAddress,
           internal_address: state.internalAddress,
-          port_forwarding: state.checkInterface === "Frowarding" ? false : true,
+          port_forwarding: state.checkInterface === "Forwarding" ? false : true,
           description: state.description,
         };
-        if (state.checkInterface === "Port Frowardin") {
+        if (state.checkInterface === "Port Forwarding") {
           payload = {
             ...payload,
             destination_port_from:
@@ -870,19 +870,19 @@ export default {
         destinationRangeFrom: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.checkInterface === "Port Frowardin")
+            requiredIf(() => state.checkInterface === "Port Forwarding")
           ),
         },
         destinationRangeTo: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.checkInterface === "Port Frowardin")
+            requiredIf(() => state.checkInterface === "Port Forwarding")
           ),
         },
         port: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.checkInterface === "Port Frowardin")
+            requiredIf(() => state.checkInterface === "Port Forwarding")
           ),
         },
 

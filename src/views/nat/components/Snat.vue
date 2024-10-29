@@ -420,6 +420,7 @@ export default {
     }
 
     const handleActionClient = (action, rowData, index) => {
+      const user = user_privilege();
       switch (action) {
         case "show":
           if (user !== "viewer") {

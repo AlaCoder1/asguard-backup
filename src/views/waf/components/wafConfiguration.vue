@@ -560,7 +560,11 @@ export default {
     });
 
     const v$ = useValidate(rules, state);
-
+    const restartNginx = () => {
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      axios.post("/waf/restartNginx");
+    };
     const submitForm = async () => {
       const user = user_privilege('Waf');
       current_user.value=user
@@ -592,15 +596,19 @@ export default {
             .put(`/waf/updateConfigWaf/${state.id}`, payload)
             .then((response) => {
               if (response.status == 200) {
-                state.loading = false;
-                state.isLoadingDialogue = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
+                restartNginx();
+                state.loading = true;
+                state.isLoadingDialogue = true;
                 setTimeout(() => {
-                  state.snackbar = false;
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                }, 4000);
+                setTimeout(() => {
                   location.reload();
-                }, 1000);
+                }, 4000);
               }
             })
             .catch((i) => {

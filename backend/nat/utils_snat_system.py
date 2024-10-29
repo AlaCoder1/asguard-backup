@@ -3,7 +3,8 @@ from backend.nat.utils_system import delete_nat_rule_in_system, save_ruleset_nft
 from utils.commands_utils import execute_command_without_arguments
 
 
-def create_snat_rule_in_system(oifname, source, destination, protocol, masking, next_rule_handle=0, rule_position=0):
+def create_snat_rule_in_system(oifname, source, destination, protocol, masking, next_rule_handle=0, 
+                               rule_position=0):
     """Create an SNAT rule in system"""
     # Set the basics of rule command
     # Command to create a rule in first position
@@ -34,7 +35,8 @@ def create_snat_rule_in_system(oifname, source, destination, protocol, masking, 
         ip_protocol = ["ip", "protocol", protocol]
 
     # Complete the SNAT rule command
-    added_fields_rule = [ip_addr_source, ip_addr_destination, tcp_source,tcp_destination, ip_protocol, masking]
+    added_fields_rule = [ip_addr_source, ip_addr_destination, tcp_source,tcp_destination, ip_protocol, 
+                         masking]
     for command in added_fields_rule:
         command_snat.extend(command)
 

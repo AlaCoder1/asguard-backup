@@ -9,4 +9,5 @@ class Routing(models.Model):
     description = models.CharField(max_length=1000, default=None, null=True, blank=True)
 
     class Meta:
+        unique_together = ('destination_address', 'gateway')
         db_table = 'routing'

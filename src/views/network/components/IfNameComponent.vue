@@ -1,4 +1,22 @@
 <template>
+  <v-dialog v-model="deleteDialog" max-width="500px">
+    <v-card>
+      <v-card-title class="headline">{{
+        $t("delete.DeleteConfirmation")
+      }}</v-card-title>
+      <v-card-text>{{ $t("delete.deleteRow") }} ?</v-card-text>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="blue darken-1" text @click="cancelDelete">{{
+          $t("buttons.cancel")
+        }}</v-btn>
+        <v-btn color="blue darken-1" text @click="confirmDelete">{{
+          $t("buttons.delete")
+        }}</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <v-overlay v-model="viewModal">
     <v-dialog v-model="isviewModal" :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
@@ -298,7 +316,32 @@
                     :items="allStaticGatewaysAddresses"
                     :rules="[(v) => !!v || $t('interface.IPV4GatewayRequired')]"
                     :no-data-text="$t('certificat.certificatlist')"
-                  ></v-select>
+                    label="Select Item"
+                  >
+                    <template v-slot:item="{ props, index, item }">
+                      <v-list-item v-bind="props">
+                        <template v-slot:prepend>
+                          <v-text-item :v-html="item"> </v-text-item>
+                        </template>
+                        <template v-slot:append>
+                          <v-btn
+                            v-if="item.title != 'Auto Detect'"
+                            icon
+                            color="red"
+                            class="mr-3 d-flex align-center text-center"
+                            style="width: 26px; height: 26px"
+                            @click.stop="deleteGateway(item, index)"
+                          >
+                            <v-icon
+                              style="width: 16px; height: 16px; font-size: 16px"
+                              small
+                              >mdi-delete</v-icon
+                            >
+                          </v-btn>
+                        </template>
+                      </v-list-item>
+                    </template>
+                  </v-select>
                 </v-col>
               </v-row>
             </div>
@@ -436,6 +479,12 @@
                 <p class="error-feedback mb-5 px-0 mx-0" v-if="!isValidAddress">
                   {{ messageValidAddress }}
                 </p>
+                <p
+                  class="error-feedback mb-5 px-0 mx-0"
+                  v-if="messageExistGateway"
+                >
+                  {{ messageExistGateway }}
+                </p>
                 <v-row>
                   <v-text-field
                     label="Description"
@@ -519,6 +568,9 @@ export default {
   },
   data() {
     return {
+      messageExistGateway: "",
+      itemData: [],
+      deleteDialog: false,
       isviewModal: false,
       viewModal: false,
       loading: false,
@@ -621,7 +673,7 @@ export default {
     },
     isValidAddress() {
       const ipRegex =
-        /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+        /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
       // Validate the input value against the regex
       if (!ipRegex.test(this.gateway.gwaddress)) {
@@ -631,6 +683,42 @@ export default {
     },
   },
   methods: {
+    cancelDelete() {
+      this.deleteDialog = false;
+    },
+    deleteGateway(item, index) {
+      this.itemData = [index, item.value];
+      this.deleteDialog = true;
+    },
+    confirmDelete(item, index) {
+      console.log("itemData", this.itemData);
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      // axios
+      //   .delete(`/gateway/deleteGateway/${item}`)
+      //   .then((response) => {
+      //     state.snackbar = true;
+      //     state.color = "success";
+      //     state.textAlert = response.data.msg;
+
+      //     setTimeout(() => {
+      //       location.reload();
+      //     }, 1000);
+      //   })
+      //   .catch((i) => {
+      //     if (i.response.status === 500) {
+      //       state.snackbar = true;
+      //       state.color = "red";
+      //       state.textAlert = t("errors.errorServer");
+      //     } else {
+      //       state.snackbar = true;
+      //       state.color = "red";
+      //       state.textAlert = i.response.data.error;
+      //     }
+      //   });
+    },
+
     close() {
       this.isviewModal = false;
       this.viewModal = false;
@@ -839,6 +927,9 @@ export default {
       }
     },
     addGateway() {
+      console.log("this.allStaticGateways", this.allStaticGateways);
+      console.log("gateway.gwaddress", this.gateway.gwaddress);
+
       const user = user_privilege();
       if (user === "viewer") {
         this.isviewModal = true;
@@ -854,6 +945,17 @@ export default {
         }
         if (!this.isValidAddress) {
           this.messageValidAddress = this.$t("champs.validAddress");
+          return;
+        }
+        let mappedGateways = this.allStaticGateways.map(
+          (gateway) => gateway.gwaddress
+        );
+
+        if (mappedGateways.includes(this.gateway.gwaddress)) {
+          this.messageExistGateway = this.$t("champs.existGateway");
+          setTimeout(() => {
+            this.messageExistGateway = "";
+          }, 1000);
           return;
         }
 

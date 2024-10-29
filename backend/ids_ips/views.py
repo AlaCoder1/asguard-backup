@@ -133,7 +133,7 @@ def activer_suricata_update(request, id):
             rules_sys = get_suricata_default_rules()
             if rules_sys is not None:
                 rules_list=[l['rule'] for l in RuleIdsIpsSerializer(ids_ips_rule.objects.all() , many=True).data]
-                if (len(list(set(rules_sys)-set(rules_list))))!=0:
+                if (len(list(set(rules_sys)-set(rules_list))))!=0 or (len(list(set(rules_list)-set(rules_sys))))!=0:
                     rules_add = [log for log in rules_sys if log not in rules_list]
                     rules_delete = [log for log in rules_list if log not in rules_sys] 
                     if len(rules_add)!=0:

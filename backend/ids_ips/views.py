@@ -127,7 +127,7 @@ def update_suricata_configuration(request, id):
 def activer_suricata_update(request, id):
     """Add default suricata rules in database"""
     if request.method=="POST":
-        cmd="sudo suricata -q"
+        cmd="sudo suricata-update -q"
         _,error=execute_cmd(cmd)
         if error.strip()=="":
             rules_sys = get_suricata_default_rules()

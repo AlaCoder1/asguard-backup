@@ -19,9 +19,9 @@ def create_file_nftables(ifname,rules):
         #cmd pour supprimer la configuration ancienne
         'if nft list tables | grep -q "filter_{}"; then sudo nft delete table inet filter_{} ; fi'.format(ifname,ifname),
         #cmd ajouter un dossier contenant le fichier config
-        """bash -c 'sudo mkdir -p /etc/rulesNetwork/{} && cat <<EOF > /etc/rulesNetwork/{}/nftables.conf
+        """sudo mkdir -p /etc/rulesNetwork/{} && sudo cat <<EOF > /etc/rulesNetwork/{}/nftables.conf
 {}
-EOF' """.format(ifname, ifname, '\n'.join(rules))
+EOF """.format(ifname, ifname, '\n'.join(rules))
       ]
     return commands
 

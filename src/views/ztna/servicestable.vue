@@ -1,32 +1,36 @@
 <template>
-<v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
-              <v-card color="#193286" class="alert-box">
-                <v-card-title class="img-containter">
-                  <img
-                    src="../../assets/images/view.png"
-                    alt="logo"
-                    class="img-view"
-                    width="100"
-                    height="100"
-                /></v-card-title>
-                <v-card-text v-html="overlayMessage">
-                </v-card-text>
+  <v-overlay v-model="state.viewModal">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="../../assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
-                <div class="mr-3 mb-5 d-flex justify-end">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#ffffff"
-                    label-color="#213E9F"
-                    :label="$t('buttons.close')"
-                    :isLarge="true"
-                    @click="close"
-                  />
-                </div>
-              </v-card>
-            </v-dialog>
-          </v-overlay>
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-container class="axe-media-print-hide" fluid>
     <div class="mt-6" style="display: flex; flex-direction: column">
       <h4>{{ $t("ztna.listofServices") }}</h4>
@@ -127,7 +131,7 @@ export default {
   setup() {
     const { t } = useI18n();
     const emitter = inject("emitter");
-    const tokenStatus = ref('');
+    const tokenStatus = ref("");
     const current_user = ref();
     const last_Subscription = ref([]);
 
@@ -164,14 +168,24 @@ export default {
       rowSelection: "single",
     });
     const overlayMessage = computed(() => {
-current_user.value= user_privilege('Ztna') 
-console.log('current_user',current_user.value)
-  if (current_user.value === "viewer" || current_user.value === "default") {
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  } else if (!last_Subscription.value.includes("ZTNA")) {
-    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } 
-});
+      current_user.value = user_privilege("Ztna");
+      console.log("current_user", current_user.value);
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!last_Subscription.value.includes("ZTNA")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
+    });
     const name = computed(() => {
       return t("ztna.name");
     });
@@ -323,11 +337,16 @@ console.log('current_user',current_user.value)
 
       switch (action) {
         case "edit":
-        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
-          state.selectedId = rowData.id;
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("ZTNA")
+          ) {
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+            state.selectedId = rowData.id;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
@@ -335,9 +354,13 @@ console.log('current_user',current_user.value)
 
           break;
         case "delete":
-        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
-          OpenDelete(rowData.id);
-
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("ZTNA")
+          ) {
+            OpenDelete(rowData.id);
           } else {
             state.isviewModal = true;
             state.viewModal = true;
@@ -425,7 +448,7 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
+      console.log("last_Subscription", last_Subscription.value);
       fetchServices();
       emitter.on("closeServicesModal", () => {
         state.isModalOpen = false;
@@ -436,8 +459,13 @@ console.log('current_user',current_user.value)
     });
 
     const openModalAdd = () => {
-      const user = user_privilege('Ztna');
-      if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
+      const user = user_privilege("Ztna");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("ZTNA")
+      ) {
         state.modalData = {};
         state.modalMode = "create";
         state.isModalOpen = true;

@@ -430,8 +430,8 @@ export default {
     return `${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!last_Subscription.value.includes("WAF")) {
     return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } else {
-    return t("profil.NoPermission");
+  } else{
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   }
 });
     const champ = computed(() => {

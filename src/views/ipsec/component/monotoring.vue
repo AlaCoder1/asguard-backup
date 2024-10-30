@@ -180,7 +180,9 @@ this.current_user= user_privilege('Ipsec')
     return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
   } else if (!this.last_Subscription.includes("VPN IPSEC")) {
     return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } 
+  } else{
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  }
 });
     const OutTraffic = computed(() => {
       return t("monitoringVPN.OutTraffic");

@@ -315,7 +315,9 @@ export default defineComponent({
         return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")} <br /> `;
       } else if (!last_Subscription.value.includes("Firewall L4")) {
         return `<br />  ${t("firewall.msg_subscription")} <br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-      }
+      }else{
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  }
     });
     const policy = computed(() => {
       return t("firewall.policy");

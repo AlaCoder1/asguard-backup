@@ -1,15 +1,32 @@
 <template>
-   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+  <v-overlay v-model="state.viewModal">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-          <v-card-text v-html="overlayMessage">
-          </v-card-text>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -175,15 +192,23 @@ export default {
       return t("monitoringVPN.Availablity");
     });
     const overlayMessage = computed(() => {
-this.current_user= user_privilege('Ipsec') 
-  if (this.current_user === "viewer" || this.current_user === "default") {
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  } else if (!this.last_Subscription.includes("VPN IPSEC")) {
-    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
-});
+      state.current_user = user_privilege("Ipsec");
+      if (state.current_user === "viewer" || state.current_user === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!state.last_Subscription.includes("VPN IPSEC")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
+    });
     const OutTraffic = computed(() => {
       return t("monitoringVPN.OutTraffic");
     });
@@ -194,8 +219,8 @@ this.current_user= user_privilege('Ipsec')
       return t("monitoringVPN.PacketSent");
     });
     const state = reactive({
-      current_user :"",
-      last_Subscription :[],
+      current_user: "",
+      last_Subscription: [],
       isviewModal: false,
       viewModal: false,
       server: "",
@@ -303,8 +328,8 @@ this.current_user= user_privilege('Ipsec')
       const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
-      last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
+      state.last_Subscription = parsedArraySubscription;
+      console.log("*********** :", state.last_Subscription);
       getAllListServer();
     });
     const error = computed(() => {
@@ -321,19 +346,24 @@ this.current_user= user_privilege('Ipsec')
     const v$ = useValidate(rules, state);
 
     const serve = async () => {
-      const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer' && user !=='default' && this.last_Subscription.includes("VPN IPSEC")) {
-      const result = await v$.value.$validate();
+      const user = user_privilege("Ipsec");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        state.last_Subscription.includes("VPN IPSEC")
+      ) {
+        const result = await v$.value.$validate();
 
-      if (result) {
-        setTimeout(() => {
-          initializeWebSocket();
-        }, 1000);
+        if (result) {
+          setTimeout(() => {
+            initializeWebSocket();
+          }, 1000);
+        }
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
       }
-    } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-          };
     };
 
     const apexChart = ref(null);

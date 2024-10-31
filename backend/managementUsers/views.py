@@ -30,6 +30,7 @@ CONSTANT_USERNAME = _("username")
 CONSTANT_PASSWORD = _("password")
 CONSTANT_PERMISSION = _("permission")
 CONSTANT_GROUPNAME = _("groupname")
+CONSTANT_ROLE = _("role")
 CONSTANT_DIRECTORY_SERVER = _("directory server")
 CONSTANT_METHOD_ADD_USER_EMAIL_SERVER = _("with their email in directory server")
 CONSTANT_METHOD_ADD_USER_EMAIL_SYSTEM = _("with simple System email")
@@ -104,7 +105,7 @@ def create_role(request):
             serializer.save()
         else:
             return JsonResponse({'msg': serializer.error_messages}, status=400) 
-        return JsonResponse({'msg': data}, status=200) 
+        return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_CREATING}"}, status=200) 
     
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -118,7 +119,7 @@ def modify_role(request,id):
             serializer.save()
         else:
             return JsonResponse({'msg': serializer.error_messages}, status=400) 
-        return JsonResponse({'msg': data}, status=200) 
+        return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_UPDATING}"}, status=200) 
     
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
@@ -127,7 +128,7 @@ def delete_role(request, id):
     """Delete role"""
     role = Roles.objects.get(id=id)
     role.delete()
-    return JsonResponse({"msg": f"{SUCCESS_MESSAGES_DELETING}"})
+    return JsonResponse({"msg": f"{CONSTANT_ROLE}{SUCCESS_MESSAGES_DELETING}"})
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET USER BY ID",

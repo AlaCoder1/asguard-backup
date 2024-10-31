@@ -1035,7 +1035,7 @@ def change_dnat_position(request, id):
                     next_dnat = list_next_dnat.order_by("dnat_position")[0]
                     delete_dnat_rule_in_system(dnat.rule_number)
                     rule_number = create_dnat_rule_in_system(dnat.interface.ifname, source, destination, dnat.protocol,
-                                                             next_dnat.rule_number, next_dnat.prerouting_position-1)
+                                                             next_dnat.rule_number, next_dnat.prerouting_position-2)
                 else:
                     new_position_in_system = len(DNat.objects.filter(rule_status=True)) - 1
                     delete_dnat_rule_in_system(dnat.rule_number)

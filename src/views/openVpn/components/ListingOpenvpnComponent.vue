@@ -1,15 +1,32 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-          <v-card-text v-html="overlayMessage">
-          </v-card-text>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -199,16 +216,24 @@ export default {
       return t("PageGeneral.ServerName");
     });
     const overlayMessage = computed(() => {
-current_user.value= user_privilege('Openvpn') 
-console.log('current_user',current_user.value)
-  if (current_user.value === "viewer" || current_user.value === "default") {
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  } else if (!last_Subscription.value.includes("VPN SSL")) {
-    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
-});
+      current_user.value = user_privilege("Openvpn");
+      console.log("current_user", current_user.value);
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!last_Subscription.value.includes("VPN SSL")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
+    });
     const Protocol = computed(() => {
       return t("Clientsopenvpn.Protocol/Port");
     });
@@ -436,11 +461,6 @@ console.log('current_user',current_user.value)
           data-action="account" title="Client">
              <i class="mdi mdi-account" style="color: #086EAE; font-size: 20px;"></i>
           </button>
-          <button 
-          class="action-button show "  
-          data-action="show">
-          <i class="mdi mdi-eye" style="color: #086eae;font-size: 20px;"></i>
-          </button>
         <button
           id="play"
           class="action-button play"
@@ -468,11 +488,6 @@ console.log('current_user',current_user.value)
           class="action-button account"
           data-action="account" title="Client">
              <i class="mdi mdi-account" style="color: #086EAE; font-size: 20px;"></i>
-          </button>
-          <button 
-          class="action-button show "  
-          data-action="show">
-          <i class="mdi mdi-eye" style="color: #086eae;font-size: 20px;"></i>
           </button>
           <button
           id="restart"
@@ -516,18 +531,22 @@ console.log('current_user',current_user.value)
 
       switch (action) {
         case "play":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
-
-          loading.value = true;
-          isLoadingDialogue.value = true;
-          axios
-            .post(`/openvpn/startServerOpenvpn/${rowData.id}`)
-            .then((response) => {
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
-              loading.value = false;
-              isLoadingDialogue.value = false;
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            loading.value = true;
+            isLoadingDialogue.value = true;
+            axios
+              .post(`/openvpn/startServerOpenvpn/${rowData.id}`)
+              .then((response) => {
+                snackbar.value = true;
+                color.value = "success";
+                textAlert.value = response.data.msg;
+                loading.value = false;
+                isLoadingDialogue.value = false;
 
                 setTimeout(() => {
                   location.reload();
@@ -553,63 +572,75 @@ console.log('current_user',current_user.value)
           }
           break;
         case "edit":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
-
-          emitter.emit("add-server");
-          setTimeout(() => {
-            emitter.emit("edit-server", rowData);
-          }, 1000);
-          break;
-        } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-          };
-        case "stop":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
-
-          loading.value = true;
-          isLoadingDialogue.value = true;
-          axios
-            .delete(`/openvpn/stopServerOpenvpn/${rowData.id}`)
-            .then((response) => {
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
-              loading.value = false;
-              isLoadingDialogue.value = false;
-
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            })
-            .catch((i) => {
-              snackbar.value = true;
-              color.value = "red";
-              textAlert.value = i.response.data.error;
-              loading.value = false;
-              isLoadingDialogue.value = false;
-              setTimeout(() => {
-                location.reload();
-              }, 1000);
-            });
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            emitter.emit("add-server");
+            setTimeout(() => {
+              emitter.emit("edit-server", rowData);
+            }, 1000);
+            break;
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-          };
+          }
+        case "stop":
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            loading.value = true;
+            isLoadingDialogue.value = true;
+            axios
+              .delete(`/openvpn/stopServerOpenvpn/${rowData.id}`)
+              .then((response) => {
+                snackbar.value = true;
+                color.value = "success";
+                textAlert.value = response.data.msg;
+                loading.value = false;
+                isLoadingDialogue.value = false;
+
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              })
+              .catch((i) => {
+                snackbar.value = true;
+                color.value = "red";
+                textAlert.value = i.response.data.error;
+                loading.value = false;
+                isLoadingDialogue.value = false;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "restart":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
-
-          loading.value = true;
-          isLoadingDialogue.value = true;
-          axios
-            .put(`/openvpn/restartServerOpenvpn/${rowData.id}`)
-            .then((response) => {
-              snackbar.value = true;
-              color.value = "success";
-              textAlert.value = response.data.msg;
-              loading.value = false;
-              isLoadingDialogue.value = false;
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            loading.value = true;
+            isLoadingDialogue.value = true;
+            axios
+              .put(`/openvpn/restartServerOpenvpn/${rowData.id}`)
+              .then((response) => {
+                snackbar.value = true;
+                color.value = "success";
+                textAlert.value = response.data.msg;
+                loading.value = false;
+                isLoadingDialogue.value = false;
 
                 setTimeout(() => {
                   location.reload();
@@ -635,7 +666,7 @@ console.log('current_user',current_user.value)
           }
           break;
         case "restart":
-          if (user && user !== "viewer" && user!=='default') {
+          if (user && user !== "viewer" && user !== "default") {
             loading.value = true;
             isLoadingDialogue.value = true;
             axios
@@ -671,34 +702,46 @@ console.log('current_user',current_user.value)
           }
           break;
         case "delete":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
-
-          isDeletedType.value = "server";
-          deleteRow.value = rowData;
-          dialogDelete.value = true;
-          rowID.value = rowData.id;
-        } else {
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            isDeletedType.value = "server";
+            deleteRow.value = rowData;
+            dialogDelete.value = true;
+            rowID.value = rowData.id;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
           break;
 
         case "account":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
-
-          state.isModalOpen = true;
-          state.editRow = rowData;
-        } else {
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            state.isModalOpen = true;
+            state.editRow = rowData;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
           break;
         case "show":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
-
-          state.isModalOpenListView = true;
-          state.editRow = rowData;
-        } else {
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            state.isModalOpenListView = true;
+            state.editRow = rowData;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
@@ -764,10 +807,14 @@ console.log('current_user',current_user.value)
 
       switch (action) {
         case "download":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
-
-          let id = rowData.id;
-          let fileExtention = `${rowData.name}.ovpn`;
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            let id = rowData.id;
+            let fileExtention = `${rowData.name}.ovpn`;
 
             const csrfToken = getCookie("csrftoken");
             axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -813,26 +860,34 @@ console.log('current_user',current_user.value)
 
           break;
         case "editClient":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
-
-          emitter.emit("add-client");
-          setTimeout(() => {
-            emitter.emit("edit-client", rowData);
-          }, 1000);
-        } else {
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            emitter.emit("add-client");
+            setTimeout(() => {
+              emitter.emit("edit-client", rowData);
+            }, 1000);
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
           break;
 
         case "delete":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
-
-          isDeletedType.value = "client";
-          deleteRow.value = rowData;
-          dialogDelete.value = true;
-          rowID.value = rowData.id;
-        } else {
+          if (
+            user &&
+            user !== "viewer" &&
+            user !== "default" &&
+            last_Subscription.value.includes("VPN SSL")
+          ) {
+            isDeletedType.value = "client";
+            deleteRow.value = rowData;
+            dialogDelete.value = true;
+            rowID.value = rowData.id;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           }
@@ -887,8 +942,13 @@ console.log('current_user',current_user.value)
     const publishServer = () => {};
 
     const addServer = () => {
-      const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+      const user = user_privilege("Openvpn");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN SSL")
+      ) {
         emitter.emit("add-server");
       } else {
         state.isviewModal = true;
@@ -899,8 +959,13 @@ console.log('current_user',current_user.value)
     const publishClient = () => {};
 
     const addClient = () => {
-      const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN SSL")) {
+      const user = user_privilege("Openvpn");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN SSL")
+      ) {
         emitter.emit("add-client");
       } else {
         state.isviewModal = true;
@@ -913,7 +978,7 @@ console.log('current_user',current_user.value)
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
+      console.log("last_Subscription", last_Subscription.value);
       emitter.on("closeModalClient", () => {
         state.isModalOpenListView = false;
       });

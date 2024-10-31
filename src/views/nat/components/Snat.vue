@@ -393,11 +393,6 @@ export default {
       } else {
         eGui.innerHTML = `
             <button
-              class="action-button show "
-              data-action="show">
-              <i class="mdi mdi-eye" style="color: #086eae;font-size: 20px;"></i>
-              </button>
-            <button
               class="action-button edit"
               data-action="edit" title="Edit Server">
                  <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>

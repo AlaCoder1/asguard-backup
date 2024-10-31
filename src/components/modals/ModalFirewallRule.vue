@@ -102,46 +102,80 @@
           <div class="row justify-content-center">
             <br />
             <div class="col-12 d-flex justify-center">
-              <v-btn
-                rounded
-                outlined
-                color="#213E9F"
-                :isLarge="true"
-                variant="outlined"
-                class="ml-2"
-                @click="closeModal"
+              <!-- Conditionally render the Create, Update, and Close buttons -->
+              <template v-if="!state.showConfirmation">
+                <v-btn
+                  rounded
+                  outlined
+                  color="#213E9F"
+                  :isLarge="true"
+                  variant="outlined"
+                  class="ml-2"
+                  @click="closeModal"
+                >
+                  <span style="color: #213e9f" class="pr-3 pl-3">
+                    {{ $t("buttons.close") }}
+                  </span>
+                </v-btn>
+                <v-btn
+                  rounded
+                  outlined
+                  color="#213E9F"
+                  label-color="#ffffff"
+                  :isLarge="true"
+                  class="ml-2"
+                  @click="handleCreateClick"
+                >
+                  <span
+                    class="text-white pr-3 pl-3"
+                    v-if="modalMode === 'create'"
+                  >
+                    {{ $t("buttons.create") }}
+                  </span>
+                  <span
+                    class="text-white pr-3 pl-3"
+                    v-if="modalMode === 'edit'"
+                  >
+                    {{ $t("buttons.update") }}
+                  </span>
+                </v-btn>
+              </template>
+
+              <!-- Show confirmation alert with Create and Cancel buttons when showConfirmation is true -->
+              <v-alert
+                density="compact"
+                v-if="state.showConfirmation"
+                class="custom-alert"
               >
-                <span style="color: #213e9f" class="pr-3 pl-3">{{
-                  $t("buttons.close")
-                }}</span>
-              </v-btn>
-              <v-btn
-                rounded
-                outlined
-                color="#213E9F"
-                label-color="#ffffff"
-                :disabled="
-                  equal ||
-                  dportCheck ||
-                  sportCheck ||
-                  daddrCheck ||
-                  saddrCheck ||
-                  dropReject
-                "
-                :isLarge="true"
-                class="ml-2"
-                @click="submitForm"
-              >
-                <span
-                  class="text-white pr-3 pl-3"
-                  v-if="modalMode === 'create'"
-                >
-                  {{ $t("buttons.create") }}</span
-                >
-                <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                  {{ $t("buttons.update") }}</span
-                >
-              </v-btn>
+                <span style="font-size: 19px">
+                  Are you sure you want to create this rule with 'reject' or
+                  'drop'?
+                </span>
+                <div class="mt-3 d-flex justify-center">
+                  <v-btn
+                    rounded
+                    outlined
+                    color="#213E9F"
+                    @click="closeConfirm"
+                    class="ml-2"
+                  >
+                    <span class="text-white pr-3 pl-3">
+                      {{ $t("buttons.cancel") }}
+                    </span>
+                  </v-btn>
+                  <v-btn
+                    rounded
+                    outlined
+                    color="#213E9F"
+                    @click="submitForm"
+                    class="ml-2"
+                  >
+                    <span class="text-white pr-3 pl-3">
+                      {{ $t("buttons.create") }}
+                    </span>
+                  </v-btn>
+                </div>
+              </v-alert>
             </div>
           </div>
         </div>
@@ -207,6 +241,7 @@ export default {
       "all",
     ]);
     const state = reactive({
+      showConfirmation: false,
       isAll: false,
       id: "",
       interUuid: "",
@@ -431,7 +466,11 @@ export default {
         state.interUuid = uuid;
       });
     });
+    const closeConfirm = () => {
+      state.showConfirmation = false;
+    };
     const closeModal = () => {
+      state.showConfirmation = false;
       emitter.emit("closFirewallInboundModal");
       if (modalMode.value === "create") {
         state.formData.policy = "";
@@ -477,6 +516,21 @@ export default {
       }
       return cookieValue;
     };
+    const handleCreateClick = () => {
+      if (
+        dropReject.value ||
+        equal.value ||
+        dportCheck.value ||
+        sportCheck.value ||
+        daddrCheck.value ||
+        saddrCheck
+      ) {
+        state.showConfirmation = true;
+      } else {
+        submitForm();
+      }
+    };
+
     const submitForm = async () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -582,7 +636,9 @@ export default {
       dropReject,
       v$,
       emitter,
+      handleCreateClick,
       closeModal,
+      closeConfirm,
       submitForm,
     };
   },
@@ -592,5 +648,15 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
+}
+.custom-alert {
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 16px;
+  box-sizing: border-box;
+  background-color: #f5f5f5; /* Light gray background similar to v-textarea */
+  border: 1px solid #ddd; /* Subtle gray border */
+  color: #333; /* Dark text for readability */
+  border-radius: 8px; /* Rounded corners */
 }
 </style>

@@ -416,7 +416,9 @@ export default {
         )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
           "firewall.sub_page"
         )}</a>`;
-      }
+      }else{
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  }
     });
     const error = computed(() => {
       return t("errors.valueRequired");

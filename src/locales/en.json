@@ -178,13 +178,16 @@
   },
 
   "firewall": {
+    "DropRejectRule":"Are you sure you want to create this rule with 'reject' or 'drop'?",
     "rules": "Rules",
     "msg_subscription": "You are currently in Free Mode, unlocking this feature requires payment. Go to",
     "sub_page": "subscription page",
     "outbound": "Outbound rules",
     "inbound": "Inbound rules",
     "delete_confirm": "Delete Confirmation",
+    "Save_confirm": "Save Confirmation",
     "msg_confirm_delete": "Are you sure you want to delete this rule from the Firewall?",
+    "msg_confirm_save": "Are you sure you want to save this rule?",
     "cancel": "Cancel",
     "delete": "Delete",
     "search": "Search",

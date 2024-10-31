@@ -172,9 +172,7 @@ export default {
     overlayMessage() {
       this.current_user = user_privilege("Ztna");
       if (this.current_user === "viewer" || this.current_user === "default") {
-        return ` ${this.$t("profil.NoPermission")} <br /> ${this.$t(
-          "profil.ContactAdmin"
-        )}`;
+        return ` ${this.$t("profil.NoPermission")} <br /> ${this.$t("profil.ContactAdmin")}`;
       } else if (!this.last_Subscription.includes("ZTNA")) {
         return `${this.$t(
           "firewall.msg_subscription"
@@ -182,9 +180,7 @@ export default {
           "firewall.sub_page"
         )}</a>`;
       } else {
-        return ` ${t("profil.NoPermission")} <br /> ${t(
-          "profil.ContactAdmin"
-        )}`;
+        return ` ${this.$t("profil.NoPermission")} <br /> ${this.$t("profil.ContactAdmin")}`;
       }
     },
   },

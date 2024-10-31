@@ -15,8 +15,7 @@
             width="100"
             height="100"
         /></v-card-title>
-        <v-card-text v-html="overlayMessage">
-        </v-card-text>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton
@@ -213,7 +212,7 @@
           label-color="#ffffff"
           :isLarge="false"
           :disabled="!rowDataLength"
-          @click="saveRules"
+          @click="confirmSave"
         >
           <span class="text-white pr-3 pl-3">{{ $t("buttons.save") }}</span>
         </v-btn>
@@ -227,6 +226,23 @@
       >
         {{ state.textAlertDelete }}
       </v-snackbar>
+      <v-dialog v-model="state.Saverulesstate" max-width="500px">
+        <v-card>
+          <v-card-title class="headline">
+            {{ $t("firewall.Save_confirm") }}
+          </v-card-title>
+          <v-card-text>{{ $t("firewall.msg_confirm_save") }}</v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="blue darken-1" text @click="cancelSave">{{
+              $t("firewall.cancel")
+            }}</v-btn>
+            <v-btn color="blue darken-1" text @click="saveRules">{{
+              $t("firewall.save")
+            }}</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </div>
   </div>
 </template>
@@ -264,7 +280,7 @@ export default defineComponent({
   },
   setup(props) {
     const { t } = useI18n();
-    const last_Subscription=ref([])
+    const last_Subscription = ref([]);
     const paginationLocalization = reactive({
       of: "/",
     });
@@ -273,6 +289,7 @@ export default defineComponent({
     const state = reactive({
       // deleteDialogSquid: false,
       // deletedRow: null,
+      Saverulesstate: false,
       snackbar: false,
       color: "",
       isviewModal: false,
@@ -310,14 +327,22 @@ export default defineComponent({
       return !rowData.value || rowData.value.length == 0 ? false : true;
     });
     const overlayMessage = computed(() => {
-      let current_user = user_privilege()
+      let current_user = user_privilege();
       if (current_user === "viewer" || current_user === "default") {
-        return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")} <br /> `;
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )} <br /> `;
       } else if (!last_Subscription.value.includes("Firewall L4")) {
-        return `<br />  ${t("firewall.msg_subscription")} <br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-      }else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
+        return `<br />  ${t(
+          "firewall.msg_subscription"
+        )} <br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
     });
     const policy = computed(() => {
       return t("firewall.policy");
@@ -448,7 +473,12 @@ export default defineComponent({
         cellRenderer: actionCellRenderer,
       },
     ]);
-
+    const cancelSave = () => {
+      state.Saverulesstate = false;
+    };
+    const confirmSave = () => {
+      state.Saverulesstate = true;
+    };
     function formatedLineSport(data) {
       const rslt = data.data.sport ? data.data.sport : "--";
       let eGui = document.createElement("div");
@@ -1154,6 +1184,8 @@ export default defineComponent({
       mode,
       last_Subscription,
       sortedrray,
+      cancelSave,
+      confirmSave,
       onGridReady,
       // setGridApi,
       // onFirstDataRendered,
@@ -1223,4 +1255,3 @@ export default defineComponent({
   }
 }
 </style>
-

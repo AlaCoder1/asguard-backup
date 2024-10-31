@@ -104,7 +104,7 @@ def input_create_snat(snat:SNat):
               "port": snat.source_port}
     destination = {"address": snat.destination_address,
                    "port": snat.destination_port}
-    masking = ["accept"]
+    masking = ["masquerade"]
     if snat.snat_type == "Static":
         masking = snat.translation_address_from
         if snat.translation_address_to != "":

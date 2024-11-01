@@ -123,21 +123,6 @@ export default {
       isVerification: false,
     };
   },
-  mounted() {
-    // let error = localStorage.getItem("response-info");
-    // if (error) {
-    //   let response = JSON.parse(error);
-    //   this.message = response.message;
-    //   setTimeout(() => {
-    //     localStorage.removeItem("response-info");
-    //     this.message = "";
-    //   }, 1000);
-    // }
-    const lastSubscription =
-      document.getElementById("app").attributes["last_subscription"].value;
-    let parsedArraySubscription = JSON.parse(lastSubscription);
-    localStorage.setItem("lastSubscription",parsedArraySubscription); 
-  },
 
   methods: {
     changeLang(item) {

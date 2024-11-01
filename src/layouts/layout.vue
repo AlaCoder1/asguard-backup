@@ -172,7 +172,9 @@ export default {
     overlayMessage() {
       this.current_user = user_privilege("Ztna");
       if (this.current_user === "viewer" || this.current_user === "default") {
-        return ` ${this.$t("profil.NoPermission")} <br /> ${this.$t("profil.ContactAdmin")}`;
+        return ` ${this.$t("profil.NoPermission")} <br /> ${this.$t(
+          "profil.ContactAdmin"
+        )}`;
       } else if (!this.last_Subscription.includes("ZTNA")) {
         return `${this.$t(
           "firewall.msg_subscription"
@@ -180,12 +182,18 @@ export default {
           "firewall.sub_page"
         )}</a>`;
       } else {
-        return ` ${this.$t("profil.NoPermission")} <br /> ${this.$t("profil.ContactAdmin")}`;
+        return ` ${this.$t("profil.NoPermission")} <br /> ${this.$t(
+          "profil.ContactAdmin"
+        )}`;
       }
     },
   },
   mounted() {
-    this.last_Subscription = localStorage.getItem("lastSubscription");
+    setTimeout(() => {
+      let packSubscription = localStorage.getItem("lastSubscription");
+      let parsedArray = JSON.parse(packSubscription);
+      this.last_Subscription = parsedArray;
+    }, 1000);
     const csrfToken = getCookie("csrftoken");
     axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 

@@ -34,9 +34,9 @@
                     height="100"
                 /></v-card-title>
                 <v-card-text>
-                  {{  $t("profil.NoPermission") }}
+                  {{ $t("profil.NoPermission") }}
                   <br />
-                  {{  $t("profil.ContactAdmin") }} 
+                  {{ $t("profil.ContactAdmin") }}
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -414,7 +414,7 @@ export default {
           <button class="action-button restart" data-action="restart">
             <span class="mdi mdi-reload fa-2x"></span>
           </button>
-         
+
         `;
       } else if (!params.data.status_started) {
         eGui.innerHTML = `
@@ -454,7 +454,7 @@ export default {
               action: "start",
               service: rowData.service,
             };
-          
+
             axios
               .put("/monitoring/action", payloadStart)
               .then((response) => {
@@ -653,6 +653,10 @@ export default {
     };
 
     onMounted(async () => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+        localStorage.setItem("lastSubscription", lastSubscription);
+
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
         d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"

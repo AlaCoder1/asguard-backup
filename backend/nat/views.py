@@ -7,6 +7,8 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 
+import ipaddress
+
 from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat, get_one_dnat, get_one_one_to_one_nat, get_one_snat
 from backend.nat.models import DNat, OneToOneNat, SNat
 from backend.nat.serializers import DNatSerializer, OneToOneNatSerializer, SNatSerializer
@@ -95,6 +97,12 @@ def create_snat(request):
     """Creating a new SNAT rule and adding it to the database"""
     try:
         data = request.data
+        
+        # Define the IP address and subnet mask and get the network address for source and destination address
+        if data["source_address"] != "":
+            data["source_address"] = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+        if data["destination_address"] != "":
+            data["destination_address"] = str(ipaddress.IPv4Interface(data["destination_address"]).network.network_address)
         
         serializer_snat = SNatSerializer(data=data)
         if serializer_snat.is_valid():
@@ -195,6 +203,13 @@ def update_snat(request, id):
     """Updating an SNAT rule"""
     try:
         data = request.data
+
+        # Define the IP address and subnet mask and get the network address for source and destination address
+        if data["source_address"] != "":
+            data["source_address"] = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+        if data["destination_address"] != "":
+            data["destination_address"] = str(ipaddress.IPv4Interface(data["destination_address"]).network.network_address)
+
         snat = SNat.objects.get(id=id)
 
         interface_ifname = Interface.objects.get(id=data["interface"]).ifname
@@ -439,6 +454,12 @@ def create_one_to_one_nat(request):
     try:
         data = request.data
         
+        # Define the IP address and subnet mask and get the network address for source and destination address
+        data["source_address"] = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+        data["translation_address"] = str(ipaddress.IPv4Interface(data["translation_address"]).network.network_address)
+        if data["destination_address"] != "":
+            data["destination_address"] = str(ipaddress.IPv4Interface(data["destination_address"]).network.network_address)
+        
         serializer_one_to_one_nat = OneToOneNatSerializer(data=data)
         if serializer_one_to_one_nat.is_valid():
 
@@ -519,6 +540,13 @@ def update_one_to_one_nat(request, id):
     """Updating an OneToOneNat rule"""
     try:
         data = request.data
+        
+        # Define the IP address and subnet mask and get the network address for source and destination address
+        data["source_address"] = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+        data["translation_address"] = str(ipaddress.IPv4Interface(data["translation_address"]).network.network_address)
+        if data["destination_address"] != "":
+            data["destination_address"] = str(ipaddress.IPv4Interface(data["destination_address"]).network.network_address)
+        
         one_to_one_nat = OneToOneNat.objects.get(id=id)
         
         serializer_one_to_one_nat = OneToOneNatSerializer(one_to_one_nat, data=data)
@@ -769,6 +797,10 @@ def create_dnat(request):
     try:
         data = request.data
         
+        # Define the IP address and subnet mask and get the network address for source address
+        if data["source_address"] != "":
+            data["source_address"] = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+        
         serializer_dnat = DNatSerializer(data=data)
         if serializer_dnat.is_valid():
 
@@ -868,6 +900,11 @@ def update_dnat(request, id):
     """Updating a DNAT rule"""
     try:
         data = request.data
+        
+        # Define the IP address and subnet mask and get the network address for source and destination address
+        if data["source_address"] != "":
+            data["source_address"] = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+        
         dnat = DNat.objects.get(id=id)
 
         interface_ifname = Interface.objects.get(id=data["interface"]).ifname

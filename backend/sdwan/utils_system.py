@@ -44,6 +44,18 @@ def switch_gateway(previous_gateway, previous_ifname, new_gateway, new_ifname, t
                     new_gateway, "dev", new_ifname,"table", table_id])
 
 
+def check_celery():
+    """Function to check if celery is opened or no"""
+    process = execute_command_without_arguments(["sudo", "ps", "aux"])
+    process = process.stdout.splitlines()
+
+    # display information about the celery running processe
+    celery_list = [line.split() for line in process if "celery" in line.split()[10]]
+    if len(celery_list) == 0:
+        return False
+    return True
+
+
 @shared_task
 def script_failover(rule_id):
     """Function to execute the failover algorithm. When connectivity of the primary interface is lost, 
@@ -110,8 +122,8 @@ def script_round_robin(rule_id):
 
 def start_sdwan_rule_in_system(rule_id):
     """Function to start the SDwan rule in system"""
-    # Check if celery is runned by checking if there is another SDwan rule started before
-    if len(SdwanRules.objects.filter(rule_status=True)) == 1:
+    # Check if celery is runned
+    if not check_celery:
         # Run celery in background
         process = Popen("sudo celery -A asguard worker -l info 2>/dev/null &", stdout=PIPE, stderr=PIPE, shell=True)
         time.sleep(5)
@@ -124,22 +136,6 @@ def start_sdwan_rule_in_system(rule_id):
         script_failover.delay(rule_id)
     else:
         script_round_robin.delay(rule_id)
-
-
-def stop_sdwan_rule_in_system():
-    """Function to stop the SDwan rule in system"""
-
-    # Check if celery is runned by checking if there is no SDwan rule started
-    if len(SdwanRules.objects.filter(rule_status=True)) == 0:
-        # display information about the currently running processes
-        process = execute_command_without_arguments(["sudo", "ps", "aux"])
-        process = process.stdout.splitlines()
-
-        # display information about the celery running processe
-        celery_list = [line.split() for line in process if "celery" in line.split()[10]]
-
-        # Kill the celery process in system
-        execute_command_without_arguments(["sudo", "kill", "-9", celery_list[0][1]])
 
 
 def synchronize_routing_table():

@@ -334,7 +334,8 @@ def change_snat_position(request, id):
         list_snat_in_interval = SNat.objects.filter(snat_position__gte=new_position, 
                                                     snat_position__lt=snat.snat_position).order_by("-snat_position")
         # Get list of activated SNAT between previous and new position.
-        list_active_snat_in_interval = SNat.objects.filter(rule_status=True, snat_position__gte=new_position,
+        list_active_snat_in_interval = SNat.objects.filter(rule_status=True, 
+                                                           snat_position__gte=new_position,
                                                            snat_position__lt=snat.snat_position)
         # Position offset
         position_offset = 1
@@ -346,7 +347,8 @@ def change_snat_position(request, id):
             list_snat_in_interval = SNat.objects.filter(snat_position__gt=snat.snat_position, 
                                                         snat_position__lte=new_position).order_by("snat_position")
             # Get list of activated SNAT between previous and new position.
-            list_active_snat_in_interval = SNat.objects.filter(rule_status=True, snat_position__gt=snat.snat_position,
+            list_active_snat_in_interval = SNat.objects.filter(rule_status=True, 
+                                                               snat_position__gt=snat.snat_position,
                                                                snat_position__lte=new_position)
             # Position offset
             position_offset = -1
@@ -366,7 +368,7 @@ def change_snat_position(request, id):
                     next_snat = list_next_snat.order_by("snat_position")[0]
                     delete_snat_rule_in_system(snat.rule_number)
                     rule_number = create_snat_rule_in_system(snat.interface.ifname, source, destination, snat.protocol,
-                                                             masking, next_snat.rule_number, next_snat.postrouting_position-1)
+                                                             masking, next_snat.rule_number, next_snat.postrouting_position-2)
                 else:
                     new_position_in_system = len(SNat.objects.filter(rule_status=True)) + len(OneToOneNat.objects.filter(rule_status=True)) - 1
                     delete_snat_rule_in_system(snat.rule_number)
@@ -394,7 +396,7 @@ def change_snat_position(request, id):
 
 
 ########################################
-################ OneToOne NAT ##################
+############ OneToOne NAT ##############
 ########################################
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL OneToOneNat RULES",)
@@ -686,7 +688,7 @@ def change_one_to_one_nat_position(request, id):
                     rule_number = create_one_to_one_nat_rule_in_system(
                         one_to_one_nat.interface.ifname, one_to_one_nat.source_address, destination, 
                         one_to_one_nat.translation_address, next_one_to_one_nat.rule_number, 
-                        next_one_to_one_nat.postrouting_position-1)
+                        next_one_to_one_nat.postrouting_position-2)
                 else:
                     new_position_in_system = len(SNat.objects.filter(rule_status=True)) + len(OneToOneNat.objects.filter(rule_status=True)) - 1
                     delete_one_to_one_nat_rule_in_system(one_to_one_nat.rule_number)
@@ -1033,7 +1035,7 @@ def change_dnat_position(request, id):
                     next_dnat = list_next_dnat.order_by("dnat_position")[0]
                     delete_dnat_rule_in_system(dnat.rule_number)
                     rule_number = create_dnat_rule_in_system(dnat.interface.ifname, source, destination, dnat.protocol,
-                                                             next_dnat.rule_number, next_dnat.prerouting_position-1)
+                                                             next_dnat.rule_number, next_dnat.prerouting_position-2)
                 else:
                     new_position_in_system = len(DNat.objects.filter(rule_status=True)) - 1
                     delete_dnat_rule_in_system(dnat.rule_number)

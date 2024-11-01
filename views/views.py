@@ -502,9 +502,8 @@ def user_managment_page(request):
     grp=get_groups(request)
     roles = getRoles(request)
     servers=get_list_ad_servers()
-    last_subscription=list_features_about_last_subscription(request)
 
-    context = {'users':usr,"groups":grp,"servers":servers,"roles":roles,'last_subscription':json.dumps(last_subscription)}
+    context = {'users':usr,"groups":grp,"servers":servers,"roles":roles}
     return render(request, 'user_managment.html',context)
 
 @login_required(login_url='/')
@@ -687,7 +686,8 @@ def index_page(request):
             "speed_duplex":speed_duplex,
             "ip_address":ip_address}
         config.append(info_interface)
-    context = {"informations":info,"gateways":json.dumps(gateways),"interfaces":json.dumps(config)}
+    last_subscription = list_features_about_last_subscription(request)
+    context = {"informations":info,"gateways":json.dumps(gateways),"interfaces":json.dumps(config),'last_subscription':json.dumps(last_subscription)}
     return render(request, 'index_page.html',context)
 
 

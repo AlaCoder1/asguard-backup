@@ -187,8 +187,7 @@ export default {
     ]);
 
     function checkboxRender(params) {
-      const user = user_privilege();
-      if (user !== "viewer") {
+      
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       var input = document.createElement("input");
@@ -204,7 +203,8 @@ export default {
       input.addEventListener("click", function (event) {
         params.value = !params.value;
         params.data.rule_status = params.value;
-
+        const user = user_privilege();
+        if (user !== "viewer") {
         if (params.value) {
           axios
             .put(`/nat/startOneToOneNat/${params.data.id}`)

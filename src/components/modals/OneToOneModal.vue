@@ -301,7 +301,11 @@ export default {
       axios.get("/network/AllInterfaces").then(
         (response) => {
           let filtredInterface = response.data.filter(
-            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+            (i) =>
+              !i.ifname.startsWith("tun_") &&
+              !i.ifname.startsWith("tap_") &&
+              !i.name_interface.startsWith("VXLAN") &&
+              !i.name_interface.startsWith("VLAN")
           );
 
           let interfaces = filtredInterface.map((i) => {

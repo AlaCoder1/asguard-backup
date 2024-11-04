@@ -13,7 +13,7 @@ from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule, get_one_sdwan
 from backend.sdwan.models import Area, SdwanRules
 from backend.sdwan.serializers import AreaSerializer, SdwanRulesSerializer
 from backend.sdwan.utils import routing_table_id
-from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, stop_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
+from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
 from utils.errors_utils import CommandExecutionError
 
 
@@ -258,7 +258,6 @@ def update_sdwan_rule(request, id):
                 # Stop the rule
                 sdwan_rule.rule_status = False
                 sdwan_rule.save()
-                stop_sdwan_rule_in_system()
                 
                 # Start the rule
                 sdwan_rule.rule_status = True
@@ -307,8 +306,6 @@ def stop_sdwan_rule(request, id):
         sdwan_rule = SdwanRules.objects.get(id=id)
         sdwan_rule.rule_status = False
         sdwan_rule.save()
-        stop_sdwan_rule_in_system()
-        
         return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_STOPING}"}, status=201)
         
     except CommandExecutionError:

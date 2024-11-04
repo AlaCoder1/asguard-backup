@@ -187,6 +187,8 @@ export default {
     ]);
 
     function checkboxRender(params) {
+      const user = user_privilege();
+      if (user !== "viewer") {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       var input = document.createElement("input");
@@ -254,6 +256,11 @@ export default {
         }
       });
       return input;
+    }
+    else{
+      state.isviewModal = true;
+      state.viewModal = true;
+    }
     }
 
     const onRowDragEnd = (event) => {

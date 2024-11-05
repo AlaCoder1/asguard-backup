@@ -85,7 +85,7 @@
               <label>Interface</label>
             </v-col>
             <v-col cols="4" class="mb-n6">
-              <input type="checkbox" v-model="activate" />
+              <input type="checkbox" disabled v-model="activate" />
               <label class="ml-2">{{ $t("interface.activate") }}</label>
             </v-col>
           </v-row>

@@ -187,7 +187,7 @@ export default {
     ]);
 
     function checkboxRender(params) {
-      
+      const user = user_privilege();
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       var input = document.createElement("input");
@@ -199,12 +199,12 @@ export default {
       input.style.width = "20px";
       input.style.height = "18px";
       input.style.cursor = "pointer";
+      input.disabled = user === "viewer";
 
       input.addEventListener("click", function (event) {
         params.value = !params.value;
         params.data.rule_status = params.value;
-        const user = user_privilege();
-        if (user !== "viewer") {
+       
         if (params.value) {
           axios
             .put(`/nat/startOneToOneNat/${params.data.id}`)
@@ -256,12 +256,8 @@ export default {
         }
       });
       return input;
-    }
-    else{
-      state.isviewModal = true;
-      state.viewModal = true;
-    }
-    }
+ 
+  }
 
     const onRowDragEnd = (event) => {
       const csrfToken = getCookie("csrftoken");

@@ -5,13 +5,13 @@
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
         <v-card-text>
-          {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
+          {{ $t("profil.NoPermission") }}
+          <br />
+          {{ $t("profil.ContactAdmin") }}
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F"  :label="$t('buttons.close')" :isLarge="true"
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
             @click="close" />
         </div>
       </v-card>
@@ -41,16 +41,16 @@
       <v-card>
         <v-card-title class="headline">{{
           $t("firewall.delete_confirm")
-        }}</v-card-title>
+          }}</v-card-title>
         <v-card-text>{{ $t("nat.msg_confirm_delete") }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("firewall.cancel")
-          }}</v-btn>
+            }}</v-btn>
           <v-btn color="blue darken-1" text @click="confirmDelete">{{
             $t("firewall.delete")
-          }}</v-btn>
+            }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
@@ -267,82 +267,77 @@ export default {
       state.viewModal = false;
     };
     function checkboxRender(params) {
-      
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      var input = document.createElement("input");
-      input.type = "checkbox";
-      params.value = params.data.rule_status;
-      input.checked = params.value;
+      const user = user_privilege();
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        var input = document.createElement("input");
+        input.type = "checkbox";
+        params.value = params.data.rule_status;
+        input.checked = params.value;
 
-      input.style.margin = "10px";
-      input.style.width = "20px";
-      input.style.height = "18px";
-      input.style.cursor = "pointer";
+        input.style.margin = "10px";
+        input.style.width = "20px";
+        input.style.height = "18px";
+        input.style.cursor = "pointer";
+        input.disabled = user === "viewer";
 
-      input.addEventListener("click", function (event) {
-        params.value = !params.value;
-        params.data.rule_status = params.value;
-        const user = user_privilege();
-        if (user !== "viewer") {
-        if (params.value) {
-          axios
-            .put(`/nat/startDNat/${params.data.id}`)
-            .then((response) => {
-              if (response.status == "201") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              if (i.response.status === 500) {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = t("errors.errorServer");
-              } else {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.error;
-              }
-            });
-        } else {
-          axios
-            .put(`/nat/stopDNat/${params.data.id}`)
-            .then((response) => {
-              if (response.status == "201") {
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              if (i.response.status === 500) {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = t("errors.errorServer");
-              } else {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.error;
-              }
-            });
-        }
-      });
-      return input;
-    }
-    else{
-      state.isviewModal = true;
-      state.viewModal = true;
-    }
-    }
+        input.addEventListener("click", function (event) {
+          params.value = !params.value;
+          params.data.rule_status = params.value;
 
+          if (params.value) {
+            axios
+              .put(`/nat/startDNat/${params.data.id}`)
+              .then((response) => {
+                if (response.status == "201") {
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  setTimeout(() => {
+                    location.reload();
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
+          } else {
+            axios
+              .put(`/nat/stopDNat/${params.data.id}`)
+              .then((response) => {
+                if (response.status == "201") {
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  setTimeout(() => {
+                    location.reload();
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
+          }
+        });
+        return input;
+   
+    }
     const onRowDragEnd = (event) => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;

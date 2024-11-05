@@ -1,9 +1,21 @@
 <template>
+  <v-overlay v-model="state.isExec"> </v-overlay>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
         <v-card-text>
           {{ $t("profil.NoPermission") }}
           <br />
@@ -11,8 +23,15 @@
         </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -24,37 +43,66 @@
       <v-row>
         <v-col cols="12">
           <div style="overflow: hidden; flex-grow: 1">
-            <ag-grid-vue id="grid-wrapper" domLayout="autoHeight" class="ag-theme-alpine mt-3" style="width: 100%"
-              @grid-ready="onGridReady" :columnDefs="columnDnat" :rowData="rowDataDnat.value" :gridOptions="gridOptions"
-              :overlayNoRowsTemplate="overlayTemplate" :rowDragManaged="true" :rowDragEntireRow="true"
-              @row-drag-end="onRowDragEnd" :localeText="paginationLocalization" />
+            <ag-grid-vue
+              id="grid-wrapper"
+              domLayout="autoHeight"
+              class="ag-theme-alpine mt-3"
+              style="width: 100%"
+              @grid-ready="onGridReady"
+              :columnDefs="columnDnat"
+              :rowData="rowDataDnat.value"
+              :gridOptions="gridOptions"
+              :overlayNoRowsTemplate="overlayTemplate"
+              :rowDragManaged="true"
+              :rowDragEntireRow="true"
+              @row-drag-end="onRowDragEnd"
+              :localeText="paginationLocalization"
+            />
           </div>
           <div class="d-flex justify-end mt-3">
-            <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('firewall.add')" :isLarge="true"
-              type="submit" class="ml-2" @click="openModalAdd" />
+            <VButton
+              rounded
+              outlined
+              color="#213E9F"
+              label-color="#ffffff"
+              :label="$t('firewall.add')"
+              :isLarge="true"
+              type="submit"
+              class="ml-2"
+              @click="openModalAdd"
+            />
           </div>
         </v-col>
       </v-row>
-      <ModalDnat :isOpen="state.isModalAreaOpen" :editRow="state.editRow" :modalMode="state.modalMode" />
+      <ModalDnat
+        :isOpen="state.isModalAreaOpen"
+        :editRow="state.editRow"
+        :modalMode="state.modalMode"
+      />
     </div>
     <v-dialog v-model="state.deleteDialog" max-width="500px">
       <v-card>
         <v-card-title class="headline">{{
           $t("firewall.delete_confirm")
-          }}</v-card-title>
+        }}</v-card-title>
         <v-card-text>{{ $t("nat.msg_confirm_delete") }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{
             $t("firewall.cancel")
-            }}</v-btn>
+          }}</v-btn>
           <v-btn color="blue darken-1" text @click="confirmDelete">{{
             $t("firewall.delete")
-            }}</v-btn>
+          }}</v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
-    <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+    <v-snackbar
+      :timeout="2000"
+      v-model="state.snackbar"
+      location="bottom right"
+      :color="state.color"
+    >
       {{ state.textAlert }}
     </v-snackbar>
   </div>
@@ -89,6 +137,7 @@ export default {
     });
     const emitter = inject("emitter");
     const state = reactive({
+      isExec: false,
       deleteDialog: false,
       deletedRow: null,
       isviewModal: false,
@@ -268,75 +317,76 @@ export default {
     };
     function checkboxRender(params) {
       const user = user_privilege();
-        const csrfToken = getCookie("csrftoken");
-        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-        var input = document.createElement("input");
-        input.type = "checkbox";
-        params.value = params.data.rule_status;
-        input.checked = params.value;
+      const csrfToken = getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+      var input = document.createElement("input");
+      input.type = "checkbox";
+      params.value = params.data.rule_status;
+      input.checked = params.value;
 
-        input.style.margin = "10px";
-        input.style.width = "20px";
-        input.style.height = "18px";
-        input.style.cursor = "pointer";
-        input.disabled = user === "viewer";
+      input.style.margin = "10px";
+      input.style.width = "20px";
+      input.style.height = "18px";
+      input.style.cursor = "pointer";
+      input.disabled = user === "viewer";
 
-        input.addEventListener("click", function (event) {
-          params.value = !params.value;
-          params.data.rule_status = params.value;
+      input.addEventListener("click", function (event) {
+        params.value = !params.value;
+        params.data.rule_status = params.value;
 
-          if (params.value) {
-            axios
-              .put(`/nat/startDNat/${params.data.id}`)
-              .then((response) => {
-                if (response.status == "201") {
-                  state.snackbar = true;
-                  state.color = "success";
-                  state.textAlert = response.data.msg;
-                  setTimeout(() => {
-                    location.reload();
-                  }, 1000);
-                }
-              })
-              .catch((i) => {
-                if (i.response.status === 500) {
-                  state.snackbar = true;
-                  state.color = "red";
-                  state.textAlert = t("errors.errorServer");
-                } else {
-                  state.snackbar = true;
-                  state.color = "red";
-                  state.textAlert = i.response.data.error;
-                }
-              });
-          } else {
-            axios
-              .put(`/nat/stopDNat/${params.data.id}`)
-              .then((response) => {
-                if (response.status == "201") {
-                  state.snackbar = true;
-                  state.color = "success";
-                  state.textAlert = response.data.msg;
-                  setTimeout(() => {
-                    location.reload();
-                  }, 1000);
-                }
-              })
-              .catch((i) => {
-                if (i.response.status === 500) {
-                  state.snackbar = true;
-                  state.color = "red";
-                  state.textAlert = t("errors.errorServer");
-                } else {
-                  state.snackbar = true;
-                  state.color = "red";
-                  state.textAlert = i.response.data.error;
-                }
-              });
-          }
-        });
-        return input;
-   
+        if (params.value) {
+          axios
+            .put(`/nat/startDNat/${params.data.id}`)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                state.isExec = true
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
+            });
+        } else {
+          axios
+            .put(`/nat/stopDNat/${params.data.id}`)
+            .then((response) => {
+              if (response.status == "201") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                state.isExec = true
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
+            });
+        }
+      });
+      return input;
     }
     const onRowDragEnd = (event) => {
       const csrfToken = getCookie("csrftoken");
@@ -529,7 +579,6 @@ export default {
         state.modalMode = "create";
         state.isModalAreaOpen = true;
       }
-
     };
 
     onMounted(() => {
@@ -606,7 +655,7 @@ export default {
       onRowDragEnd,
       overlayTemplate,
       paginationLocalization,
-      close
+      close,
     };
   },
 };

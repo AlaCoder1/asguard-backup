@@ -298,6 +298,8 @@ export default {
       state.viewModal = false;
     };
     const onRowDragEnd = (event) => {
+      const user = user_privilege();
+      if (user !== "viewer") {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const id = event.node.data.id;
@@ -310,6 +312,7 @@ export default {
         .then((response) => {
           if (response.status == "201") {
             state.snackbar = true;
+            state.isExec = true;
             state.color = "success";
             state.textAlert = response.data.msg;
             setTimeout(() => {
@@ -328,6 +331,12 @@ export default {
             state.textAlert = i.response.data.msg;
           }
         });
+      }
+          else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
+      
     };
 
     const rowDataSnat = reactive({});

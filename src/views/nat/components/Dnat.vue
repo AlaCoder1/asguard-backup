@@ -389,7 +389,9 @@ export default {
       return input;
     }
     const onRowDragEnd = (event) => {
-      const csrfToken = getCookie("csrftoken");
+      const user = user_privilege();
+      if (user !== "viewer") {
+        const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const id = event.node.data.id;
       let payload = {
@@ -402,6 +404,7 @@ export default {
           if (response.status == "201") {
             state.snackbar = true;
             state.color = "success";
+            state.isExec = true;
             state.textAlert = response.data.msg;
             setTimeout(() => {
               location.reload();
@@ -419,6 +422,12 @@ export default {
             state.textAlert = i.response.data.msg;
           }
         });
+          }
+          else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
+      
     };
 
     const rowDataDnat = reactive({});

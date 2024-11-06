@@ -61,7 +61,7 @@ def get_all_static_gateways(request):
             res[i].pop('pk')
             res[i]['fields']['id'] = gateway_id
             list_gateways.append(res[i]['fields'])
-    return JsonResponse({"Gateways:": list_gateways})
+    return JsonResponse({"Gateways": list_gateways})
 
 
 @api_view(['GET'])
@@ -101,13 +101,17 @@ def add_static_gateway(request):
         data['staticgw']=True
         if Gateway.objects.filter(Q(gwaddress=gwaddress) & Q(staticgw=True)).exists():
             msg = f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_EXISTANT}"
+            status=404
         else:
-            if add_gateway_db(data):
+            aux_gateway=add_gateway_db(data)
+            if  aux_gateway is True:
                 msg = f"{CONSTANT_GATEWAY} {(SUCCESS_MESSAGES_CREATING)}"
+                status=200
             else:
-                msg = add_gateway_db(data)
+                msg =aux_gateway
+                status=400
            
-        return JsonResponse({"msg": msg})   
+        return JsonResponse({"msg": msg},status=status)   
 
 
 @swagger_auto_schema(

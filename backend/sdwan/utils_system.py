@@ -123,7 +123,8 @@ def script_round_robin(rule_id):
 def start_sdwan_rule_in_system(rule_id):
     """Function to start the SDwan rule in system"""
     # Check if celery is runned
-    if not check_celery:
+    celery_exist = check_celery()
+    if not celery_exist:
         # Run celery in background
         process = Popen("sudo celery -A asguard worker -l info 2>/dev/null &", stdout=PIPE, stderr=PIPE, shell=True)
         time.sleep(5)

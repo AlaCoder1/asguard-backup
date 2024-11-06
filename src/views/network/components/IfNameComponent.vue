@@ -1002,7 +1002,7 @@ export default {
             } else {
               this.snackbar = true;
               this.color = "red";
-              this.textAlert = i.response.data.message;
+              this.textAlert = i.response.data.msg;
             }
           });
       }

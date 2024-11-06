@@ -312,6 +312,7 @@ export default {
         .then((response) => {
           if (response.status == "201") {
             state.snackbar = true;
+            state.isExec = true;
             state.color = "success";
             state.textAlert = response.data.msg;
             setTimeout(() => {

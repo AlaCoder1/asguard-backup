@@ -132,8 +132,7 @@ def delete_role(request, id):
     users_with_role = User.objects.filter(role=role)
     if users_with_role.exists():
         # If the role is in use, return an error message with the usernames
-        user_names = ', '.join(user.username for user in users_with_role)
-        return JsonResponse({"msg": f"{CONSTANT_DELETE_ROLE}"}, status=400)
+        return JsonResponse({"error": f"{CONSTANT_DELETE_ROLE}"}, status=400)
     
     # If no users are using the role, proceed with deletion
     role.delete()

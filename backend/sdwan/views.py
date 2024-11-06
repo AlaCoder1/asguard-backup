@@ -292,6 +292,8 @@ def start_sdwan_rule(request, id):
         return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_STARTING}"}, status=201)
         
     except CommandExecutionError:
+        sdwan_rule.rule_status = False
+        sdwan_rule.save()
         return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}"}, status=400)
     except SdwanRules.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

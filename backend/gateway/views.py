@@ -43,7 +43,7 @@ def get_all_gateways(request):
             res[i].pop('pk')
             res[i]['fields']['id'] = gateway_id
             list_gateways.append(res[i]['fields'])
-    return JsonResponse({"Gateways:": list_gateways})
+    return JsonResponse({"Gateways": list_gateways})
 
 
 @api_view(['GET'])
@@ -61,7 +61,7 @@ def get_all_static_gateways(request):
             res[i].pop('pk')
             res[i]['fields']['id'] = gateway_id
             list_gateways.append(res[i]['fields'])
-    return JsonResponse({"Gateways:": list_gateways})
+    return JsonResponse({"Gateways": list_gateways})
 
 
 @api_view(['GET'])

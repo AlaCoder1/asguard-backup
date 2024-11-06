@@ -8,7 +8,7 @@ from celery import shared_task
 
 from backend.sdwan.models import SdwanRules
 from backend.sdwan.utils import rule_failover_requirements, rule_round_robin_requirements
-from utils.commands_utils import execute_command_without_arguments
+from utils.commands_utils import execute_command_str, execute_command_without_arguments
 
 
 def create_sdwan_rule_in_system(source_address, table_id):
@@ -46,14 +46,12 @@ def switch_gateway(previous_gateway, previous_ifname, new_gateway, new_ifname, t
 
 def check_celery():
     """Function to check if celery is opened or no"""
-    process = execute_command_without_arguments(["sudo", "ps", "aux"])
-    process = process.stdout.splitlines()
+    process = execute_command_str("sudo ps aux | grep celery")
+    process = process.splitlines()
 
-    # display information about the celery running processe
-    celery_list = [line.split() for line in process if "celery" in line.split()[10]]
-    if len(celery_list) == 0:
-        return False
-    return True
+    # Check if there is an active process for celery by checking if there is more than two:
+    # One for command ps and one for the grep
+    return len(process)
 
 
 @shared_task
@@ -124,7 +122,7 @@ def start_sdwan_rule_in_system(rule_id):
     """Function to start the SDwan rule in system"""
     # Check if celery is runned
     celery_exist = check_celery()
-    if not celery_exist:
+    if celery_exist <= 2:
         # Run celery in background
         process = Popen("sudo celery -A asguard worker -l info 2>/dev/null &", stdout=PIPE, stderr=PIPE, shell=True)
         time.sleep(5)
@@ -167,3 +165,12 @@ def find_routing_table(sdwan_rule:SdwanRules, list_routing_table_system):
         if table.find(line_table_rule) > -1:
             return True
     return False
+
+
+def synchronize_sdwan_rule_status():
+    """Synchronize SDWAN rules status with celery status, 
+    if celery is enactive then all SDWAN rules are stopped"""
+    # Check if celery is runned
+    celery_exist = check_celery()
+    if celery_exist <= 2:
+        SdwanRules.objects.update(rule_status=False)

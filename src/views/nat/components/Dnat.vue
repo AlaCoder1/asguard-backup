@@ -404,6 +404,7 @@ export default {
           if (response.status == "201") {
             state.snackbar = true;
             state.color = "success";
+            state.isExec = true;
             state.textAlert = response.data.msg;
             setTimeout(() => {
               location.reload();

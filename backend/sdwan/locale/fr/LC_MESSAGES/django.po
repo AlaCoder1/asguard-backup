@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-06 15:59+0000\n"
+"POT-Creation-Date: 2024-11-06 19:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -47,24 +47,24 @@ msgid "is stoped"
 msgstr "est arrêté"
 
 #: backend/sdwan/views.py:30
-msgid "Error in creating"
-msgstr "Erreur lors de la création de"
+msgid "System error in creating"
+msgstr "Erreur système lors de la création de"
 
 #: backend/sdwan/views.py:31
-msgid "Error in deleting"
-msgstr "Erreur lors de la suppression de"
+msgid "System error in deleting"
+msgstr "Erreur système lors de la suppression de"
 
 #: backend/sdwan/views.py:32
-msgid "Error in updating"
-msgstr "Erreur lors de la modification de"
+msgid "System error in updating"
+msgstr "Erreur système lors de la modification de"
 
 #: backend/sdwan/views.py:33
-msgid "Error in starting"
-msgstr "Erreur lors de la démarrage de"
+msgid "System error in starting"
+msgstr "Erreur système lors de la démarrage de"
 
 #: backend/sdwan/views.py:34
-msgid "Error in stoping"
-msgstr "Erreur lors de l'arrêt de"
+msgid "System error in stoping"
+msgstr "Erreur système lors de l'arrêt de"
 
 #: backend/sdwan/views.py:35
 msgid "does not exist"

@@ -15,7 +15,6 @@ from backend.managementUsers.models import User,Profile,Roles
 from backend.LdapServer.models import ADServer
 from drf_yasg.utils import swagger_auto_schema
 from datetime import datetime, timedelta
-from django.templatetags import static
  
 from backend.subscription.models import Features, plan
 from .models import VerificationCode
@@ -25,7 +24,6 @@ import ldap
  
  
 # Constants
-CONSTANT_ASQUARD = _('in Asguard')
 CONSTANT_USER_EMAIL = _("Email")
 CONSTANT_VERIFIFCATION_CODE = _("verification code")
 # Success messages
@@ -60,7 +58,7 @@ def authentication(request):
             if not ad_servers.exists():
                 return JsonResponse({'message': ERROR_MESSAGES_NO_SERVERS}, status=400)
             if not user_session:
-                return JsonResponse({'message': f"{CONSTANT_USER_EMAIL} {ERROR_MESSAGES_INEXISTANT} {CONSTANT_ASQUARD}"}, status=401)
+                return JsonResponse({'message': f"{CONSTANT_USER_EMAIL} {ERROR_MESSAGES_INEXISTANT}"}, status=401)
             else:
                 authentication_server = False
                 if user_session.id_server_id:

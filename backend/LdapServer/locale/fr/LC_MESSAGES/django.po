@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-14 15:52+0000\n"
+"POT-Creation-Date: 2024-11-06 19:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,41 +18,41 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/LdapServer/list_Remote_servers.py:14 backend/LdapServer/views.py:22
+#: backend/LdapServer/list_Remote_servers.py:10 backend/LdapServer/views.py:22
 msgid "Directory Server"
 msgstr "Serveur d'annuaire"
 
-#: backend/LdapServer/list_Remote_servers.py:15 backend/LdapServer/views.py:23
-msgid "Directory Server unreachable"
-msgstr "Serveur d'annuaire est inaccessible"
+#: backend/LdapServer/list_Remote_servers.py:11 backend/LdapServer/views.py:23
+msgid "Directory Server unreachable, verify IP address or port"
+msgstr "Serveur d'annuaire est inaccessible, Vérifiez l'addresse IP ou port"
 
-#: backend/LdapServer/list_Remote_servers.py:16 backend/LdapServer/views.py:24
+#: backend/LdapServer/list_Remote_servers.py:12 backend/LdapServer/views.py:27
+msgid "Invalid Server Credentials"
+msgstr "Informations d'identification du serveur invalides"
+
+#: backend/LdapServer/list_Remote_servers.py:13 backend/LdapServer/views.py:25
+msgid "Please provide a valid Search Base"
+msgstr "Veuillez fournir une base de recherche valide"
+
+#: backend/LdapServer/views.py:24
 msgid "Authentication failed"
 msgstr "Échec de l'authentification"
 
-#: backend/LdapServer/views.py:25
+#: backend/LdapServer/views.py:26
 msgid "Invalid request method"
 msgstr "Méthode de requête non valide"
 
-#: backend/LdapServer/views.py:28
+#: backend/LdapServer/views.py:30
 msgid "is created"
 msgstr "est créé"
 
-#: backend/LdapServer/views.py:29
+#: backend/LdapServer/views.py:31
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/LdapServer/views.py:30
+#: backend/LdapServer/views.py:32
 msgid "is updated"
 msgstr "est mis à jour"
-
-#: backend/LdapServer/views.py:33
-msgid "Error in creating"
-msgstr "Erreur lors de la création"
-
-#: backend/LdapServer/views.py:34
-msgid "Error in deleting"
-msgstr "Erreur lors de la suppression"
 
 #: backend/LdapServer/views.py:35
 msgid "Error in updating"

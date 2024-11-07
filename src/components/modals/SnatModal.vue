@@ -98,7 +98,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-select
-                    v-model="state.sourcePort"
+                    v-model.number="state.sourcePort"
                     :label="$t('nat.ent_sport')"
                     :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
@@ -111,7 +111,7 @@
                 <v-col cols="12" class="mb-n6" v-if="isSourceOther">
                   <v-text-field
                     :label="$t('nat.port')"
-                    v-model="state.port"
+                    v-model.number="state.port"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.port.$error">
                     {{ v$.port.$errors[0].$message }}
@@ -160,7 +160,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
-                    v-model="state.destinationPort"
+                    v-model.number="state.destinationPort"
                     :label="$t('nat.ent_dport')"
                     :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
@@ -173,7 +173,7 @@
                 <v-col cols="12" class="mb-n6" v-if="isDestinationOther">
                   <v-text-field
                     :label="$t('nat.port')"
-                    v-model="state.specificPort"
+                    v-model.number="state.specificPort"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.specificPort.$error">
                     {{ v$.specificPort.$errors[0].$message }}
@@ -222,7 +222,7 @@
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
                       :label="$t('nat.ent_trans_port')"
-                      v-model="state.translationPort"
+                      v-model.number="state.translationPort"
                     ></v-text-field>
                   </v-col>
                 </template>

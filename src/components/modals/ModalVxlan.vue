@@ -54,7 +54,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     :label="$t('firewall.dport')"
-                    v-model="state.dport"
+                    v-model.number="state.dport"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.dport.$error">
                     {{ v$.dport.$errors[0].$message }}

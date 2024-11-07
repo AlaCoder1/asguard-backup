@@ -117,7 +117,7 @@
                         <v-col cols="12" class="mb-n6">
                           <v-text-field
                             label="Port"
-                            v-model="state.port"
+                            v-model.number="state.port"
                           ></v-text-field>
                           <p class="error-feedback mb-5" v-if="v$.port.$error">
                             {{ v$.port.$errors[0].$message }}

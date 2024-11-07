@@ -85,7 +85,7 @@
               <label>Interface</label>
             </v-col>
             <v-col cols="4" class="mb-n6">
-              <input type="checkbox" v-model="activate" />
+              <input type="checkbox" disabled v-model="activate" />
               <label class="ml-2">{{ $t("interface.activate") }}</label>
             </v-col>
           </v-row>
@@ -313,7 +313,10 @@
                 <v-col cols="6" class="mb-n6">
                   <v-select
                     v-model="value_setup_Ipv4.gateway4.value"
-                    :items="allStaticGatewaysAddresses"
+                    :items="allStaticGateways"
+                    item-title="gwaddress"
+                    item-value="id"
+                    return-object
                     :rules="[(v) => !!v || $t('interface.IPV4GatewayRequired')]"
                     :no-data-text="$t('certificat.certificatlist')"
                     label="Select Item"
@@ -321,16 +324,17 @@
                     <template v-slot:item="{ props, index, item }">
                       <v-list-item v-bind="props">
                         <template v-slot:prepend>
-                          <v-text-item :v-html="item"> </v-text-item>
+                          <v-text-item :v-html="item?.raw?.gwaddress">
+                          </v-text-item>
                         </template>
                         <template v-slot:append>
                           <v-btn
-                            v-if="item.title != 'Auto Detect'"
+                            v-if="item?.raw?.gwaddress != 'Auto Detect'"
                             icon
                             color="red"
                             class="mr-3 d-flex align-center text-center"
                             style="width: 26px; height: 26px"
-                            @click.stop="deleteGateway(item, index)"
+                            @click.stop="deleteGateway(item?.raw?.id)"
                           >
                             <v-icon
                               style="width: 16px; height: 16px; font-size: 16px"
@@ -492,7 +496,7 @@
                   ></v-text-field
                 ></v-row>
                 <v-row>
-                  <input type="checkbox" v-model="gateway.default_aux" />
+                  <input type="checkbox" disabled  v-model="gateway.default_aux" />
                   <label class="ml-3">{{
                     $t("interface.GatewayDefault")
                   }}</label>
@@ -554,6 +558,7 @@ import AdvancedConfigDHCPv4 from "./configDHCP/AdvancedConfigDHCPv4.vue";
 import VButton from "../../../components/VButton.vue";
 import netmaskItems from "../../../constants/netmask.js";
 import { user_privilege } from "@/mixins/user_privilege.js";
+import { v4 as uuidv4 } from "uuid";
 
 export default {
   name: "IfNameComponent",
@@ -630,7 +635,7 @@ export default {
         gwname: "",
         gwaddress: "",
         description: "",
-        default_aux: false,
+        default_aux: true,
         far_aux: false,
         multiwan_aux: false,
       },
@@ -668,9 +673,7 @@ export default {
     isGatewayAddress() {
       return this.gateway.gwaddress;
     },
-    allStaticGatewaysAddresses() {
-      return this.allStaticGateways.map((gateway) => gateway.gwaddress);
-    },
+
     isValidAddress() {
       const ipRegex =
         /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
@@ -686,37 +689,36 @@ export default {
     cancelDelete() {
       this.deleteDialog = false;
     },
-    deleteGateway(item, index) {
-      this.itemData = [index, item.value];
+    deleteGateway(id) {
+      this.itemData = id;
       this.deleteDialog = true;
     },
-    confirmDelete(item, index) {
-      console.log("itemData", this.itemData);
+    confirmDelete() {
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      // axios
-      //   .delete(`/gateway/deleteGateway/${item}`)
-      //   .then((response) => {
-      //     state.snackbar = true;
-      //     state.color = "success";
-      //     state.textAlert = response.data.msg;
+      axios
+        .delete(`/gateway/deleteGateway/${this.itemData}`)
+        .then((response) => {
+          this.snackbar = true;
+          this.color = "success";
+          this.textAlert = response.data.msg;
 
-      //     setTimeout(() => {
-      //       location.reload();
-      //     }, 1000);
-      //   })
-      //   .catch((i) => {
-      //     if (i.response.status === 500) {
-      //       state.snackbar = true;
-      //       state.color = "red";
-      //       state.textAlert = t("errors.errorServer");
-      //     } else {
-      //       state.snackbar = true;
-      //       state.color = "red";
-      //       state.textAlert = i.response.data.error;
-      //     }
-      //   });
+          setTimeout(() => {
+            location.reload();
+          }, 1000);
+        })
+        .catch((i) => {
+          if (i.response?.status === 500) {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = this.$t("errors.errorServer");
+          } else {
+            this.snackbar = true;
+            this.color = "red";
+            this.textAlert = i.response?.data?.msg;
+          }
+        });
     },
 
     close() {
@@ -812,11 +814,10 @@ export default {
             ip_address4: this.value_setup_Ipv4.ip_address4,
             netmask4: this.value_setup_Ipv4.netmask4,
             gateway4: {
-              value: this.value_setup_Ipv4.gateway4.value,
+              value: this.value_setup_Ipv4.gateway4.value?.gwaddress,
             },
           },
         };
-        console.log("params", params);
 
         this.loading = true;
         this.isLoadingDialogue = true;
@@ -919,7 +920,6 @@ export default {
     openGatewayDialog() {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         this.isviewModal = true;
         this.viewModal = true;
       } else {
@@ -927,9 +927,6 @@ export default {
       }
     },
     addGateway() {
-      console.log("this.allStaticGateways", this.allStaticGateways);
-      console.log("gateway.gwaddress", this.gateway.gwaddress);
-
       const user = user_privilege();
       if (user === "viewer") {
         this.isviewModal = true;
@@ -967,7 +964,6 @@ export default {
           far_aux: this.gateway.far_aux,
           multiwan_aux: this.gateway.multiwan_aux,
         };
-        this.allStaticGateways.unshift(params);
 
         const csrfToken = this.getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -975,7 +971,6 @@ export default {
         axios
           .post("/gateway/addStaticGateway", params)
           .then((response) => {
-            console.log("response***", response);
             if (response.status == "200") {
               this.showGatewayDialog = false;
               this.message = response.data.msg;
@@ -983,7 +978,7 @@ export default {
                 gwname: "",
                 gwaddress: "",
                 description: "",
-                default_aux: false,
+                default_aux: true,
                 far_aux: false,
                 multiwan_aux: false,
               };
@@ -993,6 +988,7 @@ export default {
               this.showAlertGateway = true;
               setTimeout(() => {
                 this.showAlertGateway = false;
+                this.handleGateway();
               }, 1000);
             } else {
               this.showGatewayDialog = true;
@@ -1006,7 +1002,7 @@ export default {
             } else {
               this.snackbar = true;
               this.color = "red";
-              this.textAlert = i.response.data.message;
+              this.textAlert = i.response.data.msg;
             }
           });
       }
@@ -1014,7 +1010,6 @@ export default {
     cancelGateway() {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         this.isviewModal = true;
         this.viewModal = true;
       } else {
@@ -1023,7 +1018,7 @@ export default {
           gwname: "",
           gwaddress: "",
           description: "",
-          default_aux: false,
+          default_aux: true,
           far_aux: false,
           multiwan_aux: false,
         };
@@ -1048,7 +1043,6 @@ export default {
         .put("/gateway/updateStaticGateway", params)
         .then((response) => {
           this.showAlert = true;
-          console.log(response);
           setTimeout(() => {
             this.showAlert = false;
           }, 3000);
@@ -1068,7 +1062,6 @@ export default {
     onSubmit() {
       const user = user_privilege();
       if (user === "viewer") {
-        console.log("View Mode");
         this.isviewModal = true;
         this.viewModal = true;
       } else {
@@ -1078,8 +1071,27 @@ export default {
     handleSubmit() {
       this.onSubmit();
     },
+    handleGateway() {
+      const csrfToken = this.getCookie("csrftoken");
+      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+      axios.get("/gateway/getStaticGateways").then((response) => {
+        let mappedStaticAddress = response.data?.Gateways.map((gateway) => {
+          return {
+            id: gateway.id,
+            gwaddress: gateway.gwaddress,
+          };
+        });
+
+        let combineArray = [{ id: uuidv4(), gwaddress: "Auto Detect" }];
+        this.allStaticGateways = [...mappedStaticAddress, ...combineArray];
+      });
+    },
   },
+
   beforeMount: async function () {
+    this.handleGateway();
+
     let interfaces =
       document.getElementById("app").attributes["interfaces"].value;
 
@@ -1109,17 +1121,6 @@ export default {
     let parsedArray = JSON.parse(validJsonString);
     this.IPV4Config = parsedArray[this.activeTab];
 
-    this.allStaticGateways =
-      document.getElementById("app").attributes["allStaticGateways"].value;
-    validJsonString = this.allStaticGateways
-      .replace(/'/g, '"')
-      .replace(/True/g, "true")
-      .replace(/False/g, "false")
-      .replace(/None/g, "null");
-    parsedArray = JSON.parse(validJsonString);
-    let combineArray = [{ gwaddress: "Auto Detect" }];
-    this.allStaticGateways = [...parsedArray, ...combineArray];
-
     this.activate = this.IPV4Config?.interface !== null ? true : false;
     this.device = this.IPV4Config.interface.ifname;
     this.description = this.IPV4Config.interface.description;
@@ -1139,9 +1140,22 @@ export default {
     this.value_setup_Ipv4.netmask4 = this.IPV4Config.IPV4Config.netmask;
 
     this.name_interface = this.IPV4Config.interface.name_interface;
-    this.value_setup_Ipv4.gateway4.value = this.IPV4Config.IPV4Config.addrgw
-      ? this.IPV4Config.IPV4Config.addrgw
-      : "Auto Detect";
+
+    setTimeout(() => {
+      if (this.IPV4Config.IPV4Config.addrgw) {
+        let filtredAddress = this.allStaticGateways.filter(
+          (i) => i.gwaddress === this.IPV4Config.IPV4Config.addrgw
+        );
+        this.value_setup_Ipv4.gateway4.value = filtredAddress[0];
+      } else {
+        let filtredAutoDetect = this.allStaticGateways.filter(
+          (i) => i.gwaddress === "Auto Detect"
+        );
+
+        this.value_setup_Ipv4.gateway4.value = filtredAutoDetect[0];
+      }
+    }, 1000);
+
     this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
     this.interface.alias_add = this.IPV4Config.IPV4Config.alias_add;
     this.interface.alias_mask = this.IPV4Config.IPV4Config.alias_mask;

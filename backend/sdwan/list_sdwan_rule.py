@@ -2,12 +2,13 @@ from django.core import serializers
 import json
 
 from backend.sdwan.models import SdwanRules
+from backend.sdwan.utils_system import synchronize_sdwan_rule_status
 from backend.sdwan.utils_system import synchronize_routing_table
 
 
 def get_list_all_sdwan_rule():
     """Getting all sdwan_rules from database"""
-
+    synchronize_sdwan_rule_status()
     synchronize_routing_table()
     list_sdwan_rule = []
     sdwan_rules = SdwanRules.objects.all()

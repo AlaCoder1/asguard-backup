@@ -9,7 +9,7 @@ class Gateway(models.Model):
     gwname=models.CharField(max_length=200, null=True,unique=True)
     gwaddress=models.CharField(max_length=200, null=True)
     staticgw=models.BooleanField(default=False)
-    description=models.CharField(max_length=200, null=True)
+    description=models.CharField(max_length=200, null=True,blank=True)
     default_aux= models.BooleanField(default=True)
     far_aux= models.BooleanField(default=False)
     multiwan_aux= models.BooleanField(default=False)

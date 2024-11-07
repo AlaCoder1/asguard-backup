@@ -33,9 +33,9 @@ SUCCESS_MESSAGES_UPDATING = _("is updated")
 SUCCESS_MESSAGES_ENABLED = _("is enabled")
 SUCCESS_MESSAGES_DISABLED = _("is disabled")
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UP_CONFIG = _("Error in up ipsec")
+ERROR_MESSAGES_CREATING = _("System error in creating")
+ERROR_MESSAGES_DELETING = _("System error in deleting")
+ERROR_MESSAGES_UP_CONFIG = _("System error in up ipsec")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 

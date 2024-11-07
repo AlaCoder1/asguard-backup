@@ -19,8 +19,6 @@ SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
 
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
 ERROR_MESSAGES_INVALID = _("Invalid")
 ERROR_MESSAGES_EXISTANT = _("Already exist")
 

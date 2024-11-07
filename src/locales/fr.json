@@ -177,13 +177,16 @@
     "agGridOf": "de"
   },
   "firewall": {
+    "DropRejectRule":"Êtes-vous sûr de vouloir créer cette règle avec 'rejeter' ou 'abandonner' ?",
     "rules": "Règles",
     "msg_subscription": "Vous êtes actuellement en mode gratuit, le déverrouillage de cette fonctionnalité nécessite un paiement. Aller à",
     "sub_page": "page d'abonnement",
     "outbound": "Règles sortantes",
     "inbound": "Règles entrantes",
     "delete_confirm": "Confirmation de suppression",
+    "Save_confirm": "Confirmation de sauvegarde",
     "msg_confirm_delete": "Êtes-vous sûr de vouloir supprimer cette règle du pare-feu ?",
+    "msg_confirm_save": "Êtes-vous sûr de vouloir sauvegarder cette règle?",
     "cancel": "Annuler",
     "delete": "Supprimer",
     "search": "Recherche",

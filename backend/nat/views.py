@@ -7,6 +7,8 @@ from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import IsAuthenticated
 
+import ipaddress
+
 from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat, get_one_dnat, get_one_one_to_one_nat, get_one_snat
 from backend.nat.models import DNat, OneToOneNat, SNat
 from backend.nat.serializers import DNatSerializer, OneToOneNatSerializer, SNatSerializer
@@ -34,12 +36,12 @@ SUCCESS_MESSAGES_STARTING = _("is started")
 SUCCESS_MESSAGES_STOPING = _("is stoped")
 SUCCESS_MESSAGES_CHANGE = _("is changed")
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
-ERROR_MESSAGES_STARTING = _("Error in starting")
-ERROR_MESSAGES_STOPING = _("Error in stoping")
-ERROR_MESSAGES_CHANGING = _("Error in changing")
+ERROR_MESSAGES_CREATING = _("System error in creating")
+ERROR_MESSAGES_DELETING = _("System error in deleting")
+ERROR_MESSAGES_UPDATING = _("System error in updating")
+ERROR_MESSAGES_STARTING = _("System error in starting")
+ERROR_MESSAGES_STOPING = _("System error in stoping")
+ERROR_MESSAGES_CHANGING = _("System error in changing")
 ERROR_MESSAGES_DELETING_USED_ITEM = _("Unable to delete")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
@@ -95,6 +97,18 @@ def create_snat(request):
     """Creating a new SNAT rule and adding it to the database"""
     try:
         data = request.data
+        
+        # Define the IP address and subnet mask and get the network address for source and destination address
+        if data["source_address"] != "":
+            source_mask = data["source_address"].split("/")
+            source_mask = source_mask[1]
+            source_address = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+            data["source_address"] = f"{source_address}/{source_mask}"
+        if data["destination_address"] != "":
+            destination_mask = data["destination_address"].split("/")
+            destination_mask = destination_mask[1]
+            destination_address = str(ipaddress.IPv4Interface(data["destination_address"]).network.network_address)
+            data["destination_address"] = f"{destination_address}/{destination_mask}"
         
         serializer_snat = SNatSerializer(data=data)
         if serializer_snat.is_valid():
@@ -195,6 +209,19 @@ def update_snat(request, id):
     """Updating an SNAT rule"""
     try:
         data = request.data
+
+        # Define the IP address and subnet mask and get the network address for source and destination address
+        if data["source_address"] != "":
+            source_mask = data["source_address"].split("/")
+            source_mask = source_mask[1]
+            source_address = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+            data["source_address"] = f"{source_address}/{source_mask}"
+        if data["destination_address"] != "":
+            destination_mask = data["destination_address"].split("/")
+            destination_mask = destination_mask[1]
+            destination_address = str(ipaddress.IPv4Interface(data["destination_address"]).network.network_address)
+            data["destination_address"] = f"{destination_address}/{destination_mask}"
+
         snat = SNat.objects.get(id=id)
 
         interface_ifname = Interface.objects.get(id=data["interface"]).ifname
@@ -334,7 +361,8 @@ def change_snat_position(request, id):
         list_snat_in_interval = SNat.objects.filter(snat_position__gte=new_position, 
                                                     snat_position__lt=snat.snat_position).order_by("-snat_position")
         # Get list of activated SNAT between previous and new position.
-        list_active_snat_in_interval = SNat.objects.filter(rule_status=True, snat_position__gte=new_position,
+        list_active_snat_in_interval = SNat.objects.filter(rule_status=True, 
+                                                           snat_position__gte=new_position,
                                                            snat_position__lt=snat.snat_position)
         # Position offset
         position_offset = 1
@@ -346,7 +374,8 @@ def change_snat_position(request, id):
             list_snat_in_interval = SNat.objects.filter(snat_position__gt=snat.snat_position, 
                                                         snat_position__lte=new_position).order_by("snat_position")
             # Get list of activated SNAT between previous and new position.
-            list_active_snat_in_interval = SNat.objects.filter(rule_status=True, snat_position__gt=snat.snat_position,
+            list_active_snat_in_interval = SNat.objects.filter(rule_status=True, 
+                                                               snat_position__gt=snat.snat_position,
                                                                snat_position__lte=new_position)
             # Position offset
             position_offset = -1
@@ -366,7 +395,7 @@ def change_snat_position(request, id):
                     next_snat = list_next_snat.order_by("snat_position")[0]
                     delete_snat_rule_in_system(snat.rule_number)
                     rule_number = create_snat_rule_in_system(snat.interface.ifname, source, destination, snat.protocol,
-                                                             masking, next_snat.rule_number, next_snat.postrouting_position-1)
+                                                             masking, next_snat.rule_number, next_snat.postrouting_position-2)
                 else:
                     new_position_in_system = len(SNat.objects.filter(rule_status=True)) + len(OneToOneNat.objects.filter(rule_status=True)) - 1
                     delete_snat_rule_in_system(snat.rule_number)
@@ -394,7 +423,7 @@ def change_snat_position(request, id):
 
 
 ########################################
-################ OneToOne NAT ##################
+############ OneToOne NAT ##############
 ########################################
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET LIST OF ALL OneToOneNat RULES",)
@@ -436,6 +465,21 @@ def create_one_to_one_nat(request):
     """Creating a new OneToOneNat rule and adding it to the database"""
     try:
         data = request.data
+        
+        # Define the IP address and subnet mask and get the network address for source, translation and destination address
+        source_mask = data["source_address"].split("/")
+        source_mask = source_mask[1]
+        source_address = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+        data["source_address"] = f"{source_address}/{source_mask}"
+        translation_mask = data["translation_address"].split("/")
+        translation_mask = translation_mask[1]
+        translation_address = str(ipaddress.IPv4Interface(data["translation_address"]).network.network_address)
+        data["translation_address"] = f"{translation_address}/{translation_mask}"
+        if data["destination_address"] != "":
+            destination_mask = data["destination_address"].split("/")
+            destination_mask = destination_mask[1]
+            destination_address = str(ipaddress.IPv4Interface(data["destination_address"]).network.network_address)
+            data["destination_address"] = f"{destination_address}/{destination_mask}"
         
         serializer_one_to_one_nat = OneToOneNatSerializer(data=data)
         if serializer_one_to_one_nat.is_valid():
@@ -517,6 +561,22 @@ def update_one_to_one_nat(request, id):
     """Updating an OneToOneNat rule"""
     try:
         data = request.data
+        
+        # Define the IP address and subnet mask and get the network address for source, translation and destination address
+        source_mask = data["source_address"].split("/")
+        source_mask = source_mask[1]
+        source_address = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+        data["source_address"] = f"{source_address}/{source_mask}"
+        translation_mask = data["translation_address"].split("/")
+        translation_mask = translation_mask[1]
+        translation_address = str(ipaddress.IPv4Interface(data["translation_address"]).network.network_address)
+        data["translation_address"] = f"{translation_address}/{translation_mask}"
+        if data["destination_address"] != "":
+            destination_mask = data["destination_address"].split("/")
+            destination_mask = destination_mask[1]
+            destination_address = str(ipaddress.IPv4Interface(data["destination_address"]).network.network_address)
+            data["destination_address"] = f"{destination_address}/{destination_mask}"
+        
         one_to_one_nat = OneToOneNat.objects.get(id=id)
         
         serializer_one_to_one_nat = OneToOneNatSerializer(one_to_one_nat, data=data)
@@ -686,7 +746,7 @@ def change_one_to_one_nat_position(request, id):
                     rule_number = create_one_to_one_nat_rule_in_system(
                         one_to_one_nat.interface.ifname, one_to_one_nat.source_address, destination, 
                         one_to_one_nat.translation_address, next_one_to_one_nat.rule_number, 
-                        next_one_to_one_nat.postrouting_position-1)
+                        next_one_to_one_nat.postrouting_position-2)
                 else:
                     new_position_in_system = len(SNat.objects.filter(rule_status=True)) + len(OneToOneNat.objects.filter(rule_status=True)) - 1
                     delete_one_to_one_nat_rule_in_system(one_to_one_nat.rule_number)
@@ -766,6 +826,13 @@ def create_dnat(request):
     """Creating a new DNAT rule and adding it to the database"""
     try:
         data = request.data
+        
+        # Define the IP address and subnet mask and get the network address for source address
+        if data["source_address"] != "":
+            source_mask = data["source_address"].split("/")
+            source_mask = source_mask[1]
+            source_address = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+            data["source_address"] = f"{source_address}/{source_mask}"
         
         serializer_dnat = DNatSerializer(data=data)
         if serializer_dnat.is_valid():
@@ -866,6 +933,14 @@ def update_dnat(request, id):
     """Updating a DNAT rule"""
     try:
         data = request.data
+        
+        # Define the IP address and subnet mask and get the network address for source and destination address
+        if data["source_address"] != "":
+            source_mask = data["source_address"].split("/")
+            source_mask = source_mask[1]
+            source_address = str(ipaddress.IPv4Interface(data["source_address"]).network.network_address)
+            data["source_address"] = f"{source_address}/{source_mask}"
+        
         dnat = DNat.objects.get(id=id)
 
         interface_ifname = Interface.objects.get(id=data["interface"]).ifname
@@ -1033,7 +1108,7 @@ def change_dnat_position(request, id):
                     next_dnat = list_next_dnat.order_by("dnat_position")[0]
                     delete_dnat_rule_in_system(dnat.rule_number)
                     rule_number = create_dnat_rule_in_system(dnat.interface.ifname, source, destination, dnat.protocol,
-                                                             next_dnat.rule_number, next_dnat.prerouting_position-1)
+                                                             next_dnat.rule_number, next_dnat.prerouting_position-2)
                 else:
                     new_position_in_system = len(DNat.objects.filter(rule_status=True)) - 1
                     delete_dnat_rule_in_system(dnat.rule_number)

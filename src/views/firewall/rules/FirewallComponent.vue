@@ -1,32 +1,36 @@
 <template>
   <v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
-              <v-card color="#193286" class="alert-box">
-                <v-card-title class="img-containter">
-                  <img
-                    src="@/assets/images/view.png"
-                    alt="logo"
-                    class="img-view"
-                    width="100"
-                    height="100"
-                /></v-card-title>
-                <v-card-text v-html="overlayMessage">
-                </v-card-text>
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
-                <div class="mr-3 mb-5 d-flex justify-end">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#ffffff"
-                    label-color="#213E9F"
-                    :label="$t('buttons.close')"
-                    :isLarge="true"
-                    @click="close"
-                  />
-                </div>
-              </v-card>
-            </v-dialog>
-          </v-overlay>
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <div class="mt-5">
     <div class="container">
       <h4>{{ $t("firewall.inbound") }}</h4>
@@ -209,7 +213,7 @@
           label-color="#ffffff"
           :isLarge="false"
           :disabled="!rowDataLength"
-          @click="saveRules"
+          @click="confirmSave"
         >
           <span class="text-white pr-3 pl-3">{{ $t("buttons.save") }}</span>
         </v-btn>
@@ -223,6 +227,23 @@
       >
         {{ state.textAlertDelete }}
       </v-snackbar>
+      <v-dialog v-model="state.Saverulesstate" max-width="500px">
+        <v-card>
+          <v-card-title class="headline">
+            {{ $t("firewall.Save_confirm") }}
+          </v-card-title>
+          <v-card-text>{{ $t("firewall.msg_confirm_save") }}</v-card-text>
+          <v-card-actions>
+            <v-spacer></v-spacer>
+            <v-btn color="blue darken-1" text @click="cancelSave">{{
+              $t("firewall.cancel")
+            }}</v-btn>
+            <v-btn color="blue darken-1" text @click="saveRules">{{
+              $t("firewall.save")
+            }}</v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </div>
   </div>
 </template>
@@ -261,13 +282,14 @@ export default defineComponent({
   setup(props) {
     const emitter = inject("emitter");
     const { t } = useI18n();
-    const last_Subscription=ref([])
+    const last_Subscription = ref([]);
     const paginationLocalization = reactive({
       of: "/",
     });
     const state = reactive({
       // deleteDialogSquid: false,
       // deletedRow: null,
+      Saverulesstate: false,
       snackbar: false,
       color: "",
       isviewModal: false,
@@ -299,14 +321,22 @@ export default defineComponent({
       return !rowData.value || rowData.value.length == 0 ? false : true;
     });
     const overlayMessage = computed(() => {
-      let current_user = user_privilege()
+      let current_user = user_privilege();
       if (current_user === "viewer" || current_user === "default") {
-        return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
       } else if (!last_Subscription.value.includes("Firewall L4")) {
-        return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-      }else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      }
     });
     const policy = computed(() => {
       return t("firewall.policy");
@@ -459,6 +489,12 @@ export default defineComponent({
       eGui.style.lineHeight = "-4";
       return eGui;
     }
+    const cancelSave = () => {
+      state.Saverulesstate = false;
+    };
+    const confirmSave = () => {
+      state.Saverulesstate = true;
+    };
     const close = () => {
       state.isviewModal = false;
       state.viewModal = false;
@@ -492,20 +528,19 @@ export default defineComponent({
     const openModalAdd = () => {
       const user = user_privilege();
       if (user !== "viewer") {
-
-      if (last_Subscription.value.includes("Firewall L4")) {
-        state.modalData = {};
-        state.modalMode = "create";
-        state.isModalOpen = true;
-        emitter.emit("interface-uuid", props.uuid);
+        if (last_Subscription.value.includes("Firewall L4")) {
+          state.modalData = {};
+          state.modalMode = "create";
+          state.isModalOpen = true;
+          emitter.emit("interface-uuid", props.uuid);
+        } else {
+          state.isviewModal = true;
+          state.viewModal = true;
+        }
       } else {
         state.isviewModal = true;
-      state.viewModal = true;
+        state.viewModal = true;
       }
-    } else {
-      state.isviewModal = true;
-      state.viewModal = true;
-    }
     };
 
     const onGridReady = (params) => {
@@ -584,22 +619,22 @@ export default defineComponent({
             state.viewModal = true;
           } else {
             rowDataToDelete.value = rowData;
-          deleteDialog.value = true;
-          state.rowDataId = rowData.uuid;
-            };
+            deleteDialog.value = true;
+            state.rowDataId = rowData.uuid;
+          }
           break;
         case "update":
-        if (user === "viewer") {
+          if (user === "viewer") {
             console.log("View Mode");
             state.isviewModal = true;
             state.viewModal = true;
           } else {
             mode.value = "update";
-          state.modalData = {};
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-          state.editRow = rowData;
-            };
+            state.modalData = {};
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+            state.editRow = rowData;
+          }
 
           break;
         default:
@@ -791,52 +826,51 @@ export default defineComponent({
     const saveRules = () => {
       const user = user_privilege();
       if (user === "viewer") {
-            console.log("View Mode");
-            state.isviewModal = true;
-            state.viewModal = true;
-          }
-          else {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        console.log("View Mode");
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-      let payload = rowData.value.map((e) => {
-        return {
-          id: e.id ?? null,
-          policy: e.policy,
-          saddr: e.saddr,
-          daddr: e.daddr,
-          sport: e.sport,
-          dport: e.dport,
-          protocol: e.protocol,
-          type_rule: e.type_rule,
-          rule_description: e.rule_description,
-        };
-      });
-
-      axios
-        .post(`/rules/saveRules/${props.activeTab}`, payload)
-        .then((response) => {
-          console.log("responseresponse", response);
-
-          if (response.status === 200) {
-            state.snackbar = true;
-            state.textAlert = response.data.response;
-            setTimeout(() => {
-              location.reload();
-            }, 2000);
-          }
-        })
-        .catch((i) => {
-          if (i.response.status === 500) {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = t("errors.errorServer");
-          } else {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.response;
-          }
+        let payload = rowData.value.map((e) => {
+          return {
+            id: e.id ?? null,
+            policy: e.policy,
+            saddr: e.saddr,
+            daddr: e.daddr,
+            sport: e.sport,
+            dport: e.dport,
+            protocol: e.protocol,
+            type_rule: e.type_rule,
+            rule_description: e.rule_description,
+          };
         });
+
+        axios
+          .post(`/rules/saveRules/${props.activeTab}`, payload)
+          .then((response) => {
+            console.log("responseresponse", response);
+
+            if (response.status === 200) {
+              state.snackbar = true;
+              state.textAlert = response.data.response;
+              setTimeout(() => {
+                location.reload();
+              }, 2000);
+            }
+          })
+          .catch((i) => {
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.response;
+            }
+          });
       }
     };
     const cancel = () => {
@@ -1035,6 +1069,8 @@ export default defineComponent({
       changes,
       openModalAdd,
       saveRules,
+      cancelSave,
+      confirmSave,
       oldRow,
       emitter,
       rowDataLength,

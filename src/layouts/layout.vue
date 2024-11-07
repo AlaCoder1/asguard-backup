@@ -182,14 +182,18 @@ export default {
           "firewall.sub_page"
         )}</a>`;
       } else {
-        return ` ${t("profil.NoPermission")} <br /> ${t(
+        return ` ${this.$t("profil.NoPermission")} <br /> ${this.$t(
           "profil.ContactAdmin"
         )}`;
       }
     },
   },
   mounted() {
-    this.last_Subscription = localStorage.getItem("lastSubscription");
+    setTimeout(() => {
+      let packSubscription = localStorage.getItem("lastSubscription");
+      let parsedArray = JSON.parse(packSubscription);
+      this.last_Subscription = parsedArray;
+    }, 1000);
     const csrfToken = getCookie("csrftoken");
     axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 

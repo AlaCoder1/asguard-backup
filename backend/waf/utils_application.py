@@ -99,5 +99,38 @@ def delete_application_waf_in_system(application_name):
 
 def update_application_waf_in_system(application:ApplicationWaf, app_data):
     """Function to update a WAF Application in system"""
+    # Create a backup for previous application to restore it in case of a problem in the new update
+    app_sites_available_config = f"{PATH_NGINX_SITES_AVAILABLE}{application.name}"
+    app_sites_enabled_config = f"{PATH_NGINX_SITES_ENABLED}{application.name}"
+    app_directory = f"{PATH_MODESC}{application.name}"
+    app_param_config = f"{PATH_MODESC}{application.name}_param"
+    list_backup_commands = [
+        ["sudo", "cp", "-r", app_directory, f"{app_directory}_copy"],
+        ["sudo", "cp", f"{app_directory}.conf", f"{app_directory}_copy.conf"],
+        ["sudo", "cp", f"{app_sites_available_config}.conf", f"{app_sites_available_config}_copy.conf"],
+        ["sudo", "cp", f"{app_param_config}.conf", f"{PATH_MODESC}{application.name}_copy_param.conf"]
+        ]
+    execute_list_commands_without_arguments(list_backup_commands)
+
+    # Delete the previous application
     delete_application_waf_in_system(application.name)
+    # Create a new application with the new data
     create_application_waf_in_system(app_data)
+
+
+def restore_previous_application(application_name):
+    """Function to restore the previous application where it was stored on background"""
+    app_sites_available_config = f"{PATH_NGINX_SITES_AVAILABLE}{application_name}"
+    app_sites_enabled_config = f"{PATH_NGINX_SITES_ENABLED}{application_name}"
+    app_directory = f"{PATH_MODESC}{application_name}"
+    app_param_config = f"{PATH_MODESC}{application_name}_param"
+    list_backup_commands = [
+        ["sudo", "cp", "-r", f"{app_directory}_copy", app_directory],
+        ["sudo", "cp", f"{app_directory}_copy.conf", f"{app_directory}.conf"],
+        ["sudo", "cp", f"{app_sites_available_config}_copy.conf", f"{app_sites_available_config}.conf"],
+        ["sudo", "ln", "-s", f"{app_sites_available_config}.conf", f"{app_sites_enabled_config}.conf"],
+        ["sudo", "cp", f"{app_param_config}_copy.conf", f"{app_param_config}.conf"]]
+    execute_list_commands_without_arguments(list_backup_commands)
+    append_file_from_system(PATH_MAIN_WAF, 
+                            f"\nInclude {app_directory}geoip_log_{application_name}.conf")
+    delete_application_waf_in_system(f"{application_name}_copy")

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-09-17 17:58+0100\n"
+"POT-Creation-Date: 2024-11-06 19:23+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,82 +18,86 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/ztna/views.py:15
+#: backend/ztna/views.py:20
 msgid "ZTNA"
 msgstr "ZTNA"
 
-#: backend/ztna/views.py:16
-msgid "Identitie"
+#: backend/ztna/views.py:21
+msgid "Identity"
 msgstr "Identité"
 
-#: backend/ztna/views.py:17
+#: backend/ztna/views.py:22
 msgid "Enrollment"
 msgstr "Inscription"
 
-#: backend/ztna/views.py:18
+#: backend/ztna/views.py:23
 msgid "Relay"
 msgstr "Relai"
 
-#: backend/ztna/views.py:19
+#: backend/ztna/views.py:24
 msgid "Configuration"
 msgstr "Configuration"
 
-#: backend/ztna/views.py:20
+#: backend/ztna/views.py:25
 msgid "Service"
 msgstr "Service"
 
-#: backend/ztna/views.py:21
-msgid "Terminator"
-msgstr "Terminateur"
-
-#: backend/ztna/views.py:22
-msgid "Edge Router Policy"
-msgstr "Politique de routeur de bordure"
-
-#: backend/ztna/views.py:23
-msgid "Service Policy"
-msgstr "Politique des service"
-
-#: backend/ztna/views.py:24
-msgid "Service Edge Router Policy"
-msgstr "Politique de routeur de bordure de service"
-
 #: backend/ztna/views.py:26
+msgid "Relay Policy"
+msgstr "Politique des relais"
+
+#: backend/ztna/views.py:27
+msgid "Service Policy"
+msgstr "Politique des services"
+
+#: backend/ztna/views.py:28
+msgid "Service Relay Policy"
+msgstr "Politique de relais des service"
+
+#: backend/ztna/views.py:30
 msgid "is created"
 msgstr "est créé"
 
-#: backend/ztna/views.py:27
+#: backend/ztna/views.py:31
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/ztna/views.py:28
+#: backend/ztna/views.py:32
 msgid "is updated"
 msgstr "est modifié"
 
-#: backend/ztna/views.py:29
+#: backend/ztna/views.py:33
 msgid "is started"
 msgstr "est démarré"
 
-#: backend/ztna/views.py:30
+#: backend/ztna/views.py:34
 msgid "is stoped"
 msgstr "est arrêté"
 
-#: backend/ztna/views.py:32
-msgid "Error in creating"
-msgstr "Erreur lors de la création de"
-
-#: backend/ztna/views.py:33
-msgid "Error in deleting"
-msgstr "Erreur lors de la suppression de"
-
-#: backend/ztna/views.py:34
-msgid "Error in updating"
-msgstr "Erreur lors de la modification de"
-
-#: backend/ztna/views.py:35
-msgid "Error in starting"
-msgstr "Erreur lors de la démarrage de"
-
 #: backend/ztna/views.py:36
-msgid "Error in stoping"
-msgstr "Erreur lors de l'arrêt de"
+msgid "System error in creating"
+msgstr "Erreur système lors de la création de"
+
+#: backend/ztna/views.py:37
+msgid "System error in deleting"
+msgstr "Erreur système lors de la suppression de"
+
+#: backend/ztna/views.py:38
+msgid "System error in updating"
+msgstr "Erreur système lors de la modification de"
+
+#: backend/ztna/views.py:39
+msgid "System error in starting"
+msgstr "Erreur système lors de la démarrage de"
+
+#: backend/ztna/views.py:40
+msgid "System error in stoping"
+msgstr "Erreur système lors de l'arrêt de"
+
+#: backend/ztna/views.py:41
+msgid "System error in getting status"
+msgstr "Erreur système lors de la démarrage de"
+
+#: backend/ztna/views.py:42
+msgid "does not exist"
+msgstr "n'existe pas"

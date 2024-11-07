@@ -22,7 +22,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_STRING
 from django.conf import settings
 from rest_framework import status
-
+from django.core.exceptions import ObjectDoesNotExist
 from backend.waf.models import RulesWaf
 # Constants
 CONSTANT_USER = _("User")
@@ -126,9 +126,22 @@ def modify_role(request,id):
 @permission_classes([IsAuthenticated])
 def delete_role(request, id):
     """Delete role"""
-    role = Roles.objects.get(id=id)
-    role.delete()
-    return JsonResponse({"msg": f"{CONSTANT_ROLE}{SUCCESS_MESSAGES_DELETING}"})
+    try:
+        role = Roles.objects.get(id=id)
+        
+        # Check if any users are linked to this role
+        users_with_role = User.objects.filter(role=role)
+        if users_with_role.exists():
+            # If the role is in use, return an error message with the usernames
+            user_names = ', '.join(user.username for user in users_with_role)
+            return JsonResponse({"msg": f"You can't delete this role. It is used by: {user_names}"}, status=400)
+        
+        # If no users are using the role, proceed with deletion
+        role.delete()
+        return JsonResponse({"msg": f"{CONSTANT_ROLE}{SUCCESS_MESSAGES_DELETING}"})
+    
+    except ObjectDoesNotExist:
+        return JsonResponse({"msg": "Role not found."}, status=404)
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET USER BY ID",

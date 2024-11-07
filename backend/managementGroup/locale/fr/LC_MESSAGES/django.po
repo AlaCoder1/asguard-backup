@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-05-15 09:43+0000\n"
+"POT-Creation-Date: 2024-11-06 19:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,34 +17,31 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
 #: backend/managementGroup/views.py:14
 msgid "Groupe name"
 msgstr "Nom du groupe"
 
-#: backend/managementGroup/views.py:16
+#: backend/managementGroup/views.py:15
+msgid "Groupe description"
+msgstr "Descriptif du groupe"
+
+#: backend/managementGroup/views.py:17
 msgid "is created"
 msgstr "est créé"
 
-#: backend/managementGroup/views.py:17
+#: backend/managementGroup/views.py:18
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/managementGroup/views.py:18
+#: backend/managementGroup/views.py:19
 msgid "is updated"
 msgstr "est mis à jour"
 
-#: backend/managementGroup/views.py:21
-msgid "Error in creating"
-msgstr "Erreur lors de la création"
-
 #: backend/managementGroup/views.py:22
-msgid "Error in deleting"
-msgstr "Erreur lors de la suppression"
-
-#: backend/managementGroup/views.py:23
 msgid "Invalid"
 msgstr "invalide"
 
-#: backend/managementGroup/views.py:24
+#: backend/managementGroup/views.py:23
 msgid "Already exist"
 msgstr "Existe déjà"

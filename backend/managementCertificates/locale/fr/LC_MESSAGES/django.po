@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-04-26 08:08+0100\n"
+"POT-Creation-Date: 2024-11-06 19:01+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,6 +17,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
 #: backend/managementCertificates/views.py:24
 msgid "Certificate Authority"
 msgstr "Certificat d'authorité"
@@ -42,16 +43,16 @@ msgid "is deleted"
 msgstr "est supprimé"
 
 #: backend/managementCertificates/views.py:32
-msgid "Error in creating"
-msgstr "Erreur lors de la création de"
+msgid "System error in creating"
+msgstr "Erreur système lors de la création de"
 
 #: backend/managementCertificates/views.py:33
-msgid "Error in deleting"
-msgstr "Erreur lors de la suppression de"
+msgid "System error in deleting"
+msgstr "Erreur système lors de la suppression de"
 
 #: backend/managementCertificates/views.py:34
-msgid "Error in exporting"
-msgstr "Erreur lors de l'exportation de"
+msgid "System error in exporting"
+msgstr "Erreur système lors de l'exportation de"
 
 #: backend/managementCertificates/views.py:35
 msgid "Unable to delete"

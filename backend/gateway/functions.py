@@ -16,7 +16,8 @@ def add_gateway_db(data):
     if gateway_serializer.is_valid():
         gateway_serializer.save()
         return True
-    return gateway_serializer.errors
+    return next(iter(gateway_serializer.errors.values()))[0]
+
 
 
 def update_gateway_db(data,id):

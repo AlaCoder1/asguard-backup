@@ -154,6 +154,10 @@ def delete_routing(request, id):
         # deleting routing from database even when the route does not exist in system
         routing.delete()
         return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+    except GatewayInterface.DoesNotExist:
+    # deleting routing from database even when the gateway does not exist
+        routing.delete()
+        return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
     except Routing.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 

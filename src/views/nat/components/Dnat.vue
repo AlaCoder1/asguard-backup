@@ -53,8 +53,9 @@
               :rowData="rowDataDnat.value"
               :gridOptions="gridOptions"
               :overlayNoRowsTemplate="overlayTemplate"
-              ::rowDragManaged="state.user === 'viewer' ? false : true"
+              :rowDragManaged="state.user === 'viewer' ? false : true"
               :rowDragEntireRow="state.user === 'viewer' ? false : true"
+              @row-drag-enter="onRowDragStart"
               @row-drag-end="onRowDragEnd"
               :localeText="paginationLocalization"
             />
@@ -137,7 +138,8 @@ export default {
     });
     const emitter = inject("emitter");
     const state = reactive({
-      user:null,
+      initialRowIndex: null,
+      user: null,
       isExec: false,
       deleteDialog: false,
       deletedRow: null,
@@ -343,7 +345,7 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
-                state.isExec = true
+                state.isExec = true;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -368,7 +370,7 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
-                state.isExec = true
+                state.isExec = true;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -389,46 +391,52 @@ export default {
       });
       return input;
     }
+    const onRowDragStart = (event) => {
+      state.initialRowIndex = event.overIndex;
+    };
     const onRowDragEnd = (event) => {
       const user = user_privilege();
       if (user !== "viewer") {
-        const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      const id = event.node.data.id;
-      let payload = {
-        new_position: event.overIndex + 1,
-      };
+        if (event.overIndex === state.initialRowIndex) {
+          state.initialRowIndex = null;
+          return;
+        }
 
-      axios
-        .put(`/nat/changeDNatPosition/${id}`, payload)
-        .then((response) => {
-          if (response.status == "201") {
-            state.snackbar = true;
-            state.color = "success";
-            state.isExec = true;
-            state.textAlert = response.data.msg;
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          }
-        })
-        .catch((i) => {
-          if (i.response.status === 500) {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = t("errors.errorServer");
-          } else {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.msg;
-          }
-        });
-          }
-          else {
-            state.isviewModal = true;
-            state.viewModal = true;
-          }
-      
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        const id = event.node.data.id;
+        let payload = {
+          new_position: event.overIndex + 1,
+        };
+
+        axios
+          .put(`/nat/changeDNatPosition/${id}`, payload)
+          .then((response) => {
+            if (response.status == "201") {
+              state.snackbar = true;
+              state.color = "success";
+              state.isExec = true;
+              state.textAlert = response.data.msg;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+            }
+          });
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     const rowDataDnat = reactive({});
@@ -663,6 +671,7 @@ export default {
       onGridReady,
       cancelDelete,
       confirmDelete,
+      onRowDragStart,
       onRowDragEnd,
       overlayTemplate,
       paginationLocalization,

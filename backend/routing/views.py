@@ -151,7 +151,13 @@ def delete_routing(request, id):
         return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_ROUTE}"}, status=400)
+        # deleting routing from database even when the route does not exist in system
+        routing.delete()
+        return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+    except GatewayInterface.DoesNotExist:
+    # deleting routing from database even when the gateway does not exist
+        routing.delete()
+        return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
     except Routing.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
@@ -175,15 +181,21 @@ def delete_routing(request, id):
 def update_routing(request, id):
     """Updating a Route by deleting and adding it again"""
     try:
-        data = request.data
         routing = Routing.objects.get(id=id)
-        
+    except Routing.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    
+    data = request.data
+    try:    
         # Delete a route
         gateway_interface_instance = GatewayInterface.objects.get(gateway=routing.gateway.pk)
         interface_ifname = gateway_interface_instance.interface.ifname
         routing_in_system("del", routing.destination_address, routing.gateway.gwaddress, interface_ifname, 
                           gateway_interface_instance.metric)
-        
+    except CommandExecutionError:
+        pass
+    
+    try:    
         gateway = data.get("gateway")
 
         # Create a new Gateway and GatewayInterface
@@ -211,5 +223,3 @@ def update_routing(request, id):
         
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ROUTE}"}, status=400)
-    except Routing.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

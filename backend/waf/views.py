@@ -10,7 +10,7 @@ from backend.waf.list_waf import get_alerts, get_list_all_waf_rule, get_list_all
 from backend.waf.models import ApplicationWaf, ConfigWaf, RulesWaf
 from backend.waf.serializers import ApplicationWafSerializer, ConfigWafSerializer, RulesWafSerializer
 from backend.waf.utils import convert_waf_rule_payload, find_possible_id, restart_nginx_in_system
-from backend.waf.utils_application import create_application_waf_in_system, delete_application_waf_in_system, update_application_waf_in_system
+from backend.waf.utils_application import create_application_waf_in_system, delete_application_waf_in_system, restore_previous_application, update_application_waf_in_system
 from backend.waf.utils_config import update_waf_configuration_in_system
 from backend.waf.utils_rules import create_rule_waf_in_system, create_rule_waf_str, delete_rule_waf_in_system, update_rule_waf_in_system
 from utils.errors_utils import CommandExecutionError
@@ -26,9 +26,9 @@ SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
+ERROR_MESSAGES_CREATING = _("System error in creating")
+ERROR_MESSAGES_DELETING = _("System error in deleting")
+ERROR_MESSAGES_UPDATING = _("System error in updating")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
@@ -395,9 +395,11 @@ def update_waf_application(request, id):
             config_serializer.save()
             serializer_application_waf = ApplicationWafSerializer(waf_application, data=data_serializer)
             if serializer_application_waf.is_valid():
-
+                # Update the application
                 update_application_waf_in_system(waf_application, data)
-
+                # Delete the backup of th previous application
+                delete_application_waf_in_system(f"{waf_application.name}_copy")
+                # Save the new data in database
                 serializer_application_waf.save()
                 return JsonResponse({"msg": f"{CONSTANT_WAF_APPLICATION} {SUCCESS_MESSAGES_UPDATING}"}, status=201)
 
@@ -405,6 +407,8 @@ def update_waf_application(request, id):
         return JsonResponse({"error": list(config_serializer.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
+        delete_application_waf_in_system(data["name"])
+        restore_previous_application(waf_application.name)
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_WAF_APPLICATION}"}, status=400)
     except ApplicationWaf.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_WAF_APPLICATION} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

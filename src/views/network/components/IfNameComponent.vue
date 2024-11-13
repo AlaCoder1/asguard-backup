@@ -496,7 +496,7 @@
                   ></v-text-field
                 ></v-row>
                 <v-row>
-                  <input type="checkbox" v-model="gateway.default_aux" />
+                  <input type="checkbox" disabled  v-model="gateway.default_aux" />
                   <label class="ml-3">{{
                     $t("interface.GatewayDefault")
                   }}</label>
@@ -635,7 +635,7 @@ export default {
         gwname: "",
         gwaddress: "",
         description: "",
-        default_aux: false,
+        default_aux: true,
         far_aux: false,
         multiwan_aux: false,
       },
@@ -978,7 +978,7 @@ export default {
                 gwname: "",
                 gwaddress: "",
                 description: "",
-                default_aux: false,
+                default_aux: true,
                 far_aux: false,
                 multiwan_aux: false,
               };
@@ -1002,7 +1002,7 @@ export default {
             } else {
               this.snackbar = true;
               this.color = "red";
-              this.textAlert = i.response.data.message;
+              this.textAlert = i.response.data.msg;
             }
           });
       }
@@ -1018,7 +1018,7 @@ export default {
           gwname: "",
           gwaddress: "",
           description: "",
-          default_aux: false,
+          default_aux: true,
           far_aux: false,
           multiwan_aux: false,
         };

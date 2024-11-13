@@ -246,7 +246,7 @@
                   <v-col cols="12" class="mb-n6">
                     <v-select
                       :label="$t('nat.port')"
-                      v-model="state.port"
+                      v-model.number="state.port"
                       :no-data-text="$t('nat.msg_no_data')"
                       :items="state.listPort"
                       item-title="name"

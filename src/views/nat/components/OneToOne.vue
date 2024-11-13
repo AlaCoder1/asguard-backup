@@ -55,6 +55,7 @@
               :gridOptions="gridOptions"
               :rowDragManaged="state.user === 'viewer' ? false : true"
               :rowDragEntireRow="state.user === 'viewer' ? false : true"
+              @row-drag-enter="onRowDragStart"
               @row-drag-end="onRowDragEnd"
               :localeText="paginationLocalization"
             />
@@ -137,7 +138,8 @@ export default {
       of: "/",
     });
     const state = reactive({
-      user:null,
+      initialRowIndex: null,
+      user: null,
       isExec: false,
       deleteDialog: false,
       isviewModal: false,
@@ -269,7 +271,7 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
-                state.isExec = true
+                state.isExec = true;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -294,7 +296,7 @@ export default {
                 state.snackbar = true;
                 state.color = "success";
                 state.textAlert = response.data.msg;
-                state.isExec = true
+                state.isExec = true;
                 setTimeout(() => {
                   location.reload();
                 }, 1000);
@@ -315,46 +317,52 @@ export default {
       });
       return input;
     }
+    const onRowDragStart = (event) => {
+      state.initialRowIndex = event.overIndex;
+    };
 
     const onRowDragEnd = (event) => {
       const user = user_privilege();
       if (user !== "viewer") {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      const id = event.node.data.id;
-      let payload = {
-        new_position: event.overIndex + 1,
-      };
+        if (event.overIndex === state.initialRowIndex) {
+          state.initialRowIndex = null;
+          return;
+        }
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        const id = event.node.data.id;
+        let payload = {
+          new_position: event.overIndex + 1,
+        };
 
-      axios
-        .put(`/nat/changeOneToOneNatPosition/${id}`, payload)
-        .then((response) => {
-          if (response.status == "201") {
-            state.snackbar = true;
-            state.isExec = true;
-            state.color = "success";
-            state.textAlert = response.data.msg;
-            setTimeout(() => {
-              location.reload();
-            }, 1000);
-          }
-        })
-        .catch((i) => {
-          if (i.response.status === 500) {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = t("errors.errorServer");
-          } else {
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.msg;
-          }
-        });
+        axios
+          .put(`/nat/changeOneToOneNatPosition/${id}`, payload)
+          .then((response) => {
+            if (response.status == "201") {
+              state.snackbar = true;
+              state.isExec = true;
+              state.color = "success";
+              state.textAlert = response.data.msg;
+              setTimeout(() => {
+                location.reload();
+              }, 1000);
+            }
+          })
+          .catch((i) => {
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.msg;
+            }
+          });
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
       }
-          else {
-            state.isviewModal = true;
-            state.viewModal = true;
-          }
     };
     const rowDataOneTowOne = reactive({});
 
@@ -559,6 +567,7 @@ export default {
       onGridReady,
       cancelDelete,
       confirmDelete,
+      onRowDragStart,
       onRowDragEnd,
       overlayTemplate,
       close,

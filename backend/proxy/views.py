@@ -5,7 +5,6 @@ from django.http import  JsonResponse
 import json
 from .serializers import *
 from backend.proxy.models import *
-# from django.views.decorators.csrf import csrf_exempt
 from django.core import serializers
 from .function import *
 from datetime import datetime
@@ -20,10 +19,6 @@ CONSTANT_SQUID = _('Squid')
 CONSTANT_PATTERN = _('Pattern')
 CONSTANT_LINES = _("Lines")
 CONSTANT_INTERFACE = _("interface")
-CONSTANT_INCOMMENTED= _("are Uncommented")
-CONSTANT_COMMENTED = _("are Commented")
-CONSTANT_UNBLOCKED= _("is Unblocked")
-CONSTANT_BLOCKED = _("is blocked")
 CONSTANT_ADDRESS = _("Address")
 CONSTANT_FILE = _("File")
 CONSTANT_PATH = _("Path")
@@ -36,6 +31,10 @@ CONSTANT_RULE = _("Rule")
 
 
 # Success messages
+SUCCESS_MESSAGES_UNBLOCKED= _("is Unblocked")
+SUCCESS_MESSAGES_BLOCKED = _("is blocked")
+SUCCESS_MESSAGES_INCOMMENTED= _("are Uncommented")
+SUCCESS_MESSAGES_COMMENTED = _("are Commented")
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
@@ -44,12 +43,9 @@ SUCCESS_MESSAGES_RESTARTING = _("is restarted")
 SUCCESS_MESSAGES_STOPING = _("is stoped")
 SUCCESS_MESSAGES_CHANGE_STATUS = _("is changed")
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
-ERROR_MESSAGES_STARTING = _("Error in starting")
-ERROR_MESSAGES_RESTARTING = _("Error in restarting")
-ERROR_MESSAGES_STOPING = _("Error in stoping")
+ERROR_MESSAGES_STARTING = _("System error in starting")
+ERROR_MESSAGES_RESTARTING = _("System error in restarting")
+ERROR_MESSAGES_STOPING = _("System error in stoping")
 ERROR_MESSAGES_OCCURRED = _("Error Occurred")
 ERROR_MESSAGES_NOTFOUND_INPATH = _("Not Found in")
 ERROR_MESSAGES_SAVING_INSTANCE = _("Error in saving instance")
@@ -183,7 +179,7 @@ def enable_by_time():
     with open(config_file_path, 'w') as file:
         file.writelines(config_lines)
 
-    return JsonResponse({"msg":f"{CONSTANT_LINES} {CONSTANT_INCOMMENTED}"}, status=200)
+    return JsonResponse({"msg":f"{CONSTANT_LINES} {SUCCESS_MESSAGES_INCOMMENTED}"}, status=200)
 @swagger_auto_schema(
     method='POST',
     responses={200: 'Success', 400: 'Bad Request'},
@@ -243,13 +239,12 @@ def addRuleSquid(request):
                     server_satus = ServerSatus.objects.get(id=1)
                     server_satus.status_server = True
                     server_satus.save()
-                    msg = f"{data['type']} {CONSTANT_BLOCKED}"
+                    msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
                     status=200
                     return JsonResponse({"msg": msg}, status=status)
                 else:
                     return JsonResponse(serializerProxyRules.errors, status=404 )
             except Exception as e:
-                print(f"{ERROR_MESSAGES_OCCURRED}: {e}")
                 msg = e
                 status=404 
                 return JsonResponse({"msg": msg}, status=status)
@@ -257,7 +252,7 @@ def addRuleSquid(request):
             serializerProxyRules = ProxyRulesByTimeSerializer(data=data)
             if (serializerProxyRules.is_valid()):
                 serializerProxyRules.save()
-                msg = f"{data['type']} {CONSTANT_BLOCKED}"
+                msg = f"{data['type']} {SUCCESS_MESSAGES_BLOCKED}"
                 status=200
                 return JsonResponse({"msg": msg}, status=status)
             else:
@@ -287,7 +282,7 @@ def deleteRuleSquid(request,id):
                     server_satus = ServerSatus.objects.get(id=1)
                     server_satus.status_server = True
                     server_satus.save()
-                    msg = f"{data.type} {CONSTANT_ADDRESS} {data.value} {CONSTANT_UNBLOCKED}"
+                    msg = f"{data.type} {CONSTANT_ADDRESS} {data.value} {SUCCESS_MESSAGES_UNBLOCKED}"
                     status =200
                     return JsonResponse({"msg": msg}, status=status)
                 else:
@@ -320,7 +315,7 @@ def deleteRuleSquid(request,id):
     stdout, stderr = run_command(command)
     if(stderr == ""):
         data.delete()
-        msg = f"{data.type} {CONSTANT_ADDRESS} {data.value} {CONSTANT_UNBLOCKED}"
+        msg = f"{data.type} {CONSTANT_ADDRESS} {data.value} {SUCCESS_MESSAGES_UNBLOCKED}"
         status =200
     else:
         msg =stderr
@@ -427,13 +422,12 @@ def disable_auth(request):
                 else:
                     file.write(line)
 
-        return JsonResponse({"msg":f"{CONSTANT_LINES} {CONSTANT_COMMENTED}"}, status=200)
+        return JsonResponse({"msg":f"{CONSTANT_LINES} {SUCCESS_MESSAGES_COMMENTED}"}, status=200)
+    
     except FileNotFoundError:
-        
         return JsonResponse({"msg": f"{CONSTANT_FILE} {ERROR_MESSAGES_NOTFOUND_INPATH} {CONSTANT_PATH} {config_file_path}.{CONSTANT_CORRECT_PATH}"}, status=404 )
     except Exception as e:
-        
-        return JsonResponse({"msg": f"{ERROR_MESSAGES_OCCURRED}: {e}"}, status=404 )
+        return JsonResponse({"msg": f"{ERROR_MESSAGES_OCCURRED}: {e}"}, status=400 )
 
 @swagger_auto_schema(
     method='POST',
@@ -465,7 +459,7 @@ def change_auth_status(request):
             server_satus = ServerSatus.objects.get(id=1)
             server_satus.status_server = True
             server_satus.save() 
-            return JsonResponse({"msg":f"{CONSTANT_LINES} {CONSTANT_COMMENTED}"}, status=200)
+            return JsonResponse({"msg":f"{CONSTANT_LINES} {SUCCESS_MESSAGES_COMMENTED}"}, status=200)
         except FileNotFoundError:
             print(f"Error: File not found at path {config_file_path}. Please provide the correct path.")
             return JsonResponse({"msg": f"{CONSTANT_FILE} {ERROR_MESSAGES_NOTFOUND_INPATH} {CONSTANT_PATH} {config_file_path}.{CONSTANT_CORRECT_PATH}"}, status=404 )
@@ -487,7 +481,7 @@ def change_auth_status(request):
         server_satus = ServerSatus.objects.get(id=1)
         server_satus.status = True
         server_satus.save() 
-        return JsonResponse({"msg": f"{CONSTANT_LINES} {CONSTANT_INCOMMENTED}"}, status=200)
+        return JsonResponse({"msg": f"{CONSTANT_LINES} {SUCCESS_MESSAGES_INCOMMENTED}"}, status=200)
 
 @swagger_auto_schema(
     method='POST',
@@ -513,7 +507,7 @@ def enable_auth(request):
     with open(config_file_path, 'w') as file:
         file.writelines(config_lines)
 
-    return JsonResponse({"msg":f"{CONSTANT_LINES} {CONSTANT_INCOMMENTED}"}, status=200)
+    return JsonResponse({"msg":f"{CONSTANT_LINES} {SUCCESS_MESSAGES_INCOMMENTED}"}, status=200)
 
 @swagger_auto_schema(
     method='GET',
@@ -836,7 +830,7 @@ def deleteElement(type,value,file_path):
     command = "echo '" + text + "' > " + file_path  
     stdout, stderr = run_command(command)
     if(stderr == ""):
-        msg = f"{type} {CONSTANT_ADDRESS} {value} {CONSTANT_UNBLOCKED}"
+        msg = f"{type} {CONSTANT_ADDRESS} {value} {SUCCESS_MESSAGES_UNBLOCKED}"
         status =200
     else:
         msg =stderr

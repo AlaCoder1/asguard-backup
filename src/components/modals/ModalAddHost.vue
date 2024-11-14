@@ -253,7 +253,6 @@ export default {
         return false;
       }
 
-      // Check if parsedFloat is NaN
       if (isNaN(parsedFloat)) {
         return false;
       }

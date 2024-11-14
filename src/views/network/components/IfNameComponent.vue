@@ -59,13 +59,13 @@
             <input type="checkbox" class="ml-5" v-model="activate" />
             <label class="ml-5">{{ $t("interface.activate") }}</label> -->
 
-            <v-col cols="4">
+            <!-- <v-col cols="4">
               <label>Interface</label>
             </v-col>
             <v-col cols="4" class="mb-n6">
               <input type="checkbox" disabled v-model="activate" />
               <label class="ml-2">{{ $t("interface.activate") }}</label>
-            </v-col>
+            </v-col> -->
           </v-row>
 
           <div class="px-0 mx-0">
@@ -164,7 +164,7 @@
                     :label="$t('interface.MTU')"
                     class="ml-3"
                     v-model="mtuv"
-                    :rules="[validateRange]"
+                    :rules="[rulesMTU]"
                   ></v-text-field>
                 </td>
               </tr>
@@ -173,7 +173,12 @@
                   <div class="mt-n4">{{ $t("interface.MSS") }}</div>
                 </td>
                 <td>
-                  <v-text-field :label="$t('interface.MSS')" class="ml-3" v-model="mssv"></v-text-field>
+                  <v-text-field
+                    :label="$t('interface.MSS')"
+                    class="ml-3"
+                    v-model="mssv"
+                    :rules="[rulesNumber]"
+                  ></v-text-field>
                 </td>
               </tr>
               <tr>
@@ -434,7 +439,27 @@ export default {
       setuptypeip4: "static",
       addmac: "",
       mtuv: "",
-      mssv: "",
+      mssv: null,
+      rulesNumber: (value) => {
+    if (!value) return true;
+    const integerRegex = /^[0-9]+$/;
+    if (!integerRegex.test(value.trim())) {
+        return this.$t("interface.numberValidity");
+    }
+    return true;
+},
+rulesMTU: (value) => {
+    if (!value) return true;
+    const integerRegex = /^[0-9]+$/;
+    if (!integerRegex.test(value.trim())) {
+        return this.$t("interface.numberValidity");
+    }
+    const num = parseFloat(value); 
+    if (num < 1500 || num > 9000) {
+        return this.$t("interface.NumberMust");
+      }
+    return true;
+},
       speed_duplex: "",
       dynamicGatewayPolicy: false,
       showAlert: false,
@@ -502,7 +527,7 @@ export default {
         return false; // Error message for invalid IP address
       }
       return true;
-    },
+    }
   },
   methods: {
     cancelDelete() {

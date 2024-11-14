@@ -326,7 +326,8 @@
     "requestOptions": "Request Options",
     "requiredOptions": "Required Options",
     "supersedeDomaineName": "Supersede domaine name",
-    "prependDomainServer": "Prepend domain server"
+    "prependDomainServer": "Prepend domain server",
+    "numberValidity":"Invalid format. Please enter whole numbers only."
   },
   "typeInterface": {
     "otherTypesOfInterfaces": "Other Types of Interfaces",

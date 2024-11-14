@@ -197,7 +197,7 @@
                     :label="$t('interface.MTU')"
                     class="ml-3"
                     v-model="mtuv"
-                    :rules="[validateRange]"
+                    :rules="[rulesMTU]"
                   ></v-text-field>
                 </td>
               </tr>
@@ -618,19 +618,25 @@ export default {
       mtuv: "",
       mssv: null,
       rulesNumber: (value) => {
-        if (!value) return true;
-        
-        const numberValue = Number(value);
-        if (isNaN(numberValue)) {
-          return "Invalid input type. Please enter a valid number.";
-        }
-        
-        const numberRegex = /^[0-9]+(\.[0-9]{1,2})?$/;
-        if (!numberRegex.test(String(numberValue).trim())) {
-          return "Invalid format. Please enter numbers only.";
-        }
-        
-        return true;},
+    if (!value) return true;
+    const integerRegex = /^[0-9]+$/;
+    if (!integerRegex.test(value.trim())) {
+        return this.$t("interface.numberValidity");
+    }
+    return true;
+},
+rulesMTU: (value) => {
+    if (!value) return true;
+    const integerRegex = /^[0-9]+$/;
+    if (!integerRegex.test(value.trim())) {
+        return this.$t("interface.numberValidity");
+    }
+    const num = parseFloat(value); 
+    if (num < 1500 || num > 9000) {
+        return this.$t("interface.NumberMust");
+      }
+    return true;
+},
       speed_duplex: "",
       dynamicGatewayPolicy: false,
       showAlert: false,

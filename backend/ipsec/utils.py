@@ -1,4 +1,3 @@
-import subprocess
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_CRT
 from utils.commands_utils import execute_command_without_arguments
 from utils.errors_utils import CommandExecutionError
@@ -33,7 +32,9 @@ def set_key_group_config(key_group:str):
 def up_ipsec_conn(conn_name):
     """Up IPsec config"""
     try:
-        execute_command_without_arguments(['ipsec', 'up', conn_name])
+        process = execute_command_without_arguments(['sudo', 'ipsec', 'up', conn_name, '&'])
+        if process.stdout.startswith("no config named"):
+            return False
         return True
     except CommandExecutionError:
         return False

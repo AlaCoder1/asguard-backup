@@ -27,6 +27,7 @@ SUCCESS_MESSAGES_UPDATING = _("is updated")
 ERROR_MESSAGES_CREATING = _("System error in creating")
 ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_UPDATING = _("System error in updating")
+ERROR_MESSAGES_EXISTING_NETWORK_GATEWAY = _("Route with this network and gateway exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_USED_ITEM = _("Unable to use this ")
 
@@ -108,7 +109,9 @@ def create_routing(request):
                 return JsonResponse({"error": f"{ERROR_MESSAGES_USED_ITEM} {CONSTANT_INTERFACE}"}, status=400)
             else:
                 return JsonResponse({"error": result_gateway["error"]}, status=400)
-        
+        # Add an error message for unique constraints of Network and Gateway 
+        if len(Routing.objects.filter(destination_address=data["destination_address"], gateway=gateway)) > 0:
+            return JsonResponse({"error": ERROR_MESSAGES_EXISTING_NETWORK_GATEWAY}, status=400)
         serializer_routing = RoutingSerializer(data=data)
         if serializer_routing.is_valid():
             gateway_instance = Gateway.objects.get(id=gateway)

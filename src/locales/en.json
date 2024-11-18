@@ -845,7 +845,8 @@
     "Remotesubnet": "Remote subnet",
     "Phase2Proposal": "Phase 2 Proposal",
     "Enable": "Enable",
-    "addnewpeer": "Add New Peer"
+    "addnewpeer": "Add New Peer",
+    "IpsecStatus": "Site to site VPN is not running, please start service"
   },
   "monitoringVPN": {
     "currentstate": "Current Status of all Monitors",

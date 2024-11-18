@@ -444,6 +444,26 @@ export default {
                 cancel
           </button>
           `;
+      } else if(status.value===false){
+        eGui.innerHTML = `
+            <button
+            class="action-button up"
+            data-action="up"
+            disabled>
+              <i class="mdi mdi-arrow-up-bold-circle" style="color: #086EAE; font-size: 20px;" ></i>
+            </button>
+            <button
+            class="action-button editClient"
+            data-action="edit">
+              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+            </button>
+            <button
+            class="action-button delete"
+            data-action="delete">
+              <i class="mdi mdi-delete" style="color: #086EAE; font-size: 20px;"></i>
+            </button>
+           
+        `;
       } else {
         eGui.innerHTML = `
             <button
@@ -634,7 +654,6 @@ export default {
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription", last_Subscription.value)
       overlayTemplate.value = `
       <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
@@ -655,8 +674,15 @@ export default {
         const statusAttribute =
           document.getElementById("app").attributes["status"].value;
         console.log("statusAttribute", statusAttribute);
+        
 
         status.value = statusAttribute === "False" ? false : true;
+
+        setTimeout(()=>{
+    if(!last_Subscription.value.includes("VPN IPSEC") && status.value===true ){
+      startStopServer("stop")
+    } 
+  },1000)
       } catch (error) {
         console.log(error);
       }

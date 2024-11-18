@@ -5,12 +5,7 @@
         <v-row class="justify-center mt-5 mb-4 ml-15" v-if="subInfo">
           <v-col cols="1"> </v-col>
           <v-col cols="3">
-            <v-alert
-              border="start"
-              color="#FFF"
-              border-color="indigo accent-4"
-              elevation="2"
-            >
+            <v-alert border="start" color="#FFF" border-color="indigo accent-4" elevation="2">
               <span class="title">{{ $t("subscription.currentPackage") }}</span>
               <br />
               <span class="soutitle" style="color: #26a69a !important">{{
@@ -21,42 +16,40 @@
             </v-alert>
           </v-col>
           <v-col cols="3">
-            <v-alert
-              border="start"
-              color="#FFF"
-              border-color="warning accent-4"
-              elevation="2"
-            >
-              <span class="title"
-                >{{ $t("subscription.currentSubscription") }} </span
-              ><br />
+            <v-alert border="start" color="#FFF" border-color="warning accent-4" elevation="2">
+              <span class="title">{{ $t("subscription.currentSubscription") }} </span><br />
               <span class="soutitle">{{
-                statusPackage
-                  ? $t("subscription.expired") +
-                    "" +
+                
+                getLang === "Fr"
+                  ? statusPackage
+                    ? $t("subscription.expired") +
+                    " " +
+                    $t("subscription.ago") +
+                    " " +
                     ExpiredDays +
                     " " +
-                    dayString +
-                    +"" +
-                    $t("subscription.ago")
-                  : formatedDate
-              }}</span>
+                    dayString
+                    : formatedDate
+                  : statusPackage
+                    ? $t("subscription.expired") +
+                " " +
+                ExpiredDays +
+                " " +
+                dayString +
+                " " +
+                $t("subscription.ago")
+                : formatedDate
+                }}</span>
             </v-alert>
           </v-col>
           <v-col cols="3">
-            <v-alert
-              border="start"
-              color="#FFF"
-              border-color="success accent-4"
-              elevation="2"
-            >
-              <span class="title"
-                >{{ $t("subscription.nextPaymentDue") }}
+            <v-alert border="start" color="#FFF" border-color="success accent-4" elevation="2">
+              <span class="title">{{ $t("subscription.nextPaymentDue") }}
               </span>
               <br />
               <span class="soutitle">{{
                 statusPackage ? "--" : formatedNextPayment
-              }}</span>
+                }}</span>
             </v-alert>
           </v-col>
           <v-col cols="1"> </v-col>
@@ -68,16 +61,9 @@
               {{ $t("subscription.chooseYourPlan") }}
             </h1>
             <div class="subscription-cards">
-              <SubscriptionTypeCard
-                v-for="card in subscriptionCards"
-                :key="card.title"
-                :title="card.title"
-                :prices="card.prices"
-                :communservices="card.communservices"
-                :services="card.services"
-                :backgroundColor="card.backgroundColor"
-                :buttonColor="card.buttonColor"
-              />
+              <SubscriptionTypeCard v-for="card in subscriptionCards" :key="card.title" :title="card.title"
+                :prices="card.prices" :communservices="card.communservices" :services="card.services"
+                :backgroundColor="card.backgroundColor" :buttonColor="card.buttonColor" />
             </div>
           </v-col>
           <v-col cols="2" />
@@ -219,6 +205,7 @@ export default {
     const subscriptionInfo = ref({});
     const statusPackage = ref(false);
     const ExpiredDays = ref("");
+    const getLang = ref("")
     const dayString = ref("");
     const subInfo = ref(false);
 
@@ -242,6 +229,7 @@ export default {
     });
 
     onMounted(() => {
+      getLang.value = localStorage.getItem("lang-slug");
       const subscription_information =
         document.getElementById("app").attributes["subscription_information"]
           .value;
@@ -303,6 +291,7 @@ export default {
       formatedNextPayment,
       subInfo,
       statusPackage,
+      getLang,
       ExpiredDays,
       dayString,
     };
@@ -327,6 +316,7 @@ export default {
   font-weight: 400;
   word-wrap: break-word;
 }
+
 .soutitle {
   color: #000202;
   font-size: 18px;

@@ -1,3 +1,265 @@
+# import itertools
+# from rest_framework.response import Response
+# from rest_framework.authentication import SessionAuthentication
+# from rest_framework.decorators import api_view, permission_classes, authentication_classes
+# from rest_framework.permissions import AllowAny
+# from django.contrib.auth import login, logout
+# from django.conf import settings
+# from django.http import JsonResponse
+# from django.utils import timezone
+# from django.utils.translation import gettext_lazy as _
+# from django.views.decorators.csrf import csrf_exempt
+# from backend.authentification.constant_variables import STRIPE_SECRET_KEY
+# from backend.authentification.function import exist_user_email, generate_verification_code, normal_connect, send_email_to_user, send_verification_code, show_url
+# from backend.managementUsers.models import User,Profile,Roles
+# from backend.LdapServer.models import ADServer
+# from drf_yasg.utils import swagger_auto_schema
+# from datetime import datetime, timedelta
+ 
+# from backend.subscription.models import Features, plan, plansFeatures
+# from .models import VerificationCode
+# import json
+# import stripe
+# import ldap
+# from itertools import groupby
+# from operator import itemgetter
+# # Constants
+# CONSTANT_USER_EMAIL = _("Email")
+# CONSTANT_VERIFIFCATION_CODE = _("verification code")
+# # Success messages
+# SUCCESS_MESSAGES_LOGIN = _("Success Authentication")
+# SUCCESS_MESSAGES_LOGOUT = _("Success Logout")
+# SUCCESS_MESSAGES_SENT = _("is sent successfully")
+# SUCCESS_MESSAGES_RESENT = _("is re-sent successfully")
+# # Error messages
+# ERROR_MESSAGES_INEXISTANT = _("does not exist")
+# ERROR_MESSAGES_INVALID_CREDENTIALS_SERVER_AD = _("Invalid credentials for directory server login")
+# ERROR_MESSAGES_INVALID_CREDENTIALS = _("Invalid credentials")
+# ERROR_MESSAGES_NO_SERVERS = _("No directory servers registered")
+# ERROR_MESSAGES_SERVER_UNREACHABLE = _("Directory server is unreachable")
+# ERROR_MESSAGES_USER_NOTASSIGNED = _("Email not assigned in Asguard. Contact your administrator")
+# ERROR_MESSAGES_EXPIRED = _("has expired")
+ 
+ 
+# @swagger_auto_schema('POST', responses={201: 'Created', 400: 'Bad Request'},
+#                      security=[{"session_auth": []}],  # Specify the security requirement
+#                      operation_summary="Summary of your API endpoint",
+#                      operation_description="Description of your API endpoint")
+# @api_view(['POST'])
+# @permission_classes([AllowAny])
+# def authentication(request):
+#     if (request.method == "POST"):
+#         data = json.loads(request.body)
+#         username = data['username']
+#         password = data['password']
+#         ad_servers = ADServer.objects.all()
+#         user_session = exist_user_email(username)
+#         if '@' in username:
+#             if not ad_servers.exists():
+#                 return JsonResponse({'message': ERROR_MESSAGES_NO_SERVERS}, status=400)
+#             if not user_session:
+#                 return JsonResponse({'message': f"{CONSTANT_USER_EMAIL} {ERROR_MESSAGES_INEXISTANT}"}, status=401)
+#             else:
+#                 authentication_server = False
+#                 if user_session.id_server_id:
+#                     server = ADServer.objects.get(id = user_session.id_server_id)
+#                     ldap_uri = f"{'ldaps' if server.ssl_tls_activation else 'ldap'}://{server.server_url}:{server.port}"
+#                     ldap_conn = ldap.initialize(ldap_uri)
+#                     ldap_conn.set_option(ldap.OPT_NETWORK_TIMEOUT, 5)
+#                     if server.server_type=="ad":
+#                         try :  
+#                             ldap_conn.simple_bind_s(username, password)
+#                             result = ldap_conn.search_s(server.search_base, ldap.SCOPE_SUBTREE,
+#                                                         "(objectClass=user)", ['userPrincipalName'])
+#                             if result:
+#                                 authentication_server=True
+#                         except ldap.INVALID_CREDENTIALS:
+#                             return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS_SERVER_AD}, status=400)
+#                         except ldap.SERVER_DOWN:
+#                             return JsonResponse({'message': ERROR_MESSAGES_SERVER_UNREACHABLE}, status=400)    
+#                     else: # server_type is openldap
+#                         try :
+#                             dn_user = user_session.dn_user
+#                             ldap_conn.simple_bind_s(dn_user,password)
+#                             authenticated_dn = ldap_conn.whoami_s()
+#                             if authenticated_dn:
+#                                 authentication_server=True
+#                         except ldap.INVALID_CREDENTIALS:
+#                             return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS_SERVER_AD}, status=400)  
+#                         except ldap.SERVER_DOWN:
+#                             return JsonResponse({'message': ERROR_MESSAGES_SERVER_UNREACHABLE}, status=400)  
+                       
+#                 else:
+#                     return JsonResponse({'message': ERROR_MESSAGES_USER_NOTASSIGNED}, status=400)    
+               
+#             if authentication_server:
+#                 user_object = User.objects.get(email=data['username'])
+#                 user_dict = user_object.__dict__
+#                 profile = Profile.objects.get(user=user_object.pk)
+#                 profile_dict = profile.__dict__
+#                 role = Roles.objects.get(id=user_dict['role_id'])
+#                 current_user = {
+#                     "id": user_dict['id'],
+#                     "username": user_dict['username'],
+#                     "email": user_dict['email'],
+#                     "is_enable_2FA": profile_dict['is_enable_2FA'],
+#                     # "role": user_dict['role'],
+#                     "role": role.name,
+#                     "list_fonctionalities":role.fonctionalities
+#                       }
+#                 if not profile.is_enable_2FA:
+#                     login(request, user_session)
+                   
+#                     settings.CurrentUserId = user_dict['id']
+#                     ldap_conn.unbind()
+#                     return JsonResponse({'message': SUCCESS_MESSAGES_LOGIN,
+#                                          "currentUser": current_user},
+#                                          status=200)
+#                 else:
+#                     if send_verification_code(user_dict['email'],user_dict['username']):
+ 
+#                         return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {SUCCESS_MESSAGES_SENT}",
+#                                          "currentUser": current_user,"redirect":True},status=200)
+#                     return JsonResponse({"message": "incorrect code , please try again",
+#                                          "currentUser": current_user,"redirect":True}, status=401)
+               
+#             return JsonResponse({'message': ERROR_MESSAGES_INVALID_CREDENTIALS}, status=401)
+ 
+#         # Connection with username and password
+#         message, current_user, status =normal_connect(request,data)
+#         return JsonResponse({'message': message, "currentUser": current_user}, status=status)
+ 
+ 
+# @swagger_auto_schema('GET', responses={201: 'Created', 400: 'Bad Request'},
+#                      security=[{"session_auth": []}],  # Specify the security requirement
+#                      operation_summary="Summary of your API endpoint",
+#                      operation_description="Description of your API endpoint")
+# @api_view(['GET'])
+# @permission_classes([AllowAny])
+# def logout_view(request):
+#     logout(request)
+#     return JsonResponse({"msg": SUCCESS_MESSAGES_LOGOUT})
+
+# def group_descriptions_by_plan():
+#     queryset = plansFeatures.objects.values('plan_id', 'description')
+        
+#     # Sort by plan_id to make groupby work
+#     sorted_queryset = sorted(queryset, key=itemgetter('plan_id'))
+
+#     # Group by plan_id and then format as required
+#     grouped_descriptions = []
+#     for plan_id, group in groupby(sorted_queryset, key=itemgetter('plan_id')):
+#         list_descriptions = [item['description'] for item in group]
+#         grouped_descriptions.append({
+#             "plan_id": plan_id,
+#             "descriptions": list_descriptions
+#         })
+#     return grouped_descriptions
+# def get_plan_ids_by_descriptions(list_descriptions, grouped_data):
+#     """
+#     Function to get plan_ids that match the given list of descriptions.
+    
+#     Parameters:
+#     list_descriptions (list): The descriptions to match.
+#     grouped_data (list): The grouped data returned from the previous query.
+    
+#     Returns:
+#     list: A list of plan_ids that contain all the given descriptions.
+#     """
+#     # Filter plan_ids where all descriptions match
+#     for group in grouped_data:
+#         if group['descriptions'] == list_descriptions:
+#             return group['plan_id']
+    
+#     return None
+# @api_view(['POST'])
+# @authentication_classes([SessionAuthentication])
+# def create_checkout_session(request):
+#     data = request.data
+#     list_features = data['features']
+#     if "Basic"in list_features:
+#         subscription_plan = plan.objects.get(slug="Basic")
+#         plan_id = subscription_plan.pk
+#     elif "Full" in list_features:
+#         subscription_plan = plan.objects.get(slug="Full")
+#         plan_id = subscription_plan.pk
+#     else:
+#         grouped_data = group_descriptions_by_plan()
+#         plan_id = get_plan_ids_by_descriptions(list_features, grouped_data)
+#     print({"plan_id":plan_id})
+#     status = data['status']
+#     price = data['price']
+#     card_type = 'card'
+#     stripe.api_key = STRIPE_SECRET_KEY
+#     try:
+#         url=show_url(request)
+#         checkout_session = stripe.checkout.Session.create(
+#             payment_method_types=[card_type],  # Specify the payment method type (e.g., card)
+#             line_items=[
+#                 {
+#                     'price_data': {
+#                         'currency': 'eur',
+#                         'unit_amount': int(price * 100),  # Convert price to cents
+#                         'product_data': {
+#                             'name': 'Asguard Subscription',
+#                             'images': ['https://www.numeryx.fr/wp-content/themes/numeryx/assets/images/bg-Asguard.jpg'],
+#                             'description': 'Asguard Subscription',
+#                             'metadata': {
+#                                 'subscription_id': plan_id,
+#                                 'status': status,
+#                             }
+#                         },
+#                     },
+#                     'quantity': 1,
+#                 },
+#             ],
+#                 metadata = {
+#                 'subscription_id': plan_id,
+#                 'status': status,
+#             },
+#             mode='payment',
+#             success_url = f'{url}/success/?subscription_id={plan_id}',
+#             cancel_url= f'{url}/asguard/subscription/'
+#         )
+ 
+#         return Response(checkout_session)
+#     except Exception as e:
+#         return JsonResponse({'error': str(e)})
+ 
+# @csrf_exempt
+# def verify_code(request,id):
+#     if request.method == 'POST':
+#         user = User.objects.get(id=id)
+#         data = json.loads(request.body)
+#         user_input = data['verification_code']
+#         try:
+#             verification_code = VerificationCode.objects.get(user=user.pk)
+#             if timezone.now() <= verification_code.expiration_time:
+#                 if user_input == verification_code.code:
+#                     verification_code.delete()
+#                     login(request, user)
+#                     return JsonResponse({"message": SUCCESS_MESSAGES_LOGIN}, status=200)
+#                 return JsonResponse({"message": ERROR_MESSAGES_INVALID_CREDENTIALS}, status=400)
+           
+#             # Verification code expired
+#             verification_code.delete()
+#             return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_EXPIRED}"}, status=200)
+#         except VerificationCode.DoesNotExist:
+#             return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+ 
+# @csrf_exempt
+# def resend_verification_code(request,id):
+#     if request.method == 'POST':
+#         user = User.objects.get(id=id)
+#         verification_code = generate_verification_code()
+#         send_email_to_user(user.email, verification_code, user.username)
+#         expiration_time = datetime.now() + timedelta(minutes=30)
+#         VerificationCode.objects.update_or_create(user=user,
+#                                                   defaults={'code': verification_code, 'expiration_time': expiration_time})
+#         return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {SUCCESS_MESSAGES_RESENT}"})
+
+
+
 import itertools
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
@@ -16,12 +278,13 @@ from backend.LdapServer.models import ADServer
 from drf_yasg.utils import swagger_auto_schema
 from datetime import datetime, timedelta
  
-from backend.subscription.models import Features, plan
+from backend.subscription.models import Features, plan, plansFeatures
 from .models import VerificationCode
 import json
 import stripe
 import ldap
- 
+from itertools import groupby
+from operator import itemgetter
  
 # Constants
 CONSTANT_USER_EMAIL = _("Email")
@@ -140,38 +403,61 @@ def logout_view(request):
     logout(request)
     return JsonResponse({"msg": SUCCESS_MESSAGES_LOGOUT})
  
- 
+
+def group_descriptions_by_plan():
+    print('222222')
+    queryset = plansFeatures.objects.values('plan_id', 'description')
+    print({"queryset":queryset})       
+    # Sort by plan_id to make groupby work
+    sorted_queryset = sorted(queryset, key=itemgetter('plan_id'))
+    print({"sorted_queryset":sorted_queryset})       
+
+    # Group by plan_id and then format as required
+    grouped_descriptions = []
+    for plan_id, group in groupby(sorted_queryset, key=itemgetter('plan_id')):
+        list_descriptions = [item['description'] for item in group]
+        grouped_descriptions.append({
+            "plan_id": plan_id,
+            "descriptions": list_descriptions
+        })
+    print({"grouped_descriptions":grouped_descriptions})       
+    
+    return grouped_descriptions
+def get_plan_ids_by_descriptions(list_descriptions, grouped_data):
+    """
+    Function to get plan_ids that match the given list of descriptions.
+    
+    Parameters:
+    list_descriptions (list): The descriptions to match.
+    grouped_data (list): The grouped data returned from the previous query.
+    
+    Returns:
+    list: A list of plan_ids that contain all the given descriptions.
+    """
+    # Filter plan_ids where all descriptions match
+    for group in grouped_data:
+        if group['descriptions'] == list_descriptions:
+            return group['plan_id']
+    
+    return None
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def create_checkout_session(request):
     data = request.data
-    features = data['features']
     list_features = data['features']
+    print({"list_features":list_features})
     if "Basic"in list_features:
         subscription_plan = plan.objects.get(slug="Basic")
+        plan_id = subscription_plan.pk
     elif "Full" in list_features:
         subscription_plan = plan.objects.get(slug="Full")
+        plan_id = subscription_plan.pk
     else:
-        features_queryset = Features.objects.all()
-        features = [(feature.features, feature.price) for feature in features_queryset]
- 
-        all_combinations_with_details = []
- 
-        combination_number = 1
-        for r in range(1, len(features) + 1):
-            combinations_object = itertools.combinations(features, r)
-            combinations_list = list(combinations_object)
-           
-            for combo in combinations_list:
-                total_price = sum(feature[1] for feature in combo)
-                feature_names = tuple(feature[0] for feature in combo)
-                all_combinations_with_details.append((combination_number, feature_names, total_price))
-                combination_number += 1
- 
-        for combo_number, feature_names, total_price in all_combinations_with_details:
-            feature_with_combinations = ["Firewall L4","Networking L2 L3","VPN IPSEC","LDAP","Double Masque","IDS/IPS","VPN SSL","Proxy"] + list(feature_names)
-            if list_features == feature_with_combinations:
-                subscription_plan = plan.objects.get(slug=f"Custom{combo_number}")
+        print('1111111111')
+        grouped_data = group_descriptions_by_plan()
+        print({"grouped_data":grouped_data})
+        plan_id = get_plan_ids_by_descriptions(list_features, grouped_data)
+    print({"plan_id":plan_id})
  
     status = data['status']
     price = data['price']
@@ -191,7 +477,7 @@ def create_checkout_session(request):
                             'images': ['https://www.numeryx.fr/wp-content/themes/numeryx/assets/images/bg-Asguard.jpg'],
                             'description': 'Asguard Subscription',
                             'metadata': {
-                                'subscription_id': subscription_plan.pk,
+                                'subscription_id': plan_id,
                                 'status': status,
                             }
                         },
@@ -200,17 +486,87 @@ def create_checkout_session(request):
                 },
             ],
                 metadata = {
-                'subscription_id': subscription_plan.pk,
+                'subscription_id': plan_id,
                 'status': status,
             },
             mode='payment',
-            success_url = f'{url}/success/?subscription_id={subscription_plan.pk}',
+            success_url = f'{url}/success/?subscription_id={plan_id}',
             cancel_url= f'{url}/asguard/subscription/'
         )
  
         return Response(checkout_session)
     except Exception as e:
         return JsonResponse({'error': str(e)})
+# @api_view(['POST'])
+# @authentication_classes([SessionAuthentication])
+# def create_checkout_session(request):
+#     data = request.data
+#     features = data['features']
+#     list_features = data['features']
+#     if "Basic"in list_features:
+#         subscription_plan = plan.objects.get(slug="Basic")
+#     elif "Full" in list_features:
+#         subscription_plan = plan.objects.get(slug="Full")
+#     else:
+#         features_queryset = Features.objects.all()
+#         features = [(feature.features, feature.price) for feature in features_queryset]
+ 
+#         all_combinations_with_details = []
+ 
+#         combination_number = 1
+#         for r in range(1, len(features) + 1):
+#             combinations_object = itertools.combinations(features, r)
+#             combinations_list = list(combinations_object)
+           
+#             for combo in combinations_list:
+#                 total_price = sum(feature[1] for feature in combo)
+#                 feature_names = tuple(feature[0] for feature in combo)
+#                 all_combinations_with_details.append((combination_number, feature_names, total_price))
+#                 combination_number += 1
+ 
+#         for combo_number, feature_names, total_price in all_combinations_with_details:
+#             feature_with_combinations = ["Firewall L4","Networking L2 L3","VPN IPSEC","LDAP","Double Masque","IDS/IPS","VPN SSL","Proxy"] + list(feature_names)
+#             if list_features == feature_with_combinations:
+#                 subscription_plan = plan.objects.get(slug=f"Custom{combo_number}")
+ 
+#     status = data['status']
+#     price = data['price']
+#     card_type = 'card'
+#     stripe.api_key = STRIPE_SECRET_KEY
+#     try:
+#         url=show_url(request)
+#         checkout_session = stripe.checkout.Session.create(
+#             payment_method_types=[card_type],  # Specify the payment method type (e.g., card)
+#             line_items=[
+#                 {
+#                     'price_data': {
+#                         'currency': 'eur',
+#                         'unit_amount': int(price * 100),  # Convert price to cents
+#                         'product_data': {
+#                             'name': 'Asguard Subscription',
+#                             'images': ['https://www.numeryx.fr/wp-content/themes/numeryx/assets/images/bg-Asguard.jpg'],
+#                             'description': 'Asguard Subscription',
+#                             'metadata': {
+#                                 'subscription_id': subscription_plan.pk,
+#                                 'status': status,
+#                             }
+#                         },
+#                     },
+#                     'quantity': 1,
+#                 },
+#             ],
+#                 metadata = {
+#                 'subscription_id': subscription_plan.pk,
+#                 'status': status,
+#             },
+#             mode='payment',
+#             success_url = f'{url}/success/?subscription_id={subscription_plan.pk}',
+#             cancel_url= f'{url}/asguard/subscription/'
+#         )
+ 
+#         return Response(checkout_session)
+#     except Exception as e:
+#         return JsonResponse({'error': str(e)})
  
 @csrf_exempt
 def verify_code(request,id):

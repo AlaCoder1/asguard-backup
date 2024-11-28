@@ -3,7 +3,7 @@ from django.core.management.base import BaseCommand
 # features = Features.objects.all()
 
 features = [
-    ("WAF",180),("SDWAN",180)
+    ("WAF",180),("SDWAN",180),("ZTNA",180)
 ]
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):

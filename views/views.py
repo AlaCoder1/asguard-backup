@@ -140,7 +140,6 @@ def allGProxyroups(request):
         list_groups.append({"name":i,"status":rslt})
     return list_groups
 def getUsers(request):
-    print("2222222222")
     list_users = []
     if (request.method == 'GET'):
         users = User.objects.all()

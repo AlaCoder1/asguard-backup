@@ -62,7 +62,7 @@
                 v-if="!state.isAll"
                 :readonly="state.isAll"
                 :label="$t('firewall.sport')"
-                v-model="state.formData.sport"
+                v-model.number="state.formData.sport"
                 outlined
               ></v-text-field>
               <p class="error-feedback mb-5" v-if="sportCheck">
@@ -89,7 +89,7 @@
                 v-if="!state.isAll"
                 :readonly="state.isAll"
                 :label="$t('firewall.dport')"
-                v-model="state.formData.dport"
+                v-model.number="state.formData.dport"
                 outlined
               ></v-text-field>
               <p class="error-feedback mb-5" v-if="dportCheck">

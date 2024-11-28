@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-06 19:01+0000\n"
+"POT-Creation-Date: 2024-11-14 17:28+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -51,9 +51,13 @@ msgid "System error in updating"
 msgstr "Erreur système lors de la modification de"
 
 #: backend/routing/views.py:30
+msgid "Route with this network and gateway exist"
+msgstr "Routage avec ce réseau et cette gateway existe"
+
+#: backend/routing/views.py:31
 msgid "does not exist"
 msgstr "n'existe pas"
 
-#: backend/routing/views.py:31
+#: backend/routing/views.py:32
 msgid "Unable to use this "
 msgstr "Impossible d'utiliser cette "

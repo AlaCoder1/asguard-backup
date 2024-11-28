@@ -200,7 +200,45 @@ export default {
     axios.get("/ztna/status_ztna").then((response) => {
       this.status = response.data.data;
     });
-  },
+  setTimeout(()=>{
+    if(!this.last_Subscription.includes("ZTNA") && this.status===true ){
+      this.loading = true;
+        this.isLoadingDialogue = true;
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+        let endpoint = "stop_ztna";
+        axios
+          .post(`/ztna/${endpoint}`)
+          .then((response) => {
+            console.log("response", response);
+            this.snackbar = true;
+            this.color = "success";
+            this.textAlert = response.data.message;
+            this.loading = false;
+            this.isLoadingDialogue = false;
+
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          })
+          .catch((i) => {
+            this.loading = false;
+            this.isLoadingDialogue = false;
+
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = "Internal Server Error. Please try again later";
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+            }
+          });
+    } 
+  },1000)
+     },
   methods: {
     startStopServer(status) {
       const user = user_privilege("Ztna");

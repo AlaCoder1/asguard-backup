@@ -842,7 +842,8 @@
     "Remotesubnet": "Sous-réseau distant",
     "Phase2Proposal": "Proposition de phase 2",
     "Enable": "Activer",
-    "addnewpeer": "Ajouter un nouveau pair"
+    "addnewpeer": "Ajouter un nouveau pair",
+    "IpsecStatus": "Le VPN de site à site ne fonctionne pas, veuillez démarrer le service"
   },
   "monitoringVPN": {
     "currentstate": "État actuel de tous les moniteurs",

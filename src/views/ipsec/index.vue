@@ -3,9 +3,8 @@
     <base-layout :title="$t('subtitle.siteToSiteVpn')">
 
       <template #content>
-        <v-alert v-model="isIpsecrunning" density="compact" type="warning"
-          ><span style="font-size: 19px"
-            >{{ $t("PageIpsec.IpsecStatus") }}
+        <v-alert v-model="this.isIpsecnotrunning" density="compact" type="warning"><span style="font-size: 19px">{{
+          $t("PageIpsec.IpsecStatus") }}
           </span>
         </v-alert>
         <v-tabs v-model="activeTab">
@@ -15,11 +14,7 @@
         </v-tabs>
 
         <v-window v-model="activeTab">
-          <v-window-item
-            v-for="(tab, index) in tabs"
-            :key="index"
-            :value="tab.label"
-          >
+          <v-window-item v-for="(tab, index) in tabs" :key="index" :value="tab.label">
             <v-card>
               <v-card-text>
                 <component :is="tab.component" :dataServer="dataServer" />
@@ -37,6 +32,7 @@ import BaseLayout from "@/layouts/layout.vue";
 import ipsecAdvancedParams from "./ipsecAdvancedParams.vue";
 import ConfigurationList from "./component/configurationList.vue";
 import Monotoring from "./component/monotoring.vue";
+import { getCookie } from "@/mixins/csrftoken.js";
 import axios from "axios";
 
 export default {
@@ -51,7 +47,8 @@ export default {
   data() {
     return {
       activeTab: "",
-      isIpsecrunning: false,
+      last_Subscription: [],
+      isIpsecnotrunning: false,
       tabs: [
         {
           id: 1,
@@ -80,40 +77,64 @@ export default {
       this.dataServer = val;
     },
   },
-  mounted: async function () {
-    
+  mounted() {
+    const csrfToken = getCookie("csrftoken");
+    axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    axios.get("/subscription/list_features_about_last_subscription").then((response) => {
+      this.last_Subscription = response.data.list_features
+      console.log('last sub', response.data.list_features)
+
+    });
+
     axios.get("/ipsec/getIPsecStatus").then((response) => {
-      console.log("response",response.data)
-      this.isIpsecrunning = !response.data;
-      console.log('statusipsec',this.isIpsecrunning)
+      this.isIpsecnotrunning = !response.data;
+      console.log('statusipsec', !this.isIpsecnotrunning)
     });
-    setTimeout(()=>{
-      console.log('statuaaaasipsec',this.isIpsecrunning)
+    setTimeout(() => {
+      this.emitter.on("reload-tabs", () => {
+        let tab = localStorage.getItem("ipsec-tab") || "tabs.tunnelConfig";
 
-    this.emitter.on("reload-tabs", () => {
-      let tab = localStorage.getItem("ipsec-tab") || "tabs.tunnelConfig";
+        if (tab) this.activeTab = tab;
+      });
 
-      if (tab) this.activeTab = tab;
-    });
+      let ids = localStorage.getItem("ipsec-tab") || "tabs.tunnelConfig";
+      if (ids) this.activeTab = ids;
 
-    let ids = localStorage.getItem("ipsec-tab") || "tabs.tunnelConfig";
-    if (ids) this.activeTab = ids;
+      this.serverInfo =
+        document.getElementById("app").attributes["servers"].value;
+      this.emitter.on("add-serverIpsec", () => {
+        this.activeTab = "tabs.tunnelConfig";
+      });
+      this.emitter.on("open-listingIpsec", () => {
+        this.activeTab = "tabs.ipsecPeers";
+      });
 
-    this.serverInfo =
-      document.getElementById("app").attributes["servers"].value;
-    this.emitter.on("add-serverIpsec", () => {
-      this.activeTab = "tabs.tunnelConfig";
-    });
-    this.emitter.on("open-listingIpsec", () => {
-      this.activeTab = "tabs.ipsecPeers";
-    });
-
-    this.rowDataServers =
-      document.getElementById("app").attributes["servers"].value;
-    let validJsonString = this.rowDataServers;
-    let parsedArray = JSON.parse(validJsonString);
-    this.rowDataServers = parsedArray;
-  },1000)
+      this.rowDataServers =
+        document.getElementById("app").attributes["servers"].value;
+      let validJsonString = this.rowDataServers;
+      let parsedArray = JSON.parse(validJsonString);
+      this.rowDataServers = parsedArray;
+      if (!this.last_Subscription.includes("VPN IPSEC") && this.isIpsecnotrunning === false) {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+        const status = "stop";
+        const data = {
+          "status": status,
+        };
+        let endpoint = "statusIPsec";
+        axios
+          .post(`/ipsec/${endpoint}`, data)
+          .then((response) => {
+            console.log("response", response);
+            setTimeout(() => {
+              location.reload();
+            }, 1000);
+          })
+          .catch((i) => {
+            console.error("Error in status change", error);
+          });
+      }
+    }, 1000)
   },
 };
 </script>
@@ -125,6 +146,7 @@ export default {
   object-fit: cover;
   overflow: hidden;
 }
+
 .img-containter {
   display: flex;
   width: 100%;

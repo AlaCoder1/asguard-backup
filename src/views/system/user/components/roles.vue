@@ -165,7 +165,11 @@ export default {
           .join(" , ");
 
         let eGui = document.createElement("div");
-        eGui.innerHTML = resultWithBr;
+        eGui.innerHTML = `${
+          resultWithBr === "all"
+            ? resultWithBr
+            : "[ default + ] :  " + resultWithBr
+        }`;
         return eGui;
       }
     }
@@ -215,12 +219,12 @@ export default {
           params.data.name === "default" ||
           params.data.name === "viewer"
         ) {
+          // <button
+          //    >
+          //       <i class="mdi mdi-pen-lock" style="color: #086EAE; font-size:20px;"></i>
+          //    </button>
           eGui.innerHTML = `    
-          
-          <button
-             >
-                <i class="mdi mdi-pen-lock" style="color: #086EAE; font-size:20px;"></i>
-             </button> 
+                       --
                    `;
         } else {
           eGui.innerHTML = `
@@ -318,9 +322,15 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
     return {

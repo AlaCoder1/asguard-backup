@@ -1,18 +1,14 @@
 <template>
     <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
             @click="close" />
         </div>
       </v-card>
@@ -104,6 +100,8 @@ export default {
   },
   setup() {
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const { t } = useI18n();
     const overlayTemplate = ref("");
     const state = reactive({
@@ -133,7 +131,17 @@ export default {
       // flex: 1,
       cellDataType: false,
     });
-
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege() 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("Proxy")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } else{
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  }
+});
     const listName = computed(() => {
       return t("squid.listName");
     });
@@ -259,57 +267,64 @@ export default {
     };
 
     const handleAction = (action, rowData) => {
-      const user = user_privilege('Proxy');
+      const user = user_privilege("Proxy");
       switch (action) {
         case "edit":
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
           console.log("rowData", rowData);
 
-          state.modalData = {};
-          state.editRow = rowData;
-          state.modalMode = "edit";
-          state.isModalOpen = true;
-        } else {
-        state.isviewModal = true;
-        state.viewModal = true;
-      };
+            state.modalData = {};
+            state.editRow = rowData;
+            state.modalMode = "edit";
+            state.isModalOpen = true;
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         case "enable":
-        if (user && user !== 'viewer') {
+        if (user && user !== 'viewer' && user !=='default' && last_Subscription.value.includes("Proxy")) {
           console.log("rowData", rowData);
           const csrfToken = getCookie("csrftoken");
           axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
-          let payload = {
-            group: rowData.name,
-            status: rowData.status === "Blocked" ? true : false,
-          };
+            let payload = {
+              group: rowData.name,
+              status: rowData.status === "Blocked" ? true : false,
+            };
 
-          axios
-            .post("/proxy/changeStausGroup", payload)
-            .then((response) => {
-              if (response.status == "200") {
-                state.snackbar = true;
+            axios
+              .post("/proxy/changeStausGroup", payload)
+              .then((response) => {
+                if (response.status == "200") {
+                  state.snackbar = true;
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  setTimeout(() => {
+                    location.reload();
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
                 state.loading = false;
                 state.isLoadingDialogue = false;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-                setTimeout(() => {
-                  location.reload();
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              state.snackbar = true;
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            });
-      } else {
-        state.isviewModal = true;
-        state.viewModal = true;
-      };
+
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
+          } else {
+            state.isviewModal = true;
+            state.viewModal = true;
+          }
           break;
         default:
           break;
@@ -338,6 +353,12 @@ export default {
         data-name="Unbox"
       />
     </svg></span>`;
+    
+    const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
 
       emitter.on("closeAclListModal", () => {
         state.isModalOpen = false;
@@ -367,6 +388,7 @@ export default {
       emitter,
       columnAclList,
       gridColumnApi,
+      overlayMessage,
       rowDataAclList,
       paginationLocalization,
       overlayTemplate,
@@ -379,3 +401,9 @@ export default {
   },
 };
 </script>
+<style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+</style>

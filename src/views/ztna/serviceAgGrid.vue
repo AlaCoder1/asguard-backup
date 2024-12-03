@@ -1,6 +1,6 @@
 <template>
 <v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+            <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
               <v-card color="#193286" class="alert-box">
                 <v-card-title class="img-containter">
                   <img
@@ -10,11 +10,7 @@
                     width="100"
                     height="100"
                 /></v-card-title>
-                <v-card-text>
-                  You do not have the required permissions to perform any
-                  actions.<br />
-                  Please contact the administrator if you believe this is an
-                  error.
+                <v-card-text v-html="overlayMessage">
                 </v-card-text>
 
                 <div class="mr-3 mb-5 d-flex justify-end">
@@ -23,7 +19,7 @@
                     outlined
                     color="#ffffff"
                     label-color="#213E9F"
-                    label="Close"
+                   :label="$t('buttons.close')"
                     :isLarge="true"
                     @click="close"
                   />
@@ -126,8 +122,10 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const emitter = inject("emitter");
-    const tokenStatus = ref('')
+    const tokenStatus = ref("");
 
     const state = reactive({
       modalData: {},
@@ -162,7 +160,17 @@ export default {
       paginationPageSize: 5,
       rowSelection: "single",
     });
-
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Ztna') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("ZTNA")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } else{
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  }
+});
     const name = computed(() => {
       return t("ztna.name");
     });
@@ -283,7 +291,7 @@ export default {
 
     function actionCellRenderer(params) {
       let eGui = document.createElement("div");
-      if(!tokenStatus.value){
+      if (!tokenStatus.value) {
         eGui.innerHTML = `
         <button class="action-button edit" disabled>
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
@@ -292,15 +300,16 @@ export default {
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
       `;
-      }else{
-      eGui.innerHTML = `
+      } else {
+        eGui.innerHTML = `
         <button class="action-button edit" data-action="edit">
           <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
         <button class="action-button delete" data-action="delete">
           <i class="mdi mdi-delete-circle" style="color: #086EAE; font-size: 20px;"></i>
         </button>
-      `;}
+      `;
+      }
       eGui.querySelectorAll(".action-button").forEach((button) => {
         button.addEventListener("click", () => {
           const action = button.getAttribute("data-action");
@@ -310,11 +319,11 @@ export default {
       return eGui;
     }
     const handleActionClient = (action, rowData) => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
       switch (action) {
         case "edit":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
           state.modalMode = "edit";
           state.isModalOpen = true;
           state.editRow = rowData;
@@ -323,27 +332,27 @@ export default {
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
-  
+          }
+
           break;
         case "delete":
-        if (user && user !=='viewer') {
+        if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
           OpenDelete(rowData.id);
 
           } else {
             state.isviewModal = true;
             state.viewModal = true;
-            };
+          }
           break;
         default:
           break;
       }
     };
     async function OpenDelete(itemId) {
-        state.selectedId = itemId;
-        state.deleteDialog = true;
+      state.selectedId = itemId;
+      state.deleteDialog = true;
     }
-    
+
     const cancelDelete = () => {
       state.deleteDialog = false;
     };
@@ -370,20 +379,30 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.error;
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.error;
+          }
         });
     };
 
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       let token = document.getElementById("app").getAttribute("token");
       if (token && token !== "null") {
-        tokenStatus.value = true
-      } 
-      else {
-        tokenStatus.value = false
-    }
+        tokenStatus.value = true;
+      } else {
+        tokenStatus.value = false;
+      }
       let service_policiesString = document
         .getElementById("app")
         .getAttribute("service_policies");
@@ -397,7 +416,6 @@ export default {
         gridService.value.setRowData(rowDataService.value);
       }
 
-
       emitter.on("closeServicesModal", () => {
         state.isModalOpen = false;
         state.isOpen = false;
@@ -410,16 +428,16 @@ export default {
     });
 
     const openModalAdd = () => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege("Ztna");
 
-      if (user && user !=='viewer') {
+      if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("ZTNA")) {
         state.modalData = {};
-      state.modalMode = "create";
-      state.isModalOpen = true;
-          } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-            };
+        state.modalMode = "create";
+        state.isModalOpen = true;
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
     const close = () => {
       state.isviewModal = false;
@@ -433,6 +451,7 @@ export default {
       openModalAdd,
       gridOptions,
       ServiceGRID,
+      overlayMessage,
       // openModalUpdate,
       overlayTemplate,
       confirmDelete,
@@ -440,14 +459,18 @@ export default {
       paginationLocalization,
       columnService,
       rowDataService,
-      tokenStatus
-
+      tokenStatus,
     };
   },
 };
 </script>
 
 <style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
+
 .table {
   width: 100%;
   border-collapse: collapse;

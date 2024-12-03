@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-              {{$t("nat.create_msg_dnat") }}</span
+              {{ $t("nat.create_msg_dnat") }}</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{$t("nat.update_msg_dnat") }}</span
+              {{ $t("nat.update_msg_dnat") }}</span
             >
           </v-card-title>
           <v-card-text>
@@ -55,7 +55,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                  :label="$t('nat.ent_saddr')"
+                    :label="$t('nat.ent_saddr')"
                     v-model="state.sourceAddress"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.sourceAddress.$error">
@@ -67,7 +67,7 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                  :label="$t('nat.prefix')"
+                    :label="$t('nat.prefix')"
                     v-model="state.sourcePrefix"
                     :items="numberList"
                   ></v-select>
@@ -77,11 +77,11 @@
                 </v-col>
 
                 <v-col cols="6" class="mb-n6 mt-3">
-                  <span>{{$t('nat.sport_range')}} </span>
+                  <span>{{ $t("nat.sport_range") }} </span>
                 </v-col>
                 <v-col cols="3" class="mb-n6">
                   <v-select
-                   :label="$t('nat.from')"
+                    :label="$t('nat.from')"
                     v-model="state.sourceRangeFrom"
                     :no-data-text="$t('nat.msg_no_data')"
                     :items="state.listPort"
@@ -103,7 +103,7 @@
                 </v-col>
                 <v-col cols="3" class="mb-n6">
                   <v-select
-                  :label="$t('nat.to')"
+                    :label="$t('nat.to')"
                     v-model="state.sourceRangeTo"
                     :items="state.listPortSourceTo"
                     :no-data-text="$t('nat.msg_no_data')"
@@ -131,7 +131,7 @@
                     !isHightSpecificSource
                   "
                 >
-                {{$t("nat.msg_validation_port") }}
+                  {{ $t("nat.msg_validation_port") }}
                 </p>
 
                 <v-col cols="12" class="mb-n6">
@@ -169,9 +169,9 @@
                     </v-row>
                   </v-radio-group>
                 </v-col>
-                <template v-if="state.checkInterface === 'Port Frowardin'">
+                <template v-if="state.checkInterface === 'Port Forwarding'">
                   <v-col cols="6" class="mb-n6 mt-3">
-                    <span>{{$t("nat.dport_range") }}</span>
+                    <span>{{ $t("nat.dport_range") }}</span>
                   </v-col>
                   <v-col cols="3" class="mb-n6">
                     <v-select
@@ -204,7 +204,7 @@
                   </v-col>
                   <v-col cols="3" class="mb-n6">
                     <v-select
-                    :label="$t('nat.to')"
+                      :label="$t('nat.to')"
                       v-model="state.destinationRangeTo"
                       :items="state.listPortDestinationTo"
                       :no-data-text="$t('nat.msg_no_data')"
@@ -240,13 +240,13 @@
                       !isHightSpecificDestination
                     "
                   >
-                  {{$t("nat.msg_validation_port") }}
+                    {{ $t("nat.msg_validation_port") }}
                   </p>
 
                   <v-col cols="12" class="mb-n6">
                     <v-select
                       :label="$t('nat.port')"
-                      v-model="state.port"
+                      v-model.number="state.port"
                       :no-data-text="$t('nat.msg_no_data')"
                       :items="state.listPort"
                       item-title="name"
@@ -274,7 +274,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                  :label="$t('nat.description')"
+                    :label="$t('nat.description')"
                     v-model="state.description"
                   ></v-text-field>
                 </v-col>
@@ -294,7 +294,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3" style="color: #213e9f">{{$t("firewall.cancel") }}</span>
+              <span class="pr-3 pl-3" style="color: #213e9f">{{
+                $t("firewall.cancel")
+              }}</span>
             </v-btn>
 
             <v-btn
@@ -309,7 +311,7 @@
               class="mt-3 btn-add"
               :disabled="isfalse || isfalseSpecific"
             >
-            <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
                 {{ $t("buttons.create") }}</span
               >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
@@ -365,7 +367,7 @@ export default {
     const state = reactive({
       id: null,
       //list
-      isCombo: ["Frowarding", "Port Frowardin"],
+      isCombo: ["Forwarding", "Port Forwarding"],
       versionList: [
         { name: "IPv4", slug: "ipv4" },
         { name: "IPv6", slug: "ipv6" },
@@ -404,7 +406,7 @@ export default {
       sourceAddress: "",
       sourcePrefix: "",
       destination: "",
-      checkInterface: "Frowarding",
+      checkInterface: "Forwarding",
 
       //
       sourceRangeFrom: "",
@@ -453,7 +455,7 @@ export default {
           state.sourceAddress = "";
           state.sourcePrefix = "";
           state.destination = "";
-          state.checkInterface = "Frowarding";
+          state.checkInterface = "Forwarding";
 
           //
           state.sourceRangeFrom = "";
@@ -501,7 +503,7 @@ export default {
     watch(
       () => state.checkInterface,
       (val) => {
-        if (val === "Frowarding") {
+        if (val === "Forwarding") {
           state.port = "";
           state.destinationRangeTo = "";
           state.destinationRangeFrom = "";
@@ -568,8 +570,8 @@ export default {
         state.internalAddress = data.internal_address;
 
         state.checkInterface = data.destination_port
-          ? "Port Frowardin"
-          : "Frowarding";
+          ? "Port Forwarding"
+          : "Forwarding";
 
         let filtredPort = state.listPort.filter(
           (i) => i.slug === data?.destination_port
@@ -621,7 +623,11 @@ export default {
       axios.get("/network/AllInterfaces").then(
         (response) => {
           let filtredInterface = response.data.filter(
-            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+            (i) =>
+              !i.ifname.startsWith("tun_") &&
+              !i.ifname.startsWith("tap_") &&
+              !i.name_interface.startsWith("VXLAN") &&
+              !i.name_interface.startsWith("VLAN")
           );
 
           let interfaces = filtredInterface.map((i) => {
@@ -648,7 +654,7 @@ export default {
         state.sourceAddress = "";
         state.sourcePrefix = "";
         state.destination = "";
-        state.checkInterface = "Frowarding";
+        state.checkInterface = "Forwarding";
 
         //
         state.sourceRangeFrom = "";
@@ -730,10 +736,10 @@ export default {
               : "",
           external_address: state.externalAddress,
           internal_address: state.internalAddress,
-          port_forwarding: state.checkInterface === "Frowarding" ? false : true,
+          port_forwarding: state.checkInterface === "Forwarding" ? false : true,
           description: state.description,
         };
-        if (state.checkInterface === "Port Frowardin") {
+        if (state.checkInterface === "Port Forwarding") {
           payload = {
             ...payload,
             destination_port_from:
@@ -774,9 +780,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else {
           axios
@@ -792,9 +804,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.response;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         }
       } else {
@@ -813,13 +831,15 @@ export default {
 
     const rules = computed(() => {
       return {
-        interface: { required: helpers.withMessage(error, required)},
+        interface: { required: helpers.withMessage(error, required) },
 
         sourceAddress: {
           isValidSourceAddress: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
 
@@ -835,7 +855,9 @@ export default {
           isValidSourceAddress: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         externalAddress: {
@@ -843,26 +865,28 @@ export default {
           isValidSourceAddress: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
 
         destinationRangeFrom: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.checkInterface === "Port Frowardin")
+            requiredIf(() => state.checkInterface === "Port Forwarding")
           ),
         },
         destinationRangeTo: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.checkInterface === "Port Frowardin")
+            requiredIf(() => state.checkInterface === "Port Forwarding")
           ),
         },
         port: {
           requiredIfFuction: helpers.withMessage(
             error,
-            requiredIf(() => state.checkInterface === "Port Frowardin")
+            requiredIf(() => state.checkInterface === "Port Forwarding")
           ),
         },
 

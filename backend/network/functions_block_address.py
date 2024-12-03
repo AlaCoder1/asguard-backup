@@ -17,14 +17,13 @@ def create_rule(address):
 def create_file_nftables(ifname,rules):
     commands = [
         #cmd pour supprimer la configuration ancienne
-        'if nft list tables | grep -q "filter_{}"; then sudo nft delete table inet filter_{} ; fi'.format(ifname,ifname),
+        f'sudo bash -c "if nft list tables | grep -q \'filter_{ifname}\'; then nft delete table inet filter_{ifname}; fi"',
         #cmd ajouter un dossier contenant le fichier config
-        """bash -c 'sudo mkdir -p /etc/rulesNetwork/{} && cat <<EOF > /etc/rulesNetwork/{}/nftables.conf
+        """sudo bash -c 'mkdir -p /etc/rulesNetwork/{} && sudo cat <<EOF > /etc/rulesNetwork/{}/nftables.conf
 {}
 EOF' """.format(ifname, ifname, '\n'.join(rules))
       ]
     return commands
-
 ###Function to block private or bogons address
 def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject):
     rule=''

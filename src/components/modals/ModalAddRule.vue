@@ -207,6 +207,13 @@
                 :placeholder="$t('squid.to')"
               />
             </v-col>
+
+            <p
+              class="error-feedback mb-5 ml-4"
+              v-if="state.formData.from && state.formData.from && isValidTime"
+            >
+              {{ $t("squid.errorTime") }}
+            </p>
           </template>
         </v-row>
       </form>
@@ -230,6 +237,7 @@
             large
             rounded
             outlined
+            :disabled="isValidTime"
             label-color="#213E9F"
             @click="submitForm"
             color="indigo-darken-3"
@@ -290,7 +298,7 @@ export default {
       required: true,
     },
   },
-  
+
   setup(props) {
     const { t } = useI18n();
     const { isOpenModal, editRowRule, modalModeRule } = toRefs(props);
@@ -390,7 +398,9 @@ export default {
             isValidValue: helpers.withMessage(
               formatMustBeLikeAdresseIP,
 
-              helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+              helpers.regex(
+                /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+              )
             ),
           },
 
@@ -477,6 +487,14 @@ export default {
     });
     const isTimeAndDomains = computed(() => {
       return state.formData.routageTypeDomain.slug === "domain";
+    });
+
+    const isValidTime = computed(() => {
+      if (state.formData.time) {
+        let from = dayjs(state.formData.from).format("HH:mm");
+        let to = dayjs(state.formData.to).format("HH:mm");
+        return from === to;
+      }
     });
 
     watch(
@@ -603,9 +621,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else {
           let payload = {};
@@ -672,9 +696,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         }
       } else {
@@ -692,6 +722,7 @@ export default {
       routagType,
       routagTypeDomain,
       emitter,
+      isValidTime,
       daysArray,
       closeModal,
       submitForm,

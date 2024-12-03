@@ -62,7 +62,7 @@
                 v-if="!state.isAll"
                 :readonly="state.isAll"
                 :label="$t('firewall.sport')"
-                v-model="state.formData.sport"
+                v-model.number="state.formData.sport"
                 outlined
               ></v-text-field>
               <p class="error-feedback mb-5" v-if="sportCheck">
@@ -89,7 +89,7 @@
                 v-if="!state.isAll"
                 :readonly="state.isAll"
                 :label="$t('firewall.dport')"
-                v-model="state.formData.dport"
+                v-model.number="state.formData.dport"
                 outlined
               ></v-text-field>
               <p class="error-feedback mb-5" v-if="dportCheck">
@@ -102,46 +102,93 @@
           <div class="row justify-content-center">
             <br />
             <div class="col-12 d-flex justify-center">
-              <v-btn
-                rounded
-                outlined
-                color="#213E9F"
-                :isLarge="true"
-                variant="outlined"
-                class="ml-2"
-                @click="closeModal"
+              <template v-if="!state.showConfirmation">
+                <v-btn
+                  rounded
+                  outlined
+                  color="#213E9F"
+                  :isLarge="true"
+                  variant="outlined"
+                  class="ml-2"
+                  @click="closeModal"
+                >
+                  <span style="color: #213e9f" class="pr-3 pl-3">{{
+                    $t("buttons.close")
+                  }}</span>
+                </v-btn>
+                <v-btn
+                  rounded
+                  outlined
+                  color="#213E9F"
+                  label-color="#ffffff"
+                  :isLarge="true"
+                  class="ml-2"
+                  :disabled="
+                    equal ||
+                    dportCheck ||
+                    sportCheck ||
+                    daddrCheck ||
+                    saddrCheck
+                  "
+                  @click="handleCreateClick"
+                >
+                  <span
+                    class="text-white pr-3 pl-3"
+                    v-if="modalMode === 'create'"
+                  >
+                    {{ $t("buttons.create") }}</span
+                  >
+                  <span
+                    class="text-white pr-3 pl-3"
+                    v-if="modalMode === 'edit'"
+                  >
+                    {{ $t("buttons.update") }}</span
+                  >
+                </v-btn>
+              </template>
+
+              <v-alert
+                density="compact"
+                v-if="state.showConfirmation"
+                class="custom-alert"
               >
-                <span style="color: #213e9f" class="pr-3 pl-3">{{
-                  $t("buttons.close")
-                }}</span>
-              </v-btn>
-              <v-btn
-                rounded
-                outlined
-                color="#213E9F"
-                label-color="#ffffff"
-                :disabled="
-                  equal ||
-                  dportCheck ||
-                  sportCheck ||
-                  daddrCheck ||
-                  saddrCheck ||
-                  dropReject
-                "
-                :isLarge="true"
-                class="ml-2"
-                @click="submitForm"
-              >
-                <span
-                  class="text-white pr-3 pl-3"
-                  v-if="modalMode === 'create'"
-                >
-                  {{ $t("buttons.create") }}</span
-                >
-                <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
-                  {{ $t("buttons.update") }}</span
-                >
-              </v-btn>
+                <span style="font-size: 19px">
+                  {{ $t("firewall.DropRejectRule") }}
+                </span>
+                <div class="mt-3 d-flex justify-center">
+                  <v-btn
+                    rounded
+                    outlined
+                    color="#213E9F"
+                    @click="closeConfirm"
+                    class="ml-2"
+                  >
+                    <span class="text-white pr-3 pl-3">
+                      {{ $t("buttons.cancel") }}
+                    </span>
+                  </v-btn>
+                  <v-btn
+                    rounded
+                    outlined
+                    color="#213E9F"
+                    @click="submitForm"
+                    class="ml-2"
+                  >
+                    <span
+                      class="text-white pr-3 pl-3"
+                      v-if="modalMode === 'create'"
+                    >
+                      {{ $t("buttons.create") }}
+                    </span>
+                    <span
+                      class="text-white pr-3 pl-3"
+                      v-if="modalMode === 'edit'"
+                    >
+                      {{ $t("buttons.update") }}
+                    </span>
+                  </v-btn>
+                </div>
+              </v-alert>
             </div>
           </div>
         </div>
@@ -207,6 +254,7 @@ export default {
       "all",
     ]);
     const state = reactive({
+      showConfirmation: false,
       isAll: false,
       id: "",
       interUuid: "",
@@ -371,6 +419,17 @@ export default {
       }
     );
 
+    const handleCreateClick = () => {
+      if (dropReject.value) {
+        state.showConfirmation = true;
+      } else {
+        submitForm();
+      }
+    };
+    const closeConfirm = () => {
+      state.showConfirmation = false;
+    };
+
     const equal = computed(() => {
       // let obj1 = { ...editRow.value };
       let obj1 = {
@@ -434,6 +493,7 @@ export default {
       });
     });
     const closeModal = () => {
+      state.showConfirmation = false;
       emitter.emit("closeOutboundRule");
       if (modalMode.value === "create") {
         state.formData.policy = "";
@@ -583,7 +643,9 @@ export default {
       policyList,
       protocolList,
       v$,
+      handleCreateClick,
       emitter,
+      closeConfirm,
       closeModal,
       submitForm,
     };

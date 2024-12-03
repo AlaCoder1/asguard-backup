@@ -1,7 +1,13 @@
 <template>
   <v-app id="inspire">
     <base-layout :title="$t('subtitle.siteToSiteVpn')">
+
       <template #content>
+        <v-alert v-model="isIpsecrunning" density="compact" type="warning"
+          ><span style="font-size: 19px"
+            >{{ $t("PageIpsec.IpsecStatus") }}
+          </span>
+        </v-alert>
         <v-tabs v-model="activeTab">
           <v-tab v-for="tab in tabs" :key="tab.id" :value="tab.label">
             <span style="color: #020202">{{ $t(tab.label) }}</span>
@@ -31,6 +37,7 @@ import BaseLayout from "@/layouts/layout.vue";
 import ipsecAdvancedParams from "./ipsecAdvancedParams.vue";
 import ConfigurationList from "./component/configurationList.vue";
 import Monotoring from "./component/monotoring.vue";
+import axios from "axios";
 
 export default {
   name: "IpsecComponent",
@@ -44,6 +51,7 @@ export default {
   data() {
     return {
       activeTab: "",
+      isIpsecrunning: false,
       tabs: [
         {
           id: 1,
@@ -73,6 +81,15 @@ export default {
     },
   },
   mounted: async function () {
+    
+    axios.get("/ipsec/getIPsecStatus").then((response) => {
+      console.log("response",response.data)
+      this.isIpsecrunning = !response.data;
+      console.log('statusipsec',this.isIpsecrunning)
+    });
+    setTimeout(()=>{
+      console.log('statuaaaasipsec',this.isIpsecrunning)
+
     this.emitter.on("reload-tabs", () => {
       let tab = localStorage.getItem("ipsec-tab") || "tabs.tunnelConfig";
 
@@ -96,6 +113,7 @@ export default {
     let validJsonString = this.rowDataServers;
     let parsedArray = JSON.parse(validJsonString);
     this.rowDataServers = parsedArray;
+  },1000)
   },
 };
 </script>

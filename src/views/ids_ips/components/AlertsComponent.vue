@@ -1,19 +1,27 @@
 <template>
-    <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+  <v-overlay v-model="state.viewModal">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -128,7 +136,7 @@
 import { useI18n } from "vue-i18n";
 import VButton from "@/components/VButton.vue";
 import { AgGridVue } from "ag-grid-vue3";
-import { onMounted, reactive, ref,computed } from "vue";
+import { onMounted, reactive, ref, computed } from "vue";
 import { inject } from "vue";
 import { user_privilege } from "@/mixins/user_privilege.js";
 
@@ -146,6 +154,8 @@ export default {
   },
   setup(props) {
     const emitter = inject("emitter");
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const overlayTemplate = ref("");
     const { t } = useI18n();
     const state = reactive({
@@ -168,6 +178,17 @@ export default {
     const severity = computed(() => {
       return t("suricata.severity");
     });
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege('Suricata') 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("IDS/IPS")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } else{
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  }
+});
     const LINUXTimestamp = computed(() => {
       return t("suricata.LINUXTimestamp");
     });
@@ -255,12 +276,12 @@ export default {
     const rowDataAlerts = reactive({});
     const handleRemove = (index) => {
       const user = user_privilege('Suricata');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("IDS/IPS")) {
       state.messages[index].snackbar = false;
     } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
     const gridApi = ref(null); // Optional - for accessing Grid's API
     const gridOptions = ref({
@@ -348,49 +369,58 @@ export default {
       return cookieValue;
     }
     const reloadData = async () => {
-      const user = user_privilege('Suricata');
-      if (user && user !== 'viewer') {
-      const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-      state.loading = true;
-      state.isLoadingDialogue = true;
-      try {
-        const response = await axios.post(
-          "/ids-ips/addalertsToDatabase/" + props.configInfo
-        );
-        if (response.status === 200) {
-          state.loading = false;
-          state.isLoadingDialogue = false;
-          state.snackbar = true;
-          // state.messages=response.data.message
-          showMessage({
-            color: "success",
-            text: t("suricata.allAlertsuccessfully"),
-          });
-        } else {
-          state.loading = false;
-          state.isLoadingDialogue = false;
-          state.snackbar = true;
-          showMessage({
-            color: "error",
-            text: t("suricata.failed"),
-          });
-        }
-      } catch (error) {
+  const user = user_privilege('Suricata');
+  if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("IDS/IPS")) {
+    const csrfToken = getCookie("csrftoken");
+    axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    state.loading = true;
+    state.isLoadingDialogue = true;
+    try {
+      const response = await axios.post(
+        "/ids-ips/addalertsToDatabase/" + props.configInfo
+      );
+      if (response.status === 200) {
+        state.loading = false;
+        state.isLoadingDialogue = false;
+        state.snackbar = true;
+        showMessage({
+          color: "success",
+          text: t("suricata.allAlertsuccessfully"),
+        });
+      } else {
         state.loading = false;
         state.isLoadingDialogue = false;
         state.snackbar = true;
         showMessage({
           color: "error",
-          text: error,
+          text: t("suricata.failed"),
         });
       }
-    } else {
-        state.isviewModal = true;
-        state.viewModal = true;
-      };
-    };
-    
+    } catch (error) {
+      state.loading = false;
+      state.isLoadingDialogue = false;
+
+      if (error.response && error.response.status === 500) {
+        state.snackbar = true;
+        showMessage({
+          color: "error",
+          text: t("errors.errorServer"),
+        });
+      } else {
+        state.snackbar = true;
+        showMessage({
+          color: "error",
+          text: t("suricata.failed"),
+        });
+      }
+    }
+  } else {
+    state.isviewModal = true;
+    state.viewModal = true;
+  }
+};
+
+
     const getData = () => {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -407,6 +437,11 @@ export default {
     };
 
     onMounted(async () => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
       overlayTemplate.value = `<span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
         d="m86.69 32.608-8.65-4.868 8.65-4.868a1 1 0 0 0 0-1.744l-32-18a1.002 1.002 0 0 0-.98 0L44 8.593l-9.71-5.465a1.002 1.002 0 0 0-.98 0l-32 18a1 1 0 0 0 0 1.744l8.65 4.868-8.65 4.868a1 1 0 0 0 0 1.744l9.69 5.45V66a1.001 1.001 0 0 0 .51.872l32 18A1.203 1.203 0 0 0 44 85a1.232 1.232 0 0 0 .49-.128l32-18A1.001 1.001 0 0 0 77 66V39.802l9.69-5.45a1 1 0 0 0 0-1.744zM43 44.03 14.04 27.74 43 11.45zm2-32.58 28.96 16.29L45 44.03zm9.2-6.303L84.161 22 76 26.593 46.04 9.74zm-20.4 0 8.16 4.593-22.47 12.64L12 26.593 3.839 22zM12 28.887 41.96 45.74l-8.16 4.593L3.839 33.48zm1 12.042 20.31 11.423a1 1 0 0 0 .98 0L43 47.45v34.84L13 65.415zm62 0v24.486L45 82.29V47.45l8.71 4.901a1 1 0 0 0 .98 0zm-20.8 9.404-8.16-4.593L76 28.888l8.161 4.592z"
@@ -454,6 +489,7 @@ export default {
       close,
       reloadData,
       showMessage,
+      overlayMessage,
       handleRemove,
       updateIndex,
       getData,
@@ -463,6 +499,10 @@ export default {
 </script>
 
 <style scoped>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
 .grid-container {
   height: 400px;
   max-height: 100%; /* Ajustez cette valeur en fonction de vos besoins */

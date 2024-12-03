@@ -2,13 +2,16 @@ from django.core import serializers
 import json
 
 from backend.nat.models import DNat, OneToOneNat, SNat
-from backend.nat.utils import save_rules_handle_after_reboot
+from backend.nat.utils import deactivate_all_rules, synchronize_rules_handle
 
 
 # SNAT list
 def get_list_all_snat():
     """Getting all snat from database"""
-    save_rules_handle_after_reboot()
+    try:
+        synchronize_rules_handle()
+    except Exception:
+        deactivate_all_rules()
 
     list_snat = []
     snats = SNat.objects.all().order_by('snat_position')

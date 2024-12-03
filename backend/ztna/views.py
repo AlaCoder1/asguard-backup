@@ -1,10 +1,10 @@
 import json
-from backend.ztna.models import Enrollements, Identities,HostConfigs,InterceptConfigs, Relays, RelaysPolicy, Services, ServicesPolicy, ServicesRelaysPolicy
+from backend.ztna.models import Identities,HostConfigs,InterceptConfigs, Relays, RelaysPolicy, Services, ServicesPolicy, ServicesRelaysPolicy
 from backend.ztna.serializers import EnrollementsSerializer, HostSerializerUpdate, IdentitiesSerializer, IdentitiesSerializerUpdate, InterceptConfigsSerializer,HostConfigsSerializer, InterceptSerializerUpdate, RelaysPolicySerializerUpdate, RelaysSerializerUpdate, RelaysPolicySerializer, RelaysSerializer, RelaysSerializerUpdate, ServicesPolicySerializer, ServicesPolicySerializerUpdate, ServicesRelaysPolicySerializer, ServicesRelaysPolicySerializerUpdate, ServicesSerializer, ServicesSerializerUpdate
 from utils.errors_utils import CommandExecutionError
 from .constant_variables import PATH_ZTNA_CONFIGS, PATH_ZTNA_EDGE_ROUTERS_POLICIES, PATH_ZTNA_ENROLLMENTS, PATH_ZTNA_IDENTITIES, PATH_ZTNA_ROUTERS, PATH_ZTNA_SERVICES, PATH_ZTNA_SERVICES_EDGE_ROUTERS_POLICIES, PATH_ZTNA_SERVICES_POLICIES
 from .utils import change_ports_yaml_file, change_status_router, change_status_ztna_service, check_host_templates, create_router, delete_router, get_Zt_Token, get_identities_from_ziti, get_routers_from_ziti, get_status_router_from_system, get_status_ztna_service, local_domain_linux_name, local_domain_windows_name, update_router
-from django.http import HttpResponse, JsonResponse
+from django.http import JsonResponse
 from django.utils.translation import gettext_lazy as _
 import requests
 from drf_yasg.utils import swagger_auto_schema
@@ -23,7 +23,6 @@ CONSTANT_ENROLLMENT = _('Enrollment')
 CONSTANT_RELAY = _('Relay')
 CONSTANT_CONFIGURATION = _('Configuration')
 CONSTANT_SERVICE = _('Service')
-CONSTANT_TERMINATOR = _('Terminator')
 CONSTANT_EDGE_ROUTER_POLICIE = _('Relay Policy')
 CONSTANT_SERVICE_POLICIE = _('Service Policy')
 CONSTANT_SERVICE_EDGE_ROUTER_POLICIE = _('Service Relay Policy')
@@ -34,12 +33,12 @@ SUCCESS_MESSAGES_UPDATING = _("is updated")
 SUCCESS_MESSAGES_STARTING = _("is started")
 SUCCESS_MESSAGES_STOPING = _("is stoped")
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
-ERROR_MESSAGES_STARTING = _("Error in starting")
-ERROR_MESSAGES_STOPING = _("Error in stoping")
-ERROR_MESSAGES_STATUS = _("Error in getting status")
+ERROR_MESSAGES_CREATING = _("System error in creating")
+ERROR_MESSAGES_DELETING = _("System error in deleting")
+ERROR_MESSAGES_UPDATING = _("System error in updating")
+ERROR_MESSAGES_STARTING = _("System error in starting")
+ERROR_MESSAGES_STOPING = _("System error in stoping")
+ERROR_MESSAGES_STATUS = _("System error in getting status")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 

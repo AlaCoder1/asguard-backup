@@ -7,9 +7,6 @@
             <span class="headline" v-if="modalMode === 'create'">
               {{ $t("typeInterface.createNewInterface") }} Interface</span
             >
-            <span class="headline" v-if="modalMode === 'edit'">
-              {{ $t("buttons.update") }} Interface</span
-            >
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -315,9 +312,15 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           } else if (state.typeV === "VXLAN") {
             let payload = {
@@ -336,9 +339,15 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           }
         } else if (modalMode.value === "create") {
@@ -364,9 +373,15 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           } else if (state.typeV === "VXLAN") {
             let payload = {
@@ -393,9 +408,15 @@ export default {
                 }
               })
               .catch((i) => {
-                state.snackbar = true;
-                state.color = "red";
-                state.textAlert = i.response.data.msg;
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.msg;
+                }
               });
           }
         }

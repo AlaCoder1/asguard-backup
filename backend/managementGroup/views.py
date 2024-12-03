@@ -12,14 +12,13 @@ from django.core import serializers
 
 # Constants
 CONSTANT_GROUPE_NAME= _('Groupe name')
+CONSTANT_GROUPE_DESCRIPTION= _('Groupe description')
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
 
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
 ERROR_MESSAGES_INVALID = _("Invalid")
 ERROR_MESSAGES_EXISTANT = _("Already exist")
 
@@ -120,7 +119,7 @@ def changeGroupname(request, id):
             if oldgroupname == Newgroupname:
                 group.description = description
                 group.save()
-                msg = f"{CONSTANT_GROUPE_NAME} {SUCCESS_MESSAGES_UPDATING}"
+                msg = f"{CONSTANT_GROUPE_DESCRIPTION} {SUCCESS_MESSAGES_UPDATING}"
                 return JsonResponse({"msg": msg})
             elif group_exists(Newgroupname):
                 msg = f"{Newgroupname} {ERROR_MESSAGES_EXISTANT}"

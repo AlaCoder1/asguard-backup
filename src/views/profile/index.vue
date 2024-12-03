@@ -512,10 +512,15 @@ export default {
             }
           })
           .catch((i) => {
-            console.log("i", i.response);
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = i.response.data.msg;
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.msg;
+            }
           });
       }
     },
@@ -543,10 +548,15 @@ export default {
             }
           })
           .catch((i) => {
-            console.log("i", i.response);
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = i.response.data.response;
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.response;
+            }
           });
       } else {
         console.log("his.v$", this.v$);

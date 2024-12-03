@@ -22,7 +22,7 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_STRING
 from django.conf import settings
 from rest_framework import status
-
+from django.core.exceptions import ObjectDoesNotExist
 from backend.waf.models import RulesWaf
 # Constants
 CONSTANT_USER = _("User")
@@ -30,6 +30,7 @@ CONSTANT_USERNAME = _("username")
 CONSTANT_PASSWORD = _("password")
 CONSTANT_PERMISSION = _("permission")
 CONSTANT_GROUPNAME = _("groupname")
+CONSTANT_ROLE = _("role")
 CONSTANT_DIRECTORY_SERVER = _("directory server")
 CONSTANT_METHOD_ADD_USER_EMAIL_SERVER = _("with their email in directory server")
 CONSTANT_METHOD_ADD_USER_EMAIL_SYSTEM = _("with simple System email")
@@ -37,20 +38,20 @@ CONSTANT_OR = _("or")
 CONSTANT_AND = _("and")
 CONSTANT_LANGUAGE = _('Language')
 CONSTANT_LDAP_UNREACHABLE=_("Directory Server unreachable")
+CONSTANT_DELETE_ROLE=_("You can't delete this role. It is used by other users")
 # Success messages
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
 SUCCESS_PASSWORD_MESSAGES_UPDATING = _("password is updated")
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
-ERROR_MESSAGES_RESET = _("Error in reset")
+ERROR_MESSAGES_CREATING = _("System error in creating")
+ERROR_MESSAGES_DELETING = _("System error in deleting")
+ERROR_MESSAGES_UPDATING = _("System error in updating")
 ERROR_MESSAGES_EXISTANT = _("already exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_INVALID_PASSWORD = _("Invalid password")
-ERROR_MESSAGES_CONNECTION = _("Error connecting to directory server")
+ERROR_MESSAGES_CONNECTION = _("System error in connecting to directory server")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -104,7 +105,7 @@ def create_role(request):
             serializer.save()
         else:
             return JsonResponse({'msg': serializer.error_messages}, status=400) 
-        return JsonResponse({'msg': data}, status=200) 
+        return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_CREATING}"}, status=200) 
     
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
@@ -118,7 +119,7 @@ def modify_role(request,id):
             serializer.save()
         else:
             return JsonResponse({'msg': serializer.error_messages}, status=400) 
-        return JsonResponse({'msg': data}, status=200) 
+        return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_UPDATING}"}, status=200) 
     
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
@@ -126,8 +127,17 @@ def modify_role(request,id):
 def delete_role(request, id):
     """Delete role"""
     role = Roles.objects.get(id=id)
+    
+    # Check if any users are linked to this role
+    users_with_role = User.objects.filter(role=role)
+    if users_with_role.exists():
+        # If the role is in use, return an error message with the usernames
+        return JsonResponse({"error": f"{CONSTANT_DELETE_ROLE}"}, status=400)
+    
+    # If no users are using the role, proceed with deletion
     role.delete()
-    return JsonResponse({"msg": f"{SUCCESS_MESSAGES_DELETING}"})
+    return JsonResponse({"msg": f"{CONSTANT_ROLE}{SUCCESS_MESSAGES_DELETING}"})
+    
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
                      operation_summary="API TO GET USER BY ID",

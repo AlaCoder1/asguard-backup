@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-             {{$t("nat.create_msg_one") }}</span
+              {{ $t("nat.create_msg_one") }}</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{$t("nat.update_msg_one")}}</span
+              {{ $t("nat.update_msg_one") }}</span
             >
           </v-card-title>
           <v-card-text>
@@ -32,7 +32,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                  :label="$t('nat.ent_saddr')"
+                    :label="$t('nat.ent_saddr')"
                     v-model="state.sourceAddress"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.sourceAddress.$error">
@@ -44,7 +44,7 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                  :label="$t('nat.prefix')"
+                    :label="$t('nat.prefix')"
                     v-model="state.sourcePrefix"
                     :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
@@ -86,7 +86,7 @@
 
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                  :label="$t('nat.ent_daddr')"
+                    :label="$t('nat.ent_daddr')"
                     v-model="state.destinationAddress"
                   ></v-text-field>
                   <p
@@ -101,7 +101,7 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                  :label="$t('nat.prefix')"
+                    :label="$t('nat.prefix')"
                     v-model="state.destinationAddressPrefix"
                     :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
@@ -117,7 +117,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                  :label="$t('nat.description')"
+                    :label="$t('nat.description')"
                     v-model="state.description"
                   ></v-text-field>
                 </v-col>
@@ -137,7 +137,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-            <span class="pr-3 pl-3" style="color: #213e9f">{{$t("firewall.cancel")}}</span>
+              <span class="pr-3 pl-3" style="color: #213e9f">{{
+                $t("firewall.cancel")
+              }}</span>
             </v-btn>
 
             <v-btn
@@ -151,7 +153,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-            <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
                 {{ $t("buttons.create") }}</span
               >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
@@ -299,7 +301,11 @@ export default {
       axios.get("/network/AllInterfaces").then(
         (response) => {
           let filtredInterface = response.data.filter(
-            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+            (i) =>
+              !i.ifname.startsWith("tun_") &&
+              !i.ifname.startsWith("tap_") &&
+              !i.name_interface.startsWith("VXLAN") &&
+              !i.name_interface.startsWith("VLAN")
           );
 
           let interfaces = filtredInterface.map((i) => {
@@ -360,9 +366,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.response;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else {
           axios
@@ -379,9 +391,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         }
       } else {
@@ -400,13 +418,15 @@ export default {
 
     const rules = computed(() => {
       return {
-        interface: {required: helpers.withMessage(error, required) },
+        interface: { required: helpers.withMessage(error, required) },
         sourceAddress: {
           required: helpers.withMessage(error, required),
           isValidSourceAddress: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         translationAddress: {
@@ -414,14 +434,18 @@ export default {
           isValidSourceAddress: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         destinationAddress: {
           isValidSourceAddress: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         sourcePrefix: {

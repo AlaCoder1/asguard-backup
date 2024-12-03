@@ -191,7 +191,11 @@ export default {
       axios.get("/network/AllInterfaces").then(
         (response) => {
           let filtredInterface = response.data.filter(
-            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+            (i) =>
+              !i.ifname.startsWith("tun_") &&
+              !i.ifname.startsWith("tap_") &&
+              !i.name_interface.startsWith("VXLAN") &&
+              !i.name_interface.startsWith("VLAN")
           );
 
           let interfaces = filtredInterface.map((i) => {
@@ -245,9 +249,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.response;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else {
           axios
@@ -265,9 +275,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         }
       } else {

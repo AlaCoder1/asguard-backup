@@ -35,7 +35,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n5 mb-1 mt-0">
                   <v-expansion-panels v-model="state.panel">
-                    <v-expansion-panel>
+                    <v-expansion-panel >
                       <v-expansion-panel-title>{{
                         $t("Waf.parameters")
                       }}</v-expansion-panel-title>
@@ -117,7 +117,7 @@
                         <v-col cols="12" class="mb-n6">
                           <v-text-field
                             label="Port"
-                            v-model="state.port"
+                            v-model.number="state.port"
                           ></v-text-field>
                           <p class="error-feedback mb-5" v-if="v$.port.$error">
                             {{ v$.port.$errors[0].$message }}
@@ -498,7 +498,25 @@ export default {
       rowDataWafApp.value = mapedRow;
     });
     const { t } = useI18n();
-
+    const ListofErrorsParams =[ "applicationName",
+  "type",
+  "protocol",
+  "serverCertif",
+  "value",
+  "port"];
+  const ListofErrorsConfigs = [
+  "rule_engine",
+"maximum_request",
+"size_file",
+"limit_action",
+"max_parsing",
+"max_number",
+"pcre_match_limit",
+"pcre_limit_recursion",
+"body_mimetype",
+"response_body_limit",
+"response_limit_action"
+];
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const rowDataWafApp = ref([]);
@@ -834,9 +852,15 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else {
           axios
@@ -860,13 +884,24 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         }
       } else {
-        console.log("v$", v$.value);
+        if (ListofErrorsParams.includes(v$.value.$errors[0].$property)) {
+  state.panel = 0;
+} else if (ListofErrorsConfigs.includes(v$.value.$errors[0].$property)) {
+
+  state.panel = 2;
+}
       }
     };
 
@@ -937,7 +972,12 @@ export default {
     const and = computed(() => {
       return t("Waf.and");
     });
-
+    const formaaddress = computed(() => {
+      return t("errors.formatMustBeLikeAdresseIP");
+    });
+    const isValidRemoteGateway = helpers.regex(
+      /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+    );
     const rules = computed(() => {
       return {
         applicationName: {
@@ -947,10 +987,24 @@ export default {
             helpers.regex(/^[A-Za-z0-9_\-]+$/)
           ),
         },
-
         value: {
           required: helpers.withMessage(error, required),
+          isValidAddress: helpers.withMessage(formaaddress, (value) => {
+            if (state.type === "ip") {
+              return isValidRemoteGateway(value);
+            }
+            return true;
+          }),
         },
+
+        // value: {
+        //   required: helpers.withMessage(error, required),
+
+        //   // isValidlRemoteGateway: helpers.withMessage(
+        //   //   formaaddress,
+        //   //   helpers.regex(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/)
+        //   // ),
+        // },
         protocol: {
           required: helpers.withMessage(error, required),
         },

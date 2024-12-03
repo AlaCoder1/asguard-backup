@@ -13,7 +13,7 @@ from backend.sdwan.list_sdwan_rule import get_list_all_sdwan_rule, get_one_sdwan
 from backend.sdwan.models import Area, SdwanRules
 from backend.sdwan.serializers import AreaSerializer, SdwanRulesSerializer
 from backend.sdwan.utils import routing_table_id
-from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, stop_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
+from backend.sdwan.utils_system import create_sdwan_rule_in_system, delete_sdwan_rule_in_system, start_sdwan_rule_in_system, update_sdwan_rule_in_system
 from utils.errors_utils import CommandExecutionError
 
 
@@ -27,11 +27,11 @@ SUCCESS_MESSAGES_UPDATING = _("is updated")
 SUCCESS_MESSAGES_STARTING = _("is started")
 SUCCESS_MESSAGES_STOPING = _("is stoped")
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
-ERROR_MESSAGES_STARTING = _("Error in starting")
-ERROR_MESSAGES_STOPING = _("Error in stoping")
+ERROR_MESSAGES_CREATING = _("System error in creating")
+ERROR_MESSAGES_DELETING = _("System error in deleting")
+ERROR_MESSAGES_UPDATING = _("System error in updating")
+ERROR_MESSAGES_STARTING = _("System error in starting")
+ERROR_MESSAGES_STOPING = _("System error in stoping")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
@@ -258,7 +258,6 @@ def update_sdwan_rule(request, id):
                 # Stop the rule
                 sdwan_rule.rule_status = False
                 sdwan_rule.save()
-                stop_sdwan_rule_in_system()
                 
                 # Start the rule
                 sdwan_rule.rule_status = True
@@ -293,6 +292,8 @@ def start_sdwan_rule(request, id):
         return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_STARTING}"}, status=201)
         
     except CommandExecutionError:
+        sdwan_rule.rule_status = False
+        sdwan_rule.save()
         return JsonResponse({"error": f"{ERROR_MESSAGES_STARTING} {CONSTANT_SDWAN_RULE}"}, status=400)
     except SdwanRules.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_SDWAN_RULE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
@@ -307,8 +308,6 @@ def stop_sdwan_rule(request, id):
         sdwan_rule = SdwanRules.objects.get(id=id)
         sdwan_rule.rule_status = False
         sdwan_rule.save()
-        stop_sdwan_rule_in_system()
-        
         return JsonResponse({"msg": f"{sdwan_rule.name} {SUCCESS_MESSAGES_STOPING}"}, status=201)
         
     except CommandExecutionError:

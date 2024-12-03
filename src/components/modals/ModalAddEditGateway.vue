@@ -4,7 +4,7 @@
       <form ref="myForm" @submit.prevent="submitForm" style="overflow: auto">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> {{$t('openvpn.Gateway')}}</span>
+            <span class="text-h5"> {{ $t("openvpn.Gateway") }}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
@@ -85,7 +85,7 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3">{{$t("buttons.close")}}</span>
+              <span class="pr-3 pl-3">{{ $t("buttons.close") }}</span>
             </v-btn>
 
             <v-btn
@@ -99,7 +99,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-              <span class="text-white pr-3 pl-3">{{$t("buttons.Add")}}</span>
+              <span class="text-white pr-3 pl-3">{{ $t("buttons.Add") }}</span>
             </v-btn>
           </v-card-actions>
         </v-card>
@@ -298,7 +298,9 @@ export default {
           isValidDns_server: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         gateway: {

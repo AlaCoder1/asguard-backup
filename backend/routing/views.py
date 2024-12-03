@@ -24,9 +24,10 @@ SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
+ERROR_MESSAGES_CREATING = _("System error in creating")
+ERROR_MESSAGES_DELETING = _("System error in deleting")
+ERROR_MESSAGES_UPDATING = _("System error in updating")
+ERROR_MESSAGES_EXISTING_NETWORK_GATEWAY = _("Route with this network and gateway exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 ERROR_MESSAGES_USED_ITEM = _("Unable to use this ")
 
@@ -95,7 +96,8 @@ def create_routing(request):
     """Creating a new Route and adding it to the database"""
     try:
         data = request.data
-        gateway = data.get("gateway")
+        gateway = data.get("gateway", "")
+        gateway_data = data.get("gateway", "")
 
         # Create a new Gateway and GatewayInterface
         if data.get("gateway_create"):
@@ -107,22 +109,28 @@ def create_routing(request):
                 return JsonResponse({"error": f"{ERROR_MESSAGES_USED_ITEM} {CONSTANT_INTERFACE}"}, status=400)
             else:
                 return JsonResponse({"error": result_gateway["error"]}, status=400)
-        
-        gateway_instance = Gateway.objects.get(id=gateway)
-        gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance)
-        gateway_address = gateway_instance.gwaddress
-        interface_ifname = gateway_interface_instance.interface.ifname
-        routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
-                          gateway_interface_instance.metric)
-        
+        # Add an error message for unique constraints of Network and Gateway 
+        if len(Routing.objects.filter(destination_address=data["destination_address"], gateway=gateway)) > 0:
+            return JsonResponse({"error": ERROR_MESSAGES_EXISTING_NETWORK_GATEWAY}, status=400)
         serializer_routing = RoutingSerializer(data=data)
         if serializer_routing.is_valid():
+            gateway_instance = Gateway.objects.get(id=gateway)
+            gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance)
+            gateway_address = gateway_instance.gwaddress
+            interface_ifname = gateway_interface_instance.interface.ifname
+            routing_in_system("add", data["destination_address"], gateway_address, interface_ifname, 
+                              gateway_interface_instance.metric)
             serializer_routing.save()
             return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_CREATING}"}, status=201)
 
         return JsonResponse({"error": list(serializer_routing.errors.values())[0][0]}, status=400)
         
     except CommandExecutionError:
+        if data.get("gateway_create"):
+            gwname = f'static_gw_{gateway_data["gateway_address"]}'
+            if len(Gateway.objects.filter(gwname=gwname, gwaddress=gateway_data["gateway_address"])) == 1:
+                gateway = Gateway.objects.get(gwname=gwname, gwaddress=gateway_data["gateway_address"])
+                gateway.delete()
         return JsonResponse({"error": f"{ERROR_MESSAGES_CREATING} {CONSTANT_ROUTE}"}, status=400)
 
 
@@ -146,7 +154,13 @@ def delete_routing(request, id):
         return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
         
     except CommandExecutionError:
-        return JsonResponse({"error": f"{ERROR_MESSAGES_DELETING} {CONSTANT_ROUTE}"}, status=400)
+        # deleting routing from database even when the route does not exist in system
+        routing.delete()
+        return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
+    except GatewayInterface.DoesNotExist:
+    # deleting routing from database even when the gateway does not exist
+        routing.delete()
+        return JsonResponse({"msg": f"{CONSTANT_ROUTE} {SUCCESS_MESSAGES_DELETING}"}, status=201)
     except Routing.DoesNotExist:
         return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
 
@@ -170,15 +184,21 @@ def delete_routing(request, id):
 def update_routing(request, id):
     """Updating a Route by deleting and adding it again"""
     try:
-        data = request.data
         routing = Routing.objects.get(id=id)
-        
+    except Routing.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
+    
+    data = request.data
+    try:    
         # Delete a route
         gateway_interface_instance = GatewayInterface.objects.get(gateway=routing.gateway.pk)
         interface_ifname = gateway_interface_instance.interface.ifname
         routing_in_system("del", routing.destination_address, routing.gateway.gwaddress, interface_ifname, 
                           gateway_interface_instance.metric)
-        
+    except CommandExecutionError:
+        pass
+    
+    try:    
         gateway = data.get("gateway")
 
         # Create a new Gateway and GatewayInterface
@@ -206,5 +226,3 @@ def update_routing(request, id):
         
     except CommandExecutionError:
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_ROUTE}"}, status=400)
-    except Routing.DoesNotExist:
-        return JsonResponse({"error": f"{CONSTANT_ROUTE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)

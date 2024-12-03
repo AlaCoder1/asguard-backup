@@ -275,9 +275,15 @@ export default {
               }
             )
             .catch((i) => {
-              this.snackbar = true;
-              this.color = "red";
-              this.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = this.$t("errors.errorServer");
+              } else {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = i.response.data.error;
+              }
             });
         } else {
           const payload = {
@@ -321,9 +327,15 @@ export default {
               console.log("Resource updated:", response.data);
             })
             .catch((i) => {
-              this.snackbar = true;
-              this.color = "red";
-              this.textAlert = i.response.data.error;
+              if (i.response.status === 500) {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = this.$t("errors.errorServer");
+              } else {
+                this.snackbar = true;
+                this.color = "red";
+                this.textAlert = i.response.data.error;
+              }
             });
         }
 

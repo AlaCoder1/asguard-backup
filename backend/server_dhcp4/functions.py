@@ -107,7 +107,7 @@ def delete_dhcp4_server(id_interface,ifname):
     if ServerDhcp4.objects.filter(interface_id=id_interface).exists():
         server_object=ServerDhcp4.objects.get(interface_id=id_interface)
         commandes=[
-            '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
+            '[ -e "/etc/dhcp4_servers/{}/dhcpd.conf" ] && sudo echo -n > /etc/dhcp4_servers/{}/dhcpd.conf '.format(ifname,ifname),
             "systemctl restart --quiet dhcpd4.service"
         ]
         

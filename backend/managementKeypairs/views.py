@@ -22,8 +22,8 @@ CONSTANT_USED_ITEM = _("it's used in")
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
+ERROR_MESSAGES_CREATING = _("System error in creating")
+ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_DELETING_USED_ITEM = _("Unable to delete")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 

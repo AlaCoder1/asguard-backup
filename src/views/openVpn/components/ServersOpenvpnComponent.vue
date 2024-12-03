@@ -1,19 +1,32 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
-          <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
-        </v-card-text>
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text v-html="overlayMessage"> </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
-            @click="close" />
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
         </div>
       </v-card>
     </v-dialog>
@@ -304,6 +317,8 @@ export default {
   props: ["dataServer"],
   setup(props) {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const { dataServer } = toRefs(props);
     const emitter = inject("emitter");
 
@@ -387,6 +402,23 @@ export default {
     });
     const champ = computed(() => {
       return t("champs.indication");
+    });
+    const overlayMessage = computed(() => {
+      current_user.value = user_privilege("Openvpn");
+      console.log("current_user", current_user.value);
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t(
+          "profil.ContactAdmin"
+        )}`;
+      } else if (!last_Subscription.value.includes("VPN SSL")) {
+        return `${t(
+          "firewall.msg_subscription"
+        )}<br /><a href="/asguard/subscription/" class="white-link"> ${t(
+          "firewall.sub_page"
+        )}</a>`;
+      }else{
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  }
     });
     const error = computed(() => {
       return t("errors.valueRequired");
@@ -538,7 +570,9 @@ export default {
           isValidStartDHCPBridge: helpers.withMessage(
             formatMustBeLikeAdresseIP,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         endDHCPBridge: {
@@ -553,7 +587,9 @@ export default {
           isValidEndDHCPBridge: helpers.withMessage(
             formatMustBeLikeAdresseIP,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         activeDnsDefault: {
@@ -567,7 +603,9 @@ export default {
           isValidActiveDnsDefault: helpers.withMessage(
             formatMustBeLikeAdresseIP,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         activeDnsServer1: {
@@ -581,21 +619,27 @@ export default {
           isValidActiveDnsServer1: helpers.withMessage(
             formatMustBeLikeAdresseIP,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         activeDnsServer2: {
           isValidActiveDnsServer2: helpers.withMessage(
             formatMustBeLikeAdresseIP,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         activeNtpServer2: {
           isValidActiveNtpServer2: helpers.withMessage(
             formatMustBeLikeAdresseIP,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         activeNtpServer1: {
@@ -609,7 +653,9 @@ export default {
           isValidActiveNtpServer1: helpers.withMessage(
             formatMustBeLikeAdresseIP,
 
-            helpers.regex(/^(\d{1,3}\.){3}\d{1,3}$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
 
@@ -971,6 +1017,11 @@ export default {
     );
 
     onMounted(() => {
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription", last_Subscription.value);
       getInterface();
       getAllCertAuth();
       getCertif();
@@ -1085,270 +1136,293 @@ export default {
     });
 
     const submitForm = async () => {
-      const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
-      const result = await v$.value.$validate();
+      const user = user_privilege("Openvpn");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN SSL")
+      ) {
+        const result = await v$.value.$validate();
 
-      if (result) {
-        let tls_auth = null;
-        if (state.isEnableAuth) {
-          tls_auth = {
-            generate: state.isEnableAuth,
-          };
-        } else {
-          tls_auth = {
-            generate: state.isEnableAuth,
-            tls_key: state.tlsGenerate,
-          };
-        }
+        if (result) {
+          let tls_auth = null;
+          if (state.isEnableAuth) {
+            tls_auth = {
+              generate: state.isEnableAuth,
+            };
+          } else {
+            tls_auth = {
+              generate: state.isEnableAuth,
+              tls_key: state.tlsGenerate,
+            };
+          }
 
-        let bridgeSelect = null;
-        if (!state.isBridge) {
-          bridgeSelect = {
-            bridge_select: state.isBridge,
-          };
-        } else {
-          bridgeSelect = {
-            bridge_select: state.isBridge,
-            bridge_interface: state.interfaceBridge.id,
-            bridge_start_dhcp: state.startDHCPBridge,
-            bridge_end_dhcp: state.endDHCPBridge,
-          };
-        }
-        let addressPoolElected = null;
-        if (!state.adressPool) {
-          addressPoolElected = {
-            address_pool_select: state.adressPool,
-          };
-        } else {
-          addressPoolElected = {
-            address_pool_select: state.adressPool,
-            address_pool_start: state.startAddressPool,
-            address_pool_end: state.endAddressPool,
-          };
-        }
-        let electedDefaultDns = null;
-        if (!state.dnsDefaultDomain) {
-          electedDefaultDns = {
-            dns_default_domain_select: state.dnsDefaultDomain,
-          };
-        } else {
-          electedDefaultDns = {
-            dns_default_domain_select: state.dnsDefaultDomain,
-            dns_default_domain_server: state.activeDnsDefault,
-          };
-        }
-        let electedDnsServers = null;
-        if (!state.dnsServers) {
-          electedDnsServers = {
-            dns_servers_select: state.dnsServers,
-          };
-        } else {
-          electedDnsServers = {
-            dns_servers_select: state.dnsServers,
-            dns_server1: state.activeDnsServer1,
-            dns_server2: state.activeDnsServer2,
-          };
-        }
-        let electedNtpServers = null;
-        if (!state.ntpServers) {
-          electedNtpServers = {
-            ntp_servers_select: state.ntpServers,
-          };
-        } else {
-          electedNtpServers = {
-            ntp_servers_select: state.ntpServers,
-            ntp_server1: state.activeNtpServer1,
-            ntp_server2: state.activeNtpServer2,
-          };
-        }
+          let bridgeSelect = null;
+          if (!state.isBridge) {
+            bridgeSelect = {
+              bridge_select: state.isBridge,
+            };
+          } else {
+            bridgeSelect = {
+              bridge_select: state.isBridge,
+              bridge_interface: state.interfaceBridge.id,
+              bridge_start_dhcp: state.startDHCPBridge,
+              bridge_end_dhcp: state.endDHCPBridge,
+            };
+          }
+          let addressPoolElected = null;
+          if (!state.adressPool) {
+            addressPoolElected = {
+              address_pool_select: state.adressPool,
+            };
+          } else {
+            addressPoolElected = {
+              address_pool_select: state.adressPool,
+              address_pool_start: state.startAddressPool,
+              address_pool_end: state.endAddressPool,
+            };
+          }
+          let electedDefaultDns = null;
+          if (!state.dnsDefaultDomain) {
+            electedDefaultDns = {
+              dns_default_domain_select: state.dnsDefaultDomain,
+            };
+          } else {
+            electedDefaultDns = {
+              dns_default_domain_select: state.dnsDefaultDomain,
+              dns_default_domain_server: state.activeDnsDefault,
+            };
+          }
+          let electedDnsServers = null;
+          if (!state.dnsServers) {
+            electedDnsServers = {
+              dns_servers_select: state.dnsServers,
+            };
+          } else {
+            electedDnsServers = {
+              dns_servers_select: state.dnsServers,
+              dns_server1: state.activeDnsServer1,
+              dns_server2: state.activeDnsServer2,
+            };
+          }
+          let electedNtpServers = null;
+          if (!state.ntpServers) {
+            electedNtpServers = {
+              ntp_servers_select: state.ntpServers,
+            };
+          } else {
+            electedNtpServers = {
+              ntp_servers_select: state.ntpServers,
+              ntp_server1: state.activeNtpServer1,
+              ntp_server2: state.activeNtpServer2,
+            };
+          }
 
-        let client_management = null;
-        if (state.clientPort) {
-          client_management = {
-            client_management_select: state.clientPort,
-            port: state.portClient,
-            password: state.passwordClient,
-            new_password: state.NewPasswordClient,
+          let client_management = null;
+          if (state.clientPort) {
+            client_management = {
+              client_management_select: state.clientPort,
+              port: state.portClient,
+              password: state.passwordClient,
+              new_password: state.NewPasswordClient,
+            };
+          } else {
+            client_management = {
+              client_management_select: state.clientPort,
+            };
+          }
+
+          let payload = {
+            name: state.clientName,
+            description: state.description,
+            server_mode: {
+              mode: state.serverMode.slug ?? state.serverMode,
+            },
+            protocol: state.protocol.slug,
+            device_mode: state.deviceMode.slug ?? state.deviceMode,
+            interface: state.interface.name ?? state.interface,
+            local_port: state.localPort,
+            tls_auth: tls_auth,
+            ca_name: state.peerCertif.name ?? state.peerCertif,
+            server_cert: state.serverCertif.name ?? state.serverCertif,
+            dh_params_length: state.dhParameters,
+            encryption_algorithm: state.encryptAlgo,
+            auth_digest_algorithm: state.authDigest.slug ?? state.authDigest,
+            // hardware_crypto: state.hardwareCrypto.slug ?? state.hardwareCrypto,
+
+            ipv4_tunnel_network: state.ip4Tunnel,
+            gateway: state.isGateway,
+            bridge: bridgeSelect,
+            ipv4_local_network: state.iPv4Local,
+            ipv4_remote_network: state.iPv4Remote,
+            concurrent_connections: state.concurrentConnections,
+            compression: state.compression.slug ?? state.compression,
+            type_of_service: state.typefService,
+            duplicate_connections: state.Connections,
+            ipv6: state.IPv6,
+            inter_clients: state.interClients,
+            address_pool: addressPoolElected,
+            dynamic_ip: state.dynamicIP,
+            // topology: state.topology,
+            dns_default_domain: electedDefaultDns,
+            dns_servers: electedDnsServers,
+            force_dns_cache_update: state.forceDNS,
+            ntp_servers: electedNtpServers,
+            verbosity_level: state.verbLevel?.slug ?? state.verbLevel ?? "",
+            client_management: client_management,
           };
-        } else {
-          client_management = {
-            client_management_select: state.clientPort,
-          };
-        }
+          console.log("paylood", payload);
+          state.loading = true;
+          state.isLoadingDialogue = true;
 
-        let payload = {
-          name: state.clientName,
-          description: state.description,
-          server_mode: {
-            mode: state.serverMode.slug ?? state.serverMode,
-          },
-          protocol: state.protocol.slug,
-          device_mode: state.deviceMode.slug ?? state.deviceMode,
-          interface: state.interface.name ?? state.interface,
-          local_port: state.localPort,
-          tls_auth: tls_auth,
-          ca_name: state.peerCertif.name ?? state.peerCertif,
-          server_cert: state.serverCertif.name ?? state.serverCertif,
-          dh_params_length: state.dhParameters,
-          encryption_algorithm: state.encryptAlgo,
-          auth_digest_algorithm: state.authDigest.slug ?? state.authDigest,
-          // hardware_crypto: state.hardwareCrypto.slug ?? state.hardwareCrypto,
+          if (state.isEditState === "edit") {
+            axios
+              .put(`/openvpn/updateServerOpenVPN/${state.id}`, payload)
+              .then((response) => {
+                if (response.status == "201") {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+                  state.isEditState = "";
 
-          ipv4_tunnel_network: state.ip4Tunnel,
-          gateway: state.isGateway,
-          bridge: bridgeSelect,
-          ipv4_local_network: state.iPv4Local,
-          ipv4_remote_network: state.iPv4Remote,
-          concurrent_connections: state.concurrentConnections,
-          compression: state.compression.slug ?? state.compression,
-          type_of_service: state.typefService,
-          duplicate_connections: state.Connections,
-          ipv6: state.IPv6,
-          inter_clients: state.interClients,
-          address_pool: addressPoolElected,
-          dynamic_ip: state.dynamicIP,
-          // topology: state.topology,
-          dns_default_domain: electedDefaultDns,
-          dns_servers: electedDnsServers,
-          force_dns_cache_update: state.forceDNS,
-          ntp_servers: electedNtpServers,
-          verbosity_level: state.verbLevel?.slug ?? state.verbLevel ?? "",
-          client_management: client_management,
-        };
-        console.log("paylood", payload);
-        state.loading = true;
-        state.isLoadingDialogue = true;
-
-        if (state.isEditState === "edit") {
-          axios
-            .put(`/openvpn/updateServerOpenVPN/${state.id}`, payload)
-            .then((response) => {
-              if (response.status == "201") {
+                  setTimeout(() => {
+                    location.reload();
+                    emitter.emit("open-listing");
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
                 state.loading = false;
                 state.isLoadingDialogue = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
-                state.isEditState = "";
 
-                setTimeout(() => {
-                  location.reload();
-                  emitter.emit("open-listing");
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            });
-        } else {
-          axios
-            .post("/openvpn/createServerOpenvpn", payload)
-            .then((response) => {
-              if (response.status == "201") {
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
+          } else {
+            axios
+              .post("/openvpn/createServerOpenvpn", payload)
+              .then((response) => {
+                if (response.status == "201") {
+                  state.loading = false;
+                  state.isLoadingDialogue = false;
+                  state.snackbar = true;
+                  state.color = "success";
+                  state.textAlert = response.data.msg;
+
+                  setTimeout(() => {
+                    location.reload();
+                    emitter.emit("open-listing");
+                  }, 1000);
+                }
+              })
+              .catch((i) => {
                 state.loading = false;
                 state.isLoadingDialogue = false;
-                state.snackbar = true;
-                state.color = "success";
-                state.textAlert = response.data.msg;
 
-                setTimeout(() => {
-                  location.reload();
-                  emitter.emit("open-listing");
-                }, 1000);
-              }
-            })
-            .catch((i) => {
-              state.loading = false;
-              state.isLoadingDialogue = false;
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
-            });
+                if (i.response.status === 500) {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = t("errors.errorServer");
+                } else {
+                  state.snackbar = true;
+                  state.color = "red";
+                  state.textAlert = i.response.data.error;
+                }
+              });
+          }
+        } else {
+          console.log("res", v$.value);
         }
       } else {
-        console.log("res", v$.value);
+        state.isviewModal = true;
+        state.viewModal = true;
       }
-    } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-          };
     };
 
     const cancel = () => {
-
-      const user = user_privilege('Openvpn');
-      if (user && user !== 'viewer') {
-      state.id = "";
-      state.isEditState = "";
-      (state.serverModeState = "create"),
-        //General information
-        (state.clientName = "");
-      state.description = "";
-      state.serverMode = "";
-      state.protocol = "";
-      state.deviceMode = "";
-      state.interface = "";
-      state.localPort = "";
-      //Cryptographic Settings
-      state.isEnableAuth = true;
-      state.tlsGenerate = "";
-      state.peerCertif = "";
-      state.serverCertif = "";
-      state.dhParameters = "";
-      state.encryptAlgo = "";
-      state.authDigest = "";
-      // state.hardwareCrypto = {
-      //   name: "No Hardware Crypto acceleration",
-      //   slug: "No Hardware Crypto acceleration",
-      // };
-      //tunnelSettings
-      state.ip4Tunnel = "";
-      state.ip6Tunnel = "";
-      state.isGateway = false;
-      state.isBridge = false;
-      state.interfaceBridge = "";
-      state.startDHCPBridge = "";
-      state.endDHCPBridge = "";
-      state.iPv4Local = "";
-      state.iPv6Local = "";
-      state.iPv4Remote = "";
-      state.iPv6Remote = "";
-      state.concurrentConnections = "";
-      state.compression = { name: "No preference", slug: "no_preference" };
-      state.typefService = false;
-      state.Connections = true;
-      state.IPv6 = false;
-      state.interClients = false;
-      //clientSettings
-      state.dynamicIP = false;
-      state.adressPool = false;
-      state.topology = false;
-      state.dnsDefaultDomain = false;
-      state.dnsServers = false;
-      state.forceDNS = false;
-      state.ntpServers = false;
-      state.clientPort = false;
-      state.startAddressPool = "";
-      state.endAddressPool = "";
-      state.activeDnsDefault = "";
-      state.activeDnsServer1 = "";
-      state.activeDnsServer2 = "";
-      state.activeNtpServer1 = "";
-      state.activeNtpServer2 = "";
-      state.verbLevel = {
-        name: "1 (default)",
-        slug: "1",
-      };
-      v$.value.$reset();
-    } else {
-            state.isviewModal = true;
-            state.viewModal = true;
-          };
+      const user = user_privilege("Openvpn");
+      if (
+        user &&
+        user !== "viewer" &&
+        user !== "default" &&
+        last_Subscription.value.includes("VPN SSL")
+      ) {
+        state.id = "";
+        state.isEditState = "";
+        (state.serverModeState = "create"),
+          //General information
+          (state.clientName = "");
+        state.description = "";
+        state.serverMode = "";
+        state.protocol = "";
+        state.deviceMode = "";
+        state.interface = "";
+        state.localPort = "";
+        //Cryptographic Settings
+        state.isEnableAuth = true;
+        state.tlsGenerate = "";
+        state.peerCertif = "";
+        state.serverCertif = "";
+        state.dhParameters = "";
+        state.encryptAlgo = "";
+        state.authDigest = "";
+        // state.hardwareCrypto = {
+        //   name: "No Hardware Crypto acceleration",
+        //   slug: "No Hardware Crypto acceleration",
+        // };
+        //tunnelSettings
+        state.ip4Tunnel = "";
+        state.ip6Tunnel = "";
+        state.isGateway = false;
+        state.isBridge = false;
+        state.interfaceBridge = "";
+        state.startDHCPBridge = "";
+        state.endDHCPBridge = "";
+        state.iPv4Local = "";
+        state.iPv6Local = "";
+        state.iPv4Remote = "";
+        state.iPv6Remote = "";
+        state.concurrentConnections = "";
+        state.compression = { name: "No preference", slug: "no_preference" };
+        state.typefService = false;
+        state.Connections = true;
+        state.IPv6 = false;
+        state.interClients = false;
+        //clientSettings
+        state.dynamicIP = false;
+        state.adressPool = false;
+        state.topology = false;
+        state.dnsDefaultDomain = false;
+        state.dnsServers = false;
+        state.forceDNS = false;
+        state.ntpServers = false;
+        state.clientPort = false;
+        state.startAddressPool = "";
+        state.endAddressPool = "";
+        state.activeDnsDefault = "";
+        state.activeDnsServer1 = "";
+        state.activeDnsServer2 = "";
+        state.activeNtpServer1 = "";
+        state.activeNtpServer2 = "";
+        state.verbLevel = {
+          name: "1 (default)",
+          slug: "1",
+        };
+        v$.value.$reset();
+      } else {
+        state.isviewModal = true;
+        state.viewModal = true;
+      }
     };
 
     return {
@@ -1363,6 +1437,7 @@ export default {
       close,
       deviceModeList,
       protocolList,
+      overlayMessage,
       state,
       v$,
       emitter,
@@ -1375,5 +1450,9 @@ export default {
 .error-feedback {
   color: red;
   font-size: 0.85em;
+}
+.white-link {
+  color: white;
+  text-decoration: underline;
 }
 </style>

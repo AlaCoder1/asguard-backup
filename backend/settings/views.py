@@ -33,9 +33,7 @@ SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
 
 # Error messages
-ERROR_MESSAGES_CREATING = _("Error in creating")
-ERROR_MESSAGES_DELETING = _("Error in deleting")
-ERROR_MESSAGES_UPDATING = _("Error in updating")
+ERROR_MESSAGES_CREATING = _("System error in creating")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
 
 
@@ -92,7 +90,7 @@ def generale_settings(request,id):
             msg = f"{CONSTANT_SYSTEM} {SUCCESS_MESSAGES_CREATING}"
             status = 200
         else:
-            msg = f"{CONSTANT_SYSTEM} {ERROR_MESSAGES_CREATING}"
+            msg = ERROR_MESSAGES_CREATING
             status = 400
     return JsonResponse({"msg": msg}, status=status)
 

@@ -47,10 +47,8 @@ def rule_round_robin_requirements(rule_id):
 
 def get_interfaces_details(*args):
     """Take a list of name of interfaces and returns informations related to this interface"""
-    print(args)
     list_interfaces = []
     for interface_name in args:
-        print(interface_name)
         interface = Interface.objects.get(name_interface=interface_name)
         ipv4 = IP4Config.objects.get(interface=interface)
         gateway_interface = GatewayInterface.objects.get(interface=interface)
@@ -59,5 +57,4 @@ def get_interfaces_details(*args):
                                 "address": ipv4.ip_address,
                                 "mask": ipv4.netmask,
                                 "gateway": gateway.gwaddress})
-        print(list_interfaces)
     return list_interfaces

@@ -5,14 +5,14 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5">{{ mode }}</span>
+            <span class="text-h5">{{ $t("form.resetPassword") }}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="6">
                   <v-text-field
-                    label="Password"
+                    :label="$t('form.password')"
                     type="password"
                     v-model="state.formData.password"
                   ></v-text-field>
@@ -25,7 +25,7 @@
 
                 <v-col cols="6">
                   <v-text-field
-                    label="Confirm password"
+                    :label="$t('form.confirmPassword')"
                     type="password"
                     v-model="state.formData.confirm_password"
                   ></v-text-field>
@@ -44,26 +44,26 @@
             <span style="color: green; margin-top: 10px">{{ textAlert }}</span>
             <v-spacer></v-spacer>
             <v-btn
-            :rounded="true"
-            class="mt-3 btn-add text-white"
-            color="blue-darken-1"
-            variant="text"
-            @click="closeModal"
+              :rounded="true"
+              class="mt-3 btn-add text-white"
+              color="blue-darken-1"
+              variant="text"
+              @click="closeModal"
             >
-            <span class="pr-3 pl-3 text-white" style="color: #213e9f"
-                >{{$t('buttons.close')}}</span
-              >
-          </v-btn>
-          <v-btn
-            :rounded="true"
-            class="mt-3 btn-add text-white"
-            color="blue-darken-1"
-            variant="text"
-            type="submit"
-          >
-            <span class="text-white pr-3 pl-3">Save</span>
-          </v-btn>
-        </v-card-actions>
+              <span class="pr-3 pl-3 text-white" style="color: #213e9f">{{
+                $t("buttons.close")
+              }}</span>
+            </v-btn>
+            <v-btn
+              :rounded="true"
+              class="mt-3 btn-add text-white"
+              color="blue-darken-1"
+              variant="text"
+              type="submit"
+            >
+              <span class="text-white pr-3 pl-3">{{ $t("buttons.save") }}</span>
+            </v-btn>
+          </v-card-actions>
         </v-card>
       </form>
     </v-dialog>
@@ -198,12 +198,10 @@ export default {
       }
     },
   },
-  computed: {
-    // ...mapState(storeAuth, ["user"]),
-  },
+
   methods: {
     populate(data) {
-      if (this.mode == "Reset Password") {
+      if (this.mode == "update") {
         this.state.formData.password = data.password;
         this.state.userName = data.username;
 
@@ -217,32 +215,31 @@ export default {
     resetForm() {
       this.state.formData.password = "";
     },
+    getCookie(name) {
+      let cookieValue = null;
+      if (document.cookie && document.cookie !== "") {
+        const cookies = document.cookie.split(";");
+        for (let i = 0; i < cookies.length; i++) {
+          const cookie = cookies[i].trim();
+          // Does this cookie string begin with the name we want?
+          if (cookie.substring(0, name.length + 1) === name + "=") {
+            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+            break;
+          }
+        }
+      }
+      return cookieValue;
+    },
+
     submitForm() {
       this.v$.$validate();
       if (!this.v$.$error) {
-        function getCookie(name) {
-          let cookieValue = null;
-          if (document.cookie && document.cookie !== "") {
-            const cookies = document.cookie.split(";");
-            for (let i = 0; i < cookies.length; i++) {
-              const cookie = cookies[i].trim();
-              // Does this cookie string begin with the name we want?
-              if (cookie.substring(0, name.length + 1) === name + "=") {
-                cookieValue = decodeURIComponent(
-                  cookie.substring(name.length + 1)
-                );
-                break;
-              }
-            }
-          }
-          return cookieValue;
-        }
         const params = {
           new_password: this.state.formData.password,
           confirm_password: this.state.formData.confirm_password,
         };
 
-        const csrfToken = getCookie("csrftoken");
+        const csrfToken = this.getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
         axios
@@ -261,9 +258,15 @@ export default {
             }
           })
           .catch((i) => {
-            this.snackbar = true;
-            this.color = "red";
-            this.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = this.$t("errors.errorServer");
+            } else {
+              this.snackbar = true;
+              this.color = "red";
+              this.textAlert = i.response.data.error;
+            }
           });
       }
     },

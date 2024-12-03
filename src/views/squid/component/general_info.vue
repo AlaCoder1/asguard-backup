@@ -1,18 +1,14 @@
 <template>
   <v-overlay v-model="state.viewModal">
-    <v-dialog v-model="state.isviewModal" :scrim="false" width="auto">
+    <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-        <v-card-text>
-          You do not have the required permissions to perform any
-          actions.<br />
-          Please contact the administrator if you believe this is an
-          error.
-        </v-card-text>
+          <v-card-text v-html="overlayMessage">
+          </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
-          <VButton rounded outlined color="#ffffff" label-color="#213E9F" label="Close" :isLarge="true"
+          <VButton rounded outlined color="#ffffff" label-color="#213E9F"  :label="$t('buttons.close')" :isLarge="true"
             @click="close" />
         </div>
       </v-card>
@@ -20,11 +16,20 @@
   </v-overlay>
   <div class="mt-6 ml-5" style="display: flex; flex-direction: column">
     <v-overlay v-model="state.loading">
-      <v-dialog v-model="state.isLoadingDialogue" :scrim="false" persistent width="auto">
+      <v-dialog
+        v-model="state.isLoadingDialogue"
+        :scrim="false"
+        persistent
+        width="auto"
+      >
         <v-card color="#193286">
           <v-card-text>
             {{ $t("sdwan.pleaseWait") }}
-            <v-progress-linear indeterminate color="white" class="mb-0"></v-progress-linear>
+            <v-progress-linear
+              indeterminate
+              color="white"
+              class="mb-0"
+            ></v-progress-linear>
           </v-card-text>
         </v-card>
       </v-dialog>
@@ -33,13 +38,27 @@
       <v-col cols="6">
         <h4>
           {{ $t("dhcpV4.generalInformation") }}
-          <i v-if="!state.enableState" class="mdi mdi-play-circle"
-            style="color: #4caf50; font-size: 20px; cursor: pointer" :title="$t('sdwan.startServer')"
-            @click="startStopRestartServer('Start')"></i>
-          <i v-if="state.enableState" class="mdi mdi-stop-circle" :title="$t('sdwan.stop')"
-            style="color: #b00020; font-size: 20px; cursor: pointer" @click="startStopRestartServer('Stop')"></i>
-          <i v-if="state.enableState" class="mdi mdi-reload" :title="$t('interface.restart')"
-            style="color: #4caf50; font-size: 20px; cursor: pointer" @click="startStopRestartServer('Restart')"></i>
+          <i
+            v-if="!state.enableState"
+            class="mdi mdi-play-circle"
+            style="color: #4caf50; font-size: 20px; cursor: pointer"
+            :title="$t('sdwan.startServer')"
+            @click="startStopRestartServer('Start')"
+          ></i>
+          <i
+            v-if="state.enableState"
+            class="mdi mdi-stop-circle"
+            :title="$t('sdwan.stop')"
+            style="color: #b00020; font-size: 20px; cursor: pointer"
+            @click="startStopRestartServer('Stop')"
+          ></i>
+          <i
+            v-if="state.enableState"
+            class="mdi mdi-reload"
+            :title="$t('interface.restart')"
+            style="color: #4caf50; font-size: 20px; cursor: pointer"
+            @click="startStopRestartServer('Restart')"
+          ></i>
         </h4>
         <v-divider class="mt-2"></v-divider>
         <v-card class="mt-3">
@@ -48,7 +67,10 @@
               <label>{{ $t("squid.proxyPort") }}</label>
             </v-col>
             <v-col cols="5" class="mt-3">
-              <v-text-field :label="$t('squid.proxyPort')" v-model="state.proxyPort"></v-text-field>
+              <v-text-field
+                :label="$t('squid.proxyPort')"
+                v-model="state.proxyPort"
+              ></v-text-field>
               <p class="error-feedback mb-5" v-if="v$.proxyPort.$error">
                 {{ v$.proxyPort.$errors[0].$message }}
               </p>
@@ -56,8 +78,16 @@
           </v-row>
           <v-row class="d-flex justify-end mt-1 mb-2">
             <div>
-              <VButton rounded outlined color="#213E9F" label-color="#ffffff" :label="$t('buttons.save')"
-                :isLarge="true" class="mr-4" @click="saveGeneralInfo" />
+              <VButton
+                rounded
+                outlined
+                color="#213E9F"
+                label-color="#ffffff"
+                :label="$t('buttons.save')"
+                :isLarge="true"
+                class="mr-4"
+                @click="saveGeneralInfo"
+              />
             </div>
           </v-row>
         </v-card>
@@ -66,18 +96,33 @@
       <squid_auth />
       <v-dialog v-model="state.dialogServer" max-width="500px">
         <v-card>
-          <v-card-title class="headline">{{ $t(state.statusServer) }}</v-card-title>
-          <v-card-text>{{ $t("squid.etesVouSur") }} {{ $t(state.statusServer) }}
-            {{ $t("squid.thisRule") }}</v-card-text>
+          <v-card-title class="headline">{{
+            $t(state.statusServer)
+          }}</v-card-title>
+          <v-card-text
+            >{{ $t("squid.etesVouSur") }} {{ $t(state.statusServer) }}
+            {{ $t("squid.thisRule") }}</v-card-text
+          >
           <v-card-actions>
             <v-spacer></v-spacer>
-            <v-btn color="blue darken-1" text @click="state.dialogServer = false">{{ $t("buttons.cancel") }}</v-btn>
-            <v-btn color="blue darken-1" text @click="confirmationServerState">{{ $t(state.statusServer) }}
+            <v-btn
+              color="blue darken-1"
+              text
+              @click="state.dialogServer = false"
+              >{{ $t("buttons.cancel") }}</v-btn
+            >
+            <v-btn color="blue darken-1" text @click="confirmationServerState"
+              >{{ $t(state.statusServer) }}
             </v-btn>
           </v-card-actions>
         </v-card>
       </v-dialog>
-      <v-snackbar :timeout="2000" v-model="state.snackbar" location="bottom right" :color="state.color">
+      <v-snackbar
+        :timeout="2000"
+        v-model="state.snackbar"
+        location="bottom right"
+        :color="state.color"
+      >
         {{ state.textAlert }}
 
         <template v-slot:actions> </template>
@@ -88,7 +133,7 @@
 
 <script>
 import { useI18n } from "vue-i18n";
-import { reactive, computed, onMounted } from "vue";
+import { reactive, computed, onMounted ,ref} from "vue";
 import axios from "axios";
 import squid_auth from "./squid_auth.vue";
 import useValidate from "@vuelidate/core";
@@ -107,6 +152,8 @@ export default {
   },
   setup() {
     const { t } = useI18n();
+    const current_user = ref();
+    const last_Subscription = ref([]);
     const state = reactive({
       dialogServer: false,
       isviewModal: false,
@@ -130,7 +177,17 @@ export default {
     const error = computed(() => {
       return t("errors.valueRequired");
     });
-
+    const overlayMessage = computed(() => {
+current_user.value= user_privilege() 
+console.log('current_user',current_user.value)
+  if (current_user.value === "viewer" || current_user.value === "default") {
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  } else if (!last_Subscription.value.includes("Proxy")) {
+    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+  } else{
+    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+  }
+});
     const rules = computed(() => {
       return {
         proxyPort: { required: helpers.withMessage(error, required) },
@@ -141,7 +198,7 @@ export default {
 
     const saveGeneralInfo = async () => {
       const user = user_privilege('Proxy');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("Proxy")) {
         const result = await v$.value.$validate();
 
         if (result) {
@@ -169,11 +226,18 @@ export default {
               }
             })
             .catch((i) => {
-              state.snackbar = true;
               state.loading = false;
               state.isLoadingDialogue = false;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
             });
         } else {
           console.log("error", v$.value);
@@ -181,7 +245,7 @@ export default {
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
     const getCookie = (name) => {
       let cookieValue = null;
@@ -220,24 +284,30 @@ export default {
           }, 1000);
         })
         .catch((i) => {
-          console.log("i.response.data.msg", i.response);
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = i.response.data.msg;
           state.loading = false;
           state.isLoadingDialogue = false;
+
+          if (i.response.status === 500) {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = t("errors.errorServer");
+          } else {
+            state.snackbar = true;
+            state.color = "red";
+            state.textAlert = i.response.data.msg;
+          }
         });
     };
 
     const startStopRestartServer = (item) => {
       const user = user_privilege('Proxy');
-      if (user && user !== 'viewer') {
+      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("Proxy")) {
         state.dialogServer = true;
         state.statusServer = item;
       } else {
         state.isviewModal = true;
         state.viewModal = true;
-      };
+      }
     };
     const populate = () => {
       const generalInfoAttribute =
@@ -249,6 +319,11 @@ export default {
     };
     onMounted(() => {
       populate();
+      const lastSubscription =
+        document.getElementById("app").attributes["last_subscription"].value;
+      let parsedArraySubscription = JSON.parse(lastSubscription);
+      last_Subscription.value = parsedArraySubscription;
+      console.log("last_Subscription",last_Subscription.value)
     });
 
     const close = () => {
@@ -259,6 +334,7 @@ export default {
     return {
       v$,
       close,
+      overlayMessage,
       state,
       saveGeneralInfo,
       startStopRestartServer,
@@ -268,6 +344,10 @@ export default {
 };
 </script>
 <style>
+.white-link {
+  color: white;
+  text-decoration: underline;
+}
 .actionBtn {
   justify-content: end;
 }

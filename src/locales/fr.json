@@ -11,7 +11,8 @@
     "goupname": "Nom de groupe",
     "description": "Description",
     "server": "Serveur d'annuaire",
-    "LoginTime": "Temps de connexion"
+    "LoginTime": "Temps de connexion",
+    "resetPassword":"Réinitialisation du mot de passe"
   },
   "login": {
     "verifyYourAccount": "Vérifier Votre Compte",
@@ -55,6 +56,7 @@
   },
 
   "errors": {
+    "errorServer":"Erreur de serveur interne. Veuillez réessayer plus tard",
     "valueRequired": "Champs est obligatoire",
     "invalidPassword": "Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation": "Votre mot de passe ne correspond pas",
@@ -175,13 +177,16 @@
     "agGridOf": "de"
   },
   "firewall": {
+    "DropRejectRule":"Êtes-vous sûr de vouloir créer cette règle avec 'rejeter' ou 'abandonner' ?",
     "rules": "Règles",
     "msg_subscription": "Vous êtes actuellement en mode gratuit, le déverrouillage de cette fonctionnalité nécessite un paiement. Aller à",
     "sub_page": "page d'abonnement",
     "outbound": "Règles sortantes",
     "inbound": "Règles entrantes",
     "delete_confirm": "Confirmation de suppression",
+    "Save_confirm": "Confirmation de sauvegarde",
     "msg_confirm_delete": "Êtes-vous sûr de vouloir supprimer cette règle du pare-feu ?",
+    "msg_confirm_save": "Êtes-vous sûr de vouloir sauvegarder cette règle?",
     "cancel": "Annuler",
     "delete": "Supprimer",
     "search": "Recherche",
@@ -319,7 +324,8 @@
     "requestOptions": "Demande d'options",
     "requiredOptions": "Options obligatoires",
     "supersedeDomaineName": "Remplacer nom du domaine",
-    "prependDomainServer": "Serveur de domaine en amont"
+    "prependDomainServer": "Serveur de domaine en amont",
+    "numberValidity":"Format non valide. Veuillez saisir uniquement des nombres entiers."
   },
   "typeInterface": {
     "otherTypesOfInterfaces": "Autres types d'interfaces",
@@ -438,6 +444,7 @@
   },
 
   "squid": {
+    "errorTime":"L'heure de début et l'heure de fin sont identiques",
     "restart": "Veuillez redémarrer le service pour que les modifications soient prises en compte.",
     "proxyPort": "Port du proxy",
     "etesVouSur": "Êtes-vous sûr de vouloir",
@@ -530,6 +537,7 @@
   "Sunday": "Dimanche",
 
   "champs": {
+    "existGateway":"Adresse de la passerelle existe deja",
     "indication": "champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",
     "champNumber": "champs lifeTime ne peuvent inclure que des nombres.",
     "champletter": "champs d'etat ne peut inclure que des lettres.",
@@ -834,7 +842,8 @@
     "Remotesubnet": "Sous-réseau distant",
     "Phase2Proposal": "Proposition de phase 2",
     "Enable": "Activer",
-    "addnewpeer": "Ajouter un nouveau pair"
+    "addnewpeer": "Ajouter un nouveau pair",
+    "IpsecStatus": "Le VPN de site à site ne fonctionne pas, veuillez démarrer le service"
   },
   "monitoringVPN": {
     "currentstate": "État actuel de tous les moniteurs",
@@ -1067,7 +1076,9 @@
     "Update": "Mettre à jour",
     "pleaseChoose": "Veuillez choisir un fichier image",
     "fileBig": "Votre fichier est trop volumineux ! Veuillez sélectionner une image de moins de 1MB",
-    "GotIt": "Je l'ai!"
+    "GotIt": "Je l'ai!",
+    "NoPermission":"Vous ne disposez pas des autorisations requises pour effectuer des actions",
+    "ContactAdmin":"Veuillez contacter l'administrateur si vous pensez qu'il s'agit d'une erreur."
   },
   "logrotate": {
     "id": "ID",

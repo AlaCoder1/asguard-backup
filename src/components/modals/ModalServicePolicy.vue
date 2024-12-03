@@ -116,6 +116,8 @@ import axios from "axios";
 import { toRefs, ref, watch, reactive, inject } from "vue";
 import { getCookie } from "@/mixins/csrftoken.js";
 import { onMounted } from "vue";
+import { useI18n } from "vue-i18n";
+
 
 export default {
   props: {
@@ -133,6 +135,7 @@ export default {
     },
   },
   setup(props) {
+    const { t } = useI18n();
     const name = ref("");
     const ServicePolicies = ref([])
     const ServList = ref([]);
@@ -325,10 +328,15 @@ export default {
             }
           })
           .catch((i) => {
-            console.log("response", i.response);
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       } else {
         axios
@@ -350,10 +358,15 @@ export default {
             }
           })
           .catch((i) => {
-            console.log("response", i.response);
-            state.snackbar = true;
-            state.color = "red";
-            state.textAlert = i.response.data.error;
+            if (i.response.status === 500) {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("errors.errorServer");
+            } else {
+              state.snackbar = true;
+              state.color = "red";
+              state.textAlert = i.response.data.error;
+            }
           });
       }
     };

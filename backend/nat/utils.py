@@ -1,7 +1,5 @@
-from django.db.models import Q
-
 from backend.nat.models import DNat, OneToOneNat, SNat
-from backend.nat.utils_system import find_nat_in_ruleset
+from backend.nat import utils_system
 from utils.commands_utils import execute_command_without_arguments
 
 
@@ -17,7 +15,7 @@ def get_rule_handle_in_system(nat_type="postrouting", rule_position=0):
     """Return the last rule handle from ruleset"""
     rule_set = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
 
-    list_nat_rules = find_nat_in_ruleset(rule_set.stdout, nat_type)
+    list_nat_rules = utils_system.find_nat_in_ruleset(rule_set.stdout, nat_type)
     handle_number = get_rule_handle_with_position(list_nat_rules, rule_position)
     return handle_number
     
@@ -33,11 +31,10 @@ def save_handle_from_system_to_database(list_routing_from_db, list_routing_from_
         list_routing_from_db[rule_index].save()
 
 
-def save_rules_handle_after_reboot():
-    # Get list of nat rules from system: postrouting (SNAT and One To One) and prerouting (DNAT)
-    ruleset = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
-    list_postrouting_from_system = find_nat_in_ruleset(ruleset.stdout, "postrouting")
-    list_prerouting_from_system = find_nat_in_ruleset(ruleset.stdout, "prerouting")
+def synchronize_rules_handle():
+    """Synchronize nat rules handle by extracting them from system and save them in database"""
+    # Get list of nat rules from system: postrouting and prerouting
+    list_postrouting_from_system, list_prerouting_from_system = utils_system.get_list_nat_rules_from_system()
 
     # Get all active rules from database
     # Get active rules for chain prerouting (DNAT)
@@ -53,12 +50,29 @@ def save_rules_handle_after_reboot():
     save_handle_from_system_to_database(list_prerouting_from_db, list_prerouting_from_system)
 
 
+def deactivate_all_rules():
+    """Deactivating all nat rules:
+    1. Deleting them from system
+    2. Making rule_status filed False
+    3. Making postrouting_position and prerouting_position fields None"""
+    utils_system.delete_all_nat_rule_from_system()
+    SNat.objects.filter(rule_status=True).update(rule_status=False, 
+                                                 postrouting_position=None, 
+                                                 rule_number=None)
+    OneToOneNat.objects.filter(rule_status=True).update(rule_status=False, 
+                                                        postrouting_position=None, 
+                                                 rule_number=None)
+    DNat.objects.filter(rule_status=True).update(rule_status=False, 
+                                                 prerouting_position=None, 
+                                                 rule_number=None)
+
+
 def update_position_nat(chain="postrouting"):
     """Update the activated rules position after the changes like adding or deleting a rule"""
     
     # Get list of nat rules from system: postrouting (SNAT and One To One) or prerouting (DNAT)
     ruleset = execute_command_without_arguments(["sudo", "nft", "-a", "list", "table", "nat"])
-    list_routing_from_system = find_nat_in_ruleset(ruleset.stdout, chain)
+    list_routing_from_system = utils_system.find_nat_in_ruleset(ruleset.stdout, chain)
     if chain == "postrouting":
         SNat.objects.filter(rule_status=True).update(postrouting_position=None)
         OneToOneNat.objects.filter(rule_status=True).update(postrouting_position=None)

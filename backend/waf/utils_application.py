@@ -1,6 +1,7 @@
 from backend.managementCertificates.constant_variables import PATH_SERVER_CERT_CRT, PATH_SERVER_CERT_KEY
 from backend.waf.constant_variables import PATH_CRS_SETUP, PATH_MAIN_WAF, PATH_MODESC, PATH_NGINX_SITES_AVAILABLE, PATH_NGINX_SITES_ENABLED, PATH_RULES_WAF, PATH_WAF_CONFIG
 from backend.waf.models import ApplicationWaf, RulesWaf
+from backend.waf.utils import create_reverse_proxy_config
 from backend.waf.utils_config import create_waf_config
 from utils.commands_utils import append_file_from_system, execute_command_without_arguments, execute_list_commands_without_arguments, read_file_from_system, write_file_from_system
 
@@ -17,71 +18,15 @@ def create_application_waf_in_system(app_data):
 
     ########## Configuartion of the application ##########
     # Add a modsecurity config file for the app
-    execute_command_without_arguments(["sudo", "cp", PATH_WAF_CONFIG, app_modsecurity_config])
-
-    # Add reverse proxy config for the app 
-    modsecurity = f"""
-        modsecurity on;
-        modsecurity_rules_file {app_config};"""
-    location = f"""
-        location / {{
-            proxy_pass {app_data["application_protocol"]}://{app_data["application_value"]};
-            proxy_set_header Host $host;
-            proxy_set_header X-Real-IP $remote_addr;
-            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-            proxy_set_header X-Forwarded-Proto $scheme;
-        }}"""
-    
-    # Config for HTTP
-    if app_data["application_protocol"] == "http": 
-        config_reverse_proxy = f"""
-server {{
-        listen {app_data["application_port"]};
-
-        {modsecurity}
-
-        {location}
-
-}}"""
-    # Config for HTTPS
+    if app_data["application_protocol"] == "https":
+        create_reverse_proxy_config(app_config, app_sites_available_config, app_modsecurity_config, 
+                                    app_data["application_type"], app_data["application_protocol"], 
+                                    app_data["application_value"], app_data["application_port"], 
+                                    app_data["certificate_name"])
     else:
-        # Add SSL settings for the proxy
-        location = location.replace("proxy_set_header X-Forwarded-Proto $scheme;", """
-            proxy_set_header X-Forwarded-Proto $scheme;
-
-            # SSL settings for the proxy
-            proxy_ssl_protocols TLSv1.2 TLSv1.3;
-            proxy_ssl_verify off;""")
-        config_reverse_proxy = f"""
-server {{
-    listen 80;
-    server_name _l;
- 
-    # Redirect HTTP to HTTPS
-    location / {{
-        return 301 https://$host:{app_data["application_port"]}$request_uri;
-    }}
-}}
-
-server {{
-        listen {app_data["application_port"]} ssl;
-        server_name _;
-
-        ssl_certificate {PATH_SERVER_CERT_CRT.format(app_data["certificate_name"])};
-        ssl_certificate_key {PATH_SERVER_CERT_KEY.format(app_data["certificate_name"])};
-
-        {modsecurity}
-
-        {location}
-
-}}"""
-    # changes of config when using domain name
-    if app_data['application_type'] != 'ip':
-        config_reverse_proxy = config_reverse_proxy.replace("server_name _;", 
-                                                            f"server_name {app_data['application_value']};")
-        config_reverse_proxy = config_reverse_proxy.replace("server_name _l;", 
-                                                            f"server_name {app_data['application_value']};")
-    write_file_from_system(app_sites_available_config, config_reverse_proxy)
+        create_reverse_proxy_config(app_config, app_sites_available_config, app_modsecurity_config, 
+                                    app_data["application_type"], app_data["application_protocol"], 
+                                    app_data["application_value"], app_data["application_port"])
     
     # Put a symbolic link
     execute_command_without_arguments(["sudo", "rm", "-f", app_sites_enabled_config])
@@ -112,7 +57,7 @@ SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{rule_geoip_block_id},chain,deny,st
 SecRule GEO:COUNTRY_CODE "@pm {" ".join(app_data['country'])}" """
         write_file_from_system(f"{app_directory}geoip_{app_data['name']}.conf", rule_geoip_block)
     
-    rule_geoip_log = f"""SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{rule_geoip_log_id},log,pass,logdata:Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}" """
+    rule_geoip_log = f"""SecRule REMOTE_ADDR "@geoLookup" "phase:1,id:{rule_geoip_log_id},log,pass,logdata:'Country: %{{GEO:COUNTRY_CODE}}, Latitude: %{{GEO:LATITUDE}}, Longitude: %{{GEO:LONGITUDE}}'" """
     write_file_from_system(f"{app_directory}geoip_log_{app_data['name']}.conf", rule_geoip_log)
     append_file_from_system(PATH_MAIN_WAF, f"\nInclude {app_directory}geoip_log_{app_data['name']}.conf")
     
@@ -154,9 +99,38 @@ def delete_application_waf_in_system(application_name):
 
 def update_application_waf_in_system(application:ApplicationWaf, app_data):
     """Function to update a WAF Application in system"""
+    # Create a backup for previous application to restore it in case of a problem in the new update
+    app_sites_available_config = f"{PATH_NGINX_SITES_AVAILABLE}{application.name}"
+    app_sites_enabled_config = f"{PATH_NGINX_SITES_ENABLED}{application.name}"
+    app_directory = f"{PATH_MODESC}{application.name}"
+    app_param_config = f"{PATH_MODESC}{application.name}_param"
+    list_backup_commands = [
+        ["sudo", "cp", "-r", app_directory, f"{app_directory}_copy"],
+        ["sudo", "cp", f"{app_directory}.conf", f"{app_directory}_copy.conf"],
+        ["sudo", "cp", f"{app_sites_available_config}.conf", f"{app_sites_available_config}_copy.conf"],
+        ["sudo", "cp", f"{app_param_config}.conf", f"{PATH_MODESC}{application.name}_copy_param.conf"]
+        ]
+    execute_list_commands_without_arguments(list_backup_commands)
+
+    # Delete the previous application
     delete_application_waf_in_system(application.name)
+    # Create a new application with the new data
     create_application_waf_in_system(app_data)
 
 
-def restart_nginx_in_system():
-    execute_command_without_arguments(["sudo", "systemctl", "restart", "nginx"])
+def restore_previous_application(application_name):
+    """Function to restore the previous application where it was stored on background"""
+    app_sites_available_config = f"{PATH_NGINX_SITES_AVAILABLE}{application_name}"
+    app_sites_enabled_config = f"{PATH_NGINX_SITES_ENABLED}{application_name}"
+    app_directory = f"{PATH_MODESC}{application_name}"
+    app_param_config = f"{PATH_MODESC}{application_name}_param"
+    list_backup_commands = [
+        ["sudo", "cp", "-r", f"{app_directory}_copy", app_directory],
+        ["sudo", "cp", f"{app_directory}_copy.conf", f"{app_directory}.conf"],
+        ["sudo", "cp", f"{app_sites_available_config}_copy.conf", f"{app_sites_available_config}.conf"],
+        ["sudo", "ln", "-s", f"{app_sites_available_config}.conf", f"{app_sites_enabled_config}.conf"],
+        ["sudo", "cp", f"{app_param_config}_copy.conf", f"{app_param_config}.conf"]]
+    execute_list_commands_without_arguments(list_backup_commands)
+    append_file_from_system(PATH_MAIN_WAF, 
+                            f"\nInclude {app_directory}geoip_log_{application_name}.conf")
+    delete_application_waf_in_system(f"{application_name}_copy")

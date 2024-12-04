@@ -156,7 +156,6 @@ export default {
     const items = ref([
       "Dial",
       "Bind",
-      "Invalid",
     ]);
     const semantic = ref(["AllOf", "AnyOf"]);
     const rules = [

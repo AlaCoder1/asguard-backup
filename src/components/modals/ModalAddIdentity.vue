@@ -34,18 +34,9 @@
                     persistent-placeholder
                   />
                 </v-col>
-
                 <v-col cols="12">
                   <div class="d-flex align-center">
-                    <label for="IsAdmin" class="mr-3 ml-1">{{
-                      $t("ztna.isAdmin")
-                    }}</label>
-                    <input type="checkbox" id="IsAdmin" v-model="isAdmin" />
-                  </div>
-                </v-col>
-                <v-col cols="12">
-                  <div class="d-flex align-center">
-                    <label class="ml-1" for="Type">OS Type</label>
+                    <label class="ml-1" for="Type">{{$t('ztna.osType')}}</label>
                     <div class="ml-5 mt-1">
                       <v-menu open-on-hover>
                         <template v-slot:activator="{ props }">

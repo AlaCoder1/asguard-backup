@@ -146,6 +146,7 @@
     "questionuser": "Êtes-vous sûr de vouloir supprimer cet utilisateur ?",
     "questiongroup": "Êtes-vous sûr de vouloir supprimer ce groupe ?",
     "questionserver": "Êtes-vous sûr de vouloir supprimer ce server ?",
+    "questionrole": "Êtes-vous sûr de vouloir supprimer ce rôle ?",
     "questioncertif": "Êtes-vous sûr de vouloir supprimer cette autorité ?",
     "questioncertificat": "Êtes-vous sûr de vouloir supprimer ce certificat ?",
     "questionkey": "Êtes-vous sûr de vouloir supprimer cette clé ?",
@@ -635,7 +636,8 @@
     "addService": "Ajouter une Politique de Service de Relai de Périphérie",
     "edgeRelaysPolicies": "Politiques des relais",
     "servicesPolicies": "Politiques des services",
-    "ZTNAStatus": "ZTNA ne fonctionne pas, veuillez démarrer le service"
+    "ZTNAStatus": "ZTNA ne fonctionne pas, veuillez démarrer le service",
+    "osType":"Type OS"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",

@@ -51,10 +51,10 @@ def device_name_interface(name_interface):
 def restart_network_manager():
     restart_cmd = "sudo systemctl restart NetworkManager"
     run_command(restart_cmd)
-    time.sleep(5)
+    time.sleep(2)
 ## function to get uuid connection
 def get_uuid_con(ifname):
-    ifname=ifname.split("@")[0]if ifname.startswith("vlan")else ifname
+    ifname=ifname.split("@")[0]if ifname.find("@")!=-1 else ifname
     cmd = "sudo nmcli connection show | awk '$NF == \"{}\" {{print}}'".format(ifname)
     output,_=run_command(cmd)
     # print({"cmd":cmd,"output":output})

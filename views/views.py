@@ -11,6 +11,7 @@ from backend.managementUsers.models import User, Roles
 from backend.managementServers.models import Type, Server
 from backend.managementUsers.views import get_all_users
 from backend.nat.list_nat import get_list_all_dnat, get_list_all_one_to_one_nat, get_list_all_snat
+from backend.network.functions import get_uuid_con, restart_network_manager
 from backend.network.models import GenericConfig, IP4Config, IP6Config, Interface 
 from backend.routing.list_routing import get_list_all_gateway, get_list_all_routing
 from backend.rules.models import Rule
@@ -36,7 +37,7 @@ from backend.waf.list_waf import get_alerts, get_list_all_waf_application, get_l
 from backend.ztna.list_ztna import get_edge_router_policies,get_local_domain_windows, get_host_configs, get_identities, get_intercept_configs, get_routers, get_service_policies, get_services,get_local_domain_linux
 from backend.ztna.utils import get_Zt_Token
 from backend.ztna.list_ztna import get_service_edge_router_policies
-from views.functions import get_logrotate_data, get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
+from views.functions import delete_inactive_conn, get_logrotate_data, get_uuid_v2, get_vlan, get_vlan_interface, get_vxlan, get_vxlan_interface
 
 from views.functions import get_all_server_dhcp4, get_vlan, get_vlan_interface
 def get_squid_status_from_bd():
@@ -517,8 +518,14 @@ def interface_page(request):
     config={}
     all_static_gateways={}
     for i in range(len(interfaces)):
-        ipv4_config=get_informations_by_interface(request, interfaces[i]['name_interface'])
-        config[interfaces[i]['name_interface']]=ipv4_config
+        if get_uuid_v2(interfaces[i]['ifname']) is None:
+            int_delete=Interface.objects.get(ifname=interfaces[i]['ifname'])
+            delete_inactive_conn()
+            int_delete.delete()
+            interfaces.remove(interfaces[i])
+        else:
+            ipv4_config=get_informations_by_interface(request, interfaces[i]['name_interface'])
+            config[interfaces[i]['name_interface']]=ipv4_config
     # ipv4_config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
     all_static_gateways_ipv4=get_all_static_gateways(request,ipv4_gw=True)
     all_static_gateways_ipv6=get_all_static_gateways(request,ipv4_gw=False)

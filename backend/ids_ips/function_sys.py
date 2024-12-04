@@ -116,10 +116,11 @@ def add_rule_database(rules_add,id):
         rule['suricatafile'] = int(id)
         serializer_rules = RuleIdsIpsSerializer(data=rule)
         if serializer_rules.is_valid():
-            rule_objects.append(ids_ips_rule(**serializer_rules.validated_data))
+            serializer_rules.save()
+    #         rule_objects.append(ids_ips_rule(**serializer_rules.validated_data))
         else:
             continue
-    ids_ips_rule.objects.bulk_create(rule_objects)
+    # ids_ips_rule.objects.bulk_create(rule_objects)
 def delete_rule_database(rules_delete):
     """ function to delete rule from database to refresh table rule suricata"""
     for l in rules_delete:

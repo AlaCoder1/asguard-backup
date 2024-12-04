@@ -53,7 +53,7 @@ class Command(BaseCommand):
             # print({"interface":interface})
             # print({"description":description})
             interface_id = Interface.objects.get(ifname=interface)
-            ruleupdate=return_rule(policy,source_address,destination_address,source_port,destination_port,protocol,type_rule)
+            ruleupdate=return_rule(interface,policy,source_address,destination_address,source_port,destination_port,protocol,type_rule)
             handle=get_handle_rule(interface,type_rule,rule)
             if handle is not None:
                 return_delete_rule_remote=delete_rule_remote(interface,type_rule,handle)
@@ -62,7 +62,7 @@ class Command(BaseCommand):
                     if  return_add_rule is True:
                         saddr_db=calculate_subnet_address(source_address)
                         daddr_db=calculate_subnet_address(destination_address)
-                        rule_db_update=return_rule(policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
+                        rule_db_update=return_rule(interface,policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
                         try:
                             rule = Rule.objects.get(rule=rule)
                             rule.rule = rule_db_update

@@ -517,15 +517,15 @@ def interface_page(request):
     interfaces=get_all_interfaces_version2(request)
     config={}
     all_static_gateways={}
-    for i in range(len(interfaces)):
-        if get_uuid_v2(interfaces[i]['ifname']) is None:
-            int_delete=Interface.objects.get(ifname=interfaces[i]['ifname'])
+    for interface in interfaces:
+        if get_uuid_v2(interface['ifname']) is None:
+            int_delete=Interface.objects.get(ifname=interface['ifname'])
             delete_inactive_conn()
             int_delete.delete()
-            interfaces.remove(interfaces[i])
+            interfaces.remove(interface)
         else:
-            ipv4_config=get_informations_by_interface(request, interfaces[i]['name_interface'])
-            config[interfaces[i]['name_interface']]=ipv4_config
+            ipv4_config=get_informations_by_interface(request, interface['name_interface'])
+            config[interface['name_interface']]=ipv4_config
     # ipv4_config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
     all_static_gateways_ipv4=get_all_static_gateways(request,ipv4_gw=True)
     all_static_gateways_ipv6=get_all_static_gateways(request,ipv4_gw=False)
@@ -533,6 +533,7 @@ def interface_page(request):
     all_static_gateways['ipv6_gw']=all_static_gateways_ipv6
     ##pour le moment on ajoute ce ligne
     all_static_gateways=all_static_gateways_ipv4
+    
     ###
     context = {'interfaces':interfaces,'IPV4Config':config,'allStaticGateways':all_static_gateways}
     return render(request, 'interface_page.html',context)

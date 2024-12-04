@@ -526,7 +526,6 @@ def interface_page(request):
         else:
             ipv4_config=get_informations_by_interface(request, interface['name_interface'])
             config[interface['name_interface']]=ipv4_config
-    # ipv4_config=GetInformationsByInterface(request, interfaces[0]['name_interface'])
     all_static_gateways_ipv4=get_all_static_gateways(request,ipv4_gw=True)
     all_static_gateways_ipv6=get_all_static_gateways(request,ipv4_gw=False)
     all_static_gateways['ipv4_gw']=all_static_gateways_ipv4

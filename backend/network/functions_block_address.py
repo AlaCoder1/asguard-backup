@@ -15,7 +15,6 @@ def create_rule(address):
 
 ####create file
 def create_file_nftables(ifname,rules):
-    # ifname = ifname.split("@")[0] if ifname.find("@")!=-1 else ifname
     commands = [
         #cmd pour supprimer la configuration ancienne
         f'sudo bash -c "if nft list tables | grep -q \'filter_{ifname}\'; then nft delete table inet filter_{ifname}; fi"',

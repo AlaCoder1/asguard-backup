@@ -425,10 +425,7 @@ export default {
         "100baseTx-FD",
         "100baseTx-HD",
         "10baseT-FD",
-        "10baseT-HD",
-        "100baseTX",
-        "10BaseT/UTP full duplex",
-        "10BaseT/UTP",
+        "10baseT-HD"
       ],
       netmaskItems: netmaskItems,
       activate: false,

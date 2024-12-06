@@ -90,14 +90,14 @@ def update_vlan(request,id):
                 new_vlan_priority=convert_priority(data_input['vlan_priority']) if data_input["vlan_priority"] is not None else data_input["vlan_priority"]
                 new_parent_interface=Interface.objects.get(id=data_input['parent_interface']).ifname
                 new_vlan_tag=data_input['vlan_tag']
-                if Interface.objects.filter(ifname=f"vlan{vlan_tag}@{parent_interface}").exists(): 
-                    interface_object=Interface.objects.get(ifname=f"vlan{vlan_tag}@{parent_interface}")
+                if Interface.objects.filter(ifname=f"vlan{vlan_tag}").exists(): 
+                    interface_object=Interface.objects.get(ifname=f"vlan{vlan_tag}")
                     aux_save=update_vlan_sys(interface_object.ifname,new_parent_interface,new_vlan_tag,new_vlan_priority)  
                     data_save={
-                        "ifname":f"vlan{new_vlan_tag}@{new_parent_interface}",
+                        "ifname":f"vlan{new_vlan_tag}",
                         "private_aux":False,
                         "bogon_aux":False,
-                        "description":f"update default config vlan{new_vlan_tag}",
+                        # "description":f"update default config vlan{new_vlan_tag}",
                         }
                     if aux_save:
                         interface_serializer=InterfaceSerializer(interface_object,data=data_save)
@@ -136,8 +136,8 @@ def delete_vlan(request,id):
         if Vlan.objects.filter(id=id):
             vlan_object=Vlan.objects.get(id=id)
             name_interface=Interface.objects.get(id=vlan_object.parent_interface_id).ifname
-            if Interface.objects.filter(ifname=f"vlan{vlan_object.vlan_tag}@{name_interface}").exists():
-                interface_object=Interface.objects.get(ifname=f"vlan{vlan_object.vlan_tag}@{name_interface}")
+            if Interface.objects.filter(ifname=f"vlan{vlan_object.vlan_tag}").exists():
+                interface_object=Interface.objects.get(ifname=f"vlan{vlan_object.vlan_tag}")
                 aux_delete=delete_vlan_sys(interface_object.ifname)
                 if aux_delete:
                     interface_object.delete()
@@ -184,7 +184,7 @@ def assign_vlan_interface(request):
             vlan_tag=res_vlan["vlan_tag"]
             vlan_priority=convert_priority(res_vlan["vlan_priority"]) if res_vlan["vlan_priority"] is not None else res_vlan["vlan_priority"]
             data_save={
-                        "ifname":f"vlan{vlan_object.vlan_tag}@{parent_interface}",
+                        "ifname":f"vlan{vlan_object.vlan_tag}",
                         "private_aux":False,
                         "bogon_aux":False,
                         "name_interface":f"VLAN{vlan_object.vlan_tag}",

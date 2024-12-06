@@ -1,12 +1,19 @@
 import json
+import subprocess
 from backend.managementLogs.models import LogrotateData, LogsData
+from backend.network.functions import run_command
 from backend.network.models import Interface
 from backend.server_dhcp4.models import ServerDhcp4
 from backend.vlan.models import Vlan
 from django.core import serializers
 from backend.vxlan.models import Vxlan
 
-
+def delete_inactive_conn():
+    result = subprocess.run("sudo nmcli connection show | awk '$NF == \"--\" {print $2}'", shell=True, capture_output=True, text=True)
+    if result.stdout.strip():  
+        uuids = result.stdout.strip().splitlines()
+        for uuid in uuids:
+            subprocess.run(f"sudo nmcli connection delete uuid {uuid}", shell=True) 
 def get_vlan(request):
     """API to get all vlan from database """
     if (request.method == 'GET'):
@@ -33,14 +40,19 @@ def get_vlan_interface(request):
             vlan_tag=res[i]['fields']['ifname'].split("@")[0].strip("vlan").strip()
             interface=Vlan.objects.get(vlan_tag=vlan_tag).parent_interface_id
             id_vlan=Vlan.objects.get(vlan_tag=vlan_tag).id
-            ifname_parent=Interface.objects.get(id=interface).ifname      
+            ifname_parent=Interface.objects.get(id=interface).ifname     
             data={
                 "id":res[i]['pk'],
                 "id_vlan":id_vlan,
                 "name_interface":res[i]['fields']['name_interface'],
                 "network_port":f"VLAN {vlan_tag} on {ifname_parent}"
             }
-            list_vlan_interface.append(data)
+            if get_uuid_v2(res[i]['fields']['ifname']) is None:
+                int_delete=Interface.objects.get(ifname=res[i]['fields']['ifname'])
+                delete_inactive_conn()
+                int_delete.delete()
+            else:
+                list_vlan_interface.append(data)
     return list_vlan_interface
 
 def get_all_server_dhcp4(request):
@@ -84,17 +96,24 @@ def get_vxlan_interface(request):
         res = json.loads(vlans)
         for i in range(len(res)):
             vlan_ifname=res[i]['fields']['ifname']
+            
             interface=Vxlan.objects.get(vxlan_interface_name=vlan_ifname).parent_interface_id
             ifname_parent=Interface.objects.get(id=interface).ifname
             id_vxlan=Vxlan.objects.get(vxlan_interface_name=vlan_ifname).id
-
+            vxlan_tag=Vxlan.objects.get(vxlan_interface_name=vlan_ifname).vxlan_id
             data={
                 "id":res[i]['pk'],
                 "id_vxlan":id_vxlan,
                 "name_interface":res[i]['fields']['name_interface'],
-                "network_port":f"VXLAN {vlan_ifname} on {ifname_parent}"
+                "network_port":f"VXLAN {vxlan_tag} on {ifname_parent}"
             }
-            list_vlan_interface.append(data)
+            print({"ifname":res[i]['fields']['ifname'],"uuid":get_uuid_v2(res[i]['fields']['ifname'])})
+            if get_uuid_v2(res[i]['fields']['ifname']) is None:
+                int_delete=Interface.objects.get(ifname=res[i]['fields']['ifname'])
+                delete_inactive_conn()
+                int_delete.delete()
+            else:
+                list_vlan_interface.append(data)
     return list_vlan_interface
 
 
@@ -154,3 +173,17 @@ def get_logrotate_data(request,service):
             log['fields']['id'] = log["pk"]
             list_logs.append(log['fields'])
         return list_logs
+    
+    
+def get_uuid_v2(ifname):
+    ifname=ifname.split("@")[0]if ifname.find("@")!=-1 else ifname
+    cmd = "sudo nmcli connection show | awk '$NF == \"{}\" {{print}}'".format(ifname)
+    output,_=run_command(cmd)
+    if len(output)==0:
+        return None
+    else:
+        output = output.split('  ')
+        output=[value for value in output if value]
+        uuid=output[1]
+        return uuid
+    

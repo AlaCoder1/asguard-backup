@@ -637,7 +637,8 @@
     "addService": "Add Service Relay Policy",
     "edgeRelaysPolicies": "Relays Policies",
     "servicesPolicies": "Services Policies",
-    "ZTNAStatus": "ZTNA is not running, please start service"
+    "ZTNAStatus": "ZTNA is not running, please start service",
+    "osType":"OS Type"
   },
 
   "titleAgGrid": {

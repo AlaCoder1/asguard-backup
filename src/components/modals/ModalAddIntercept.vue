@@ -48,11 +48,11 @@
                 </v-col>
 
                 <v-col cols="6">
-                  <v-text-field id="portLow" v-model.number="portLow" :placeholder="$t('ztna.lowPorts')"
+                  <v-text-field id="portLow" v-model="portLow" :placeholder="$t('ztna.lowPorts')"
                     :rules="rulesNumber" persistent-placeholder outlined dense hide-details="auto" />
                 </v-col>
                 <v-col cols="6" class="mb-n6">
-                  <v-text-field id="portHigh" v-model.number="portHigh" :placeholder="$t('ztna.highPorts')"
+                  <v-text-field id="portHigh" v-model="portHigh" :placeholder="$t('ztna.highPorts')"
                     :rules="rulesNumber" persistent-placeholder outlined dense hide-details="auto" />
                 </v-col>
 
@@ -129,9 +129,10 @@ export default {
     ];
     const rulesNumber = [
       (value) => {
-        if (!value) return true;
-        return isNumber(value) ? true : "Please enter a valid number.";
-      },
+        if (!value) return 'This field is required.';
+        const integerPattern = /^-?\d+$/;
+        return integerPattern.test(value) || 'Only whole numbers are allowed.';
+      }
     ];
     const rulesName = [
       (value) => {

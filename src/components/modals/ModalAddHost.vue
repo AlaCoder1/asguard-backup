@@ -66,7 +66,7 @@
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
                     id="PORT"
-                    v-model.number="portHigh"
+                    v-model="portHigh"
                     placeholder="PORT"
                     :rules="rulesNumber"
                     persistent-placeholder
@@ -177,9 +177,10 @@ export default {
     ];
     const rulesNumber = [
       (value) => {
-        if (!value) return true;
-        return isNumber(value) ? true : "Please enter a valid number.";
-      },
+        if (!value) return 'This field is required.';
+        const integerPattern = /^-?\d+$/;
+        return integerPattern.test(value) || 'Only whole numbers are allowed.';
+      }
     ];
 
     const rulesaddress = [
@@ -233,38 +234,30 @@ export default {
     });
 
     function isNumber(value) {
-      // Check if value is null or undefined
-      if (value == null) return false;
+  // Check if value is null or undefined
+  if (value == null) return false;
 
-      // Convert to string to handle numeric primitives
-      let stringValue = String(value);
+  // Convert to string to handle numeric primitives
+  let stringValue = String(value);
 
-      // Remove leading/trailing whitespace
-      stringValue = stringValue.trim();
+  // Remove leading/trailing whitespace
+  stringValue = stringValue.trim();
 
-      // Check if empty after trimming
-      if (!stringValue.length) return false;
+  // Check if empty after trimming
+  if (!stringValue.length) return false;
 
-      // Try to parse the string as a float
-      let parsedFloat;
-      try {
-        parsedFloat = parseFloat(stringValue);
-      } catch (error) {
-        return false;
-      }
+  // Regular expression to validate integer strings
+  const integerPattern = /^-?\d+$/;
 
-      if (isNaN(parsedFloat)) {
-        return false;
-      }
+  // Test the string against the pattern
+  if (!integerPattern.test(stringValue)) return false;
 
-      // Check if parsedFloat is finite (not Infinity or -Infinity)
-      if (!isFinite(parsedFloat)) {
-        return false;
-      }
+  // Parse the string as an integer and verify it's finite
+  const parsedInt = parseInt(stringValue, 10);
+  return Number.isFinite(parsedInt);
+}
 
-      // If all checks pass, it's a valid number
-      return true;
-    }
+
 
     function isValidIpOrHostname(value) {
       // Regular expression for IPv4

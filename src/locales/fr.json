@@ -324,7 +324,8 @@
     "requestOptions": "Demande d'options",
     "requiredOptions": "Options obligatoires",
     "supersedeDomaineName": "Remplacer nom du domaine",
-    "prependDomainServer": "Serveur de domaine en amont"
+    "prependDomainServer": "Serveur de domaine en amont",
+    "numberValidity":"Format non valide. Veuillez saisir uniquement des nombres entiers."
   },
   "typeInterface": {
     "otherTypesOfInterfaces": "Autres types d'interfaces",
@@ -841,7 +842,8 @@
     "Remotesubnet": "Sous-réseau distant",
     "Phase2Proposal": "Proposition de phase 2",
     "Enable": "Activer",
-    "addnewpeer": "Ajouter un nouveau pair"
+    "addnewpeer": "Ajouter un nouveau pair",
+    "IpsecStatus": "Le VPN de site à site ne fonctionne pas, veuillez démarrer le service"
   },
   "monitoringVPN": {
     "currentstate": "État actuel de tous les moniteurs",

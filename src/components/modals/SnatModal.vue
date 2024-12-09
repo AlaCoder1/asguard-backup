@@ -5,10 +5,10 @@
         <v-card>
           <v-card-title>
             <span class="headline" v-if="modalMode === 'create'">
-             {{$t("nat.create_msg_snat") }}</span
+              {{ $t("nat.create_msg_snat") }}</span
             >
             <span class="headline" v-if="modalMode === 'edit'">
-              {{$t("nat.update_msg_snat")}}</span
+              {{ $t("nat.update_msg_snat") }}</span
             >
           </v-card-title>
           <v-card-text>
@@ -85,7 +85,7 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                  :label="$t('nat.prefix')"
+                    :label="$t('nat.prefix')"
                     v-model="state.sourcePrefix"
                     :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
@@ -98,7 +98,7 @@
 
                 <v-col cols="12" class="mb-n6">
                   <v-select
-                    v-model="state.sourcePort"
+                    v-model.number="state.sourcePort"
                     :label="$t('nat.ent_sport')"
                     :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
@@ -111,7 +111,7 @@
                 <v-col cols="12" class="mb-n6" v-if="isSourceOther">
                   <v-text-field
                     :label="$t('nat.port')"
-                    v-model="state.port"
+                    v-model.number="state.port"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.port.$error">
                     {{ v$.port.$errors[0].$message }}
@@ -130,7 +130,7 @@
                 </v-col> -->
                 <v-col cols="7" class="mb-n6">
                   <v-text-field
-                  :label="$t('nat.ent_daddr')"
+                    :label="$t('nat.ent_daddr')"
                     v-model="state.destinationAddress"
                   ></v-text-field>
                   <p
@@ -145,7 +145,7 @@
                 </v-col>
                 <v-col cols="4" class="mb-n6">
                   <v-select
-                  :label="$t('nat.prefix')"
+                    :label="$t('nat.prefix')"
                     v-model="state.destinationPrefix"
                     :no-data-text="$t('nat.msg_no_data')"
                     :items="numberList"
@@ -160,7 +160,7 @@
                 </v-col>
                 <v-col cols="12" class="mb-n6">
                   <v-select
-                    v-model="state.destinationPort"
+                    v-model.number="state.destinationPort"
                     :label="$t('nat.ent_dport')"
                     :no-data-text="$t('nat.msg_no_data')"
                     item-title="name"
@@ -173,7 +173,7 @@
                 <v-col cols="12" class="mb-n6" v-if="isDestinationOther">
                   <v-text-field
                     :label="$t('nat.port')"
-                    v-model="state.specificPort"
+                    v-model.number="state.specificPort"
                   ></v-text-field>
                   <p class="error-feedback mb-5" v-if="v$.specificPort.$error">
                     {{ v$.specificPort.$errors[0].$message }}
@@ -197,7 +197,7 @@
                 <template v-if="state.checkInterface === 'Static'">
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
-                    :label="$t('nat.tran_add_from')"
+                      :label="$t('nat.tran_add_from')"
                       v-model="state.translationAddressFrom"
                     ></v-text-field>
                     <p
@@ -209,7 +209,7 @@
                   </v-col>
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
-                    :label="$t('nat.tran_add_to')"
+                      :label="$t('nat.tran_add_to')"
                       v-model="state.translationAddressTo"
                     ></v-text-field>
                     <p
@@ -221,15 +221,15 @@
                   </v-col>
                   <v-col cols="12" class="mb-n6">
                     <v-text-field
-                    :label="$t('nat.ent_trans_port')"
-                      v-model="state.translationPort"
+                      :label="$t('nat.ent_trans_port')"
+                      v-model.number="state.translationPort"
                     ></v-text-field>
                   </v-col>
                 </template>
 
                 <v-col cols="12" class="mb-n6">
                   <v-text-field
-                  :label="$t('nat.description')"
+                    :label="$t('nat.description')"
                     v-model="state.description"
                   ></v-text-field>
                 </v-col>
@@ -249,7 +249,9 @@
               @click="closeModal"
               class="mt-3 btn-add"
             >
-              <span class="pr-3 pl-3" style="color: #213e9f">{{$t("firewall.cancel")}}</span>
+              <span class="pr-3 pl-3" style="color: #213e9f">{{
+                $t("firewall.cancel")
+              }}</span>
             </v-btn>
 
             <v-btn
@@ -263,7 +265,7 @@
               variant="flat"
               class="mt-3 btn-add"
             >
-            <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
+              <span class="text-white pr-3 pl-3" v-if="modalMode === 'create'">
                 {{ $t("buttons.create") }}</span
               >
               <span class="text-white pr-3 pl-3" v-if="modalMode === 'edit'">
@@ -509,7 +511,11 @@ export default {
       axios.get("/network/AllInterfaces").then(
         (response) => {
           let filtredInterface = response.data.filter(
-            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+            (i) =>
+              !i.ifname.startsWith("tun_") &&
+              !i.ifname.startsWith("tap_") &&
+              !i.name_interface.startsWith("VXLAN") &&
+              !i.name_interface.startsWith("VLAN")
           );
 
           let interfaces = filtredInterface.map((i) => {
@@ -641,8 +647,8 @@ export default {
       } else {
         console.log("v$", v$.value);
       }
-    }; 
-    
+    };
+
     const error = computed(() => {
       return t("errors.valueRequired");
     });
@@ -655,7 +661,7 @@ export default {
 
     const rules = computed(() => {
       return {
-        interface: { required: helpers.withMessage(error, required)},
+        interface: { required: helpers.withMessage(error, required) },
         translationAddressFrom: {
           requiredIfFuction: helpers.withMessage(
             error,
@@ -664,30 +670,32 @@ export default {
           isValidDestinationAddress: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         port: {
           requiredIfFuction: helpers.withMessage(
-            error ,
+            error,
             requiredIf(() => state.sourcePort?.slug === "other")
           ),
         },
         specificPort: {
           requiredIfFuction: helpers.withMessage(
-            error ,
+            error,
             requiredIf(() => state.destinationPort?.slug === "other")
           ),
         },
         sourcePrefix: {
           requiredIfFuction: helpers.withMessage(
-            error ,
+            error,
             requiredIf(() => state.sourceAddress)
           ),
         },
         destinationPrefix: {
           requiredIfFuction: helpers.withMessage(
-            error ,
+            error,
             requiredIf(() => state.destinationAddress)
           ),
         },
@@ -696,14 +704,18 @@ export default {
           isValidSourceAddress: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
         destinationAddress: {
           isValidDestinationAddress: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
 
@@ -711,7 +723,9 @@ export default {
           isValidDestinationAddress: helpers.withMessage(
             formaaddress,
 
-            helpers.regex(/^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/)
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
           ),
         },
       };

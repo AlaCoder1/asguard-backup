@@ -4,8 +4,8 @@
       <v-card color="#193286" class="alert-box">
         <v-card-title class="img-containter">
           <img src="@/assets/images/view.png" alt="logo" class="img-view" width="100" height="100" /></v-card-title>
-          <v-card-text v-html="overlayMessage">
-          </v-card-text>
+        <v-card-text v-html="overlayMessage">
+        </v-card-text>
 
         <div class="mr-3 mb-5 d-flex justify-end">
           <VButton rounded outlined color="#ffffff" label-color="#213E9F" :label="$t('buttons.close')" :isLarge="true"
@@ -66,10 +66,10 @@
       <v-card-actions>
         <v-btn color="error" text @click="deleteItem">{{
           $t("buttons.delete")
-        }}</v-btn>
+          }}</v-btn>
         <v-btn text @click="dialogDelete = false">{{
           $t("buttons.cancel")
-        }}</v-btn>
+          }}</v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -118,15 +118,15 @@ export default {
       return t("PageIpsec.remotegateway");
     });
     const overlayMessage = computed(() => {
-current_user.value= user_privilege('Ipscec') 
-  if (current_user.value === "viewer" || current_user.value === "default") {
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  } else if (!last_Subscription.value.includes("VPN IPSEC")) {
-    return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
-  } else{
-    return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
-  }
-});
+      current_user.value = user_privilege('Ipscec')
+      if (current_user.value === "viewer" || current_user.value === "default") {
+        return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+      } else if (!last_Subscription.value.includes("VPN IPSEC")) {
+        return `${t("firewall.msg_subscription")}<br /><a href="/asguard/subscription/" class="white-link"> ${t("firewall.sub_page")}</a>`;
+      } else {
+        return ` ${t("profil.NoPermission")} <br /> ${t("profil.ContactAdmin")}`;
+      }
+    });
     const Phase1Proposal = computed(() => {
       return t("PageIpsec.Phase1Proposal");
     });
@@ -263,13 +263,13 @@ current_user.value= user_privilege('Ipscec')
           })
           .catch((i) => {
             if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = t("errors.errorServer");
             } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
             }
           });
       });
@@ -444,6 +444,26 @@ current_user.value= user_privilege('Ipscec')
                 cancel
           </button>
           `;
+      } else if(status.value===false){
+        eGui.innerHTML = `
+            <button
+            class="action-button up"
+            data-action="up"
+            disabled>
+              <i class="mdi mdi-arrow-up-bold-circle" style="color: #086EAE; font-size: 20px;" ></i>
+            </button>
+            <button
+            class="action-button editClient"
+            data-action="edit">
+              <i class="mdi mdi-pencil-circle" style="color: #086EAE; font-size: 20px;"></i>
+            </button>
+            <button
+            class="action-button delete"
+            data-action="delete">
+              <i class="mdi mdi-delete" style="color: #086EAE; font-size: 20px;"></i>
+            </button>
+           
+        `;
       } else {
         eGui.innerHTML = `
             <button
@@ -472,43 +492,43 @@ current_user.value= user_privilege('Ipscec')
       });
       return eGui;
     }
-    const handleAction = (action, rowData) => {      
+    const handleAction = (action, rowData) => {
       const user = user_privilege('Ipsec');
 
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       switch (action) {
         case "edit":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN IPSEC")) {
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
 
-          console.log("edit :", rowData);
-          emitter.emit("add-serverIpsec");
+            console.log("edit :", rowData);
+            emitter.emit("add-serverIpsec");
 
-          setTimeout(() => {
-            emitter.emit("edit-serverIpsec", rowData);
-          }, 1000);
-        } else {
+            setTimeout(() => {
+              emitter.emit("edit-serverIpsec", rowData);
+            }, 1000);
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           };
           break;
         case "delete":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN IPSEC")) {
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
 
-          currentRowToDelete.value = rowData;
-          dialogDelete.value = true;
-        } else {
+            currentRowToDelete.value = rowData;
+            dialogDelete.value = true;
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           };
           break;
         case "up":
-        if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN IPSEC")) {
+          if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
 
-          console.log("up", rowData);
-          let id = rowData.id;
-          upServer(id);
-        } else {
+            console.log("up", rowData);
+            let id = rowData.id;
+            upServer(id);
+          } else {
             state.isviewModal = true;
             state.viewModal = true;
           };
@@ -521,7 +541,7 @@ current_user.value= user_privilege('Ipscec')
       let timeoutPromise = new Promise((resolve, reject) => {
         setTimeout(() => {
           reject(new Error("Request is taking longer than expected."));
-        }, 3000);
+        }, 4000);
       });
       console.log("up", id);
       try {
@@ -560,31 +580,26 @@ current_user.value= user_privilege('Ipscec')
           }, 1000);
         }
       } catch (error) {
-        // snackbar.value = true;
-        // color.value = "red";
-        // textAlert.value = i.response.data.error;
-        // loading.value = false;
-        // isLoadingDialogue.value = false;
-
-        if (error.response.status === 500) {
-          loading.value = false;
-          isLoadingDialogue.value = false;
-          state.snackbar = true;
-          state.color = "red";
-          state.textAlert = t("errors.errorServer");
-        }
-
+        // if (error.response.status === 500) {
+        //   loading.value = false;
+        //   isLoadingDialogue.value = false;
+        //   snackbar.value = true;
+        //   color.value = "red";
+        //   textAlert.value = t("errors.errorServer");
+        // }
         if (error.message === "Request is taking longer than expected.") {
-          // snackbar.value = true;
-          // color.value = "warning";
-          // textAlert.value = "The request is taking longer than expected...";
+          snackbar.value = true;
+          color.value = "red";
+          textAlert.value = "The request is taking longer than expected...";
           loading.value = false;
           isLoadingDialogue.value = false;
+          setTimeout(()=>{
+            snackbar.value = false;
+          },3000)
         } else {
-          // console.error(error);
-          // snackbar.value = true;
-          // color.value = "error";
-          // textAlert.value = "An error occurred while processing your request.";
+          snackbar.value = true;
+          color.value = "red";
+          textAlert.value = error.response.data.error;
           loading.value = false;
           isLoadingDialogue.value = false;
         }
@@ -592,7 +607,7 @@ current_user.value= user_privilege('Ipscec')
     };
     const addServer = () => {
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN IPSEC")) {
+      if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
         emitter.emit("add-serverIpsec");
       } else {
         state.isviewModal = true;
@@ -617,13 +632,13 @@ current_user.value= user_privilege('Ipscec')
           })
           .catch((i) => {
             if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = t("errors.errorServer");
             } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
             }
           })
           .finally(() => {
@@ -634,12 +649,11 @@ current_user.value= user_privilege('Ipscec')
       }
     };
     onMounted(async () => {
-      
-    const lastSubscription =
+
+      const lastSubscription =
         document.getElementById("app").attributes["last_subscription"].value;
       let parsedArraySubscription = JSON.parse(lastSubscription);
       last_Subscription.value = parsedArraySubscription;
-      console.log("last_Subscription",last_Subscription.value)
       overlayTemplate.value = `
       <span aria-live="polite" aria-atomic="true">  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" width=50px >
       <path
@@ -660,8 +674,15 @@ current_user.value= user_privilege('Ipscec')
         const statusAttribute =
           document.getElementById("app").attributes["status"].value;
         console.log("statusAttribute", statusAttribute);
+        
 
         status.value = statusAttribute === "False" ? false : true;
+
+        setTimeout(()=>{
+    if(!last_Subscription.value.includes("VPN IPSEC") && status.value===true ){
+      startStopServer("stop")
+    } 
+  },1000)
       } catch (error) {
         console.log(error);
       }
@@ -669,7 +690,7 @@ current_user.value= user_privilege('Ipscec')
 
     const startStopServer = (data) => {
       const user = user_privilege('Ipsec');
-      if (user && user !== 'viewer' && user!=='default' && last_Subscription.value.includes("VPN IPSEC")) {
+      if (user && user !== 'viewer' && user !== 'default' && last_Subscription.value.includes("VPN IPSEC")) {
 
         const csrfToken = getCookie("csrftoken");
         axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -691,13 +712,13 @@ current_user.value= user_privilege('Ipscec')
           })
           .catch((i) => {
             if (i.response.status === 500) {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = t("errors.errorServer");
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = t("errors.errorServer");
             } else {
-              state.snackbar = true;
-              state.color = "red";
-              state.textAlert = i.response.data.error;
+              snackbar.value = true;
+              color.value = "red";
+              textAlert.value = i.response.data.error;
             }
           });
       } else {

@@ -246,7 +246,7 @@
                   <v-col cols="12" class="mb-n6">
                     <v-select
                       :label="$t('nat.port')"
-                      v-model="state.port"
+                      v-model.number="state.port"
                       :no-data-text="$t('nat.msg_no_data')"
                       :items="state.listPort"
                       item-title="name"
@@ -623,7 +623,11 @@ export default {
       axios.get("/network/AllInterfaces").then(
         (response) => {
           let filtredInterface = response.data.filter(
-            (i) => !i.ifname.startsWith("tun_") && !i.ifname.startsWith("tap_")
+            (i) =>
+              !i.ifname.startsWith("tun_") &&
+              !i.ifname.startsWith("tap_") &&
+              !i.name_interface.startsWith("VXLAN") &&
+              !i.name_interface.startsWith("VLAN")
           );
 
           let interfaces = filtredInterface.map((i) => {

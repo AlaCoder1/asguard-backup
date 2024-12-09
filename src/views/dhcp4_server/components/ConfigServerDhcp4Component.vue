@@ -788,12 +788,19 @@ export default {
 
               if (i.response.status === 500) {
                 state.snackbar = true;
-                state.color = "red";
+                state.color = "error";
                 state.textAlert = t("errors.errorServer");
+                setTimeout(() => {
+                  state.snackbar = false;
+                }, 2000);
               } else {
                 state.snackbar = true;
-                state.color = "red";
+                state.color = "error";
+                console.log('i.response.data.msg',i.response.data.msg)
                 state.textAlert = i.response.data.msg;
+                setTimeout(() => {
+                  state.snackbar = false;
+                }, 2000);
               }
             });
         } else {

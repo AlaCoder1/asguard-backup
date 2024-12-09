@@ -326,7 +326,8 @@
     "requestOptions": "Request Options",
     "requiredOptions": "Required Options",
     "supersedeDomaineName": "Supersede domaine name",
-    "prependDomainServer": "Prepend domain server"
+    "prependDomainServer": "Prepend domain server",
+    "numberValidity":"Invalid format. Please enter whole numbers only."
   },
   "typeInterface": {
     "otherTypesOfInterfaces": "Other Types of Interfaces",
@@ -844,7 +845,8 @@
     "Remotesubnet": "Remote subnet",
     "Phase2Proposal": "Phase 2 Proposal",
     "Enable": "Enable",
-    "addnewpeer": "Add New Peer"
+    "addnewpeer": "Add New Peer",
+    "IpsecStatus": "Site to site VPN is not running, please start service"
   },
   "monitoringVPN": {
     "currentstate": "Current Status of all Monitors",

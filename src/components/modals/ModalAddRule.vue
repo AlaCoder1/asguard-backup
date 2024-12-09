@@ -683,29 +683,29 @@ export default {
             };
           }
           console.log("pay", payload);
-          // axios
-          //   .post("/proxy/addRuleSquid", payload)
-          //   .then((response) => {
-          //     if (response.status == "200") {
-          //       state.snackbar = true;
-          //       state.color = "success";
-          //       state.textAlert = response.data.msg;
-          //       setTimeout(() => {
-          //         location.reload();
-          //       }, 1000);
-          //     }
-          //   })
-          //   .catch((i) => {
-          //     if (i.response.status === 500) {
-          //       state.snackbar = true;
-          //       state.color = "red";
-          //       state.textAlert = t("errors.errorServer");
-          //     } else {
-          //       state.snackbar = true;
-          //       state.color = "red";
-          //       state.textAlert = i.response.data.error;
-          //     }
-          //   });
+          axios
+            .post("/proxy/addRuleSquid", payload)
+            .then((response) => {
+              if (response.status == "200") {
+                state.snackbar = true;
+                state.color = "success";
+                state.textAlert = response.data.msg;
+                setTimeout(() => {
+                  location.reload();
+                }, 1000);
+              }
+            })
+            .catch((i) => {
+              if (i.response.status === 500) {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = t("errors.errorServer");
+              } else {
+                state.snackbar = true;
+                state.color = "red";
+                state.textAlert = i.response.data.error;
+              }
+            });
         }
       } else {
         console.log("error", v$.value);

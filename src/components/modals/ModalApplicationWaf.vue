@@ -35,7 +35,7 @@
               <v-row>
                 <v-col cols="12" class="mb-n5 mb-1 mt-0">
                   <v-expansion-panels v-model="state.panel">
-                    <v-expansion-panel>
+                    <v-expansion-panel >
                       <v-expansion-panel-title>{{
                         $t("Waf.parameters")
                       }}</v-expansion-panel-title>
@@ -117,7 +117,7 @@
                         <v-col cols="12" class="mb-n6">
                           <v-text-field
                             label="Port"
-                            v-model="state.port"
+                            v-model.number="state.port"
                           ></v-text-field>
                           <p class="error-feedback mb-5" v-if="v$.port.$error">
                             {{ v$.port.$errors[0].$message }}
@@ -498,7 +498,25 @@ export default {
       rowDataWafApp.value = mapedRow;
     });
     const { t } = useI18n();
-
+    const ListofErrorsParams =[ "applicationName",
+  "type",
+  "protocol",
+  "serverCertif",
+  "value",
+  "port"];
+  const ListofErrorsConfigs = [
+  "rule_engine",
+"maximum_request",
+"size_file",
+"limit_action",
+"max_parsing",
+"max_number",
+"pcre_match_limit",
+"pcre_limit_recursion",
+"body_mimetype",
+"response_body_limit",
+"response_limit_action"
+];
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const rowDataWafApp = ref([]);
@@ -878,7 +896,12 @@ export default {
             });
         }
       } else {
-        console.log("v$", v$.value);
+        if (ListofErrorsParams.includes(v$.value.$errors[0].$property)) {
+  state.panel = 0;
+} else if (ListofErrorsConfigs.includes(v$.value.$errors[0].$property)) {
+
+  state.panel = 2;
+}
       }
     };
 

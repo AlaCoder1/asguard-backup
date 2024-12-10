@@ -136,7 +136,7 @@ def delete_role(request, id):
     
     # If no users are using the role, proceed with deletion
     role.delete()
-    return JsonResponse({"msg": f"{CONSTANT_ROLE}{SUCCESS_MESSAGES_DELETING}"})
+    return JsonResponse({"msg": f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_DELETING}"})
     
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 

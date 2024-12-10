@@ -146,6 +146,7 @@
     "questionuser": "Are you sure you want to delete this user?",
     "questiongroup": "Are you sure you want to delete this group?",
     "questionserver": "Are you sure you want to delete this server?",
+    "questionrole": "Are you sure you want to delete this role?",
     "questioncertif": "Are you sure you want to delete this authority?",
     "questioncertificat": "Are you sure you want to delete this certificate?",
     "questionkey": "Are you sure you want to delete this Key ?",

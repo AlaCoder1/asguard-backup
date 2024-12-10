@@ -55,7 +55,7 @@ def get_waf_config(request):
                                    "request_body_limit_action", "maximum_parsing_depth_json", "maximum_number_args_request", 
                                    "pcre_match_limit", "pcre_match_limit_recursion", "response_body_access", 
                                    "response_body_mimetype", "response_body_limit", "response_body_limit_action"],
-                         properties={'rule_engine_initialization': Schema(type=TYPE_STRING, enum=["On", "Off", "Detection only"]),
+                         properties={'rule_engine_initialization': Schema(type=TYPE_STRING, enum=["On", "Off", "DetectionOnly"]),
                                      'access_request_bodies':Schema(type=TYPE_BOOLEAN),
                                      'xml_request_body_parser':Schema(type=TYPE_BOOLEAN),
                                      'json_request_body_parser':Schema(type=TYPE_BOOLEAN),

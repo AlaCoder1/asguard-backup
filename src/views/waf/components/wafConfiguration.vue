@@ -323,7 +323,7 @@ export default {
       isLoadingDialogue: false,
       id: null,
       //
-      engineList: ["On", "Off", "Detection only"],
+      engineList: ["On", "Off", "DetectionOnly"],
       requestBodyList: ["ProcessPartial", "Reject"],
       responseBodyList: ["ProcessPartial", "Reject"],
       bodyMimeTypeList: ["text/*", "text/html", "text/xml", "text/plain"],

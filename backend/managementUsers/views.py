@@ -510,7 +510,7 @@ def reset_password_by_admin(request, id):
         if rslt == True:
             user_object.password = make_password(new_password)
             user_object.save()
-            return JsonResponse({"msg": f"{SUCCESS_MESSAGES_UPDATING} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
+            return JsonResponse({"msg": f"{CONSTANT_PASSWORD} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_PASSWORD}"}, status=400)
 
 

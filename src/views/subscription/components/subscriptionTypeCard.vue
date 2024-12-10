@@ -1,35 +1,40 @@
 <template>
   <v-overlay v-model="state.viewModal">
-            <v-dialog v-model="state.isviewModal" persistent :scrim="false" width="auto">
-              <v-card color="#193286" class="alert-box">
-                <v-card-title class="img-containter">
-                  <img
-                    src="@/assets/images/view.png"
-                    alt="logo"
-                    class="img-view"
-                    width="100"
-                    height="100"
-                /></v-card-title>
-                <v-card-text>
-                  {{  $t("profil.NoPermission") }}
-                  <br />
-                  {{  $t("profil.ContactAdmin") }} 
-                </v-card-text>
+    <v-dialog
+      v-model="state.isviewModal"
+      persistent
+      :scrim="false"
+      width="auto"
+    >
+      <v-card color="#193286" class="alert-box">
+        <v-card-title class="img-containter">
+          <img
+            src="@/assets/images/view.png"
+            alt="logo"
+            class="img-view"
+            width="100"
+            height="100"
+        /></v-card-title>
+        <v-card-text>
+          {{ $t("profil.NoPermission") }}
+          <br />
+          {{ $t("profil.ContactAdmin") }}
+        </v-card-text>
 
-                <div class="mr-3 mb-5 d-flex justify-end">
-                  <VButton
-                    rounded
-                    outlined
-                    color="#ffffff"
-                    label-color="#213E9F"
-                    :label="$t('buttons.close')"
-                    :isLarge="true"
-                    @click="close"
-                  />
-                </div>
-              </v-card>
-            </v-dialog>
-          </v-overlay>
+        <div class="mr-3 mb-5 d-flex justify-end">
+          <VButton
+            rounded
+            outlined
+            color="#ffffff"
+            label-color="#213E9F"
+            :label="$t('buttons.close')"
+            :isLarge="true"
+            @click="close"
+          />
+        </div>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-container>
     <v-row>
       <v-card class="mx-auto my-12">
@@ -244,37 +249,36 @@ export default {
     const submitForm = async () => {
       const user = user_privilege();
       if (user !== "see_all") {
-            state.isviewModal = true;
-            state.viewModal = true;
+        state.isviewModal = true;
+        state.viewModal = true;
+      } else {
+        const csrfToken = getCookie("csrftoken");
+        axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+
+        const features = getPackId();
+        console.log("features", features);
+
+        // if (features.length === 4) {
+        //   state.snackbar = true;
+        //   state.color = "red";
+        //   state.textAlert = t("subscription.chooseService");
+        //   return;
+        // }
+        try {
+          const response = await axios.post("/auth/create_checkout_session", {
+            status: true,
+            features: features,
+            price: props.prices[0].amount,
+          });
+          if (response.status === 200) {
+            window.open(response.data.url, "_blank");
           } else {
-            const csrfToken = getCookie("csrftoken");
-      axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
-
-      const features = getPackId();
-      console.log("features", features);
-
-      // if (features.length === 4) {
-      //   state.snackbar = true;
-      //   state.color = "red";
-      //   state.textAlert = t("subscription.chooseService");
-      //   return;
-      // }
-      try {
-        const response = await axios.post("/auth/create_checkout_session", {
-          status: true,
-          features: features,
-          price: props.prices[0].amount,
-        });
-        if (response.status === 200) {
-          window.open(response.data.url, "_blank");
-        } else {
-          console.log("error");
+            console.log("error");
+          }
+        } catch (error) {
+          console.log(error);
         }
-      } catch (error) {
-        console.log(error);
       }
-            };
-
     };
 
     // const getPackId = () => {
@@ -427,6 +431,7 @@ export default {
   font-size: 30px;
   font-weight: 400;
 }
+
 .img-view {
   border-style: none;
   width: 100%;
@@ -434,6 +439,7 @@ export default {
   object-fit: cover;
   overflow: hidden;
 }
+
 .img-containter {
   display: flex;
   width: 100%;

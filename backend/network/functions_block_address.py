@@ -67,10 +67,10 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject)
             'ExecStart=/usr/bin/nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
             "#End nftables config {}".format(ifname)
             ]
-        if interfaceObject is not None and private_aux!=interfaceObject.private_aux or bogon_aux!=interfaceObject.bogon_aux:
-            cmd_final+=[
-                'sudo nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
-            ]
+        # if interfaceObject is not None :
+        cmd_final+=[
+            'sudo nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
+        ]
     else:
 
         #call function to clean old config

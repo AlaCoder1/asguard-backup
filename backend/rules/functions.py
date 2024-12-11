@@ -75,7 +75,7 @@ EOF""".format(ifname,rules),
    return True
 
 
-def return_rule(policy,saddr,daddr,sport,dport,protocol,type_rule):
+def return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule):
    """function to return rule  outbound"""
    #initialiser une chaine vide
    rule=''
@@ -83,22 +83,18 @@ def return_rule(policy,saddr,daddr,sport,dport,protocol,type_rule):
    ##cas inbound
    if policy=="reject":
       policy="reject with icmp port-unreachable"
-   # if policy=="reject" and not protocol.startswith("icmp type"):
-   #    policy="reject with icmp port-unreachable"
-   # elif policy=="reject" and  protocol.startswith("icmp type"):
-   #    policy="reject with icmp type port-unreachable"
    if type_rule=='inbound' :
       if protocol.upper() != "ALL":
-         rule='ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(saddr,daddr,protocol,sport,protocol,dport,policy)
+         rule='iifname "{}" ip saddr {} ip daddr {} {} sport {} {} dport {} {}'.format(ifname,saddr,daddr,protocol,sport,protocol,dport,policy)
       else:
-         rule='ip saddr {} ip daddr {} {}'.format(saddr,daddr,policy)
+         rule='iifname "{}" ip saddr {} ip daddr {} {}'.format(ifname,saddr,daddr,policy)
          
     ##cas outbound
    elif type_rule=='outbound' :
       if protocol.upper() != "ALL":
-         rule='ip daddr {} ip saddr {} {} sport {} {} dport {} {}'.format(daddr,saddr,protocol,sport,protocol,dport,policy)
+         rule='oifname "{}" ip daddr {} ip saddr {} {} sport {} {} dport {} {}'.format(ifname,daddr,saddr,protocol,sport,protocol,dport,policy)
       else:
-         rule='ip daddr {} ip saddr {} {}'.format(daddr,saddr,policy)
+         rule='oifname "{}" ip daddr {} ip saddr {} {}'.format(ifname,daddr,saddr,policy)
          
    #####cas saddr is None
    if saddr is None:
@@ -230,7 +226,7 @@ def add_rule_db(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule,rule_de
       saddr_db=calculate_subnet_address(saddr)
       daddr_db=calculate_subnet_address(daddr)
       #appel la fonction pour retourner rule à ajouter 
-      rule=return_rule(policy,saddr_db,daddr_db,sport,dport,protocol,type_rule)
+      rule=return_rule(ifname,policy,saddr_db,daddr_db,sport,dport,protocol,type_rule)
       # if not Rule.objects.filter(Q(rule=rule) & ((Q(interface_id=interface_object.pk)& Q(type_rule!=type_rule ) )|(Q(interface_id!=interface_object.pk) & Q(type_rule=type_rule )))).exists():
       if not Rule.objects.filter(
             Q(rule=rule) & (
@@ -290,7 +286,7 @@ def update_rule_db(id,ifname,policy,saddr,daddr,sport,dport,protocol,rule_descri
          saddr_db=calculate_subnet_address(saddr)
          daddr_db=calculate_subnet_address(daddr)
          #appel la fonction pour retourner rule à ajouter 
-         ruleupdate=return_rule(policy,saddr_db,daddr_db,sport,dport,protocol,type_rules)
+         ruleupdate=return_rule(ifname,policy,saddr_db,daddr_db,sport,dport,protocol,type_rules)
          handle=get_handle_rule(ifname,type_rules,rule)
          if handle is not None: 
                return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)

@@ -5,7 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from django.core.exceptions import ValidationError
 from backend.managementUsers.models import Profile, User, Roles
 from backend.managementUsers.serializers import PermissionSerializer, ProfileSerializer, UserSerializerGet, UserSerializerPost, UserSerializerPostWithoutGroupAndPermission,RoleSerializer
-from backend.managementUsers.functions import add_user_group, add_mail_spool, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password,delete_directory,change_directory_name
+from backend.managementUsers.functions import add_user_group, add_user, reset_password_by_admin_in_system, change_username, check_same_groupname_with_username, delete_user_group, delete_user_in_system, get_uid_user, reset_password, reset_password_by_admin_in_system, username_exists, valid_input, valid_password,delete_directory,change_directory_name
 from backend.managementGroup.serializers import GroupSerializer
 from backend.managementGroup.functions import change_groupname_username, getGroupNameById, getUidGroup
 from backend.managementGroup.models import Group
@@ -14,7 +14,7 @@ import json
 from django.core import serializers
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth.hashers import make_password
 from backend.LdapServer.models import ADServer
 import ldap
@@ -22,8 +22,8 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg.openapi import Schema, TYPE_OBJECT, TYPE_STRING
 from django.conf import settings
 from rest_framework import status
-from django.core.exceptions import ObjectDoesNotExist
 from backend.waf.models import RulesWaf
+
 # Constants
 CONSTANT_USER = _("User")
 CONSTANT_USERNAME = _("username")
@@ -43,7 +43,6 @@ CONSTANT_DELETE_ROLE=_("You can't delete this role. It is used by other users")
 SUCCESS_MESSAGES_CREATING = _("is created")
 SUCCESS_MESSAGES_DELETING = _("is deleted")
 SUCCESS_MESSAGES_UPDATING = _("is updated")
-SUCCESS_PASSWORD_MESSAGES_UPDATING = _("password is updated")
 # Error messages
 ERROR_MESSAGES_CREATING = _("System error in creating")
 ERROR_MESSAGES_DELETING = _("System error in deleting")
@@ -74,7 +73,8 @@ def get_all_users(request):
             res[i]['fields'].pop('password')
             res[i]['fields']['id'] = user_id
             list_users.append(res[i]['fields'])
-            
+
+
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -94,6 +94,7 @@ def get_all_roles(request):
         
         return JsonResponse({"list_roles":list_roles})
 
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -106,7 +107,8 @@ def create_role(request):
         else:
             return JsonResponse({'msg': serializer.error_messages}, status=400) 
         return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_CREATING}"}, status=200) 
-    
+
+
 @api_view(['PUT'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -120,7 +122,8 @@ def modify_role(request,id):
         else:
             return JsonResponse({'msg': serializer.error_messages}, status=400) 
         return JsonResponse({'msg': f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_UPDATING}"}, status=200) 
-    
+
+
 @api_view(['DELETE'])
 @authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
@@ -136,7 +139,7 @@ def delete_role(request, id):
     
     # If no users are using the role, proceed with deletion
     role.delete()
-    return JsonResponse({"msg": f"{CONSTANT_ROLE}{SUCCESS_MESSAGES_DELETING}"})
+    return JsonResponse({"msg": f"{CONSTANT_ROLE} {SUCCESS_MESSAGES_DELETING}"})
     
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -504,10 +507,10 @@ def reset_password_by_admin(request, id):
         # run 'passwd' command to change password
         rslt = reset_password_by_admin_in_system(new_password, user_object.username)
         # check if password change was successful
-        if rslt == True:
+        if rslt:
             user_object.password = make_password(new_password)
             user_object.save()
-            return JsonResponse({"msg": f"{SUCCESS_PASSWORD_MESSAGES_UPDATING}"}, status=200)
+            return JsonResponse({"msg": f"{CONSTANT_PASSWORD} {SUCCESS_MESSAGES_UPDATING}"}, status=200)
         return JsonResponse({"error": f"{ERROR_MESSAGES_UPDATING} {CONSTANT_PASSWORD}"}, status=400)
 
 

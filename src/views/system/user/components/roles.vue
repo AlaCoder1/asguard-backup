@@ -40,7 +40,7 @@
         <v-card-title class="headline">{{
           $t("delete.DeleteConfirmation")
         }}</v-card-title>
-        <v-card-text>{{ $t("delete.questionserver") }}</v-card-text>
+        <v-card-text>{{ $t("delete.questionrole") }}</v-card-text>
         <v-card-actions>
           <v-spacer></v-spacer>
           <v-btn color="blue darken-1" text @click="cancelDelete">{{

@@ -30,6 +30,8 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject)
     commandes=[]
     configuration=[]
     cmd_final=[]
+    ifname = ifname.split("@")[0] if ifname.find("@")!=-1 else ifname
+    
     #tester si on bloque les addresses bogons ou private
     if bogon_aux or private_aux:
         #tester si on bloque les addresses bogons and private
@@ -48,7 +50,7 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject)
         elif private_aux and not bogon_aux:
             #rules pour les adresses ipv4
             rule='iifname {} ip saddr {}'.format(ifname,create_rule(private_address))
-        #le contenu de fichier config nftables.conf    
+        #le contenu de fichier config nftables.conf   
         rules=[
             'table inet filter_'+ifname+' {',
                     'chain input {',
@@ -65,10 +67,10 @@ def block_address_commandes(config,ifname,bogon_aux,private_aux,interfaceObject)
             'ExecStart=/usr/bin/nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
             "#End nftables config {}".format(ifname)
             ]
-        if interfaceObject is not None and private_aux!=interfaceObject.private_aux or bogon_aux!=interfaceObject.bogon_aux:
-            cmd_final+=[
-                'sudo nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
-            ]
+        # if interfaceObject is not None :
+        cmd_final+=[
+            'sudo nft -f /etc/rulesNetwork/{}/nftables.conf'.format(ifname),
+        ]
     else:
 
         #call function to clean old config

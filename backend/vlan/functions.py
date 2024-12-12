@@ -22,8 +22,8 @@ def execute_cmd(command):
 def add_vlan_sys(parent_interface,vlan_tag,vlan_priority):
     """function to add vlan in system"""
     commands= [
-    f"nmcli connection add type vlan con-name vlan{vlan_tag}@{parent_interface} ifname vlan{vlan_tag} dev {parent_interface} id {vlan_tag} ingress {vlan_priority}",
-     f"nmcli connection modify vlan{vlan_tag}@{parent_interface} connection.autoconnect yes",
+    f"nmcli connection add type vlan con-name vlan{vlan_tag} ifname vlan{vlan_tag} dev {parent_interface} id {vlan_tag} ingress {vlan_priority}",
+     f"nmcli connection modify vlan{vlan_tag} connection.autoconnect yes",
     "systemctl restart NetworkManager"
           ]
     for cmd in commands:
@@ -35,8 +35,8 @@ def add_vlan_sys(parent_interface,vlan_tag,vlan_priority):
 def update_vlan_sys(old_vlan,parent_interface,vlan_tag,vlan_priority):
     """function to update vlan in system"""
     commands=[
-        f"nmcli connection modify {old_vlan} con-name  vlan{vlan_tag}@{parent_interface} ifname vlan{vlan_tag} dev {parent_interface} id {vlan_tag} ingress {vlan_priority}",
-        f"nmcli connection modify vlan{vlan_tag}@{parent_interface} connection.autoconnect yes",
+        f"nmcli connection modify {old_vlan} con-name  vlan{vlan_tag} ifname vlan{vlan_tag} dev {parent_interface} id {vlan_tag} ingress {vlan_priority}",
+        f"nmcli connection modify vlan{vlan_tag} connection.autoconnect yes",
         f"nmcli connection down {old_vlan}   && nmcli connection up {old_vlan} ",
         
         # "systemctl restart NetworkManager"

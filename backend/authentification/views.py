@@ -1,4 +1,3 @@
-import itertools
 from rest_framework.response import Response
 from rest_framework.authentication import SessionAuthentication
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
@@ -9,19 +8,22 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 from django.views.decorators.csrf import csrf_exempt
-from backend.authentification.constant_variables import STRIPE_SECRET_KEY
-from backend.authentification.function import exist_user_email, generate_verification_code, normal_connect, send_email_to_user, send_verification_code, show_url
-from backend.managementUsers.models import User,Profile,Roles
-from backend.LdapServer.models import ADServer
+
 from drf_yasg.utils import swagger_auto_schema
 from datetime import datetime, timedelta
- 
-from backend.subscription.models import Features, plan
-from .models import VerificationCode
+
 import json
 import stripe
 import ldap
- 
+
+from backend.authentification.function import get_plan_ids_by_descriptions, group_descriptions_by_plan
+
+from .constant_variables import STRIPE_SECRET_KEY
+from .function import exist_user_email, generate_verification_code, normal_connect, send_email_to_user, send_verification_code, show_url
+from .models import VerificationCode
+from backend.managementUsers.models import User, Profile, Roles
+from backend.LdapServer.models import ADServer
+from backend.subscription.models import plan
  
 # Constants
 CONSTANT_USER_EMAIL = _("Email")
@@ -140,38 +142,21 @@ def logout_view(request):
     logout(request)
     return JsonResponse({"msg": SUCCESS_MESSAGES_LOGOUT})
  
- 
+
 @api_view(['POST'])
 @authentication_classes([SessionAuthentication])
 def create_checkout_session(request):
     data = request.data
-    features = data['features']
     list_features = data['features']
     if "Basic"in list_features:
         subscription_plan = plan.objects.get(slug="Basic")
+        plan_id = subscription_plan.pk
     elif "Full" in list_features:
         subscription_plan = plan.objects.get(slug="Full")
+        plan_id = subscription_plan.pk
     else:
-        features_queryset = Features.objects.all()
-        features = [(feature.features, feature.price) for feature in features_queryset]
- 
-        all_combinations_with_details = []
- 
-        combination_number = 1
-        for r in range(1, len(features) + 1):
-            combinations_object = itertools.combinations(features, r)
-            combinations_list = list(combinations_object)
-           
-            for combo in combinations_list:
-                total_price = sum(feature[1] for feature in combo)
-                feature_names = tuple(feature[0] for feature in combo)
-                all_combinations_with_details.append((combination_number, feature_names, total_price))
-                combination_number += 1
- 
-        for combo_number, feature_names, total_price in all_combinations_with_details:
-            feature_with_combinations = ["Firewall L4","Networking L2 L3","VPN IPSEC","LDAP","Double Masque","IDS/IPS","VPN SSL","Proxy"] + list(feature_names)
-            if list_features == feature_with_combinations:
-                subscription_plan = plan.objects.get(slug=f"Custom{combo_number}")
+        grouped_data = group_descriptions_by_plan()
+        plan_id = get_plan_ids_by_descriptions(list_features, grouped_data)
  
     status = data['status']
     price = data['price']
@@ -191,7 +176,7 @@ def create_checkout_session(request):
                             'images': ['https://www.numeryx.fr/wp-content/themes/numeryx/assets/images/bg-Asguard.jpg'],
                             'description': 'Asguard Subscription',
                             'metadata': {
-                                'subscription_id': subscription_plan.pk,
+                                'subscription_id': plan_id,
                                 'status': status,
                             }
                         },
@@ -200,17 +185,18 @@ def create_checkout_session(request):
                 },
             ],
                 metadata = {
-                'subscription_id': subscription_plan.pk,
+                'subscription_id': plan_id,
                 'status': status,
             },
             mode='payment',
-            success_url = f'{url}/success/?subscription_id={subscription_plan.pk}',
+            success_url = f'{url}/success/?subscription_id={plan_id}',
             cancel_url= f'{url}/asguard/subscription/'
         )
  
         return Response(checkout_session)
     except Exception as e:
         return JsonResponse({'error': str(e)})
+
  
 @csrf_exempt
 def verify_code(request,id):
@@ -232,7 +218,8 @@ def verify_code(request,id):
             return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_EXPIRED}"}, status=200)
         except VerificationCode.DoesNotExist:
             return JsonResponse({"message": f"{CONSTANT_VERIFIFCATION_CODE} {ERROR_MESSAGES_INEXISTANT}"}, status=400)
- 
+
+
 @csrf_exempt
 def resend_verification_code(request,id):
     if request.method == 'POST':

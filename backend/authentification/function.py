@@ -1,10 +1,14 @@
+from itertools import groupby
+from operator import itemgetter
 from rest_framework import status
 from django.contrib.auth import authenticate, login
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 from backend.managementUsers.models import User, Profile,Roles
 from email.message import EmailMessage
-from datetime import datetime, timedelta 
+from datetime import datetime, timedelta
+
+from backend.subscription.models import plansFeatures 
 from .models import VerificationCode
 import smtplib
 import random
@@ -174,3 +178,39 @@ def send_verification_code(email,username):
     expiration_time = datetime.now() + timedelta(minutes=30)
     VerificationCode.objects.update_or_create(user=user, defaults={'code': verification_code, 'expiration_time': expiration_time})
     return True
+
+
+def group_descriptions_by_plan():
+    queryset = plansFeatures.objects.values('plan_id', 'description')
+    # Sort by plan_id to make groupby work
+    sorted_queryset = sorted(queryset, key=itemgetter('plan_id'))
+
+    # Group by plan_id and then format as required
+    grouped_descriptions = []
+    for plan_id, group in groupby(sorted_queryset, key=itemgetter('plan_id')):
+        list_descriptions = [item['description'] for item in group]
+        grouped_descriptions.append({
+            "plan_id": plan_id,
+            "descriptions": list_descriptions
+        })
+
+    return grouped_descriptions
+
+
+def get_plan_ids_by_descriptions(list_descriptions, grouped_data):
+    """
+    Function to get plan_ids that match the given list of descriptions.
+
+    Parameters:
+    list_descriptions (list): The descriptions to match.
+    grouped_data (list): The grouped data returned from the previous query.
+
+    Returns:
+    list: A list of plan_ids that contain all the given descriptions.
+    """
+    # Filter plan_ids where all descriptions match
+    for group in grouped_data:
+        if group['descriptions'] == list_descriptions:
+            return group['plan_id']
+
+    return None

@@ -42,10 +42,10 @@ class Command(BaseCommand):
             interface_id = Interface.objects.get(ifname=interface)
             return_init_file_nftables = init_file_nftables(interface)
             if return_init_file_nftables:
-                rule=return_rule(policy,source_address,destination_address,source_port,destination_port,protocol,type_rule)
+                rule=return_rule(interface,policy,source_address,destination_address,source_port,destination_port,protocol,type_rule)
                 saddr_db=calculate_subnet_address(source_address)
                 daddr_db=calculate_subnet_address(destination_address)
-                rule_db=return_rule(policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
+                rule_db=return_rule(interface,policy,saddr_db,daddr_db,source_port,destination_port,protocol,type_rule)
                 if not Rule.objects.filter(
                     Q(rule=rule_db) & (
                         (Q(interface_id=interface_id.id) ) &

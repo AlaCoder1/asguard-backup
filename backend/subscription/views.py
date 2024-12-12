@@ -210,7 +210,8 @@ def if_subscribed(indexs_plans_feature):
     except ValueError:
         return False
     
-
+# @api_view(['POST'])
+# @authentication_classes([SessionAuthentication])
 def list_features_about_last_subscription(request):
     list_features = []
     if request.method == 'GET':
@@ -228,7 +229,7 @@ def list_features_about_last_subscription(request):
         else:
             list_features = []
         # return list_features
-        return JsonResponse({"msg": list_features}, status=200)
+        return JsonResponse({"list_features": list_features}, status=200)
     
 def subscription_info(request):
     subscription_info = {}
@@ -385,3 +386,7 @@ def basic():
     initBD_plansFeatures("IDS/IPS",last_plan.pk)
     initBD_plansFeatures("VPN SSL",last_plan.pk)
     initBD_plansFeatures("Proxy",last_plan.pk)
+
+
+
+

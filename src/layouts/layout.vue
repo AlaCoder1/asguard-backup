@@ -189,13 +189,18 @@ export default {
     },
   },
   mounted() {
-    setTimeout(() => {
-      let packSubscription = localStorage.getItem("lastSubscription");
-      let parsedArray = JSON.parse(packSubscription);
-      this.last_Subscription = parsedArray;
-    }, 1000);
     const csrfToken = getCookie("csrftoken");
     axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
+    axios.get("/subscription/list_features_about_last_subscription").then((response) => {
+      console.log(response.data.list_features)
+      this.last_Subscription=response.data.list_features
+    });
+    // setTimeout(() => {
+    //   let packSubscription = localStorage.getItem("lastSubscription");
+    //   let parsedArray = JSON.parse(packSubscription);
+    //   this.last_Subscription = parsedArray;
+    // }, 1000);
+    
 
     axios.get("/ztna/status_ztna").then((response) => {
       this.status = response.data.data;
@@ -242,7 +247,7 @@ export default {
   methods: {
     startStopServer(status) {
       const user = user_privilege("Ztna");
-
+      console.log("include")
       if (
         user &&
         user !== "viewer" &&

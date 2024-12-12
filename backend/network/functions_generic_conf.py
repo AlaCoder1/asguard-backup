@@ -1,6 +1,21 @@
 from .functions import *
 ###################generic configuration
-
+def parse_data_generic(data):
+    setuptype_ip4 = data.get('setuptypeIP4')
+    ## for ipv6
+    setuptype_ip6 = data.get('setuptypeIP6')
+    ####
+    bogon_aux = data.get('bogon_aux')
+    private_aux = data.get('private_aux')
+    mtuv =  None if data.get('mtuv', None) == "" else data.get('mtuv', None)
+    mssv =  None if data.get('mssv', None) == "" else data.get('mssv', None)
+    speed_duplex =  None if data.get('speed_duplex', None) == "" else data.get('speed_duplex', None)
+    addmac =  None if data.get('addmac', None) == "" else data.get('addmac', None)
+    data["mtuv"]=mtuv
+    data["mssv"]=mssv
+    data["speed_duplex"]=speed_duplex
+    data["addmac"]=addmac
+    return data,setuptype_ip4,setuptype_ip6,bogon_aux,private_aux,mtuv,mssv,speed_duplex,addmac
 def generic_config(config,ifname,speed_duplex,addmac,mtuv,mssv,genericConfigObject):
     commandes=[]
     cmd_final=[]

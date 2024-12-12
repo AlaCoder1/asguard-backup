@@ -507,7 +507,7 @@ def reset_password_by_admin(request, id):
         # run 'passwd' command to change password
         rslt = reset_password_by_admin_in_system(new_password, user_object.username)
         # check if password change was successful
-        if rslt == True:
+        if rslt:
             user_object.password = make_password(new_password)
             user_object.save()
             return JsonResponse({"msg": f"{CONSTANT_PASSWORD} {SUCCESS_MESSAGES_UPDATING}"}, status=200)

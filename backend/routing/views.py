@@ -207,8 +207,10 @@ def update_routing(request, id):
             if result_gateway["gateway"]:
                 gateway = result_gateway["gateway"]
                 data["gateway"] = gateway
-            else:
+            elif result_gateway["error"] == "":
                 return JsonResponse({"error": f"{ERROR_MESSAGES_USED_ITEM} {CONSTANT_INTERFACE}"}, status=400)
+            else:
+                return JsonResponse({"error": result_gateway["error"]}, status=400)
         
         gateway_instance = Gateway.objects.get(id=gateway)
         gateway_interface_instance = GatewayInterface.objects.get(gateway=gateway_instance)

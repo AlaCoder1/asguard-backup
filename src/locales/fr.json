@@ -43,6 +43,10 @@
     "Load": "charger"
   },
 
+  "noDesc":"Pas de description",
+  "noApp":"Aucune application pour cette règle",
+  "zeroNumber":"Valeur ne peut pas être 0.",
+
   "requiredfield": {
     "indicatesrequiredfield": "Indique champ obligatoire",
     "attente": "S'il vous plaît, attendez...",

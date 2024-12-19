@@ -4,6 +4,10 @@
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
           <v-card-title>
+            <span
+              class="mdi mdi-close cursor-pointer text-end justify-end d-flex"
+              @click="closeModal"
+            ></span>
             <span class="headline" v-if="modalMode === 'create'">
               {{ $t("Waf.createNewApplication") }}</span
             >
@@ -39,7 +43,7 @@
                       {{ app.name }}
                     </v-card-item>
                     <v-card-item v-else class="d-flex justify-center mt-5">
-                      No Applications for this rule
+                      {{ $t("noApp") }}
                     </v-card-item>
                   </v-card>
                 </v-col>
@@ -47,7 +51,7 @@
             </v-container>
           </v-card-text>
           <v-card-actions class="mt-3 actionBtn">
-            <v-btn
+            <!-- <v-btn
               color="indigo-darken-3"
               large
               rounded
@@ -60,7 +64,7 @@
               <span class="text-white pr-3 pl-3">{{
                 $t("buttons.close")
               }}</span>
-            </v-btn>
+            </v-btn> -->
           </v-card-actions>
         </v-card>
       </form>

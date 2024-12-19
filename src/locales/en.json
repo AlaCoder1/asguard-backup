@@ -43,6 +43,10 @@
     "Load": "Load"
   },
 
+  "noDesc":"No Desrciption",
+  "noApp":"No Applications for this rule",
+  "zeroNumber":"Value cannot be 0.",
+
   "requiredfield": {
     "indicatesrequiredfield": "Indicates required field",
     "attente": "Please Wait...",

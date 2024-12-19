@@ -2,11 +2,12 @@
 from django.db import models
 from django.utils import timezone
 from backend.network.models import Interface
+from django.utils.translation import gettext_lazy as _
 # Create your models here.
 ###model Gateway
 class Gateway(models.Model):
     # interfaces = models.ManyToManyField(Interface, related_name='Interfaces', through='GatewayInterface')
-    gwname=models.CharField(max_length=200, null=True,unique=True)
+    gwname=models.CharField(max_length=200, null=True,unique=True,verbose_name=_("gateway name"))
     gwaddress=models.CharField(max_length=200, null=True)
     staticgw=models.BooleanField(default=False)
     description=models.CharField(max_length=200, null=True,blank=True)

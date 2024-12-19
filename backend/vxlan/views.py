@@ -8,11 +8,10 @@ from backend.network.serializers import InterfaceSerializer
 from backend.vxlan.functions import add_vxlan_sys, delete_vxlan_sys, get_all_nmcli_uuids,save_in_db, update_vxlan_sys
 from backend.vxlan.models import Vxlan
 from django.core import serializers
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import gettext_lazy as _,get_language
 from backend.vxlan.serializers import VxlanSerializer
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-
 
 
 # Constants
@@ -63,12 +62,14 @@ def add_vxlan(request):
         # parse the incoming information
         data_input=request.data
         vxlan_serializer=VxlanSerializer(data=data_input)
+        
         if vxlan_serializer.is_valid():
             vxlan_serializer.save()
             msg= f"{CONSTANT_VXLAN_CONFIG} {SUCCESS_MESSAGES_CREATING}"
             status=200
         else:
             msg=str(next(iter(vxlan_serializer.errors.values()))[0]).strip('.')+"!"
+            print(msg)
             status=400
     return JsonResponse({"msg": msg},status=status)  
  

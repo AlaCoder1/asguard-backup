@@ -182,6 +182,7 @@
                 </td>
                 <td>
                   <v-text-field
+                    :readonly="is_vxlan_vlan"
                     :label="$t('interface.MACAddress')"
                     class="ml-3"
                     v-model="addmac"
@@ -195,6 +196,7 @@
                 </td>
                 <td>
                   <v-text-field
+                    :readonly="is_vxlan_vlan"
                     :label="$t('interface.MTU')"
                     class="ml-3"
                     v-model="mtuv"
@@ -208,6 +210,7 @@
                 </td>
                 <td>
                   <v-text-field
+                    :readonly="is_vxlan_vlan"
                     :label="$t('interface.MSS')"
                     class="ml-3"
                     v-model="mssv"
@@ -223,6 +226,7 @@
                 </td>
                 <td>
                   <v-select
+                    :readonly="is_vxlan_vlan"
                     :label="$t('interface.speedAndDuplex')"
                     v-model="speed_duplex"
                     :items="speedDuplexItems.map((item) => item)"
@@ -275,6 +279,7 @@
                 </v-col>
                 <v-col cols="2" class="mb-n6" align-self="center">
                   <v-btn
+                    :disabled="is_main"
                     color="#F6F6F6"
                     class="text-none"
                     variant="flat"
@@ -381,7 +386,282 @@
                 class="ml-3"
               />
             </v-row>
-            <AdvancedConfigDHCPv4
+            <!-- advanced -->
+
+            <div v-if="advancedParameters">
+              <v-card-title class="title-text">{{
+                $t("interface.protocolTiming")
+              }}</v-card-title>
+              <v-divider class="ml-3"></v-divider>
+              <table class="ml-3 mt-3 mr-5">
+                <tbody>
+                  <tr>
+                    <td>
+                      <span style="color: black" class="">{{
+                        $t("interface.timeout")
+                      }}</span>
+                    </td>
+                    <td>
+                      <v-text-field
+                        :label="$t('interface.timeout')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.timeout"
+                      ></v-text-field>
+
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidTimeout"
+                      >
+                        {{ $t("errors.ChampIncludeOnlyNumbers") }}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span style="color: black" class="">{{
+                        $t("interface.tryAgain")
+                      }}</span>
+                    </td>
+                    <td style="width: 80%">
+                      <v-text-field
+                        :label="$t('interface.tryAgain')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.retry"
+                      ></v-text-field>
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidRetry"
+                      >
+                        {{ $t("errors.ChampIncludeOnlyNumbers") }}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span style="color: black; width: 50%" class="">{{
+                        $t("interface.selectExpiration")
+                      }}</span>
+                    </td>
+                    <td style="width: 50%">
+                      <v-text-field
+                        :label="$t('interface.selectExpiration')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.select_timeout"
+                      ></v-text-field>
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidSelectTimeout"
+                      >
+                        {{ $t("errors.ChampIncludeOnlyNumbers") }}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span style="color: black" class="">{{
+                        $t("interface.restart")
+                      }}</span>
+                    </td>
+                    <td style="width: 80%">
+                      <v-text-field
+                        :label="$t('interface.restart')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.reboot"
+                      ></v-text-field>
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidReboot"
+                      >
+                        {{ $t("errors.ChampIncludeOnlyNumbers") }}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span style="color: black" class="">{{
+                        $t("interface.backoffCutoff")
+                      }}</span>
+                    </td>
+                    <td style="width: 80%">
+                      <v-text-field
+                        :label="$t('interface.backoffCutoff')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.backoff"
+                      ></v-text-field>
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidBackoff"
+                      >
+                        {{ $t("errors.ChampIncludeOnlyNumbers") }}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span style="color: black" class="">{{
+                        $t("interface.initialInterval")
+                      }}</span>
+                    </td>
+                    <td style="width: 80%">
+                      <v-text-field
+                        :label="$t('interface.initialInterval')"
+                        class="ml-3 mt-1"
+                        v-model="AdvancedConfigDHCPv4.initial_interval"
+                      ></v-text-field>
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidInitialInterval"
+                      >
+                        {{ $t("errors.ChampIncludeOnlyNumbers") }}
+                      </p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <v-card-title class="title-text">{{
+                $t("interface.leaseRequirements")
+              }}</v-card-title>
+              <v-divider class="ml-3"></v-divider>
+              <table class="ml-3 mt-3 mr-5">
+                <tbody>
+                  <tr>
+                    <td>
+                      <span style="color: black" class="">{{
+                        $t("interface.sendOptions")
+                      }}</span>
+                    </td>
+                    <td style="width: 70%">
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.sendOptions')"
+                        v-model="AdvancedConfigDHCPv4.dhcp_client"
+                      ></v-text-field>
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidDhcp_client"
+                      >
+                        {{ $t("champs.champletter") }}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span style="color: black" class="">{{
+                        $t("interface.sendOptionsLeaseTime")
+                      }}</span>
+                    </td>
+                    <td style="width: 70%">
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.sendOptionsLeaseTime')"
+                        v-model="AdvancedConfigDHCPv4.lease_time"
+                      ></v-text-field>
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidLease_time"
+                      >
+                        {{ $t("errors.ChampIncludeOnlyNumbers") }}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span style="color: black" class="">{{
+                        $t("interface.requestOptions")
+                      }}</span>
+                    </td>
+                    <td style="width: 70%">
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.requestOptions')"
+                        v-model="AdvancedConfigDHCPv4.request"
+                      ></v-text-field>
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidRequest"
+                      >
+                        {{ $t("champs.champletter") }}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span style="color: black" class="">{{
+                        $t("interface.requiredOptions")
+                      }}</span>
+                    </td>
+                    <td style="width: 70%">
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.requiredOptions')"
+                        v-model="AdvancedConfigDHCPv4.require"
+                      ></v-text-field>
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidRequire"
+                      >
+                        {{ $t("champs.champletter") }}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span style="color: black" class="">{{
+                        $t("interface.supersedeDomaineName")
+                      }}</span>
+                    </td>
+                    <td style="width: 70%">
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.supersedeDomaineName')"
+                        v-model="AdvancedConfigDHCPv4.domain_name"
+                      ></v-text-field>
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidDomain_name"
+                      >
+                        {{ $t("champs.champletter") }}
+                        {{ $t("champs.max") }}
+                      </p>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span style="color: black" class="">{{
+                        $t("interface.prependDomainServer")
+                      }}</span>
+                    </td>
+                    <td style="width: 70%">
+                      <v-text-field
+                        class="ml-3 mt-1"
+                        :label="$t('interface.prependDomainServer')"
+                        v-model="AdvancedConfigDHCPv4.domain_server"
+                      ></v-text-field>
+                      <p
+                        style="margin-top: -5px"
+                        class="error-feedback ml-4"
+                        v-if="!isValidDomain_server"
+                      >
+                        {{ $t("champs.champletter") }}
+                      </p>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <!--  -->
+            <!-- <AdvancedConfigDHCPv4
               v-if="advancedParameters"
               v-model:typeDHCP4="typeDHCP4"
               v-model:timeout="AdvancedConfigDHCPv4.timeout"
@@ -396,7 +676,7 @@
               v-model:require="AdvancedConfigDHCPv4.require"
               v-model:domain_name="AdvancedConfigDHCPv4.domain_name"
               v-model:domain_server="AdvancedConfigDHCPv4.domain_server"
-            />
+            /> -->
           </div>
         </v-col>
       </v-row>
@@ -583,6 +863,7 @@ export default {
   data() {
     return {
       is_main: false,
+      is_vxlan_vlan: false,
       messageExistGateway: "",
       itemData: [],
       deleteDialog: false,
@@ -671,7 +952,6 @@ export default {
         timeout: "",
         retry: "",
         select_timeout: "",
-        select_timeout: "",
         reboot: "",
         backoff: "",
         initial_interval: "",
@@ -708,6 +988,140 @@ export default {
       // Validate the input value against the regex
       if (!ipRegex.test(this.gateway.gwaddress)) {
         return false; // Error message for invalid IP address
+      }
+      return true;
+    },
+    isValidTimeout() {
+      const numberRegex = /^[0-9]+$/;
+
+      if (
+        this.AdvancedConfigDHCPv4.timeout &&
+        !numberRegex.test(this.AdvancedConfigDHCPv4.timeout)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    isValidRetry() {
+      const numberRegex = /^[0-9]+$/;
+
+      if (
+        this.AdvancedConfigDHCPv4.retry &&
+        !numberRegex.test(this.AdvancedConfigDHCPv4.retry)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    isValidSelectTimeout() {
+      const numberRegex = /^[0-9]+$/;
+
+      if (
+        this.AdvancedConfigDHCPv4.select_timeout &&
+        !numberRegex.test(this.AdvancedConfigDHCPv4.select_timeout)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    isValidReboot() {
+      const numberRegex = /^[0-9]+$/;
+
+      if (
+        this.AdvancedConfigDHCPv4.reboot &&
+        !numberRegex.test(this.AdvancedConfigDHCPv4.reboot)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    isValidBackoff() {
+      const numberRegex = /^[0-9]+$/;
+
+      if (
+        this.AdvancedConfigDHCPv4.backoff &&
+        !numberRegex.test(this.AdvancedConfigDHCPv4.backoff)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    isValidInitialInterval() {
+      const numberRegex = /^[0-9]+$/;
+
+      if (
+        this.AdvancedConfigDHCPv4.initial_interval &&
+        !numberRegex.test(this.AdvancedConfigDHCPv4.initial_interval)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    isValidDhcp_client() {
+      const charRegex = /^[a-zA-Z]+$/;
+
+      if (
+        this.AdvancedConfigDHCPv4.dhcp_client &&
+        !charRegex.test(this.AdvancedConfigDHCPv4.dhcp_client)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    isValidLease_time() {
+      const numberRegex = /^[0-9]+$/;
+
+      if (
+        this.AdvancedConfigDHCPv4.lease_time &&
+        !numberRegex.test(this.AdvancedConfigDHCPv4.lease_time)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    isValidRequest() {
+      const charRegex = /^[a-zA-Z]+$/;
+
+      if (
+        this.AdvancedConfigDHCPv4.request &&
+        !charRegex.test(this.AdvancedConfigDHCPv4.request)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    isValidRequire() {
+      const charRegex = /^[a-zA-Z]+$/;
+
+      if (
+        this.AdvancedConfigDHCPv4.require &&
+        !charRegex.test(this.AdvancedConfigDHCPv4.require)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    isValidDomain_name() {
+      const charRegex = /^[a-zA-Z]+$/;
+      const maxLength = 63;
+
+      if (
+        this.AdvancedConfigDHCPv4.domain_name &&
+        (!charRegex.test(this.AdvancedConfigDHCPv4.domain_name) ||
+          this.AdvancedConfigDHCPv4.domain_name.length > maxLength)
+      ) {
+        return false;
+      }
+      return true;
+    },
+    isValidDomain_server() {
+      const charRegex = /^[a-zA-Z]+$/;
+
+      if (
+        this.AdvancedConfigDHCPv4.domain_server &&
+        !charRegex.test(this.AdvancedConfigDHCPv4.domain_server)
+      ) {
+        return false;
       }
       return true;
     },
@@ -812,6 +1226,19 @@ export default {
     },
 
     addNetwork() {
+      if (!this.isValidTimeout) return;
+      if (!this.isValidRetry) return;
+      if (!this.isValidSelectTimeout) return;
+      if (!this.isValidReboot) return;
+      if (!this.isValidBackoff) return;
+      if (!this.isValidInitialInterval) return;
+      if (!this.isValidDhcp_client) return;
+      if (!this.isValidLease_time) return;
+      if (!this.isValidRequest) return;
+      if (!this.isValidRequire) return;
+      if (!this.isValidDomain_name) return;
+      if (!this.isValidDomain_server) return;
+
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -1133,14 +1560,18 @@ export default {
       (i) => i.name_interface === this.activeTab
     );
 
+    this.is_vxlan_vlan =
+      this.activeTab.startsWith("VXLAN") || this.activeTab.startsWith("VLAN")
+        ? true
+        : false;
+
     this.is_main = filtred_main[0]?.is_main;
 
-    let tab = localStorage.getItem("network-tab");
-    let filtredInterface = parsedArrayInterface.filter(
-      (i) => i.name_interface === tab
-    );
-    if (filtredInterface[0]?.ifname.startsWith("vlan")) {
-      this.items.push({ id: 1, value: "static" });
+    if (
+      this.activeTab.startsWith("VXLAN") ||
+      this.activeTab.startsWith("VLAN")
+    ) {
+      this.items.push({ id: 1, value: "static" }); 
     } else {
       this.items.push({ id: 1, value: "static" }, { id: 2, value: "dhcp" });
     }
@@ -1198,7 +1629,7 @@ export default {
   watch: {
     typeDHCP4: function (val) {
       if (val === "Advanced") {
-        this.advancedParameters = true;
+        // this.advancedParameters = true;
         this.AdvancedConfigDHCPv4.timeout = this.IPV4Config.IPV4Config.timeout;
         this.AdvancedConfigDHCPv4.retry = this.IPV4Config.IPV4Config.retry;
         this.AdvancedConfigDHCPv4.select_timeout =
@@ -1218,7 +1649,7 @@ export default {
         this.AdvancedConfigDHCPv4.domain_server =
           this.IPV4Config.IPV4Config.domain_server;
       } else {
-        this.advancedParameters = false;
+        // this.advancedParameters = false;
       }
     },
   },
@@ -1281,5 +1712,17 @@ export default {
 
 .new-style {
   width: 70%;
+}
+.title-text {
+  color: #020202;
+  font-family: Nunito;
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+}
+.error-feedback {
+  color: red;
+  font-size: 0.85em;
 }
 </style>

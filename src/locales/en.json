@@ -544,9 +544,10 @@
     "existGateway":"Gateway address already exists",
     "indication": "champs can include only letters & Numbers & underscores & hyphens without space.",
     "champNumber": "champs lifeTime can include only Numbers.",
-    "champletter": "champs state can include only letters.",
+    "champletter": "champs can include only letters.",
     "champplaceletter": "champs place can include only letters.",
-    "validAddress": "Please enter a valid email address."
+    "validAddress": "Please enter a valid email address.",
+    "max":"Max 63 characters or fewer."
   },
 
   "tabs": {

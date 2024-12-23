@@ -241,6 +241,7 @@ export default {
     };
 
     const submitForm = async () => {
+      
       const isFieldValid = rulesName.every(rule => rule(IdentityAttribute.value) === true && rule(IdentityName.value) === true);
       if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
@@ -270,9 +271,7 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
-              state.loading = true;
-      state.isLoadingDialogue = true;
+              state.textAlert = t("ztna.identityUpdated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -280,13 +279,17 @@ export default {
           })
           .catch((i) => {
             if (i.response.status === 500) {
+              state.loading = false;
+              state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = t("errors.errorServer");
             } else {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       } else {
@@ -299,12 +302,10 @@ export default {
           })
           .then((response) => {
             if (response.status == "200") {
-              state.loading = true;
-              state.isLoadingDialogue = true;
               state.openModal = false;
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.identityCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -312,13 +313,17 @@ export default {
           })
           .catch((i) => {
             if (i.response.status === 500) {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = t("errors.errorServer");
             } else {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       }
@@ -373,7 +378,6 @@ export default {
     function ValidName(value) {
       const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
 
-      console.log("Identities.value", Identities.value);
 
       if (!Array.isArray(Identities.value)) {
         console.error("Identities.value is not an array:", Identities.value);

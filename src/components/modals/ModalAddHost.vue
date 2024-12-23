@@ -381,7 +381,9 @@ export default {
 
     const submitForm = async () => {
       const isFieldValid = rulesName.every(rule => rule(ConfigName.value) === true);
-      if (isFieldValid) {
+      const isnumberValid = rulesNumber.every(rule => rule(port.value) === true);
+      const isaddressValid = rulesaddress.every(rule => rule(address.value) === true);
+      if (isFieldValid && isnumberValid && isaddressValid) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -411,7 +413,7 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.configUpdated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -419,13 +421,17 @@ export default {
           })
           .catch((i) => {
             if (i.response.status === 500) {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = t("errors.errorServer");
             } else {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       } else {
@@ -440,7 +446,7 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.configCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -448,13 +454,17 @@ export default {
           })
           .catch((i) => {
             if (i.response.status === 500) {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = t("errors.errorServer");
             } else {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       }

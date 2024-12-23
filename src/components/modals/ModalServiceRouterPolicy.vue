@@ -375,13 +375,15 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.servicerouterpolUpdated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
             }
           })
           .catch((i) => {
+            state.loading = false;
+      state.isLoadingDialogue = false;
             if (i.response.status === 500) {
               state.snackbar = true;
               state.color = "red";
@@ -389,7 +391,7 @@ export default {
             } else {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       } else {
@@ -405,13 +407,15 @@ export default {
               state.openModal = false;
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.servicerouterpolCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
             }
           })
           .catch((i) => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
             if (i.response.status === 500) {
               state.snackbar = true;
               state.color = "red";
@@ -419,7 +423,7 @@ export default {
             } else {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       }} else {

@@ -23,18 +23,18 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> {{ $t("ztna.createNewIdentity") }}</span>
+            <span class="text-h5"> {{ $t("ztna.createNewEnrollment") }}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12">
-                  <v-text-field v-model="date" label="Date" prepend-icon="mdi-calendar" type="date" :rules="dateRules"
+                  <v-text-field v-model="date" :label="$t('ztna.ztnadate')" prepend-icon="mdi-calendar" type="date" :rules="dateRules"
 
                   ></v-text-field>
                 </v-col>
                 <v-col cols="12">
-                  <v-text-field v-model="time" label="Time" prepend-icon="mdi-clock" type="time"  :rules="timeRules"
+                  <v-text-field v-model="time" :label="$t('ztna.ztnatime')" prepend-icon="mdi-clock" type="time"  :rules="timeRules"
                     class="ml-1"></v-text-field>
                 </v-col>
               </v-row>
@@ -119,7 +119,7 @@ export default {
       }
     );
 
-    const timeRules = [
+const timeRules = [
       (value) => !!value || t("ztna.enterTime"),
       (value) => {
         if (!value) return true;
@@ -129,8 +129,8 @@ export default {
         const currentTime = new Date().getHours();
         const enteredHour = parseInt(value.split(':')[0]);
 
-        currentDate.setUTCHours(0, 0, 0, 0);
-        enteredDate.setUTCHours(0, 0, 0, 0);
+        currentDate.setHours(0, 0, 0, 0);
+        enteredDate.setHours(0, 0, 0, 0);
         
         if (enteredDate > currentDate) {
           return true;
@@ -145,33 +145,37 @@ export default {
       }
     ];
 
-    const dateRules = [
+
+const dateRules = [
   (value) => !!value || t("ztna.enterDate"),
   (value) => {
     if (!value) return true;
-    
+
     const currentDate = new Date();
     const enteredDate = new Date(value);
-    
-    currentDate.setUTCHours(0, 0, 0, 0);
-    enteredDate.setUTCHours(0, 0, 0, 0);
-    
+
     if (isNaN(enteredDate.getTime())) {
-      return t("ztna.dateformat");
+      return t("ztna.dateformat"); // Invalid date format
     }
-    
+
+    currentDate.setHours(0, 0, 0, 0);
+    enteredDate.setHours(0, 0, 0, 0);
+
     if (enteredDate < currentDate) {
-      return t("ztna.dateCheck");
+      return t("ztna.dateCheck"); // Date is in the past
     }
-    
-    return true;
-  }
+
+    return true; // Valid date
+  },
 ];
 
 
 
+
     const submitForm = async () => {
-      
+      const isDateValid = dateRules.every((rule) => rule(date.value) === true);
+      const isTimeValid = timeRules.every((rule) => rule(time.value) === true);
+      if(isTimeValid && isDateValid){
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -197,7 +201,7 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.EnrollCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -206,15 +210,23 @@ export default {
           })
           .catch((i) => {
             if (i.response.status === 500) {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = t("errors.errorServer");
             } else {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
-          });
+          });} else {
+      state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("ztna.missingFields");
+      }
     };
 
     const selectItem = (item) => {
@@ -222,6 +234,8 @@ export default {
     };
 
     const cancel = () => {
+      date.value=null;
+      time.value=null
       emitter.emit("closeEnrollmentModal");
     };
 

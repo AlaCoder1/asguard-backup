@@ -311,7 +311,7 @@ const fetchServices = async () => {
 }
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(name.value) === true );
+      const isFieldValid = rulesName.every(rule => rule(name.value) === true  && rule(serviceAtt.value) === true);
       if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -340,7 +340,7 @@ const fetchServices = async () => {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.serviceUpdated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -355,7 +355,7 @@ const fetchServices = async () => {
             } else {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       } else {
@@ -370,7 +370,7 @@ const fetchServices = async () => {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.serviceCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -384,7 +384,7 @@ const fetchServices = async () => {
             } else {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       }} else {

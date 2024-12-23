@@ -43,9 +43,10 @@
     "Load": "Load"
   },
 
-  "noDesc":"No Desrciption",
-  "noApp":"No Applications for this rule",
-  "zeroNumber":"Value cannot be 0.",
+  "noDesc": "No Desrciption",
+  "noApp": "No Applications for this rule",
+  "zeroNumber": "Value cannot be 0.",
+  "plageAddresse": "Different address ranges are required.",
 
   "requiredfield": {
     "indicatesrequiredfield": "Indicates required field",
@@ -60,6 +61,7 @@
   },
 
   "errors": {
+    "format_address": "Format must be like : example.com",
     "errorServer": "Internal Server Error. Please try again later",
     "valueRequired": "Value is required",
     "invalidPassword": "There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
@@ -68,7 +70,7 @@
     "ChampNoInclude": "Field cannot contain only numbers or spaces",
     "formatMustBeLikeAdresseIP": "Format must be like adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format must be like: X.X.X.X/XX",
-    "subnetNotAccepted":"Subnet mask 32 is not accepted. Format must be like: X.X.X.X/XX",
+    "subnetNotAccepted": "Subnet mask 32 is not accepted. Format must be like: X.X.X.X/XX",
     "minimumOneRange": "Minimum One Range",
     "Formatdomain": "Format must be like exemple.com",
     "specificform": "Champ must be at least 32 characters, including at least one uppercase,one lowercase, one number, and one special character",
@@ -184,7 +186,7 @@
   },
 
   "firewall": {
-    "DropRejectRule":"Are you sure you want to create this rule with 'reject' or 'drop'?",
+    "DropRejectRule": "Are you sure you want to create this rule with 'reject' or 'drop'?",
     "rules": "Rules",
     "msg_subscription": "You are currently in Free Mode, unlocking this feature requires payment. Go to",
     "sub_page": "subscription page",
@@ -333,7 +335,7 @@
     "requiredOptions": "Required Options",
     "supersedeDomaineName": "Supersede domaine name",
     "prependDomainServer": "Prepend domain server",
-    "numberValidity":"Invalid format. Please enter whole numbers only."
+    "numberValidity": "Invalid format. Please enter whole numbers only."
   },
   "typeInterface": {
     "otherTypesOfInterfaces": "Other Types of Interfaces",
@@ -429,6 +431,8 @@
     "domainName": "Domain name",
     "rangeFrom": "Range From",
     "rangeTo": "Range To",
+    "range": "Range",
+    "exist": "already exists.",
     "addRange": "Add Range",
     "editRange": "Edit Range"
   },
@@ -545,13 +549,13 @@
   },
 
   "champs": {
-    "existGateway":"Gateway address already exists",
+    "existGateway": "Gateway address already exists",
     "indication": "champs can include only letters & Numbers & underscores & hyphens without space.",
     "champNumber": "champs lifeTime can include only Numbers.",
     "champletter": "champs can include only letters.",
     "champplaceletter": "champs place can include only letters.",
     "validAddress": "Please enter a valid email address.",
-    "max":"Max 63 characters or fewer."
+    "max": "Max 63 characters or fewer."
   },
 
   "tabs": {
@@ -645,7 +649,7 @@
     "edgeRelaysPolicies": "Relays Policies",
     "servicesPolicies": "Services Policies",
     "ZTNAStatus": "ZTNA is not running, please start service",
-    "osType":"OS Type"
+    "osType": "OS Type"
   },
 
   "titleAgGrid": {
@@ -1035,6 +1039,7 @@
     "nombreMustBe": "Number must be between",
     "and": "and"
   },
+  "mustBe": "Address One must be higher than Address Two.",
   "rangeFrom": "Range",
   "outBounds": "is out of bounds.",
   "settings": {

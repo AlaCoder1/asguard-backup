@@ -600,7 +600,11 @@ export default {
         state.modalData = {};
         state.modalMode = "create";
         state.isModalOpen = true;
-        emitter.emit("id-range", props.configInfo.id);
+
+        emitter.emit("id-range", {
+          id: props.configInfo.id,
+          range: rowDataRanges.value,
+        });
       }
     };
 
@@ -647,6 +651,10 @@ export default {
               state.modalMode = "edit";
               state.isModalOpen = true;
               state.editRow = rowData;
+              emitter.emit("id-range", {
+                id: props.configInfo.id,
+                range: rowDataRanges.value,
+              });
             }
 
             break;
@@ -796,7 +804,7 @@ export default {
               } else {
                 state.snackbar = true;
                 state.color = "error";
-                console.log('i.response.data.msg',i.response.data.msg)
+                console.log("i.response.data.msg", i.response.data.msg);
                 state.textAlert = i.response.data.msg;
                 setTimeout(() => {
                   state.snackbar = false;

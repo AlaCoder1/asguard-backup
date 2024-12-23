@@ -1,4 +1,24 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
+
   <v-row justify="center">
     <v-dialog v-model="openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
@@ -360,6 +380,8 @@ export default {
   setup() {
     const { t } = useI18n();
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       formData: {
         certifName: "",
         method: null,
@@ -685,6 +707,9 @@ export default {
           };
         }
 
+        this.state.loading = true;
+        this.state.isLoadingDialogue = true;
+
         axios
           .post("/certificates/createCertificate", payload)
           .then((response) => {
@@ -695,12 +720,18 @@ export default {
               this.color = "success";
               this.textAlert = response.data.msg;
 
+              this.state.loading = false;
+              this.state.isLoadingDialogue = false;
+
               setTimeout(() => {
                 location.reload();
               }, 1000);
             }
           })
           .catch((i) => {
+            this.state.loading = false;
+            this.state.isLoadingDialogue = false;
+
             if (i.response.status === 500) {
               this.snackbar = true;
               this.color = "red";
@@ -709,6 +740,10 @@ export default {
               this.snackbar = true;
               this.color = "red";
               this.textAlert = i.response.data.error;
+
+              setTimeout(() => {
+                this.textAlert = "";
+              }, 2000);
             }
           });
       } else {

@@ -64,6 +64,7 @@
     "ChampNoInclude": "Field cannot contain only numbers or spaces",
     "formatMustBeLikeAdresseIP": "Format must be like adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format must be like: X.X.X.X/XX",
+    "subnetNotAccepted":"Subnet mask 32 is not accepted. Format must be like: X.X.X.X/XX",
     "minimumOneRange": "Minimum One Range",
     "Formatdomain": "Format must be like exemple.com",
     "specificform": "Champ must be at least 32 characters, including at least one uppercase,one lowercase, one number, and one special character",
@@ -439,7 +440,7 @@
     "createNewProxyUser": "Create New Proxy User",
     "editUserProxy": "Edit User Proxy",
     "search": "Search",
-    "routageType": "Routage Type",
+    "routageType": "Routing Type",
     "value": "Value",
     "allowedByAuth": "Allowed by auth",
     "start": "Start",
@@ -543,9 +544,10 @@
     "existGateway":"Gateway address already exists",
     "indication": "champs can include only letters & Numbers & underscores & hyphens without space.",
     "champNumber": "champs lifeTime can include only Numbers.",
-    "champletter": "champs state can include only letters.",
+    "champletter": "champs can include only letters.",
     "champplaceletter": "champs place can include only letters.",
-    "validAddress": "Please enter a valid email address."
+    "validAddress": "Please enter a valid email address.",
+    "max":"Max 63 characters or fewer."
   },
 
   "tabs": {

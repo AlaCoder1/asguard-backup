@@ -349,7 +349,7 @@ console.log('current_user',current_user.value)
     });
 
     const openModalAdd = () => {
-      const user = user_privilege('Ztna');
+      const user = user_privilege('WAF');
       if (user && user !=='viewer' && user !=='default' && last_Subscription.value.includes("WAF")) {
       state.modalData = {};
       state.modalMode = "create";

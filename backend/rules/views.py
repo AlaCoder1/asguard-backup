@@ -114,7 +114,7 @@ def add_rule(request,name_interface):
     return_init_file_nftables = init_file_nftables(ifname)
     if return_init_file_nftables:
       #appel la fonction pour retourner rule à ajouter 
-      rule=return_rule(policy,saddr,daddr,sport,dport,protocol,type_rule)
+      rule=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rule)
       # if not Rule.objects.filter(Q(rule=rule) & ((Q(interface_id=interface_object.pk)& Q(type_rule!=type_rule ) )|(Q(interface_id!=interface_object.pk) & Q(type_rule=type_rule )))).exists():
       if not Rule.objects.filter(
             Q(rule=rule) & (
@@ -140,7 +140,7 @@ def add_rule(request,name_interface):
           data={key: value for key, value in data.items() if value is not None}
           saddr_db=calculate_subnet_address(saddr)
           daddr_db=calculate_subnet_address(daddr)
-          rule_db=return_rule(policy,saddr_db,daddr_db,sport,dport,protocol,type_rule)
+          rule_db=return_rule(ifname,policy,saddr_db,daddr_db,sport,dport,protocol,type_rule)
           data['rule']=rule_db
           data["rule_status"]=True
           data["type_rule"]=type_rule
@@ -178,7 +178,7 @@ def update_rule(request,name_interface):
         rule=rules_object.rule
         type_rules=rules_object.type_rule
         #appel la fonction pour retourner rule à ajouter 
-        ruleupdate=return_rule(policy,saddr,daddr,sport,dport,protocol,type_rules)
+        ruleupdate=return_rule(ifname,policy,saddr,daddr,sport,dport,protocol,type_rules)
         handle=get_handle_rule(ifname,type_rules,rule)
         if handle:
             return_delete_rule_remote=delete_rule_remote(ifname,type_rules,handle)
@@ -201,7 +201,7 @@ def update_rule(request,name_interface):
                     data['interface']=rules_object.interface_id
                     saddr_db=calculate_subnet_address(saddr)
                     daddr_db=calculate_subnet_address(daddr)
-                    rule_db_update=return_rule(policy,saddr_db,daddr_db,sport,dport,protocol,type_rules)
+                    rule_db_update=return_rule(ifname,policy,saddr_db,daddr_db,sport,dport,protocol,type_rules)
                     data['rule']=rule_db_update
                     rule_serializer = RuleSerializer(rules_object,data=data)
                     if rule_serializer.is_valid():

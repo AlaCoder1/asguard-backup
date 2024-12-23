@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.db.models.functions import Length
 from .models import OpenVpnLogs, ServerOpenvpn, ClientOpenvpn
 
 
@@ -9,7 +10,7 @@ class ServerOpenvpnSerializer(serializers.ModelSerializer):
     
     def validate_name(self, value):
         # Check if an openvpn server with the same first 11 letters exists
-        existing_servers = ServerOpenvpn.objects.filter(name__startswith=value[:11])
+        existing_servers = ServerOpenvpn.objects.annotate(name_length=Length('name')).filter(name_length__gte=11, name__startswith=value[:11])
         
         if self.instance:
             # If updating an existing instance, exclude it from the check

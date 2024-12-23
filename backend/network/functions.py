@@ -6,6 +6,28 @@ from .models import *
 ####################################################  BD functions  ############################################################### 
 
 ####update in Database functions
+
+###
+
+def save_config_database(setuptype_ip4,):
+    cmds=[]       
+    cmds,output_service,cmd_final_gen=generic_config(output_service,ifname,speed_duplex,addmac,mtuv,mssv,generic_config_object)
+    ##blocages des adresses
+    cmds_block=[]
+    configs=[]
+    configs,cmds_block,output_service,cmd_final_block=block_address_commandes(output_service,ifname,bogon_aux,private_aux,device_info)
+    cmds_block = [x for x in cmds_block if x not in output_service]
+    commandes+=commandes_ipv6+cmds+cmds_block
+    output_service = add_cmd(output_service,commandes)
+    ###cmd to refresh conf in system Network Manager
+    cmd_final_conf=refresh_conf_system(uuid,aux_main)
+    #ajouter au liste des commandes finales à executer  
+    commandes_final+=configs+cmd_final_ipv4+cmd_final_ipv6+cmd_final_conf+cmd_final_gen+cmd_final_block
+    cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
+{}
+EOF""".format('\n'.join(output_service))
+    aux_run=run_all_commands(commandes_final,setuptype_ip4,10)
+
 #function to update config tables
 def update_DB(id,data,model,IP4serializer):
     data={key: value for key, value in data.items() if value is not None}
@@ -81,6 +103,7 @@ def get_old_config():
     cmd = "cat /etc/systemd/system/Asguard-Networking.service"
     output,error=run_command(cmd)
     output=output.split("\n")
+    output=[x for x in output if x]
     return output,error
    
 def add_requirement(ifname,output):
@@ -154,9 +177,14 @@ def run_command_with_timeout(type, command, timeout):
         print(f"Command too long ({elapsed_time:.2f} seconds). {command}")
         return None, "Command timed out and was terminated."
  
-def run_all_commands(commandes,setuptypeIP4,timeout):
+def run_all_commands(commandes,setuptypeIP4,timeout,output_service):
+    cmd_asguard="""sudo cat <<EOF > /etc/systemd/system/Asguard-Networking.service
+{}
+EOF""".format('\n'.join(output_service))
+    commandes.append(cmd_asguard)
     for cmd in commandes:
         output,error=run_command_with_timeout(setuptypeIP4, cmd, timeout)
+        # print({"cmd to execute==>":cmd})
         if output is None and error!="" :
             print(error)
             return error

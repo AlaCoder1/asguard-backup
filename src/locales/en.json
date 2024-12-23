@@ -649,7 +649,19 @@
     "edgeRelaysPolicies": "Relays Policies",
     "servicesPolicies": "Services Policies",
     "ZTNAStatus": "ZTNA is not running, please start service",
-    "osType": "OS Type"
+    "osType": "OS Type",
+    "enterValue":"You must enter a value",
+    "nameExist":"The name already exists",
+    "validName":"Please enter a valid name",
+    "enterTime":"Please enter the time",
+    "timeformat":"Invalid time format",
+    "timeCheck":"Time should be after the current time",
+    "enterDate":"Please enter a date",
+    "dateformat":"Invalid date format",
+    "dateCheck":"Date should be after today",
+    "holeNumber":"Only whole numbers are allowed",
+    "validAddress":"Please enter a valid address",
+    "missingFields":"Check missing or invalid fields"
   },
 
   "titleAgGrid": {

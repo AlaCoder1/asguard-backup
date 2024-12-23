@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-row justify="center">
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm">
@@ -165,6 +184,7 @@ export default {
     const portLow = ref("");
     const portHigh = ref("");
     const Host = ref([]);
+    const intercept = ref([]);
     const Description = ref("");
     const selectedTitle = ref("tcp");
     const items = [{ title: "tcp" }, { title: "udp" }];
@@ -172,14 +192,15 @@ export default {
       (value) => {
         if (value) return true;
 
-        return "You must enter a value.";
+        return t("ztna.enterValue");
       },
     ];
     const rulesNumber = [
       (value) => {
-        if (!value) return 'This field is required.';
-        const integerPattern = /^-?\d+$/;
-        return integerPattern.test(value) || 'Only whole numbers are allowed.';
+        if (!value) return t("ztna.enterValue");
+        const integerPattern = /^-?[1-9]\d*$/;
+
+        return integerPattern.test(value) || t("ztna.holeNumber");
       }
     ];
 
@@ -188,29 +209,41 @@ export default {
         if (!value) return true;
         return isValidIpOrHostname(value)
           ? true
-          : "Please enter a valid adress.";
+          : t("ztna.validName");
       },
     ];
     const rulesName = [
       (value) => {
-        if (!value) return true;
-        if (existingName(value)) return "The name already exists";
-        return ValidName(value) ? true : "Please enter a valid name.";
+        if (!value) return t("ztna.enterValue");
+        if (existingName(value)) return t("ztna.nameExist");
+        return ValidName(value) ? true : t("ztna.validName");
       },
     ];
 
     function existingName(value) {
-      const existingIdentity = Host.value.find(
-        (identity) => identity.name === value
-      );
-
-      if (existingIdentity) {
+      const existingIdentity = intercept.value.find(identity => identity.name === value);
+      const existinghost = Host.value.find(identity => identity.name === value);
+      if (existingIdentity && existinghost) {
         return true;
       }
 
       return false;
     }
+    const fetchintercept = async () => {
+      try {
+        const interceptString = await document.getElementById("app").getAttribute("interceptconfigs");
+        const interceptObject = JSON.parse(interceptString);
 
+        const interceptArray = Array.isArray(interceptObject) ? interceptObject : [];
+
+        intercept.value = interceptArray.map(identity => ({ name: identity.name }));
+
+        console.log('intercept.value', intercept.value);
+      } catch (error) {
+        console.error("Failed to fetch intercept:", error);
+        intercept.value = [];
+      }
+    };
     const fetchHost = async () => {
       try {
         const HostString = await document
@@ -230,6 +263,7 @@ export default {
     };
 
     onMounted(() => {
+      fetchintercept();
       fetchHost();
     });
 
@@ -298,6 +332,8 @@ export default {
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       openModal: false,
       snackbar: false,
       color: null,
@@ -344,6 +380,8 @@ export default {
     };
 
     const submitForm = async () => {
+      const isFieldValid = rulesName.every(rule => rule(ConfigName.value) === true);
+      if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -359,7 +397,8 @@ export default {
       };
 
       let token = document.getElementById("app").getAttribute("token");
-
+      state.loading = true;
+      state.isLoadingDialogue = true;
       if (modalMode.value === "edit") {
         axios
           .put(`/ztna/update_host_config/${ConfigId.value}`, payload, {
@@ -418,6 +457,11 @@ export default {
               state.textAlert = i.response.data.error;
             }
           });
+      }
+    } else {
+      state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("ztna.missingFields");
       }
     };
     const selectItem = (item) => {

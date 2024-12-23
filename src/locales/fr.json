@@ -648,7 +648,19 @@
     "edgeRelaysPolicies": "Politiques des relais",
     "servicesPolicies": "Politiques des services",
     "ZTNAStatus": "ZTNA ne fonctionne pas, veuillez démarrer le service",
-    "osType": "Type OS"
+    "osType": "Type OS",
+    "enterValue":"Vous devez entrer une valeur.",
+    "nameExist":"Le nom existe déjà",
+    "validName":"Veuillez entrer un nom valide",
+    "enterTime":"Veuillez saisir l'heure",
+    "timeformat":"Format d'heure invalide",
+    "timeCheck":"L'heure doit être postérieure à l'heure actuelle",
+    "enterDate":"Veuillez saisir une date",
+    "dateformat":"Format de date non valide",
+    "dateCheck":"La date devrait être postérieure à aujourd'hui",
+    "holeNumber":"Seuls les nombres entiers sont autorisés",
+    "validAddress":"Veuillez entrer une adresse valide",
+    "missingFields":"Vérifiez les champs manquants ou invalides"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",

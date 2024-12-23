@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-row justify="center">
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm">
@@ -160,20 +179,23 @@ export default {
       { title: "Default" },
     ];
     const OS = [{ title: "windows" }, { title: "linux" }];
-    const rules = [(value) => !!value || "You must enter a value."];
+    const rules = [(value) => !!value || t("ztna.enterValue")];
     const rulesName = [
-      (value) => {
-        if (!value) return true;
-        if (existingName(value)) return "The name already exists";
-        return ValidName(value) ? true : "Please enter a valid name.";
-      },
-    ];
+  (value) => {
+    if (!value) return t("ztna.enterValue"); // Show message if the field is empty
+    if (existingName(value)) return t("ztna.nameExist"); // Check for existing name
+    return ValidName(value) ? true : t("ztna.validName"); // Validate format
+  },
+];
+
 
     const emitter = inject("emitter");
 
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       openModal: false,
       snackbar: false,
       color: "",
@@ -219,6 +241,8 @@ export default {
     };
 
     const submitForm = async () => {
+      const isFieldValid = rulesName.every(rule => rule(IdentityAttribute.value) === true && rule(IdentityName.value) === true);
+      if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -232,7 +256,8 @@ export default {
       };
 
       let token = document.getElementById("app").getAttribute("token");
-
+      state.loading = true;
+      state.isLoadingDialogue = true;
       if (modalMode.value === "edit") {
         axios
           .patch(`/ztna/update_identities/${identityId.value}`, payload, {
@@ -246,6 +271,8 @@ export default {
               state.snackbar = true;
               state.color = "success";
               state.textAlert = response.data.message;
+              state.loading = true;
+      state.isLoadingDialogue = true;
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -272,6 +299,8 @@ export default {
           })
           .then((response) => {
             if (response.status == "200") {
+              state.loading = true;
+              state.isLoadingDialogue = true;
               state.openModal = false;
               state.snackbar = true;
               state.color = "success";
@@ -292,6 +321,11 @@ export default {
               state.textAlert = i.response.data.error;
             }
           });
+      }
+    } else {
+      state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("ztna.missingFields");
       }
     };
 

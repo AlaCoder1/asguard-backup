@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-row justify="center">
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm">
@@ -188,8 +207,8 @@ export default {
     const rulesName = [
       (value) => {
         if (!value) return true;
-        if (existingName(value)) return "The name already exists";
-        return ValidName(value) ? true : "Please enter a valid name.";
+        if (existingName(value)) return t("ztna.nameExist");
+        return ValidName(value) ? true : t("ztna.validName");
       },
     ];
     function existingName(value) {
@@ -238,6 +257,8 @@ export default {
     const { isOpen, editRow, modalMode } = toRefs(props);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       openModal: false,
       snackbar: false,
       color: "",
@@ -321,6 +342,8 @@ export default {
     };
 
     const submitForm = async () => {
+      const isFieldValid = rulesName.every(rule => rule(name.value) === true );
+      if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       let routerAttribute = `#${routerR.value.attribute_relay}`;
@@ -334,7 +357,8 @@ export default {
       };
 
       let token = document.getElementById("app").getAttribute("token");
-
+      state.loading = true;
+      state.isLoadingDialogue = true;
       if (modalMode.value === "edit") {
         axios
           .put(
@@ -398,6 +422,10 @@ export default {
               state.textAlert = i.response.data.error;
             }
           });
+      }} else {
+      state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("ztna.missingFields");
       }
     };
     const resetForm = () => {

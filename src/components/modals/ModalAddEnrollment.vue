@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-row justify="center">
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm">
@@ -69,13 +88,15 @@ export default {
     const showJwtToken = ref(false);
     const EnrollementId = ref("");
     const items = [{ title: "ott" }, { title: "updb" }, { title: "ottca" }];
-    const rules = [(value) => !!value || "You must enter a value."];
+    const rules = [(value) => !!value || t("ztna.enterValue")];
 
     const emitter = inject("emitter");
 
     const { isOpen, selectedId } = toRefs(props);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       openModal: false,
       itemId: null,
       snackbar: false,
@@ -99,7 +120,7 @@ export default {
     );
 
     const timeRules = [
-      (value) => !!value || "Please enter a time",
+      (value) => !!value || t("ztna.enterTime"),
       (value) => {
         if (!value) return true;
         const currentDate = new Date();
@@ -115,17 +136,17 @@ export default {
           return true;
         }
         if (isNaN(enteredHour)) {
-          return "Invalid time format";
+          return t("ztna.timeformat");
         }
         if (enteredHour < currentTime) {
-          return "Time should be after the current time";
+          return t("ztna.timeCheck");
         }
         return true;
       }
     ];
 
     const dateRules = [
-  (value) => !!value || "Please enter a date",
+  (value) => !!value || t("ztna.enterDate"),
   (value) => {
     if (!value) return true;
     
@@ -136,11 +157,11 @@ export default {
     enteredDate.setUTCHours(0, 0, 0, 0);
     
     if (isNaN(enteredDate.getTime())) {
-      return "Invalid date format";
+      return t("ztna.dateformat");
     }
     
     if (enteredDate < currentDate) {
-      return "Date should be after today";
+      return t("ztna.dateCheck");
     }
     
     return true;
@@ -150,13 +171,15 @@ export default {
 
 
     const submitForm = async () => {
+      
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       let token = document.getElementById("app").getAttribute("token");
 
       let dateTime = `${date.value}T${time.value}:00Z`;
-
+      state.loading = true;
+      state.isLoadingDialogue = true;
 
       let payload = {
         expiresAt: dateTime,

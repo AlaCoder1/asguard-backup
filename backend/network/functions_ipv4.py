@@ -219,6 +219,9 @@ def get_address_dhcp(ifname,aux_ip):
 
 def configuration_ipv4(data,setuptype_ip4,uuid,ifname,name_interface,id_interface,aux_main,commandes_final,output_service):
     list_metric=[]
+    json_ipv4={}
+    commandes=[]
+    cmd_final_ipv4=[]
     match setuptype_ip4.lower():
         case "none":
             #call function to convert address to None

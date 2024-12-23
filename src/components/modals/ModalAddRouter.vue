@@ -164,8 +164,8 @@ export default {
     const rulesName = [
       (value) => {
         if (!value) return true;
-        if (existingName(value)) return "The name already exists";
-        return ValidName(value) ? true : "Please enter a valid name.";
+        if (existingName(value)) return t("ztna.nameExist");
+        return ValidName(value) ? true : t("ztna.validName");
       },
     ];
 
@@ -257,6 +257,8 @@ export default {
     });
 
     const submitForm = async () => {
+      const isFieldValid = rulesName.every(rule => rule(RouterName.value) === true );
+      if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -344,6 +346,10 @@ export default {
               state.textAlert = i.response.data.error;
             }
           });
+      }} else {
+      state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("ztna.missingFields");
       }
     };
 

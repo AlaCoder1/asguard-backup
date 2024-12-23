@@ -12,7 +12,7 @@ import pyshark
 from django.core import serializers
 from django.contrib.auth.hashers import  check_password
 from django.utils.translation import gettext_lazy as _
-
+from django.utils.translation import activate
 
 # Constants
 ERROR_MESSAGES_INVALID_PASSWORD = _("Invalid password")
@@ -32,6 +32,8 @@ class OpenVpnConsumer(AsyncWebsocketConsumer):
         text_data_json = json.loads(text_data)
         id_server = text_data_json['id']
         password=text_data_json['password']
+        lang=text_data_json['lang']
+        activate(lang)
         while True:
             data =await self.start_data_loop_openvpn(id_server,password)
             await self.send(json.dumps(data))

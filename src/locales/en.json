@@ -1039,7 +1039,7 @@
     "nombreMustBe": "Number must be between",
     "and": "and"
   },
-  "mustBe": "Address One must be higher than Address Two.",
+  "mustBe": "Address Two must be higher than Address One.",
   "rangeFrom": "Range",
   "outBounds": "is out of bounds.",
   "settings": {

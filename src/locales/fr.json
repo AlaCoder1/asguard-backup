@@ -1037,7 +1037,7 @@
     "nombreMustBe": "Nombre doit etre compris entre",
     "and": "et"
   },
-  "mustBe":"L'adresse Un doit être supérieure à l'adresse Deux.",
+  "mustBe":"L'adresse Deux doit être supérieure à l'adresse Un.",
   "rangeFrom": "La plage",
   "outBounds": "est hors limites.",
   "settings": {

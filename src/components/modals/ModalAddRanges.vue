@@ -380,7 +380,7 @@ export default {
         const numeroOne = ipToNumber(state.rangeFrom);
         const numeroTwo = ipToNumber(state.rangeTo);
 
-        if (numeroOne < numeroTwo) {
+        if (numeroOne > numeroTwo) {
           state.error = t("mustBe");
 
           setTimeout(() => {

@@ -218,7 +218,7 @@ console.log('current_user',current_user.value)
         flex: 1,
       },
       {
-        headerName: "Actions",
+        headerName: "Applications",
         cellRenderer: actionCellRenderer,
         field: "action",
       },

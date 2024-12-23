@@ -182,7 +182,7 @@ export default {
     }
 
     function ValidName(value) {
-      const hostnamePattern = /^[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
+      const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
 
       if (hostnamePattern.test(value) && !/^\d+$/.test(value)) {
         return true;

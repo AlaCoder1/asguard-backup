@@ -375,6 +375,13 @@ export default {
     const formatMustBeLikeAdresseIP = computed(() => {
       return t("errors.formatMustBeLikeAdresseIP");
     });
+    const zeroNumber = computed(() => {
+      return t("zeroNumber");
+    });
+
+    const format = computed(() => {
+      return t("errors.format_address");
+    });
 
     const rules = computed(() => {
       return {
@@ -413,7 +420,17 @@ export default {
                   state.formData.routageType.slug === "domain"
               )
             ),
+            isValidName: helpers.withMessage(
+              format,
+
+              helpers.regex(/^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/)
+            ),
+            isNotZero: helpers.withMessage(zeroNumber, (value) => {
+              const numericValue = Number(value);
+              return numericValue !== 0;
+            }),
           },
+
           valueIp: {
             required: helpers.withMessage(
               error,

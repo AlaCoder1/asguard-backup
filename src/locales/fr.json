@@ -12,7 +12,7 @@
     "description": "Description",
     "server": "Serveur d'annuaire",
     "LoginTime": "Temps de connexion",
-    "resetPassword":"Réinitialisation du mot de passe"
+    "resetPassword": "Réinitialisation du mot de passe"
   },
   "login": {
     "verifyYourAccount": "Vérifier Votre Compte",
@@ -43,6 +43,12 @@
     "Load": "charger"
   },
 
+  "noDesc":"Pas de description",
+  "noApp":"Aucune application pour cette règle",
+  "zeroNumber":"Valeur ne peut pas être 0.",
+  "plageAddresse":"Il faut des plages d'adresses différentes.",
+
+
   "requiredfield": {
     "indicatesrequiredfield": "Indique champ obligatoire",
     "attente": "S'il vous plaît, attendez...",
@@ -56,7 +62,8 @@
   },
 
   "errors": {
-    "errorServer":"Erreur de serveur interne. Veuillez réessayer plus tard",
+    "format_address":"Format doit correspondre à : exemple.com",
+    "errorServer": "Erreur de serveur interne. Veuillez réessayer plus tard",
     "valueRequired": "Champs est obligatoire",
     "invalidPassword": "Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation": "Votre mot de passe ne correspond pas",
@@ -64,6 +71,7 @@
     "ChampNoInclude": "Champ ne peut pas contenir uniquement des numéros ou des espaces",
     "formatMustBeLikeAdresseIP": "Format doit correspondre à l'adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format doit correspondre à l'adresse : X.X.X.X/XX",
+    "subnetNotAccepted": "Le masque de sous-réseau 32 n'est pas accepté. Le format doit être le suivant : X.X.X.X/XX",
     "minimumOneRange": "Minimum Une Plage",
     "Formatdomain": "Le format doit être comme exemple.com",
     "specificform": "champ doit y avoir au moins 32 caractères, dont au moins une majuscule, une minuscule, un chiffre et un caractère spécial.",
@@ -178,7 +186,7 @@
     "agGridOf": "de"
   },
   "firewall": {
-    "DropRejectRule":"Êtes-vous sûr de vouloir créer cette règle avec 'rejeter' ou 'abandonner' ?",
+    "DropRejectRule": "Êtes-vous sûr de vouloir créer cette règle avec 'rejeter' ou 'abandonner' ?",
     "rules": "Règles",
     "msg_subscription": "Vous êtes actuellement en mode gratuit, le déverrouillage de cette fonctionnalité nécessite un paiement. Aller à",
     "sub_page": "page d'abonnement",
@@ -326,7 +334,7 @@
     "requiredOptions": "Options obligatoires",
     "supersedeDomaineName": "Remplacer nom du domaine",
     "prependDomainServer": "Serveur de domaine en amont",
-    "numberValidity":"Format non valide. Veuillez saisir uniquement des nombres entiers."
+    "numberValidity": "Format non valide. Veuillez saisir uniquement des nombres entiers."
   },
   "typeInterface": {
     "otherTypesOfInterfaces": "Autres types d'interfaces",
@@ -421,6 +429,8 @@
     "domainName": "Nom de domaine",
     "rangeFrom": "Plage de",
     "rangeTo": "Plage à",
+    "range":"Plage",
+    "exist":"existe déjà.",
     "addRange": "Ajouter une plage",
     "editRange": "Modifier la plage"
   },
@@ -445,7 +455,7 @@
   },
 
   "squid": {
-    "errorTime":"L'heure de début et l'heure de fin sont identiques",
+    "errorTime": "L'heure de début et l'heure de fin sont identiques",
     "restart": "Veuillez redémarrer le service pour que les modifications soient prises en compte.",
     "proxyPort": "Port du proxy",
     "etesVouSur": "Êtes-vous sûr de vouloir",
@@ -538,12 +548,13 @@
   "Sunday": "Dimanche",
 
   "champs": {
-    "existGateway":"Adresse de la passerelle existe deja",
+    "existGateway": "Adresse de la passerelle existe deja",
     "indication": "champs ne peuvent inclure que des lettres, des chiffres, des traits de soulignement et des traits d'union sans espace.",
     "champNumber": "champs lifeTime ne peuvent inclure que des nombres.",
-    "champletter": "champs d'etat ne peut inclure que des lettres.",
+    "champletter": "champs ne peut inclure que des lettres.",
     "champplaceletter": "champs Lieu peut inclure que des lettres.",
-    "validAddress": "Veuillez saisir une adresse e-mail valide."
+    "validAddress": "Veuillez saisir une adresse e-mail valide.",
+    "max": "Au maximum 63 caractères ou moins."
   },
 
   "tabs": {
@@ -637,7 +648,7 @@
     "edgeRelaysPolicies": "Politiques des relais",
     "servicesPolicies": "Politiques des services",
     "ZTNAStatus": "ZTNA ne fonctionne pas, veuillez démarrer le service",
-    "osType":"Type OS"
+    "osType": "Type OS"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",
@@ -1026,6 +1037,7 @@
     "nombreMustBe": "Nombre doit etre compris entre",
     "and": "et"
   },
+  "mustBe":"L'adresse Deux doit être supérieure à l'adresse Un.",
   "rangeFrom": "La plage",
   "outBounds": "est hors limites.",
   "settings": {
@@ -1079,8 +1091,8 @@
     "pleaseChoose": "Veuillez choisir un fichier image",
     "fileBig": "Votre fichier est trop volumineux ! Veuillez sélectionner une image de moins de 1MB",
     "GotIt": "Je l'ai!",
-    "NoPermission":"Vous ne disposez pas des autorisations requises pour effectuer des actions",
-    "ContactAdmin":"Veuillez contacter l'administrateur si vous pensez qu'il s'agit d'une erreur."
+    "NoPermission": "Vous ne disposez pas des autorisations requises pour effectuer des actions",
+    "ContactAdmin": "Veuillez contacter l'administrateur si vous pensez qu'il s'agit d'une erreur."
   },
   "logrotate": {
     "id": "ID",

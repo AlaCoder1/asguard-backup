@@ -396,7 +396,7 @@
 
   "sdwan": {
     "listOfAreas": "List of areas",
-    "addKey": "Add Key",
+    "addArea": "Add Area",
     "areaName": "Area Name",
     "members": "Members",
     "createNewArea": "Create New Area",
@@ -417,7 +417,7 @@
     "updateRule": "Update Rule",
     "prefix": "Prefix",
     "healthCheckMilliseconds": "Health check milliseconds",
-    "healthCheckTargetMilliseconds": "Health check target milliseconds"
+    "healthCheckTargetMilliseconds": "Health check target"
   },
   "dhcpV4": {
     "generalInformation": "General information",

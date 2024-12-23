@@ -394,7 +394,7 @@
   },
   "sdwan": {
     "listOfAreas": "Liste des zones",
-    "addKey": "Ajouter une clé",
+    "addArea": "Ajouter une zone",
     "areaName": "Nom de la zone",
     "members": "Membres",
     "createNewArea": "Créer une nouvelle zone",
@@ -415,7 +415,7 @@
     "updateRule": "Modifier la règle",
     "prefix": "Préfixe",
     "healthCheckMilliseconds": "Contrôle de santé en millisecondes",
-    "healthCheckTargetMilliseconds": "Objectif du contrôle de santé millisecondes"
+    "healthCheckTargetMilliseconds": "Objectif du contrôle de santé"
   },
   "dhcpV4": {
     "generalInformation": "Informations générales",

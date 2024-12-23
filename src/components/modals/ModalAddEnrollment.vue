@@ -1,21 +1,40 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-row justify="center">
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> {{ $t("ztna.createNewIdentity") }}</span>
+            <span class="text-h5"> {{ $t("ztna.createNewEnrollment") }}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12">
-                  <v-text-field v-model="date" label="Date" prepend-icon="mdi-calendar" type="date" :rules="dateRules"
+                  <v-text-field v-model="date" :label="$t('ztna.ztnadate')" prepend-icon="mdi-calendar" type="date" :rules="dateRules"
 
                   ></v-text-field>
                 </v-col>
                 <v-col cols="12">
-                  <v-text-field v-model="time" label="Time" prepend-icon="mdi-clock" type="time"  :rules="timeRules"
+                  <v-text-field v-model="time" :label="$t('ztna.ztnatime')" prepend-icon="mdi-clock" type="time"  :rules="timeRules"
                     class="ml-1"></v-text-field>
                 </v-col>
               </v-row>
@@ -69,13 +88,15 @@ export default {
     const showJwtToken = ref(false);
     const EnrollementId = ref("");
     const items = [{ title: "ott" }, { title: "updb" }, { title: "ottca" }];
-    const rules = [(value) => !!value || "You must enter a value."];
+    const rules = [(value) => !!value || t("ztna.enterValue")];
 
     const emitter = inject("emitter");
 
     const { isOpen, selectedId } = toRefs(props);
 
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       openModal: false,
       itemId: null,
       snackbar: false,
@@ -98,8 +119,8 @@ export default {
       }
     );
 
-    const timeRules = [
-      (value) => !!value || "Please enter a time",
+const timeRules = [
+      (value) => !!value || t("ztna.enterTime"),
       (value) => {
         if (!value) return true;
         const currentDate = new Date();
@@ -108,55 +129,61 @@ export default {
         const currentTime = new Date().getHours();
         const enteredHour = parseInt(value.split(':')[0]);
 
-        currentDate.setUTCHours(0, 0, 0, 0);
-        enteredDate.setUTCHours(0, 0, 0, 0);
+        currentDate.setHours(0, 0, 0, 0);
+        enteredDate.setHours(0, 0, 0, 0);
         
         if (enteredDate > currentDate) {
           return true;
         }
         if (isNaN(enteredHour)) {
-          return "Invalid time format";
+          return t("ztna.timeformat");
         }
         if (enteredHour < currentTime) {
-          return "Time should be after the current time";
+          return t("ztna.timeCheck");
         }
         return true;
       }
     ];
 
-    const dateRules = [
-  (value) => !!value || "Please enter a date",
+
+const dateRules = [
+  (value) => !!value || t("ztna.enterDate"),
   (value) => {
     if (!value) return true;
-    
+
     const currentDate = new Date();
     const enteredDate = new Date(value);
-    
-    currentDate.setUTCHours(0, 0, 0, 0);
-    enteredDate.setUTCHours(0, 0, 0, 0);
-    
+
     if (isNaN(enteredDate.getTime())) {
-      return "Invalid date format";
+      return t("ztna.dateformat"); // Invalid date format
     }
-    
+
+    currentDate.setHours(0, 0, 0, 0);
+    enteredDate.setHours(0, 0, 0, 0);
+
     if (enteredDate < currentDate) {
-      return "Date should be after today";
+      return t("ztna.dateCheck"); // Date is in the past
     }
-    
-    return true;
-  }
+
+    return true; // Valid date
+  },
 ];
 
 
 
+
     const submitForm = async () => {
+      const isDateValid = dateRules.every((rule) => rule(date.value) === true);
+      const isTimeValid = timeRules.every((rule) => rule(time.value) === true);
+      if(isTimeValid && isDateValid){
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
       let token = document.getElementById("app").getAttribute("token");
 
       let dateTime = `${date.value}T${time.value}:00Z`;
-
+      state.loading = true;
+      state.isLoadingDialogue = true;
 
       let payload = {
         expiresAt: dateTime,
@@ -174,7 +201,7 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.EnrollCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -183,15 +210,23 @@ export default {
           })
           .catch((i) => {
             if (i.response.status === 500) {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = t("errors.errorServer");
             } else {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
-          });
+          });} else {
+      state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("ztna.missingFields");
+      }
     };
 
     const selectItem = (item) => {
@@ -199,6 +234,8 @@ export default {
     };
 
     const cancel = () => {
+      date.value=null;
+      time.value=null
       emitter.emit("closeEnrollmentModal");
     };
 

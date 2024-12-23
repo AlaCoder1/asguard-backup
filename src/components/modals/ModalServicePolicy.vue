@@ -1,4 +1,23 @@
 <template>
+  <v-overlay v-model="state.loading">
+    <v-dialog
+      v-model="state.isLoadingDialogue"
+      :scrim="false"
+      persistent
+      width="auto"
+    >
+      <v-card color="#193286">
+        <v-card-text>
+          {{ $t("sdwan.pleaseWait") }}
+          <v-progress-linear
+            indeterminate
+            color="white"
+            class="mb-0"
+          ></v-progress-linear>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
+  </v-overlay>
   <v-row justify="center">
     <v-dialog v-model="state.openModal" persistent width="600">
       <form ref="myForm" @submit.prevent="submitForm">
@@ -149,8 +168,8 @@ export default {
     const rulesName = [
       (value) => {
         if (!value) return true;
-        if (existingName(value)) return "The name already exists";
-        return ValidName(value) ? true : "Please enter a valid name.";
+        if (existingName(value)) return t("ztna.nameExist");
+        return ValidName(value) ? true : t("ztna.validName");
       },
     ];
     const items = ref([
@@ -187,6 +206,8 @@ export default {
       return false;
     }
     const state = reactive({
+      loading: false,
+      isLoadingDialogue: false,
       openModal: false,
       snackbar: false,
       color: "",
@@ -290,7 +311,8 @@ export default {
     };
 
     const submitForm = async () => {
-
+      const isFieldValid = rulesName.every(rule => rule(name.value) === true );
+      if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -307,7 +329,8 @@ export default {
       };
 
       let token = document.getElementById("app").getAttribute("token");
-
+      state.loading = true;
+      state.isLoadingDialogue = true;
       if (modalMode.value === "edit") {
         axios
           .put(`/ztna/update_services_policies/${idServ.value}`, payload, {
@@ -320,13 +343,15 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.servicepolUpdated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
             }
           })
           .catch((i) => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
             if (i.response.status === 500) {
               state.snackbar = true;
               state.color = "red";
@@ -334,7 +359,7 @@ export default {
             } else {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       } else {
@@ -350,13 +375,15 @@ export default {
               state.openModal = false;
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.servicepolCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
             }
           })
           .catch((i) => {
+            state.loading = false;
+      state.isLoadingDialogue = false;
             if (i.response.status === 500) {
               state.snackbar = true;
               state.color = "red";
@@ -364,9 +391,13 @@ export default {
             } else {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
+      }} else {
+      state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("ztna.missingFields");
       }
     };
     const resetForm = () => {

@@ -164,8 +164,8 @@ export default {
     const rulesName = [
       (value) => {
         if (!value) return true;
-        if (existingName(value)) return "The name already exists";
-        return ValidName(value) ? true : "Please enter a valid name.";
+        if (existingName(value)) return t("ztna.nameExist");
+        return ValidName(value) ? true : t("ztna.validName");
       },
     ];
 
@@ -257,6 +257,8 @@ export default {
     });
 
     const submitForm = async () => {
+      const isFieldValid = rulesName.every(rule => rule(RouterName.value) === true && rule(RouterAttribute.value) === true );
+      if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -288,9 +290,7 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
-              state.loading = true;
-              state.isLoadingDialogue = true;
+              state.textAlert = t("ztna.routerUpdated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -306,7 +306,7 @@ export default {
             } else {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       } else {
@@ -320,12 +320,8 @@ export default {
           .then((response) => {
             if (response.status == "200") {
               state.snackbar = true;
-              state.color = "success";
-              state.loading = true;
-              state.isLoadingDialogue = true;
-              state.textAlert = response.data.message;
-              state.loading = false;
-              state.isLoadingDialogue = false;
+              state.color = "success";     
+              state.textAlert = t("ztna.routerCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -341,9 +337,13 @@ export default {
             } else {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
+      }} else {
+      state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("ztna.missingFields");
       }
     };
 

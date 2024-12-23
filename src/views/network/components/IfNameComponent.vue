@@ -983,7 +983,7 @@ export default {
 
     isValidAddress() {
       const ipRegex =
-        /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      /^(?!0\.0\.0\.0$)((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
 
       // Validate the input value against the regex
       if (!ipRegex.test(this.gateway.gwaddress)) {
@@ -1201,7 +1201,7 @@ export default {
 
       // Regular expression for IP address validation
       const ipRegex =
-        /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+/^(?!0\.0\.0\.0$)((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
 
       // Validate the input value against the regex
       if (!ipRegex.test(value)) {
@@ -1238,6 +1238,13 @@ export default {
       if (!this.isValidRequire) return;
       if (!this.isValidDomain_name) return;
       if (!this.isValidDomain_server) return;
+
+      const ipRegex =
+       /^(?!0\.0\.0\.0$)((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+
+      if (!ipRegex.test(this.value_setup_Ipv4.ip_address4)) {
+        return;
+      }
 
       const csrfToken = this.getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -1571,7 +1578,7 @@ export default {
       this.activeTab.startsWith("VXLAN") ||
       this.activeTab.startsWith("VLAN")
     ) {
-      this.items.push({ id: 1, value: "static" }); 
+      this.items.push({ id: 1, value: "static" });
     } else {
       this.items.push({ id: 1, value: "static" }, { id: 2, value: "dhcp" });
     }

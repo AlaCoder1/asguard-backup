@@ -396,7 +396,7 @@
 
   "sdwan": {
     "listOfAreas": "List of areas",
-    "addKey": "Add Key",
+    "addArea": "Add Area",
     "areaName": "Area Name",
     "members": "Members",
     "createNewArea": "Create New Area",
@@ -417,7 +417,7 @@
     "updateRule": "Update Rule",
     "prefix": "Prefix",
     "healthCheckMilliseconds": "Health check milliseconds",
-    "healthCheckTargetMilliseconds": "Health check target milliseconds"
+    "healthCheckTargetMilliseconds": "Health check target"
   },
   "dhcpV4": {
     "generalInformation": "General information",
@@ -550,10 +550,11 @@
 
   "champs": {
     "existGateway": "Gateway address already exists",
-    "indication": "champs can include only letters & Numbers & underscores & hyphens without space.",
-    "champNumber": "champs lifeTime can include only Numbers.",
-    "champletter": "champs can include only letters.",
-    "champplaceletter": "champs place can include only letters.",
+    "indication": "Champs can include only letters & Numbers & underscores & hyphens without space.",
+    "champNumber": "Champs lifeTime can include only Numbers.",
+    "champNumberAndMax": "LifeTime field must contain only numbers and be ≤ 825.",
+    "champletter": "Champs can include only letters.",
+    "champplaceletter": "Champs place can include only letters.",
     "validAddress": "Please enter a valid email address.",
     "max": "Max 63 characters or fewer."
   },
@@ -578,8 +579,8 @@
   },
 
   "ztna": {
-    "identite": "IDENTITIES",
-    "configuration": "CONFIGURATIONS",
+    "identities": "IDENTITIES",
+    "configurations": "CONFIGURATIONS",
     "services": "Services",
     "relays": "Relays",
     "terminators": "TERMINATORS",
@@ -593,6 +594,7 @@
     "expirationDate": "Expiration Date",
     "creationDate": "Creation Date",
     "createNewIdentity": "Create New Identity",
+    "createNewEnrollment": "Create Enrollment",
     "identityName": "Identity Name",
     "identityAttribute": "Identity Attribute",
     "isAdmin": "Is Admin",
@@ -649,7 +651,36 @@
     "edgeRelaysPolicies": "Relays Policies",
     "servicesPolicies": "Services Policies",
     "ZTNAStatus": "ZTNA is not running, please start service",
-    "osType": "OS Type"
+    "osType": "OS Type",
+    "enterValue":"You must enter a value",
+    "nameExist":"The name already exists",
+    "validName":"Please enter a valid name",
+    "enterTime":"Please enter the time",
+    "timeformat":"Invalid time format",
+    "timeCheck":"Time should be after the current time",
+    "enterDate":"Please enter a date",
+    "dateformat":"Invalid date format",
+    "dateCheck":"Date should be after today",
+    "holeNumber":"Only whole numbers are allowed",
+    "validAddress":"Please enter a valid address",
+    "missingFields":"Check missing or invalid fields",
+    "identityCreated":"Identity created successfully",
+    "identityUpdated":"Identity updated successfully",
+    "configUpdated":"Configuration updated successfully",
+    "configCreated":"Configuration created successfully",
+    "EnrollCreated":"Enrollment created successfully",
+    "serviceUpdated":"Service updated successfully",
+    "serviceCreated":"Service created successfully",
+    "routerUpdated":"Relay updated successfully",
+    "routerCreated":"Relay created successfully",
+    "routerpolCreated":"Relay policy created successfully",
+    "routerpolUpdated":"Relay policy updated successfully",
+    "servicepolCreated":"Service policy created successfully",
+    "servicepolUpdated":"Service policy updated successfully",
+    "servicerouterpolCreated":"Service relay policy created successfully",
+    "servicerouterpolUpdated":"Service relay policy updated successfully",
+    "ztnadate":"Date",
+    "ztnatime":"Time"
   },
 
   "titleAgGrid": {

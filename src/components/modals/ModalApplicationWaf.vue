@@ -19,7 +19,7 @@
         </v-card>
       </v-dialog>
     </v-overlay>
-    <v-dialog v-model="state.openModal" persistent width="600">
+    <v-dialog v-model="state.openModal" persistent width="800">
       <form ref="myForm" @submit.prevent="submitForm" class="scroller">
         <v-card>
           <v-card-title>

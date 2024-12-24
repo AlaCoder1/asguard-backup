@@ -311,7 +311,7 @@ const fetchServices = async () => {
 }
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(name.value) === true );
+      const isFieldValid = rulesName.every(rule => rule(name.value) === true  && rule(serviceAtt.value) === true);
       if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;

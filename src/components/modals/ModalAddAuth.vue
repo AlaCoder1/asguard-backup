@@ -395,6 +395,9 @@ export default {
     const champplaceletter = computed(() => {
       return t("champs.champplaceletter");
     });
+    const champNumberAndMax = computed(() => {
+      return t("champs.champNumberAndMax");
+    });
     const rules = computed(() => {
       return {
         formData: {
@@ -437,9 +440,9 @@ export default {
               requiredIf(() => state.formData.method?.slug === "create")
             ),
             isValidlifeTime: helpers.withMessage(
-              champNumber,
+              champNumberAndMax,
 
-              helpers.regex(/^[0-9]+$/)
+              (value) => /^[0-9]+$/.test(value) && parseInt(value, 10) <= 825
             ),
           },
           country: {

@@ -241,6 +241,7 @@ export default {
     };
 
     const submitForm = async () => {
+      
       const isFieldValid = rulesName.every(rule => rule(IdentityAttribute.value) === true && rule(IdentityName.value) === true);
       if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
@@ -271,8 +272,6 @@ export default {
               state.snackbar = true;
               state.color = "success";
               state.textAlert = response.data.message;
-              state.loading = true;
-      state.isLoadingDialogue = true;
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -280,10 +279,14 @@ export default {
           })
           .catch((i) => {
             if (i.response.status === 500) {
+              state.loading = false;
+              state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = t("errors.errorServer");
             } else {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;
@@ -299,8 +302,6 @@ export default {
           })
           .then((response) => {
             if (response.status == "200") {
-              state.loading = true;
-              state.isLoadingDialogue = true;
               state.openModal = false;
               state.snackbar = true;
               state.color = "success";
@@ -312,10 +313,14 @@ export default {
           })
           .catch((i) => {
             if (i.response.status === 500) {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = t("errors.errorServer");
             } else {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;

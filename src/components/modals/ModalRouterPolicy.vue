@@ -347,7 +347,7 @@ export default {
     };
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(name.value) === true );
+      const isFieldValid = rulesName.every(rule => rule(name.value) === true);
       if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -384,6 +384,8 @@ export default {
             }
           })
           .catch((i) => {
+            state.loading = false;
+      state.isLoadingDialogue = false;
             if (i.response.status === 500) {
               state.snackbar = true;
               state.color = "red";
@@ -414,6 +416,8 @@ export default {
             }
           })
           .catch((i) => {
+            state.loading = false;
+      state.isLoadingDialogue = false;
             if (i.response.status === 500) {
               state.snackbar = true;
               state.color = "red";

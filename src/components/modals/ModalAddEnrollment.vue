@@ -120,58 +120,78 @@ export default {
     );
 
     const timeRules = [
-      (value) => !!value || t("ztna.enterTime"),
-      (value) => {
-        if (!value) return true;
-        const currentDate = new Date();
-        const enteredDate = new Date(date.value);
-    
-        const currentTime = new Date().getHours();
-        const enteredHour = parseInt(value.split(':')[0]);
+  (value) => !!value || t("ztna.enterTime"),
+  (value) => {
+    if (!value) return true;
 
-        currentDate.setUTCHours(0, 0, 0, 0);
-        enteredDate.setUTCHours(0, 0, 0, 0);
-        
-        if (enteredDate > currentDate) {
-          return true;
-        }
-        if (isNaN(enteredHour)) {
-          return t("ztna.timeformat");
-        }
-        if (enteredHour < currentTime) {
-          return t("ztna.timeCheck");
-        }
-        return true;
+    const currentDate = new Date();
+    const enteredDate = new Date(date.value);
+
+    const enteredTimeParts = value.split(":");
+    if (enteredTimeParts.length !== 2 || isNaN(enteredTimeParts[0]) || isNaN(enteredTimeParts[1])) {
+      return t("ztna.timeformat"); // Invalid time format
+    }
+
+    const enteredHour = parseInt(enteredTimeParts[0]);
+    const enteredMinute = parseInt(enteredTimeParts[1]);
+
+    if (enteredHour < 0 || enteredHour > 23 || enteredMinute < 0 || enteredMinute > 59) {
+      return t("ztna.timeformat"); // Ensure valid hour and minute range
+    }
+
+    // Compare dates and times
+    currentDate.setHours(0, 0, 0, 0);
+    enteredDate.setHours(0, 0, 0, 0);
+
+    if (enteredDate > currentDate) {
+      return true; // Future date is valid
+    }
+
+    if (enteredDate.getTime() === currentDate.getTime()) {
+      const currentTime = new Date();
+      const enteredTime = new Date();
+      enteredTime.setHours(enteredHour, enteredMinute, 0, 0);
+
+      if (enteredTime <= currentTime) {
+        return t("ztna.timeCheck"); // Time is in the past for the same day
       }
-    ];
+    }
 
-    const dateRules = [
+    return true; // Valid time
+  },
+];
+
+
+const dateRules = [
   (value) => !!value || t("ztna.enterDate"),
   (value) => {
     if (!value) return true;
-    
+
     const currentDate = new Date();
     const enteredDate = new Date(value);
-    
-    currentDate.setUTCHours(0, 0, 0, 0);
-    enteredDate.setUTCHours(0, 0, 0, 0);
-    
+
     if (isNaN(enteredDate.getTime())) {
-      return t("ztna.dateformat");
+      return t("ztna.dateformat"); // Invalid date format
     }
-    
+
+    currentDate.setHours(0, 0, 0, 0);
+    enteredDate.setHours(0, 0, 0, 0);
+
     if (enteredDate < currentDate) {
-      return t("ztna.dateCheck");
+      return t("ztna.dateCheck"); // Date is in the past
     }
-    
-    return true;
-  }
+
+    return true; // Valid date
+  },
 ];
 
 
 
+
     const submitForm = async () => {
-      
+      const isDateValid = dateRules.every((rule) => rule(date.value) === true);
+      const isTimeValid = timeRules.every((rule) => rule(time.value) === true);
+      if(isTimeValid && isDateValid){
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
 
@@ -206,15 +226,23 @@ export default {
           })
           .catch((i) => {
             if (i.response.status === 500) {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = t("errors.errorServer");
             } else {
+              state.loading = false;
+      state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
               state.textAlert = i.response.data.error;
             }
-          });
+          });} else {
+      state.snackbar = true;
+              state.color = "red";
+              state.textAlert = t("ztna.missingFields");
+      }
     };
 
     const selectItem = (item) => {

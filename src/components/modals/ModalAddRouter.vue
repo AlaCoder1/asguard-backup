@@ -257,7 +257,7 @@ export default {
     });
 
     const submitForm = async () => {
-      const isFieldValid = rulesName.every(rule => rule(RouterName.value) === true );
+      const isFieldValid = rulesName.every(rule => rule(RouterName.value) === true && rule(RouterAttribute.value) === true );
       if (isFieldValid) {
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
@@ -291,8 +291,6 @@ export default {
               state.snackbar = true;
               state.color = "success";
               state.textAlert = response.data.message;
-              state.loading = true;
-              state.isLoadingDialogue = true;
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -322,12 +320,8 @@ export default {
           .then((response) => {
             if (response.status == "200") {
               state.snackbar = true;
-              state.color = "success";
-              state.loading = true;
-              state.isLoadingDialogue = true;
+              state.color = "success";     
               state.textAlert = response.data.message;
-              state.loading = false;
-              state.isLoadingDialogue = false;
               setTimeout(() => {
                 location.reload();
               }, 1000);

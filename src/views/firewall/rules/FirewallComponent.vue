@@ -854,10 +854,10 @@ export default defineComponent({
 
             state.snackbar = true;
             state.textAlert = response.data.response;
+            state.Saverulesstate = false;
             setTimeout(() => {
               location.reload();
               state.textAlert = [];
-              state.Saverulesstate = false;
             }, 2000);
           })
           .catch((i) => {
@@ -870,9 +870,9 @@ export default defineComponent({
               state.color = "red";
               state.textAlert = i.response.data.response;
 
+              state.Saverulesstate = false;
               setTimeout(() => {
                 state.textAlert = [];
-                state.Saverulesstate = false;
               }, 2000);
             }
           });

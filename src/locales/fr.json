@@ -592,6 +592,7 @@
     "expirationDate": "Date d'expiration",
     "creationDate": "Date de Création",
     "createNewIdentity": "Créer une Nouvelle Identité",
+    "createNewEnrollment": "Créer une inscription",
     "identityName": "Nom d'identité",
     "identityAttribute": "Attribut d'identité",
     "isAdmin": "Est administrateur",
@@ -675,7 +676,9 @@
     "servicepolCreated":"Politique de service créée avec succès",
     "servicepolUpdated":"Politique de service mise à jour avec succès",
     "servicerouterpolCreated":"Politique de relais de service créée avec succès",
-    "servicerouterpolUpdated":"Politique de relais de service mise à jour avec succès"
+    "servicerouterpolUpdated":"Politique de relais de service mise à jour avec succès",
+    "ztnadate":"Date",
+    "ztnatime":"Temps"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",

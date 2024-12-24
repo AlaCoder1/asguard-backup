@@ -578,8 +578,8 @@
   },
 
   "ztna": {
-    "identite": "IDENTITIES",
-    "configuration": "CONFIGURATIONS",
+    "identities": "IDENTITIES",
+    "configurations": "CONFIGURATIONS",
     "services": "Services",
     "relays": "Relays",
     "terminators": "TERMINATORS",
@@ -593,6 +593,7 @@
     "expirationDate": "Expiration Date",
     "creationDate": "Creation Date",
     "createNewIdentity": "Create New Identity",
+    "createNewEnrollment": "Create Enrollment",
     "identityName": "Identity Name",
     "identityAttribute": "Identity Attribute",
     "isAdmin": "Is Admin",
@@ -676,7 +677,9 @@
     "servicepolCreated":"Service policy created successfully",
     "servicepolUpdated":"Service policy updated successfully",
     "servicerouterpolCreated":"Service relay policy created successfully",
-    "servicerouterpolUpdated":"Service relay policy updated successfully"
+    "servicerouterpolUpdated":"Service relay policy updated successfully",
+    "ztnadate":"Date",
+    "ztnatime":"Time"
   },
 
   "titleAgGrid": {

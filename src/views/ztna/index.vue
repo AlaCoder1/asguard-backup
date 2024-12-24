@@ -55,8 +55,8 @@ export default {
       activeTab: "",
       isZTNArunning: false,
       tabs: [
-        { id: 1, label: "ztna.identite", component: identities },
-        { id: 2, label: "ztna.configuration", component: configs },
+        { id: 1, label: "ztna.identities", component: identities },
+        { id: 2, label: "ztna.configurations", component: configs },
         { id: 3, label: "ztna.services", component: Services },
         { id: 4, label: "ztna.relays", component: routers },
         { id: 5, label: "ztna.policies", component: Policies },

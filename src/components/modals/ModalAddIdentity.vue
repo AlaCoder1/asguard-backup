@@ -289,7 +289,7 @@ export default {
       state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       } else {
@@ -323,7 +323,7 @@ export default {
       state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       }
@@ -378,7 +378,6 @@ export default {
     function ValidName(value) {
       const hostnamePattern = /^(?=.*[a-zA-Z])[a-zA-Z0-9-\s]{1,63}(\.[a-zA-Z0-9-\s]{1,63})*$/;
 
-      console.log("Identities.value", Identities.value);
 
       if (!Array.isArray(Identities.value)) {
         console.error("Identities.value is not an array:", Identities.value);

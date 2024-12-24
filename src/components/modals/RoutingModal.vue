@@ -404,6 +404,10 @@ export default {
     const addressForma = computed(() => {
       return t("errors.formatMustBeLikeAdresseIP");
     });
+    const onlynumbers = computed(() => {
+      return t("errors.ChampIncludeOnlyNumbers");
+    });
+    
 
     const rules = computed(() => {
       return {
@@ -428,6 +432,13 @@ export default {
             error,
             requiredIf(() => state.gateway.name === "Other")
           ),
+          isValidGateway: helpers.withMessage(
+            addressForma,
+
+            helpers.regex(
+              /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
+            )
+          ),
         },
         interface: {
           requiredIfFuction: helpers.withMessage(
@@ -444,6 +455,11 @@ export default {
           requiredIfFuction: helpers.withMessage(
             error,
             requiredIf(() => state.gateway.name === "Other")
+          ),
+          isValidMetric: helpers.withMessage(
+            onlynumbers,
+
+            helpers.regex(/^[0-9]+$/)
           ),
         },
       };

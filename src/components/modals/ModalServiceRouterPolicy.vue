@@ -375,7 +375,7 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.servicerouterpolUpdated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -407,7 +407,7 @@ export default {
               state.openModal = false;
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.servicerouterpolCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -415,7 +415,7 @@ export default {
           })
           .catch((i) => {
             state.loading = false;
-      state.isLoadingDialogue = false;
+            state.isLoadingDialogue = false;
             if (i.response.status === 500) {
               state.snackbar = true;
               state.color = "red";

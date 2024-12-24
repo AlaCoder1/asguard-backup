@@ -660,7 +660,22 @@
     "dateCheck":"La date devrait être postérieure à aujourd'hui",
     "holeNumber":"Seuls les nombres entiers sont autorisés",
     "validAddress":"Veuillez entrer une adresse valide",
-    "missingFields":"Vérifiez les champs manquants ou invalides"
+    "missingFields":"Vérifiez les champs manquants ou invalides",
+    "identityCreated":"Identité créée avec succès",
+    "identityUpdated":"Identité mise à jour avec succès",
+    "configUpdated":"Configuration mise à jour avec succès",
+    "configCreated":"Configuration créée avec succès",
+    "EnrollCreated":"Inscription créée avec succès",
+    "serviceUpdated":"Service mis à jour avec succès",
+    "serviceCreated":"Service créé avec succès",
+    "routerUpdated":"Relais mis à jour avec succès",
+    "routerCreated":"Relais créé avec succès",
+    "routerpolCreated":"Politique de relais créée avec succès",
+    "routerpolUpdated":"Politique de relais mise à jour avec succès",
+    "servicepolCreated":"Politique de service créée avec succès",
+    "servicepolUpdated":"Politique de service mise à jour avec succès",
+    "servicerouterpolCreated":"Politique de relais de service créée avec succès",
+    "servicerouterpolUpdated":"Politique de relais de service mise à jour avec succès"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",

@@ -661,7 +661,22 @@
     "dateCheck":"Date should be after today",
     "holeNumber":"Only whole numbers are allowed",
     "validAddress":"Please enter a valid address",
-    "missingFields":"Check missing or invalid fields"
+    "missingFields":"Check missing or invalid fields",
+    "identityCreated":"Identity created successfully",
+    "identityUpdated":"Identity updated successfully",
+    "configUpdated":"Configuration updated successfully",
+    "configCreated":"Configuration created successfully",
+    "EnrollCreated":"Enrollment created successfully",
+    "serviceUpdated":"Service updated successfully",
+    "serviceCreated":"Service created successfully",
+    "routerUpdated":"Relay updated successfully",
+    "routerCreated":"Relay created successfully",
+    "routerpolCreated":"Relay policy created successfully",
+    "routerpolUpdated":"Relay policy updated successfully",
+    "servicepolCreated":"Service policy created successfully",
+    "servicepolUpdated":"Service policy updated successfully",
+    "servicerouterpolCreated":"Service relay policy created successfully",
+    "servicerouterpolUpdated":"Service relay policy updated successfully"
   },
 
   "titleAgGrid": {

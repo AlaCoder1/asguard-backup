@@ -340,7 +340,7 @@ const fetchServices = async () => {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.serviceUpdated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -370,7 +370,7 @@ const fetchServices = async () => {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.serviceCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);

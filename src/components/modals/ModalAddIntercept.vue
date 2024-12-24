@@ -372,7 +372,7 @@ export default {
               state.loading = true;
       state.isLoadingDialogue = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.configUpdated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
@@ -407,7 +407,7 @@ export default {
               state.loading = true;
       state.isLoadingDialogue = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.configCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);

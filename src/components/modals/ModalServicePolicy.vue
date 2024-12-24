@@ -343,13 +343,15 @@ export default {
             if (response.status == "200") {
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.servicepolUpdated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
             }
           })
           .catch((i) => {
+            state.loading = false;
+            state.isLoadingDialogue = false;
             if (i.response.status === 500) {
               state.snackbar = true;
               state.color = "red";
@@ -373,13 +375,15 @@ export default {
               state.openModal = false;
               state.snackbar = true;
               state.color = "success";
-              state.textAlert = response.data.message;
+              state.textAlert = t("ztna.servicepolCreated");
               setTimeout(() => {
                 location.reload();
               }, 1000);
             }
           })
           .catch((i) => {
+            state.loading = false;
+      state.isLoadingDialogue = false;
             if (i.response.status === 500) {
               state.snackbar = true;
               state.color = "red";

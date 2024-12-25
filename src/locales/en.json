@@ -67,7 +67,7 @@
     "invalidPassword": "There must be at least 20 characters, including at least one uppercase, one number, and one special character.",
     "passwordConfirmation": "Your password does not match",
     "ChampIncludeOnlyNumbers": "Champs can include only Numbers",
-    "ChampNoInclude": "Field cannot contain only numbers or spaces",
+    "ChampNoInclude": "Field cannot contain only numbers or spaces or the word 'test'",
     "formatMustBeLikeAdresseIP": "Format must be like adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format must be like: X.X.X.X/XX",
     "subnetNotAccepted": "Subnet mask 32 is not accepted. Format must be like: X.X.X.X/XX",

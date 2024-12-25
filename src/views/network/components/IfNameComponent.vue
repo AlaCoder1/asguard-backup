@@ -1242,7 +1242,10 @@ export default {
       const ipRegex =
         /^(?!0\.0\.0\.0$)((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
 
-      if (!ipRegex.test(this.value_setup_Ipv4.ip_address4)) {
+      if (
+        this.setuptypeip4 === "static" &&
+        !ipRegex.test(this.value_setup_Ipv4.ip_address4)
+      ) {
         return;
       }
 
@@ -1334,14 +1337,12 @@ export default {
             reboot: this.AdvancedConfigDHCPv4.reboot,
             select_timeout: this.AdvancedConfigDHCPv4.select_timeout,
             initial_interval: this.AdvancedConfigDHCPv4.initial_interval,
-            send_options_dhcp_client:
-              this.AdvancedConfigDHCPv4.send_options_dhcp_client,
+            dhcp_client: this.AdvancedConfigDHCPv4.dhcp_client,
             request: this.AdvancedConfigDHCPv4.request,
             require: this.AdvancedConfigDHCPv4.require,
-            supersede_domain_name:
-              this.AdvancedConfigDHCPv4.supersede_domain_name,
-            prepend_domain_server:
-              this.AdvancedConfigDHCPv4.prepend_domain_server,
+            domain_name: this.AdvancedConfigDHCPv4.domain_name,
+            domain_server: this.AdvancedConfigDHCPv4.domain_server,
+            lease_time: this.AdvancedConfigDHCPv4.lease_time,
           },
         };
 
@@ -1627,6 +1628,8 @@ export default {
       }
     }, 1000);
 
+    this.advancedParameters = this.IPV4Config.IPV4Config.typedhcp === 'Advanced' ? true : false;
+
     this.typeDHCP4 = this.IPV4Config.IPV4Config.typedhcp;
     this.interface.alias_add = this.IPV4Config.IPV4Config.alias_add;
     this.interface.alias_mask = this.IPV4Config.IPV4Config.alias_mask;
@@ -1655,9 +1658,10 @@ export default {
           this.IPV4Config.IPV4Config.domain_name;
         this.AdvancedConfigDHCPv4.domain_server =
           this.IPV4Config.IPV4Config.domain_server;
-      } else {
-        // this.advancedParameters = false;
       }
+      //  else {
+      //   this.advancedParameters = false;
+      // }
     },
   },
 };

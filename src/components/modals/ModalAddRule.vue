@@ -416,19 +416,23 @@ export default {
               error,
               requiredIf(
                 () =>
-                  modalModeRule.value === "create" &&
-                  state.formData.routageType.slug === "domain"
+                  (modalModeRule.value === "create" ||
+                    modalModeRule.value === "edit") &&
+                  state.formData.routageType.slug === "domain" &&
+                  !state.formData.time
               )
             ),
             isValidName: helpers.withMessage(
               format,
 
-              helpers.regex(/^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/)
+              helpers.regex(
+                /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/
+              )
             ),
-            isNotZero: helpers.withMessage(zeroNumber, (value) => {
-              const numericValue = Number(value);
-              return numericValue !== 0;
-            }),
+            // isNotZero: helpers.withMessage(zeroNumber, (value) => {
+            //   const numericValue = Number(value);
+            //   return numericValue !== 0;
+            // }),
           },
 
           valueIp: {
@@ -452,7 +456,15 @@ export default {
               requiredIf(
                 () =>
                   modalModeRule.value === "create" &&
-                  state.formData.routageTypeDomain.slug === "domain"
+                  state.formData.routageTypeDomain.slug === "domain" &&
+                  state.formData.time
+              )
+            ),
+            isValidName: helpers.withMessage(
+              format,
+
+              helpers.regex(
+                /^([a-zA-Z]+\d*|\d+[a-zA-Z]*|\d+|[a-zA-Z]+)\.[a-zA-Z]{2,}$/
               )
             ),
           },
@@ -518,12 +530,15 @@ export default {
       state,
       () => {
         if (state.formData.time) {
+          v$.value.$reset();
           state.formData.routageType = "";
           state.formData.status = false;
           state.formData.value = "";
           state.formData.value2 = "";
           state.formData.valueIp = "";
           state.formData.prefix = "";
+        } else {
+          state.formData.valueDomainTime = "";
         }
       },
       { immediate: true }
@@ -613,6 +628,7 @@ export default {
     };
 
     const submitForm = async () => {
+      console.log("state.formData.value2"), state.formData.value2;
       const csrfToken = getCookie("csrftoken");
       axios.defaults.headers.common["X-CSRFToken"] = csrfToken;
       const result = await v$.value.$validate();

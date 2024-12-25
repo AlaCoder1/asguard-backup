@@ -5,7 +5,7 @@ echo "Please enter the router name:"
 read router_name
 
 # Search for the process using the router name
-process=$(ps aux | grep "ziti router run .*${router_name}" | grep -v grep)
+process=$(ps aux | grep "ziti router run .*/${router_name}\.yaml" | grep -v grep)
 
 # Check if the process was found
 if [ -z "$process" ]; then

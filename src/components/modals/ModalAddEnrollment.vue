@@ -23,18 +23,18 @@
       <form ref="myForm" @submit.prevent="submitForm">
         <v-card>
           <v-card-title>
-            <span class="text-h5"> {{ $t("ztna.createNewIdentity") }}</span>
+            <span class="text-h5"> {{ $t("ztna.createNewEnrollment") }}</span>
           </v-card-title>
           <v-card-text>
             <v-container>
               <v-row>
                 <v-col cols="12">
-                  <v-text-field v-model="date" label="Date" prepend-icon="mdi-calendar" type="date" :rules="dateRules"
+                  <v-text-field v-model="date" :label="$t('ztna.ztnadate')" prepend-icon="mdi-calendar" type="date" :rules="dateRules"
 
                   ></v-text-field>
                 </v-col>
                 <v-col cols="12">
-                  <v-text-field v-model="time" label="Time" prepend-icon="mdi-clock" type="time"  :rules="timeRules"
+                  <v-text-field v-model="time" :label="$t('ztna.ztnatime')" prepend-icon="mdi-clock" type="time"  :rules="timeRules"
                     class="ml-1"></v-text-field>
                 </v-col>
               </v-row>
@@ -119,47 +119,31 @@ export default {
       }
     );
 
-    const timeRules = [
-  (value) => !!value || t("ztna.enterTime"),
-  (value) => {
-    if (!value) return true;
+const timeRules = [
+      (value) => !!value || t("ztna.enterTime"),
+      (value) => {
+        if (!value) return true;
+        const currentDate = new Date();
+        const enteredDate = new Date(date.value);
+    
+        const currentTime = new Date().getHours();
+        const enteredHour = parseInt(value.split(':')[0]);
 
-    const currentDate = new Date();
-    const enteredDate = new Date(date.value);
-
-    const enteredTimeParts = value.split(":");
-    if (enteredTimeParts.length !== 2 || isNaN(enteredTimeParts[0]) || isNaN(enteredTimeParts[1])) {
-      return t("ztna.timeformat"); // Invalid time format
-    }
-
-    const enteredHour = parseInt(enteredTimeParts[0]);
-    const enteredMinute = parseInt(enteredTimeParts[1]);
-
-    if (enteredHour < 0 || enteredHour > 23 || enteredMinute < 0 || enteredMinute > 59) {
-      return t("ztna.timeformat"); // Ensure valid hour and minute range
-    }
-
-    // Compare dates and times
-    currentDate.setHours(0, 0, 0, 0);
-    enteredDate.setHours(0, 0, 0, 0);
-
-    if (enteredDate > currentDate) {
-      return true; // Future date is valid
-    }
-
-    if (enteredDate.getTime() === currentDate.getTime()) {
-      const currentTime = new Date();
-      const enteredTime = new Date();
-      enteredTime.setHours(enteredHour, enteredMinute, 0, 0);
-
-      if (enteredTime <= currentTime) {
-        return t("ztna.timeCheck"); // Time is in the past for the same day
+        currentDate.setHours(0, 0, 0, 0);
+        enteredDate.setHours(0, 0, 0, 0);
+        
+        if (enteredDate > currentDate) {
+          return true;
+        }
+        if (isNaN(enteredHour)) {
+          return t("ztna.timeformat");
+        }
+        if (enteredHour < currentTime) {
+          return t("ztna.timeCheck");
+        }
+        return true;
       }
-    }
-
-    return true; // Valid time
-  },
-];
+    ];
 
 
 const dateRules = [
@@ -236,7 +220,7 @@ const dateRules = [
       state.isLoadingDialogue = false;
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });} else {
       state.snackbar = true;
@@ -250,6 +234,8 @@ const dateRules = [
     };
 
     const cancel = () => {
+      date.value=null;
+      time.value=null
       emitter.emit("closeEnrollmentModal");
     };
 

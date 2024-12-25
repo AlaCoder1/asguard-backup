@@ -12,17 +12,17 @@ from utils.commands_utils import execute_command_str, execute_command_without_ar
 
 
 def create_sdwan_rule_in_system(source_address, table_id):
-    """Function to create an sdwan rule in system by adding a routing table in system"""
+    """Function to create an sdwan rule in system by adding a rule table in system"""
     execute_command_without_arguments(['sudo', 'ip', 'rule', 'add', 'from', source_address, 'table', table_id])
 
 
 def delete_sdwan_rule_in_system(table_id):
-    """Function to delete an sdwan rule in system by removing the routing table in system"""
+    """Function to delete an sdwan rule in system by removing the rule table in system"""
     execute_command_without_arguments(['sudo', 'ip', 'rule', 'del', 'table', table_id])
 
 
 def update_sdwan_rule_in_system(source_address, table_id):
-    """Function to update an sdwan rule in system by removing the routing table and adding it again"""
+    """Function to update an sdwan rule in system by removing the rule table and adding it again"""
     delete_sdwan_rule_in_system(table_id)
     create_sdwan_rule_in_system(source_address, table_id)
 
@@ -36,7 +36,7 @@ def script_ping(interface, health_check_target):
 
 
 def switch_gateway(previous_gateway, previous_ifname, new_gateway, new_ifname, table_id):
-    """Function to switch between two gateways by defining a command that modifies the routing table (table 200) 
+    """Function to switch between two gateways by defining a command that modifies the rule table (table 200) 
     to set the default gateway to the new gateway via the new interface"""
     subprocess.run(["sudo", "ip", "r", "d", "default", "via", 
                     previous_gateway, "dev", previous_ifname, "table", table_id])
@@ -137,31 +137,33 @@ def start_sdwan_rule_in_system(rule_id):
         script_round_robin.delay(rule_id)
 
 
-def synchronize_routing_table():
-    """Synchronize routing tables with database"""
-    # Get list of all routing tables from system
-    list_routing_table_system = execute_command_without_arguments(["sudo", "ip", "rule", "show"])
-    list_routing_table_system = list_routing_table_system.stdout.splitlines()
+def synchronize_rule_table():
+    """Synchronize rule tables with database.
+    Check if there is rules in SDWAN table in database that doesn't exist in list of rule table in system
+    and add this rule to the system by creating a new rules"""
+    # Get list of all rule tables from system
+    list_rule_table_system = execute_command_without_arguments(["sudo", "ip", "rule", "show"])
+    list_rule_table_system = list_rule_table_system.stdout.splitlines()
     
-    # Removing the three default routing table from list
-    list_routing_table_system.remove('0:\tfrom all lookup local')
-    list_routing_table_system.remove('32766:\tfrom all lookup main')
-    list_routing_table_system.remove('32767:\tfrom all lookup default')
+    # Removing the three default rule table from list
+    list_rule_table_system.remove('0:\tfrom all lookup local')
+    list_rule_table_system.remove('32766:\tfrom all lookup main')
+    list_rule_table_system.remove('32767:\tfrom all lookup default')
 
     # Get list of SDwan rules
     list_sdwan_rule = SdwanRules.objects.order_by("table_id")
 
     # Add the missing table in system
     for sdwan_rule in list_sdwan_rule:
-        if not find_routing_table(sdwan_rule, list_routing_table_system):
+        if not find_rule_table(sdwan_rule, list_rule_table_system):
             create_sdwan_rule_in_system(sdwan_rule.source_address, str(sdwan_rule.table_id))
 
 
-def find_routing_table(sdwan_rule:SdwanRules, list_routing_table_system):
-    """Find routing table in list of SDwan rules in system"""
-    # Remove the mask /32 of the source_address because system never set /32 in routing table
+def find_rule_table(sdwan_rule:SdwanRules, list_rule_table_system):
+    """Find rule table in list of SDwan rules in system"""
+    # Remove the mask /32 of the source_address because system never set /32 in rule table
     line_table_rule = f"""from {sdwan_rule.source_address.replace("/32", "")} lookup {sdwan_rule.table_id}"""
-    for table in list_routing_table_system:
+    for table in list_rule_table_system:
         if table.find(line_table_rule) > -1:
             return True
     return False

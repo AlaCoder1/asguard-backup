@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-11-06 17:13+0000\n"
+"POT-Creation-Date: 2024-12-24 11:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,54 +18,54 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-#: backend/authentification/function.py:17 backend/authentification/views.py:28
+#: backend/authentification/function.py:21 backend/authentification/views.py:30
 msgid "verification code"
 msgstr "code de vérification"
 
-#: backend/authentification/function.py:19 backend/authentification/views.py:30
+#: backend/authentification/function.py:23 backend/authentification/views.py:32
 msgid "Success Authentication"
 msgstr "Authentification réussie"
 
-#: backend/authentification/function.py:20 backend/authentification/views.py:32
+#: backend/authentification/function.py:24 backend/authentification/views.py:34
 msgid "is sent successfully"
 msgstr "a été envoyé avec succès"
 
-#: backend/authentification/function.py:22 backend/authentification/views.py:37
+#: backend/authentification/function.py:26 backend/authentification/views.py:39
 msgid "Invalid credentials"
 msgstr "les informations d'identification invalides"
 
-#: backend/authentification/views.py:27
+#: backend/authentification/views.py:29
 msgid "Email"
 msgstr "E-mail"
 
-#: backend/authentification/views.py:31
+#: backend/authentification/views.py:33
 msgid "Success Logout"
 msgstr "Déconnexion réussie"
 
-#: backend/authentification/views.py:33
+#: backend/authentification/views.py:35
 msgid "is re-sent successfully"
 msgstr "a été re-envoyé avec succès"
 
-#: backend/authentification/views.py:35
+#: backend/authentification/views.py:37
 msgid "does not exist"
 msgstr "n'existe pas"
 
-#: backend/authentification/views.py:36
+#: backend/authentification/views.py:38
 msgid "Invalid credentials for directory server login"
 msgstr "Informations d'identification non valides pour la connexion au serveur d'annuaire"
 
-#: backend/authentification/views.py:38
+#: backend/authentification/views.py:40
 msgid "No directory servers registered"
 msgstr "Aucun serveur d'annuaire enregistré"
 
-#: backend/authentification/views.py:39
+#: backend/authentification/views.py:41
 msgid "Directory server is unreachable"
 msgstr "Le serveur d'annuaire est inaccessible"
 
-#: backend/authentification/views.py:40
+#: backend/authentification/views.py:42
 msgid "Email not assigned in Asguard. Contact your administrator"
 msgstr "E-mail non attribué dans Asguard. Contactez votre administrateur"
 
-#: backend/authentification/views.py:41
+#: backend/authentification/views.py:43
 msgid "has expired"
 msgstr "a expiré"

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-23 09:29+0100\n"
+"POT-Creation-Date: 2024-12-24 11:07+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -26,9 +26,13 @@ msgstr "Gateway DHCP"
 msgid "does not found"
 msgstr "n'est pas trouvée"
 
-#: backend/gateway/models.py:10
+#: backend/gateway/models.py:9
 msgid "gateway name"
-msgstr "Gateway"
+msgstr "nom de gateway"
+
+#: backend/gateway/models.py:10
+msgid "gateway address"
+msgstr "Addresse gateway"
 
 #: backend/gateway/views.py:19
 msgid "Gateway"

@@ -845,10 +845,10 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 4000);
+                }, 5000);
                 setTimeout(() => {
                   location.reload();
-                }, 4000);
+                }, 5000);
               }
             })
             .catch((i) => {
@@ -877,10 +877,10 @@ export default {
                   state.color = "success";
                   state.textAlert = response.data.msg;
                   closeModal();
-                }, 4000);
+                }, 5000);
                 setTimeout(() => {
                   location.reload();
-                }, 4000);
+                }, 5000);
               }
             })
             .catch((i) => {

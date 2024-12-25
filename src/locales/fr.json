@@ -394,7 +394,7 @@
   },
   "sdwan": {
     "listOfAreas": "Liste des zones",
-    "addKey": "Ajouter une clé",
+    "addArea": "Ajouter une zone",
     "areaName": "Nom de la zone",
     "members": "Membres",
     "createNewArea": "Créer une nouvelle zone",
@@ -415,7 +415,7 @@
     "updateRule": "Modifier la règle",
     "prefix": "Préfixe",
     "healthCheckMilliseconds": "Contrôle de santé en millisecondes",
-    "healthCheckTargetMilliseconds": "Objectif du contrôle de santé millisecondes"
+    "healthCheckTargetMilliseconds": "Objectif du contrôle de santé"
   },
   "dhcpV4": {
     "generalInformation": "Informations générales",
@@ -593,6 +593,7 @@
     "expirationDate": "Date d'expiration",
     "creationDate": "Date de Création",
     "createNewIdentity": "Créer une Nouvelle Identité",
+    "createNewEnrollment": "Créer une inscription",
     "identityName": "Nom d'identité",
     "identityAttribute": "Attribut d'identité",
     "isAdmin": "Est administrateur",
@@ -676,7 +677,9 @@
     "servicepolCreated":"Politique de service créée avec succès",
     "servicepolUpdated":"Politique de service mise à jour avec succès",
     "servicerouterpolCreated":"Politique de relais de service créée avec succès",
-    "servicerouterpolUpdated":"Politique de relais de service mise à jour avec succès"
+    "servicerouterpolUpdated":"Politique de relais de service mise à jour avec succès",
+    "ztnadate":"Date",
+    "ztnatime":"Temps"
   },
   "titleAgGrid": {
     "privateKey": "Clé.privée",

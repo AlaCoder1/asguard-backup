@@ -355,7 +355,7 @@ const fetchServices = async () => {
             } else {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       } else {
@@ -384,7 +384,7 @@ const fetchServices = async () => {
             } else {
               state.snackbar = true;
               state.color = "red";
-              state.textAlert = i.response.data.error;
+              state.textAlert = t("ztna.missingFields");
             }
           });
       }} else {

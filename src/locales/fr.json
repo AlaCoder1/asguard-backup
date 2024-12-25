@@ -68,7 +68,7 @@
     "invalidPassword": "Il doit contenir au moins 20 caractères, dont au moins une majuscule, un chiffre et un caractère spécial.",
     "passwordConfirmation": "Votre mot de passe ne correspond pas",
     "ChampIncludeOnlyNumbers": "Champ ne peut inclure que des numéros",
-    "ChampNoInclude": "Champ ne peut pas contenir uniquement des numéros ou des espaces",
+    "ChampNoInclude": "Champ ne peut pas contenir uniquement des numéros ou des espaces ou le mot 'test'",
     "formatMustBeLikeAdresseIP": "Format doit correspondre à l'adresse IP : X.X.X.X",
     "formatMustBeLikeAdresse": "Format doit correspondre à l'adresse : X.X.X.X/XX",
     "subnetNotAccepted": "Le masque de sous-réseau 32 n'est pas accepté. Le format doit être le suivant : X.X.X.X/XX",

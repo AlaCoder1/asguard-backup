@@ -15,6 +15,7 @@ from backend.openvpn.constant_variables import PATH_SERVER_STATIC
 from backend.openvpn.list_servers_clients import get_list_all_client_openvpn, get_list_all_server_openvpn, get_one_client_openvpn, get_one_server_openvpn
 from utils.commands_utils import read_file_from_system
 from utils.errors_utils import CommandExecutionError
+from utils.utils_functions import fix_ipv4_address
 from .servers_status import change_status_server_openvpn
 from .models import ServerOpenvpn, ClientOpenvpn
 from .serializers import ServerOpenvpnSerializer, ClientOpenvpnSerializer
@@ -146,6 +147,10 @@ def create_server_openvpn(request):
     """Creating a new server in system and adding it to the database"""
     try:
         data = request.data
+        # Apply correction for ipv4 addresses
+        data["ipv4_tunnel_network"] = fix_ipv4_address(data["ipv4_tunnel_network"])
+        data["ipv4_local_network"] = fix_ipv4_address(data["ipv4_local_network"])
+        data["ipv4_remote_network"] = fix_ipv4_address(data["ipv4_remote_network"])
 
         name = data.get('name', '')
         description = data.get('description', '')
@@ -374,6 +379,11 @@ def update_server_openvpn(request, id):
     try:
         # parse the incoming information
         data = request.data
+        # Apply correction for ipv4 addresses
+        data["ipv4_tunnel_network"] = fix_ipv4_address(data["ipv4_tunnel_network"])
+        data["ipv4_local_network"] = fix_ipv4_address(data["ipv4_local_network"])
+        data["ipv4_remote_network"] = fix_ipv4_address(data["ipv4_remote_network"])
+
         server = ServerOpenvpn.objects.get(id=id)
         previous_name = server.name
         server.name = data.get('name', '')
@@ -620,6 +630,9 @@ def create_client_openvpn(request):
     try:
         # parse the incoming information
         data = request.data
+        # Apply correction for ipv4 addresses
+        data["ipv4_tunnel_network"] = fix_ipv4_address(data["ipv4_tunnel_network"])
+        data["ipv4_remote_network"] = fix_ipv4_address(data["ipv4_remote_network"])
 
         name = data.get('name', '')
         description = data.get('description', '')
@@ -787,6 +800,9 @@ def update_client_openvpn(request, id):
     """Updating a client from system and database"""
     try:
         data = request.data
+        # Apply correction for ipv4 addresses
+        data["ipv4_tunnel_network"] = fix_ipv4_address(data["ipv4_tunnel_network"])
+        data["ipv4_remote_network"] = fix_ipv4_address(data["ipv4_remote_network"])
 
         client = ClientOpenvpn.objects.get(id=id)
         previous_name = client.name

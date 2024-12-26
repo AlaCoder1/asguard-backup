@@ -1,6 +1,6 @@
 from django.db import models
+from django.utils.translation import gettext_lazy as _
 
-# Create your models here.
 
 class ServerIPsec(models.Model):
 
@@ -9,7 +9,7 @@ class ServerIPsec(models.Model):
     #######################################
 
     # General Information
-    conn_name = models.CharField(max_length=100, unique=True)
+    conn_name = models.CharField(max_length=100, unique=True, verbose_name=_("tunnel name"))
     connection_method = models.CharField(max_length=100, default='default', blank=True, null=True)
     key_exchange_version = models.CharField(max_length=100, default='ike', blank=True, null=True)
     internet_protocol = models.CharField(max_length=100, default='IPv4', blank=True, null=True)

@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-24 11:07+0000\n"
+"POT-Creation-Date: 2024-12-26 06:37+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -34,34 +34,34 @@ msgstr "nom de gateway"
 msgid "gateway address"
 msgstr "Addresse gateway"
 
-#: backend/gateway/views.py:19
+#: backend/gateway/views.py:21
 msgid "Gateway"
 msgstr "Gateway"
 
-#: backend/gateway/views.py:21
+#: backend/gateway/views.py:23
 msgid "is created"
 msgstr "est créé"
 
-#: backend/gateway/views.py:22
+#: backend/gateway/views.py:24
 msgid "is deleted"
 msgstr "est supprimé"
 
-#: backend/gateway/views.py:23
+#: backend/gateway/views.py:25
 msgid "is updated"
 msgstr "est modifié"
 
-#: backend/gateway/views.py:25
+#: backend/gateway/views.py:27
 msgid "Error in deleting"
 msgstr "Erreur lors de la suppression"
 
-#: backend/gateway/views.py:26
+#: backend/gateway/views.py:28
 msgid "Error in updating"
 msgstr "Erreur lors de la modification"
 
-#: backend/gateway/views.py:27
+#: backend/gateway/views.py:29
 msgid "does not exist"
 msgstr "n'existe pas"
 
-#: backend/gateway/views.py:28
+#: backend/gateway/views.py:30
 msgid "already exist"
 msgstr "existe déjà"

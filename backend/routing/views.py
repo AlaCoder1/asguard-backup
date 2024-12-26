@@ -29,7 +29,7 @@ ERROR_MESSAGES_DELETING = _("System error in deleting")
 ERROR_MESSAGES_UPDATING = _("System error in updating")
 ERROR_MESSAGES_EXISTING_NETWORK_GATEWAY = _("Route with this network and gateway exist")
 ERROR_MESSAGES_INEXISTANT = _("does not exist")
-ERROR_MESSAGES_USED_ITEM = _("Unable to use this ")
+ERROR_MESSAGES_USED_INTERFACE = _("Gateway for this interface exist")
 
 
 @swagger_auto_schema('GET', responses={200: 'Created', 400: 'Bad Request'}, 
@@ -106,7 +106,7 @@ def create_routing(request):
                 gateway = result_gateway["gateway"]
                 data["gateway"] = gateway
             elif result_gateway["error"] == "":
-                return JsonResponse({"error": f"{ERROR_MESSAGES_USED_ITEM} {CONSTANT_INTERFACE}"}, status=400)
+                return JsonResponse({"error": ERROR_MESSAGES_USED_INTERFACE}, status=400)
             else:
                 return JsonResponse({"error": result_gateway["error"]}, status=400)
         # Add an error message for unique constraints of Network and Gateway 
@@ -208,7 +208,7 @@ def update_routing(request, id):
                 gateway = result_gateway["gateway"]
                 data["gateway"] = gateway
             elif result_gateway["error"] == "":
-                return JsonResponse({"error": f"{ERROR_MESSAGES_USED_ITEM} {CONSTANT_INTERFACE}"}, status=400)
+                return JsonResponse({"error": ERROR_MESSAGES_USED_INTERFACE}, status=400)
             else:
                 return JsonResponse({"error": result_gateway["error"]}, status=400)
         

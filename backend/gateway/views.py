@@ -1,18 +1,20 @@
 
-from backend.gateway.models import Gateway
-from backend.gateway.serializers import GatewaySerializer
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from django.core import serializers
 import json
 from django.http import JsonResponse
 from rest_framework.parsers import JSONParser
-from backend.gateway.functions import add_gateway_db, update_gateway_db
 from django.core import serializers
 from django.utils.translation import gettext_lazy as _
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import AllowAny
 from rest_framework.authentication import SessionAuthentication
 from django.db.models import Q
 from drf_yasg.utils import swagger_auto_schema
+
+from .models import Gateway
+from .serializers import GatewaySerializer
+from .functions import add_gateway_db, update_gateway_db
+from backend.routing.models import Routing
 
 
 # Constants
@@ -122,16 +124,17 @@ def add_static_gateway(request):
 )
 @api_view(['DELETE'])
 @permission_classes([])
-def delete_gateway(request,id):
+def delete_gateway(request, id):
     """API to delete gateway"""
-    if (request.method == 'DELETE'):
-        msg = f"{ERROR_MESSAGES_DELETING} {CONSTANT_GATEWAY}"
-        #tester si rule exist ou non
-        if (Gateway.objects.filter(id=id).exists()):
-            gateways = Gateway.objects.get(id=id)
-            gateways.delete()
-            msg = f"{CONSTANT_GATEWAY} {(SUCCESS_MESSAGES_DELETING)}"
-    return JsonResponse({"msg": msg})      
+    try:
+        gateway = Gateway.objects.get(id=id)
+        # Can't deleting a gateway of a route configured with this interface
+        if len(Routing.objects.filter(gateway=gateway)):
+            return JsonResponse({"msg": f"{ERROR_MESSAGES_DELETING} {CONSTANT_GATEWAY}"}, status=400)
+        gateway.delete()
+        return JsonResponse({"msg": f"{CONSTANT_GATEWAY} {(SUCCESS_MESSAGES_DELETING)}"}, status=201)
+    except Gateway.DoesNotExist:
+        return JsonResponse({"error": f"{CONSTANT_GATEWAY} {ERROR_MESSAGES_INEXISTANT}"}, status=404) 
 
 
 @swagger_auto_schema(
